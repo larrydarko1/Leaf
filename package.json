@@ -1,18 +1,15 @@
 {
   "name": "leaf",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
-    "dev": "vite",
-    "dev:electron": "NODE_ENV=development concurrently \"vite\" \"wait-on http://localhost:3000 && electron .\"",
-    "build": "vue-tsc -b && vite build",
-    "build:electron": "npm run build && electron-builder",
-    "build:mac": "npm run build && electron-builder --mac",
-    "build:win": "npm run build && electron-builder --win",
-    "build:linux": "npm run build && electron-builder --linux",
-    "preview": "vite preview"
+    "dev": "NODE_ENV=development concurrently \"vite\" \"wait-on http://localhost:3000 && electron .\"",
+    "build": "vue-tsc -b && vite build && electron-builder",
+    "build:mac": "vue-tsc -b && vite build && electron-builder --mac",
+    "build:win": "vue-tsc -b && vite build && electron-builder --win",
+    "build:linux": "vue-tsc -b && vite build && electron-builder --linux"
   },
   "dependencies": {
     "vue": "^3.5.17"

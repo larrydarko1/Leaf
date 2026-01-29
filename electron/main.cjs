@@ -1,6 +1,7 @@
 // Electron Main Process - Leaf note-taking app
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
+const fs = require('fs').promises;
 
 let mainWindow = null;
 
@@ -28,13 +29,6 @@ function createWindow() {
         backgroundColor: '#1a1a1a',
         titleBarStyle: 'hiddenInset', // macOS style
         show: false // Don't show until ready
-    });
-
-    // Disable all Electron session storage
-    const session = mainWindow.webContents.session;
-    session.clearCache();
-    session.clearStorageData({
-        storages: ['localstorage', 'sessionstorage', 'cookies', 'indexdb', 'serviceworkers', 'cachestorage']
     });
 
     // Load the app
@@ -76,4 +70,111 @@ app.on('window-all-closed', () => {
 // Handle errors
 process.on('uncaughtException', (error) => {
     console.error('Uncaught exception:', error);
+});
+
+// IPC Handlers for file system operations
+
+// Open folder dialog and return the selected path
+ipcMain.handle('dialog:openFolder', async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+        properties: ['openDirectory'],
+        title: 'Select Your Notes Folder',
+        buttonLabel: 'Select Folder'
+    });
+
+    if (result.canceled) {
+        return null;
+    }
+
+    return result.filePaths[0];
+});
+
+// Recursively scan a folder for .txt, .md, and .rtf files
+async function scanFolder(folderPath, basePath = folderPath) {
+    const files = [];
+    const allowedExtensions = ['.txt', '.md', '.rtf'];
+
+    try {
+        const entries = await fs.readdir(folderPath, { withFileTypes: true });
+
+        for (const entry of entries) {
+            const fullPath = path.join(folderPath, entry.name);
+            const relativePath = path.relative(basePath, fullPath);
+
+            if (entry.isDirectory()) {
+                // Recursively scan subdirectories
+                const subFiles = await scanFolder(fullPath, basePath);
+                files.push(...subFiles);
+            } else if (entry.isFile()) {
+                const ext = path.extname(entry.name).toLowerCase();
+                if (allowedExtensions.includes(ext)) {
+                    const stats = await fs.stat(fullPath);
+                    files.push({
+                        name: entry.name,
+                        path: fullPath,
+                        relativePath: relativePath,
+                        extension: ext,
+                        size: stats.size,
+                        modified: stats.mtime.toISOString(),
+                        folder: path.dirname(relativePath)
+                    });
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error scanning folder:', error);
+    }
+
+    return files;
+}
+
+// Get all files from a folder
+ipcMain.handle('files:scan', async (event, folderPath) => {
+    try {
+        const files = await scanFolder(folderPath);
+        return { success: true, files };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+// Read a file's content
+ipcMain.handle('file:read', async (event, filePath) => {
+    try {
+        const content = await fs.readFile(filePath, 'utf-8');
+        return { success: true, content };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+// Write content to a file
+ipcMain.handle('file:write', async (event, filePath, content) => {
+    try {
+        await fs.writeFile(filePath, content, 'utf-8');
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+// Create a new file
+ipcMain.handle('file:create', async (event, folderPath, fileName) => {
+    try {
+        const filePath = path.join(folderPath, fileName);
+        await fs.writeFile(filePath, '', 'utf-8');
+        return { success: true, path: filePath };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+// Delete a file (move to trash)
+ipcMain.handle('file:delete', async (event, filePath) => {
+    try {
+        await shell.trashItem(filePath);
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
 });

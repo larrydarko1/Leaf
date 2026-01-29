@@ -1,4 +1,4 @@
-# Leaf 🍃
+# Leaf 
 
 ![License](https://img.shields.io/github/license/larrydarko1/leaf)
 ![Issues](https://img.shields.io/github/issues/larrydarko1/leaf)
@@ -11,11 +11,10 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 ## Features
 
 ### Note Management
-- **Vault-based system** - Create or import a folder as your vault
+- **Vault-based system** - Select any folder as your vault
 - **Multi-format support** - Read and edit `.txt`, `.md`, and `.rtf` files
-- **File browser** - Navigate your notes with an intuitive file tree
-- **Quick search** - Find notes instantly across your vault
-- **Live preview** - Markdown rendering for `.md` files
+- **File browser** - Navigate your notes with a simple file list
+- **Auto-save** - Changes save automatically as you type
 
 ### Privacy & Storage
 - **100% Offline** - Works completely without internet connection
@@ -29,23 +28,37 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 - **Dark mode** - Easy on the eyes
 - **Distraction-free** - Focus on your writing
 
+## Security & Privacy
+
+Leaf is built with privacy and security as core principles:
+
+### Privacy Guarantees
+- **No telemetry** - We don't collect any usage data, analytics, or crash reports
+- **No network requests** - The app works 100% offline and makes zero external connections
+- **No cloud sync** - Your notes never leave your device unless you explicitly copy them
+- **No accounts** - No sign-ups, logins, or user tracking of any kind
+
+### Security Architecture
+- **Sandboxed renderer** - Context isolation prevents unauthorized system access
+- **Local file system only** - File operations are limited to your selected vault folder
+- **No remote code execution** - All code runs locally on your device
+- **Open source** - Full transparency - audit the code yourself
+
+### Reporting Security Issues
+If you discover a security vulnerability, please open an issue on the [GitHub repository](https://github.com/larrydarko1/leaf/issues). 
+
 ## Data Storage
 
-Your notes are stored exactly where you choose:
+### Your Notes
+Your notes are stored exactly where you choose - simply select any folder on your system as your vault. Common locations:
+- **macOS:** `~/Documents/Notes/`, `~/Desktop/MyVault/`
+- **Windows:** `C:\Users\YourName\Documents\Notes\`, `D:\MyVault\`
+- **Linux:** `~/Documents/Notes/`, `~/notes/`
 
-### Vault Location
-- You select the folder location when creating/importing a vault
-- Common locations:
-  - **macOS:** `~/Documents/Notes/`, `~/Desktop/MyVault/`
-  - **Windows:** `C:\Users\YourName\Documents\Notes\`, `D:\MyVault\`
-  - **Linux:** `~/Documents/Notes/`, `~/notes/`
+> **Note:** Your vault folder can be anywhere on your system. Use it with other apps, back it up to external drives, sync with git - it's just plain text files!
 
 ### App Settings
-- **macOS:** `~/Library/Application Support/leaf/`
-- **Windows:** `%APPDATA%/leaf/`
-- **Linux:** `~/.config/leaf/`
-
-> **Note:** Your vault folder can be anywhere on your system. Use it with other apps, back it up to external drives, sync with git - it's just files!
+Leaf stores minimal app preferences (like your last opened folder path) automatically. No configuration needed.
 
 ## Getting Started
 
@@ -72,30 +85,6 @@ npm run dev:electron
 ```
 
 ### Building for Production
-
-#### Desktop Development
-```sh
-# Start the Electron app in development mode
-npm run dev:electron
-```
-
-This will:
-- Start Vite dev server on http://localhost:3000
-- Launch the Electron desktop app
-- Enable hot reload for development
-
-#### Mobile Development
-
-See [MOBILE.md](MOBILE.md) for complete mobile development guide.
-
-**Quick Start:**
-```sh
-# Build and sync to mobile platforms
-npm run build:mobile
-
-# Open in native IDEs
-npm run cap:open:ios      # Requires macOS + Xcode
-npm run cap:open:android  # Requires Android Studio
 
 ```sh
 # Build for your current platform
@@ -127,7 +116,7 @@ After building:
 ## Tech Stack
 - **Desktop:** Electron (Native macOS, Windows, Linux app)
 - **Frontend:** Vue 3, TypeScript, Vite, SCSS
-- **Storage:** Plain text files (txt, md, rtf) + JSON for app settings
+- **Storage:** Plain text files (txt, md, rtf) in your local vault
 - **Build Tools:** Vite + Electron Builder
 
 ## Project Structure
@@ -136,16 +125,13 @@ After building:
 leaf/
 ├── electron/
 │   ├── main.cjs           # Electron main process
-│   ├── preload.cjs        # Secure bridge between main/renderer
-│   └── storage.cjs        # File system operations
+│   └── preload.cjs        # Secure bridge between main/renderer
 ├── src/
-│   ├── components/        # Vue components
-│   ├── store/             # Storage adapters
-│   │   ├── adapters/
-│   │   │   ├── electron.ts    # Electron storage adapter
-│   │   │   └── factory.ts     # Storage factory
-│   │   ├── index.ts
-│   │   └── types.ts
+│   ├── components/
+│   │   ├── FileExplorer.vue
+│   │   └── NoteEditor.vue
+│   ├── types/
+│   │   └── electron.d.ts
 │   ├── App.vue
 │   ├── main.ts
 │   └── style.scss
@@ -157,22 +143,25 @@ leaf/
 ## Roadmap
 
 ### Current Features
-- [x] Electron desktop app foundation
+- [x] Electron desktop app
 - [x] Local-first architecture
 - [x] Dark theme
-- [x] Multi-language support
+- [x] Folder selection for vault
+- [x] File browser with list view
+- [x] Text editor with auto-save
+- [x] Create and delete files
+- [x] `.txt`, `.md`, and `.rtf` file support
+- [x] Keyboard shortcuts (Cmd/Ctrl+S to save)
 
 ### Planned Features
-- [ ] Vault management (create/import folder)
-- [ ] File browser with tree view
-- [ ] Markdown editor with live preview
-- [ ] TXT and RTF file support
+- [ ] Markdown live preview
 - [ ] Full-text search across vault
-- [ ] Tags and organization
+- [ ] Tree view for nested folders
+- [ ] Tags and metadata
 - [ ] Wikilinks support (`[[note]]`)
 - [ ] Graph view of note connections
-- [ ] Export/import vault
-- [ ] Keyboard shortcuts
+- [ ] Light theme
+- [ ] More keyboard shortcuts
 
 ## Contributing
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
@@ -182,7 +171,6 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) for detai
 
 ## Acknowledgments
 - Inspired by [Obsidian](https://obsidian.md/) for the vault-based note-taking approach
-- Built with ❤️ for privacy-conscious note-takers
 
 ---
 
