@@ -1,0 +1,74 @@
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+
+  color-scheme: dark;
+  color: #e0e0e0;
+  background-color: #1a1a1a;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Electron window dragging support */
+#app {
+  -webkit-app-region: drag;
+}
+
+/* Make interactive elements clickable */
+button,
+input,
+textarea,
+select,
+a,
+[role="button"],
+.clickable {
+  -webkit-app-region: no-drag;
+  cursor: pointer;
+}
+
+/* Allow scrolling on content containers */
+[class*="content"],
+[class*="list"],
+[class*="body"],
+[class*="container"],
+[class*="wrapper"],
+[class*="entries"],
+[class*="items"],
+.modal,
+.popup,
+.dropdown-menu {
+  -webkit-app-region: no-drag;
+}
+
+/* Better font scaling on mobile */
+@media (max-width: 768px) {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+}
+
+/* Smooth scrolling for all devices */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "name": "leaf",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "vite",
+    "dev:electron": "NODE_ENV=development concurrently \"vite\" \"wait-on http://localhost:3000 && electron .\"",
+    "build": "vue-tsc -b && vite build",
+    "build:electron": "npm run build && electron-builder",
+    "build:mac": "npm run build && electron-builder --mac",
+    "build:win": "npm run build && electron-builder --win",
+    "build:linux": "npm run build && electron-builder --linux",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.5.17"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.13",
+    "@vitejs/plugin-vue": "^6.0.0",
+    "@vue/test-utils": "^2.4.6",
+    "@vue/tsconfig": "^0.7.0",
+    "concurrently": "^9.2.1",
+    "electron": "^40.0.0",
+    "electron-builder": "^26.4.0",
+    "jsdom": "^26.1.0",
+    "sass-embedded": "^1.92.1",
+    "typescript": "~5.8.3",
+    "vite": "^7.0.0",
+    "vitest": "^3.2.4",
+    "vue-tsc": "^2.2.10",
+    "wait-on": "^9.0.3"
+  },
+  "description": "A local-first, privacy-focused note-taking app for desktop. Simple interface for reading and editing txt, md, and rtf files. All notes stay on your device.",
+  "author": "Lorenzo Mazzola",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/larrydarko1/leaf.git"
+  },
+  "build": {
+    "appId": "com.leaf.app",
+    "productName": "Leaf",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "node_modules/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.icns"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.ico"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Utility"
+    }
+  }
+}
