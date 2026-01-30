@@ -9,13 +9,17 @@
         :depth="0"
         :selected-file="selectedFile"
         :renaming-file="renamingFile"
+        :selected-folder="selectedFolder"
+        :renaming-folder="renamingFolder"
         :rename-value="renameValue"
         :expanded-folders="expandedFolders"
         @select-file="selectFile"
-        @select-folder="toggleFolder"
+        @select-folder="selectFolder"
+        @toggle-folder="toggleFolder"
         @rename="confirmRename"
         @cancel-rename="cancelRename"
         @update-rename-value="renameValue = $event"
+        @context-menu="handleContextMenu"
       />
       
       <div v-if="files.length === 0" class="empty-state">
@@ -23,6 +27,15 @@
         <p class="hint">Create .txt or .md files to get started.</p>
       </div>
     </div>
+    
+    <!-- Context Menu -->
+    <ContextMenu
+      :visible="contextMenu.visible"
+      :position="contextMenu.position"
+      :items="contextMenuItems"
+      @close="closeContextMenu"
+      @action="handleContextMenuAction"
+    />
   </div>
 </template>
 
@@ -30,6 +43,7 @@
 import { computed, ref, watch } from 'vue';
 import type { FileInfo, FolderInfo } from '../types/electron';
 import FolderNode, { type TreeNode } from './FolderNode.vue';
+import ContextMenu, { type ContextMenuItem } from './ContextMenu.vue';
 
 const props = defineProps<{
   files: FileInfo[];
@@ -37,16 +51,46 @@ const props = defineProps<{
   currentFolder: string | null;
   selectedFile: FileInfo | null;
   renamingFile: FileInfo | null;
+  selectedFolder: string | null;
+  renamingFolder: string | null;
 }>();
 
 const emit = defineEmits<{
   selectFile: [file: FileInfo];
-  rename: [file: FileInfo, newName: string];
+  selectFolder: [path: string];
+  renameFile: [file: FileInfo, newName: string];
+  renameFolder: [path: string, newName: string];
+  deleteFile: [file: FileInfo];
+  deleteFolder: [path: string];
   cancelRename: [];
+  startRenameFile: [file: FileInfo];
+  startRenameFolder: [path: string];
 }>();
 
 const renameValue = ref('');
 const expandedFolders = ref<Set<string>>(new Set());
+
+// Context menu state
+const contextMenu = ref({
+  visible: false,
+  position: { x: 0, y: 0 },
+  type: '' as 'file' | 'folder',
+  targetPath: ''
+});
+
+const contextMenuItems = computed<ContextMenuItem[]>(() => {
+  if (contextMenu.value.type === 'folder') {
+    return [
+      { label: 'Rename', action: 'rename', shortcut: 'F2' },
+      { label: 'Delete', action: 'delete' }
+    ];
+  } else {
+    return [
+      { label: 'Rename', action: 'rename', shortcut: 'F2' },
+      { label: 'Delete', action: 'delete' }
+    ];
+  }
+});
 
 // Build a folder tree from flat file list
 const folderTree = computed(() => {
@@ -153,8 +197,14 @@ function getFileNameWithoutExtension(fileName: string): string {
 }
 
 function selectFile(file: FileInfo) {
-  if (!props.renamingFile) {
+  if (!props.renamingFile && !props.renamingFolder) {
     emit('selectFile', file);
+  }
+}
+
+function selectFolder(folderPath: string) {
+  if (!props.renamingFile && !props.renamingFolder) {
+    emit('selectFolder', folderPath);
   }
 }
 
@@ -168,11 +218,57 @@ function toggleFolder(folderPath: string) {
   expandedFolders.value = new Set(expandedFolders.value);
 }
 
+function handleContextMenu(type: 'file' | 'folder', path: string, event: MouseEvent) {
+  contextMenu.value = {
+    visible: true,
+    position: { x: event.clientX, y: event.clientY },
+    type,
+    targetPath: path
+  };
+}
+
+function closeContextMenu() {
+  contextMenu.value.visible = false;
+}
+
+function handleContextMenuAction(action: string) {
+  const { type, targetPath } = contextMenu.value;
+  
+  if (action === 'rename') {
+    if (type === 'folder') {
+      emit('startRenameFolder', targetPath);
+    } else if (type === 'file') {
+      const file = props.files.find(f => f.path === targetPath);
+      if (file) {
+        emit('startRenameFile', file);
+      }
+    }
+  } else if (action === 'delete') {
+    if (type === 'folder') {
+      if (confirm(`Are you sure you want to delete this folder and all its contents?`)) {
+        emit('deleteFolder', targetPath);
+      }
+    } else if (type === 'file') {
+      const file = props.files.find(f => f.path === targetPath);
+      if (file && confirm(`Are you sure you want to delete "${file.name}"?`)) {
+        emit('deleteFile', file);
+      }
+    }
+  }
+}
+
 function confirmRename() {
   if (props.renamingFile && renameValue.value.trim() !== '') {
     const currentName = getFileNameWithoutExtension(props.renamingFile.name);
     if (renameValue.value.trim() !== currentName) {
-      emit('rename', props.renamingFile, renameValue.value.trim());
+      emit('renameFile', props.renamingFile, renameValue.value.trim());
+    } else {
+      emit('cancelRename');
+    }
+  } else if (props.renamingFolder && renameValue.value.trim() !== '') {
+    const currentName = props.renamingFolder.split('/').pop() || props.renamingFolder;
+    if (renameValue.value.trim() !== currentName) {
+      emit('renameFolder', props.renamingFolder, renameValue.value.trim());
     } else {
       emit('cancelRename');
     }
@@ -190,6 +286,14 @@ watch(() => props.renamingFile, (newRenamingFile) => {
   if (newRenamingFile) {
     const fileName = getFileNameWithoutExtension(newRenamingFile.name);
     renameValue.value = fileName;
+  }
+});
+
+// Watch for renaming folder changes
+watch(() => props.renamingFolder, (newRenamingFolder) => {
+  if (newRenamingFolder) {
+    const folderName = newRenamingFolder.split('/').pop() || newRenamingFolder;
+    renameValue.value = folderName;
   }
 });
 

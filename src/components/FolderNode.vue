@@ -3,8 +3,10 @@
     <div
       v-if="node.type === 'folder'"
       class="folder-item"
+      :class="{ active: isSelected, renaming: isRenaming }"
       :style="{ paddingLeft: (depth * 16 + 10) + 'px' }"
-      @click="$emit('selectFolder', node.path)"
+      @click="handleFolderClick"
+      @contextmenu.prevent="$emit('contextMenu', 'folder', node.path, $event)"
     >
       <svg 
         class="chevron" 
@@ -17,6 +19,7 @@
         stroke-width="2" 
         stroke-linecap="round" 
         stroke-linejoin="round"
+        @click.stop="$emit('toggleFolder', node.path)"
       >
         <polyline points="9 18 15 12 9 6"></polyline>
       </svg>
@@ -33,7 +36,18 @@
       >
         <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
       </svg>
-      <span class="folder-name">{{ node.name }}</span>
+      <input
+        v-if="isRenaming"
+        ref="renameInput"
+        :value="renameValue"
+        @input="$emit('updateRenameValue', ($event.target as HTMLInputElement).value)"
+        class="folder-name-input"
+        @keydown.enter="$emit('rename')"
+        @keydown.esc="$emit('cancelRename')"
+        @blur="$emit('rename')"
+        @click.stop
+      />
+      <span v-else class="folder-name">{{ node.name }}</span>
     </div>
 
     <div
@@ -42,6 +56,7 @@
       :class="{ active: isSelected, renaming: isRenaming }"
       :style="{ paddingLeft: (depth * 16 + 10) + 'px' }"
       @click="node.file && $emit('selectFile', node.file)"
+      @contextmenu.prevent="node.file && $emit('contextMenu', 'file', node.file.path, $event)"
     >
       <svg 
         class="file-icon" 
@@ -80,13 +95,17 @@
         :depth="depth + 1"
         :selected-file="selectedFile"
         :renaming-file="renamingFile"
+        :selected-folder="selectedFolder"
+        :renaming-folder="renamingFolder"
         :rename-value="renameValue"
         :expanded-folders="expandedFolders"
         @select-file="$emit('selectFile', $event)"
         @select-folder="$emit('selectFolder', $event)"
+        @toggle-folder="$emit('toggleFolder', $event)"
         @rename="$emit('rename')"
         @cancel-rename="$emit('cancelRename')"
         @update-rename-value="$emit('updateRenameValue', $event)"
+        @context-menu="(type: 'file' | 'folder', path: string, event: MouseEvent) => $emit('contextMenu', type, path, event)"
       />
     </template>
   </div>
@@ -109,16 +128,20 @@ const props = defineProps<{
   depth: number;
   selectedFile: FileInfo | null;
   renamingFile: FileInfo | null;
+  selectedFolder: string | null;
+  renamingFolder: string | null;
   renameValue: string;
   expandedFolders: Set<string>;
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
   selectFile: [file: FileInfo];
   selectFolder: [path: string];
+  toggleFolder: [path: string];
   rename: [];
   cancelRename: [];
   updateRenameValue: [value: string];
+  contextMenu: [type: 'file' | 'folder', path: string, event: MouseEvent];
 }>();
 
 const renameInput = ref<HTMLInputElement | null>(null);
@@ -128,13 +151,21 @@ const isExpanded = computed(() => {
 });
 
 const isRenaming = computed(() => {
-  return props.node.type === 'file' && 
-         props.renamingFile?.path === props.node.file?.path;
+  if (props.node.type === 'file') {
+    return props.renamingFile?.path === props.node.file?.path;
+  } else if (props.node.type === 'folder') {
+    return props.renamingFolder === props.node.path;
+  }
+  return false;
 });
 
 const isSelected = computed(() => {
-  return props.node.type === 'file' && 
-         props.selectedFile?.path === props.node.file?.path;
+  if (props.node.type === 'file') {
+    return props.selectedFile?.path === props.node.file?.path;
+  } else if (props.node.type === 'folder') {
+    return props.selectedFolder === props.node.path;
+  }
+  return false;
 });
 
 watch(isRenaming, (renaming) => {
@@ -147,6 +178,11 @@ watch(isRenaming, (renaming) => {
     });
   }
 });
+
+function handleFolderClick() {
+  // Single click selects the folder
+  emit('selectFolder', props.node.path);
+}
 </script>
 
 <style scoped lang="scss">
@@ -167,7 +203,7 @@ watch(isRenaming, (renaming) => {
   
   &:hover {
     background: var(--base1);
-    margin-left: 10px;
+    margin: 1px 10px 1px 10px;
   }
 }
 
@@ -176,11 +212,26 @@ watch(isRenaming, (renaming) => {
   font-size: 0.875rem;
   font-weight: 500;
 
+  &.active {
+    background: var(--base1);
+    margin: 1px 10px 1px 10px;
+    
+    .folder-name {
+      color: var(--base2);
+      font-weight: 500;
+    }
+  }
+  
+  &.renaming {
+    cursor: default;
+  }
+
   .chevron {
     flex-shrink: 0;
     color: var(--text2);
     transition: transform 0.2s ease;
     margin-left: 0.125rem;
+    cursor: pointer;
     
     &.expanded {
       transform: rotate(90deg);
@@ -194,16 +245,36 @@ watch(isRenaming, (renaming) => {
   }
 
   .folder-name {
+    flex: 1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  
+  .folder-name-input {
+    flex: 1;
+    font-size: 0.875rem;
+    color: var(--text1);
+    background: var(--base4);
+    border: none;
+    border-radius: 5px;
+    padding: 0.15rem 0.35rem;
+    outline: none;
+    font-family: inherit;
+    font-weight: 500;
+    line-height: 1.4;
+    transition: background 0.15s ease;
+    
+    &:focus {
+      background: var(--base3);
+    }
   }
 }
 
 .file-item {
   &.active {
     background: var(--base1);
-    margin-left: 10px;
+    margin: 1px 10px 1px 10px;
     
     .file-name {
       color: var(--base2);
@@ -219,7 +290,7 @@ watch(isRenaming, (renaming) => {
     flex-shrink: 0;
     color: var(--text2);
     opacity: 0.7;
-    margin-left: 1.75rem; // Align with folder content
+    margin: 1px 10px 1px 10px;
   }
 }
 

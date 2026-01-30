@@ -230,3 +230,34 @@ ipcMain.handle('file:rename', async (event, oldPath, newFileName) => {
         return { success: false, error: error.message };
     }
 });
+
+// Rename a folder
+ipcMain.handle('folder:rename', async (event, oldPath, newFolderName) => {
+    try {
+        const parentDirectory = path.dirname(oldPath);
+        const newPath = path.join(parentDirectory, newFolderName);
+
+        // Check if folder with new name already exists
+        try {
+            await fs.access(newPath);
+            return { success: false, error: 'A folder with this name already exists' };
+        } catch {
+            // Folder doesn't exist, safe to rename
+        }
+
+        await fs.rename(oldPath, newPath);
+        return { success: true, newPath };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+// Delete a folder (move to trash)
+ipcMain.handle('folder:delete', async (event, folderPath) => {
+    try {
+        await shell.trashItem(folderPath);
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});

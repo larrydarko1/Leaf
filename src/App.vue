@@ -48,20 +48,6 @@
 								<line x1="9" y1="14" x2="15" y2="14"></line>
 							</svg>
 						</button>
-						<button @click="deleteSelectedFile" class="btn-menu-icon" :disabled="!selectedFile" title="Delete note">
-							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-								<polyline points="3 6 5 6 21 6"></polyline>
-								<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-								<line x1="10" y1="11" x2="10" y2="17"></line>
-								<line x1="14" y1="11" x2="14" y2="17"></line>
-							</svg>
-					</button>
-					<button @click="renameSelectedFile" class="btn-menu-icon" :disabled="!selectedFile" title="Rename note">
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-							<path d="M12 20h9"></path>
-							<path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-						</svg>
-					</button>
 					<button @click="toggleTheme" class="btn-menu-icon" title="Toggle theme">
 							<!-- Sun icon for dark theme -->
 							<svg v-if="currentTheme === 'dark-theme'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -87,8 +73,16 @@
 						:current-folder="currentFolder"
 						:selected-file="selectedFile"
 						:renaming-file="renamingFile"
-						@select-file="handleFileSelect"
-						@rename="handleFileRename"
+					:selected-folder="selectedFolder"
+					:renaming-folder="renamingFolder"
+					@select-file="handleFileSelect"
+					@select-folder="handleFolderSelect"
+					@start-rename-file="startRenameFile"
+					@start-rename-folder="startRenameFolder"
+					@rename-file="handleFileRename"
+					@rename-folder="handleFolderRename"
+					@delete-file="handleFileDelete"
+					@delete-folder="handleFolderDelete"
 						@cancel-rename="cancelRename"
 					/>
 				</aside>
@@ -116,6 +110,8 @@ const files = ref<FileInfo[]>([]);
 const folders = ref<FolderInfo[]>([]);
 const selectedFile = ref<FileInfo | null>(null);
 const renamingFile = ref<FileInfo | null>(null);
+const selectedFolder = ref<string | null>(null);
+const renamingFolder = ref<string | null>(null);
 
 // Load saved folder path and theme from localStorage
 onMounted(() => {
@@ -128,7 +124,21 @@ onMounted(() => {
 	if (savedFolder) {
 		loadFolder(savedFolder);
 	}
+	
+	// Add keyboard listener for F2 (rename)
+	window.addEventListener('keydown', handleKeydown);
 });
+
+function handleKeydown(e: KeyboardEvent) {
+	if (e.key === 'F2') {
+		e.preventDefault();
+		if (selectedFile.value && !renamingFile.value) {
+			renameSelectedFile();
+		} else if (selectedFolder.value && !renamingFolder.value) {
+			renamingFolder.value = selectedFolder.value;
+		}
+	}
+}
 
 async function selectFolder() {
 	try {
@@ -190,6 +200,12 @@ function changeFolder() {
 
 function handleFileSelect(file: FileInfo) {
 	selectedFile.value = file;
+	selectedFolder.value = null; // Clear folder selection when file is selected
+}
+
+function handleFolderSelect(folderPath: string) {
+	selectedFolder.value = folderPath;
+	selectedFile.value = null; // Clear file selection when folder is selected
 }
 
 function handleFileSave() {
@@ -244,37 +260,26 @@ async function createNewFolder() {
 	}
 }
 
-async function deleteSelectedFile() {
-	if (!selectedFile.value) return;
-	
-	try {
-		const result = await window.electronAPI.deleteFile(selectedFile.value.path);
-		if (result.success) {
-			selectedFile.value = null;
-			
-			// Refresh the file list
-			await refreshFiles();
-			
-			// Select another file if available
-			if (files.value.length > 0) {
-				selectedFile.value = files.value[0];
-			}
-		} else {
-			alert('Failed to delete file: ' + result.error);
-		}
-	} catch (error) {
-		console.error('Error deleting file:', error);
-		alert('Error deleting file');
-	}
-}
-
 async function renameSelectedFile() {
 	if (!selectedFile.value) return;
 	renamingFile.value = selectedFile.value;
 }
 
+function startRenameFile(file: FileInfo) {
+	selectedFile.value = file;
+	selectedFolder.value = null;
+	renamingFile.value = file;
+}
+
+function startRenameFolder(folderPath: string) {
+	selectedFolder.value = folderPath;
+	selectedFile.value = null;
+	renamingFolder.value = folderPath;
+}
+
 function cancelRename() {
 	renamingFile.value = null;
+	renamingFolder.value = null;
 }
 
 async function handleFileRename(file: FileInfo, newName: string) {
@@ -300,6 +305,74 @@ async function handleFileRename(file: FileInfo, newName: string) {
 		renamingFile.value = null;
 		console.error('Error renaming file:', error);
 		alert('Error renaming file');
+	}
+}
+
+async function handleFolderRename(folderPath: string, newName: string) {
+	if (!currentFolder.value) return;
+	
+	try {
+		// Convert relative path to absolute path
+		const absolutePath = currentFolder.value + '/' + folderPath;
+		
+		const result = await window.electronAPI.renameFolder(absolutePath, newName);
+		if (result.success && result.newPath) {
+			renamingFolder.value = null;
+			// Refresh the file list
+			await refreshFiles();
+			// Calculate the new relative path for selection
+			const parentPath = folderPath.includes('/') ? folderPath.substring(0, folderPath.lastIndexOf('/')) : '';
+			const newRelativePath = parentPath ? parentPath + '/' + newName : newName;
+			selectedFolder.value = newRelativePath;
+		} else {
+			renamingFolder.value = null;
+			alert('Failed to rename folder: ' + result.error);
+		}
+	} catch (error) {
+		renamingFolder.value = null;
+		console.error('Error renaming folder:', error);
+		alert('Error renaming folder');
+	}
+}
+
+async function handleFolderDelete(folderPath: string) {
+	if (!currentFolder.value) return;
+	
+	try {
+		// Convert relative path to absolute path
+		const absolutePath = currentFolder.value + '/' + folderPath;
+		
+		const result = await window.electronAPI.deleteFolder(absolutePath);
+		if (result.success) {
+			selectedFolder.value = null;
+			// Refresh the file list
+			await refreshFiles();
+		} else {
+			alert('Failed to delete folder: ' + result.error);
+		}
+	} catch (error) {
+		console.error('Error deleting folder:', error);
+		alert('Error deleting folder');
+	}
+}
+
+async function handleFileDelete(file: FileInfo) {
+	try {
+		const result = await window.electronAPI.deleteFile(file.path);
+		if (result.success) {
+			selectedFile.value = null;
+			// Refresh the file list
+			await refreshFiles();
+			// Select another file if available
+			if (files.value.length > 0) {
+				selectedFile.value = files.value[0];
+			}
+		} else {
+			alert('Failed to delete file: ' + result.error);
+		}
+	} catch (error) {
+		console.error('Error deleting file:', error);
+		alert('Error deleting file');
 	}
 }
 
@@ -402,6 +475,7 @@ function toggleTheme() {
 .sidebar-menu {
 	display: flex;
 	align-items: center;
+	justify-content: center;
 	gap: 0.25rem;
 	padding: 0.5rem 0.75rem;
 	border-bottom: 1px solid var(--text3);

@@ -59,6 +59,17 @@ export interface FileRenameResult {
     error?: string;
 }
 
+export interface FolderRenameResult {
+    success: boolean;
+    newPath?: string;
+    error?: string;
+}
+
+export interface FolderDeleteResult {
+    success: boolean;
+    error?: string;
+}
+
 export interface ElectronAPI {
     isElectron: () => boolean;
     openFolderDialog: () => Promise<string | null>;
@@ -69,6 +80,8 @@ export interface ElectronAPI {
     createFile: (folderPath: string, fileName: string) => Promise<FileCreateResult>;
     deleteFile: (filePath: string) => Promise<FileDeleteResult>;
     renameFile: (filePath: string, newFileName: string) => Promise<FileRenameResult>;
+    renameFolder: (folderPath: string, newFolderName: string) => Promise<FolderRenameResult>;
+    deleteFolder: (folderPath: string) => Promise<FolderDeleteResult>;
 }
 
 declare global {
