@@ -153,7 +153,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--bg-primary);
+  background: var(--base1);
 }
 
 .editor-header {
@@ -161,8 +161,8 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 1.5rem;
-  border-bottom: 1px solid var(--border-color);
-  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--text3);
+  background: var(--base3);
   -webkit-app-region: drag;
 }
 
@@ -183,7 +183,7 @@ onUnmounted(() => {
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text1);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -196,9 +196,9 @@ onUnmounted(() => {
   font-size: 0.625rem;
   font-weight: 500;
   text-transform: uppercase;
-  color: var(--accent-color);
-  background: var(--bg-tertiary);
-  border: 1px solid var(--accent-color);
+  color: var(--base2);
+  background: var(--base4);
+  border: 1px solid var(--base2);
   border-radius: 3px;
   opacity: 0.7;
   flex-shrink: 0;
@@ -213,19 +213,19 @@ onUnmounted(() => {
 }
 
 .unsaved-indicator {
-  color: var(--accent-color);
+  color: var(--base2);
 }
 
 .saving-indicator {
-  color: var(--accent-hover);
+  color: var(--text2);
   font-style: italic;
 }
 
 .editor-textarea {
   flex: 1;
   padding: 2rem;
-  background: var(--bg-primary);
-  color: var(--text-primary);
+  background: var(--base1);
+  color: var(--text1);
   border: none;
   outline: none;
   font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
@@ -236,7 +236,7 @@ onUnmounted(() => {
   -webkit-app-region: no-drag;
   
   &::placeholder {
-    color: var(--text-tertiary);
+    color: var(--text2);
   }
 }
 
@@ -249,7 +249,7 @@ onUnmounted(() => {
 
 .empty-message {
   text-align: center;
-  color: var(--text-secondary);
+  color: var(--text2);
   
   p {
     margin: 0.5rem 0;
@@ -258,7 +258,7 @@ onUnmounted(() => {
   
   .hint {
     font-size: 0.9rem;
-    color: var(--text-tertiary);
+    color: var(--text2);
   }
 }
 </style>

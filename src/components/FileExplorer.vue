@@ -5,17 +5,27 @@
         v-for="file in sortedFiles"
         :key="file.path"
         class="file-item"
-        :class="{ active: selectedFile?.path === file.path }"
+        :class="{ active: selectedFile?.path === file.path, renaming: renamingFile?.path === file.path }"
         @click="selectFile(file)"
       >
         <div class="file-info">
-          <div class="file-name">{{ getFileNameWithoutExtension(file.name) }}</div>
+          <input
+            v-if="renamingFile?.path === file.path"
+            ref="renameInput"
+            v-model="renameValue"
+            class="file-name-input"
+            @keydown.enter="confirmRename"
+            @keydown.esc="cancelRename"
+            @blur="confirmRename"
+            @click.stop
+          />
+          <div v-else class="file-name">{{ getFileNameWithoutExtension(file.name) }}</div>
           <div class="file-folder" v-if="file.folder !== '.'">{{ file.folder }}</div>
         </div>
       </div>
       
       <div v-if="files.length === 0" class="empty-state">
-        <p>No notes found in this folder.</p>
+        <p>No notes found.</p>
         <p class="hint">Create .txt, .md, or .rtf files to get started.</p>
       </div>
     </div>
@@ -23,18 +33,24 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, nextTick, watch } from 'vue';
 import type { FileInfo } from '../types/electron';
 
 const props = defineProps<{
   files: FileInfo[];
   currentFolder: string | null;
   selectedFile: FileInfo | null;
+  renamingFile: FileInfo | null;
 }>();
 
 const emit = defineEmits<{
   selectFile: [file: FileInfo];
+  rename: [file: FileInfo, newName: string];
+  cancelRename: [];
 }>();
+
+const renameInput = ref<HTMLInputElement | null>(null);
+const renameValue = ref('');
 
 const sortedFiles = computed(() => {
   return [...props.files].sort((a, b) => {
@@ -51,8 +67,41 @@ function getFileNameWithoutExtension(fileName: string): string {
 }
 
 function selectFile(file: FileInfo) {
-  emit('selectFile', file);
+  if (!props.renamingFile) {
+    emit('selectFile', file);
+  }
 }
+
+function confirmRename() {
+  if (props.renamingFile && renameValue.value.trim() !== '') {
+    const currentName = getFileNameWithoutExtension(props.renamingFile.name);
+    if (renameValue.value.trim() !== currentName) {
+      emit('rename', props.renamingFile, renameValue.value.trim());
+    } else {
+      emit('cancelRename');
+    }
+  } else {
+    emit('cancelRename');
+  }
+}
+
+function cancelRename() {
+  emit('cancelRename');
+}
+
+// Watch for renaming file changes and focus input
+watch(() => props.renamingFile, (newRenamingFile) => {
+  if (newRenamingFile) {
+    const fileName = getFileNameWithoutExtension(newRenamingFile.name);
+    renameValue.value = fileName;
+    nextTick(() => {
+      if (renameInput.value) {
+        renameInput.value.focus();
+        renameInput.value.select();
+      }
+    });
+  }
+});
 </script>
 
 <style scoped lang="scss">
@@ -60,8 +109,7 @@ function selectFile(file: FileInfo) {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--bg-secondary);
-  border-right: 1px solid var(--border-color);
+  background: var(--base3);
 }
 
 .file-list {
@@ -73,23 +121,29 @@ function selectFile(file: FileInfo) {
 .file-item {
   display: flex;
   align-items: center;
-  padding: 0.5rem 1rem;
+  padding: 0.625rem 1rem;
+  margin-bottom: 0.125rem;
   cursor: pointer;
   transition: all 0.15s ease;
-  border-left: 2px solid transparent;
+  border-radius: 5px;
   
   &:hover {
-    background: var(--bg-hover);
+    background: var(--base1);
+    margin-left: 10px;
   }
   
   &.active {
-    background: var(--bg-hover);
-    border-left-color: var(--accent-color);
+    background: var(--base1);
+    margin-left: 10px;
     
     .file-name {
-      color: var(--accent-color);
+      color: var(--base2);
       font-weight: 500;
     }
+  }
+  
+  &.renaming {
+    cursor: default;
   }
 }
 
@@ -100,16 +154,35 @@ function selectFile(file: FileInfo) {
 
 .file-name {
   font-size: 0.875rem;
-  color: var(--text-primary);
+  color: var(--text1);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.4;
 }
 
+.file-name-input {
+  font-size: 0.875rem;
+  color: var(--text1);
+  background: var(--base4);
+  border: none;
+  border-radius: 5px;
+  padding: 0.15rem 0.35rem;
+  width: 100%;
+  outline: none;
+  font-family: inherit;
+  font-weight: 500;
+  line-height: 1.4;
+  transition: border-color 0.15s ease;
+  
+  &:focus {
+    background: var(--base3);
+  }
+}
+
 .file-folder {
   font-size: 0.7rem;
-  color: var(--text-tertiary);
+  color: var(--text2);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -119,7 +192,7 @@ function selectFile(file: FileInfo) {
 .empty-state {
   padding: 2rem 1rem;
   text-align: center;
-  color: var(--text-secondary);
+  color: var(--text2);
   
   p {
     margin: 0.5rem 0;
@@ -128,7 +201,7 @@ function selectFile(file: FileInfo) {
   
   .hint {
     font-size: 0.8rem;
-    color: var(--text-tertiary);
+    color: var(--text2);
   }
 }
 </style>

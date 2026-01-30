@@ -178,3 +178,24 @@ ipcMain.handle('file:delete', async (event, filePath) => {
         return { success: false, error: error.message };
     }
 });
+
+// Rename a file
+ipcMain.handle('file:rename', async (event, oldPath, newFileName) => {
+    try {
+        const directory = path.dirname(oldPath);
+        const newPath = path.join(directory, newFileName);
+
+        // Check if file with new name already exists
+        try {
+            await fs.access(newPath);
+            return { success: false, error: 'A file with this name already exists' };
+        } catch {
+            // File doesn't exist, safe to rename
+        }
+
+        await fs.rename(oldPath, newPath);
+        return { success: true, newPath };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});

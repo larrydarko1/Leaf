@@ -38,13 +38,40 @@
 								<line x1="10" y1="11" x2="10" y2="17"></line>
 								<line x1="14" y1="11" x2="14" y2="17"></line>
 							</svg>
+					</button>
+					<button @click="renameSelectedFile" class="btn-menu-icon" :disabled="!selectedFile" title="Rename note">
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<path d="M12 20h9"></path>
+							<path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+						</svg>
+					</button>
+					<button @click="toggleTheme" class="btn-menu-icon" title="Toggle theme">
+							<!-- Sun icon for dark theme -->
+							<svg v-if="currentTheme === 'dark-theme'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<circle cx="12" cy="12" r="5"></circle>
+								<line x1="12" y1="1" x2="12" y2="3"></line>
+								<line x1="12" y1="21" x2="12" y2="23"></line>
+								<line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+								<line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+								<line x1="1" y1="12" x2="3" y2="12"></line>
+								<line x1="21" y1="12" x2="23" y2="12"></line>
+								<line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+								<line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+							</svg>
+							<!-- Moon icon for light theme -->
+							<svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+							</svg>
 						</button>
 					</div>
 					<FileExplorer
 						:files="files"
 						:current-folder="currentFolder"
 						:selected-file="selectedFile"
+						:renaming-file="renamingFile"
 						@select-file="handleFileSelect"
+						@rename="handleFileRename"
+						@cancel-rename="cancelRename"
 					/>
 				</aside>
 
@@ -65,13 +92,19 @@ import FileExplorer from './components/FileExplorer.vue';
 import NoteEditor from './components/NoteEditor.vue';
 import type { FileInfo } from './types/electron';
 
-const currentTheme = ref('dark');
+const currentTheme = ref('dark-theme');
 const currentFolder = ref<string | null>(null);
 const files = ref<FileInfo[]>([]);
 const selectedFile = ref<FileInfo | null>(null);
+const renamingFile = ref<FileInfo | null>(null);
 
-// Load saved folder path from localStorage
+// Load saved folder path and theme from localStorage
 onMounted(() => {
+	const savedTheme = localStorage.getItem('leaf-theme');
+	if (savedTheme) {
+		currentTheme.value = savedTheme;
+	}
+	
 	const savedFolder = localStorage.getItem('leaf-folder-path');
 	if (savedFolder) {
 		loadFolder(savedFolder);
@@ -193,6 +226,46 @@ async function deleteSelectedFile() {
 		alert('Error deleting file');
 	}
 }
+
+async function renameSelectedFile() {
+	if (!selectedFile.value) return;
+	renamingFile.value = selectedFile.value;
+}
+
+function cancelRename() {
+	renamingFile.value = null;
+}
+
+async function handleFileRename(file: FileInfo, newName: string) {
+	const extension = file.name.substring(file.name.lastIndexOf('.'));
+	const newFileName = newName + extension;
+	
+	try {
+		const result = await window.electronAPI.renameFile(file.path, newFileName);
+		if (result.success && result.newPath) {
+			renamingFile.value = null;
+			// Refresh the file list
+			await refreshFiles();
+			// Select the renamed file
+			const renamedFile = files.value.find(f => f.path === result.newPath);
+			if (renamedFile) {
+				selectedFile.value = renamedFile;
+			}
+		} else {
+			renamingFile.value = null;
+			alert('Failed to rename file: ' + result.error);
+		}
+	} catch (error) {
+		renamingFile.value = null;
+		console.error('Error renaming file:', error);
+		alert('Error renaming file');
+	}
+}
+
+function toggleTheme() {
+	currentTheme.value = currentTheme.value === 'dark-theme' ? 'light-theme' : 'dark-theme';
+	localStorage.setItem('leaf-theme', currentTheme.value);
+}
 </script>
 
 <style lang="scss">
@@ -207,8 +280,8 @@ async function deleteSelectedFile() {
 	flex-direction: column;
 	width: 100%;
 	height: 100%;
-	background: var(--bg-primary);
-	color: var(--text-primary);
+	background: var(--base1);
+	color: var(--text1);
 }
 
 // Welcome Screen
@@ -217,7 +290,7 @@ async function deleteSelectedFile() {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: var(--bg-primary);
+	background: var(--base1);
 }
 
 .welcome-content {
@@ -230,19 +303,19 @@ async function deleteSelectedFile() {
 	font-size: 3rem;
 	font-weight: 600;
 	margin: 0 0 0.5rem 0;
-	color: var(--text-primary);
+	color: var(--text1);
 }
 
 .app-subtitle {
 	font-size: 1.2rem;
-	color: var(--text-secondary);
+	color: var(--text2);
 	margin: 0 0 2rem 0;
 }
 
 .btn-primary {
 	padding: 1rem 2rem;
-	background: var(--accent-color);
-	color: white;
+	background: var(--base2);
+	color: var(--base1);
 	border: none;
 	border-radius: 8px;
 	font-size: 1rem;
@@ -251,16 +324,16 @@ async function deleteSelectedFile() {
 	transition: all 0.2s;
 	
 	&:hover {
-		background: var(--accent-hover);
+		opacity: 0.9;
 		transform: translateY(-2px);
-		box-shadow: 0 4px 12px rgba(107, 155, 110, 0.3);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 	}
 }
 
 .hint {
 	margin-top: 1rem;
 	font-size: 0.9rem;
-	color: var(--text-tertiary);
+	color: var(--text2);
 }
 
 // Main App Layout
@@ -274,15 +347,14 @@ async function deleteSelectedFile() {
 	width: 300px;
 	display: flex;
 	flex-direction: column;
-	border-right: 1px solid var(--border-color);
-	background: var(--bg-secondary);
+	border-right: 1px solid var(--text3);
+	background: var(--base3);
 }
 
 .sidebar-header {
-	// Keep empty for spacing with OS window controls
 	height: 52px;
-	background: var(--bg-secondary);
-	border-bottom: 1px solid var(--border-color);
+	background: var(--base3);
+	border-bottom: 1px solid var(--text3);
 	-webkit-app-region: drag;
 }
 
@@ -291,15 +363,15 @@ async function deleteSelectedFile() {
 	align-items: center;
 	gap: 0.25rem;
 	padding: 0.5rem 0.75rem;
-	border-bottom: 1px solid var(--border-color);
-	background: var(--bg-secondary);
+	border-bottom: 1px solid var(--text3);
+	background: var(--base3);
 	-webkit-app-region: drag;
 }
 
 .btn-menu-icon {
 	background: none;
 	border: none;
-	color: var(--text-secondary);
+	color: var(--text2);
 	cursor: pointer;
 	padding: 0.375rem;
 	border-radius: 4px;
@@ -310,8 +382,8 @@ async function deleteSelectedFile() {
 	-webkit-app-region: no-drag;
 	
 	&:hover:not(:disabled) {
-		background: var(--bg-hover);
-		color: var(--text-primary);
+		background: var(--base1);
+		color: var(--text1);
 	}
 	
 	&:disabled {
@@ -331,17 +403,24 @@ async function deleteSelectedFile() {
 	overflow: hidden;
 }
 
-// Dark theme variables (default)
-.dark {
-	--bg-primary: #1a1a1a;
-	--bg-secondary: #242424;
-	--bg-tertiary: #2d2d2d;
-	--bg-hover: #383838;
-	--text-primary: #e0e0e0;
-	--text-secondary: #a0a0a0;
-	--text-tertiary: #707070;
-	--border-color: #383838;
-	--accent-color: #6b9b6e;
-	--accent-hover: #7cb37f;
+// Theme color palettes
+.light-theme {
+	--text1: #000000;
+	--text2: #4a4a4a;
+	--text3: #cdcdcd;
+	--base1: #e8e8e8;
+	--base2: #000000;
+	--base3: #cdcdcd;
+	--base4: #ffffff;
+}
+
+.dark-theme {
+	--text1: #ffffff;
+	--text2: #b0b0b0;
+	--text3: #282828;
+	--base1: #121212;
+	--base2: #ffffff;
+	--base3: #282828;
+	--base4: #000000;
 }
 </style>
