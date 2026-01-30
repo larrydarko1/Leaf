@@ -26,7 +26,7 @@
       
       <div v-if="files.length === 0" class="empty-state">
         <p>No notes found.</p>
-        <p class="hint">Create .txt, .md, or .rtf files to get started.</p>
+        <p class="hint">Create .txt or .md files to get started.</p>
       </div>
     </div>
   </div>

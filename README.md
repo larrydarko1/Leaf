@@ -12,7 +12,7 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 
 ### Note Management
 - **Vault-based system** - Select any folder as your vault
-- **Multi-format support** - Read and edit `.txt`, `.md`, and `.rtf` files
+- **Multi-format support** - Read and edit `.txt` and `.md` (Markdown) files
 - **File browser** - Navigate your notes with a simple file list
 - **Auto-save** - Changes save automatically as you type
 

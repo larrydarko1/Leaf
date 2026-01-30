@@ -89,10 +89,10 @@ ipcMain.handle('dialog:openFolder', async () => {
     return result.filePaths[0];
 });
 
-// Recursively scan a folder for .txt, .md, and .rtf files
+// Recursively scan a folder for .txt and .md files
 async function scanFolder(folderPath, basePath = folderPath) {
     const files = [];
-    const allowedExtensions = ['.txt', '.md', '.rtf'];
+    const allowedExtensions = ['.txt', '.md'];
 
     try {
         const entries = await fs.readdir(folderPath, { withFileTypes: true });
