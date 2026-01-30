@@ -10,9 +10,18 @@ export interface FileInfo {
     folder: string;
 }
 
+export interface FolderInfo {
+    name: string;
+    path: string;
+    relativePath: string;
+    type: 'folder';
+    folder: string;
+}
+
 export interface ScanResult {
     success: boolean;
     files?: FileInfo[];
+    folders?: FolderInfo[];
     error?: string;
 }
 
@@ -32,6 +41,13 @@ export interface FileCreateResult {
     path?: string;
     error?: string;
 }
+
+export interface FolderCreateResult {
+    success: boolean;
+    path?: string;
+    error?: string;
+}
+
 export interface FileDeleteResult {
     success: boolean;
     error?: string;
@@ -48,6 +64,7 @@ export interface ElectronAPI {
     openFolderDialog: () => Promise<string | null>;
     scanFolder: (folderPath: string) => Promise<ScanResult>;
     readFile: (filePath: string) => Promise<FileReadResult>;
+    createFolder: (parentPath: string, folderName: string) => Promise<FolderCreateResult>;
     writeFile: (filePath: string, content: string) => Promise<FileWriteResult>;
     createFile: (folderPath: string, fileName: string) => Promise<FileCreateResult>;
     deleteFile: (filePath: string) => Promise<FileDeleteResult>;

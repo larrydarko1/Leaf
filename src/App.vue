@@ -31,6 +31,13 @@
 								<line x1="9" y1="15" x2="15" y2="15"></line>
 							</svg>
 						</button>
+						<button @click="createNewFolder" class="btn-menu-icon" title="Create new folder">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+								<line x1="12" y1="11" x2="12" y2="17"></line>
+								<line x1="9" y1="14" x2="15" y2="14"></line>
+							</svg>
+						</button>
 						<button @click="deleteSelectedFile" class="btn-menu-icon" :disabled="!selectedFile" title="Delete note">
 							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 								<polyline points="3 6 5 6 21 6"></polyline>
@@ -66,6 +73,7 @@
 					</div>
 					<FileExplorer
 						:files="files"
+						:folders="folders"
 						:current-folder="currentFolder"
 						:selected-file="selectedFile"
 						:renaming-file="renamingFile"
@@ -90,11 +98,12 @@
 import { ref, onMounted } from 'vue';
 import FileExplorer from './components/FileExplorer.vue';
 import NoteEditor from './components/NoteEditor.vue';
-import type { FileInfo } from './types/electron';
+import type { FileInfo, FolderInfo } from './types/electron';
 
 const currentTheme = ref('dark-theme');
 const currentFolder = ref<string | null>(null);
 const files = ref<FileInfo[]>([]);
+const folders = ref<FolderInfo[]>([]);
 const selectedFile = ref<FileInfo | null>(null);
 const renamingFile = ref<FileInfo | null>(null);
 
@@ -130,6 +139,7 @@ async function loadFolder(folderPath: string) {
 		if (result.success && result.files) {
 			currentFolder.value = folderPath;
 			files.value = result.files;
+			folders.value = result.folders || [];
 			
 			// Auto-select first file if available
 			if (files.value.length > 0 && !selectedFile.value) {
@@ -163,6 +173,7 @@ async function refreshFiles() {
 function changeFolder() {
 	currentFolder.value = null;
 	files.value = [];
+	folders.value = [];
 	selectedFile.value = null;
 	localStorage.removeItem('leaf-folder-path');
 }
@@ -200,6 +211,26 @@ async function createNewFile() {
 	} catch (error) {
 		console.error('Error creating file:', error);
 		alert('Error creating file');
+	}
+}
+
+async function createNewFolder() {
+	if (!currentFolder.value) return;
+	
+	// Generate a unique folder name with timestamp
+	const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+	const folderName = `folder-${timestamp}`;
+	
+	try {
+		const result = await window.electronAPI.createFolder(currentFolder.value, folderName);
+		if (result.success) {
+			// Refresh the file list to show the new folder
+			await refreshFiles();
+		} else {
+			console.error('Failed to create folder:', result.error);
+		}
+	} catch (error) {
+		console.error('Error creating folder:', error);
 	}
 }
 

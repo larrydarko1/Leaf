@@ -92,6 +92,7 @@ ipcMain.handle('dialog:openFolder', async () => {
 // Recursively scan a folder for .txt and .md files
 async function scanFolder(folderPath, basePath = folderPath) {
     const files = [];
+    const folders = [];
     const allowedExtensions = ['.txt', '.md'];
 
     try {
@@ -102,9 +103,19 @@ async function scanFolder(folderPath, basePath = folderPath) {
             const relativePath = path.relative(basePath, fullPath);
 
             if (entry.isDirectory()) {
+                // Add the folder itself
+                folders.push({
+                    name: entry.name,
+                    path: fullPath,
+                    relativePath: relativePath,
+                    type: 'folder',
+                    folder: path.dirname(relativePath)
+                });
+
                 // Recursively scan subdirectories
-                const subFiles = await scanFolder(fullPath, basePath);
-                files.push(...subFiles);
+                const subResult = await scanFolder(fullPath, basePath);
+                files.push(...subResult.files);
+                folders.push(...subResult.folders);
             } else if (entry.isFile()) {
                 const ext = path.extname(entry.name).toLowerCase();
                 if (allowedExtensions.includes(ext)) {
@@ -125,14 +136,14 @@ async function scanFolder(folderPath, basePath = folderPath) {
         console.error('Error scanning folder:', error);
     }
 
-    return files;
+    return { files, folders };
 }
 
 // Get all files from a folder
 ipcMain.handle('files:scan', async (event, folderPath) => {
     try {
-        const files = await scanFolder(folderPath);
-        return { success: true, files };
+        const result = await scanFolder(folderPath);
+        return { success: true, files: result.files, folders: result.folders };
     } catch (error) {
         return { success: false, error: error.message };
     }
@@ -164,6 +175,26 @@ ipcMain.handle('file:create', async (event, folderPath, fileName) => {
         const filePath = path.join(folderPath, fileName);
         await fs.writeFile(filePath, '', 'utf-8');
         return { success: true, path: filePath };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+// Create a new folder
+ipcMain.handle('folder:create', async (event, parentPath, folderName) => {
+    try {
+        const folderPath = path.join(parentPath, folderName);
+
+        // Check if folder already exists
+        try {
+            await fs.access(folderPath);
+            return { success: false, error: 'A folder with this name already exists' };
+        } catch {
+            // Folder doesn't exist, proceed with creation
+        }
+
+        await fs.mkdir(folderPath, { recursive: true });
+        return { success: true, path: folderPath };
     } catch (error) {
         return { success: false, error: error.message };
     }

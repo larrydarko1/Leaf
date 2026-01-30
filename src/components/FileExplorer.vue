@@ -1,28 +1,22 @@
 <template>
   <div class="file-explorer">
     <div class="file-list">
-      <div
-        v-for="file in sortedFiles"
-        :key="file.path"
-        class="file-item"
-        :class="{ active: selectedFile?.path === file.path, renaming: renamingFile?.path === file.path }"
-        @click="selectFile(file)"
-      >
-        <div class="file-info">
-          <input
-            v-if="renamingFile?.path === file.path"
-            ref="renameInput"
-            v-model="renameValue"
-            class="file-name-input"
-            @keydown.enter="confirmRename"
-            @keydown.esc="cancelRename"
-            @blur="confirmRename"
-            @click.stop
-          />
-          <div v-else class="file-name">{{ getFileNameWithoutExtension(file.name) }}</div>
-          <div class="file-folder" v-if="file.folder !== '.'">{{ file.folder }}</div>
-        </div>
-      </div>
+      <!-- Recursive folder tree component -->
+      <FolderNode
+        v-for="node in folderTree"
+        :key="node.path"
+        :node="node"
+        :depth="0"
+        :selected-file="selectedFile"
+        :renaming-file="renamingFile"
+        :rename-value="renameValue"
+        :expanded-folders="expandedFolders"
+        @select-file="selectFile"
+        @select-folder="toggleFolder"
+        @rename="confirmRename"
+        @cancel-rename="cancelRename"
+        @update-rename-value="renameValue = $event"
+      />
       
       <div v-if="files.length === 0" class="empty-state">
         <p>No notes found.</p>
@@ -33,11 +27,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, nextTick, watch } from 'vue';
-import type { FileInfo } from '../types/electron';
+import { computed, ref, watch } from 'vue';
+import type { FileInfo, FolderInfo } from '../types/electron';
+import FolderNode, { type TreeNode } from './FolderNode.vue';
 
 const props = defineProps<{
   files: FileInfo[];
+  folders?: FolderInfo[];
   currentFolder: string | null;
   selectedFile: FileInfo | null;
   renamingFile: FileInfo | null;
@@ -49,16 +45,106 @@ const emit = defineEmits<{
   cancelRename: [];
 }>();
 
-const renameInput = ref<HTMLInputElement | null>(null);
 const renameValue = ref('');
+const expandedFolders = ref<Set<string>>(new Set());
 
-const sortedFiles = computed(() => {
-  return [...props.files].sort((a, b) => {
-    // Sort by folder first, then by name
-    const folderCompare = a.folder.localeCompare(b.folder);
-    if (folderCompare !== 0) return folderCompare;
-    return a.name.localeCompare(b.name);
+// Build a folder tree from flat file list
+const folderTree = computed(() => {
+  const root: TreeNode[] = [];
+  const folderMap = new Map<string, TreeNode>();
+
+  // First pass: create folder nodes from explicit folders list
+  if (props.folders) {
+    props.folders.forEach(folder => {
+      if (!folderMap.has(folder.relativePath)) {
+        const folderNode: TreeNode = {
+          path: folder.relativePath,
+          name: folder.name,
+          type: 'folder',
+          children: []
+        };
+        folderMap.set(folder.relativePath, folderNode);
+      }
+    });
+  }
+
+  // Second pass: create folder nodes from file paths (for backwards compatibility)
+  props.files.forEach(file => {
+    if (file.folder === '.') return;
+    
+    const parts = file.folder.split(/[/\\]/);
+    let currentPath = '';
+    
+    parts.forEach((part) => {
+      currentPath = currentPath ? `${currentPath}/${part}` : part;
+      
+      if (!folderMap.has(currentPath)) {
+        const folderNode: TreeNode = {
+          path: currentPath,
+          name: part,
+          type: 'folder',
+          children: []
+        };
+        folderMap.set(currentPath, folderNode);
+      }
+    });
   });
+
+  // Third pass: build the tree hierarchy
+  folderMap.forEach((node, path) => {
+    const parentPath = path.substring(0, path.lastIndexOf('/'));
+    if (parentPath === '' || !parentPath) {
+      // Top-level folder
+      root.push(node);
+    } else {
+      // Nested folder - add to parent
+      const parent = folderMap.get(parentPath);
+      if (parent && parent.children) {
+        parent.children.push(node);
+      }
+    }
+  });
+
+  // Fourth pass: add files to their folders and root
+  props.files.forEach(file => {
+    const fileNode: TreeNode = {
+      path: file.path,
+      name: getFileNameWithoutExtension(file.name),
+      type: 'file',
+      file
+    };
+
+    if (file.folder === '.') {
+      // Add to root
+      root.push(fileNode);
+    } else {
+      // Add to folder
+      const parent = folderMap.get(file.folder);
+      if (parent && parent.children) {
+        parent.children.push(fileNode);
+      }
+    }
+  });
+
+  // Sort everything
+  const sortNodes = (nodes: TreeNode[]) => {
+    nodes.sort((a, b) => {
+      // Folders first, then files
+      if (a.type !== b.type) {
+        return a.type === 'folder' ? -1 : 1;
+      }
+      return a.name.localeCompare(b.name);
+    });
+    
+    nodes.forEach(node => {
+      if (node.children) {
+        sortNodes(node.children);
+      }
+    });
+  };
+
+  sortNodes(root);
+  return root;
 });
 
 function getFileNameWithoutExtension(fileName: string): string {
@@ -70,6 +156,16 @@ function selectFile(file: FileInfo) {
   if (!props.renamingFile) {
     emit('selectFile', file);
   }
+}
+
+function toggleFolder(folderPath: string) {
+  if (expandedFolders.value.has(folderPath)) {
+    expandedFolders.value.delete(folderPath);
+  } else {
+    expandedFolders.value.add(folderPath);
+  }
+  // Trigger reactivity
+  expandedFolders.value = new Set(expandedFolders.value);
 }
 
 function confirmRename() {
@@ -89,19 +185,66 @@ function cancelRename() {
   emit('cancelRename');
 }
 
-// Watch for renaming file changes and focus input
+// Watch for renaming file changes
 watch(() => props.renamingFile, (newRenamingFile) => {
   if (newRenamingFile) {
     const fileName = getFileNameWithoutExtension(newRenamingFile.name);
     renameValue.value = fileName;
-    nextTick(() => {
-      if (renameInput.value) {
-        renameInput.value.focus();
-        renameInput.value.select();
-      }
-    });
   }
 });
+
+// Helper to get all folder paths from files and explicit folders
+const allFolderPaths = computed(() => {
+  const paths = new Set<string>();
+  
+  // Add explicit folders
+  if (props.folders) {
+    props.folders.forEach(folder => {
+      paths.add(folder.relativePath);
+    });
+  }
+  
+  // Add folders from file paths
+  props.files.forEach(file => {
+    if (file.folder === '.') return;
+    const parts = file.folder.split(/[/\\]/);
+    let currentPath = '';
+    parts.forEach(part => {
+      currentPath = currentPath ? `${currentPath}/${part}` : part;
+      paths.add(currentPath);
+    });
+  });
+  
+  return paths;
+});
+
+// Load expanded folders from localStorage
+watch(() => props.currentFolder, (newFolder) => {
+  if (newFolder) {
+    const saved = localStorage.getItem(`leaf-expanded-folders-${newFolder}`);
+    if (saved) {
+      try {
+        expandedFolders.value = new Set(JSON.parse(saved));
+      } catch (e) {
+        // If parse fails, expand all by default
+        expandedFolders.value = new Set(allFolderPaths.value);
+      }
+    } else {
+      // By default, expand all folders
+      expandedFolders.value = new Set(allFolderPaths.value);
+    }
+  }
+}, { immediate: true });
+
+// Save expanded folders to localStorage
+watch(expandedFolders, (newExpanded) => {
+  if (props.currentFolder) {
+    localStorage.setItem(
+      `leaf-expanded-folders-${props.currentFolder}`,
+      JSON.stringify(Array.from(newExpanded))
+    );
+  }
+}, { deep: true });
 </script>
 
 <style scoped lang="scss">
@@ -118,77 +261,6 @@ watch(() => props.renamingFile, (newRenamingFile) => {
   padding: 0.25rem 0;
 }
 
-.file-item {
-  display: flex;
-  align-items: center;
-  padding: 0.625rem 1rem;
-  margin-bottom: 0.125rem;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  border-radius: 5px;
-  
-  &:hover {
-    background: var(--base1);
-    margin-left: 10px;
-  }
-  
-  &.active {
-    background: var(--base1);
-    margin-left: 10px;
-    
-    .file-name {
-      color: var(--base2);
-      font-weight: 500;
-    }
-  }
-  
-  &.renaming {
-    cursor: default;
-  }
-}
-
-.file-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.file-name {
-  font-size: 0.875rem;
-  color: var(--text1);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.4;
-}
-
-.file-name-input {
-  font-size: 0.875rem;
-  color: var(--text1);
-  background: var(--base4);
-  border: none;
-  border-radius: 5px;
-  padding: 0.15rem 0.35rem;
-  width: 100%;
-  outline: none;
-  font-family: inherit;
-  font-weight: 500;
-  line-height: 1.4;
-  transition: border-color 0.15s ease;
-  
-  &:focus {
-    background: var(--base3);
-  }
-}
-
-.file-folder {
-  font-size: 0.7rem;
-  color: var(--text2);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-top: 0.125rem;
-}
-
 .empty-state {
   padding: 2rem 1rem;
   text-align: center;
@@ -202,6 +274,26 @@ watch(() => props.renamingFile, (newRenamingFile) => {
   .hint {
     font-size: 0.8rem;
     color: var(--text2);
+  }
+}
+
+// Scrollbar styling
+.file-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.file-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.file-list::-webkit-scrollbar-thumb {
+  background: var(--text2);
+  border-radius: 4px;
+  opacity: 0.3;
+  
+  &:hover {
+    background: var(--text1);
+    opacity: 0.5;
   }
 }
 </style>

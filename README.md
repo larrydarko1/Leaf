@@ -140,29 +140,6 @@ leaf/
 └── vite.config.ts
 ```
 
-## Roadmap
-
-### Current Features
-- [x] Electron desktop app
-- [x] Local-first architecture
-- [x] Dark theme
-- [x] Folder selection for vault
-- [x] File browser with list view
-- [x] Text editor with auto-save
-- [x] Create and delete files
-- [x] `.txt`, `.md`, and `.rtf` file support
-- [x] Keyboard shortcuts (Cmd/Ctrl+S to save)
-
-### Planned Features
-- [ ] Markdown live preview
-- [ ] Full-text search across vault
-- [ ] Tree view for nested folders
-- [ ] Tags and metadata
-- [ ] Wikilinks support (`[[note]]`)
-- [ ] Graph view of note connections
-- [ ] Light theme
-- [ ] More keyboard shortcuts
-
 ## Contributing
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
