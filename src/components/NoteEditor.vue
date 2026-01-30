@@ -153,7 +153,9 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--base1);
+  background: transparent;
+  position: relative;
+  overflow: hidden;
 }
 
 .editor-header {
@@ -161,9 +163,14 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 1.5rem;
-  border-bottom: 1px solid var(--text3);
-  background: var(--base3);
+  border-bottom: 1px solid color-mix(in srgb, var(--text3) 60%, transparent);
+  background: transparent;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   -webkit-app-region: drag;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .file-info {
@@ -197,7 +204,7 @@ onUnmounted(() => {
   font-weight: 500;
   text-transform: uppercase;
   color: var(--base2);
-  background: var(--base4);
+  background: transparent;
   border: 1px solid var(--base2);
   border-radius: 3px;
   opacity: 0.7;
@@ -224,11 +231,11 @@ onUnmounted(() => {
 .editor-textarea {
   flex: 1;
   padding: 2rem;
-  background: var(--base1);
+  background: transparent;
   color: var(--text1);
   border: none;
   outline: none;
-  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-family: Helvetica, sans-serif;
   font-size: 1rem;
   line-height: 1.6;
   resize: none;
