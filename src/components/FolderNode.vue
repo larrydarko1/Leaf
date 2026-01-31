@@ -100,6 +100,23 @@
         <polygon points="23 7 16 12 23 17 23 7"></polygon>
         <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
       </svg>
+      <!-- Audio icon for audio files -->
+      <svg 
+        v-else-if="isAudioFile"
+        class="file-icon" 
+        width="14" 
+        height="14" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-width="2" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"
+      >
+        <path d="M9 18V5l12-2v13"></path>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="16" r="3"></circle>
+      </svg>
       <!-- Code icon for code files -->
       <svg 
         v-else-if="isCodeFile"
@@ -218,6 +235,9 @@ const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp
 // Video file extensions
 const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
 
+// Audio file extensions
+const audioExtensions = ['.mp3', '.wav', '.flac', '.aac', '.m4a', '.ogg', '.wma', '.aiff'];
+
 // Code file extensions
 const codeExtensions = [
   '.py', '.js', '.jsx', '.ts', '.tsx', '.html', '.htm', '.css', '.scss', '.sass', '.less',
@@ -237,6 +257,11 @@ const isImageFile = computed(() => {
 const isVideoFile = computed(() => {
   if (props.node.type !== 'file' || !props.node.file) return false;
   return videoExtensions.includes(props.node.file.extension.toLowerCase());
+});
+
+const isAudioFile = computed(() => {
+  if (props.node.type !== 'file' || !props.node.file) return false;
+  return audioExtensions.includes(props.node.file.extension.toLowerCase());
 });
 
 const isCodeFile = computed(() => {

@@ -15,6 +15,7 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 - **Multi-format support** - Read and edit `.txt` and `.md` (Markdown) files
 - **Image support** - View images directly in the app (`.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.svg`, `.bmp`, `.ico`)
 - **Video support** - Play videos directly in the app (`.mp4`, `.webm`, `.ogg`, `.mov`, `.avi`, `.mkv`)
+- **Audio support** - Play audio files directly in the app (`.mp3`, `.wav`, `.flac`, `.aac`, `.m4a`, `.ogg`, `.wma`, `.aiff`)
 - **File browser** - Navigate your notes with a tree-based folder structure
 - **Drag & drop organization** - Move files between folders with drag and drop
 - **Folder nesting** - Organize folders by dragging them into other folders
@@ -120,7 +121,7 @@ After building:
 ## Tech Stack
 - **Desktop:** Electron (Native macOS, Windows, Linux app)
 - **Frontend:** Vue 3, TypeScript, Vite, SCSS
-- **Storage:** Plain text files (txt, md), images, and videos in your local vault
+- **Storage:** Plain text files (txt, md), images, videos, and audio in your local vault
 - **Build Tools:** Vite + Electron Builder
 
 ## Project Structure

@@ -37,6 +37,12 @@ export interface ImageReadResult {
     error?: string;
 }
 
+export interface AudioReadResult {
+    success: boolean;
+    dataUrl?: string;
+    error?: string;
+}
+
 export interface FileWriteResult {
     success: boolean;
     error?: string;
@@ -94,6 +100,7 @@ export interface ElectronAPI {
     scanFolder: (folderPath: string) => Promise<ScanResult>;
     readFile: (filePath: string) => Promise<FileReadResult>;
     readImage: (filePath: string) => Promise<ImageReadResult>;
+    readAudio: (filePath: string) => Promise<AudioReadResult>;
     createFolder: (parentPath: string, folderName: string) => Promise<FolderCreateResult>;
     writeFile: (filePath: string, content: string) => Promise<FileWriteResult>;
     createFile: (folderPath: string, fileName: string) => Promise<FileCreateResult>;

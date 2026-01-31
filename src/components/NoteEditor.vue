@@ -50,9 +50,49 @@
       </div>
     </div>
     
+    <!-- Audio player for audio files -->
+    <div v-else-if="file && isAudioFile" class="audio-viewer">
+      <div class="audio-container">
+        <div class="audio-icon">
+          <svg 
+            width="80" 
+            height="80" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            stroke-width="1.5" 
+            stroke-linecap="round" 
+            stroke-linejoin="round"
+          >
+            <path d="M9 18V5l12-2v13"></path>
+            <circle cx="6" cy="18" r="3"></circle>
+            <circle cx="18" cy="16" r="3"></circle>
+          </svg>
+        </div>
+        <div v-if="isLoadingAudio" class="audio-loading">
+          <p>Loading audio...</p>
+        </div>
+        <audio 
+          v-else-if="audioUrl && !audioError"
+          ref="audioRef"
+          :src="audioUrl"
+          :key="audioUrl"
+          class="audio-preview"
+          controls
+          @error="onAudioError"
+        >
+          Your browser does not support the audio element.
+        </audio>
+        <div v-if="audioError" class="audio-error">
+          <p>Failed to load audio</p>
+          <p class="audio-error-hint">This format may not be supported</p>
+        </div>
+      </div>
+    </div>
+    
     <!-- Text editor for text files -->
     <textarea
-      v-else-if="file && !isImageFile && !isVideoFile"
+      v-else-if="file && !isImageFile && !isVideoFile && !isAudioFile"
       v-model="content"
       class="editor-textarea"
       :class="{ 'code-editor': isCodeFile }"
@@ -105,6 +145,9 @@ const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp
 // Video file extensions
 const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
 
+// Audio file extensions
+const audioExtensions = ['.mp3', '.wav', '.flac', '.aac', '.m4a', '.ogg', '.wma', '.aiff'];
+
 // Code file extensions
 const codeExtensions = [
   '.py', '.js', '.jsx', '.ts', '.tsx', '.html', '.htm', '.css', '.scss', '.sass', '.less',
@@ -124,6 +167,12 @@ const isLoadingImage = ref(false);
 const videoUrl = ref('');
 const videoRef = ref<HTMLVideoElement | null>(null);
 
+// Audio state
+const audioUrl = ref('');
+const audioRef = ref<HTMLAudioElement | null>(null);
+const audioError = ref(false);
+const isLoadingAudio = ref(false);
+
 // Check if current file is an image
 const isImageFile = computed(() => {
   if (!props.file) return false;
@@ -134,6 +183,12 @@ const isImageFile = computed(() => {
 const isVideoFile = computed(() => {
   if (!props.file) return false;
   return videoExtensions.includes(props.file.extension.toLowerCase());
+});
+
+// Check if current file is an audio file
+const isAudioFile = computed(() => {
+  if (!props.file) return false;
+  return audioExtensions.includes(props.file.extension.toLowerCase());
 });
 
 // Check if current file is a code file
@@ -168,12 +223,38 @@ function onVideoError() {
   videoError.value = true;
 }
 
+function onAudioError() {
+  audioError.value = true;
+}
+
 function onImageLoad() {
   imageError.value = false;
 }
 
 function onImageError() {
   imageError.value = true;
+}
+
+// Load audio via IPC for reliable base64 data URL
+async function loadAudio(filePath: string) {
+  isLoadingAudio.value = true;
+  audioError.value = false;
+  audioUrl.value = '';
+  
+  try {
+    const result = await window.electronAPI.readAudio(filePath);
+    if (result.success && result.dataUrl) {
+      audioUrl.value = result.dataUrl;
+    } else {
+      console.error('Failed to load audio:', result.error);
+      audioError.value = true;
+    }
+  } catch (error) {
+    console.error('Error loading audio:', error);
+    audioError.value = true;
+  } finally {
+    isLoadingAudio.value = false;
+  }
 }
 
 function getFileNameWithoutExtension(fileName: string): string {
@@ -186,8 +267,10 @@ watch(() => props.file, async (newFile) => {
   // Reset error states
   imageError.value = false;
   videoError.value = false;
+  audioError.value = false;
   imageUrl.value = '';
   videoUrl.value = '';
+  audioUrl.value = '';
   
   if (newFile) {
     const ext = newFile.extension.toLowerCase();
@@ -205,6 +288,13 @@ watch(() => props.file, async (newFile) => {
       videoUrl.value = `file://${newFile.path}`;
       videoError.value = false;
       // Clear text content for video files
+      content.value = '';
+      originalContent.value = '';
+      hasUnsavedChanges.value = false;
+    } else if (audioExtensions.includes(ext)) {
+      // Load audio via IPC for better format compatibility
+      await loadAudio(newFile.path);
+      // Clear text content for audio files
       content.value = '';
       originalContent.value = '';
       hasUnsavedChanges.value = false;
@@ -299,6 +389,20 @@ function handleKeyboard(e: KeyboardEvent) {
       videoRef.value.play();
     } else {
       videoRef.value.pause();
+    }
+  }
+  
+  // Spacebar to toggle audio play/pause (only when not in textarea)
+  if (e.key === ' ' && isAudioFile.value && audioRef.value) {
+    // Don't trigger if user is typing in an input or textarea
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+    
+    e.preventDefault();
+    if (audioRef.value.paused) {
+      audioRef.value.play();
+    } else {
+      audioRef.value.pause();
     }
   }
 }
@@ -500,6 +604,67 @@ onUnmounted(() => {
   }
   
   .video-error-hint {
+    font-size: 0.85rem;
+    opacity: 0.7;
+  }
+}
+
+.audio-viewer {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  overflow: auto;
+  -webkit-app-region: no-drag;
+  background: var(--base1);
+}
+
+.audio-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  max-width: 500px;
+  width: 100%;
+}
+
+.audio-icon {
+  color: var(--text2);
+  opacity: 0.6;
+}
+
+.audio-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text2);
+  
+  p {
+    margin: 0.5rem 0;
+    font-size: 1rem;
+  }
+}
+
+.audio-preview {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.audio-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text2);
+  
+  p {
+    margin: 0.5rem 0;
+    font-size: 1rem;
+  }
+  
+  .audio-error-hint {
     font-size: 0.85rem;
     opacity: 0.7;
   }

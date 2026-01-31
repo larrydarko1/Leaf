@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     scanFolder: (folderPath) => ipcRenderer.invoke('files:scan', folderPath),
     readFile: (filePath) => ipcRenderer.invoke('file:read', filePath),
     readImage: (filePath) => ipcRenderer.invoke('file:readImage', filePath),
+    readAudio: (filePath) => ipcRenderer.invoke('file:readAudio', filePath),
     writeFile: (filePath, content) => ipcRenderer.invoke('file:write', filePath, content),
     createFile: (folderPath, fileName) => ipcRenderer.invoke('file:create', folderPath, fileName),
     createFolder: (parentPath, folderName) => ipcRenderer.invoke('folder:create', parentPath, folderName),

@@ -112,7 +112,9 @@ async function scanFolder(folderPath, basePath = folderPath) {
     const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico'];
     // Video files
     const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
-    const allowedExtensions = [...textExtensions, ...codeExtensions, ...imageExtensions, ...videoExtensions];
+    // Audio files
+    const audioExtensions = ['.mp3', '.wav', '.flac', '.aac', '.m4a', '.ogg', '.wma', '.aiff'];
+    const allowedExtensions = [...textExtensions, ...codeExtensions, ...imageExtensions, ...videoExtensions, ...audioExtensions];
 
     try {
         const entries = await fs.readdir(folderPath, { withFileTypes: true });
@@ -195,6 +197,30 @@ ipcMain.handle('file:readImage', async (event, filePath) => {
         const mimeType = mimeTypes[ext] || 'image/png';
         const imageBuffer = await fs.readFile(filePath);
         const base64 = imageBuffer.toString('base64');
+        const dataUrl = `data:${mimeType};base64,${base64}`;
+        return { success: true, dataUrl };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+// Read an audio file as base64 data URL
+ipcMain.handle('file:readAudio', async (event, filePath) => {
+    try {
+        const ext = path.extname(filePath).toLowerCase();
+        const mimeTypes = {
+            '.mp3': 'audio/mpeg',
+            '.wav': 'audio/wav',
+            '.flac': 'audio/flac',
+            '.aac': 'audio/aac',
+            '.m4a': 'audio/mp4',
+            '.ogg': 'audio/ogg',
+            '.wma': 'audio/x-ms-wma',
+            '.aiff': 'audio/aiff'
+        };
+        const mimeType = mimeTypes[ext] || 'audio/mpeg';
+        const audioBuffer = await fs.readFile(filePath);
+        const base64 = audioBuffer.toString('base64');
         const dataUrl = `data:${mimeType};base64,${base64}`;
         return { success: true, dataUrl };
     } catch (error) {
