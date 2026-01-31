@@ -54,7 +54,8 @@
       v-else-if="file && !isImageFile && !isVideoFile"
       v-model="content"
       class="editor-textarea"
-      :placeholder="'Start writing...'"
+      :class="{ 'code-editor': isCodeFile }"
+      :placeholder="isCodeFile ? 'Start coding...' : 'Start writing...'"
       @input="onContentChange"
     ></textarea>
     
@@ -103,6 +104,17 @@ const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp
 // Video file extensions
 const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
 
+// Code file extensions
+const codeExtensions = [
+  '.py', '.js', '.jsx', '.ts', '.tsx', '.html', '.htm', '.css', '.scss', '.sass', '.less',
+  '.vue', '.svelte', '.json', '.xml', '.yaml', '.yml', '.toml', '.ini', '.conf', '.cfg',
+  '.sh', '.bash', '.zsh', '.fish', '.ps1', '.bat', '.cmd',
+  '.c', '.cpp', '.h', '.hpp', '.cs', '.java', '.kt', '.kts', '.go', '.rs', '.rb', '.php',
+  '.swift', '.m', '.mm', '.r', '.R', '.pl', '.pm', '.lua', '.sql', '.graphql', '.gql',
+  '.dockerfile', '.env', '.gitignore', '.gitattributes', '.editorconfig', '.eslintrc',
+  '.prettierrc', '.babelrc', '.npmrc', '.nvmrc'
+];
+
 // Image loading state
 const imageUrl = ref('');
 const isLoadingImage = ref(false);
@@ -120,6 +132,12 @@ const isImageFile = computed(() => {
 const isVideoFile = computed(() => {
   if (!props.file) return false;
   return videoExtensions.includes(props.file.extension.toLowerCase());
+});
+
+// Check if current file is a code file
+const isCodeFile = computed(() => {
+  if (!props.file) return false;
+  return codeExtensions.includes(props.file.extension.toLowerCase());
 });
 
 // Load image via IPC for reliable base64 data URL
@@ -378,6 +396,17 @@ onUnmounted(() => {
   
   &::placeholder {
     color: var(--text2);
+  }
+  
+  &.code-editor {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Menlo', 'Consolas', 'DejaVu Sans Mono', monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    tab-size: 4;
+    -moz-tab-size: 4;
+    white-space: pre;
+    overflow-wrap: normal;
+    word-wrap: normal;
   }
 }
 

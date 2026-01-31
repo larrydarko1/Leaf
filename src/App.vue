@@ -48,6 +48,9 @@
 								<line x1="9" y1="14" x2="15" y2="14"></line>
 							</svg>
 						</button>
+
+						<span class="menu-divider"></span>
+						
 					<button @click="toggleTheme" class="btn-menu-icon" title="Toggle theme">
 							<!-- Sun icon for dark theme -->
 							<svg v-if="currentTheme === 'dark-theme'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -546,6 +549,14 @@ function toggleTheme() {
 	border-bottom: 1px solid var(--text3);
 	background: var(--base3);
 	-webkit-app-region: drag;
+}
+
+.menu-divider {
+	width: 1px;
+	height: 16px;
+	background: var(--text2);
+	margin: 0 0.25rem;
+	opacity: 0.6;
 }
 
 .btn-menu-icon {

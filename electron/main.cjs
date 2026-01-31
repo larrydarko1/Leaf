@@ -92,11 +92,27 @@ ipcMain.handle('dialog:openFolder', async () => {
     return result.filePaths[0];
 });
 
-// Recursively scan a folder for .txt, .md, image and video files
+// Recursively scan a folder for text, code, image and video files
 async function scanFolder(folderPath, basePath = folderPath) {
     const files = [];
     const folders = [];
-    const allowedExtensions = ['.txt', '.md', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico', '.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
+    // Text and markdown files
+    const textExtensions = ['.txt', '.md'];
+    // Code files
+    const codeExtensions = [
+        '.py', '.js', '.jsx', '.ts', '.tsx', '.html', '.htm', '.css', '.scss', '.sass', '.less',
+        '.vue', '.svelte', '.json', '.xml', '.yaml', '.yml', '.toml', '.ini', '.conf', '.cfg',
+        '.sh', '.bash', '.zsh', '.fish', '.ps1', '.bat', '.cmd',
+        '.c', '.cpp', '.h', '.hpp', '.cs', '.java', '.kt', '.kts', '.go', '.rs', '.rb', '.php',
+        '.swift', '.m', '.mm', '.r', '.R', '.pl', '.pm', '.lua', '.sql', '.graphql', '.gql',
+        '.dockerfile', '.env', '.gitignore', '.gitattributes', '.editorconfig', '.eslintrc',
+        '.prettierrc', '.babelrc', '.npmrc', '.nvmrc', '.cjs'
+    ];
+    // Image files
+    const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico'];
+    // Video files
+    const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
+    const allowedExtensions = [...textExtensions, ...codeExtensions, ...imageExtensions, ...videoExtensions];
 
     try {
         const entries = await fs.readdir(folderPath, { withFileTypes: true });

@@ -31,8 +31,8 @@
       />
       
       <div v-if="files.length === 0" class="empty-state">
-        <p>No notes found.</p>
-        <p class="hint">Create .txt or .md files to get started.</p>
+        <p>No files found.</p>
+        <p class="hint">Add text, code, or media files to get started.</p>
       </div>
     </div>
     

@@ -100,6 +100,22 @@
         <polygon points="23 7 16 12 23 17 23 7"></polygon>
         <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
       </svg>
+      <!-- Code icon for code files -->
+      <svg 
+        v-else-if="isCodeFile"
+        class="file-icon code-icon" 
+        width="14" 
+        height="14" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-width="2" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"
+      >
+        <polyline points="16 18 22 12 16 6"></polyline>
+        <polyline points="8 6 2 12 8 18"></polyline>
+      </svg>
       <!-- Document icon for text files -->
       <svg 
         v-else
@@ -202,6 +218,17 @@ const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp
 // Video file extensions
 const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
 
+// Code file extensions
+const codeExtensions = [
+  '.py', '.js', '.jsx', '.ts', '.tsx', '.html', '.htm', '.css', '.scss', '.sass', '.less',
+  '.vue', '.svelte', '.json', '.xml', '.yaml', '.yml', '.toml', '.ini', '.conf', '.cfg',
+  '.sh', '.bash', '.zsh', '.fish', '.ps1', '.bat', '.cmd',
+  '.c', '.cpp', '.h', '.hpp', '.cs', '.java', '.kt', '.kts', '.go', '.rs', '.rb', '.php',
+  '.swift', '.m', '.mm', '.r', '.R', '.pl', '.pm', '.lua', '.sql', '.graphql', '.gql',
+  '.dockerfile', '.env', '.gitignore', '.gitattributes', '.editorconfig', '.eslintrc',
+  '.prettierrc', '.babelrc', '.npmrc', '.nvmrc'
+];
+
 const isImageFile = computed(() => {
   if (props.node.type !== 'file' || !props.node.file) return false;
   return imageExtensions.includes(props.node.file.extension.toLowerCase());
@@ -210,6 +237,11 @@ const isImageFile = computed(() => {
 const isVideoFile = computed(() => {
   if (props.node.type !== 'file' || !props.node.file) return false;
   return videoExtensions.includes(props.node.file.extension.toLowerCase());
+});
+
+const isCodeFile = computed(() => {
+  if (props.node.type !== 'file' || !props.node.file) return false;
+  return codeExtensions.includes(props.node.file.extension.toLowerCase());
 });
 
 const isExpanded = computed(() => {
