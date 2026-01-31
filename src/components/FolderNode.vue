@@ -3,10 +3,13 @@
     <div
       v-if="node.type === 'folder'"
       class="folder-item"
-      :class="{ active: isSelected, renaming: isRenaming }"
+      :class="{ active: isSelected, renaming: isRenaming, 'drag-over': isDragOver }"
       :style="{ paddingLeft: (depth * 16 + 10) + 'px' }"
       @click="handleFolderClick"
       @contextmenu.prevent="$emit('contextMenu', 'folder', node.path, $event)"
+      @dragover.prevent="handleDragOver"
+      @dragleave="handleDragLeave"
+      @drop.prevent="handleDrop"
     >
       <svg 
         class="chevron" 
@@ -53,10 +56,13 @@
     <div
       v-else
       class="file-item"
-      :class="{ active: isSelected, renaming: isRenaming }"
+      :class="{ active: isSelected, renaming: isRenaming, 'is-dragging': isDragging }"
       :style="{ paddingLeft: (depth * 16 + 10) + 'px' }"
+      draggable="true"
       @click="node.file && $emit('selectFile', node.file)"
       @contextmenu.prevent="node.file && $emit('contextMenu', 'file', node.file.path, $event)"
+      @dragstart="handleDragStart"
+      @dragend="handleDragEnd"
     >
       <svg 
         class="file-icon" 
@@ -106,6 +112,7 @@
         @cancel-rename="$emit('cancelRename')"
         @update-rename-value="$emit('updateRenameValue', $event)"
         @context-menu="(type: 'file' | 'folder', path: string, event: MouseEvent) => $emit('contextMenu', type, path, event)"
+        @move-file="(filePath: string, targetFolderPath: string) => $emit('moveFile', filePath, targetFolderPath)"
       />
     </template>
   </div>
@@ -142,9 +149,12 @@ const emit = defineEmits<{
   cancelRename: [];
   updateRenameValue: [value: string];
   contextMenu: [type: 'file' | 'folder', path: string, event: MouseEvent];
+  moveFile: [filePath: string, targetFolderPath: string];
 }>();
 
 const renameInput = ref<HTMLInputElement | null>(null);
+const isDragging = ref(false);
+const isDragOver = ref(false);
 
 const isExpanded = computed(() => {
   return props.node.type === 'folder' && props.expandedFolders.has(props.node.path);
@@ -182,6 +192,55 @@ watch(isRenaming, (renaming) => {
 function handleFolderClick() {
   // Single click selects the folder
   emit('selectFolder', props.node.path);
+}
+
+function handleDragStart(event: DragEvent) {
+  if (props.node.type === 'file' && props.node.file) {
+    isDragging.value = true;
+    event.dataTransfer!.effectAllowed = 'move';
+    event.dataTransfer!.setData('text/plain', props.node.file.path);
+    
+    // Set a custom drag image if needed
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+  }
+}
+
+function handleDragEnd() {
+  isDragging.value = false;
+}
+
+function handleDragOver(event: DragEvent) {
+  if (props.node.type === 'folder') {
+    event.preventDefault();
+    isDragOver.value = true;
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+  }
+}
+
+function handleDragLeave() {
+  isDragOver.value = false;
+}
+
+function handleDrop(event: DragEvent) {
+  isDragOver.value = false;
+  
+  if (props.node.type === 'folder') {
+    const filePath = event.dataTransfer?.getData('text/plain');
+    if (filePath) {
+      // Don't allow moving to the same folder the file is already in
+      const file = props.selectedFile;
+      if (file && file.path === filePath && file.folder === props.node.path) {
+        return; // File is already in this folder
+      }
+      
+      // Emit moveFile event to parent
+      emit('moveFile', filePath, props.node.path);
+    }
+  }
 }
 </script>
 
@@ -224,6 +283,12 @@ function handleFolderClick() {
   
   &.renaming {
     cursor: default;
+  }
+
+  &.drag-over {
+    background: var(--base2) !important;
+    border: 2px dashed var(--text2);
+    margin: 1px 10px 1px 10px;
   }
 
   .chevron {
@@ -284,6 +349,11 @@ function handleFolderClick() {
   
   &.renaming {
     cursor: default;
+  }
+
+  &.is-dragging {
+    opacity: 0.5;
+    cursor: move;
   }
 
   .file-icon {

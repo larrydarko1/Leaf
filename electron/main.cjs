@@ -261,3 +261,29 @@ ipcMain.handle('folder:delete', async (event, folderPath) => {
         return { success: false, error: error.message };
     }
 });
+
+// Move a file to a different folder
+ipcMain.handle('file:move', async (event, filePath, targetFolderPath) => {
+    try {
+        const fileName = path.basename(filePath);
+        const newPath = path.join(targetFolderPath, fileName);
+
+        // If source and destination are the same, just return success
+        if (filePath === newPath) {
+            return { success: true, newPath };
+        }
+
+        // Check if file with same name already exists in target folder
+        try {
+            await fs.access(newPath);
+            return { success: false, error: 'A file with this name already exists in the target folder' };
+        } catch {
+            // File doesn't exist, safe to move
+        }
+
+        await fs.rename(filePath, newPath);
+        return { success: true, newPath };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});

@@ -1,6 +1,12 @@
 <template>
   <div class="file-explorer">
-    <div class="file-list">
+    <div 
+      class="file-list"
+      :class="{ 'drag-over-root': isDragOverRoot }"
+      @dragover.prevent="handleRootDragOver"
+      @dragleave="handleRootDragLeave"
+      @drop.prevent="handleRootDrop"
+    >
       <!-- Recursive folder tree component -->
       <FolderNode
         v-for="node in folderTree"
@@ -20,6 +26,7 @@
         @cancel-rename="cancelRename"
         @update-rename-value="renameValue = $event"
         @context-menu="handleContextMenu"
+        @move-file="handleMoveFile"
       />
       
       <div v-if="files.length === 0" class="empty-state">
@@ -65,10 +72,12 @@ const emit = defineEmits<{
   cancelRename: [];
   startRenameFile: [file: FileInfo];
   startRenameFolder: [path: string];
+  moveFile: [filePath: string, targetFolderPath: string];
 }>();
 
 const renameValue = ref('');
 const expandedFolders = ref<Set<string>>(new Set());
+const isDragOverRoot = ref(false);
 
 // Context menu state
 const contextMenu = ref({
@@ -281,6 +290,38 @@ function cancelRename() {
   emit('cancelRename');
 }
 
+function handleMoveFile(filePath: string, targetFolderPath: string) {
+  emit('moveFile', filePath, targetFolderPath);
+}
+
+function handleRootDragOver(event: DragEvent) {
+  event.preventDefault();
+  isDragOverRoot.value = true;
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = 'move';
+  }
+}
+
+function handleRootDragLeave(event: DragEvent) {
+  // Only set to false if we're leaving the root container entirely
+  const target = event.target as HTMLElement;
+  const relatedTarget = event.relatedTarget as HTMLElement;
+  
+  if (!target.contains(relatedTarget)) {
+    isDragOverRoot.value = false;
+  }
+}
+
+function handleRootDrop(event: DragEvent) {
+  isDragOverRoot.value = false;
+  
+  const filePath = event.dataTransfer?.getData('text/plain');
+  if (filePath) {
+    // Move to root (empty string or '.')
+    emit('moveFile', filePath, '.');
+  }
+}
+
 // Watch for renaming file changes
 watch(() => props.renamingFile, (newRenamingFile) => {
   if (newRenamingFile) {
@@ -363,6 +404,12 @@ watch(expandedFolders, (newExpanded) => {
   flex: 1;
   overflow-y: auto;
   padding: 0.25rem 0;
+  
+  &.drag-over-root {
+    background: var(--base1);
+    outline: 2px dashed var(--text2);
+    outline-offset: -4px;
+  }
 }
 
 .empty-state {

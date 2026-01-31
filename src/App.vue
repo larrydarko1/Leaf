@@ -84,6 +84,7 @@
 					@delete-file="handleFileDelete"
 					@delete-folder="handleFolderDelete"
 						@cancel-rename="cancelRename"
+					@move-file="handleFileMove"
 					/>
 				</aside>
 
@@ -373,6 +374,38 @@ async function handleFileDelete(file: FileInfo) {
 	} catch (error) {
 		console.error('Error deleting file:', error);
 		alert('Error deleting file');
+	}
+}
+
+async function handleFileMove(filePath: string, targetFolderPath: string) {
+	if (!currentFolder.value) return;
+	
+	try {
+		let absoluteTargetPath: string;
+		
+		// Handle moving to root folder
+		if (targetFolderPath === '.' || targetFolderPath === '') {
+			absoluteTargetPath = currentFolder.value;
+		} else {
+			// Convert relative path to absolute path
+			absoluteTargetPath = currentFolder.value + '/' + targetFolderPath;
+		}
+		
+		const result = await window.electronAPI.moveFile(filePath, absoluteTargetPath);
+		if (result.success && result.newPath) {
+			// Refresh the file list
+			await refreshFiles();
+			// Select the moved file
+			const movedFile = files.value.find(f => f.path === result.newPath);
+			if (movedFile) {
+				selectedFile.value = movedFile;
+			}
+		} else {
+			alert('Failed to move file: ' + result.error);
+		}
+	} catch (error) {
+		console.error('Error moving file:', error);
+		alert('Error moving file');
 	}
 }
 

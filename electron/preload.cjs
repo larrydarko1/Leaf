@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     deleteFile: (filePath) => ipcRenderer.invoke('file:delete', filePath),
     renameFile: (filePath, newFileName) => ipcRenderer.invoke('file:rename', filePath, newFileName),
     renameFolder: (folderPath, newFolderName) => ipcRenderer.invoke('folder:rename', folderPath, newFolderName),
-    deleteFolder: (folderPath) => ipcRenderer.invoke('folder:delete', folderPath)
+    deleteFolder: (folderPath) => ipcRenderer.invoke('folder:delete', folderPath),
+    moveFile: (filePath, targetFolderPath) => ipcRenderer.invoke('file:move', filePath, targetFolderPath)
 });
 
