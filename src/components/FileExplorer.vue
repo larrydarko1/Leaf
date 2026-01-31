@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
 import type { FileInfo, FolderInfo } from '../types/electron';
 import FolderNode, { type TreeNode } from './FolderNode.vue';
 import ContextMenu, { type ContextMenuItem } from './ContextMenu.vue';
@@ -200,6 +200,92 @@ const folderTree = computed(() => {
 
   sortNodes(root);
   return root;
+});
+
+// Flatten tree to get navigable items (only visible ones based on expanded folders)
+const flattenedItems = computed(() => {
+  const items: { type: 'file' | 'folder'; file?: FileInfo; folderPath?: string }[] = [];
+  
+  function traverse(nodes: TreeNode[]) {
+    for (const node of nodes) {
+      if (node.type === 'folder') {
+        items.push({ type: 'folder', folderPath: node.path });
+        // Only include children if folder is expanded
+        if (expandedFolders.value.has(node.path) && node.children) {
+          traverse(node.children);
+        }
+      } else if (node.type === 'file' && node.file) {
+        items.push({ type: 'file', file: node.file });
+      }
+    }
+  }
+  
+  traverse(folderTree.value);
+  return items;
+});
+
+// Keyboard navigation handler
+function handleKeyDown(e: KeyboardEvent) {
+  // Don't navigate if we're renaming
+  if (props.renamingFile || props.renamingFolder) return;
+  
+  // Only handle arrow keys
+  if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+  
+  e.preventDefault();
+  
+  // Handle left/right for folder expand/collapse
+  if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+    if (props.selectedFolder) {
+      const isExpanded = expandedFolders.value.has(props.selectedFolder);
+      if (e.key === 'ArrowRight' && !isExpanded) {
+        // Expand folder
+        expandedFolders.value.add(props.selectedFolder);
+        expandedFolders.value = new Set(expandedFolders.value);
+      } else if (e.key === 'ArrowLeft' && isExpanded) {
+        // Collapse folder
+        expandedFolders.value.delete(props.selectedFolder);
+        expandedFolders.value = new Set(expandedFolders.value);
+      }
+    }
+    return;
+  }
+  
+  const items = flattenedItems.value;
+  if (items.length === 0) return;
+  
+  // Find current index
+  let currentIndex = -1;
+  if (props.selectedFile) {
+    currentIndex = items.findIndex(item => item.type === 'file' && item.file?.path === props.selectedFile?.path);
+  } else if (props.selectedFolder) {
+    currentIndex = items.findIndex(item => item.type === 'folder' && item.folderPath === props.selectedFolder);
+  }
+  
+  // Calculate new index
+  let newIndex: number;
+  if (e.key === 'ArrowDown') {
+    newIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
+  } else {
+    newIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
+  }
+  
+  // Select the new item
+  const newItem = items[newIndex];
+  if (newItem.type === 'file' && newItem.file) {
+    emit('selectFile', newItem.file);
+  } else if (newItem.type === 'folder' && newItem.folderPath) {
+    emit('selectFolder', newItem.folderPath);
+  }
+}
+
+// Set up keyboard listeners
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown);
 });
 
 function getFileNameWithoutExtension(fileName: string): string {
@@ -416,6 +502,29 @@ watch(expandedFolders, (newExpanded) => {
   overflow-y: auto;
   padding: 0.25rem 0;
   
+  // Hide scrollbar by default, show on hover
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 4px;
+    transition: background 0.2s ease;
+  }
+  
+  &:hover::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--text2) 40%, transparent);
+  }
+  
+  &:hover::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--text2) 60%, transparent);
+  }
+  
   &.drag-over-root {
     background: var(--base1);
     outline: 2px dashed var(--text2);
@@ -436,26 +545,6 @@ watch(expandedFolders, (newExpanded) => {
   .hint {
     font-size: 0.8rem;
     color: var(--text2);
-  }
-}
-
-// Scrollbar styling
-.file-list::-webkit-scrollbar {
-  width: 8px;
-}
-
-.file-list::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.file-list::-webkit-scrollbar-thumb {
-  background: var(--text2);
-  border-radius: 4px;
-  opacity: 0.3;
-  
-  &:hover {
-    background: var(--text1);
-    opacity: 0.5;
   }
 }
 </style>
