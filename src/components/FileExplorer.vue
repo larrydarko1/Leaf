@@ -493,8 +493,10 @@ watch(expandedFolders, (newExpanded) => {
 .file-explorer {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   background: var(--base3);
+  overflow: hidden;
 }
 
 .file-list {

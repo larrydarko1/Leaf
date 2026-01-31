@@ -531,13 +531,15 @@ function toggleTheme() {
 	flex-direction: column;
 	border-right: 1px solid var(--text3);
 	background: var(--base3);
+	overflow: hidden;
 }
 
 .sidebar-header {
-	height: 57px;
+	height: 50px;
 	background: var(--base1);
 	border-bottom: 1px solid var(--text3);
 	-webkit-app-region: drag;
+	flex-shrink: 0;
 }
 
 .sidebar-menu {
@@ -549,6 +551,7 @@ function toggleTheme() {
 	border-bottom: 1px solid var(--text3);
 	background: var(--base3);
 	-webkit-app-region: drag;
+	flex-shrink: 0;
 }
 
 .menu-divider {

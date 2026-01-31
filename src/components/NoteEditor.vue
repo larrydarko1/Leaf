@@ -35,6 +35,7 @@
     <div v-else-if="file && isVideoFile" class="video-viewer">
       <video 
         v-if="videoUrl && !videoError"
+        ref="videoRef"
         :src="videoUrl"
         :key="videoUrl"
         class="video-preview"
@@ -119,8 +120,9 @@ const codeExtensions = [
 const imageUrl = ref('');
 const isLoadingImage = ref(false);
 
-// Video URL
+// Video state
 const videoUrl = ref('');
+const videoRef = ref<HTMLVideoElement | null>(null);
 
 // Check if current file is an image
 const isImageFile = computed(() => {
@@ -284,6 +286,20 @@ function handleKeyboard(e: KeyboardEvent) {
   if ((e.metaKey || e.ctrlKey) && e.key === 's') {
     e.preventDefault();
     saveFile();
+  }
+  
+  // Spacebar to toggle video play/pause (only when not in textarea)
+  if (e.key === ' ' && isVideoFile.value && videoRef.value) {
+    // Don't trigger if user is typing in an input or textarea
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+    
+    e.preventDefault();
+    if (videoRef.value.paused) {
+      videoRef.value.play();
+    } else {
+      videoRef.value.pause();
+    }
   }
 }
 
