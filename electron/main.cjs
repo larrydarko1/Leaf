@@ -2,6 +2,8 @@
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs').promises;
+const fsSync = require('fs');
+const { pathToFileURL } = require('url');
 
 let mainWindow = null;
 
@@ -22,6 +24,7 @@ function createWindow() {
             nodeIntegration: false, // Security: don't expose Node to renderer
             contextIsolation: true,  // Security: isolate contexts
             sandbox: false,
+            webSecurity: false, // Allow loading local files (required for video/media)
             // Disable all browser-like storage mechanisms
             partition: 'persist:leaf', // Use persistent session
             cache: false // Disable HTTP cache
@@ -89,11 +92,11 @@ ipcMain.handle('dialog:openFolder', async () => {
     return result.filePaths[0];
 });
 
-// Recursively scan a folder for .txt and .md files
+// Recursively scan a folder for .txt, .md, image and video files
 async function scanFolder(folderPath, basePath = folderPath) {
     const files = [];
     const folders = [];
-    const allowedExtensions = ['.txt', '.md', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico'];
+    const allowedExtensions = ['.txt', '.md', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico', '.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
 
     try {
         const entries = await fs.readdir(folderPath, { withFileTypes: true });

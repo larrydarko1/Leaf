@@ -84,6 +84,22 @@
         <circle cx="8.5" cy="8.5" r="1.5"></circle>
         <polyline points="21 15 16 10 5 21"></polyline>
       </svg>
+      <!-- Video icon for video files -->
+      <svg 
+        v-else-if="isVideoFile"
+        class="file-icon" 
+        width="14" 
+        height="14" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-width="2" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"
+      >
+        <polygon points="23 7 16 12 23 17 23 7"></polygon>
+        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+      </svg>
       <!-- Document icon for text files -->
       <svg 
         v-else
@@ -183,9 +199,17 @@ const isDragOver = ref(false);
 // Image file extensions
 const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico'];
 
+// Video file extensions
+const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
+
 const isImageFile = computed(() => {
   if (props.node.type !== 'file' || !props.node.file) return false;
   return imageExtensions.includes(props.node.file.extension.toLowerCase());
+});
+
+const isVideoFile = computed(() => {
+  if (props.node.type !== 'file' || !props.node.file) return false;
+  return videoExtensions.includes(props.node.file.extension.toLowerCase());
 });
 
 const isExpanded = computed(() => {

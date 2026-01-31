@@ -31,9 +31,27 @@
       </div>
     </div>
     
+    <!-- Video player for video files -->
+    <div v-else-if="file && isVideoFile" class="video-viewer">
+      <video 
+        v-if="videoUrl && !videoError"
+        :src="videoUrl"
+        :key="videoUrl"
+        class="video-preview"
+        controls
+        @error="onVideoError"
+      >
+        Your browser does not support the video tag.
+      </video>
+      <div v-if="videoError" class="video-error">
+        <p>Failed to load video</p>
+        <p class="video-error-hint">This format may not be supported</p>
+      </div>
+    </div>
+    
     <!-- Text editor for text files -->
     <textarea
-      v-else-if="file && !isImageFile"
+      v-else-if="file && !isImageFile && !isVideoFile"
       v-model="content"
       class="editor-textarea"
       :placeholder="'Start writing...'"
@@ -76,19 +94,32 @@ const originalContent = ref('');
 const hasUnsavedChanges = ref(false);
 const isSaving = ref(false);
 const imageError = ref(false);
+const videoError = ref(false);
 let autoSaveTimeout: number | null = null;
 
 // Image file extensions
 const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico'];
 
+// Video file extensions
+const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
+
 // Image loading state
 const imageUrl = ref('');
 const isLoadingImage = ref(false);
+
+// Video URL
+const videoUrl = ref('');
 
 // Check if current file is an image
 const isImageFile = computed(() => {
   if (!props.file) return false;
   return imageExtensions.includes(props.file.extension.toLowerCase());
+});
+
+// Check if current file is a video
+const isVideoFile = computed(() => {
+  if (!props.file) return false;
+  return videoExtensions.includes(props.file.extension.toLowerCase());
 });
 
 // Load image via IPC for reliable base64 data URL
@@ -113,6 +144,10 @@ async function loadImage(filePath: string) {
   }
 }
 
+function onVideoError() {
+  videoError.value = true;
+}
+
 function onImageLoad() {
   imageError.value = false;
 }
@@ -128,21 +163,33 @@ function getFileNameWithoutExtension(fileName: string): string {
 
 // Watch for file changes
 watch(() => props.file, async (newFile) => {
-  // Reset image error state
+  // Reset error states
   imageError.value = false;
+  videoError.value = false;
   imageUrl.value = '';
+  videoUrl.value = '';
   
   if (newFile) {
+    const ext = newFile.extension.toLowerCase();
+    
     // Check if file is an image
-    if (imageExtensions.includes(newFile.extension.toLowerCase())) {
+    if (imageExtensions.includes(ext)) {
       // Load image via IPC
       await loadImage(newFile.path);
       // Clear text content for image files
       content.value = '';
       originalContent.value = '';
       hasUnsavedChanges.value = false;
+    } else if (videoExtensions.includes(ext)) {
+      // Set video URL using file:// protocol (webSecurity disabled allows this)
+      videoUrl.value = `file://${newFile.path}`;
+      videoError.value = false;
+      // Clear text content for video files
+      content.value = '';
+      originalContent.value = '';
+      hasUnsavedChanges.value = false;
     } else {
-      // Load text content for non-image files
+      // Load text content for text files
       await loadFile(newFile);
     }
   } else {
@@ -375,6 +422,41 @@ onUnmounted(() => {
   p {
     margin: 0.5rem 0;
     font-size: 1rem;
+  }
+}
+
+.video-viewer {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  overflow: auto;
+  -webkit-app-region: no-drag;
+  background: var(--base1);
+}
+
+.video-preview {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 8px;
+}
+
+.video-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text2);
+  
+  p {
+    margin: 0.5rem 0;
+    font-size: 1rem;
+  }
+  
+  .video-error-hint {
+    font-size: 0.85rem;
+    opacity: 0.7;
   }
 }
 
