@@ -3,10 +3,13 @@
     <div
       v-if="node.type === 'folder'"
       class="folder-item"
-      :class="{ active: isSelected, renaming: isRenaming, 'drag-over': isDragOver }"
+      :class="{ active: isSelected, renaming: isRenaming, 'drag-over': isDragOver, 'is-dragging': isDragging }"
       :style="{ paddingLeft: (depth * 16 + 10) + 'px' }"
+      draggable="true"
       @click="handleFolderClick"
       @contextmenu.prevent="$emit('contextMenu', 'folder', node.path, $event)"
+      @dragstart="handleDragStart"
+      @dragend="handleDragEnd"
       @dragover.prevent="handleDragOver"
       @dragleave="handleDragLeave"
       @drop.prevent="handleDrop"
@@ -113,6 +116,7 @@
         @update-rename-value="$emit('updateRenameValue', $event)"
         @context-menu="(type: 'file' | 'folder', path: string, event: MouseEvent) => $emit('contextMenu', type, path, event)"
         @move-file="(filePath: string, targetFolderPath: string) => $emit('moveFile', filePath, targetFolderPath)"
+        @move-folder="(folderPath: string, targetFolderPath: string) => $emit('moveFolder', folderPath, targetFolderPath)"
       />
     </template>
   </div>
@@ -150,6 +154,7 @@ const emit = defineEmits<{
   updateRenameValue: [value: string];
   contextMenu: [type: 'file' | 'folder', path: string, event: MouseEvent];
   moveFile: [filePath: string, targetFolderPath: string];
+  moveFolder: [folderPath: string, targetFolderPath: string];
 }>();
 
 const renameInput = ref<HTMLInputElement | null>(null);
@@ -195,15 +200,19 @@ function handleFolderClick() {
 }
 
 function handleDragStart(event: DragEvent) {
+  isDragging.value = true;
+  event.dataTransfer!.effectAllowed = 'move';
+  
   if (props.node.type === 'file' && props.node.file) {
-    isDragging.value = true;
-    event.dataTransfer!.effectAllowed = 'move';
-    event.dataTransfer!.setData('text/plain', props.node.file.path);
-    
-    // Set a custom drag image if needed
-    if (event.dataTransfer) {
-      event.dataTransfer.dropEffect = 'move';
-    }
+    // Set data with type prefix for files
+    event.dataTransfer!.setData('text/plain', 'file:' + props.node.file.path);
+  } else if (props.node.type === 'folder') {
+    // Set data with type prefix for folders
+    event.dataTransfer!.setData('text/plain', 'folder:' + props.node.path);
+  }
+  
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = 'move';
   }
 }
 
@@ -229,16 +238,24 @@ function handleDrop(event: DragEvent) {
   isDragOver.value = false;
   
   if (props.node.type === 'folder') {
-    const filePath = event.dataTransfer?.getData('text/plain');
-    if (filePath) {
-      // Don't allow moving to the same folder the file is already in
-      const file = props.selectedFile;
-      if (file && file.path === filePath && file.folder === props.node.path) {
-        return; // File is already in this folder
+    const data = event.dataTransfer?.getData('text/plain');
+    if (data) {
+      if (data.startsWith('file:')) {
+        const filePath = data.substring(5);
+        // Don't allow moving to the same folder the file is already in
+        const file = props.selectedFile;
+        if (file && file.path === filePath && file.folder === props.node.path) {
+          return;
+        }
+        emit('moveFile', filePath, props.node.path);
+      } else if (data.startsWith('folder:')) {
+        const folderPath = data.substring(7);
+        // Don't allow moving a folder into itself or if it's the same folder
+        if (folderPath === props.node.path || props.node.path.startsWith(folderPath + '/')) {
+          return;
+        }
+        emit('moveFolder', folderPath, props.node.path);
       }
-      
-      // Emit moveFile event to parent
-      emit('moveFile', filePath, props.node.path);
     }
   }
 }
@@ -283,6 +300,11 @@ function handleDrop(event: DragEvent) {
   
   &.renaming {
     cursor: default;
+  }
+
+  &.is-dragging {
+    opacity: 0.5;
+    cursor: move;
   }
 
   &.drag-over {

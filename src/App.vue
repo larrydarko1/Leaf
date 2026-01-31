@@ -85,6 +85,7 @@
 					@delete-folder="handleFolderDelete"
 						@cancel-rename="cancelRename"
 					@move-file="handleFileMove"
+					@move-folder="handleFolderMove"
 					/>
 				</aside>
 
@@ -406,6 +407,37 @@ async function handleFileMove(filePath: string, targetFolderPath: string) {
 	} catch (error) {
 		console.error('Error moving file:', error);
 		alert('Error moving file');
+	}
+}
+
+async function handleFolderMove(folderPath: string, targetFolderPath: string) {
+	if (!currentFolder.value) return;
+	
+	try {
+		// Convert relative folder path to absolute path
+		const absoluteFolderPath = currentFolder.value + '/' + folderPath;
+		
+		let absoluteTargetPath: string;
+		
+		// Handle moving to root folder
+		if (targetFolderPath === '.' || targetFolderPath === '') {
+			absoluteTargetPath = currentFolder.value;
+		} else {
+			// Convert relative path to absolute path
+			absoluteTargetPath = currentFolder.value + '/' + targetFolderPath;
+		}
+		
+		const result = await window.electronAPI.moveFolder(absoluteFolderPath, absoluteTargetPath);
+		if (result.success) {
+			selectedFolder.value = null;
+			// Refresh the file list
+			await refreshFiles();
+		} else {
+			alert('Failed to move folder: ' + result.error);
+		}
+	} catch (error) {
+		console.error('Error moving folder:', error);
+		alert('Error moving folder');
 	}
 }
 

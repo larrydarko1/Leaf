@@ -27,6 +27,7 @@
         @update-rename-value="renameValue = $event"
         @context-menu="handleContextMenu"
         @move-file="handleMoveFile"
+        @move-folder="handleMoveFolder"
       />
       
       <div v-if="files.length === 0" class="empty-state">
@@ -73,6 +74,7 @@ const emit = defineEmits<{
   startRenameFile: [file: FileInfo];
   startRenameFolder: [path: string];
   moveFile: [filePath: string, targetFolderPath: string];
+  moveFolder: [folderPath: string, targetFolderPath: string];
 }>();
 
 const renameValue = ref('');
@@ -294,6 +296,10 @@ function handleMoveFile(filePath: string, targetFolderPath: string) {
   emit('moveFile', filePath, targetFolderPath);
 }
 
+function handleMoveFolder(folderPath: string, targetFolderPath: string) {
+  emit('moveFolder', folderPath, targetFolderPath);
+}
+
 function handleRootDragOver(event: DragEvent) {
   event.preventDefault();
   isDragOverRoot.value = true;
@@ -315,10 +321,15 @@ function handleRootDragLeave(event: DragEvent) {
 function handleRootDrop(event: DragEvent) {
   isDragOverRoot.value = false;
   
-  const filePath = event.dataTransfer?.getData('text/plain');
-  if (filePath) {
-    // Move to root (empty string or '.')
-    emit('moveFile', filePath, '.');
+  const data = event.dataTransfer?.getData('text/plain');
+  if (data) {
+    if (data.startsWith('file:')) {
+      const filePath = data.substring(5);
+      emit('moveFile', filePath, '.');
+    } else if (data.startsWith('folder:')) {
+      const folderPath = data.substring(7);
+      emit('moveFolder', folderPath, '.');
+    }
   }
 }
 

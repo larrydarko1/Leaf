@@ -287,3 +287,34 @@ ipcMain.handle('file:move', async (event, filePath, targetFolderPath) => {
         return { success: false, error: error.message };
     }
 });
+
+// Move a folder to a different parent folder
+ipcMain.handle('folder:move', async (event, folderPath, targetFolderPath) => {
+    try {
+        const folderName = path.basename(folderPath);
+        const newPath = path.join(targetFolderPath, folderName);
+
+        // If source and destination are the same, just return success
+        if (folderPath === newPath) {
+            return { success: true, newPath };
+        }
+
+        // Prevent moving a folder into itself or its own subdirectory
+        if (targetFolderPath.startsWith(folderPath + path.sep) || targetFolderPath === folderPath) {
+            return { success: false, error: 'Cannot move a folder into itself' };
+        }
+
+        // Check if folder with same name already exists in target folder
+        try {
+            await fs.access(newPath);
+            return { success: false, error: 'A folder with this name already exists in the target folder' };
+        } catch {
+            // Folder doesn't exist, safe to move
+        }
+
+        await fs.rename(folderPath, newPath);
+        return { success: true, newPath };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});

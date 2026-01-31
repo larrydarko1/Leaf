@@ -76,6 +76,12 @@ export interface FileMoveResult {
     error?: string;
 }
 
+export interface FolderMoveResult {
+    success: boolean;
+    newPath?: string;
+    error?: string;
+}
+
 export interface ElectronAPI {
     isElectron: () => boolean;
     openFolderDialog: () => Promise<string | null>;
@@ -89,6 +95,7 @@ export interface ElectronAPI {
     renameFolder: (folderPath: string, newFolderName: string) => Promise<FolderRenameResult>;
     deleteFolder: (folderPath: string) => Promise<FolderDeleteResult>;
     moveFile: (filePath: string, targetFolderPath: string) => Promise<FileMoveResult>;
+    moveFolder: (folderPath: string, targetFolderPath: string) => Promise<FolderMoveResult>;
 }
 
 declare global {
