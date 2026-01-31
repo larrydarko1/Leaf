@@ -13,8 +13,27 @@
       </div>
     </div>
     
+    <!-- Image viewer for image files -->
+    <div v-if="file && isImageFile" class="image-viewer">
+      <div v-if="isLoadingImage" class="image-loading">
+        <p>Loading image...</p>
+      </div>
+      <img 
+        v-else-if="imageUrl && !imageError"
+        :src="imageUrl" 
+        :alt="file.name"
+        class="image-preview"
+        @load="onImageLoad"
+        @error="onImageError"
+      />
+      <div v-if="imageError" class="image-error">
+        <p>Failed to load image</p>
+      </div>
+    </div>
+    
+    <!-- Text editor for text files -->
     <textarea
-      v-if="file"
+      v-else-if="file && !isImageFile"
       v-model="content"
       class="editor-textarea"
       :placeholder="'Start writing...'"
@@ -40,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onUnmounted } from 'vue';
+import { ref, watch, onUnmounted, computed } from 'vue';
 import type { FileInfo } from '../types/electron';
 
 const props = defineProps<{
@@ -56,7 +75,51 @@ const content = ref('');
 const originalContent = ref('');
 const hasUnsavedChanges = ref(false);
 const isSaving = ref(false);
+const imageError = ref(false);
 let autoSaveTimeout: number | null = null;
+
+// Image file extensions
+const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico'];
+
+// Image loading state
+const imageUrl = ref('');
+const isLoadingImage = ref(false);
+
+// Check if current file is an image
+const isImageFile = computed(() => {
+  if (!props.file) return false;
+  return imageExtensions.includes(props.file.extension.toLowerCase());
+});
+
+// Load image via IPC for reliable base64 data URL
+async function loadImage(filePath: string) {
+  isLoadingImage.value = true;
+  imageError.value = false;
+  imageUrl.value = '';
+  
+  try {
+    const result = await window.electronAPI.readImage(filePath);
+    if (result.success && result.dataUrl) {
+      imageUrl.value = result.dataUrl;
+    } else {
+      console.error('Failed to load image:', result.error);
+      imageError.value = true;
+    }
+  } catch (error) {
+    console.error('Error loading image:', error);
+    imageError.value = true;
+  } finally {
+    isLoadingImage.value = false;
+  }
+}
+
+function onImageLoad() {
+  imageError.value = false;
+}
+
+function onImageError() {
+  imageError.value = true;
+}
 
 function getFileNameWithoutExtension(fileName: string): string {
   const lastDotIndex = fileName.lastIndexOf('.');
@@ -65,8 +128,23 @@ function getFileNameWithoutExtension(fileName: string): string {
 
 // Watch for file changes
 watch(() => props.file, async (newFile) => {
+  // Reset image error state
+  imageError.value = false;
+  imageUrl.value = '';
+  
   if (newFile) {
-    await loadFile(newFile);
+    // Check if file is an image
+    if (imageExtensions.includes(newFile.extension.toLowerCase())) {
+      // Load image via IPC
+      await loadImage(newFile.path);
+      // Clear text content for image files
+      content.value = '';
+      originalContent.value = '';
+      hasUnsavedChanges.value = false;
+    } else {
+      // Load text content for non-image files
+      await loadFile(newFile);
+    }
   } else {
     content.value = '';
     originalContent.value = '';
@@ -253,6 +331,50 @@ onUnmounted(() => {
   
   &::placeholder {
     color: var(--text2);
+  }
+}
+
+.image-viewer {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  overflow: auto;
+  -webkit-app-region: no-drag;
+  background: var(--base1);
+}
+
+.image-preview {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.image-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text2);
+  
+  p {
+    margin: 0.5rem 0;
+    font-size: 1rem;
+  }
+}
+
+.image-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text2);
+  
+  p {
+    margin: 0.5rem 0;
+    font-size: 1rem;
   }
 }
 

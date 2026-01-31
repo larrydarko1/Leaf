@@ -67,7 +67,26 @@
       @dragstart="handleDragStart"
       @dragend="handleDragEnd"
     >
+      <!-- Image icon for image files -->
       <svg 
+        v-if="isImageFile"
+        class="file-icon" 
+        width="14" 
+        height="14" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-width="2" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"
+      >
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+        <polyline points="21 15 16 10 5 21"></polyline>
+      </svg>
+      <!-- Document icon for text files -->
+      <svg 
+        v-else
         class="file-icon" 
         width="14" 
         height="14" 
@@ -160,6 +179,14 @@ const emit = defineEmits<{
 const renameInput = ref<HTMLInputElement | null>(null);
 const isDragging = ref(false);
 const isDragOver = ref(false);
+
+// Image file extensions
+const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico'];
+
+const isImageFile = computed(() => {
+  if (props.node.type !== 'file' || !props.node.file) return false;
+  return imageExtensions.includes(props.node.file.extension.toLowerCase());
+});
 
 const isExpanded = computed(() => {
   return props.node.type === 'folder' && props.expandedFolders.has(props.node.path);

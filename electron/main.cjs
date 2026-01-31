@@ -93,7 +93,7 @@ ipcMain.handle('dialog:openFolder', async () => {
 async function scanFolder(folderPath, basePath = folderPath) {
     const files = [];
     const folders = [];
-    const allowedExtensions = ['.txt', '.md'];
+    const allowedExtensions = ['.txt', '.md', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico'];
 
     try {
         const entries = await fs.readdir(folderPath, { withFileTypes: true });
@@ -154,6 +154,30 @@ ipcMain.handle('file:read', async (event, filePath) => {
     try {
         const content = await fs.readFile(filePath, 'utf-8');
         return { success: true, content };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+// Read an image file as base64 data URL
+ipcMain.handle('file:readImage', async (event, filePath) => {
+    try {
+        const ext = path.extname(filePath).toLowerCase();
+        const mimeTypes = {
+            '.png': 'image/png',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.gif': 'image/gif',
+            '.webp': 'image/webp',
+            '.svg': 'image/svg+xml',
+            '.bmp': 'image/bmp',
+            '.ico': 'image/x-icon'
+        };
+        const mimeType = mimeTypes[ext] || 'image/png';
+        const imageBuffer = await fs.readFile(filePath);
+        const base64 = imageBuffer.toString('base64');
+        const dataUrl = `data:${mimeType};base64,${base64}`;
+        return { success: true, dataUrl };
     } catch (error) {
         return { success: false, error: error.message };
     }

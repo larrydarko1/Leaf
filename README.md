@@ -13,7 +13,10 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 ### Note Management
 - **Vault-based system** - Select any folder as your vault
 - **Multi-format support** - Read and edit `.txt` and `.md` (Markdown) files
-- **File browser** - Navigate your notes with a simple file list
+- **Image support** - View images directly in the app (`.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.svg`, `.bmp`, `.ico`)
+- **File browser** - Navigate your notes with a tree-based folder structure
+- **Drag & drop organization** - Move files between folders with drag and drop
+- **Folder nesting** - Organize folders by dragging them into other folders
 - **Auto-save** - Changes save automatically as you type
 
 ### Privacy & Storage
@@ -81,7 +84,7 @@ npm install
 
 3. **Run in development mode**
 ```sh
-npm run dev:electron
+npm run dev
 ```
 
 ### Building for Production
@@ -116,7 +119,7 @@ After building:
 ## Tech Stack
 - **Desktop:** Electron (Native macOS, Windows, Linux app)
 - **Frontend:** Vue 3, TypeScript, Vite, SCSS
-- **Storage:** Plain text files (txt, md, rtf) in your local vault
+- **Storage:** Plain text files (txt, md) and images in your local vault
 - **Build Tools:** Vite + Electron Builder
 
 ## Project Structure

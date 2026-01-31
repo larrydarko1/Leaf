@@ -31,6 +31,12 @@ export interface FileReadResult {
     error?: string;
 }
 
+export interface ImageReadResult {
+    success: boolean;
+    dataUrl?: string;
+    error?: string;
+}
+
 export interface FileWriteResult {
     success: boolean;
     error?: string;
@@ -87,6 +93,7 @@ export interface ElectronAPI {
     openFolderDialog: () => Promise<string | null>;
     scanFolder: (folderPath: string) => Promise<ScanResult>;
     readFile: (filePath: string) => Promise<FileReadResult>;
+    readImage: (filePath: string) => Promise<ImageReadResult>;
     createFolder: (parentPath: string, folderName: string) => Promise<FolderCreateResult>;
     writeFile: (filePath: string, content: string) => Promise<FileWriteResult>;
     createFile: (folderPath: string, fileName: string) => Promise<FileCreateResult>;
