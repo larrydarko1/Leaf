@@ -206,6 +206,17 @@
         @click.stop
       />
       <span v-else class="file-name">{{ node.name }}</span>
+      <svg 
+        v-if="node.file && bookmarkedFiles?.includes(node.file.path)"
+        class="bookmark-star" 
+        width="12" 
+        height="12" 
+        viewBox="0 0 24 24" 
+        fill="currentColor"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+      </svg>
     </div>
 
     <!-- Recursively render children -->
@@ -222,6 +233,7 @@
         :renaming-folder="renamingFolder"
         :rename-value="renameValue"
         :expanded-folders="expandedFolders"
+        :bookmarked-files="bookmarkedFiles"
         @select-file="(file: FileInfo, event?: MouseEvent, visibleFiles?: FileInfo[]) => $emit('selectFile', file, event, visibleFiles)"
         @select-folder="$emit('selectFolder', $event)"
         @toggle-folder="$emit('toggleFolder', $event)"
@@ -258,6 +270,7 @@ const props = defineProps<{
   renamingFolder: string | null;
   renameValue: string;
   expandedFolders: Set<string>;
+  bookmarkedFiles?: string[];
 }>();
 
 const emit = defineEmits<{
@@ -586,6 +599,18 @@ function handleDrop(event: DragEvent) {
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.4;
+}
+
+.bookmark-star {
+  flex-shrink: 0;
+  color: var(--accent-color);
+  margin-left: 4px;
+  opacity: 0.8;
+}
+
+.file-item.active .bookmark-star {
+  color: white;
+  opacity: 1;
 }
 
 .file-name-input {

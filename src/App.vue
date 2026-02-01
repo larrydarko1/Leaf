@@ -71,6 +71,11 @@
 							</g>
 						</svg>
 </button>
+<button @click="toggleBookmarks" class="btn-menu-icon" :class="{ 'active': showBookmarksPanel }" title="Bookmarks">
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="currentColor"/>
+					</svg>
+</button>
 					<button @click="toggleTheme" class="btn-menu-icon" title="Toggle theme">
 							<!-- Sun icon for dark theme -->
 						<svg v-if="currentTheme === 'dark-theme'" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -92,15 +97,16 @@
 						</button>
 					</div>
 					<FileExplorer
-						v-if="!showSearchPanel"
-						:files="files"
-						:folders="folders"
-						:current-folder="currentFolder"
-						:selected-files="selectedFiles"
-						:active-file="activeFile"
-						:renaming-file="renamingFile"
+					v-if="!showSearchPanel && !showBookmarksPanel"
+					:files="files"
+					:folders="folders"
+					:current-folder="currentFolder"
+					:selected-files="selectedFiles"
+					:active-file="activeFile"
+					:renaming-file="renamingFile"
 					:selected-folder="selectedFolder"
 					:renaming-folder="renamingFolder"
+					:bookmarked-files="bookmarkedFiles"
 					@select-file="handleFileSelect"
 					@select-folder="handleFolderSelect"
 					@start-rename-file="startRenameFile"
@@ -109,21 +115,31 @@
 					@rename-folder="handleFolderRename"
 					@delete-file="handleFileDelete"
 					@delete-folder="handleFolderDelete"
-						@cancel-rename="cancelRename"
+					@cancel-rename="cancelRename"
 					@move-file="handleFileMove"
 					@move-folder="handleFolderMove"
-					/>
-					<SearchPanel
-						v-else
-						:files="files"
-						:selected-files="selectedFiles"
-						:active-file="activeFile"
-						@select-file="handleSearchFileSelect"
-						@open-file="handleSearchFileOpen"
-						@close="closeSearch"
-					/>
-				</aside>
-
+					@toggle-bookmark="toggleBookmark"
+				/>
+				<SearchPanel
+					v-else-if="showSearchPanel"
+					:files="files"
+					:selected-files="selectedFiles"
+					:active-file="activeFile"
+					@select-file="handleSearchFileSelect"
+					@open-file="handleSearchFileOpen"
+					@close="closeSearch"
+				/>
+				<BookmarksPanel
+					v-else-if="showBookmarksPanel"
+					:files="files"
+					:bookmarked-paths="bookmarkedFiles"
+					:selected-files="selectedFiles"
+					:active-file="activeFile"
+					@select-file="handleSearchFileSelect"
+					@open-file="handleSearchFileOpen"
+					@remove-bookmark="removeBookmark"
+				/>
+			</aside>
 				<main class="main-content">
 					<NoteEditor
 						:file="activeFile"
@@ -136,10 +152,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import FileExplorer from './components/FileExplorer.vue';
 import NoteEditor from './components/NoteEditor.vue';
 import SearchPanel from './components/SearchPanel.vue';
+import BookmarksPanel from './components/BookmarksPanel.vue';
 import type { FileInfo, FolderInfo } from './types/electron';
 
 const currentTheme = ref('dark-theme');
@@ -153,6 +170,13 @@ const renamingFile = ref<FileInfo | null>(null);
 const selectedFolder = ref<string | null>(null);
 const renamingFolder = ref<string | null>(null);
 const showSearchPanel = ref(false);
+const showBookmarksPanel = ref(false);
+const bookmarkedFiles = ref<string[]>([]); // Array of file paths
+
+// Computed property to get bookmarks key for current folder
+const bookmarksStorageKey = computed(() => {
+	return currentFolder.value ? `leaf-bookmarks-${currentFolder.value}` : null;
+});
 
 // Load saved folder path and theme from localStorage
 onMounted(() => {
@@ -201,6 +225,9 @@ async function loadFolder(folderPath: string) {
 			currentFolder.value = folderPath;
 			files.value = result.files;
 			folders.value = result.folders || [];
+			
+			// Load bookmarks for this folder
+			loadBookmarks();
 			
 			// Try to restore the last selected file
 			const lastSelectedPath = localStorage.getItem('leaf-last-selected-file');
@@ -579,6 +606,9 @@ function toggleTheme() {
 
 function toggleSearch() {
 	showSearchPanel.value = !showSearchPanel.value;
+	if (showSearchPanel.value) {
+		showBookmarksPanel.value = false;
+	}
 }
 
 function closeSearch() {
@@ -596,6 +626,56 @@ function handleSearchFileOpen(file: FileInfo) {
 	activeFile.value = file;
 	showSearchPanel.value = false;
 	localStorage.setItem('leaf-last-selected-file', file.path);
+}
+
+// Bookmark functions
+function loadBookmarks() {
+	if (bookmarksStorageKey.value) {
+		try {
+			const saved = localStorage.getItem(bookmarksStorageKey.value);
+			if (saved) {
+				bookmarkedFiles.value = JSON.parse(saved);
+			} else {
+				bookmarkedFiles.value = [];
+			}
+		} catch (error) {
+			console.error('Error loading bookmarks:', error);
+			bookmarkedFiles.value = [];
+		}
+	}
+}
+
+function saveBookmarks() {
+	if (bookmarksStorageKey.value) {
+		localStorage.setItem(bookmarksStorageKey.value, JSON.stringify(bookmarkedFiles.value));
+	}
+}
+
+function toggleBookmark(filePath: string) {
+	const index = bookmarkedFiles.value.indexOf(filePath);
+	if (index >= 0) {
+		// Remove bookmark
+		bookmarkedFiles.value.splice(index, 1);
+	} else {
+		// Add bookmark
+		bookmarkedFiles.value.push(filePath);
+	}
+	saveBookmarks();
+}
+
+function removeBookmark(filePath: string) {
+	const index = bookmarkedFiles.value.indexOf(filePath);
+	if (index >= 0) {
+		bookmarkedFiles.value.splice(index, 1);
+		saveBookmarks();
+	}
+}
+
+function toggleBookmarks() {
+	showBookmarksPanel.value = !showBookmarksPanel.value;
+	if (showBookmarksPanel.value) {
+		showSearchPanel.value = false;
+	}
 }
 </script>
 
@@ -696,7 +776,7 @@ function handleSearchFileOpen(file: FileInfo) {
 	align-items: center;
 	justify-content: center;
 	gap: 0.25rem;
-	padding: 0.5rem 0.75rem;
+	padding: 0.1rem 0.75rem;
 	border-bottom: 1px solid var(--text3);
 	background: var(--base3);
 	-webkit-app-region: drag;

@@ -20,6 +20,7 @@
         :renaming-folder="renamingFolder"
         :rename-value="renameValue"
         :expanded-folders="expandedFolders"
+        :bookmarked-files="bookmarkedFiles"
         @select-file="selectFile"
         @select-folder="selectFolder"
         @toggle-folder="toggleFolder"
@@ -63,6 +64,7 @@ const props = defineProps<{
   renamingFile: FileInfo | null;
   selectedFolder: string | null;
   renamingFolder: string | null;
+  bookmarkedFiles?: string[];
 }>();
 
 const emit = defineEmits<{
@@ -77,6 +79,7 @@ const emit = defineEmits<{
   startRenameFolder: [path: string];
   moveFile: [filePath: string, targetFolderPath: string];
   moveFolder: [folderPath: string, targetFolderPath: string];
+  toggleBookmark: [filePath: string];
 }>();
 
 const renameValue = ref('');
@@ -98,7 +101,10 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
       { label: 'Delete', action: 'delete' }
     ];
   } else {
+    // Check if file is bookmarked
+    const isBookmarked = props.bookmarkedFiles?.includes(contextMenu.value.targetPath) || false;
     return [
+      { label: isBookmarked ? 'Remove from Bookmarks' : 'Add to Bookmarks', action: 'bookmark' },
       { label: 'Rename', action: 'rename', shortcut: 'F2' },
       { label: 'Delete', action: 'delete' }
     ];
@@ -340,7 +346,11 @@ function closeContextMenu() {
 function handleContextMenuAction(action: string) {
   const { type, targetPath } = contextMenu.value;
   
-  if (action === 'rename') {
+  if (action === 'bookmark') {
+    if (type === 'file') {
+      emit('toggleBookmark', targetPath);
+    }
+  } else if (action === 'rename') {
     if (type === 'folder') {
       emit('startRenameFolder', targetPath);
     } else if (type === 'file') {
@@ -361,6 +371,8 @@ function handleContextMenuAction(action: string) {
       }
     }
   }
+  
+  closeContextMenu();
 }
 
 function confirmRename() {
