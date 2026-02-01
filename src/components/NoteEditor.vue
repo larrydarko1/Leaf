@@ -539,6 +539,18 @@ onUnmounted(() => {
   overflow: auto;
   -webkit-app-region: no-drag;
   background: var(--base1);
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url('../assets/pattern.png');
+    background-size: cover;
+    background-position: center;
+    opacity: 0.01;
+    pointer-events: none;
+  }
 }
 
 .image-preview {
@@ -583,6 +595,18 @@ onUnmounted(() => {
   overflow: auto;
   -webkit-app-region: no-drag;
   background: var(--base1);
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url('../assets/pattern.png');
+    background-size: cover;
+    background-position: center;
+    opacity: 0.01;
+    pointer-events: none;
+  }
 }
 
 .video-preview {
@@ -618,6 +642,18 @@ onUnmounted(() => {
   overflow: auto;
   -webkit-app-region: no-drag;
   background: var(--base1);
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url('../assets/pattern.png');
+    background-size: cover;
+    background-position: center;
+    opacity: 0.01;
+    pointer-events: none;
+  }
 }
 
 .audio-container {
