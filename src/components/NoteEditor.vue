@@ -4,7 +4,24 @@
       <div class="file-info">
         <div class="file-title-container">
           <h2 class="file-title">{{ getFileNameWithoutExtension(file.name) }}</h2>
-          <span class="file-extension-badge">{{ file.extension }}</span>
+          <div class="badge-with-toggle">
+            <span class="file-extension-badge">{{ file.extension }}</span>
+            <button 
+              v-if="isMarkdownFile"
+              @click="showPreview = !showPreview"
+              class="preview-toggle"
+              :title="showPreview ? 'Edit' : 'Preview'"
+            >
+              <svg v-if="showPreview" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+              <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
       <div class="editor-actions">
@@ -106,14 +123,27 @@
     </div>
     
     <!-- Text editor for text files -->
-    <textarea
+    <div 
       v-else-if="file && !isImageFile && !isVideoFile && !isAudioFile && !isPdfFile"
-      v-model="content"
-      class="editor-textarea"
-      :class="{ 'code-editor': isCodeFile }"
-      :placeholder="isCodeFile ? 'Start coding...' : 'Start writing...'"
-      @input="onContentChange"
-    ></textarea>
+      class="text-editor-container"
+    >
+      <!-- Edit mode -->
+      <textarea
+        v-if="!showPreview || !isMarkdownFile"
+        v-model="content"
+        class="editor-textarea"
+        :class="{ 'code-editor': isCodeFile }"
+        :placeholder="isCodeFile ? 'Start coding...' : 'Start writing...'"
+        @input="onContentChange"
+      ></textarea>
+      
+      <!-- Preview mode for markdown -->
+      <div 
+        v-if="showPreview && isMarkdownFile"
+        class="markdown-preview-mode"
+        v-html="renderedMarkdown"
+      ></div>
+    </div>
     
     <div v-else class="editor-empty">
       <div class="empty-message">
@@ -195,6 +225,9 @@ const isLoadingAudio = ref(false);
 const pdfUrl = ref('');
 const pdfError = ref(false);
 
+// Markdown preview state
+const showPreview = ref(false);
+
 // Check if current file is an image
 const isImageFile = computed(() => {
   if (!props.file) return false;
@@ -223,6 +256,103 @@ const isPdfFile = computed(() => {
 const isCodeFile = computed(() => {
   if (!props.file) return false;
   return codeExtensions.includes(props.file.extension.toLowerCase());
+});
+
+// Check if current file is a markdown file
+const isMarkdownFile = computed(() => {
+  if (!props.file) return false;
+  return props.file.extension.toLowerCase() === '.md';
+});
+
+// Render markdown for preview mode
+const renderedMarkdown = computed(() => {
+  if (!isMarkdownFile.value) return '';
+  
+  let html = content.value;
+  
+  // Escape HTML to prevent XSS
+  html = html
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  
+  // Math blocks ($$...$$) - must come before inline math and other replacements
+  html = html.replace(/\$\$([\s\S]+?)\$\$/g, '<div class="math-block">$1</div>');
+  
+  // Inline math ($...$)
+  html = html.replace(/\$(.+?)\$/g, '<span class="math-inline">$1</span>');
+  
+  // Code blocks (```language ... ```) - must come before inline code
+  html = html.replace(/```(\w+)?\n([\s\S]+?)```/g, '<pre><code class="language-$1">$2</code></pre>');
+  
+  // Embeds (![[filename]]) - must come before links
+  html = html.replace(/!\[\[([^\]]+)\]\]/g, '<div class="embed" data-file="$1">📄 Embed: $1</div>');
+  
+  // Wiki links ([[link]])
+  html = html.replace(/\[\[([^\]]+)\]\]/g, '<a href="#" class="wiki-link" data-link="$1">$1</a>');
+  
+  // Regular links and images - images first
+  html = html.replace(/!\[([^\]]*)\]\(([^\)]+)\)/g, '<img src="$2" alt="$1" class="md-image">');
+  html = html.replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2" class="external-link" target="_blank">$1</a>');
+  
+  // Headers (must be at start of line) - must come after links to avoid # in URLs
+  html = html.replace(/^######\s+(.+)$/gm, '<h6>$1</h6>');
+  html = html.replace(/^#####\s+(.+)$/gm, '<h5>$1</h5>');
+  html = html.replace(/^####\s+(.+)$/gm, '<h4>$1</h4>');
+  html = html.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^#\s+(.+)$/gm, '<h1>$1</h1>');
+  
+  // Tags (#tag) - must come after headers
+  html = html.replace(/(?<!\w)#(\w+)/g, '<span class="tag">#$1</span>');
+  
+  // Bold + Italic (***text*** or ___text___) - must come before bold and italic
+  html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  html = html.replace(/___(.+?)___/g, '<strong><em>$1</em></strong>');
+  
+  // Bold (**text** or __text__)
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+  
+  // Italic (*text* or _text_)
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+  
+  // Highlights (==text==)
+  html = html.replace(/==(.+?)==/g, '<mark>$1</mark>');
+  
+  // Strikethrough (~~text~~)
+  html = html.replace(/~~(.+?)~~/g, '<del>$1</del>');
+  
+  // Inline code (`code`)
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  
+  // Task lists (- [ ] and - [x])
+  html = html.replace(/^-\s+\[\s\]\s+(.+)$/gm, '<li class="task"><input type="checkbox" disabled> $1</li>');
+  html = html.replace(/^-\s+\[x\]\s+(.+)$/gmi, '<li class="task"><input type="checkbox" checked disabled> $1</li>');
+  
+  // Bullet lists (- or * or +)
+  html = html.replace(/^[\-\*\+]\s+(.+)$/gm, '<li>$1</li>');
+  
+  // Numbered lists (1. )
+  html = html.replace(/^\d+\.\s+(.+)$/gm, '<li class="numbered">$1</li>');
+  
+  // Blockquotes (> text)
+  html = html.replace(/^>\s+(.+)$/gm, '<blockquote>$1</blockquote>');
+  
+  // Horizontal rule (--- or ***)
+  html = html.replace(/^[\-\*]{3,}$/gm, '<hr>');
+  
+  // Tables (basic support)
+  html = html.replace(/^\|(.+)\|$/gm, (match) => {
+    const cells = match.slice(1, -1).split('|').map(cell => cell.trim());
+    return '<tr>' + cells.map(cell => `<td>${cell}</td>`).join('') + '</tr>';
+  });
+  
+  // Line breaks
+  html = html.replace(/\n/g, '<br>');
+  
+  return html;
 });
 
 // Load image via IPC for reliable base64 data URL
@@ -510,6 +640,17 @@ onUnmounted(() => {
   text-overflow: ellipsis;
 }
 
+.badge-with-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-shrink: 0;
+  
+  .file-extension-badge {
+    border-radius: 3px 0 0 3px;
+  }
+}
+
 .file-extension-badge {
   display: inline-flex;
   align-items: center;
@@ -523,6 +664,33 @@ onUnmounted(() => {
   border-radius: 3px;
   opacity: 0.7;
   flex-shrink: 0;
+}
+
+.preview-toggle {
+  background: transparent;
+  border: 1px solid var(--base2);
+  border-left: none;
+  border-radius: 0 3px 3px 0;
+  padding: 0.20rem 0.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--base2);
+  opacity: 0.7;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  height: 100%;
+  
+  &:hover {
+    background: var(--base2);
+    color: var(--base1);
+    opacity: 1;
+  }
+  
+  svg {
+    display: block;
+  }
 }
 
 .editor-actions {
@@ -540,6 +708,12 @@ onUnmounted(() => {
 .saving-indicator {
   color: var(--text2);
   font-style: italic;
+}
+
+.text-editor-container {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
 }
 
 .editor-textarea {
@@ -569,6 +743,257 @@ onUnmounted(() => {
     white-space: pre;
     overflow-wrap: normal;
     word-wrap: normal;
+  }
+}
+
+.markdown-preview-mode {
+  flex: 1;
+  padding: 2rem;
+  background: transparent;
+  color: var(--text1);
+  overflow: auto;
+  -webkit-app-region: no-drag;
+  font-family: Helvetica, sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
+  
+  h1, h2, h3, h4, h5, h6 {
+    margin: 1em 0 0.5em 0;
+    font-weight: 600;
+    color: var(--text1);
+    line-height: 1.3;
+    
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+  
+  h1 {
+    font-size: 2em;
+    border-bottom: 1px solid var(--text3);
+    padding-bottom: 0.3em;
+  }
+  
+  h2 {
+    font-size: 1.5em;
+    border-bottom: 1px solid var(--text3);
+    padding-bottom: 0.3em;
+  }
+  
+  h3 {
+    font-size: 1.25em;
+  }
+  
+  h4 {
+    font-size: 1.1em;
+  }
+  
+  h5 {
+    font-size: 1em;
+  }
+  
+  h6 {
+    font-size: 0.9em;
+    color: var(--text2);
+  }
+  
+  strong {
+    font-weight: 600;
+    color: var(--text1);
+  }
+  
+  em {
+    font-style: italic;
+  }
+  
+  del {
+    text-decoration: line-through;
+    opacity: 0.7;
+  }
+  
+  code {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Menlo', 'Consolas', monospace;
+    font-size: 0.9em;
+    background: color-mix(in srgb, var(--text2) 15%, transparent);
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    color: var(--base2);
+  }
+  
+  pre {
+    background: color-mix(in srgb, var(--text2) 10%, transparent);
+    border: 1px solid var(--text3);
+    border-radius: 6px;
+    padding: 1em;
+    overflow-x: auto;
+    margin: 1em 0;
+    
+    code {
+      background: none;
+      padding: 0;
+      color: var(--text1);
+      font-size: 0.875em;
+      line-height: 1.5;
+    }
+  }
+  
+  mark {
+    background: color-mix(in srgb, #ffeb3b 50%, transparent);
+    color: var(--text1);
+    padding: 0.1em 0.2em;
+    border-radius: 2px;
+  }
+  
+  li {
+    margin: 0.25em 0;
+    
+    &::before {
+      content: '\u2022 ';
+      color: var(--text2);
+      font-weight: bold;
+      margin-right: 0.5em;
+    }
+    
+    &.numbered {
+      counter-increment: list-counter;
+      
+      &::before {
+        content: counter(list-counter) '. ';
+        font-weight: normal;
+      }
+    }
+    
+    &.task {
+      list-style: none;
+      
+      &::before {
+        content: '';
+        margin-right: 0;
+      }
+      
+      input[type="checkbox"] {
+        margin-right: 0.5em;
+        cursor: not-allowed;
+      }
+    }
+  }
+  
+  table, tr, td {
+    border: 1px solid var(--text3);
+    border-collapse: collapse;
+  }
+  
+  table {
+    margin: 1em 0;
+    width: auto;
+  }
+  
+  td {
+    padding: 0.5em 1em;
+  }
+  
+  tr:first-child {
+    background: color-mix(in srgb, var(--text2) 10%, transparent);
+    font-weight: 600;
+  }
+  
+  a {
+    color: var(--base2);
+    text-decoration: none;
+    
+    &:hover {
+      text-decoration: underline;
+    }
+    
+    &.wiki-link {
+      color: #9c27b0;
+      font-weight: 500;
+    }
+    
+    &.external-link {
+      color: #2196f3;
+      
+      &::after {
+        content: ' ↗';
+        font-size: 0.8em;
+        opacity: 0.7;
+      }
+    }
+  }
+  
+  .tag {
+    color: #ff6b6b;
+    font-weight: 500;
+    background: color-mix(in srgb, #ff6b6b 10%, transparent);
+    padding: 0.1em 0.3em;
+    border-radius: 3px;
+    font-size: 0.9em;
+  }
+  
+  .math-inline {
+    font-family: 'Times New Roman', serif;
+    font-style: italic;
+    color: #4caf50;
+    padding: 0.1em 0.2em;
+    background: color-mix(in srgb, #4caf50 10%, transparent);
+    border-radius: 2px;
+  }
+  
+  .math-block {
+    font-family: 'Times New Roman', serif;
+    font-style: italic;
+    color: #4caf50;
+    background: color-mix(in srgb, #4caf50 10%, transparent);
+    padding: 1em;
+    margin: 1em 0;
+    border-radius: 6px;
+    border-left: 4px solid #4caf50;
+    overflow-x: auto;
+  }
+  
+  .embed {
+    background: color-mix(in srgb, var(--text2) 10%, transparent);
+    border: 1px dashed var(--text3);
+    border-radius: 6px;
+    padding: 1em;
+    margin: 1em 0;
+    color: var(--text2);
+    font-style: italic;
+    text-align: center;
+  }
+  
+  .md-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 1em 0;
+    display: block;
+  }
+  
+  blockquote {
+    margin: 1em 0;
+    padding: 0 1em;
+    border-left: 4px solid var(--text3);
+    color: var(--text2);
+    font-style: italic;
+  }
+  
+  hr {
+    border: none;
+    border-top: 2px solid var(--text3);
+    margin: 2em 0;
+  }
+  
+  p {
+    margin: 1em 0;
+    
+    &:first-child {
+      margin-top: 0;
+    }
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
   }
 }
 
