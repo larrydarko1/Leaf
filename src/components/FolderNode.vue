@@ -78,7 +78,8 @@
       v-else
       class="file-item"
       :class="{ 
-        active: isSelected, 
+        selected: isSelected,
+        active: isActive, 
         renaming: isRenaming, 
         'is-dragging': isDragging,
         'media-image': isImageFile,
@@ -88,7 +89,7 @@
       }"
       :style="{ paddingLeft: (depth * 16 + 10) + 'px' }"
       draggable="true"
-      @click="node.file && $emit('selectFile', node.file)"
+      @click="handleFileClick"
       @contextmenu.prevent="node.file && $emit('contextMenu', 'file', node.file.path, $event)"
       @dragstart="handleDragStart"
       @dragend="handleDragEnd"
@@ -214,13 +215,14 @@
         :key="child.path"
         :node="child"
         :depth="depth + 1"
-        :selected-file="selectedFile"
+        :selected-files="selectedFiles"
+        :active-file="activeFile"
         :renaming-file="renamingFile"
         :selected-folder="selectedFolder"
         :renaming-folder="renamingFolder"
         :rename-value="renameValue"
         :expanded-folders="expandedFolders"
-        @select-file="$emit('selectFile', $event)"
+        @select-file="(file: FileInfo, event?: MouseEvent, visibleFiles?: FileInfo[]) => $emit('selectFile', file, event, visibleFiles)"
         @select-folder="$emit('selectFolder', $event)"
         @toggle-folder="$emit('toggleFolder', $event)"
         @rename="$emit('rename')"
@@ -249,7 +251,8 @@ export interface TreeNode {
 const props = defineProps<{
   node: TreeNode;
   depth: number;
-  selectedFile: FileInfo | null;
+  selectedFiles: FileInfo[];
+  activeFile: FileInfo | null;
   renamingFile: FileInfo | null;
   selectedFolder: string | null;
   renamingFolder: string | null;
@@ -258,7 +261,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  selectFile: [file: FileInfo];
+  selectFile: [file: FileInfo, event?: MouseEvent, visibleFiles?: FileInfo[]];
   selectFolder: [path: string];
   toggleFolder: [path: string];
   rename: [];
@@ -336,9 +339,16 @@ const isRenaming = computed(() => {
 
 const isSelected = computed(() => {
   if (props.node.type === 'file') {
-    return props.selectedFile?.path === props.node.file?.path;
+    return props.selectedFiles.some(f => f.path === props.node.file?.path);
   } else if (props.node.type === 'folder') {
     return props.selectedFolder === props.node.path;
+  }
+  return false;
+});
+
+const isActive = computed(() => {
+  if (props.node.type === 'file') {
+    return props.activeFile?.path === props.node.file?.path;
   }
   return false;
 });
@@ -357,6 +367,12 @@ watch(isRenaming, (renaming) => {
 function handleFolderClick() {
   // Single click selects the folder
   emit('selectFolder', props.node.path);
+}
+
+function handleFileClick(event: MouseEvent) {
+  if (props.node.file) {
+    emit('selectFile', props.node.file, event, undefined);
+  }
 }
 
 function handleDragStart(event: DragEvent) {
@@ -403,7 +419,7 @@ function handleDrop(event: DragEvent) {
       if (data.startsWith('file:')) {
         const filePath = data.substring(5);
         // Don't allow moving to the same folder the file is already in
-        const file = props.selectedFile;
+        const file = props.activeFile;
         if (file && file.path === filePath && file.folder === props.node.path) {
           return;
         }
@@ -519,6 +535,17 @@ function handleDrop(event: DragEvent) {
 }
 
 .file-item {
+  // Selected but not active (multi-select)
+  &.selected {
+    background: color-mix(in srgb, var(--base1) 50%, transparent);
+    margin: 1px 10px 1px 10px;
+    
+    .file-name {
+      font-weight: 500;
+    }
+  }
+  
+  // Active file (being edited)
   &.active {
     background: var(--base1);
     margin: 1px 10px 1px 10px;

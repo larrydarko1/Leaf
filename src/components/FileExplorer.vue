@@ -13,7 +13,8 @@
         :key="node.path"
         :node="node"
         :depth="0"
-        :selected-file="selectedFile"
+        :selected-files="selectedFiles"
+        :active-file="activeFile"
         :renaming-file="renamingFile"
         :selected-folder="selectedFolder"
         :renaming-folder="renamingFolder"
@@ -57,14 +58,15 @@ const props = defineProps<{
   files: FileInfo[];
   folders?: FolderInfo[];
   currentFolder: string | null;
-  selectedFile: FileInfo | null;
+  selectedFiles: FileInfo[];
+  activeFile: FileInfo | null;
   renamingFile: FileInfo | null;
   selectedFolder: string | null;
   renamingFolder: string | null;
 }>();
 
 const emit = defineEmits<{
-  selectFile: [file: FileInfo];
+  selectFile: [file: FileInfo, event?: MouseEvent, visibleFiles?: FileInfo[]];
   selectFolder: [path: string];
   renameFile: [file: FileInfo, newName: string];
   renameFolder: [path: string, newName: string];
@@ -224,6 +226,13 @@ const flattenedItems = computed(() => {
   return items;
 });
 
+// Get just the visible files in display order (for range selection)
+const visibleFiles = computed(() => {
+  return flattenedItems.value
+    .filter(item => item.type === 'file' && item.file)
+    .map(item => item.file!);
+});
+
 // Keyboard navigation handler
 function handleKeyDown(e: KeyboardEvent) {
   // Don't navigate if we're renaming
@@ -256,8 +265,8 @@ function handleKeyDown(e: KeyboardEvent) {
   
   // Find current index
   let currentIndex = -1;
-  if (props.selectedFile) {
-    currentIndex = items.findIndex(item => item.type === 'file' && item.file?.path === props.selectedFile?.path);
+  if (props.activeFile) {
+    currentIndex = items.findIndex(item => item.type === 'file' && item.file?.path === props.activeFile?.path);
   } else if (props.selectedFolder) {
     currentIndex = items.findIndex(item => item.type === 'folder' && item.folderPath === props.selectedFolder);
   }
@@ -293,9 +302,9 @@ function getFileNameWithoutExtension(fileName: string): string {
   return lastDotIndex > 0 ? fileName.substring(0, lastDotIndex) : fileName;
 }
 
-function selectFile(file: FileInfo) {
+function selectFile(file: FileInfo, event?: MouseEvent) {
   if (!props.renamingFile && !props.renamingFolder) {
-    emit('selectFile', file);
+    emit('selectFile', file, event, visibleFiles.value);
   }
 }
 

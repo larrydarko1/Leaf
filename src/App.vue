@@ -74,7 +74,8 @@
 						:files="files"
 						:folders="folders"
 						:current-folder="currentFolder"
-						:selected-file="selectedFile"
+						:selected-files="selectedFiles"
+						:active-file="activeFile"
 						:renaming-file="renamingFile"
 					:selected-folder="selectedFolder"
 					:renaming-folder="renamingFolder"
@@ -94,7 +95,7 @@
 
 				<main class="main-content">
 					<NoteEditor
-						:file="selectedFile"
+						:file="activeFile"
 						@save="handleFileSave"
 					/>
 				</main>
@@ -113,7 +114,9 @@ const currentTheme = ref('dark-theme');
 const currentFolder = ref<string | null>(null);
 const files = ref<FileInfo[]>([]);
 const folders = ref<FolderInfo[]>([]);
-const selectedFile = ref<FileInfo | null>(null);
+const selectedFiles = ref<FileInfo[]>([]); // Multiple selected files
+const activeFile = ref<FileInfo | null>(null); // The file being edited
+const lastSelectedIndex = ref<number>(-1); // For shift+click range selection
 const renamingFile = ref<FileInfo | null>(null);
 const selectedFolder = ref<string | null>(null);
 const renamingFolder = ref<string | null>(null);
@@ -137,7 +140,7 @@ onMounted(() => {
 function handleKeydown(e: KeyboardEvent) {
 	if (e.key === 'F2') {
 		e.preventDefault();
-		if (selectedFile.value && !renamingFile.value) {
+		if (activeFile.value && !renamingFile.value) {
 			renameSelectedFile();
 		} else if (selectedFolder.value && !renamingFolder.value) {
 			renamingFolder.value = selectedFolder.value;
@@ -166,9 +169,24 @@ async function loadFolder(folderPath: string) {
 			files.value = result.files;
 			folders.value = result.folders || [];
 			
-			// Auto-select first file if available
-			if (files.value.length > 0 && !selectedFile.value) {
-				selectedFile.value = files.value[0];
+			// Try to restore the last selected file
+			const lastSelectedPath = localStorage.getItem('leaf-last-selected-file');
+			if (lastSelectedPath && selectedFiles.value.length === 0) {
+				const lastFile = files.value.find(f => f.path === lastSelectedPath);
+				if (lastFile) {
+					selectedFiles.value = [lastFile];
+					activeFile.value = lastFile;
+				} else if (files.value.length > 0) {
+					// File was deleted, select first file and update localStorage
+					selectedFiles.value = [files.value[0]];
+					activeFile.value = files.value[0];
+					localStorage.setItem('leaf-last-selected-file', files.value[0].path);
+				}
+			} else if (files.value.length > 0 && selectedFiles.value.length === 0) {
+				// No last selected file, select first file
+				selectedFiles.value = [files.value[0]];
+				activeFile.value = files.value[0];
+				localStorage.setItem('leaf-last-selected-file', files.value[0].path);
 			}
 		} else {
 			console.error('Failed to scan folder:', result.error);
@@ -182,14 +200,20 @@ async function loadFolder(folderPath: string) {
 
 async function refreshFiles() {
 	if (currentFolder.value) {
-		const currentPath = selectedFile.value?.path;
+		const currentPaths = selectedFiles.value.map(f => f.path);
+		const activePath = activeFile.value?.path;
 		await loadFolder(currentFolder.value);
 		
-		// Reselect the same file if it still exists
-		if (currentPath) {
-			const file = files.value.find(f => f.path === currentPath);
-			if (file) {
-				selectedFile.value = file;
+		// Reselect the same files if they still exist
+		if (currentPaths.length > 0) {
+			const stillExist = files.value.filter(f => currentPaths.includes(f.path));
+			if (stillExist.length > 0) {
+				selectedFiles.value = stillExist;
+				// Restore active file if it still exists
+				if (activePath) {
+					const activeStillExists = stillExist.find(f => f.path === activePath);
+					activeFile.value = activeStillExists || stillExist[0];
+				}
 			}
 		}
 	}
@@ -199,22 +223,63 @@ function changeFolder() {
 	currentFolder.value = null;
 	files.value = [];
 	folders.value = [];
-	selectedFile.value = null;
+	selectedFiles.value = [];
+	activeFile.value = null;
+	lastSelectedIndex.value = -1;
 	localStorage.removeItem('leaf-folder-path');
+	localStorage.removeItem('leaf-last-selected-file');
 }
 
-function handleFileSelect(file: FileInfo) {
-	selectedFile.value = file;
+function handleFileSelect(file: FileInfo, event?: MouseEvent, visibleFiles?: FileInfo[]) {
 	selectedFolder.value = null; // Clear folder selection when file is selected
+	
+	// Use visibleFiles if provided (visual order), otherwise fall back to files.value
+	const fileList = visibleFiles || files.value;
+	const fileIndex = fileList.findIndex(f => f.path === file.path);
+	
+	if (event?.metaKey || event?.ctrlKey) {
+		// Cmd/Ctrl+Click: Toggle file in selection
+		const index = selectedFiles.value.findIndex(f => f.path === file.path);
+		if (index >= 0) {
+			// Remove from selection
+			selectedFiles.value.splice(index, 1);
+			// If we removed the active file, set a new active file
+			if (activeFile.value?.path === file.path) {
+				activeFile.value = selectedFiles.value[0] || null;
+			}
+		} else {
+			// Add to selection
+			selectedFiles.value.push(file);
+			activeFile.value = file; // Make this the active file
+		}
+		lastSelectedIndex.value = fileIndex;
+	} else if (event?.shiftKey && lastSelectedIndex.value >= 0) {
+		// Shift+Click: Select range from visual order
+		const start = Math.min(lastSelectedIndex.value, fileIndex);
+		const end = Math.max(lastSelectedIndex.value, fileIndex);
+		selectedFiles.value = fileList.slice(start, end + 1);
+		activeFile.value = file;
+	} else {
+		// Normal click: Select only this file
+		selectedFiles.value = [file];
+		activeFile.value = file;
+		lastSelectedIndex.value = fileIndex;
+	}
+	
+	// Save the active file path for next app launch
+	if (activeFile.value) {
+		localStorage.setItem('leaf-last-selected-file', activeFile.value.path);
+	}
 }
 
 function handleFolderSelect(folderPath: string) {
 	selectedFolder.value = folderPath;
-	selectedFile.value = null; // Clear file selection when folder is selected
+	selectedFiles.value = []; // Clear file selection when folder is selected
+	activeFile.value = null;
 }
 
 function handleFileSave() {
-	console.log('File saved:', selectedFile.value?.name);
+	console.log('File saved:', activeFile.value?.name);
 	// Optionally refresh file metadata
 	refreshFiles();
 }
@@ -234,7 +299,8 @@ async function createNewFile() {
 			// Select the new file
 			const newFile = files.value.find(f => f.path === result.path);
 			if (newFile) {
-				selectedFile.value = newFile;
+				selectedFiles.value = [newFile];
+				activeFile.value = newFile;
 			}
 		} else {
 			alert('Failed to create file: ' + result.error);
@@ -266,19 +332,21 @@ async function createNewFolder() {
 }
 
 async function renameSelectedFile() {
-	if (!selectedFile.value) return;
-	renamingFile.value = selectedFile.value;
+	if (!activeFile.value) return;
+	renamingFile.value = activeFile.value;
 }
 
 function startRenameFile(file: FileInfo) {
-	selectedFile.value = file;
+	selectedFiles.value = [file];
+	activeFile.value = file;
 	selectedFolder.value = null;
 	renamingFile.value = file;
 }
 
 function startRenameFolder(folderPath: string) {
 	selectedFolder.value = folderPath;
-	selectedFile.value = null;
+	selectedFiles.value = [];
+	activeFile.value = null;
 	renamingFolder.value = folderPath;
 }
 
@@ -300,7 +368,8 @@ async function handleFileRename(file: FileInfo, newName: string) {
 			// Select the renamed file
 			const renamedFile = files.value.find(f => f.path === result.newPath);
 			if (renamedFile) {
-				selectedFile.value = renamedFile;
+				selectedFiles.value = [renamedFile];
+				activeFile.value = renamedFile;
 			}
 		} else {
 			renamingFile.value = null;
@@ -363,17 +432,30 @@ async function handleFolderDelete(folderPath: string) {
 
 async function handleFileDelete(file: FileInfo) {
 	try {
-		const result = await window.electronAPI.deleteFile(file.path);
-		if (result.success) {
-			selectedFile.value = null;
-			// Refresh the file list
-			await refreshFiles();
-			// Select another file if available
-			if (files.value.length > 0) {
-				selectedFile.value = files.value[0];
+		// If multiple files selected, delete all of them
+		const filesToDelete = selectedFiles.value.length > 1 ? selectedFiles.value : [file];
+		const confirmMsg = filesToDelete.length > 1 
+			? `Are you sure you want to delete ${filesToDelete.length} files?`
+			: `Are you sure you want to delete "${file.name}"?`;
+		
+		if (!confirm(confirmMsg)) return;
+		
+		// Delete all selected files
+		for (const f of filesToDelete) {
+			const result = await window.electronAPI.deleteFile(f.path);
+			if (!result.success) {
+				alert(`Failed to delete ${f.name}: ${result.error}`);
 			}
-		} else {
-			alert('Failed to delete file: ' + result.error);
+		}
+		
+		selectedFiles.value = [];
+		activeFile.value = null;
+		// Refresh the file list
+		await refreshFiles();
+		// Select another file if available
+		if (files.value.length > 0) {
+			selectedFiles.value = [files.value[0]];
+			activeFile.value = files.value[0];
 		}
 	} catch (error) {
 		console.error('Error deleting file:', error);
@@ -395,17 +477,30 @@ async function handleFileMove(filePath: string, targetFolderPath: string) {
 			absoluteTargetPath = currentFolder.value + '/' + targetFolderPath;
 		}
 		
-		const result = await window.electronAPI.moveFile(filePath, absoluteTargetPath);
-		if (result.success && result.newPath) {
+		// Move all selected files if multiple are selected
+		const filesToMove = selectedFiles.value.length > 1 
+			? selectedFiles.value 
+			: [files.value.find(f => f.path === filePath)].filter(Boolean) as FileInfo[];
+		
+		const movedPaths: string[] = [];
+		for (const file of filesToMove) {
+			const result = await window.electronAPI.moveFile(file.path, absoluteTargetPath);
+			if (result.success && result.newPath) {
+				movedPaths.push(result.newPath);
+			} else {
+				alert(`Failed to move ${file.name}: ${result.error}`);
+			}
+		}
+		
+		if (movedPaths.length > 0) {
 			// Refresh the file list
 			await refreshFiles();
-			// Select the moved file
-			const movedFile = files.value.find(f => f.path === result.newPath);
-			if (movedFile) {
-				selectedFile.value = movedFile;
+			// Select the moved files
+			const movedFiles = files.value.filter(f => movedPaths.includes(f.path));
+			if (movedFiles.length > 0) {
+				selectedFiles.value = movedFiles;
+				activeFile.value = movedFiles[0];
 			}
-		} else {
-			alert('Failed to move file: ' + result.error);
 		}
 	} catch (error) {
 		console.error('Error moving file:', error);
