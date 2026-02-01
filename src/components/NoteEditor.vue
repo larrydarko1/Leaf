@@ -50,6 +50,21 @@
       </div>
     </div>
     
+    <!-- PDF viewer for PDF files -->
+    <div v-else-if="file && isPdfFile" class="pdf-viewer">
+      <iframe 
+        v-if="pdfUrl && !pdfError"
+        :src="pdfUrl"
+        class="pdf-preview"
+        @error="onPdfError"
+      >
+      </iframe>
+      <div v-if="pdfError" class="pdf-error">
+        <p>Failed to load PDF</p>
+        <p class="pdf-error-hint">This file may be corrupted or in an unsupported format</p>
+      </div>
+    </div>
+    
     <!-- Audio player for audio files -->
     <div v-else-if="file && isAudioFile" class="audio-viewer">
       <div class="audio-container">
@@ -92,7 +107,7 @@
     
     <!-- Text editor for text files -->
     <textarea
-      v-else-if="file && !isImageFile && !isVideoFile && !isAudioFile"
+      v-else-if="file && !isImageFile && !isVideoFile && !isAudioFile && !isPdfFile"
       v-model="content"
       class="editor-textarea"
       :class="{ 'code-editor': isCodeFile }"
@@ -148,6 +163,9 @@ const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
 // Audio file extensions
 const audioExtensions = ['.mp3', '.wav', '.flac', '.aac', '.m4a', '.ogg', '.wma', '.aiff'];
 
+// PDF file extensions
+const pdfExtensions = ['.pdf'];
+
 // Code file extensions
 const codeExtensions = [
   '.py', '.js', '.jsx', '.ts', '.tsx', '.html', '.htm', '.css', '.scss', '.sass', '.less',
@@ -173,6 +191,10 @@ const audioRef = ref<HTMLAudioElement | null>(null);
 const audioError = ref(false);
 const isLoadingAudio = ref(false);
 
+// PDF state
+const pdfUrl = ref('');
+const pdfError = ref(false);
+
 // Check if current file is an image
 const isImageFile = computed(() => {
   if (!props.file) return false;
@@ -189,6 +211,12 @@ const isVideoFile = computed(() => {
 const isAudioFile = computed(() => {
   if (!props.file) return false;
   return audioExtensions.includes(props.file.extension.toLowerCase());
+});
+
+// Check if current file is a PDF file
+const isPdfFile = computed(() => {
+  if (!props.file) return false;
+  return pdfExtensions.includes(props.file.extension.toLowerCase());
 });
 
 // Check if current file is a code file
@@ -225,6 +253,10 @@ function onVideoError() {
 
 function onAudioError() {
   audioError.value = true;
+}
+
+function onPdfError() {
+  pdfError.value = true;
 }
 
 function onImageLoad() {
@@ -268,9 +300,11 @@ watch(() => props.file, async (newFile) => {
   imageError.value = false;
   videoError.value = false;
   audioError.value = false;
+  pdfError.value = false;
   imageUrl.value = '';
   videoUrl.value = '';
   audioUrl.value = '';
+  pdfUrl.value = '';
   
   if (newFile) {
     const ext = newFile.extension.toLowerCase();
@@ -295,6 +329,14 @@ watch(() => props.file, async (newFile) => {
       // Load audio via IPC for better format compatibility
       await loadAudio(newFile.path);
       // Clear text content for audio files
+      content.value = '';
+      originalContent.value = '';
+      hasUnsavedChanges.value = false;
+    } else if (pdfExtensions.includes(ext)) {
+      // Set PDF URL using file:// protocol
+      pdfUrl.value = `file://${newFile.path}`;
+      pdfError.value = false;
+      // Clear text content for PDF files
       content.value = '';
       originalContent.value = '';
       hasUnsavedChanges.value = false;
@@ -558,6 +600,8 @@ onUnmounted(() => {
   max-height: 100%;
   object-fit: contain;
   border-radius: 8px;
+  position: relative;
+  z-index: 1;
 }
 
 .image-loading {
@@ -566,6 +610,8 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   color: var(--text2);
+  position: relative;
+  z-index: 1;
   
   p {
     margin: 0.5rem 0;
@@ -579,6 +625,8 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   color: var(--text2);
+  position: relative;
+  z-index: 1;
   
   p {
     margin: 0.5rem 0;
@@ -613,6 +661,8 @@ onUnmounted(() => {
   max-width: 100%;
   max-height: 100%;
   border-radius: 8px;
+  position: relative;
+  z-index: 1;
 }
 
 .video-error {
@@ -621,6 +671,8 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   color: var(--text2);
+  position: relative;
+  z-index: 1;
   
   p {
     margin: 0.5rem 0;
@@ -628,6 +680,46 @@ onUnmounted(() => {
   }
   
   .video-error-hint {
+    font-size: 0.85rem;
+    opacity: 0.7;
+  }
+}
+
+.pdf-viewer {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  overflow: hidden;
+  -webkit-app-region: no-drag;
+  background: var(--base1);
+  position: relative;
+}
+
+.pdf-preview {
+  width: 100%;
+  height: 100%;
+  border: none;
+  position: relative;
+  z-index: 1;
+}
+
+.pdf-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text2);
+  position: relative;
+  z-index: 1;
+  
+  p {
+    margin: 0.5rem 0;
+    font-size: 1rem;
+  }
+  
+  .pdf-error-hint {
     font-size: 0.85rem;
     opacity: 0.7;
   }
@@ -663,6 +755,8 @@ onUnmounted(() => {
   gap: 2rem;
   max-width: 500px;
   width: 100%;
+  position: relative;
+  z-index: 1;
 }
 
 .audio-icon {
@@ -676,6 +770,8 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   color: var(--text2);
+  position: relative;
+  z-index: 1;
   
   p {
     margin: 0.5rem 0;
@@ -694,6 +790,8 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   color: var(--text2);
+  position: relative;
+  z-index: 1;
   
   p {
     margin: 0.5rem 0;
