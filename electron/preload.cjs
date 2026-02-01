@@ -22,6 +22,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     renameFolder: (folderPath, newFolderName) => ipcRenderer.invoke('folder:rename', folderPath, newFolderName),
     deleteFolder: (folderPath) => ipcRenderer.invoke('folder:delete', folderPath),
     moveFile: (filePath, targetFolderPath) => ipcRenderer.invoke('file:move', filePath, targetFolderPath),
-    moveFolder: (folderPath, targetFolderPath) => ipcRenderer.invoke('folder:move', folderPath, targetFolderPath)
+    moveFolder: (folderPath, targetFolderPath) => ipcRenderer.invoke('folder:move', folderPath, targetFolderPath),
+
+    // Spellcheck
+    getSpellingSuggestions: (word) => ipcRenderer.invoke('spellcheck:getSuggestions', word)
 });
 

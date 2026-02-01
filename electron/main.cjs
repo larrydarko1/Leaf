@@ -1,5 +1,5 @@
 // Electron Main Process - Leaf note-taking app
-const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs').promises;
 const fsSync = require('fs');
@@ -27,11 +27,39 @@ function createWindow() {
             webSecurity: false, // Allow loading local files (required for video/media)
             // Disable all browser-like storage mechanisms
             partition: 'persist:leaf', // Use persistent session
-            cache: false // Disable HTTP cache
+            cache: false, // Disable HTTP cache
+            spellcheck: true // Enable spellcheck
         },
         backgroundColor: '#1a1a1a',
         titleBarStyle: 'hiddenInset', // macOS style
         show: false // Don't show until ready
+    });
+
+    // Enable context menu with spellcheck suggestions
+    mainWindow.webContents.on('context-menu', (event, params) => {
+        const menu = Menu.buildFromTemplate([
+            // Spellcheck suggestions
+            ...params.dictionarySuggestions.map(suggestion => ({
+                label: suggestion,
+                click: () => mainWindow.webContents.replaceMisspelling(suggestion)
+            })),
+            // Separator if there are suggestions
+            ...(params.dictionarySuggestions.length > 0 ? [{ type: 'separator' }] : []),
+            // Add to dictionary option
+            ...(params.misspelledWord ? [{
+                label: 'Add to Dictionary',
+                click: () => mainWindow.webContents.session.addWordToSpellCheckerDictionary(params.misspelledWord)
+            }] : []),
+            // Separator before standard options
+            ...(params.misspelledWord ? [{ type: 'separator' }] : []),
+            // Standard editing options
+            { role: 'cut', visible: params.isEditable },
+            { role: 'copy', visible: params.selectionText.length > 0 },
+            { role: 'paste', visible: params.isEditable },
+            { type: 'separator', visible: params.isEditable || params.selectionText.length > 0 },
+            { role: 'selectAll' }
+        ]);
+        menu.popup();
     });
 
     // Load the app
@@ -385,6 +413,19 @@ ipcMain.handle('folder:move', async (event, folderPath, targetFolderPath) => {
 
         await fs.rename(folderPath, newPath);
         return { success: true, newPath };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+// Get spelling suggestions for a word
+ipcMain.handle('spellcheck:getSuggestions', async (event, word) => {
+    try {
+        const suggestions = event.sender.session.availableSpellCheckerLanguages;
+        // Use Chromium's spell checker to get suggestions
+        // Note: Electron doesn't expose direct API for suggestions, so we return empty array
+        // The context menu will be handled by Chromium's native spellcheck
+        return { success: true, suggestions: [] };
     } catch (error) {
         return { success: false, error: error.message };
     }
