@@ -33,44 +33,66 @@
 								<path d="M7.54717 4.5C5.48889 4.503 4.41599 4.54826 3.73223 5.23202C3 5.96425 3 7.14276 3 9.49979V14.4998C3 16.8568 3 18.0353 3.73223 18.7676C4.41599 19.4513 5.48889 19.4966 7.54717 19.4996C7.49985 18.8763 7.49992 18.1557 7.50001 17.3768V6.6227C7.49992 5.84388 7.49985 5.1233 7.54717 4.5Z"></path>
 							</svg>
 						</button>
+						<span class="menu-divider"></span>
 						<button @click="createNewFile" class="btn-menu-icon" title="Create new note">
-							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-								<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-								<polyline points="14 2 14 8 20 8"></polyline>
-								<line x1="12" y1="18" x2="12" y2="12"></line>
-								<line x1="9" y1="15" x2="15" y2="15"></line>
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+							<g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+							<g id="SVGRepo_iconCarrier">
+								<path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C13.4992 2 14.7004 2 15.6773 2.07361C15.5629 2.3601 15.5 2.6727 15.5 3V3.5H15C13.6193 3.5 12.5 4.61929 12.5 6C12.5 7.38071 13.6193 8.5 15 8.5H15.5V9C15.5 10.3807 16.6193 11.5 18 11.5C18.8178 11.5 19.5439 11.1073 20 10.5002V14C20 17.7712 20 19.6569 18.8284 20.8284C17.6569 22 15.7712 22 12 22C8.22876 22 6.34315 22 5.17157 20.8284C4 19.6569 4 17.7712 4 14V10C4 6.22876 4 4.34315 5.17157 3.17157C6.34315 2 8.22876 2 12 2ZM8 11C7.44772 11 7 11.4477 7 12C7 12.5523 7.44772 13 8 13H12C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11H8ZM8 14C7.44772 14 7 14.4477 7 15C7 15.5523 7.44772 16 8 16H14C14.5523 16 15 15.5523 15 15C15 14.4477 14.5523 14 14 14H8ZM8 17C7.44772 17 7 17.4477 7 18C7 18.5523 7.44772 19 8 19H12C12.5523 19 13 18.5523 13 18C13 17.4477 12.5523 17 12 17H8Z" fill="currentColor"></path>
+								<path d="M18 3L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+								<path d="M21 6L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+							</g>
 							</svg>
 						</button>
 						<button @click="createNewFolder" class="btn-menu-icon" title="Create new folder">
-							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-								<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-								<line x1="12" y1="11" x2="12" y2="17"></line>
-								<line x1="9" y1="14" x2="15" y2="14"></line>
-							</svg>
-						</button>
-
-						<span class="menu-divider"></span>
-						
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<defs>
+								<mask id="folderMask">
+									<rect width="24" height="24" fill="white"/>
+									<path d="M10 14H12M12 14H14M12 14V16M12 14V12" stroke="black" stroke-width="1.5" stroke-linecap="round"/>
+								</mask>
+							</defs>
+							<g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+							<g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+							<g id="SVGRepo_iconCarrier">
+								<path mask="url(#folderMask)" d="M2 6.94975C2 6.06722 2 5.62595 2.06935 5.25839C2.37464 3.64031 3.64031 2.37464 5.25839 2.06935C5.62595 2 6.06722 2 6.94975 2C7.33642 2 7.52976 2 7.71557 2.01738C8.51665 2.09229 9.27652 2.40704 9.89594 2.92051C10.0396 3.03961 10.1763 3.17633 10.4497 3.44975L11 4C11.8158 4.81578 12.2237 5.22367 12.7121 5.49543C12.9804 5.64471 13.2651 5.7626 13.5604 5.84678C14.0979 6 14.6747 6 15.8284 6H16.2021C18.8345 6 20.1506 6 21.0062 6.76946C21.0849 6.84024 21.1598 6.91514 21.2305 6.99383C22 7.84935 22 9.16554 22 11.7979V14C22 17.7712 22 19.6569 20.8284 20.8284C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.8284C2 19.6569 2 17.7712 2 14V6.94975Z" fill="currentColor" stroke="currentColor" stroke-width="1.5"/>
+							</g>
+						</svg>
+</button>
+<span class="menu-divider"></span>
+			<button @click="toggleSearch" class="btn-menu-icon" :class="{ 'active': showSearchPanel }" title="Search files">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+							<g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+							<g id="SVGRepo_iconCarrier">
+								<rect width="24" height="24" fill="transparent"></rect>
+								<path fill-rule="evenodd" clip-rule="evenodd" d="M7.25007 2.38782C8.54878 2.0992 10.1243 2 12 2C13.8757 2 15.4512 2.0992 16.7499 2.38782C18.06 2.67897 19.1488 3.176 19.9864 4.01358C20.824 4.85116 21.321 5.94002 21.6122 7.25007C21.9008 8.54878 22 10.1243 22 12C22 13.8757 21.9008 15.4512 21.6122 16.7499C21.321 18.06 20.824 19.1488 19.9864 19.9864C19.1488 20.824 18.06 21.321 16.7499 21.6122C15.4512 21.9008 13.8757 22 12 22C10.1243 22 8.54878 21.9008 7.25007 21.6122C5.94002 21.321 4.85116 20.824 4.01358 19.9864C3.176 19.1488 2.67897 18.06 2.38782 16.7499C2.0992 15.4512 2 13.8757 2 12C2 10.1243 2.0992 8.54878 2.38782 7.25007C2.67897 5.94002 3.176 4.85116 4.01358 4.01358C4.85116 3.176 5.94002 2.67897 7.25007 2.38782ZM9 11.5C9 10.1193 10.1193 9 11.5 9C12.8807 9 14 10.1193 14 11.5C14 12.8807 12.8807 14 11.5 14C10.1193 14 9 12.8807 9 11.5ZM11.5 7C9.01472 7 7 9.01472 7 11.5C7 13.9853 9.01472 16 11.5 16C12.3805 16 13.202 15.7471 13.8957 15.31L15.2929 16.7071C15.6834 17.0976 16.3166 17.0976 16.7071 16.7071C17.0976 16.3166 17.0976 15.6834 16.7071 15.2929L15.31 13.8957C15.7471 13.202 16 12.3805 16 11.5C16 9.01472 13.9853 7 11.5 7Z" fill="currentColor"></path>
+							</g>
+						</svg>
+</button>
 					<button @click="toggleTheme" class="btn-menu-icon" title="Toggle theme">
 							<!-- Sun icon for dark theme -->
-							<svg v-if="currentTheme === 'dark-theme'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-								<circle cx="12" cy="12" r="5"></circle>
-								<line x1="12" y1="1" x2="12" y2="3"></line>
-								<line x1="12" y1="21" x2="12" y2="23"></line>
-								<line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-								<line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-								<line x1="1" y1="12" x2="3" y2="12"></line>
-								<line x1="21" y1="12" x2="23" y2="12"></line>
-								<line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-								<line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+						<svg v-if="currentTheme === 'dark-theme'" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+							<g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+							<g id="SVGRepo_iconCarrier">
+								<path d="M17 12C17 14.7614 14.7614 17 12 17C9.23858 17 7 14.7614 7 12C7 9.23858 9.23858 7 12 7C14.7614 7 17 9.23858 17 12Z" fill="currentColor"></path>
+								<path fill-rule="evenodd" clip-rule="evenodd" d="M12 1.25C12.4142 1.25 12.75 1.58579 12.75 2V4C12.75 4.41421 12.4142 4.75 12 4.75C11.5858 4.75 11.25 4.41421 11.25 4V2C11.25 1.58579 11.5858 1.25 12 1.25ZM3.66865 3.71609C3.94815 3.41039 4.42255 3.38915 4.72825 3.66865L6.95026 5.70024C7.25596 5.97974 7.2772 6.45413 6.9977 6.75983C6.7182 7.06553 6.2438 7.08677 5.9381 6.80727L3.71609 4.77569C3.41039 4.49619 3.38915 4.02179 3.66865 3.71609ZM20.3314 3.71609C20.6109 4.02179 20.5896 4.49619 20.2839 4.77569L18.0619 6.80727C17.7562 7.08677 17.2818 7.06553 17.0023 6.75983C16.7228 6.45413 16.744 5.97974 17.0497 5.70024L19.2718 3.66865C19.5775 3.38915 20.0518 3.41039 20.3314 3.71609ZM1.25 12C1.25 11.5858 1.58579 11.25 2 11.25H4C4.41421 11.25 4.75 11.5858 4.75 12C4.75 12.4142 4.41421 12.75 4 12.75H2C1.58579 12.75 1.25 12.4142 1.25 12ZM19.25 12C19.25 11.5858 19.5858 11.25 20 11.25H22C22.4142 11.25 22.75 11.5858 22.75 12C22.75 12.4142 22.4142 12.75 22 12.75H20C19.5858 12.75 19.25 12.4142 19.25 12ZM17.0255 17.0252C17.3184 16.7323 17.7933 16.7323 18.0862 17.0252L20.3082 19.2475C20.6011 19.5404 20.601 20.0153 20.3081 20.3082C20.0152 20.6011 19.5403 20.601 19.2475 20.3081L17.0255 18.0858C16.7326 17.7929 16.7326 17.3181 17.0255 17.0252ZM6.97467 17.0253C7.26756 17.3182 7.26756 17.7931 6.97467 18.086L4.75244 20.3082C4.45955 20.6011 3.98468 20.6011 3.69178 20.3082C3.39889 20.0153 3.39889 19.5404 3.69178 19.2476L5.91401 17.0253C6.2069 16.7324 6.68177 16.7324 6.97467 17.0253ZM12 19.25C12.4142 19.25 12.75 19.5858 12.75 20V22C12.75 22.4142 12.4142 22.75 12 22.75C11.5858 22.75 11.25 22.4142 11.25 22V20C11.25 19.5858 11.5858 19.25 12 19.25Z" fill="currentColor"></path>
+							</g>
 							</svg>
 							<!-- Moon icon for light theme -->
-							<svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-								<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+						<svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+							<g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+							<g id="SVGRepo_iconCarrier">
+								<path d="M12 22C17.5228 22 22 17.5228 22 12C22 11.5373 21.3065 11.4608 21.0672 11.8568C19.9289 13.7406 17.8615 15 15.5 15C11.9101 15 9 12.0899 9 8.5C9 6.13845 10.2594 4.07105 12.1432 2.93276C12.5392 2.69347 12.4627 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="currentColor"></path>
+							</g>
 							</svg>
 						</button>
 					</div>
 					<FileExplorer
+						v-if="!showSearchPanel"
 						:files="files"
 						:folders="folders"
 						:current-folder="currentFolder"
@@ -91,6 +113,15 @@
 					@move-file="handleFileMove"
 					@move-folder="handleFolderMove"
 					/>
+					<SearchPanel
+						v-else
+						:files="files"
+						:selected-files="selectedFiles"
+						:active-file="activeFile"
+						@select-file="handleSearchFileSelect"
+						@open-file="handleSearchFileOpen"
+						@close="closeSearch"
+					/>
 				</aside>
 
 				<main class="main-content">
@@ -108,6 +139,7 @@
 import { ref, onMounted } from 'vue';
 import FileExplorer from './components/FileExplorer.vue';
 import NoteEditor from './components/NoteEditor.vue';
+import SearchPanel from './components/SearchPanel.vue';
 import type { FileInfo, FolderInfo } from './types/electron';
 
 const currentTheme = ref('dark-theme');
@@ -120,6 +152,7 @@ const lastSelectedIndex = ref<number>(-1); // For shift+click range selection
 const renamingFile = ref<FileInfo | null>(null);
 const selectedFolder = ref<string | null>(null);
 const renamingFolder = ref<string | null>(null);
+const showSearchPanel = ref(false);
 
 // Load saved folder path and theme from localStorage
 onMounted(() => {
@@ -543,6 +576,27 @@ function toggleTheme() {
 	currentTheme.value = currentTheme.value === 'dark-theme' ? 'light-theme' : 'dark-theme';
 	localStorage.setItem('leaf-theme', currentTheme.value);
 }
+
+function toggleSearch() {
+	showSearchPanel.value = !showSearchPanel.value;
+}
+
+function closeSearch() {
+	showSearchPanel.value = false;
+}
+
+function handleSearchFileSelect(file: FileInfo, event?: MouseEvent) {
+	// Handle file selection from search panel (similar to regular file selection)
+	handleFileSelect(file, event);
+}
+
+function handleSearchFileOpen(file: FileInfo) {
+	// Open the file (make it active and close search panel)
+	selectedFiles.value = [file];
+	activeFile.value = file;
+	showSearchPanel.value = false;
+	localStorage.setItem('leaf-last-selected-file', file.path);
+}
 </script>
 
 <style lang="scss">
@@ -675,6 +729,11 @@ function toggleTheme() {
 		color: var(--text1);
 	}
 	
+	&.active {
+		background: var(--accent-color-alpha);
+		color: var(--accent-color);
+	}
+	
 	&:disabled {
 		opacity: 0.3;
 		cursor: not-allowed;
@@ -697,19 +756,43 @@ function toggleTheme() {
 	--text1: #000000;
 	--text2: #4a4a4a;
 	--text3: #cdcdcd;
+	--text-primary: #000000;
+	--text-muted: #666666;
 	--base1: #e8e8e8;
 	--base2: #000000;
 	--base3: #cdcdcd;
 	--base4: #ffffff;
+	--bg-primary: #ffffff;
+	--bg-secondary: #f5f5f5;
+	--bg-tertiary: #ebebeb;
+	--bg-hover: #e8e8e8;
+	--bg-selected: #d9d9d9;
+	--border-color: #d0d0d0;
+	--accent-color: #3EB489;
+	--accent-color-alpha: rgba(62, 180, 137, 0.1);
+	--scrollbar-thumb: #c0c0c0;
+	--scrollbar-thumb-hover: #a0a0a0;
 }
 
 .dark-theme {
 	--text1: #ffffff;
 	--text2: #b0b0b0;
 	--text3: #282828;
+	--text-primary: #ffffff;
+	--text-muted: #888888;
 	--base1: #121212;
 	--base2: #ffffff;
 	--base3: #282828;
 	--base4: #000000;
+	--bg-primary: #1e1e1e;
+	--bg-secondary: #181818;
+	--bg-tertiary: #252525;
+	--bg-hover: #2a2a2a;
+	--bg-selected: #333333;
+	--border-color: #333333;
+	--accent-color: #3EB489;
+	--accent-color-alpha: rgba(62, 180, 137, 0.15);
+	--scrollbar-thumb: #444444;
+	--scrollbar-thumb-hover: #555555;
 }
 </style>

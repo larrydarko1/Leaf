@@ -504,7 +504,7 @@ watch(expandedFolders, (newExpanded) => {
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  background: var(--base3);
+  background: var(--bg-secondary);
   overflow: hidden;
 }
 
@@ -529,15 +529,15 @@ watch(expandedFolders, (newExpanded) => {
   }
   
   &:hover::-webkit-scrollbar-thumb {
-    background: color-mix(in srgb, var(--text2) 40%, transparent);
+    background: var(--scrollbar-thumb);
   }
   
   &:hover::-webkit-scrollbar-thumb:hover {
-    background: color-mix(in srgb, var(--text2) 60%, transparent);
+    background: var(--scrollbar-thumb-hover);
   }
   
   &.drag-over-root {
-    background: var(--base1);
+    background: var(--bg-hover);
     outline: 2px dashed var(--text2);
     outline-offset: -4px;
   }
