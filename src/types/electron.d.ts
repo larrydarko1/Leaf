@@ -94,6 +94,12 @@ export interface FolderMoveResult {
     error?: string;
 }
 
+export interface AudioSaveResult {
+    success: boolean;
+    path?: string;
+    error?: string;
+}
+
 export interface ElectronAPI {
     isElectron: () => boolean;
     openFolderDialog: () => Promise<string | null>;
@@ -110,6 +116,7 @@ export interface ElectronAPI {
     deleteFolder: (folderPath: string) => Promise<FolderDeleteResult>;
     moveFile: (filePath: string, targetFolderPath: string) => Promise<FileMoveResult>;
     moveFolder: (folderPath: string, targetFolderPath: string) => Promise<FolderMoveResult>;
+    saveAudioRecording: (folderPath: string, fileName: string, base64Data: string) => Promise<AudioSaveResult>;
 }
 
 declare global {

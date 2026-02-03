@@ -24,6 +24,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     moveFile: (filePath, targetFolderPath) => ipcRenderer.invoke('file:move', filePath, targetFolderPath),
     moveFolder: (folderPath, targetFolderPath) => ipcRenderer.invoke('folder:move', folderPath, targetFolderPath),
 
+    // Audio recording
+    saveAudioRecording: (folderPath, fileName, base64Data) => ipcRenderer.invoke('audio:saveRecording', folderPath, fileName, base64Data),
+
     // Spellcheck
     getSpellingSuggestions: (word) => ipcRenderer.invoke('spellcheck:getSuggestions', word)
 });

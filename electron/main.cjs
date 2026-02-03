@@ -430,3 +430,20 @@ ipcMain.handle('spellcheck:getSuggestions', async (event, word) => {
         return { success: false, error: error.message };
     }
 });
+
+// Save audio recording as WAV file
+ipcMain.handle('audio:saveRecording', async (event, folderPath, fileName, base64Data) => {
+    try {
+        const filePath = path.join(folderPath, fileName);
+
+        // Convert base64 to buffer
+        const audioBuffer = Buffer.from(base64Data, 'base64');
+
+        // Write the file
+        await fs.writeFile(filePath, audioBuffer);
+
+        return { success: true, path: filePath };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});

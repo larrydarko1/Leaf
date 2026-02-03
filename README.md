@@ -16,6 +16,7 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 - **Image support** - View images directly in the app (`.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.svg`, `.bmp`, `.ico`)
 - **Video support** - Play videos directly in the app (`.mp4`, `.webm`, `.ogg`, `.mov`, `.avi`, `.mkv`)
 - **Audio support** - Play audio files directly in the app (`.mp3`, `.wav`, `.flac`, `.aac`, `.m4a`, `.ogg`, `.wma`, `.aiff`)
+- **Audio recording** - Record voice notes directly in the app and save as `.wav` files to your vault
 - **File browser** - Navigate your notes with a tree-based folder structure
 - **Drag & drop organization** - Move files between folders with drag and drop
 - **Folder nesting** - Organize folders by dragging them into other folders

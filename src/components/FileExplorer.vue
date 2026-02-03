@@ -361,12 +361,12 @@ function handleContextMenuAction(action: string) {
     }
   } else if (action === 'delete') {
     if (type === 'folder') {
-      if (confirm(`Are you sure you want to delete this folder and all its contents?`)) {
+ {
         emit('deleteFolder', targetPath);
       }
     } else if (type === 'file') {
       const file = props.files.find(f => f.path === targetPath);
-      if (file && confirm(`Are you sure you want to delete "${file.name}"?`)) {
+      if (file) {
         emit('deleteFile', file);
       }
     }

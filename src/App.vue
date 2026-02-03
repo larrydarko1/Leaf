@@ -76,6 +76,10 @@
 						<path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="currentColor"/>
 					</svg>
 </button>
+					<AudioRecorder 
+						:current-folder="currentFolder"
+						@recording-saved="handleRecordingSaved"
+					/>
 					<button @click="toggleTheme" class="btn-menu-icon" title="Toggle theme">
 							<!-- Sun icon for dark theme -->
 						<svg v-if="currentTheme === 'dark-theme'" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -157,6 +161,7 @@ import FileExplorer from './components/FileExplorer.vue';
 import NoteEditor from './components/NoteEditor.vue';
 import SearchPanel from './components/SearchPanel.vue';
 import BookmarksPanel from './components/BookmarksPanel.vue';
+import AudioRecorder from './components/AudioRecorder.vue';
 import type { FileInfo, FolderInfo } from './types/electron';
 
 const currentTheme = ref('dark-theme');
@@ -344,6 +349,18 @@ function handleFileSave() {
 	refreshFiles();
 }
 
+async function handleRecordingSaved(filePath: string) {
+	console.log('Recording saved:', filePath);
+	// Refresh the file list to show the new recording
+	await refreshFiles();
+	// Select the new recording file
+	const recordingFile = files.value.find(f => f.path === filePath);
+	if (recordingFile) {
+		selectedFiles.value = [recordingFile];
+		activeFile.value = recordingFile;
+	}
+}
+
 async function createNewFile() {
 	if (!currentFolder.value) return;
 	
@@ -494,12 +511,7 @@ async function handleFileDelete(file: FileInfo) {
 	try {
 		// If multiple files selected, delete all of them
 		const filesToDelete = selectedFiles.value.length > 1 ? selectedFiles.value : [file];
-		const confirmMsg = filesToDelete.length > 1 
-			? `Are you sure you want to delete ${filesToDelete.length} files?`
-			: `Are you sure you want to delete "${file.name}"?`;
-		
-		if (!confirm(confirmMsg)) return;
-		
+
 		// Delete all selected files
 		for (const f of filesToDelete) {
 			const result = await window.electronAPI.deleteFile(f.path);
@@ -850,6 +862,8 @@ function toggleBookmarks() {
 	--border-color: #d0d0d0;
 	--accent-color: #3EB489;
 	--accent-color-alpha: rgba(62, 180, 137, 0.1);
+	--danger-color: #dc3545;
+	--danger-color-alpha: rgba(220, 53, 69, 0.15);
 	--scrollbar-thumb: #c0c0c0;
 	--scrollbar-thumb-hover: #a0a0a0;
 }
@@ -872,6 +886,8 @@ function toggleBookmarks() {
 	--border-color: #333333;
 	--accent-color: #3EB489;
 	--accent-color-alpha: rgba(62, 180, 137, 0.15);
+	--danger-color: #dc3545;
+	--danger-color-alpha: rgba(220, 53, 69, 0.15);
 	--scrollbar-thumb: #444444;
 	--scrollbar-thumb-hover: #555555;
 }
