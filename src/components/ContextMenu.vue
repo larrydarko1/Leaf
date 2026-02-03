@@ -89,11 +89,11 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .context-menu {
   position: fixed;
-  background: var(--base2);
-  border: 1px solid var(--base3);
-  color: var(--text1);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
   border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   padding: 0.25rem 0;
   min-width: 160px;
   z-index: 10000;
@@ -108,12 +108,12 @@ onUnmounted(() => {
   padding: 0.5rem 0.75rem;
   cursor: pointer;
   transition: background 0.15s ease;
-  color: var(--text1);
+  color: var(--text-primary);
   font-size: 0.875rem;
   gap: 1rem;
 
   &:hover:not(.disabled) {
-    background: var(--base3);
+    background: var(--bg-hover);
   }
 
   &.disabled {

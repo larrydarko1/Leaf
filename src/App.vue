@@ -1,5 +1,5 @@
 <template>
-	<div id="app" :class="currentTheme">
+	<div id="app">
 		<div class="leaf-app">
 			<!-- Welcome screen when no folder is selected -->
 			<div v-if="!currentFolder" class="welcome-screen">
@@ -82,7 +82,7 @@
 					/>
 					<button @click="toggleTheme" class="btn-menu-icon" title="Toggle theme">
 							<!-- Sun icon for dark theme -->
-						<svg v-if="currentTheme === 'dark-theme'" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<svg v-if="currentTheme === 'dark'" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 							<g id="SVGRepo_bgCarrier" stroke-width="0"></g>
 							<g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
 							<g id="SVGRepo_iconCarrier">
@@ -164,7 +164,7 @@ import BookmarksPanel from './components/BookmarksPanel.vue';
 import AudioRecorder from './components/AudioRecorder.vue';
 import type { FileInfo, FolderInfo } from './types/electron';
 
-const currentTheme = ref('dark-theme');
+const currentTheme = ref('dark');
 const currentFolder = ref<string | null>(null);
 const files = ref<FileInfo[]>([]);
 const folders = ref<FolderInfo[]>([]);
@@ -183,12 +183,18 @@ const bookmarksStorageKey = computed(() => {
 	return currentFolder.value ? `leaf-bookmarks-${currentFolder.value}` : null;
 });
 
+// Apply theme to document root
+const applyTheme = (theme: string) => {
+	document.documentElement.setAttribute('data-theme', theme);
+};
+
 // Load saved folder path and theme from localStorage
 onMounted(() => {
 	const savedTheme = localStorage.getItem('leaf-theme');
 	if (savedTheme) {
 		currentTheme.value = savedTheme;
 	}
+	applyTheme(currentTheme.value);
 	
 	const savedFolder = localStorage.getItem('leaf-folder-path');
 	if (savedFolder) {
@@ -612,8 +618,9 @@ async function handleFolderMove(folderPath: string, targetFolderPath: string) {
 }
 
 function toggleTheme() {
-	currentTheme.value = currentTheme.value === 'dark-theme' ? 'light-theme' : 'dark-theme';
+	currentTheme.value = currentTheme.value === 'dark' ? 'light' : 'dark';
 	localStorage.setItem('leaf-theme', currentTheme.value);
+	applyTheme(currentTheme.value);
 }
 
 function toggleSearch() {
@@ -841,54 +848,5 @@ function toggleBookmarks() {
 	display: flex;
 	flex-direction: column;
 	overflow: hidden;
-}
-
-// Theme color palettes
-.light-theme {
-	--text1: #000000;
-	--text2: #4a4a4a;
-	--text3: #cdcdcd;
-	--text-primary: #000000;
-	--text-muted: #666666;
-	--base1: #e8e8e8;
-	--base2: #000000;
-	--base3: #cdcdcd;
-	--base4: #ffffff;
-	--bg-primary: #ffffff;
-	--bg-secondary: #f5f5f5;
-	--bg-tertiary: #ebebeb;
-	--bg-hover: #e8e8e8;
-	--bg-selected: #d9d9d9;
-	--border-color: #d0d0d0;
-	--accent-color: #3EB489;
-	--accent-color-alpha: rgba(62, 180, 137, 0.1);
-	--danger-color: #dc3545;
-	--danger-color-alpha: rgba(220, 53, 69, 0.15);
-	--scrollbar-thumb: #c0c0c0;
-	--scrollbar-thumb-hover: #a0a0a0;
-}
-
-.dark-theme {
-	--text1: #ffffff;
-	--text2: #b0b0b0;
-	--text3: #282828;
-	--text-primary: #ffffff;
-	--text-muted: #888888;
-	--base1: #121212;
-	--base2: #ffffff;
-	--base3: #282828;
-	--base4: #000000;
-	--bg-primary: #1e1e1e;
-	--bg-secondary: #181818;
-	--bg-tertiary: #252525;
-	--bg-hover: #2a2a2a;
-	--bg-selected: #333333;
-	--border-color: #333333;
-	--accent-color: #3EB489;
-	--accent-color-alpha: rgba(62, 180, 137, 0.15);
-	--danger-color: #dc3545;
-	--danger-color-alpha: rgba(220, 53, 69, 0.15);
-	--scrollbar-thumb: #444444;
-	--scrollbar-thumb-hover: #555555;
 }
 </style>
