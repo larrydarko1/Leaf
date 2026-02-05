@@ -8,6 +8,9 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 
 > **IMPORTANT:** This app runs natively on **Desktop** (macOS, Windows, Linux). All notes are stored in your local vault folder and never leave your device.
 
+# Demo
+![Leaf Demo](./public/demo.png)
+
 ## Features
 
 ### Note Management
