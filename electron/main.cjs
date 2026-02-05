@@ -144,7 +144,9 @@ async function scanFolder(folderPath, basePath = folderPath) {
     const audioExtensions = ['.mp3', '.wav', '.flac', '.aac', '.m4a', '.ogg', '.wma', '.aiff'];
     // PDF files
     const pdfExtensions = ['.pdf'];
-    const allowedExtensions = [...textExtensions, ...codeExtensions, ...imageExtensions, ...videoExtensions, ...audioExtensions, ...pdfExtensions];
+    // Drawing files
+    const drawingExtensions = ['.drawing'];
+    const allowedExtensions = [...textExtensions, ...codeExtensions, ...imageExtensions, ...videoExtensions, ...audioExtensions, ...pdfExtensions, ...drawingExtensions];
 
     try {
         const entries = await fs.readdir(folderPath, { withFileTypes: true });

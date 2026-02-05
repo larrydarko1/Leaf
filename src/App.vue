@@ -60,6 +60,13 @@
 							</g>
 						</svg>
 </button>
+						<button @click="createNewDrawing" class="btn-menu-icon" title="Create new drawing">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M12 19l7-7 3 3-7 7-3-3z" fill="currentColor"/>
+								<path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" fill="currentColor"/>
+								<circle cx="11" cy="11" r="2" fill="var(--base1)"/>
+							</svg>
+						</button>
 <span class="menu-divider"></span>
 			<button @click="toggleSearch" class="btn-menu-icon" :class="{ 'active': showSearchPanel }" title="Search files">
 							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -391,6 +398,42 @@ async function createNewFile() {
 	} catch (error) {
 		console.error('Error creating file:', error);
 		alert('Error creating file');
+	}
+}
+
+async function createNewDrawing() {
+	if (!currentFolder.value) return;
+	
+	// Generate a unique filename
+	const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+	const fileName = `drawing-${timestamp}.drawing`;
+	
+	// Create empty drawing data
+	const emptyDrawing = JSON.stringify({
+		version: 1,
+		strokes: [],
+		backgroundColor: '#1a1a1a'
+	}, null, 2);
+	
+	try {
+		const result = await window.electronAPI.createFile(currentFolder.value, fileName);
+		if (result.success && result.path) {
+			// Write initial drawing data
+			await window.electronAPI.writeFile(result.path, emptyDrawing);
+			// Refresh the file list
+			await refreshFiles();
+			// Select the new file
+			const newFile = files.value.find(f => f.path === result.path);
+			if (newFile) {
+				selectedFiles.value = [newFile];
+				activeFile.value = newFile;
+			}
+		} else {
+			alert('Failed to create drawing: ' + result.error);
+		}
+	} catch (error) {
+		console.error('Error creating drawing:', error);
+		alert('Error creating drawing');
 	}
 }
 

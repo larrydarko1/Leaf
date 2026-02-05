@@ -122,9 +122,18 @@
       </div>
     </div>
     
+    <!-- Drawing canvas for drawing files -->
+    <DrawingCanvas
+      v-else-if="file && isDrawingFile"
+      :file-path="file.path"
+      :initial-content="content"
+      @save="handleDrawingSave"
+      @content-changed="(hasChanges) => hasUnsavedChanges = hasChanges"
+    />
+    
     <!-- Text editor for text files -->
     <div 
-      v-else-if="file && !isImageFile && !isVideoFile && !isAudioFile && !isPdfFile"
+      v-else-if="file && !isImageFile && !isVideoFile && !isAudioFile && !isPdfFile && !isDrawingFile"
       class="text-editor-container"
     >
       <!-- Edit mode -->
@@ -165,6 +174,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onUnmounted, computed } from 'vue';
+import DrawingCanvas from './DrawingCanvas.vue';
 import type { FileInfo } from '../types/electron';
 
 const props = defineProps<{
@@ -195,6 +205,9 @@ const audioExtensions = ['.mp3', '.wav', '.flac', '.aac', '.m4a', '.ogg', '.wma'
 
 // PDF file extensions
 const pdfExtensions = ['.pdf'];
+
+// Drawing file extensions
+const drawingExtensions = ['.drawing'];
 
 // Code file extensions
 const codeExtensions = [
@@ -262,6 +275,12 @@ const isCodeFile = computed(() => {
 const isMarkdownFile = computed(() => {
   if (!props.file) return false;
   return props.file.extension.toLowerCase() === '.md';
+});
+
+// Check if current file is a drawing file
+const isDrawingFile = computed(() => {
+  if (!props.file) return false;
+  return drawingExtensions.includes(props.file.extension.toLowerCase());
 });
 
 // Render markdown for preview mode
@@ -540,6 +559,26 @@ async function saveFile() {
     alert('Error saving file');
   } finally {
     isSaving.value = false;
+  }
+}
+
+// Handle drawing canvas save
+async function handleDrawingSave(drawingContent: string) {
+  if (!props.file) return;
+  
+  try {
+    const result = await window.electronAPI.writeFile(props.file.path, drawingContent);
+    if (result.success) {
+      content.value = drawingContent;
+      originalContent.value = drawingContent;
+      hasUnsavedChanges.value = false;
+      emit('contentChanged', false);
+      emit('save', drawingContent);
+    } else {
+      console.error('Failed to save drawing:', result.error);
+    }
+  } catch (error) {
+    console.error('Error saving drawing:', error);
   }
 }
 
