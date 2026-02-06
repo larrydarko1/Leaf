@@ -1,5 +1,5 @@
 <template>
-  <div class="drawing-canvas-container">
+  <div class="drawing-canvas-container" tabindex="0" @keydown="handleKeydown" ref="containerEl">
     <!-- Toolbar -->
     <div class="drawing-toolbar">
       <div class="tool-group">
@@ -27,6 +27,96 @@
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M20 20H7L3 16c-.8-.8-.8-2 0-2.8L13.8 2.4c.8-.8 2-.8 2.8 0L21 6.8c.8.8.8 2 0 2.8L12 18"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <span class="toolbar-divider"></span>
+      
+      <!-- Shape Tools -->
+      <div class="tool-group">
+        <!-- Line Tool -->
+        <button 
+          @click="currentTool = 'line'" 
+          class="tool-btn" 
+          :class="{ active: currentTool === 'line' }"
+          title="Line"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="5" y1="19" x2="19" y2="5"></line>
+          </svg>
+        </button>
+        
+        <!-- Rectangle Tool -->
+        <button 
+          @click="currentTool = 'rectangle'" 
+          class="tool-btn" 
+          :class="{ active: currentTool === 'rectangle' }"
+          title="Rectangle"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+          </svg>
+        </button>
+        
+        <!-- Ellipse Tool -->
+        <button 
+          @click="currentTool = 'ellipse'" 
+          class="tool-btn" 
+          :class="{ active: currentTool === 'ellipse' }"
+          title="Ellipse / Circle"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <ellipse cx="12" cy="12" rx="10" ry="8"></ellipse>
+          </svg>
+        </button>
+
+        <!-- Triangle Tool -->
+        <button 
+          @click="currentTool = 'triangle'" 
+          class="tool-btn" 
+          :class="{ active: currentTool === 'triangle' }"
+          title="Triangle"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12,3 22,21 2,21"></polygon>
+          </svg>
+        </button>
+
+        <!-- Diamond Tool -->
+        <button 
+          @click="currentTool = 'diamond'" 
+          class="tool-btn" 
+          :class="{ active: currentTool === 'diamond' }"
+          title="Diamond"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12,2 22,12 12,22 2,12"></polygon>
+          </svg>
+        </button>
+
+        <!-- Arrow Tool -->
+        <button 
+          @click="currentTool = 'arrow'" 
+          class="tool-btn" 
+          :class="{ active: currentTool === 'arrow' }"
+          title="Arrow"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="5" y1="19" x2="19" y2="5"></line>
+            <polyline points="10,5 19,5 19,14"></polyline>
+          </svg>
+        </button>
+
+        <!-- Fill Toggle -->
+        <button 
+          @click="shapeFill = !shapeFill" 
+          class="tool-btn" 
+          :class="{ active: shapeFill }"
+          title="Fill Shape"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" :fill="shapeFill ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+            <rect x="4" y="4" width="16" height="16" rx="2"></rect>
           </svg>
         </button>
       </div>
@@ -118,25 +208,39 @@
         ref="canvas"
         @mousedown="startDrawing"
         @mousemove="draw"
-        @mouseup="stopDrawing"
-        @mouseleave="stopDrawing"
+        @mouseup="stopDrawing($event)"
+        @mouseleave="handleMouseLeave"
         @touchstart.prevent="handleTouchStart"
         @touchmove.prevent="handleTouchMove"
-        @touchend.prevent="stopDrawing"
-        :class="{ 'eraser-cursor': currentTool === 'eraser' }"
+        @touchend.prevent="stopDrawing($event)"
+        :class="{ 'eraser-cursor': currentTool === 'eraser', 'shape-cursor': isShapeTool }"
       ></canvas>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
+
+type ToolType = 'pen' | 'eraser' | 'line' | 'rectangle' | 'ellipse' | 'triangle' | 'diamond' | 'arrow';
+type ShapeType = 'line' | 'rectangle' | 'ellipse' | 'triangle' | 'diamond' | 'arrow';
+
+const shapeTools: ShapeType[] = ['line', 'rectangle', 'ellipse', 'triangle', 'diamond', 'arrow'];
 
 interface Stroke {
-  tool: 'pen' | 'eraser';
+  tool: ToolType;
   color: string;
   size: number;
   points: { x: number; y: number }[];
+  // Shape-specific data (start + end point define the bounding box)
+  shape?: {
+    type: ShapeType;
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+    fill: boolean;
+  };
 }
 
 interface DrawingData {
@@ -158,14 +262,22 @@ const emit = defineEmits<{
 // Canvas refs
 const canvas = ref<HTMLCanvasElement | null>(null);
 const canvasWrapper = ref<HTMLDivElement | null>(null);
+const containerEl = ref<HTMLDivElement | null>(null);
 let ctx: CanvasRenderingContext2D | null = null;
 
 // Drawing state
 const isDrawing = ref(false);
-const currentTool = ref<'pen' | 'eraser'>('pen');
+const currentTool = ref<ToolType>('pen');
 const currentColor = ref('#ffffff');
 const brushSize = ref(4);
+const shapeFill = ref(false);
 const backgroundColor = '#1a1a1a';
+
+// Shape drawing state
+const shapeStart = ref<{ x: number; y: number } | null>(null);
+
+// Computed
+const isShapeTool = computed(() => shapeTools.includes(currentTool.value as ShapeType));
 
 // History for undo/redo
 const strokes = ref<Stroke[]>([]);
@@ -204,12 +316,14 @@ onMounted(() => {
   setupCanvas();
   loadDrawing();
   window.addEventListener('resize', handleResize);
-  window.addEventListener('keydown', handleKeydown);
+  window.addEventListener('keydown', handleKeydown, true);
+  // Focus the container so it can receive keyboard events
+  nextTick(() => containerEl.value?.focus());
 });
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize);
-  window.removeEventListener('keydown', handleKeydown);
+  window.removeEventListener('keydown', handleKeydown, true);
   if (autoSaveTimeout) {
     clearTimeout(autoSaveTimeout);
   }
@@ -305,7 +419,15 @@ function redrawAllStrokes() {
 }
 
 function drawStroke(stroke: Stroke) {
-  if (!ctx || stroke.points.length < 2) return;
+  if (!ctx) return;
+  
+  // If it's a shape stroke, draw the shape
+  if (stroke.shape) {
+    drawShapeFromData(stroke.shape, stroke.color, stroke.size);
+    return;
+  }
+  
+  if (stroke.points.length < 2) return;
   
   ctx.beginPath();
   ctx.strokeStyle = stroke.tool === 'eraser' ? backgroundColor : stroke.color;
@@ -322,6 +444,135 @@ function drawStroke(stroke: Stroke) {
   ctx.stroke();
 }
 
+function drawShapeFromData(
+  shape: { type: ShapeType; x1: number; y1: number; x2: number; y2: number; fill: boolean },
+  color: string,
+  size: number
+) {
+  if (!ctx) return;
+  
+  ctx.strokeStyle = color;
+  ctx.lineWidth = size;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  
+  const { type, x1, y1, x2, y2, fill } = shape;
+  
+  if (fill) {
+    ctx.fillStyle = color;
+  }
+  
+  switch (type) {
+    case 'line':
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+      break;
+      
+    case 'arrow': {
+      // Draw the line
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+      // Draw the arrowhead
+      const angle = Math.atan2(y2 - y1, x2 - x1);
+      const headLength = Math.max(size * 3, 12);
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(
+        x2 - headLength * Math.cos(angle - Math.PI / 6),
+        y2 - headLength * Math.sin(angle - Math.PI / 6)
+      );
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(
+        x2 - headLength * Math.cos(angle + Math.PI / 6),
+        y2 - headLength * Math.sin(angle + Math.PI / 6)
+      );
+      ctx.stroke();
+      break;
+    }
+      
+    case 'rectangle': {
+      const rx = Math.min(x1, x2);
+      const ry = Math.min(y1, y2);
+      const rw = Math.abs(x2 - x1);
+      const rh = Math.abs(y2 - y1);
+      ctx.beginPath();
+      ctx.rect(rx, ry, rw, rh);
+      if (fill) ctx.fill();
+      ctx.stroke();
+      break;
+    }
+      
+    case 'ellipse': {
+      const cx = (x1 + x2) / 2;
+      const cy = (y1 + y2) / 2;
+      const radiusX = Math.abs(x2 - x1) / 2;
+      const radiusY = Math.abs(y2 - y1) / 2;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, radiusX, radiusY, 0, 0, Math.PI * 2);
+      if (fill) ctx.fill();
+      ctx.stroke();
+      break;
+    }
+      
+    case 'triangle': {
+      const topX = (x1 + x2) / 2;
+      const topY = Math.min(y1, y2);
+      const bottomY = Math.max(y1, y2);
+      const leftX = Math.min(x1, x2);
+      const rightX = Math.max(x1, x2);
+      ctx.beginPath();
+      ctx.moveTo(topX, topY);
+      ctx.lineTo(rightX, bottomY);
+      ctx.lineTo(leftX, bottomY);
+      ctx.closePath();
+      if (fill) ctx.fill();
+      ctx.stroke();
+      break;
+    }
+      
+    case 'diamond': {
+      const dcx = (x1 + x2) / 2;
+      const dcy = (y1 + y2) / 2;
+      const dhw = Math.abs(x2 - x1) / 2;
+      const dhh = Math.abs(y2 - y1) / 2;
+      ctx.beginPath();
+      ctx.moveTo(dcx, dcy - dhh); // top
+      ctx.lineTo(dcx + dhw, dcy); // right
+      ctx.lineTo(dcx, dcy + dhh); // bottom
+      ctx.lineTo(dcx - dhw, dcy); // left
+      ctx.closePath();
+      if (fill) ctx.fill();
+      ctx.stroke();
+      break;
+    }
+  }
+}
+
+function drawShapePreview(start: { x: number; y: number }, end: { x: number; y: number }) {
+  if (!ctx || !canvas.value) return;
+  
+  // Redraw everything first to clear the previous preview
+  redrawAllStrokes();
+  
+  // Draw the shape preview
+  drawShapeFromData(
+    {
+      type: currentTool.value as ShapeType,
+      x1: start.x,
+      y1: start.y,
+      x2: end.x,
+      y2: end.y,
+      fill: shapeFill.value
+    },
+    currentColor.value,
+    brushSize.value
+  );
+}
+
 function getCanvasPoint(e: MouseEvent | Touch): { x: number; y: number } {
   if (!canvas.value) return { x: 0, y: 0 };
   
@@ -335,6 +586,12 @@ function getCanvasPoint(e: MouseEvent | Touch): { x: number; y: number } {
 function startDrawing(e: MouseEvent) {
   isDrawing.value = true;
   const point = getCanvasPoint(e);
+  
+  // Shape tool: record start point and wait for drag
+  if (isShapeTool.value) {
+    shapeStart.value = point;
+    return;
+  }
   
   currentStroke.value = {
     tool: currentTool.value,
@@ -353,9 +610,18 @@ function startDrawing(e: MouseEvent) {
 }
 
 function draw(e: MouseEvent) {
-  if (!isDrawing.value || !currentStroke.value || !ctx) return;
+  if (!isDrawing.value || !ctx) return;
   
   const point = getCanvasPoint(e);
+  
+  // Shape tool: show live preview
+  if (isShapeTool.value && shapeStart.value) {
+    drawShapePreview(shapeStart.value, point);
+    return;
+  }
+  
+  if (!currentStroke.value) return;
+  
   currentStroke.value.points.push(point);
   
   // Draw line segment
@@ -375,10 +641,47 @@ function draw(e: MouseEvent) {
   }
 }
 
-function stopDrawing() {
-  if (!isDrawing.value || !currentStroke.value) return;
+function stopDrawing(e?: MouseEvent | TouchEvent) {
+  if (!isDrawing.value) return;
   
   isDrawing.value = false;
+  
+  // Shape tool: commit the shape
+  if (isShapeTool.value && shapeStart.value) {
+    let endPoint: { x: number; y: number } | null = null;
+    
+    if (e instanceof MouseEvent) {
+      endPoint = getCanvasPoint(e);
+    } else if (e instanceof TouchEvent && e.changedTouches.length > 0) {
+      endPoint = getCanvasPoint(e.changedTouches[0]);
+    }
+    
+    if (endPoint) {
+      const shapeStroke: Stroke = {
+        tool: currentTool.value,
+        color: currentColor.value,
+        size: brushSize.value,
+        points: [shapeStart.value, endPoint],
+        shape: {
+          type: currentTool.value as ShapeType,
+          x1: shapeStart.value.x,
+          y1: shapeStart.value.y,
+          x2: endPoint.x,
+          y2: endPoint.y,
+          fill: shapeFill.value
+        }
+      };
+      strokes.value.push(shapeStroke);
+      redrawAllStrokes();
+      saveToHistory();
+      scheduleAutoSave();
+    }
+    
+    shapeStart.value = null;
+    return;
+  }
+  
+  if (!currentStroke.value) return;
   
   // Only save stroke if it has points
   if (currentStroke.value.points.length > 0) {
@@ -397,6 +700,12 @@ function handleTouchStart(e: TouchEvent) {
     isDrawing.value = true;
     const point = getCanvasPoint(touch);
     
+    // Shape tool: record start point
+    if (isShapeTool.value) {
+      shapeStart.value = point;
+      return;
+    }
+    
     currentStroke.value = {
       tool: currentTool.value,
       color: currentColor.value,
@@ -407,10 +716,19 @@ function handleTouchStart(e: TouchEvent) {
 }
 
 function handleTouchMove(e: TouchEvent) {
-  if (!isDrawing.value || !currentStroke.value || !ctx || e.touches.length !== 1) return;
+  if (!isDrawing.value || !ctx || e.touches.length !== 1) return;
   
   const touch = e.touches[0];
   const point = getCanvasPoint(touch);
+  
+  // Shape tool: show live preview
+  if (isShapeTool.value && shapeStart.value) {
+    drawShapePreview(shapeStart.value, point);
+    return;
+  }
+  
+  if (!currentStroke.value) return;
+  
   currentStroke.value.points.push(point);
   
   // Draw line segment
@@ -476,15 +794,34 @@ function clearCanvas() {
   scheduleAutoSave();
 }
 
+function handleMouseLeave(e: MouseEvent) {
+  // For shape tools, cancel the preview on leave
+  if (isShapeTool.value && isDrawing.value) {
+    isDrawing.value = false;
+    shapeStart.value = null;
+    redrawAllStrokes();
+    return;
+  }
+  stopDrawing(e);
+}
+
 // Keyboard shortcuts
 function handleKeydown(e: KeyboardEvent) {
   if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
     e.preventDefault();
+    e.stopPropagation();
     if (e.shiftKey) {
       redo();
     } else {
       undo();
     }
+  }
+  
+  // Escape cancels shape in progress
+  if (e.key === 'Escape' && isShapeTool.value && isDrawing.value) {
+    isDrawing.value = false;
+    shapeStart.value = null;
+    redrawAllStrokes();
   }
 }
 
@@ -526,6 +863,7 @@ function saveDrawing() {
   flex-direction: column;
   height: 100%;
   background: #1a1a1a;
+  outline: none;
 }
 
 .drawing-toolbar {
@@ -662,6 +1000,10 @@ canvas {
   
   &.eraser-cursor {
     cursor: cell;
+  }
+  
+  &.shape-cursor {
+    cursor: crosshair;
   }
 }
 </style>
