@@ -85,7 +85,8 @@
         'media-image': isImageFile,
         'media-video': isVideoFile,
         'media-audio': isAudioFile,
-        'media-pdf': isPdfFile
+        'media-pdf': isPdfFile,
+        'media-drawing': isDrawingFile
       }"
       :style="{ paddingLeft: (depth * 16 + 10) + 'px' }"
       draggable="true"
@@ -161,6 +162,23 @@
         <polyline points="14 2 14 8 20 8"></polyline>
         <path d="M10 12h4"></path>
         <path d="M10 16h4"></path>
+      </svg>
+      <!-- Drawing icon for drawing files -->
+      <svg 
+        v-else-if="isDrawingFile"
+        class="file-icon drawing-icon" 
+        width="14" 
+        height="14" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-width="2" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"
+      >
+        <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+        <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+        <circle cx="11" cy="11" r="2"></circle>
       </svg>
       <!-- Code icon for code files -->
       <svg 
@@ -301,6 +319,9 @@ const audioExtensions = ['.mp3', '.wav', '.flac', '.aac', '.m4a', '.ogg', '.wma'
 // PDF file extensions
 const pdfExtensions = ['.pdf'];
 
+// Drawing file extensions
+const drawingExtensions = ['.drawing'];
+
 // Code file extensions
 const codeExtensions = [
   '.py', '.js', '.jsx', '.ts', '.tsx', '.html', '.htm', '.css', '.scss', '.sass', '.less',
@@ -330,6 +351,11 @@ const isAudioFile = computed(() => {
 const isPdfFile = computed(() => {
   if (props.node.type !== 'file' || !props.node.file) return false;
   return pdfExtensions.includes(props.node.file.extension.toLowerCase());
+});
+
+const isDrawingFile = computed(() => {
+  if (props.node.type !== 'file' || !props.node.file) return false;
+  return drawingExtensions.includes(props.node.file.extension.toLowerCase());
 });
 
 const isCodeFile = computed(() => {
@@ -588,6 +614,11 @@ function handleDrop(event: DragEvent) {
     color: var(--text2);
     opacity: 0.7;
     margin: 1px 10px 1px 10px;
+  }
+
+  &.media-drawing .drawing-icon {
+    color: var(--text2);
+    opacity: 0.9;
   }
 }
 

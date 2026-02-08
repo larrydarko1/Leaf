@@ -14,8 +14,8 @@ function createWindow() {
         : path.join(__dirname, '../build/icon.icns');
 
     mainWindow = new BrowserWindow({
-        width: 1400,
-        height: 900,
+        width: 1000,
+        height: 700,
         minWidth: 1000,
         minHeight: 700,
         icon: iconPath,

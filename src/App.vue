@@ -24,7 +24,7 @@
 
 			<!-- Main app interface -->
 			<div v-else class="app-layout">
-				<aside class="sidebar">
+				<div class="left-column">
 					<div class="sidebar-header"></div>
 					<div class="sidebar-menu">
 						<button @click="changeFolder" class="btn-menu-icon" title="Change folder">
@@ -107,6 +107,9 @@
 							</svg>
 						</button>
 					</div>
+				</div>
+				<aside class="sidebar">
+					<div class="sidebar-header"></div>
 					<FileExplorer
 					v-if="!showSearchPanel && !showBookmarksPanel"
 					:files="files"
@@ -816,8 +819,27 @@ function toggleBookmarks() {
 	overflow: hidden;
 }
 
+.left-column {
+	display: flex;
+	flex-direction: column;
+	background: var(--base1);
+	flex-shrink: 0;
+}
+
+.sidebar-menu {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.25rem;
+	padding: 0.5rem 0.25rem;
+	background: var(--base3);
+	-webkit-app-region: drag;
+	flex: 1;
+	overflow-y: auto;
+}
+
 .sidebar {
-	width: 300px;
+	width: 260px;
 	display: flex;
 	flex-direction: column;
 	border-right: 1px solid var(--text3);
@@ -833,23 +855,11 @@ function toggleBookmarks() {
 	flex-shrink: 0;
 }
 
-.sidebar-menu {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 0.25rem;
-	padding: 0.1rem 0.75rem;
-	border-bottom: 1px solid var(--text3);
-	background: var(--base3);
-	-webkit-app-region: drag;
-	flex-shrink: 0;
-}
-
 .menu-divider {
-	width: 1px;
-	height: 16px;
+	height: 1px;
+	width: 16px;
 	background: var(--text2);
-	margin: 0 0.25rem;
+	margin: 0.25rem 0;
 	opacity: 0.6;
 }
 
