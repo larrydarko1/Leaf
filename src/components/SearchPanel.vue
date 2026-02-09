@@ -12,8 +12,6 @@
           placeholder="Search files..."
           class="search-input"
           @keydown.escape="clearSearch"
-          @keydown.down.prevent="navigateDown"
-          @keydown.up.prevent="navigateUp"
           @keydown.enter="openSelectedResult"
         />
         <button
@@ -148,6 +146,11 @@ function isFileSelected(file: FileInfo): boolean {
 }
 
 function selectFile(file: FileInfo, event?: MouseEvent) {
+  // Update keyboard selected index when clicking
+  const index = searchResults.value.findIndex(f => f.path === file.path);
+  if (index >= 0) {
+    keyboardSelectedIndex.value = index;
+  }
   emit('selectFile', file, event);
 }
 
@@ -163,15 +166,52 @@ function clearSearch() {
 
 function navigateDown() {
   if (searchResults.value.length === 0) return;
-  keyboardSelectedIndex.value = Math.min(
-    keyboardSelectedIndex.value + 1,
-    searchResults.value.length - 1
-  );
+  
+  if (keyboardSelectedIndex.value < 0) {
+    keyboardSelectedIndex.value = 0;
+  } else {
+    keyboardSelectedIndex.value = Math.min(
+      keyboardSelectedIndex.value + 1,
+      searchResults.value.length - 1
+    );
+  }
+  
+  const nextFile = searchResults.value[keyboardSelectedIndex.value];
+  if (nextFile) {
+    selectFile(nextFile);
+  }
+  
+  scrollToSelectedItem();
 }
 
 function navigateUp() {
   if (searchResults.value.length === 0) return;
-  keyboardSelectedIndex.value = Math.max(keyboardSelectedIndex.value - 1, 0);
+  
+  if (keyboardSelectedIndex.value < 0) {
+    keyboardSelectedIndex.value = 0;
+  } else {
+    keyboardSelectedIndex.value = Math.max(keyboardSelectedIndex.value - 1, 0);
+  }
+  
+  const prevFile = searchResults.value[keyboardSelectedIndex.value];
+  if (prevFile) {
+    selectFile(prevFile);
+  }
+  
+  scrollToSelectedItem();
+}
+
+function scrollToSelectedItem() {
+  // Wait for DOM update
+  setTimeout(() => {
+    const selectedElement = document.querySelector('.search-result-item.keyboard-selected');
+    if (selectedElement) {
+      selectedElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest'
+      });
+    }
+  }, 0);
 }
 
 function openSelectedResult() {
@@ -190,20 +230,41 @@ function highlightMatch(text: string): string {
   return text.replace(regex, '<mark>$1</mark>');
 }
 
+// Handle keyboard navigation
+function handleKeyDown(e: KeyboardEvent) {
+  // Don't intercept keyboard events when user is typing in a textarea or contenteditable
+  // but allow navigation when in the search input itself
+  const target = e.target as HTMLElement;
+  if ((target.tagName === 'TEXTAREA' || target.isContentEditable) && target !== searchInput.value) {
+    return;
+  }
+  
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    navigateDown();
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    navigateUp();
+  } else if (e.key === 'Enter' && keyboardSelectedIndex.value >= 0) {
+    e.preventDefault();
+    openSelectedResult();
+  } else if (e.key === 'Escape') {
+    if (searchQuery.value) {
+      clearSearch();
+    } else {
+      emit('close');
+    }
+  }
+}
+
 // Handle Escape key to close search panel
 onMounted(() => {
-  window.addEventListener('keydown', handleEscapeKey);
+  window.addEventListener('keydown', handleKeyDown);
 });
 
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleEscapeKey);
+  window.removeEventListener('keydown', handleKeyDown);
 });
-
-function handleEscapeKey(e: KeyboardEvent) {
-  if (e.key === 'Escape' && !searchQuery.value) {
-    emit('close');
-  }
-}
 </script>
 
 <style scoped lang="scss">
@@ -316,12 +377,12 @@ function handleEscapeKey(e: KeyboardEvent) {
   }
 
   &.active {
-    background: var(--accent-color);
-    color: white;
+    background: var(--bg-selected);
+    color: var(--text1);
 
     .file-path,
     .file-icon {
-      color: rgba(255, 255, 255, 0.8);
+      color: var(--text1);
     }
   }
 

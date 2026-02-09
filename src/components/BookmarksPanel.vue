@@ -101,6 +101,14 @@ function removeBookmark(file: FileInfo) {
 function handleKeyDown(event: KeyboardEvent) {
   if (bookmarkedFiles.value.length === 0) return;
 
+  // Don't intercept keyboard events when user is typing in an input or textarea
+  const target = event.target as HTMLElement;
+  if (target.tagName === 'TEXTAREA' || 
+      target.tagName === 'INPUT' || 
+      target.isContentEditable) {
+    return;
+  }
+
   if (event.key === 'ArrowDown') {
     event.preventDefault();
     // Find the currently selected file
