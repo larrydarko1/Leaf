@@ -100,6 +100,47 @@ export interface AudioSaveResult {
     error?: string;
 }
 
+// AI / LLM Types
+export interface AiModelInfo {
+    name: string;
+    path: string;
+    size: number;
+    sizeFormatted: string;
+    modified: string;
+}
+
+export interface AiListModelsResult {
+    success: boolean;
+    models: AiModelInfo[];
+    modelsDir: string;
+    error?: string;
+}
+
+export interface AiLoadResult {
+    success: boolean;
+    modelName?: string;
+    error?: string;
+}
+
+export interface AiChatResult {
+    success: boolean;
+    response?: string;
+    error?: string;
+}
+
+export interface AiStatus {
+    isModelLoaded: boolean;
+    currentModelPath: string | null;
+    currentModelName: string | null;
+    isGenerating: boolean;
+    modelsDir: string;
+}
+
+export interface AiSimpleResult {
+    success: boolean;
+    error?: string;
+}
+
 export interface ElectronAPI {
     isElectron: () => boolean;
     openFolderDialog: () => Promise<string | null>;
@@ -117,6 +158,17 @@ export interface ElectronAPI {
     moveFile: (filePath: string, targetFolderPath: string) => Promise<FileMoveResult>;
     moveFolder: (folderPath: string, targetFolderPath: string) => Promise<FolderMoveResult>;
     saveAudioRecording: (folderPath: string, fileName: string, base64Data: string) => Promise<AudioSaveResult>;
+
+    // AI / LLM operations
+    aiListModels: () => Promise<AiListModelsResult>;
+    aiLoadModel: (modelPath: string) => Promise<AiLoadResult>;
+    aiUnloadModel: () => Promise<AiSimpleResult>;
+    aiChat: (userMessage: string, noteContext?: string | null) => Promise<AiChatResult>;
+    aiResetChat: () => Promise<AiSimpleResult>;
+    aiGetStatus: () => Promise<AiStatus>;
+    aiOpenModelsDir: () => Promise<AiSimpleResult>;
+    onAiToken: (callback: (token: string) => void) => void;
+    removeAiTokenListener: () => void;
 }
 
 declare global {

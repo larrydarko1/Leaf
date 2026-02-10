@@ -28,6 +28,23 @@ contextBridge.exposeInMainWorld('electronAPI', {
     saveAudioRecording: (folderPath, fileName, base64Data) => ipcRenderer.invoke('audio:saveRecording', folderPath, fileName, base64Data),
 
     // Spellcheck
-    getSpellingSuggestions: (word) => ipcRenderer.invoke('spellcheck:getSuggestions', word)
+    getSpellingSuggestions: (word) => ipcRenderer.invoke('spellcheck:getSuggestions', word),
+
+    // AI / LLM operations
+    aiListModels: () => ipcRenderer.invoke('ai:listModels'),
+    aiLoadModel: (modelPath) => ipcRenderer.invoke('ai:loadModel', modelPath),
+    aiUnloadModel: () => ipcRenderer.invoke('ai:unloadModel'),
+    aiChat: (userMessage, noteContext) => ipcRenderer.invoke('ai:chat', userMessage, noteContext),
+    aiResetChat: () => ipcRenderer.invoke('ai:resetChat'),
+    aiGetStatus: () => ipcRenderer.invoke('ai:getStatus'),
+    aiOpenModelsDir: () => ipcRenderer.invoke('ai:openModelsDir'),
+
+    // AI streaming token listener
+    onAiToken: (callback) => {
+        ipcRenderer.on('ai:token', (event, token) => callback(token));
+    },
+    removeAiTokenListener: () => {
+        ipcRenderer.removeAllListeners('ai:token');
+    }
 });
 

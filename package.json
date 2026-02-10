@@ -1,7 +1,7 @@
 {
   "name": "leaf",
   "private": true,
-  "version": "1.2.7",
+  "version": "1.2.8",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -12,6 +12,8 @@
     "build:linux": "vue-tsc -b && vite build && electron-builder --linux"
   },
   "dependencies": {
+    "marked": "^17.0.1",
+    "node-llama-cpp": "^3.15.1",
     "vue": "^3.5.17"
   },
   "devDependencies": {

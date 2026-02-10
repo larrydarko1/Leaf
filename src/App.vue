@@ -87,6 +87,12 @@
 						:current-folder="currentFolder"
 						@recording-saved="handleRecordingSaved"
 					/>
+					<button @click="toggleAiPanel" class="btn-menu-icon" :class="{ 'active': showAiPanel }" title="AI Assistant">
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/>
+							<line x1="9" y1="21" x2="15" y2="21"/>
+						</svg>
+					</button>
 					<button @click="toggleTheme" class="btn-menu-icon" title="Toggle theme">
 							<!-- Sun icon for dark theme -->
 						<svg v-if="currentTheme === 'dark'" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -160,6 +166,11 @@
 						@save="handleFileSave"
 					/>
 				</main>
+				<AiPanel
+					v-if="showAiPanel"
+					:active-file="activeFile"
+					@close="showAiPanel = false"
+				/>
 			</div>
 		</div>
 	</div>
@@ -172,6 +183,7 @@ import NoteEditor from './components/NoteEditor.vue';
 import SearchPanel from './components/SearchPanel.vue';
 import BookmarksPanel from './components/BookmarksPanel.vue';
 import AudioRecorder from './components/AudioRecorder.vue';
+import AiPanel from './components/AiPanel.vue';
 import type { FileInfo, FolderInfo } from './types/electron';
 
 const currentTheme = ref('dark');
@@ -186,6 +198,7 @@ const selectedFolder = ref<string | null>(null);
 const renamingFolder = ref<string | null>(null);
 const showSearchPanel = ref(false);
 const showBookmarksPanel = ref(false);
+const showAiPanel = ref(false);
 const bookmarkedFiles = ref<string[]>([]); // Array of file paths
 
 // Computed property to get bookmarks key for current folder
@@ -741,6 +754,10 @@ function toggleBookmarks() {
 	if (showBookmarksPanel.value) {
 		showSearchPanel.value = false;
 	}
+}
+
+function toggleAiPanel() {
+	showAiPanel.value = !showAiPanel.value;
 }
 </script>
 

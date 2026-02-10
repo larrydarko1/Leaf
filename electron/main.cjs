@@ -449,3 +449,52 @@ ipcMain.handle('audio:saveRecording', async (event, folderPath, fileName, base64
         return { success: false, error: error.message };
     }
 });
+
+// ============================
+// AI / LLM IPC Handlers
+// ============================
+const aiService = require('./ai-service.cjs');
+
+// List available models in ~/leaf-models/
+ipcMain.handle('ai:listModels', async () => {
+    return await aiService.listModels();
+});
+
+// Load a model by file path
+ipcMain.handle('ai:loadModel', async (event, modelPath) => {
+    return await aiService.loadModel(modelPath);
+});
+
+// Unload the current model
+ipcMain.handle('ai:unloadModel', async () => {
+    return await aiService.unloadModel();
+});
+
+// Send a chat message with streaming tokens
+ipcMain.handle('ai:chat', async (event, userMessage, noteContext) => {
+    return await aiService.chat(
+        userMessage,
+        (token) => {
+            // Stream each token to the renderer process
+            if (mainWindow && !mainWindow.isDestroyed()) {
+                mainWindow.webContents.send('ai:token', token);
+            }
+        },
+        noteContext
+    );
+});
+
+// Reset chat session (clear history)
+ipcMain.handle('ai:resetChat', async () => {
+    return await aiService.resetChat();
+});
+
+// Get AI service status
+ipcMain.handle('ai:getStatus', async () => {
+    return aiService.getStatus();
+});
+
+// Open the models directory in Finder/Explorer
+ipcMain.handle('ai:openModelsDir', async () => {
+    return await aiService.openModelsDir();
+});

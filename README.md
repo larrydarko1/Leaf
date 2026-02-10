@@ -25,6 +25,14 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 - **Folder nesting** - Organize folders by dragging them into other folders
 - **Auto-save** - Changes save automatically as you type
 
+### AI Assistant (Local LLM)
+- **100% local inference** - Run AI models directly on your machine, no cloud or API keys needed
+- **Chat interface** - Built-in chat panel with streaming responses
+- **Note-aware context** - Toggle to include the current note as context for AI queries
+- **Model management** - Load and unload GGUF models from a dedicated models folder (`~/leaf-models/`)
+- **GPU accelerated** - Automatically uses Metal (macOS), CUDA (NVIDIA), or Vulkan for fast inference
+- **Powered by llama.cpp** - Uses [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) bindings to [llama.cpp](https://github.com/ggml-org/llama.cpp) (both MIT licensed)
+
 ### Privacy & Storage
 - **100% Offline** - Works completely without internet connection
 - **Local-only** - Notes never leave your device
@@ -46,6 +54,7 @@ Leaf is built with privacy and security as core principles:
 - **No network requests** - The app works 100% offline and makes zero external connections
 - **No cloud sync** - Your notes never leave your device unless you explicitly copy them
 - **No accounts** - No sign-ups, logins, or user tracking of any kind
+- **Local AI** - AI inference runs entirely on your hardware; no data is sent to any server
 
 ### Security Architecture
 - **Sandboxed renderer** - Context isolation prevents unauthorized system access
@@ -65,6 +74,21 @@ Your notes are stored exactly where you choose - simply select any folder on you
 - **Linux:** `~/Documents/Notes/`, `~/notes/`
 
 > **Note:** Your vault folder can be anywhere on your system. Use it with other apps, back it up to external drives, sync with git - it's just plain text files!
+
+### AI Models
+Leaf stores AI models in `~/leaf-models/`. To get started with the AI assistant:
+1. Open the AI panel by clicking the lightbulb icon in the sidebar
+2. Click the folder icon to open the models directory
+3. Download a `.gguf` model file from [Hugging Face](https://huggingface.co/models?library=gguf&sort=trending) and place it in the folder
+4. Select and load the model from the dropdown in the AI panel
+
+Recommended models for getting started:
+| Model | Size | RAM Needed | Best For |
+|-------|------|------------|----------|
+| Llama 3.2 1B Q4 | ~0.7 GB | ~2 GB | Fast, lightweight tasks |
+| Llama 3.2 3B Q4 | ~2 GB | ~4 GB | Good balance of speed and quality |
+| Phi-3 Mini 3.8B Q4 | ~2.3 GB | ~4 GB | Strong reasoning |
+| Llama 3.1 8B Q4 | ~4.5 GB | ~8 GB | Best quality |
 
 ### App Settings
 Leaf stores minimal app preferences (like your last opened folder path) automatically. No configuration needed.
@@ -125,6 +149,7 @@ After building:
 ## Tech Stack
 - **Desktop:** Electron (Native macOS, Windows, Linux app)
 - **Frontend:** Vue 3, TypeScript, Vite, SCSS
+- **AI:** [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) + [llama.cpp](https://github.com/ggml-org/llama.cpp) (local LLM inference)
 - **Storage:** Plain text files (txt, md), images, videos, and audio in your local vault
 - **Build Tools:** Vite + Electron Builder
 
@@ -134,9 +159,11 @@ After building:
 leaf/
 ├── electron/
 │   ├── main.cjs           # Electron main process
-│   └── preload.cjs        # Secure bridge between main/renderer
+│   ├── preload.cjs        # Secure bridge between main/renderer
+│   └── ai-service.cjs     # Local LLM inference service (node-llama-cpp)
 ├── src/
 │   ├── components/
+│   │   ├── AiPanel.vue    # AI chat interface
 │   │   ├── FileExplorer.vue
 │   │   └── NoteEditor.vue
 │   ├── types/
@@ -157,6 +184,7 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) for detai
 
 ## Acknowledgments
 - Inspired by [Obsidian](https://obsidian.md/) for the vault-based note-taking approach
+- Local AI powered by [llama.cpp](https://github.com/ggml-org/llama.cpp) and [node-llama-cpp](https://github.com/withcatai/node-llama-cpp)
 
 ---
 
