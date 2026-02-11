@@ -7,7 +7,7 @@ Thank you for considering contributing to Leaf! This is a desktop note-taking ap
 1. **Fork the repository**
 2. **Clone your fork**
    ```sh
-   git clone https://github.com/YOUR_USERNAME/leaf.git
+   git clone https://github.com/larrydarko1/leaf.git
    cd leaf
    ```
 3. **Install dependencies**
