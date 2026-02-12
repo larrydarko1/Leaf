@@ -35,6 +35,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     aiLoadModel: (modelPath) => ipcRenderer.invoke('ai:loadModel', modelPath),
     aiUnloadModel: () => ipcRenderer.invoke('ai:unloadModel'),
     aiChat: (userMessage, noteContext) => ipcRenderer.invoke('ai:chat', userMessage, noteContext),
+    aiStopChat: () => ipcRenderer.invoke('ai:stopChat'),
     aiResetChat: () => ipcRenderer.invoke('ai:resetChat'),
     aiGetStatus: () => ipcRenderer.invoke('ai:getStatus'),
     aiOpenModelsDir: () => ipcRenderer.invoke('ai:openModelsDir'),

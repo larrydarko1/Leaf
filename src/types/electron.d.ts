@@ -207,6 +207,7 @@ export interface ElectronAPI {
     aiLoadModel: (modelPath: string) => Promise<AiLoadResult>;
     aiUnloadModel: () => Promise<AiSimpleResult>;
     aiChat: (userMessage: string, noteContext?: string | null) => Promise<AiChatResult>;
+    aiStopChat: () => Promise<AiSimpleResult>;
     aiResetChat: () => Promise<AiSimpleResult>;
     aiGetStatus: () => Promise<AiStatus>;
     aiOpenModelsDir: () => Promise<AiSimpleResult>;

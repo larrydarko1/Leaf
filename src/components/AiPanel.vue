@@ -246,9 +246,20 @@
 					rows="1"
 				/>
 				<button 
+					v-if="isStreaming"
+					@click="stopGeneration" 
+					class="ai-btn-send ai-btn-stop" 
+					title="Stop generating"
+				>
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--base1)" xmlns="http://www.w3.org/2000/svg">
+						<rect x="6" y="6" width="12" height="12" rx="2" ry="2"/>
+					</svg>
+				</button>
+				<button 
+					v-else
 					@click="sendMessage" 
 					class="ai-btn-send" 
-					:disabled="!inputMessage.trim() || !status.isModelLoaded || status.isGenerating"
+					:disabled="!inputMessage.trim() || !status.isModelLoaded || isStreaming"
 					title="Send message"
 				>
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M10 14L13 21L20 4L3 11L6.5 12.5" stroke="var(--base1)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
@@ -430,6 +441,10 @@ async function loadSelectedModel() {
 // Unload current model
 async function unloadModel() {
 	try {
+		// Stop any in-progress generation first
+		if (status.value.isGenerating) {
+			await stopGeneration();
+		}
 		// Save current conversation before unloading
 		await saveCurrentConversation();
 		await window.electronAPI.aiUnloadModel();
@@ -507,6 +522,18 @@ async function sendMessage() {
 		await refreshStatus();
 		await refreshConversationList();
 		scrollToBottom();
+	}
+}
+
+// Stop the current generation
+async function stopGeneration() {
+	try {
+		await window.electronAPI.aiStopChat();
+	} catch (error) {
+		console.error('Failed to stop generation:', error);
+	} finally {
+		isStreaming.value = false;
+		await refreshStatus();
 	}
 }
 
@@ -1425,6 +1452,15 @@ onUnmounted(() => {
 	&:disabled {
 		opacity: 0.3;
 		cursor: not-allowed;
+	}
+
+	&.ai-btn-stop {
+		background: var(--danger-color, #e74c3c);
+
+		&:hover {
+			opacity: 0.85;
+			transform: scale(1.05);
+		}
 	}
 }
 </style>

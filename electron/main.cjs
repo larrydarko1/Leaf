@@ -493,6 +493,11 @@ ipcMain.handle('ai:resetChat', async () => {
     return await aiService.resetChat();
 });
 
+// Stop the current generation
+ipcMain.handle('ai:stopChat', async () => {
+    return aiService.stopChat();
+});
+
 // Get AI service status
 ipcMain.handle('ai:getStatus', async () => {
     return aiService.getStatus();

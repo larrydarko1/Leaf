@@ -19,6 +19,7 @@ let session = null;     // Active chat session
 let isModelLoaded = false;
 let currentModelPath = null;
 let isGenerating = false;
+let currentAbortController = null; // For stopping generation
 
 /**
  * Ensure the models directory exists
@@ -222,6 +223,7 @@ async function chat(userMessage, onToken, noteContext = null) {
     }
 
     isGenerating = true;
+    currentAbortController = new AbortController();
 
     try {
         // Build the prompt with optional note context
@@ -233,6 +235,8 @@ async function chat(userMessage, onToken, noteContext = null) {
         let fullResponse = '';
 
         const response = await session.prompt(prompt, {
+            signal: currentAbortController.signal,
+            stopOnAbortSignal: true,
             onTextChunk: (text) => {
                 fullResponse += text;
                 if (onToken) {
@@ -242,12 +246,28 @@ async function chat(userMessage, onToken, noteContext = null) {
         });
 
         isGenerating = false;
+        currentAbortController = null;
         return { success: true, response: fullResponse };
     } catch (error) {
         isGenerating = false;
+        currentAbortController = null;
         console.error('Chat error:', error);
         return { success: false, error: error.message };
     }
+}
+
+/**
+ * Stop the currently running generation
+ */
+function stopChat() {
+    if (isGenerating && currentAbortController) {
+        currentAbortController.abort();
+        isGenerating = false;
+        currentAbortController = null;
+        console.log('Generation stopped by user');
+        return { success: true };
+    }
+    return { success: false, error: 'No generation in progress.' };
 }
 
 /**
@@ -306,6 +326,7 @@ module.exports = {
     loadModel,
     unloadModel,
     chat,
+    stopChat,
     resetChat,
     getStatus,
     openModelsDir,
