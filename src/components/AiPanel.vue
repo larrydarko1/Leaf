@@ -75,7 +75,19 @@
 				</button>
 				<button 
 					v-if="status.isModelLoaded"
-					@click="resetChat" 
+					@click="toggleHistory" 
+					class="ai-btn-icon" 
+					:class="{ 'ai-btn-active': showHistory }"
+					title="Conversation history"
+				>
+					<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+						<circle cx="12" cy="12" r="10"/>
+						<polyline points="12 6 12 12 16 14"/>
+					</svg>
+				</button>
+				<button 
+					v-if="status.isModelLoaded"
+					@click="startNewConversation" 
 					class="ai-btn-icon" 
 					title="New conversation"
 				>
@@ -90,6 +102,65 @@
 						<line x1="6" y1="6" x2="18" y2="18"/>
 					</svg>
 				</button>
+			</div>
+		</div>
+
+		<!-- Conversation history panel -->
+		<div v-if="showHistory" class="ai-history-panel">
+			<div class="ai-history-header">
+				<span class="ai-history-title">History</span>
+			</div>
+			<div class="ai-history-list">
+				<div v-if="conversationList.length === 0" class="ai-history-empty">
+					No conversations yet
+				</div>
+				<div 
+					v-for="conv in conversationList" 
+					:key="conv.id" 
+					class="ai-history-item"
+					:class="{ active: currentConversationId === conv.id }"
+					@click="loadConversation(conv.id)"
+				>
+					<div class="ai-history-item-content">
+						<span v-if="renamingConversationId === conv.id" class="ai-history-item-title">
+							<input
+								ref="renameInputRef"
+								v-model="renameValue"
+								class="ai-history-rename-input"
+								@keydown.enter.prevent="confirmRename(conv.id)"
+								@keydown.escape.prevent="cancelRename"
+								@blur="confirmRename(conv.id)"
+								@click.stop
+							/>
+						</span>
+						<span v-else class="ai-history-item-title">{{ conv.title }}</span>
+						<span class="ai-history-item-meta">
+							{{ conv.messageCount }} msgs · {{ formatRelativeDate(conv.updatedAt) }}
+						</span>
+					</div>
+					<div class="ai-history-item-actions" @click.stop>
+						<button 
+							class="ai-btn-icon ai-btn-tiny" 
+							@click="startRename(conv)"
+							title="Rename"
+						>
+							<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+								<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+								<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+							</svg>
+						</button>
+						<button 
+							class="ai-btn-icon ai-btn-tiny ai-btn-danger" 
+							@click="deleteConversation(conv.id)"
+							title="Delete"
+						>
+							<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+								<polyline points="3 6 5 6 21 6"/>
+								<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+							</svg>
+						</button>
+					</div>
+				</div>
 			</div>
 		</div>
 
@@ -190,7 +261,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { marked } from 'marked';
-import type { FileInfo, AiModelInfo, AiStatus } from '../types/electron';
+import type { FileInfo, AiModelInfo, AiStatus, ConversationMeta } from '../types/electron';
 
 // Configure marked for safe, clean rendering
 marked.setOptions({
@@ -228,6 +299,14 @@ const status = ref<AiStatus>({
 });
 
 const copiedIndex = ref<number | null>(null);
+
+// Conversation persistence state
+const showHistory = ref(false);
+const conversationList = ref<ConversationMeta[]>([]);
+const currentConversationId = ref<string | null>(null);
+const renamingConversationId = ref<string | null>(null);
+const renameValue = ref('');
+const renameInputRef = ref<HTMLInputElement[] | null>(null);
 
 // Dropdown state
 const showDropdown = ref(false);
@@ -334,7 +413,7 @@ async function loadSelectedModel() {
 		const result = await window.electronAPI.aiLoadModel(selectedModelPath.value);
 		if (result.success) {
 			await refreshStatus();
-			messages.value = [];
+			await startNewConversation();
 		} else {
 			messages.value.push({
 				role: 'assistant',
@@ -351,9 +430,13 @@ async function loadSelectedModel() {
 // Unload current model
 async function unloadModel() {
 	try {
+		// Save current conversation before unloading
+		await saveCurrentConversation();
 		await window.electronAPI.aiUnloadModel();
 		await refreshStatus();
 		messages.value = [];
+		currentConversationId.value = null;
+		showHistory.value = false;
 	} catch (error) {
 		console.error('Failed to unload model:', error);
 	}
@@ -364,9 +447,20 @@ async function sendMessage() {
 	const text = inputMessage.value.trim();
 	if (!text || !status.value.isModelLoaded || status.value.isGenerating) return;
 	
+	// Create a new conversation if none exists
+	if (!currentConversationId.value) {
+		await createNewConversation();
+	}
+	
 	// Add user message
-	messages.value.push({ role: 'user', content: text });
+	const userMsg: ChatMessage = { role: 'user', content: text };
+	messages.value.push(userMsg);
 	inputMessage.value = '';
+	
+	// Persist user message
+	if (currentConversationId.value) {
+		await window.electronAPI.conversationAddMessage(currentConversationId.value, userMsg);
+	}
 	
 	// Add empty assistant message for streaming
 	messages.value.push({ role: 'assistant', content: '' });
@@ -389,11 +483,19 @@ async function sendMessage() {
 	try {
 		const result = await window.electronAPI.aiChat(text, noteContext);
 		if (!result.success) {
-			// Update the last assistant message with error
 			const lastMsg = messages.value[messages.value.length - 1];
 			if (lastMsg.role === 'assistant') {
 				lastMsg.content = `Error: ${result.error}`;
 			}
+		}
+		
+		// Persist assistant response
+		const assistantMsg = messages.value[messages.value.length - 1];
+		if (currentConversationId.value && assistantMsg.role === 'assistant') {
+			await window.electronAPI.conversationAddMessage(currentConversationId.value, {
+				role: 'assistant',
+				content: assistantMsg.content
+			});
 		}
 	} catch (error) {
 		const lastMsg = messages.value[messages.value.length - 1];
@@ -403,18 +505,181 @@ async function sendMessage() {
 	} finally {
 		isStreaming.value = false;
 		await refreshStatus();
+		await refreshConversationList();
 		scrollToBottom();
 	}
 }
 
-// Reset conversation
-async function resetChat() {
+// ============================
+// Conversation persistence
+// ============================
+
+// Toggle history panel
+function toggleHistory() {
+	showHistory.value = !showHistory.value;
+	if (showHistory.value) {
+		refreshConversationList();
+	}
+}
+
+// Refresh conversation list
+async function refreshConversationList() {
+	try {
+		const result = await window.electronAPI.conversationList();
+		if (result.success) {
+			conversationList.value = result.conversations;
+		}
+	} catch (error) {
+		console.error('Failed to list conversations:', error);
+	}
+}
+
+// Create a new conversation (internal)
+async function createNewConversation() {
+	try {
+		const modelName = status.value.currentModelName || 'unknown';
+		const result = await window.electronAPI.conversationCreate(modelName);
+		if (result.success && result.conversation) {
+			currentConversationId.value = result.conversation.id;
+		}
+	} catch (error) {
+		console.error('Failed to create conversation:', error);
+	}
+}
+
+// Start a new conversation (user action)
+async function startNewConversation() {
+	// Save current conversation before starting a new one
+	await saveCurrentConversation();
+	
+	// Reset chat session in the model
 	try {
 		await window.electronAPI.aiResetChat();
-		messages.value = [];
 	} catch (error) {
 		console.error('Failed to reset chat:', error);
 	}
+	
+	messages.value = [];
+	currentConversationId.value = null;
+	showHistory.value = false;
+	
+	if (inputField.value) {
+		inputField.value.focus();
+	}
+}
+
+// Save current conversation state
+async function saveCurrentConversation() {
+	if (!currentConversationId.value || messages.value.length === 0) return;
+	
+	try {
+		const result = await window.electronAPI.conversationLoad(currentConversationId.value);
+		if (result.success && result.conversation) {
+			result.conversation.messages = messages.value.map(m => ({
+				role: m.role,
+				content: m.content,
+				timestamp: new Date().toISOString()
+			}));
+			await window.electronAPI.conversationSave(result.conversation);
+		}
+	} catch (error) {
+		console.error('Failed to save conversation:', error);
+	}
+}
+
+// Load a conversation from history
+async function loadConversation(id: string) {
+	try {
+		// Save current conversation first
+		await saveCurrentConversation();
+		
+		const result = await window.electronAPI.conversationLoad(id);
+		if (result.success && result.conversation) {
+			// Reset the LLM chat session
+			await window.electronAPI.aiResetChat();
+			
+			currentConversationId.value = result.conversation.id;
+			messages.value = result.conversation.messages.map(m => ({
+				role: m.role,
+				content: m.content
+			}));
+			
+			showHistory.value = false;
+			scrollToBottom();
+		}
+	} catch (error) {
+		console.error('Failed to load conversation:', error);
+	}
+}
+
+// Delete a conversation
+async function deleteConversation(id: string) {
+	try {
+		await window.electronAPI.conversationDelete(id);
+		
+		// If we deleted the current conversation, clear the view
+		if (currentConversationId.value === id) {
+			messages.value = [];
+			currentConversationId.value = null;
+			await window.electronAPI.aiResetChat();
+		}
+		
+		await refreshConversationList();
+	} catch (error) {
+		console.error('Failed to delete conversation:', error);
+	}
+}
+
+// Start renaming a conversation
+function startRename(conv: ConversationMeta) {
+	renamingConversationId.value = conv.id;
+	renameValue.value = conv.title;
+	nextTick(() => {
+		if (renameInputRef.value && renameInputRef.value.length > 0) {
+			renameInputRef.value[0].focus();
+			renameInputRef.value[0].select();
+		}
+	});
+}
+
+// Confirm rename
+async function confirmRename(id: string) {
+	if (!renameValue.value.trim()) {
+		cancelRename();
+		return;
+	}
+	
+	try {
+		await window.electronAPI.conversationRename(id, renameValue.value.trim());
+		await refreshConversationList();
+	} catch (error) {
+		console.error('Failed to rename conversation:', error);
+	}
+	
+	renamingConversationId.value = null;
+	renameValue.value = '';
+}
+
+// Cancel rename
+function cancelRename() {
+	renamingConversationId.value = null;
+	renameValue.value = '';
+}
+
+// Format relative date for history items
+function formatRelativeDate(dateStr: string): string {
+	const date = new Date(dateStr);
+	const now = new Date();
+	const diffMs = now.getTime() - date.getTime();
+	const diffMin = Math.floor(diffMs / 60000);
+	const diffHr = Math.floor(diffMs / 3600000);
+	const diffDay = Math.floor(diffMs / 86400000);
+	
+	if (diffMin < 1) return 'just now';
+	if (diffMin < 60) return `${diffMin}m ago`;
+	if (diffHr < 24) return `${diffHr}h ago`;
+	if (diffDay < 7) return `${diffDay}d ago`;
+	return date.toLocaleDateString();
 }
 
 // Open models directory
@@ -450,6 +715,7 @@ onMounted(async () => {
 	// Load initial state
 	await refreshStatus();
 	await refreshModels();
+	await refreshConversationList();
 	
 	// Focus input if model already loaded
 	if (status.value.isModelLoaded && inputField.value) {
@@ -685,6 +951,11 @@ onUnmounted(() => {
 	}
 }
 
+.ai-btn-active {
+	color: var(--accent-color) !important;
+	background: var(--bg-hover);
+}
+
 .ai-btn-small {
 	padding: 0.25rem 0.55rem;
 	background: var(--accent-color);
@@ -735,6 +1006,117 @@ onUnmounted(() => {
 	flex-direction: column;
 	gap: 0.75rem;
 	-webkit-app-region: no-drag;
+}
+
+// Conversation history panel
+.ai-history-panel {
+	flex-shrink: 0;
+	max-height: 45%;
+	display: flex;
+	flex-direction: column;
+	border-bottom: 1px solid var(--text3);
+	-webkit-app-region: no-drag;
+}
+
+.ai-history-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0.5rem 0.75rem 0.35rem;
+}
+
+.ai-history-title {
+	font-size: 0.72rem;
+	font-weight: 600;
+	color: var(--text2);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.ai-history-list {
+	flex: 1;
+	overflow-y: auto;
+	padding: 0 0.5rem 0.5rem;
+}
+
+.ai-history-empty {
+	font-size: 0.75rem;
+	color: var(--text2);
+	text-align: center;
+	padding: 1rem 0;
+}
+
+.ai-history-item {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.45rem 0.55rem;
+	border-radius: 8px;
+	cursor: pointer;
+	transition: background 0.12s;
+	
+	&:hover {
+		background: var(--bg-hover);
+		
+		.ai-history-item-actions {
+			opacity: 1;
+		}
+	}
+	
+	&.active {
+		background: var(--bg-hover);
+		
+		.ai-history-item-title {
+			color: var(--accent-color);
+		}
+	}
+}
+
+.ai-history-item-content {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.1rem;
+}
+
+.ai-history-item-title {
+	font-size: 0.78rem;
+	color: var(--text1);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	line-height: 1.3;
+}
+
+.ai-history-item-meta {
+	font-size: 0.66rem;
+	color: var(--text2);
+	opacity: 0.7;
+}
+
+.ai-history-item-actions {
+	display: flex;
+	gap: 0.1rem;
+	opacity: 0;
+	transition: opacity 0.15s;
+	flex-shrink: 0;
+}
+
+.ai-btn-tiny {
+	padding: 0.2rem !important;
+}
+
+.ai-history-rename-input {
+	width: 100%;
+	background: var(--bg-primary);
+	color: var(--text1);
+	border: 1px solid var(--accent-color);
+	border-radius: 4px;
+	padding: 0.15rem 0.35rem;
+	font-size: 0.78rem;
+	font-family: inherit;
+	outline: none;
 }
 
 .ai-empty-state {

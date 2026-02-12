@@ -454,6 +454,10 @@ ipcMain.handle('audio:saveRecording', async (event, folderPath, fileName, base64
 // AI / LLM IPC Handlers
 // ============================
 const aiService = require('./ai-service.cjs');
+const conversationService = require('./conversation-service.cjs');
+
+// Initialize conversation storage in app's userData directory
+conversationService.init(app.getPath('userData'));
 
 // List available models in ~/leaf-models/
 ipcMain.handle('ai:listModels', async () => {
@@ -497,4 +501,48 @@ ipcMain.handle('ai:getStatus', async () => {
 // Open the models directory in Finder/Explorer
 ipcMain.handle('ai:openModelsDir', async () => {
     return await aiService.openModelsDir();
+});
+
+// ============================
+// Conversation Persistence IPC Handlers
+// ============================
+
+// List all conversations (metadata only)
+ipcMain.handle('conversations:list', async () => {
+    return await conversationService.listConversations();
+});
+
+// Create a new conversation
+ipcMain.handle('conversations:create', async (event, modelName) => {
+    return await conversationService.createConversation(modelName);
+});
+
+// Load a full conversation by ID
+ipcMain.handle('conversations:load', async (event, id) => {
+    return await conversationService.loadConversation(id);
+});
+
+// Save a full conversation object
+ipcMain.handle('conversations:save', async (event, conversation) => {
+    return await conversationService.saveConversation(conversation);
+});
+
+// Add a message to a conversation
+ipcMain.handle('conversations:addMessage', async (event, conversationId, message) => {
+    return await conversationService.addMessage(conversationId, message);
+});
+
+// Update the last message (for streaming completion)
+ipcMain.handle('conversations:updateLastMessage', async (event, conversationId, content) => {
+    return await conversationService.updateLastMessage(conversationId, content);
+});
+
+// Delete a conversation
+ipcMain.handle('conversations:delete', async (event, id) => {
+    return await conversationService.deleteConversation(id);
+});
+
+// Rename a conversation
+ipcMain.handle('conversations:rename', async (event, id, newTitle) => {
+    return await conversationService.renameConversation(id, newTitle);
 });

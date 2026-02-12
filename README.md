@@ -28,6 +28,7 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 ### AI Assistant (Local LLM)
 - **100% local inference** - Run AI models directly on your machine, no cloud or API keys needed
 - **Chat interface** - Built-in chat panel with streaming responses
+- **Conversation history** - All chats are automatically saved as JSON and can be browsed, loaded, renamed, or deleted
 - **Note-aware context** - Toggle to include the current note as context for AI queries
 - **Model management** - Load and unload GGUF models from a dedicated models folder (`~/leaf-models/`)
 - **GPU accelerated** - Automatically uses Metal (macOS), CUDA (NVIDIA), or Vulkan for fast inference
@@ -92,6 +93,14 @@ Recommended models for getting started:
 
 ### App Settings
 Leaf stores minimal app preferences (like your last opened folder path) automatically. No configuration needed.
+
+### Conversation History
+AI conversations are automatically saved as JSON files in Electron's standard `userData` directory:
+- **macOS:** `~/Library/Application Support/Leaf/conversations/`
+- **Windows:** `%APPDATA%\Leaf\conversations\`
+- **Linux:** `~/.config/Leaf/conversations/`
+
+Each conversation is stored as a separate `.json` file containing the model used, timestamps, and the full message history. Conversations are auto-titled from the first message and can be renamed or deleted from the history panel.
 
 ## Getting Started
 
@@ -158,12 +167,13 @@ After building:
 ```
 leaf/
 ├── electron/
-│   ├── main.cjs           # Electron main process
-│   ├── preload.cjs        # Secure bridge between main/renderer
-│   └── ai-service.cjs     # Local LLM inference service (node-llama-cpp)
+│   ├── main.cjs                # Electron main process
+│   ├── preload.cjs             # Secure bridge between main/renderer
+│   ├── ai-service.cjs          # Local LLM inference service (node-llama-cpp)
+│   └── conversation-service.cjs # Conversation persistence (JSON storage)
 ├── src/
 │   ├── components/
-│   │   ├── AiPanel.vue    # AI chat interface
+│   │   ├── AiPanel.vue         # AI chat interface with conversation history
 │   │   ├── FileExplorer.vue
 │   │   └── NoteEditor.vue
 │   ├── types/
@@ -171,7 +181,7 @@ leaf/
 │   ├── App.vue
 │   ├── main.ts
 │   └── style.scss
-├── build/                 # App icons
+├── build/                      # App icons
 ├── package.json
 └── vite.config.ts
 ```

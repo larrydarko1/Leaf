@@ -45,6 +45,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
     },
     removeAiTokenListener: () => {
         ipcRenderer.removeAllListeners('ai:token');
-    }
+    },
+
+    // Conversation persistence
+    conversationList: () => ipcRenderer.invoke('conversations:list'),
+    conversationCreate: (modelName) => ipcRenderer.invoke('conversations:create', modelName),
+    conversationLoad: (id) => ipcRenderer.invoke('conversations:load', id),
+    conversationSave: (conversation) => ipcRenderer.invoke('conversations:save', conversation),
+    conversationAddMessage: (conversationId, message) => ipcRenderer.invoke('conversations:addMessage', conversationId, message),
+    conversationUpdateLastMessage: (conversationId, content) => ipcRenderer.invoke('conversations:updateLastMessage', conversationId, content),
+    conversationDelete: (id) => ipcRenderer.invoke('conversations:delete', id),
+    conversationRename: (id, newTitle) => ipcRenderer.invoke('conversations:rename', id, newTitle)
 });
 

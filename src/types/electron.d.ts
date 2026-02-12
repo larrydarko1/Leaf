@@ -141,6 +141,49 @@ export interface AiSimpleResult {
     error?: string;
 }
 
+// Conversation persistence types
+export interface ConversationMessage {
+    role: 'user' | 'assistant';
+    content: string;
+    timestamp?: string;
+}
+
+export interface Conversation {
+    id: string;
+    title: string;
+    model: string;
+    createdAt: string;
+    updatedAt: string;
+    messages: ConversationMessage[];
+}
+
+export interface ConversationMeta {
+    id: string;
+    title: string;
+    model: string;
+    createdAt: string;
+    updatedAt: string;
+    messageCount: number;
+}
+
+export interface ConversationListResult {
+    success: boolean;
+    conversations: ConversationMeta[];
+    error?: string;
+}
+
+export interface ConversationCreateResult {
+    success: boolean;
+    conversation?: Conversation;
+    error?: string;
+}
+
+export interface ConversationLoadResult {
+    success: boolean;
+    conversation?: Conversation;
+    error?: string;
+}
+
 export interface ElectronAPI {
     isElectron: () => boolean;
     openFolderDialog: () => Promise<string | null>;
@@ -169,6 +212,16 @@ export interface ElectronAPI {
     aiOpenModelsDir: () => Promise<AiSimpleResult>;
     onAiToken: (callback: (token: string) => void) => void;
     removeAiTokenListener: () => void;
+
+    // Conversation persistence
+    conversationList: () => Promise<ConversationListResult>;
+    conversationCreate: (modelName: string) => Promise<ConversationCreateResult>;
+    conversationLoad: (id: string) => Promise<ConversationLoadResult>;
+    conversationSave: (conversation: Conversation) => Promise<AiSimpleResult>;
+    conversationAddMessage: (conversationId: string, message: ConversationMessage) => Promise<AiSimpleResult>;
+    conversationUpdateLastMessage: (conversationId: string, content: string) => Promise<AiSimpleResult>;
+    conversationDelete: (id: string) => Promise<AiSimpleResult>;
+    conversationRename: (id: string, newTitle: string) => Promise<AiSimpleResult>;
 }
 
 declare global {
