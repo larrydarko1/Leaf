@@ -134,6 +134,8 @@ export interface AiStatus {
     currentModelName: string | null;
     isGenerating: boolean;
     modelsDir: string;
+    contextTokens: number;
+    contextSize: number;
 }
 
 export interface AiSimpleResult {
@@ -155,6 +157,7 @@ export interface Conversation {
     createdAt: string;
     updatedAt: string;
     messages: ConversationMessage[];
+    tokenCount?: number;
 }
 
 export interface ConversationMeta {
@@ -164,6 +167,7 @@ export interface ConversationMeta {
     createdAt: string;
     updatedAt: string;
     messageCount: number;
+    tokenCount: number;
 }
 
 export interface ConversationListResult {

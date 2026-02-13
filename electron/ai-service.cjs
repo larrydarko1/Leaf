@@ -293,12 +293,29 @@ async function resetChat() {
  * Get current AI service status
  */
 function getStatus() {
+    let contextTokens = 0;
+    let contextSize = 0;
+
+    if (isModelLoaded && session) {
+        try {
+            const seq = session.sequence;
+            if (seq) {
+                contextTokens = seq.nextTokenIndex;
+                contextSize = seq.contextSize;
+            }
+        } catch (e) {
+            // Sequence may not be available yet
+        }
+    }
+
     return {
         isModelLoaded,
         currentModelPath,
         currentModelName: currentModelPath ? path.basename(currentModelPath) : null,
         isGenerating,
-        modelsDir: DEFAULT_MODELS_DIR
+        modelsDir: DEFAULT_MODELS_DIR,
+        contextTokens,
+        contextSize
     };
 }
 

@@ -221,6 +221,18 @@
 			</div>
 		</div>
 
+		<!-- Token counter -->
+		<div v-if="status.isModelLoaded && status.contextSize > 0" class="ai-token-bar">
+			<div class="ai-token-bar-track">
+				<div 
+					class="ai-token-bar-fill" 
+					:class="{ warning: tokenUsagePercent > 75, danger: tokenUsagePercent > 90 }"
+					:style="{ width: tokenUsagePercent + '%' }"
+				></div>
+			</div>
+			<span class="ai-token-label">{{ formatTokenCount(conversationTokenCount) }} / {{ formatTokenCount(status.contextSize) }} · {{ tokenUsagePercent }}%</span>
+		</div>
+
 		<!-- Input area -->
 		<div class="ai-input-area">
 			<div v-if="includeNoteContext && activeFile" class="ai-context-hint">
@@ -306,7 +318,9 @@ const status = ref<AiStatus>({
 	currentModelPath: null,
 	currentModelName: null,
 	isGenerating: false,
-	modelsDir: ''
+	modelsDir: '',
+	contextTokens: 0,
+	contextSize: 0
 });
 
 const copiedIndex = ref<number | null>(null);
@@ -318,6 +332,9 @@ const currentConversationId = ref<string | null>(null);
 const renamingConversationId = ref<string | null>(null);
 const renameValue = ref('');
 const renameInputRef = ref<HTMLInputElement[] | null>(null);
+
+// Per-conversation token count
+const conversationTokenCount = ref(0);
 
 // Dropdown state
 const showDropdown = ref(false);
@@ -451,6 +468,7 @@ async function unloadModel() {
 		await refreshStatus();
 		messages.value = [];
 		currentConversationId.value = null;
+		conversationTokenCount.value = 0;
 		showHistory.value = false;
 	} catch (error) {
 		console.error('Failed to unload model:', error);
@@ -520,6 +538,10 @@ async function sendMessage() {
 	} finally {
 		isStreaming.value = false;
 		await refreshStatus();
+		// Update per-conversation token count from live session
+		conversationTokenCount.value = status.value.contextTokens;
+		// Persist token count to the conversation
+		await saveTokenCountToConversation();
 		await refreshConversationList();
 		scrollToBottom();
 	}
@@ -534,6 +556,9 @@ async function stopGeneration() {
 	} finally {
 		isStreaming.value = false;
 		await refreshStatus();
+		// Update per-conversation token count from live session
+		conversationTokenCount.value = status.value.contextTokens;
+		await saveTokenCountToConversation();
 	}
 }
 
@@ -588,6 +613,7 @@ async function startNewConversation() {
 	
 	messages.value = [];
 	currentConversationId.value = null;
+	conversationTokenCount.value = 0;
 	showHistory.value = false;
 	
 	if (inputField.value) {
@@ -607,10 +633,26 @@ async function saveCurrentConversation() {
 				content: m.content,
 				timestamp: new Date().toISOString()
 			}));
+			result.conversation.tokenCount = conversationTokenCount.value;
 			await window.electronAPI.conversationSave(result.conversation);
 		}
 	} catch (error) {
 		console.error('Failed to save conversation:', error);
+	}
+}
+
+// Persist token count to the current conversation
+async function saveTokenCountToConversation() {
+	if (!currentConversationId.value) return;
+	
+	try {
+		const result = await window.electronAPI.conversationLoad(currentConversationId.value);
+		if (result.success && result.conversation) {
+			result.conversation.tokenCount = conversationTokenCount.value;
+			await window.electronAPI.conversationSave(result.conversation);
+		}
+	} catch (error) {
+		console.error('Failed to save token count:', error);
 	}
 }
 
@@ -631,6 +673,9 @@ async function loadConversation(id: string) {
 				content: m.content
 			}));
 			
+			// Restore per-conversation token count
+			conversationTokenCount.value = result.conversation.tokenCount || 0;
+			
 			showHistory.value = false;
 			scrollToBottom();
 		}
@@ -648,6 +693,7 @@ async function deleteConversation(id: string) {
 		if (currentConversationId.value === id) {
 			messages.value = [];
 			currentConversationId.value = null;
+			conversationTokenCount.value = 0;
 			await window.electronAPI.aiResetChat();
 		}
 		
@@ -716,6 +762,18 @@ async function openModelsFolder() {
 	} catch (error) {
 		console.error('Failed to open models dir:', error);
 	}
+}
+
+// Token usage percentage
+const tokenUsagePercent = computed(() => {
+	if (!status.value.contextSize) return 0;
+	return Math.min(100, Math.round((conversationTokenCount.value / status.value.contextSize) * 100));
+});
+
+// Format token count for display
+function formatTokenCount(n: number): string {
+	if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+	return String(n);
 }
 
 // Token streaming handler
@@ -1348,6 +1406,47 @@ onUnmounted(() => {
 	padding: 0.5rem 0.75rem 0.75rem;
 	flex-shrink: 0;
 	-webkit-app-region: no-drag;
+}
+
+// Token counter bar
+.ai-token-bar {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0 0.75rem;
+	flex-shrink: 0;
+	-webkit-app-region: no-drag;
+}
+
+.ai-token-bar-track {
+	flex: 1;
+	height: 3px;
+	background: var(--text3);
+	border-radius: 2px;
+	overflow: hidden;
+}
+
+.ai-token-bar-fill {
+	height: 100%;
+	background: var(--accent-color);
+	border-radius: 2px;
+	transition: width 0.3s ease;
+
+	&.warning {
+		background: #e6a700;
+	}
+
+	&.danger {
+		background: var(--danger-color, #e74c3c);
+	}
+}
+
+.ai-token-label {
+	font-size: 0.62rem;
+	color: var(--text2);
+	white-space: nowrap;
+	flex-shrink: 0;
+	font-variant-numeric: tabular-nums;
 }
 
 .ai-context-hint {

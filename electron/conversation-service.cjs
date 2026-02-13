@@ -62,7 +62,8 @@ async function createConversation(modelName) {
             model: modelName || 'unknown',
             createdAt: now,
             updatedAt: now,
-            messages: []
+            messages: [],
+            tokenCount: 0
         };
 
         await fs.writeFile(
@@ -188,7 +189,8 @@ async function listConversations() {
                         model: conv.model,
                         createdAt: conv.createdAt,
                         updatedAt: conv.updatedAt,
-                        messageCount: conv.messages ? conv.messages.length : 0
+                        messageCount: conv.messages ? conv.messages.length : 0,
+                        tokenCount: conv.tokenCount || 0
                     });
                 } catch (err) {
                     console.error(`Failed to read conversation file ${entry.name}:`, err);
