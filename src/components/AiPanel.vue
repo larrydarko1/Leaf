@@ -165,7 +165,7 @@
 		</div>
 
 		<!-- Chat messages -->
-		<div class="ai-messages" ref="messagesContainer">
+		<div class="ai-messages" ref="messagesContainer" @scroll="onMessagesScroll">
 			<!-- Empty state -->
 			<div v-if="messages.length === 0" class="ai-empty-state">
 				<div class="ai-empty-icon">
@@ -469,6 +469,16 @@ function handleDropdownClickOutside(event: MouseEvent) {
 const messagesContainer = ref<HTMLElement | null>(null);
 const inputField = ref<HTMLTextAreaElement | null>(null);
 
+// Auto-scroll control: pause when user scrolls up during streaming
+const userScrolledUp = ref(false);
+
+function onMessagesScroll() {
+	if (!messagesContainer.value || !isStreaming.value) return;
+	const el = messagesContainer.value;
+	const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+	userScrolledUp.value = !atBottom;
+}
+
 // Render markdown content
 function renderMarkdown(content: string): string {
 	if (!content) return '';
@@ -553,7 +563,8 @@ async function resendMessage(index: number) {
 	// Add empty assistant message for streaming
 	messages.value.push({ role: 'assistant', content: '' });
 	isStreaming.value = true;
-	scrollToBottom();
+	userScrolledUp.value = false;
+	scrollToBottom(true);
 	
 	// Get note context if enabled
 	let noteContext: string | null = null;
@@ -592,11 +603,12 @@ async function resendMessage(index: number) {
 		}
 	} finally {
 		isStreaming.value = false;
+		userScrolledUp.value = false;
 		await refreshStatus();
 		conversationTokenCount.value = status.value.contextTokens;
 		await saveTokenCountToConversation();
 		await refreshConversationList();
-		scrollToBottom();
+		scrollToBottom(true);
 	}
 }
 
@@ -642,7 +654,8 @@ async function regenerateLastResponse() {
 }
 
 // Scroll to bottom of messages
-function scrollToBottom() {
+function scrollToBottom(force = false) {
+	if (!force && userScrolledUp.value) return;
 	nextTick(() => {
 		if (messagesContainer.value) {
 			messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
@@ -736,7 +749,8 @@ async function sendMessage() {
 	// Add empty assistant message for streaming
 	messages.value.push({ role: 'assistant', content: '' });
 	isStreaming.value = true;
-	scrollToBottom();
+	userScrolledUp.value = false;
+	scrollToBottom(true);
 	
 	// Get note context if enabled
 	let noteContext: string | null = null;
@@ -775,13 +789,14 @@ async function sendMessage() {
 		}
 	} finally {
 		isStreaming.value = false;
+		userScrolledUp.value = false;
 		await refreshStatus();
 		// Update per-conversation token count from live session
 		conversationTokenCount.value = status.value.contextTokens;
 		// Persist token count to the conversation
 		await saveTokenCountToConversation();
 		await refreshConversationList();
-		scrollToBottom();
+		scrollToBottom(true);
 	}
 }
 
@@ -793,6 +808,7 @@ async function stopGeneration() {
 		console.error('Failed to stop generation:', error);
 	} finally {
 		isStreaming.value = false;
+		userScrolledUp.value = false;
 		await refreshStatus();
 		// Update per-conversation token count from live session
 		conversationTokenCount.value = status.value.contextTokens;
