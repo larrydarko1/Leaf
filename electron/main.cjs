@@ -455,6 +455,7 @@ ipcMain.handle('audio:saveRecording', async (event, folderPath, fileName, base64
 // ============================
 const aiService = require('./ai-service.cjs');
 const conversationService = require('./conversation-service.cjs');
+const agentService = require('./agent-service.cjs');
 
 // Initialize conversation storage in app's userData directory
 conversationService.init(app.getPath('userData'));
@@ -550,4 +551,33 @@ ipcMain.handle('conversations:delete', async (event, id) => {
 // Rename a conversation
 ipcMain.handle('conversations:rename', async (event, id, newTitle) => {
     return await conversationService.renameConversation(id, newTitle);
+});
+
+// ============================
+// Agent Mode IPC Handlers
+// ============================
+
+// Read a file for the agent (scoped to workspace)
+ipcMain.handle('agent:readFile', async (event, filePath, workspacePath) => {
+    return await agentService.readFileForAgent(filePath, workspacePath);
+});
+
+// Propose an edit (backup + write)
+ipcMain.handle('agent:proposeEdit', async (event, filePath, newContent, workspacePath) => {
+    return await agentService.proposeEdit(filePath, newContent, workspacePath);
+});
+
+// Approve a pending edit
+ipcMain.handle('agent:approveEdit', async (event, editId) => {
+    return await agentService.approveEdit(editId);
+});
+
+// Reject a pending edit (restore from backup)
+ipcMain.handle('agent:rejectEdit', async (event, editId) => {
+    return await agentService.rejectEdit(editId);
+});
+
+// Get all pending edits
+ipcMain.handle('agent:getPendingEdits', async () => {
+    return agentService.getPendingEdits();
 });

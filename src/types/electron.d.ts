@@ -188,6 +188,43 @@ export interface ConversationLoadResult {
     error?: string;
 }
 
+// Agent mode types
+export interface AgentReadFileResult {
+    success: boolean;
+    content?: string;
+    filePath?: string;
+    error?: string;
+}
+
+export interface AgentProposeEditResult {
+    success: boolean;
+    editId?: string;
+    filePath?: string;
+    relativePath?: string;
+    originalContent?: string;
+    newContent?: string;
+    isNewFile?: boolean;
+    error?: string;
+}
+
+export interface AgentEditResult {
+    success: boolean;
+    error?: string;
+}
+
+export interface AgentPendingEdit {
+    editId: string;
+    filePath: string;
+    relativePath: string;
+    isNewFile: boolean;
+    timestamp: string;
+}
+
+export interface AgentPendingEditsResult {
+    success: boolean;
+    edits: AgentPendingEdit[];
+}
+
 export interface ElectronAPI {
     isElectron: () => boolean;
     openFolderDialog: () => Promise<string | null>;
@@ -227,6 +264,13 @@ export interface ElectronAPI {
     conversationUpdateLastMessage: (conversationId: string, content: string) => Promise<AiSimpleResult>;
     conversationDelete: (id: string) => Promise<AiSimpleResult>;
     conversationRename: (id: string, newTitle: string) => Promise<AiSimpleResult>;
+
+    // Agent mode operations
+    agentReadFile: (filePath: string, workspacePath: string) => Promise<AgentReadFileResult>;
+    agentProposeEdit: (filePath: string, newContent: string, workspacePath: string) => Promise<AgentProposeEditResult>;
+    agentApproveEdit: (editId: string) => Promise<AgentEditResult>;
+    agentRejectEdit: (editId: string) => Promise<AgentEditResult>;
+    agentGetPendingEdits: () => Promise<AgentPendingEditsResult>;
 }
 
 declare global {

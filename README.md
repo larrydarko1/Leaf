@@ -30,6 +30,7 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 - **Chat interface** - Built-in chat panel with streaming responses
 - **Conversation history** - All chats are automatically saved as JSON and can be browsed, loaded, renamed, or deleted
 - **Note-aware context** - Toggle to include the current note as context for AI queries
+- **Agent mode** - Let the AI read and edit your currently open file directly, with built-in version control (approve or revert every change)
 - **Model management** - Load and unload GGUF models from a dedicated models folder (`~/leaf-models/`)
 - **GPU accelerated** - Automatically uses Metal (macOS), CUDA (NVIDIA), or Vulkan for fast inference
 - **Powered by llama.cpp** - Uses [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) bindings to [llama.cpp](https://github.com/ggml-org/llama.cpp) (both MIT licensed)
@@ -82,6 +83,17 @@ Leaf stores AI models in `~/leaf-models/`. To get started with the AI assistant:
 2. Click the folder icon to open the models directory
 3. Download a `.gguf` model file from [Hugging Face](https://huggingface.co/models?library=gguf&sort=trending) and place it in the folder
 4. Select and load the model from the dropdown in the AI panel
+
+### Using Agent Mode
+Agent mode lets the AI edit your files directly with a safety net:
+1. Open a file in the editor
+2. Open the AI panel and load a model
+3. Click the **Agent mode** button (code brackets icon) in the toolbar — the indicator shows the current file name
+4. Ask the AI to make changes (e.g. "add a table of contents" or "refactor the second paragraph")
+5. The AI proposes edits shown as inline diff cards with **Approve** and **Reject** buttons
+6. **Approve** keeps the change permanently; **Reject** reverts the file to its original content
+
+> Agent mode only operates on the currently open file and is scoped to your vault folder for security.
 
 Recommended models for getting started:
 | Model | Size | RAM Needed | Best For |
@@ -170,6 +182,7 @@ leaf/
 │   ├── main.cjs                # Electron main process
 │   ├── preload.cjs             # Secure bridge between main/renderer
 │   ├── ai-service.cjs          # Local LLM inference service (node-llama-cpp)
+│   ├── agent-service.cjs       # Agent mode file editing with backup/restore
 │   └── conversation-service.cjs # Conversation persistence (JSON storage)
 ├── src/
 │   ├── components/

@@ -169,6 +169,7 @@
 				<AiPanel
 					v-if="showAiPanel"
 					:active-file="activeFile"
+					:workspace-path="currentFolder"
 					@close="showAiPanel = false"
 				/>
 			</div>

@@ -56,6 +56,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
     conversationAddMessage: (conversationId, message) => ipcRenderer.invoke('conversations:addMessage', conversationId, message),
     conversationUpdateLastMessage: (conversationId, content) => ipcRenderer.invoke('conversations:updateLastMessage', conversationId, content),
     conversationDelete: (id) => ipcRenderer.invoke('conversations:delete', id),
-    conversationRename: (id, newTitle) => ipcRenderer.invoke('conversations:rename', id, newTitle)
+    conversationRename: (id, newTitle) => ipcRenderer.invoke('conversations:rename', id, newTitle),
+
+    // Agent mode operations
+    agentReadFile: (filePath, workspacePath) => ipcRenderer.invoke('agent:readFile', filePath, workspacePath),
+    agentProposeEdit: (filePath, newContent, workspacePath) => ipcRenderer.invoke('agent:proposeEdit', filePath, newContent, workspacePath),
+    agentApproveEdit: (editId) => ipcRenderer.invoke('agent:approveEdit', editId),
+    agentRejectEdit: (editId) => ipcRenderer.invoke('agent:rejectEdit', editId),
+    agentGetPendingEdits: () => ipcRenderer.invoke('agent:getPendingEdits')
 });
 

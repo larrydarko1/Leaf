@@ -87,6 +87,19 @@
 				</button>
 				<button 
 					v-if="status.isModelLoaded"
+					@click="toggleAgentMode" 
+					class="ai-btn-icon" 
+					:class="{ 'ai-btn-active': agentMode }"
+					title="Agent mode — AI can read and edit files"
+				>
+					<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M12 2L2 7l10 5 10-5-10-5z"/>
+						<path d="M2 17l10 5 10-5"/>
+						<path d="M2 12l10 5 10-5"/>
+					</svg>
+				</button>
+				<button 
+					v-if="status.isModelLoaded"
 					@click="startNewConversation" 
 					class="ai-btn-icon" 
 					title="New conversation"
@@ -228,6 +241,63 @@
 						class="ai-message-content ai-markdown" 
 						v-html="renderMarkdown(msg.content)"
 					></div>
+					<!-- Agent edit cards -->
+					<div v-if="msg.agentEdits && msg.agentEdits.length > 0" class="ai-agent-edits">
+						<div 
+							v-for="(edit, editIdx) in msg.agentEdits" 
+							:key="editIdx" 
+							class="ai-agent-edit-card"
+							:class="edit.status"
+						>
+							<div class="ai-agent-edit-header">
+								<div class="ai-agent-edit-file">
+									<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+										<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+										<polyline points="14 2 14 8 20 8"/>
+									</svg>
+									<span class="ai-agent-edit-filename">{{ edit.relativePath || edit.filePath }}</span>
+									<span v-if="edit.isNewFile" class="ai-agent-edit-badge new">NEW</span>
+								</div>
+								<div class="ai-agent-edit-status">
+									<span v-if="edit.status === 'approved'" class="ai-agent-status-text approved">Approved</span>
+									<span v-else-if="edit.status === 'rejected'" class="ai-agent-status-text rejected">Reverted</span>
+									<span v-else-if="edit.status === 'error'" class="ai-agent-status-text error">Error</span>
+								</div>
+							</div>
+							<!-- Diff view (collapsible) -->
+							<details v-if="edit.originalContent !== undefined" class="ai-agent-diff-details">
+								<summary class="ai-agent-diff-summary">View changes</summary>
+								<div class="ai-agent-diff">
+									<div v-if="!edit.isNewFile" class="ai-agent-diff-section removed">
+										<div class="ai-agent-diff-label">Original</div>
+										<pre class="ai-agent-diff-code">{{ edit.originalContent }}</pre>
+									</div>
+									<div class="ai-agent-diff-section added">
+										<div class="ai-agent-diff-label">{{ edit.isNewFile ? 'New file' : 'Modified' }}</div>
+										<pre class="ai-agent-diff-code">{{ edit.newContent }}</pre>
+									</div>
+								</div>
+							</details>
+							<!-- Error message -->
+							<div v-if="edit.error" class="ai-agent-edit-error">{{ edit.error }}</div>
+							<!-- Approve / Reject buttons -->
+							<div v-if="edit.status === 'pending'" class="ai-agent-edit-actions">
+								<button @click="approveAgentEdit(index, editIdx)" class="ai-agent-btn approve">
+									<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+										<polyline points="20 6 9 17 4 12"/>
+									</svg>
+									Approve
+								</button>
+								<button @click="rejectAgentEdit(index, editIdx)" class="ai-agent-btn reject">
+									<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+										<line x1="18" y1="6" x2="6" y2="18"/>
+										<line x1="6" y1="6" x2="18" y2="18"/>
+									</svg>
+									Reject
+								</button>
+							</div>
+						</div>
+					</div>
 					<span v-if="msg.role === 'assistant' && index === messages.length - 1 && isStreaming" class="ai-cursor">▊</span>
 					<!-- Message action buttons -->
 					<div 
@@ -315,6 +385,14 @@
 
 		<!-- Input area -->
 		<div class="ai-input-area">
+			<div v-if="agentMode" class="ai-agent-indicator">
+				<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<polyline points="16 18 22 12 16 6"/>
+					<polyline points="8 6 2 12 8 18"/>
+				</svg>
+				<span v-if="activeFile" class="ai-agent-file-name">Agent · {{ activeFile.name }}</span>
+				<span v-else class="ai-agent-no-file">Agent · No file open</span>
+			</div>
 			<div v-if="includeNoteContext && activeFile" class="ai-context-hint">
 				<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
 					<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/>
@@ -375,14 +453,29 @@ marked.setOptions({
 interface ChatMessage {
 	role: 'user' | 'assistant';
 	content: string;
+	agentEdits?: AgentFileEdit[];
+}
+
+// Agent mode: parsed file edit from AI response
+interface AgentFileEdit {
+	filePath: string;
+	newContent: string;
+	editId?: string;
+	originalContent?: string;
+	relativePath?: string;
+	isNewFile?: boolean;
+	status: 'pending' | 'approved' | 'rejected' | 'error';
+	error?: string;
 }
 
 const props = defineProps<{
 	activeFile: FileInfo | null;
+	workspacePath: string | null;
 }>();
 
 defineEmits<{
 	(e: 'close'): void;
+	(e: 'file-changed', path: string): void;
 }>();
 
 // State
@@ -420,6 +513,10 @@ const conversationTokenCount = ref(0);
 const editingIndex = ref<number | null>(null);
 const editContent = ref('');
 const editInputRef = ref<HTMLTextAreaElement[] | null>(null);
+
+// Agent mode state
+const agentMode = ref(false);
+
 
 // Dropdown state
 const showDropdown = ref(false);
@@ -653,6 +750,140 @@ async function regenerateLastResponse() {
 	}
 }
 
+// ============================
+// Agent mode logic
+// ============================
+
+// Toggle agent mode on/off
+function toggleAgentMode() {
+	agentMode.value = !agentMode.value;
+}
+
+// Agent system prompt — instructs the model how to propose file edits
+const AGENT_SYSTEM_PROMPT = `You are an AI assistant with the ability to edit files. When the user asks you to modify a file, you MUST output your proposed changes using this exact format:
+
+<file_edit path="RELATIVE_FILE_PATH">
+NEW FILE CONTENT HERE
+</file_edit>
+
+Rules:
+- The path must be relative to the workspace root.
+- Include the COMPLETE new file content inside the tags.
+- You can include multiple <file_edit> blocks for multiple files.
+- Always explain what you changed before or after the edit block.
+- If the user just asks a question without requesting an edit, respond normally without <file_edit> tags.`;
+
+/**
+ * Parse AI response for <file_edit> blocks
+ */
+function parseAgentEdits(response: string): { cleanContent: string; edits: AgentFileEdit[] } {
+	const edits: AgentFileEdit[] = [];
+	const editRegex = /<file_edit\s+path="([^"]+)">\n?([\s\S]*?)<\/file_edit>/g;
+	let match;
+	let cleanContent = response;
+
+	while ((match = editRegex.exec(response)) !== null) {
+		const filePath = match[1];
+		const newContent = match[2].trimEnd();
+		edits.push({
+			filePath,
+			newContent,
+			status: 'pending'
+		});
+		// Remove edit block from displayed content
+		cleanContent = cleanContent.replace(match[0], '').trim();
+	}
+
+	return { cleanContent, edits };
+}
+
+/**
+ * Process agent edits: propose each one to the backend
+ */
+async function processAgentEdits(_msgIndex: number, edits: AgentFileEdit[]) {
+	if (!props.workspacePath) return;
+
+	for (let i = 0; i < edits.length; i++) {
+		const edit = edits[i];
+		const fullPath = pathHelper.resolve(props.workspacePath, edit.filePath);
+
+		try {
+			const result = await window.electronAPI.agentProposeEdit(
+				fullPath,
+				edit.newContent,
+				props.workspacePath
+			);
+
+			if (result.success) {
+				edit.editId = result.editId;
+				edit.originalContent = result.originalContent;
+				edit.newContent = result.newContent!;
+				edit.relativePath = result.relativePath;
+				edit.isNewFile = result.isNewFile;
+				edit.status = 'pending';
+			} else {
+				edit.status = 'error';
+				edit.error = result.error || 'Failed to propose edit';
+			}
+		} catch (err) {
+			edit.status = 'error';
+			edit.error = (err as Error).message;
+		}
+	}
+}
+
+// Simple path helper since we don't have Node's path in renderer
+const pathHelper = {
+	resolve: (...parts: string[]) => {
+		// Simple join — the backend handles proper resolution
+		return parts.filter(Boolean).join('/').replace(/\/+/g, '/');
+	}
+};
+
+/**
+ * Approve an agent edit
+ */
+async function approveAgentEdit(msgIndex: number, editIdx: number) {
+	const msg = messages.value[msgIndex];
+	if (!msg?.agentEdits?.[editIdx]) return;
+
+	const edit = msg.agentEdits[editIdx];
+	if (!edit.editId || edit.status !== 'pending') return;
+
+	try {
+		const result = await window.electronAPI.agentApproveEdit(edit.editId);
+		if (result.success) {
+			edit.status = 'approved';
+		} else {
+			edit.error = result.error || 'Failed to approve edit';
+		}
+	} catch (err) {
+		edit.error = (err as Error).message;
+	}
+}
+
+/**
+ * Reject an agent edit (revert)
+ */
+async function rejectAgentEdit(msgIndex: number, editIdx: number) {
+	const msg = messages.value[msgIndex];
+	if (!msg?.agentEdits?.[editIdx]) return;
+
+	const edit = msg.agentEdits[editIdx];
+	if (!edit.editId || edit.status !== 'pending') return;
+
+	try {
+		const result = await window.electronAPI.agentRejectEdit(edit.editId);
+		if (result.success) {
+			edit.status = 'rejected';
+		} else {
+			edit.error = result.error || 'Failed to reject edit';
+		}
+	} catch (err) {
+		edit.error = (err as Error).message;
+	}
+}
+
 // Scroll to bottom of messages
 function scrollToBottom(force = false) {
 	if (!force && userScrolledUp.value) return;
@@ -752,9 +983,26 @@ async function sendMessage() {
 	userScrolledUp.value = false;
 	scrollToBottom(true);
 	
-	// Get note context if enabled
+	// Build note context
 	let noteContext: string | null = null;
-	if (includeNoteContext.value && props.activeFile) {
+	
+	if (agentMode.value && props.workspacePath && props.activeFile) {
+		// Agent mode: build context with system prompt + current file content
+		let agentContext = AGENT_SYSTEM_PROMPT + '\n\n';
+		
+		// Read the currently open file as the target
+		try {
+			const fileResult = await window.electronAPI.agentReadFile(props.activeFile.path, props.workspacePath);
+			if (fileResult.success && fileResult.content !== undefined) {
+				agentContext += `Current content of "${props.activeFile.name}" (${props.activeFile.relativePath}):\n\`\`\`\n${fileResult.content}\n\`\`\`\n\n`;
+			}
+		} catch (err) {
+			agentContext += `Note: Could not read "${props.activeFile.name}": ${(err as Error).message}\n\n`;
+		}
+		
+		noteContext = agentContext;
+	} else if (includeNoteContext.value && props.activeFile) {
+		// Normal mode: just include note context
 		try {
 			const result = await window.electronAPI.readFile(props.activeFile.path);
 			if (result.success && result.content) {
@@ -774,8 +1022,19 @@ async function sendMessage() {
 			}
 		}
 		
-		// Persist assistant response
+		// If agent mode, parse the response for file edits
 		const assistantMsg = messages.value[messages.value.length - 1];
+		if (agentMode.value && assistantMsg.role === 'assistant' && assistantMsg.content) {
+			const { cleanContent, edits } = parseAgentEdits(assistantMsg.content);
+			if (edits.length > 0) {
+				assistantMsg.content = cleanContent;
+				assistantMsg.agentEdits = edits;
+				const msgIdx = messages.value.length - 1;
+				await processAgentEdits(msgIdx, edits);
+			}
+		}
+		
+		// Persist assistant response
 		if (currentConversationId.value && assistantMsg.role === 'assistant') {
 			await window.electronAPI.conversationAddMessage(currentConversationId.value, {
 				role: 'assistant',
@@ -1890,6 +2149,240 @@ onUnmounted(() => {
 			opacity: 0.85;
 			transform: scale(1.05);
 		}
+	}
+}
+
+// Agent mode styles
+.ai-agent-indicator {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+	font-size: 0.7rem;
+	color: var(--accent-color);
+	padding: 0 0.25rem 0.4rem;
+	flex-wrap: wrap;
+
+	svg {
+		flex-shrink: 0;
+	}
+
+	span {
+		font-weight: 600;
+		white-space: nowrap;
+	}
+}
+
+.ai-agent-file-input {
+	flex: 1;
+	min-width: 120px;
+	background: var(--bg-primary);
+	color: var(--text1);
+	border: 1px solid var(--text3);
+	border-radius: 6px;
+	padding: 0.2rem 0.4rem;
+	font-size: 0.7rem;
+	font-family: 'SF Mono', 'Fira Code', monospace;
+	outline: none;
+	transition: border-color 0.2s;
+
+	&::placeholder {
+		color: var(--text2);
+	}
+
+	&:focus {
+		border-color: var(--accent-color);
+	}
+}
+
+// Agent edit cards in messages
+.ai-agent-edits {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	margin-top: 0.5rem;
+	width: 100%;
+}
+
+.ai-agent-edit-card {
+	background: var(--bg-primary);
+	border: 1px solid var(--text3);
+	border-radius: 10px;
+	overflow: hidden;
+	transition: border-color 0.2s;
+
+	&.pending {
+		border-color: var(--accent-color);
+		border-style: dashed;
+	}
+
+	&.approved {
+		border-color: #2ecc71;
+	}
+
+	&.rejected {
+		border-color: #e74c3c;
+		opacity: 0.7;
+	}
+
+	&.error {
+		border-color: #e74c3c;
+	}
+}
+
+.ai-agent-edit-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0.5rem 0.65rem;
+	border-bottom: 1px solid var(--text3);
+	background: rgba(0, 0, 0, 0.05);
+}
+
+.ai-agent-edit-file {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+	min-width: 0;
+	flex: 1;
+}
+
+.ai-agent-edit-filename {
+	font-size: 0.75rem;
+	font-family: 'SF Mono', 'Fira Code', monospace;
+	color: var(--text1);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.ai-agent-edit-badge {
+	font-size: 0.6rem;
+	font-weight: 700;
+	padding: 0.1rem 0.3rem;
+	border-radius: 4px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	flex-shrink: 0;
+
+	&.new {
+		background: var(--accent-color);
+		color: var(--base1);
+	}
+}
+
+.ai-agent-status-text {
+	font-size: 0.7rem;
+	font-weight: 600;
+	flex-shrink: 0;
+
+	&.approved {
+		color: #2ecc71;
+	}
+
+	&.rejected {
+		color: #e74c3c;
+	}
+
+	&.error {
+		color: #e74c3c;
+	}
+}
+
+.ai-agent-diff-details {
+	border-bottom: 1px solid var(--text3);
+}
+
+.ai-agent-diff-summary {
+	padding: 0.35rem 0.65rem;
+	font-size: 0.72rem;
+	color: var(--text2);
+	cursor: pointer;
+	user-select: none;
+	transition: color 0.15s;
+
+	&:hover {
+		color: var(--text1);
+	}
+}
+
+.ai-agent-diff {
+	max-height: 300px;
+	overflow-y: auto;
+}
+
+.ai-agent-diff-section {
+	&.removed {
+		background: rgba(231, 76, 60, 0.08);
+	}
+
+	&.added {
+		background: rgba(46, 204, 113, 0.08);
+	}
+}
+
+.ai-agent-diff-label {
+	padding: 0.25rem 0.65rem;
+	font-size: 0.65rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--text2);
+	border-bottom: 1px solid var(--text3);
+}
+
+.ai-agent-diff-code {
+	padding: 0.5rem 0.65rem;
+	font-size: 0.72rem;
+	font-family: 'SF Mono', 'Fira Code', monospace;
+	line-height: 1.5;
+	margin: 0;
+	white-space: pre-wrap;
+	word-break: break-all;
+	color: var(--text1);
+	max-height: 140px;
+	overflow-y: auto;
+}
+
+.ai-agent-edit-error {
+	padding: 0.4rem 0.65rem;
+	font-size: 0.72rem;
+	color: #e74c3c;
+	border-bottom: 1px solid var(--text3);
+}
+
+.ai-agent-edit-actions {
+	display: flex;
+	gap: 0.5rem;
+	padding: 0.5rem 0.65rem;
+}
+
+.ai-agent-btn {
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+	padding: 0.35rem 0.65rem;
+	border: none;
+	border-radius: 7px;
+	font-size: 0.72rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: opacity 0.15s, transform 0.1s;
+	flex: 1;
+	justify-content: center;
+
+	&:hover {
+		opacity: 0.85;
+		transform: scale(1.02);
+	}
+
+	&.approve {
+		background: #2ecc71;
+		color: #fff;
+	}
+
+	&.reject {
+		background: #e74c3c;
+		color: #fff;
 	}
 }
 </style>
