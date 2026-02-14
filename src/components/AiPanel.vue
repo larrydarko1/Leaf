@@ -194,29 +194,109 @@
 				:class="msg.role"
 			>
 				<div class="ai-message-wrapper">
-					<div class="ai-message-content" v-if="msg.role === 'user'">
+					<!-- User message: edit mode -->
+					<div v-if="msg.role === 'user' && editingIndex === index" class="ai-message-edit">
+						<textarea
+							ref="editInputRef"
+							v-model="editContent"
+							@keydown.enter.exact.prevent="confirmEditMessage(index)"
+							@keydown.escape.prevent="cancelEditMessage"
+							class="ai-edit-input"
+							rows="2"
+						/>
+						<div class="ai-edit-actions">
+							<button @click="cancelEditMessage" class="ai-btn-icon ai-btn-tiny" title="Cancel">
+								<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+									<line x1="18" y1="6" x2="6" y2="18"/>
+									<line x1="6" y1="6" x2="18" y2="18"/>
+								</svg>
+							</button>
+							<button @click="confirmEditMessage(index)" class="ai-btn-icon ai-btn-tiny" title="Save & resend">
+								<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+									<polyline points="20 6 9 17 4 12"/>
+								</svg>
+							</button>
+						</div>
+					</div>
+					<!-- User message: normal mode -->
+					<div class="ai-message-content" v-else-if="msg.role === 'user'">
 						{{ msg.content }}
 					</div>
+					<!-- Assistant message -->
 					<div 
 						v-else 
 						class="ai-message-content ai-markdown" 
 						v-html="renderMarkdown(msg.content)"
 					></div>
 					<span v-if="msg.role === 'assistant' && index === messages.length - 1 && isStreaming" class="ai-cursor">▊</span>
-					<button 
-						v-if="msg.content && !(msg.role === 'assistant' && index === messages.length - 1 && isStreaming)"
-						class="ai-btn-copy" 
-						@click="copyMessage(msg.content, index)"
-						:title="copiedIndex === index ? 'Copied!' : 'Copy message'"
+					<!-- Message action buttons -->
+					<div 
+						v-if="msg.content && !(isStreaming && index >= messages.length - 2) && editingIndex !== index" 
+						class="ai-message-actions"
 					>
-						<svg v-if="copiedIndex !== index" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-							<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-							<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-						</svg>
-						<svg v-else width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-							<polyline points="20 6 9 17 4 12"/>
-						</svg>
-					</button>
+						<!-- Copy -->
+						<button 
+							class="ai-btn-action" 
+							@click="copyMessage(msg.content, index)"
+							:title="copiedIndex === index ? 'Copied!' : 'Copy'"
+						>
+							<svg v-if="copiedIndex !== index" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+								<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+							</svg>
+							<svg v-else width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+								<polyline points="20 6 9 17 4 12"/>
+							</svg>
+						</button>
+						<!-- Edit (user messages only) -->
+						<button 
+							v-if="msg.role === 'user'" 
+							class="ai-btn-action" 
+							@click="startEditMessage(index)"
+							title="Edit"
+						>
+							<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+								<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+							</svg>
+						</button>
+						<!-- Resend (last user message only, no messages after it) -->
+						<button 
+							v-if="msg.role === 'user' && index === messages.length - 1 && status.isModelLoaded" 
+							class="ai-btn-action" 
+							@click="resendMessage(index)"
+							title="Resend"
+						>
+							<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<polyline points="1 4 1 10 7 10"/>
+								<path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+							</svg>
+						</button>
+						<!-- Regenerate (last assistant message only) -->
+						<button 
+							v-if="msg.role === 'assistant' && index === messages.length - 1 && status.isModelLoaded" 
+							class="ai-btn-action" 
+							@click="regenerateLastResponse"
+							title="Regenerate"
+						>
+							<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<polyline points="23 4 23 10 17 10"/>
+								<path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+							</svg>
+						</button>
+						<!-- Delete last message pair -->
+						<button 
+							v-if="index === messages.length - 1" 
+							class="ai-btn-action ai-btn-action-danger" 
+							@click="deleteLastMessagePair"
+							title="Delete"
+						>
+							<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<polyline points="3 6 5 6 21 6"/>
+								<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+							</svg>
+						</button>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -336,6 +416,11 @@ const renameInputRef = ref<HTMLInputElement[] | null>(null);
 // Per-conversation token count
 const conversationTokenCount = ref(0);
 
+// Message editing state
+const editingIndex = ref<number | null>(null);
+const editContent = ref('');
+const editInputRef = ref<HTMLTextAreaElement[] | null>(null);
+
 // Dropdown state
 const showDropdown = ref(false);
 const dropdownRef = ref<HTMLElement | null>(null);
@@ -400,6 +485,159 @@ async function copyMessage(content: string, index: number) {
 		}, 2000);
 	} catch (err) {
 		console.error('Failed to copy:', err);
+	}
+}
+
+// ============================
+// Message editing, resend, delete
+// ============================
+
+// Start editing a user message
+function startEditMessage(index: number) {
+	if (messages.value[index]?.role !== 'user') return;
+	editingIndex.value = index;
+	editContent.value = messages.value[index].content;
+	nextTick(() => {
+		if (editInputRef.value && editInputRef.value.length > 0) {
+			editInputRef.value[0].focus();
+		}
+	});
+}
+
+// Cancel editing
+function cancelEditMessage() {
+	editingIndex.value = null;
+	editContent.value = '';
+}
+
+// Confirm edit: update message, remove everything after it, save
+async function confirmEditMessage(index: number) {
+	const newContent = editContent.value.trim();
+	if (!newContent) {
+		cancelEditMessage();
+		return;
+	}
+	
+	// Update the message content
+	messages.value[index].content = newContent;
+	
+	// Remove all messages after this one
+	messages.value.splice(index + 1);
+	
+	// Reset LLM session since context changed
+	await window.electronAPI.aiResetChat();
+	
+	// Reset token count since session was reset
+	conversationTokenCount.value = 0;
+	
+	// Save updated conversation
+	await saveCurrentConversation();
+	await saveTokenCountToConversation();
+	await refreshConversationList();
+	
+	editingIndex.value = null;
+	editContent.value = '';
+	
+	scrollToBottom();
+}
+
+// Resend a user message (must be the last message, no messages after it)
+async function resendMessage(index: number) {
+	const msg = messages.value[index];
+	if (msg.role !== 'user' || !status.value.isModelLoaded || status.value.isGenerating) return;
+	
+	// Reset the LLM session
+	await window.electronAPI.aiResetChat();
+	conversationTokenCount.value = 0;
+	
+	// Add empty assistant message for streaming
+	messages.value.push({ role: 'assistant', content: '' });
+	isStreaming.value = true;
+	scrollToBottom();
+	
+	// Get note context if enabled
+	let noteContext: string | null = null;
+	if (includeNoteContext.value && props.activeFile) {
+		try {
+			const result = await window.electronAPI.readFile(props.activeFile.path);
+			if (result.success && result.content) {
+				noteContext = result.content;
+			}
+		} catch (error) {
+			console.error('Failed to read note for context:', error);
+		}
+	}
+	
+	try {
+		const result = await window.electronAPI.aiChat(msg.content, noteContext);
+		if (!result.success) {
+			const lastMsg = messages.value[messages.value.length - 1];
+			if (lastMsg.role === 'assistant') {
+				lastMsg.content = `Error: ${result.error}`;
+			}
+		}
+		
+		// Persist assistant response
+		const assistantMsg = messages.value[messages.value.length - 1];
+		if (currentConversationId.value && assistantMsg.role === 'assistant') {
+			await window.electronAPI.conversationAddMessage(currentConversationId.value, {
+				role: 'assistant',
+				content: assistantMsg.content
+			});
+		}
+	} catch (error) {
+		const lastMsg = messages.value[messages.value.length - 1];
+		if (lastMsg.role === 'assistant') {
+			lastMsg.content = `Error: ${(error as Error).message}`;
+		}
+	} finally {
+		isStreaming.value = false;
+		await refreshStatus();
+		conversationTokenCount.value = status.value.contextTokens;
+		await saveTokenCountToConversation();
+		await refreshConversationList();
+		scrollToBottom();
+	}
+}
+
+// Delete the last message only
+async function deleteLastMessagePair() {
+	if (messages.value.length === 0 || isStreaming.value) return;
+	
+	// Remove only the last message
+	messages.value.pop();
+	
+	// Reset LLM session since context is invalid
+	await window.electronAPI.aiResetChat();
+	
+	// Reset token count
+	conversationTokenCount.value = 0;
+	
+	// Save updated conversation
+	await saveCurrentConversation();
+	await saveTokenCountToConversation();
+	await refreshConversationList();
+	
+	scrollToBottom();
+}
+
+// Regenerate the last assistant response
+async function regenerateLastResponse() {
+	if (messages.value.length < 2 || isStreaming.value) return;
+	
+	const lastMsg = messages.value[messages.value.length - 1];
+	if (lastMsg.role !== 'assistant') return;
+	
+	// Remove the assistant response
+	messages.value.pop();
+	
+	// Save the trimmed conversation
+	await saveCurrentConversation();
+	
+	// Resend the last user message (now the last message)
+	const lastIndex = messages.value.length - 1;
+	if (lastIndex >= 0 && messages.value[lastIndex].role === 'user') {
+		await resendMessage(lastIndex);
 	}
 }
 
@@ -623,7 +861,7 @@ async function startNewConversation() {
 
 // Save current conversation state
 async function saveCurrentConversation() {
-	if (!currentConversationId.value || messages.value.length === 0) return;
+	if (!currentConversationId.value) return;
 	
 	try {
 		const result = await window.electronAPI.conversationLoad(currentConversationId.value);
@@ -1229,7 +1467,7 @@ onUnmounted(() => {
 .ai-message {
 	display: flex;
 	
-	&:hover .ai-btn-copy {
+	&:hover .ai-message-actions {
 		opacity: 1;
 	}
 	
@@ -1245,6 +1483,10 @@ onUnmounted(() => {
 			color: var(--text1);
 			border-radius: 12px 12px 2px 12px;
 		}
+
+		.ai-message-actions {
+			justify-content: flex-end;
+		}
 	}
 	
 	&.assistant {
@@ -1258,6 +1500,10 @@ onUnmounted(() => {
 			background: var(--bg-primary);
 			color: var(--text1);
 			border-radius: 12px 12px 12px 2px;
+		}
+
+		.ai-message-actions {
+			justify-content: flex-start;
 		}
 	}
 }
@@ -1389,6 +1635,74 @@ onUnmounted(() => {
 		color: var(--text1);
 		background: var(--bg-hover);
 	}
+}
+
+// Message action buttons bar
+.ai-message-actions {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	opacity: 0;
+	transition: opacity 0.15s;
+	margin-top: 3px;
+	padding: 0 2px;
+}
+
+.ai-btn-action {
+	background: none;
+	border: none;
+	color: var(--text2);
+	cursor: pointer;
+	padding: 3px 4px;
+	border-radius: 4px;
+	transition: color 0.15s, background 0.15s;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	&:hover {
+		color: var(--text1);
+		background: var(--bg-hover);
+	}
+
+	&.ai-btn-action-danger:hover {
+		color: #e55;
+	}
+}
+
+// Inline edit mode
+.ai-message-edit {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	width: 100%;
+}
+
+.ai-edit-input {
+	width: 100%;
+	min-height: 2.5rem;
+	max-height: 8rem;
+	padding: 0.5rem 0.65rem;
+	background: var(--bg-primary);
+	color: var(--text1);
+	border: 1px solid var(--accent-color);
+	border-radius: 8px;
+	font-size: 0.82rem;
+	font-family: inherit;
+	line-height: 1.5;
+	resize: vertical;
+	outline: none;
+
+	&:focus {
+		border-color: var(--accent-color);
+		box-shadow: 0 0 0 1px var(--accent-color);
+	}
+}
+
+.ai-edit-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 4px;
 }
 
 .ai-cursor {
