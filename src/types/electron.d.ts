@@ -232,6 +232,8 @@ export interface ElectronAPI {
     readFile: (filePath: string) => Promise<FileReadResult>;
     readImage: (filePath: string) => Promise<ImageReadResult>;
     readAudio: (filePath: string) => Promise<AudioReadResult>;
+    readOdt: (filePath: string) => Promise<FileReadResult>;
+    writeOdt: (filePath: string, content: string) => Promise<FileWriteResult>;
     createFolder: (parentPath: string, folderName: string) => Promise<FolderCreateResult>;
     writeFile: (filePath: string, content: string) => Promise<FileWriteResult>;
     createFile: (folderPath: string, fileName: string) => Promise<FileCreateResult>;
