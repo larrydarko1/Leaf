@@ -74,7 +74,6 @@
 					</svg>
 				</button>
 				<button 
-					v-if="status.isModelLoaded"
 					@click="toggleHistory" 
 					class="ai-btn-icon" 
 					:class="{ 'ai-btn-active': showHistory }"
@@ -99,7 +98,6 @@
 					</svg>
 				</button>
 				<button 
-					v-if="status.isModelLoaded"
 					@click="startNewConversation" 
 					class="ai-btn-icon" 
 					title="New conversation"
@@ -196,6 +194,9 @@
 				</p>
 				<button v-if="!status.isModelLoaded && availableModels.length === 0" @click="openModelsFolder" class="ai-btn-secondary">
 					Open Models Folder
+				</button>
+				<button v-if="!status.isModelLoaded && availableModels.length > 0" @click="openHistory" class="ai-btn-secondary">
+					Browse History
 				</button>
 			</div>
 
@@ -371,6 +372,30 @@
 			</div>
 		</div>
 
+		<!-- Load model banner (shown when viewing a conversation without a loaded model) -->
+		<div v-if="!status.isModelLoaded && messages.length > 0" class="ai-load-model-banner">
+			<div class="ai-load-model-banner-content">
+				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<circle cx="12" cy="12" r="10"/>
+					<line x1="12" y1="8" x2="12" y2="12"/>
+					<line x1="12" y1="16" x2="12.01" y2="16"/>
+				</svg>
+				<span>Load a model to continue chatting</span>
+			</div>
+			<button 
+				v-if="previousModelMatch" 
+				@click="loadPreviousModel" 
+				class="ai-load-model-btn"
+				:disabled="isLoading"
+			>
+				<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+					<polyline points="23 4 23 10 17 10"/>
+					<path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+				</svg>
+				{{ isLoading ? 'Loading...' : 'Load ' + truncate(previousModelMatch.name, 20) }}
+			</button>
+		</div>
+
 		<!-- Token counter -->
 		<div v-if="status.isModelLoaded && status.contextSize > 0" class="ai-token-bar">
 			<div class="ai-token-bar-track">
@@ -516,6 +541,18 @@ const editInputRef = ref<HTMLTextAreaElement[] | null>(null);
 
 // Agent mode state
 const agentMode = ref(false);
+
+// Track last used model name (from conversation) for quick reload
+const lastUsedModelName = ref<string | null>(null);
+
+// Find matching model in available models for quick reload
+const previousModelMatch = computed(() => {
+	if (!lastUsedModelName.value || status.value.isModelLoaded) return null;
+	return availableModels.value.find(m => 
+		m.name === lastUsedModelName.value || 
+		m.path.endsWith(lastUsedModelName.value!)
+	) || null;
+});
 
 
 // Dropdown state
@@ -944,14 +981,20 @@ async function unloadModel() {
 		if (status.value.isGenerating) {
 			await stopGeneration();
 		}
+		// Remember the model name for quick reload
+		if (status.value.currentModelName) {
+			lastUsedModelName.value = status.value.currentModelName;
+		}
 		// Save current conversation before unloading
 		await saveCurrentConversation();
 		await window.electronAPI.aiUnloadModel();
 		await refreshStatus();
-		messages.value = [];
-		currentConversationId.value = null;
+		// Keep messages and conversation visible (read-only) after unload
 		conversationTokenCount.value = 0;
-		showHistory.value = false;
+		// Auto-select the previous model in the dropdown for easy reload
+		if (previousModelMatch.value) {
+			selectedModelPath.value = previousModelMatch.value.path;
+		}
 	} catch (error) {
 		console.error('Failed to unload model:', error);
 	}
@@ -1177,14 +1220,21 @@ async function loadConversation(id: string) {
 		
 		const result = await window.electronAPI.conversationLoad(id);
 		if (result.success && result.conversation) {
-			// Reset the LLM chat session
-			await window.electronAPI.aiResetChat();
+			// Only reset LLM session if a model is loaded
+			if (status.value.isModelLoaded) {
+				await window.electronAPI.aiResetChat();
+			}
 			
 			currentConversationId.value = result.conversation.id;
 			messages.value = result.conversation.messages.map(m => ({
 				role: m.role,
 				content: m.content
 			}));
+			
+			// Track the model used in this conversation for quick reload
+			if (result.conversation.model) {
+				lastUsedModelName.value = result.conversation.model;
+			}
 			
 			// Restore per-conversation token count
 			conversationTokenCount.value = result.conversation.tokenCount || 0;
@@ -1266,6 +1316,42 @@ function formatRelativeDate(dateStr: string): string {
 	if (diffHr < 24) return `${diffHr}h ago`;
 	if (diffDay < 7) return `${diffDay}d ago`;
 	return date.toLocaleDateString();
+}
+
+// Open history panel
+function openHistory() {
+	showHistory.value = true;
+	refreshConversationList();
+}
+
+// Load the previously used model (quick reload)
+async function loadPreviousModel() {
+	const match = previousModelMatch.value;
+	if (!match) return;
+	
+	isLoading.value = true;
+	try {
+		const result = await window.electronAPI.aiLoadModel(match.path);
+		if (result.success) {
+			await refreshStatus();
+			// If we have a conversation loaded, keep it (don't start new)
+			if (!currentConversationId.value) {
+				await startNewConversation();
+			}
+			if (inputField.value) {
+				inputField.value.focus();
+			}
+		} else {
+			messages.value.push({
+				role: 'assistant',
+				content: `Failed to load model: ${result.error}`
+			});
+		}
+	} catch (error) {
+		console.error('Failed to load previous model:', error);
+	} finally {
+		isLoading.value = false;
+	}
 }
 
 // Open models directory
@@ -2383,6 +2469,62 @@ onUnmounted(() => {
 	&.reject {
 		background: #e74c3c;
 		color: #fff;
+	}
+}
+
+// Load model banner
+.ai-load-model-banner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+	padding: 0.5rem 0.75rem;
+	background: var(--bg-primary);
+	border-top: 1px solid var(--text3);
+	flex-shrink: 0;
+}
+
+.ai-load-model-banner-content {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	font-size: 0.72rem;
+	color: var(--text2);
+
+	svg {
+		flex-shrink: 0;
+		opacity: 0.7;
+	}
+}
+
+.ai-load-model-btn {
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+	padding: 0.3rem 0.6rem;
+	background: var(--accent-color);
+	color: var(--base1);
+	border: none;
+	border-radius: 7px;
+	font-size: 0.7rem;
+	font-weight: 600;
+	cursor: pointer;
+	white-space: nowrap;
+	transition: opacity 0.15s, transform 0.1s;
+	flex-shrink: 0;
+
+	&:hover:not(:disabled) {
+		opacity: 0.85;
+		transform: scale(1.02);
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	svg {
+		flex-shrink: 0;
 	}
 }
 </style>
