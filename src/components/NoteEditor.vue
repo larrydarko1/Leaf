@@ -293,6 +293,15 @@ const emit = defineEmits<{
 const content = ref('');
 const originalContent = ref('');
 const hasUnsavedChanges = ref(false);
+
+/** Reload the current file's content from disk */
+async function reloadContent() {
+  if (props.file) {
+    await loadFile(props.file);
+  }
+}
+
+defineExpose({ reloadContent });
 const isSaving = ref(false);
 const imageError = ref(false);
 const videoError = ref(false);

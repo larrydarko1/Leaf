@@ -67,6 +67,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
     agentRejectEdit: (editId) => ipcRenderer.invoke('agent:rejectEdit', editId),
     agentGetPendingEdits: () => ipcRenderer.invoke('agent:getPendingEdits'),
 
+    // File system watcher
+    watchFolder: (folderPath) => ipcRenderer.invoke('fs:watchFolder', folderPath),
+    unwatchFolder: () => ipcRenderer.invoke('fs:unwatchFolder'),
+    onFsChanged: (callback) => {
+        ipcRenderer.on('fs:changed', (event, data) => callback(data));
+    },
+    removeFsChangedListener: () => {
+        ipcRenderer.removeAllListeners('fs:changed');
+    },
+
     // Hugging Face model download operations
     hfSearch: (query) => ipcRenderer.invoke('hf:search', query),
     hfListFiles: (repoId) => ipcRenderer.invoke('hf:listFiles', repoId),

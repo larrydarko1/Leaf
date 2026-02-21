@@ -665,7 +665,7 @@ const props = defineProps<{
 	workspacePath: string | null;
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
 	(e: 'close'): void;
 	(e: 'file-changed', path: string): void;
 }>();
@@ -1081,6 +1081,7 @@ async function approveAgentEdit(msgIndex: number, editIdx: number) {
 		const result = await window.electronAPI.agentApproveEdit(edit.editId);
 		if (result.success) {
 			edit.status = 'approved';
+			emit('file-changed', edit.filePath);
 		} else {
 			edit.error = result.error || 'Failed to approve edit';
 		}
@@ -1103,6 +1104,7 @@ async function rejectAgentEdit(msgIndex: number, editIdx: number) {
 		const result = await window.electronAPI.agentRejectEdit(edit.editId);
 		if (result.success) {
 			edit.status = 'rejected';
+			emit('file-changed', edit.filePath);
 		} else {
 			edit.error = result.error || 'Failed to reject edit';
 		}

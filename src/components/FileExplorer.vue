@@ -527,7 +527,7 @@ watch(expandedFolders, (newExpanded) => {
   
   // Hide scrollbar by default, show on hover
   &::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
   }
   
   &::-webkit-scrollbar-track {
@@ -536,7 +536,7 @@ watch(expandedFolders, (newExpanded) => {
   
   &::-webkit-scrollbar-thumb {
     background: transparent;
-    border-radius: 4px;
+    border-radius: 3px;
     transition: background 0.2s ease;
   }
   

@@ -276,8 +276,8 @@ onUnmounted(() => {
 }
 
 .search-header {
-  padding: 12px;
-  border-bottom: 1px solid var(--border-color);
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid var(--text3);
 }
 
 .search-input-wrapper {
@@ -285,9 +285,9 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 8px 12px;
+  border: 1px solid var(--text3);
+  border-radius: 10px;
+  padding: 0.35rem 0.6rem;
   transition: border-color 0.2s;
 
   &:focus-within {
@@ -306,7 +306,7 @@ onUnmounted(() => {
   border: none;
   background: none;
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: 0.8rem;
   outline: none;
   font-family: inherit;
 
@@ -361,10 +361,10 @@ onUnmounted(() => {
 }
 
 .search-result-item {
-  padding: 8px 12px;
-  border-radius: 6px;
+  padding: 0.45rem 0.65rem;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.12s;
   margin-bottom: 2px;
   user-select: none;
 
@@ -437,7 +437,7 @@ onUnmounted(() => {
 
 /* Scrollbar styling */
 .search-results::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 .search-results::-webkit-scrollbar-track {
@@ -446,7 +446,7 @@ onUnmounted(() => {
 
 .search-results::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
-  border-radius: 4px;
+  border-radius: 3px;
 
   &:hover {
     background: var(--scrollbar-thumb-hover);

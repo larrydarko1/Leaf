@@ -7,6 +7,7 @@ const { pathToFileURL } = require('url');
 const JSZip = require('jszip');
 
 let mainWindow = null;
+let folderWatcher = null; // fs.watch handle for vault directory
 
 function createWindow() {
     // Set app icon based on platform
@@ -203,6 +204,41 @@ ipcMain.handle('files:scan', async (event, folderPath) => {
     } catch (error) {
         return { success: false, error: error.message };
     }
+});
+
+// Watch a folder for external file system changes
+ipcMain.handle('fs:watchFolder', async (event, folderPath) => {
+    try {
+        // Close any existing watcher
+        if (folderWatcher) {
+            folderWatcher.close();
+            folderWatcher = null;
+        }
+
+        // Use recursive fs.watch (supported on macOS and Windows)
+        folderWatcher = fsSync.watch(folderPath, { recursive: true }, (eventType, filename) => {
+            if (mainWindow && !mainWindow.isDestroyed()) {
+                mainWindow.webContents.send('fs:changed', { eventType, filename });
+            }
+        });
+
+        folderWatcher.on('error', (err) => {
+            console.error('Folder watcher error:', err);
+        });
+
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+// Stop watching the folder
+ipcMain.handle('fs:unwatchFolder', async () => {
+    if (folderWatcher) {
+        folderWatcher.close();
+        folderWatcher = null;
+    }
+    return { success: true };
 });
 
 // Read a file's content

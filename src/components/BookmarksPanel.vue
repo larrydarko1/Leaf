@@ -169,21 +169,23 @@ onUnmounted(() => {
 }
 
 .bookmarks-header {
-  padding: 12px;
-  border-bottom: 1px solid var(--border-color);
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid var(--text3);
 }
 
 .header-title {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
 
   h3 {
     margin: 0;
-    font-size: 14px;
+    font-size: 0.78rem;
     font-weight: 600;
     color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
 
   .star-icon {
@@ -238,10 +240,10 @@ onUnmounted(() => {
 }
 
 .bookmark-item {
-  padding: 8px 12px;
-  border-radius: 6px;
+  padding: 0.45rem 0.65rem;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.12s;
   margin-bottom: 2px;
   user-select: none;
 
@@ -329,7 +331,7 @@ onUnmounted(() => {
 
 /* Scrollbar styling */
 .bookmarks-results::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 .bookmarks-results::-webkit-scrollbar-track {
@@ -338,7 +340,7 @@ onUnmounted(() => {
 
 .bookmarks-results::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
-  border-radius: 4px;
+  border-radius: 3px;
 
   &:hover {
     background: var(--scrollbar-thumb-hover);

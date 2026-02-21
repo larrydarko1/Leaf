@@ -351,6 +351,12 @@ export interface ElectronAPI {
     agentRejectEdit: (editId: string) => Promise<AgentEditResult>;
     agentGetPendingEdits: () => Promise<AgentPendingEditsResult>;
 
+    // File system watcher
+    watchFolder: (folderPath: string) => Promise<AiSimpleResult>;
+    unwatchFolder: () => Promise<AiSimpleResult>;
+    onFsChanged: (callback: (data: { eventType: string; filename: string }) => void) => void;
+    removeFsChangedListener: () => void;
+
     // Hugging Face model download operations
     hfSearch: (query: string) => Promise<HfSearchResponse>;
     hfListFiles: (repoId: string) => Promise<HfListFilesResponse>;

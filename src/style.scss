@@ -105,6 +105,38 @@ a,
   -webkit-app-region: no-drag;
 }
 
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+
+  &:hover {
+    background: var(--scrollbar-thumb-hover);
+  }
+}
+
+/* Focus visible styling */
+:focus-visible {
+  outline: 1.5px solid var(--accent-color);
+  outline-offset: -1.5px;
+  border-radius: 4px;
+}
+
+/* Selection color */
+::selection {
+  background: var(--accent-color-alpha);
+  color: var(--text1);
+}
+
 /* Better font scaling on mobile */
 @media (max-width: 768px) {
   html {
