@@ -65,6 +65,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
     agentProposeEdit: (filePath, newContent, workspacePath) => ipcRenderer.invoke('agent:proposeEdit', filePath, newContent, workspacePath),
     agentApproveEdit: (editId) => ipcRenderer.invoke('agent:approveEdit', editId),
     agentRejectEdit: (editId) => ipcRenderer.invoke('agent:rejectEdit', editId),
-    agentGetPendingEdits: () => ipcRenderer.invoke('agent:getPendingEdits')
+    agentGetPendingEdits: () => ipcRenderer.invoke('agent:getPendingEdits'),
+
+    // Hugging Face model download operations
+    hfSearch: (query) => ipcRenderer.invoke('hf:search', query),
+    hfListFiles: (repoId) => ipcRenderer.invoke('hf:listFiles', repoId),
+    hfDownload: (url, fileName) => ipcRenderer.invoke('hf:download', url, fileName),
+    hfCancelDownload: (fileName) => ipcRenderer.invoke('hf:cancelDownload', fileName),
+    hfGetActiveDownloads: () => ipcRenderer.invoke('hf:getActiveDownloads'),
+    onHfDownloadProgress: (callback) => {
+        ipcRenderer.on('hf:downloadProgress', (event, progress) => callback(progress));
+    },
+    removeHfDownloadProgressListener: () => {
+        ipcRenderer.removeAllListeners('hf:downloadProgress');
+    }
 });
 

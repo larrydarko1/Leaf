@@ -5,6 +5,7 @@
 
 		<!-- Model selector / status bar -->
 		<div class="ai-model-bar">
+			<!-- LOCAL MODE: model pill -->
 			<div class="ai-model-pill">
 				<div v-if="!status.isModelLoaded" class="ai-model-selector">
 					<div class="ai-dropdown" ref="dropdownRef">
@@ -67,6 +68,19 @@
 						<path d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.12.28.256.554.53L11 4c.816.816 1.224 1.224 1.712 1.495.274.15.56.263.86.348.536.153 1.113.153 2.268.153h.374c2.632 0 3.949 0 4.804.77.079.07.154.145.224.224C22 7.85 22 9.166 22 11.798V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14V6.95z"/>
 					</svg>
 				</button>
+				<!-- HF Download button -->
+				<button 
+					@click="toggleHfPanel" 
+					class="ai-btn-icon" 
+					:class="{ 'ai-btn-active': showHfPanel }"
+					title="Download models from Hugging Face"
+				>
+					<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+						<polyline points="7 10 12 15 17 10"/>
+						<line x1="12" y1="15" x2="12" y2="3"/>
+					</svg>
+				</button>
 				<button @click="refreshModels" class="ai-btn-icon" title="Refresh model list">
 					<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
 						<polyline points="23 4 23 10 17 10"/>
@@ -113,6 +127,159 @@
 						<line x1="6" y1="6" x2="18" y2="18"/>
 					</svg>
 				</button>
+			</div>
+		</div>
+
+		<!-- HF Model Download Panel -->
+		<div v-if="showHfPanel" class="ai-hf-panel">
+			<div class="ai-hf-header">
+				<span class="ai-hf-title">Download Models</span>
+				<button @click="showHfPanel = false" class="ai-btn-icon ai-btn-tiny" title="Close">
+					<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+						<line x1="18" y1="6" x2="6" y2="18"/>
+						<line x1="6" y1="6" x2="18" y2="18"/>
+					</svg>
+				</button>
+			</div>
+			<div class="ai-hf-search-bar">
+				<input
+					v-model="hfSearchQuery"
+					placeholder="Search GGUF models..."
+					class="ai-hf-search-input"
+					@keydown.enter.prevent="searchHfModels"
+				/>
+				<button @click="searchHfModels" class="ai-btn-icon" :disabled="hfIsSearching" title="Search">
+					<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+						<circle cx="11" cy="11" r="8"/>
+						<line x1="21" y1="21" x2="16.65" y2="16.65"/>
+					</svg>
+				</button>
+			</div>
+
+			<!-- Back button when viewing files -->
+			<button v-if="hfSelectedRepo" @click="hfSelectedRepo = null; hfRepoFiles = []; hfModelInfo = null" class="ai-hf-back-btn">
+				<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+					<line x1="19" y1="12" x2="5" y2="12"/>
+					<polyline points="12 19 5 12 12 5"/>
+				</svg>
+				Back to results
+			</button>
+
+			<div class="ai-hf-results">
+				<!-- Loading state -->
+				<div v-if="hfIsSearching || hfIsLoadingFiles" class="ai-hf-loading">Searching...</div>
+
+				<!-- Repo file listing -->
+				<template v-else-if="hfSelectedRepo && hfRepoFiles.length > 0">
+					<div class="ai-hf-repo-header">
+						<span class="ai-hf-repo-title">{{ hfSelectedRepo }}</span>
+						<div v-if="hfModelInfo" class="ai-hf-model-meta">
+							<span v-if="hfModelInfo.architecture" class="ai-hf-meta-tag" title="Model Architecture">
+								<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><path d="M16 14a4 4 0 0 0-8 0v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4z"/></svg>
+								{{ hfModelInfo.architecture }}
+							</span>
+							<span v-if="hfModelInfo.contextLength" class="ai-hf-meta-tag" title="Context Window">
+								<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+								{{ formatNumber(hfModelInfo.contextLength) }} tokens
+							</span>
+							<span v-if="hfModelInfo.totalParamSize" class="ai-hf-meta-tag" title="Total Parameter Size (unquantized)">
+								<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73L13 2.27a2 2 0 0 0-2 0L4 6.27A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+								{{ hfModelInfo.totalParamSizeFormatted }} params
+							</span>
+						</div>
+					</div>
+					<div 
+						v-for="file in hfRepoFiles" 
+						:key="file.name" 
+						class="ai-hf-file-item"
+					>
+						<div class="ai-hf-file-info">
+							<div class="ai-hf-file-top-row">
+								<span class="ai-hf-file-name">{{ file.name }}</span>
+								<span 
+									v-if="file.tier" 
+									class="ai-hf-tier-badge" 
+									:class="'ai-hf-tier-' + file.tier.color"
+									:title="file.tier.description"
+								>
+									{{ file.tier.label }}
+								</span>
+							</div>
+							<div class="ai-hf-file-details">
+								<span class="ai-hf-file-size" title="Download size">{{ file.sizeFormatted }}</span>
+								<span v-if="file.quantType" class="ai-hf-quant-badge" title="Quantization type">{{ file.quantType }}</span>
+								<span v-if="file.estimatedRamFormatted" class="ai-hf-ram-estimate" title="Estimated RAM needed for inference">
+									RAM: ~{{ file.estimatedRamFormatted }}
+								</span>
+								<span v-if="file.isSharded" class="ai-hf-shard-info" title="Model is split into multiple files">
+									{{ file.shardCount }} parts
+								</span>
+							</div>
+						</div>
+						<div class="ai-hf-file-actions">
+							<template v-if="hfActiveDownloads.has(file.name)">
+								<div v-if="hfDownloadProgress && hfDownloadProgress.fileName === file.name" class="ai-hf-progress">
+									<div class="ai-hf-progress-bar">
+										<div class="ai-hf-progress-fill" :style="{ width: hfDownloadProgress.percent + '%' }"></div>
+									</div>
+									<span class="ai-hf-progress-text">{{ hfDownloadProgress.percent }}%</span>
+								</div>
+								<button @click="cancelHfDownload(file.name)" class="ai-btn-icon ai-btn-tiny ai-btn-danger" title="Cancel">
+									<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+										<line x1="18" y1="6" x2="6" y2="18"/>
+										<line x1="6" y1="6" x2="18" y2="18"/>
+									</svg>
+								</button>
+							</template>
+							<button v-else-if="file.isSharded" @click="downloadHfModel(file)" class="ai-hf-download-btn ai-hf-download-sharded" title="Download all parts to ~/leaf-models/">
+								<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+									<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+									<polyline points="7 10 12 15 17 10"/>
+									<line x1="12" y1="15" x2="12" y2="3"/>
+								</svg>
+								<span class="ai-hf-download-label">All</span>
+							</button>
+							<button v-else @click="downloadHfModel(file)" class="ai-hf-download-btn" title="Download to ~/leaf-models/">
+								<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+									<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+									<polyline points="7 10 12 15 17 10"/>
+									<line x1="12" y1="15" x2="12" y2="3"/>
+								</svg>
+							</button>
+						</div>
+					</div>
+				</template>
+
+				<!-- No files found -->
+				<div v-else-if="hfSelectedRepo && !hfIsLoadingFiles" class="ai-hf-empty">
+					No .gguf files found in this repository
+				</div>
+
+				<!-- Search results -->
+				<template v-else-if="hfSearchResults.length > 0">
+					<div 
+						v-for="repo in hfSearchResults" 
+						:key="repo.id" 
+						class="ai-hf-result-item"
+						@click="selectHfRepo(repo.id)"
+					>
+						<div class="ai-hf-result-info">
+							<span class="ai-hf-result-name">{{ repo.id }}</span>
+							<span class="ai-hf-result-meta">
+								<span title="Downloads">↓ {{ formatNumber(repo.downloads) }}</span>
+								<span title="Likes">♥ {{ formatNumber(repo.likes) }}</span>
+							</span>
+						</div>
+						<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<polyline points="9 18 15 12 9 6"/>
+						</svg>
+					</div>
+				</template>
+
+				<!-- Empty state -->
+				<div v-else-if="!hfIsSearching" class="ai-hf-empty">
+					Search for GGUF models on Hugging Face
+				</div>
 			</div>
 		</div>
 
@@ -333,7 +500,7 @@
 						</button>
 						<!-- Resend (last user message only, no messages after it) -->
 						<button 
-							v-if="msg.role === 'user' && index === messages.length - 1 && status.isModelLoaded" 
+							v-if="msg.role === 'user' && index === messages.length - 1 && isReady" 
 							class="ai-btn-action" 
 							@click="resendMessage(index)"
 							title="Resend"
@@ -345,7 +512,7 @@
 						</button>
 						<!-- Regenerate (last assistant message only) -->
 						<button 
-							v-if="msg.role === 'assistant' && index === messages.length - 1 && status.isModelLoaded" 
+							v-if="msg.role === 'assistant' && index === messages.length - 1 && isReady" 
 							class="ai-btn-action" 
 							@click="regenerateLastResponse"
 							title="Regenerate"
@@ -437,7 +604,7 @@
 					@keydown.enter.exact.prevent="sendMessage"
 					placeholder="Ask something..."
 					class="ai-input"
-					:disabled="!status.isModelLoaded || status.isGenerating"
+					:disabled="!isReady || isAnyGenerating"
 					rows="1"
 				/>
 				<button 
@@ -454,7 +621,7 @@
 					v-else
 					@click="sendMessage" 
 					class="ai-btn-send" 
-					:disabled="!inputMessage.trim() || !status.isModelLoaded || isStreaming"
+					:disabled="!inputMessage.trim() || !isReady || isStreaming"
 					title="Send message"
 				>
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M10 14L13 21L20 4L3 11L6.5 12.5" stroke="var(--base1)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
@@ -467,7 +634,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { marked } from 'marked';
-import type { FileInfo, AiModelInfo, AiStatus, ConversationMeta } from '../types/electron';
+import type { FileInfo, AiModelInfo, AiStatus, ConversationMeta, HfSearchResult, HfRepoFile, HfModelInfo, HfDownloadProgress } from '../types/electron';
 
 // Configure marked for safe, clean rendering
 marked.setOptions({
@@ -545,6 +712,20 @@ const agentMode = ref(false);
 // Track last used model name (from conversation) for quick reload
 const lastUsedModelName = ref<string | null>(null);
 
+// ============================
+// HF Download state
+// ============================
+const showHfPanel = ref(false);
+const hfSearchQuery = ref('');
+const hfSearchResults = ref<HfSearchResult[]>([]);
+const hfIsSearching = ref(false);
+const hfSelectedRepo = ref<string | null>(null);
+const hfRepoFiles = ref<HfRepoFile[]>([]);
+const hfModelInfo = ref<HfModelInfo | null>(null);
+const hfIsLoadingFiles = ref(false);
+const hfDownloadProgress = ref<HfDownloadProgress | null>(null);
+const hfActiveDownloads = ref<Set<string>>(new Set());
+
 // Find matching model in available models for quick reload
 const previousModelMatch = computed(() => {
 	if (!lastUsedModelName.value || status.value.isModelLoaded) return null;
@@ -552,6 +733,15 @@ const previousModelMatch = computed(() => {
 		m.name === lastUsedModelName.value || 
 		m.path.endsWith(lastUsedModelName.value!)
 	) || null;
+});
+
+// Unified "is ready" check
+const isReady = computed(() => {
+	return status.value.isModelLoaded;
+});
+
+const isAnyGenerating = computed(() => {
+	return status.value.isGenerating;
 });
 
 
@@ -1003,7 +1193,7 @@ async function unloadModel() {
 // Send a chat message
 async function sendMessage() {
 	const text = inputMessage.value.trim();
-	if (!text || !status.value.isModelLoaded || status.value.isGenerating) return;
+	if (!text || !isReady.value || isAnyGenerating.value) return;
 	
 	// Create a new conversation if none exists
 	if (!currentConversationId.value) {
@@ -1057,7 +1247,10 @@ async function sendMessage() {
 	}
 	
 	try {
-		const result = await window.electronAPI.aiChat(text, noteContext);
+		let result;
+
+		result = await window.electronAPI.aiChat(text, noteContext);
+
 		if (!result.success) {
 			const lastMsg = messages.value[messages.value.length - 1];
 			if (lastMsg.role === 'assistant') {
@@ -1067,6 +1260,7 @@ async function sendMessage() {
 		
 		// If agent mode, parse the response for file edits
 		const assistantMsg = messages.value[messages.value.length - 1];
+
 		if (agentMode.value && assistantMsg.role === 'assistant' && assistantMsg.content) {
 			const { cleanContent, edits } = parseAgentEdits(assistantMsg.content);
 			if (edits.length > 0) {
@@ -1093,9 +1287,7 @@ async function sendMessage() {
 		isStreaming.value = false;
 		userScrolledUp.value = false;
 		await refreshStatus();
-		// Update per-conversation token count from live session
 		conversationTokenCount.value = status.value.contextTokens;
-		// Persist token count to the conversation
 		await saveTokenCountToConversation();
 		await refreshConversationList();
 		scrollToBottom(true);
@@ -1112,7 +1304,6 @@ async function stopGeneration() {
 		isStreaming.value = false;
 		userScrolledUp.value = false;
 		await refreshStatus();
-		// Update per-conversation token count from live session
 		conversationTokenCount.value = status.value.contextTokens;
 		await saveTokenCountToConversation();
 	}
@@ -1363,6 +1554,102 @@ async function openModelsFolder() {
 	}
 }
 
+// ============================
+// Cloud AI functions
+// ============================
+
+// ============================
+// HF Model Download functions
+// ============================
+
+function toggleHfPanel() {
+	showHfPanel.value = !showHfPanel.value;
+	if (showHfPanel.value && hfSearchResults.value.length === 0) {
+		// Pre-populate with trending GGUF models
+		searchHfModels();
+	}
+}
+
+async function searchHfModels() {
+	hfIsSearching.value = true;
+	hfSelectedRepo.value = null;
+	hfRepoFiles.value = [];
+
+	try {
+		const result = await window.electronAPI.hfSearch(hfSearchQuery.value);
+		if (result.success && result.results) {
+			hfSearchResults.value = result.results;
+		} else {
+			hfSearchResults.value = [];
+		}
+	} catch (error) {
+		console.error('Failed to search HF:', error);
+		hfSearchResults.value = [];
+	} finally {
+		hfIsSearching.value = false;
+	}
+}
+
+async function selectHfRepo(repoId: string) {
+	hfSelectedRepo.value = repoId;
+	hfIsLoadingFiles.value = true;
+	hfRepoFiles.value = [];
+	hfModelInfo.value = null;
+
+	try {
+		const result = await window.electronAPI.hfListFiles(repoId);
+		if (result.success && result.files) {
+			hfRepoFiles.value = result.files;
+			hfModelInfo.value = result.modelInfo || null;
+		}
+	} catch (error) {
+		console.error('Failed to list HF repo files:', error);
+	} finally {
+		hfIsLoadingFiles.value = false;
+	}
+}
+
+async function downloadHfModel(file: HfRepoFile) {
+	if (hfActiveDownloads.value.has(file.name)) return;
+
+	hfActiveDownloads.value.add(file.name);
+
+	try {
+		const result = await window.electronAPI.hfDownload(file.downloadUrl, file.name);
+		if (result.success) {
+			// Refresh the models list after successful download
+			await refreshModels();
+		} else {
+			console.error('Download failed:', result.error);
+		}
+	} catch (error) {
+		console.error('Failed to download model:', error);
+	} finally {
+		hfActiveDownloads.value.delete(file.name);
+		hfDownloadProgress.value = null;
+	}
+}
+
+async function cancelHfDownload(fileName: string) {
+	try {
+		await window.electronAPI.hfCancelDownload(fileName);
+		hfActiveDownloads.value.delete(fileName);
+		hfDownloadProgress.value = null;
+	} catch (error) {
+		console.error('Failed to cancel download:', error);
+	}
+}
+
+function handleHfProgress(progress: HfDownloadProgress) {
+	hfDownloadProgress.value = progress;
+}
+
+function formatNumber(n: number): string {
+	if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+	if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+	return String(n);
+}
+
 // Token usage percentage
 const tokenUsagePercent = computed(() => {
 	if (!status.value.contextSize) return 0;
@@ -1393,6 +1680,9 @@ onMounted(async () => {
 	// Set up token streaming listener
 	window.electronAPI.onAiToken(handleToken);
 	
+	// Set up HF download progress listener
+	window.electronAPI.onHfDownloadProgress(handleHfProgress);
+	
 	// Dropdown click-outside listener
 	document.addEventListener('click', handleDropdownClickOutside);
 	
@@ -1410,6 +1700,7 @@ onMounted(async () => {
 onUnmounted(() => {
 	// Clean up listeners
 	window.electronAPI.removeAiTokenListener();
+	window.electronAPI.removeHfDownloadProgressListener();
 	document.removeEventListener('click', handleDropdownClickOutside);
 });
 </script>
@@ -2526,5 +2817,335 @@ onUnmounted(() => {
 	svg {
 		flex-shrink: 0;
 	}
+}
+
+// HF Download Panel
+.ai-hf-panel {
+	flex-shrink: 0;
+	max-height: 50%;
+	display: flex;
+	flex-direction: column;
+	border-bottom: 1px solid var(--text3);
+	-webkit-app-region: no-drag;
+}
+
+.ai-hf-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0.5rem 0.75rem 0.35rem;
+}
+
+.ai-hf-title {
+	font-size: 0.72rem;
+	font-weight: 600;
+	color: var(--text2);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.ai-hf-search-bar {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	margin: 0 0.5rem 0.4rem;
+	background: var(--bg-primary);
+	border: 1px solid var(--text3);
+	border-radius: 8px;
+	padding: 0.15rem 0.15rem 0.15rem 0.5rem;
+
+	&:focus-within {
+		border-color: var(--accent-color);
+	}
+}
+
+.ai-hf-search-input {
+	flex: 1;
+	min-width: 0;
+	padding: 0.3rem 0;
+	background: transparent;
+	color: var(--text1);
+	border: none;
+	font-size: 0.75rem;
+	font-family: inherit;
+	outline: none;
+
+	&::placeholder {
+		color: var(--text2);
+	}
+}
+
+.ai-hf-back-btn {
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+	padding: 0.3rem 0.6rem;
+	margin: 0 0.5rem 0.3rem;
+	background: none;
+	border: none;
+	color: var(--text2);
+	font-size: 0.72rem;
+	cursor: pointer;
+	border-radius: 6px;
+	transition: all 0.15s;
+
+	&:hover {
+		color: var(--text1);
+		background: var(--bg-hover);
+	}
+}
+
+.ai-hf-results {
+	flex: 1;
+	overflow-y: auto;
+	padding: 0 0.5rem 0.5rem;
+}
+
+.ai-hf-loading {
+	font-size: 0.75rem;
+	color: var(--text2);
+	text-align: center;
+	padding: 1rem 0;
+}
+
+.ai-hf-empty {
+	font-size: 0.75rem;
+	color: var(--text2);
+	text-align: center;
+	padding: 1rem 0;
+}
+
+.ai-hf-result-item {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.5rem 0.55rem;
+	border-radius: 8px;
+	cursor: pointer;
+	transition: background 0.12s;
+
+	&:hover {
+		background: var(--bg-hover);
+	}
+}
+
+.ai-hf-result-info {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.1rem;
+}
+
+.ai-hf-result-name {
+	font-size: 0.75rem;
+	color: var(--text1);
+	word-break: break-word;
+	line-height: 1.3;
+}
+
+.ai-hf-result-meta {
+	display: flex;
+	gap: 0.5rem;
+	font-size: 0.65rem;
+	color: var(--text2);
+	opacity: 0.7;
+}
+
+.ai-hf-repo-header {
+	padding: 0.3rem 0.55rem 0.5rem;
+
+	.ai-hf-repo-title {
+		display: block;
+		font-size: 0.72rem;
+		font-weight: 600;
+		color: var(--text1);
+		word-break: break-word;
+	}
+
+	.ai-hf-model-meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+		margin-top: 0.35rem;
+
+		.ai-hf-meta-tag {
+			font-size: 0.62rem;
+			color: var(--text2);
+			background: var(--bg-hover);
+			padding: 0.15rem 0.4rem;
+			border-radius: 4px;
+			white-space: nowrap;
+			display: inline-flex;
+			align-items: center;
+			gap: 0.2rem;
+
+			svg {
+				flex-shrink: 0;
+				opacity: 0.7;
+			}
+		}
+	}
+}
+
+.ai-hf-file-item {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.35rem;
+	padding: 0.45rem 0.55rem;
+	border-radius: 8px;
+	transition: background 0.12s;
+
+	&:hover {
+		background: var(--bg-hover);
+	}
+}
+
+.ai-hf-file-info {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+}
+
+.ai-hf-file-top-row {
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+}
+
+.ai-hf-file-name {
+	font-size: 0.72rem;
+	color: var(--text1);
+	word-break: break-all;
+	line-height: 1.3;
+	font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.ai-hf-tier-badge {
+	font-size: 0.58rem;
+	font-weight: 600;
+	padding: 0.08rem 0.35rem;
+	border-radius: 4px;
+	white-space: nowrap;
+	flex-shrink: 0;
+
+	&.ai-hf-tier-green {
+		background: rgba(40, 167, 69, 0.15);
+		color: #28a745;
+	}
+	&.ai-hf-tier-blue {
+		background: rgba(0, 123, 255, 0.15);
+		color: #007bff;
+	}
+	&.ai-hf-tier-orange {
+		background: rgba(255, 165, 0, 0.15);
+		color: #e69500;
+	}
+	&.ai-hf-tier-red {
+		background: rgba(220, 53, 69, 0.15);
+		color: #dc3545;
+	}
+}
+
+.ai-hf-file-details {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.3rem;
+	align-items: center;
+}
+
+.ai-hf-file-size {
+	font-size: 0.62rem;
+	color: var(--text2);
+}
+
+.ai-hf-quant-badge {
+	font-size: 0.58rem;
+	font-weight: 500;
+	background: rgba(108, 117, 125, 0.15);
+	color: var(--text2);
+	padding: 0.05rem 0.3rem;
+	border-radius: 3px;
+	font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.ai-hf-ram-estimate {
+	font-size: 0.6rem;
+	color: var(--text2);
+	opacity: 0.85;
+}
+
+.ai-hf-shard-info {
+	font-size: 0.58rem;
+	color: var(--text2);
+	opacity: 0.7;
+	font-style: italic;
+}
+
+.ai-hf-file-actions {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	flex-shrink: 0;
+	margin-top: 0.15rem;
+}
+
+.ai-hf-download-btn {
+	background: none;
+	border: 1px solid var(--accent-color);
+	color: var(--accent-color);
+	cursor: pointer;
+	padding: 0.25rem;
+	border-radius: 5px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.2rem;
+	transition: all 0.15s;
+
+	&:hover {
+		background: var(--accent-color);
+		color: var(--base1);
+	}
+
+	&.ai-hf-download-sharded {
+		padding: 0.2rem 0.4rem;
+	}
+
+	.ai-hf-download-label {
+		font-size: 0.58rem;
+		font-weight: 600;
+	}
+}
+
+.ai-hf-progress {
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+	min-width: 60px;
+}
+
+.ai-hf-progress-bar {
+	flex: 1;
+	height: 3px;
+	background: var(--text3);
+	border-radius: 2px;
+	overflow: hidden;
+}
+
+.ai-hf-progress-fill {
+	height: 100%;
+	background: var(--accent-color);
+	border-radius: 2px;
+	transition: width 0.3s ease;
+}
+
+.ai-hf-progress-text {
+	font-size: 0.62rem;
+	color: var(--text2);
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
 }
 </style>

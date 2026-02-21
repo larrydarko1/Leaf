@@ -225,6 +225,83 @@ export interface AgentPendingEditsResult {
     edits: AgentPendingEdit[];
 }
 
+// Hugging Face download types
+export interface HfSearchResult {
+    id: string;
+    author: string;
+    name: string;
+    downloads: number;
+    likes: number;
+    tags: string[];
+    lastModified: string;
+}
+
+export interface HfSearchResponse {
+    success: boolean;
+    results?: HfSearchResult[];
+    error?: string;
+}
+
+export interface HfModelTier {
+    label: string;   // 'Small' | 'Medium' | 'Large' | 'Very Large' | 'Extreme'
+    color: string;   // 'green' | 'blue' | 'orange' | 'red'
+    description: string;
+}
+
+export interface HfShardFile {
+    name: string;
+    path: string;
+    size: number;
+    sizeFormatted: string;
+    downloadUrl: string;
+}
+
+export interface HfRepoFile {
+    name: string;
+    path: string;
+    size: number;
+    sizeFormatted: string;
+    downloadUrl: string;
+    quantType: string | null;
+    estimatedRam: number;
+    estimatedRamFormatted: string;
+    tier: HfModelTier;
+    isSharded: boolean;
+    shardCount: number;
+    shardFiles: HfShardFile[] | null;
+    architecture: string | null;
+    contextLength: number | null;
+}
+
+export interface HfModelInfo {
+    architecture: string | null;
+    contextLength: number | null;
+    totalParamSize: number | null;
+    totalParamSizeFormatted: string;
+}
+
+export interface HfListFilesResponse {
+    success: boolean;
+    files?: HfRepoFile[];
+    modelInfo?: HfModelInfo;
+    repoId?: string;
+    repoName?: string;
+    error?: string;
+}
+
+export interface HfDownloadProgress {
+    downloaded: number;
+    total: number;
+    percent: number;
+    fileName: string;
+}
+
+export interface HfDownloadResult {
+    success: boolean;
+    filePath?: string;
+    error?: string;
+}
+
 export interface ElectronAPI {
     isElectron: () => boolean;
     openFolderDialog: () => Promise<string | null>;
@@ -273,6 +350,15 @@ export interface ElectronAPI {
     agentApproveEdit: (editId: string) => Promise<AgentEditResult>;
     agentRejectEdit: (editId: string) => Promise<AgentEditResult>;
     agentGetPendingEdits: () => Promise<AgentPendingEditsResult>;
+
+    // Hugging Face model download operations
+    hfSearch: (query: string) => Promise<HfSearchResponse>;
+    hfListFiles: (repoId: string) => Promise<HfListFilesResponse>;
+    hfDownload: (url: string, fileName: string) => Promise<HfDownloadResult>;
+    hfCancelDownload: (fileName: string) => Promise<AiSimpleResult>;
+    hfGetActiveDownloads: () => Promise<{ success: boolean; downloads: string[] }>;
+    onHfDownloadProgress: (callback: (progress: HfDownloadProgress) => void) => void;
+    removeHfDownloadProgressListener: () => void;
 }
 
 declare global {

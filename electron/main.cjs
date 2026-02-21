@@ -901,6 +901,7 @@ ipcMain.handle('audio:saveRecording', async (event, folderPath, fileName, base64
 const aiService = require('./ai-service.cjs');
 const conversationService = require('./conversation-service.cjs');
 const agentService = require('./agent-service.cjs');
+const hfDownloadService = require('./hf-download-service.cjs');
 
 // Initialize conversation storage in app's userData directory
 conversationService.init(app.getPath('userData'));
@@ -1025,4 +1026,37 @@ ipcMain.handle('agent:rejectEdit', async (event, editId) => {
 // Get all pending edits
 ipcMain.handle('agent:getPendingEdits', async () => {
     return agentService.getPendingEdits();
+});
+
+// ============================
+// Hugging Face Download IPC Handlers
+// ============================
+
+// Search for GGUF models on Hugging Face
+ipcMain.handle('hf:search', async (event, query) => {
+    return await hfDownloadService.searchModels(query);
+});
+
+// List GGUF files in a HF repo
+ipcMain.handle('hf:listFiles', async (event, repoId) => {
+    return await hfDownloadService.listRepoFiles(repoId);
+});
+
+// Download a model file
+ipcMain.handle('hf:download', async (event, url, fileName) => {
+    return await hfDownloadService.downloadModel(url, fileName, (progress) => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('hf:downloadProgress', progress);
+        }
+    });
+});
+
+// Cancel a download
+ipcMain.handle('hf:cancelDownload', async (event, fileName) => {
+    return await hfDownloadService.cancelDownload(fileName);
+});
+
+// Get active downloads
+ipcMain.handle('hf:getActiveDownloads', async () => {
+    return { success: true, downloads: hfDownloadService.getActiveDownloads() };
 });

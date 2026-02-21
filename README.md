@@ -27,6 +27,8 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 
 ### AI Assistant (Local LLM)
 - **100% local inference** - Run AI models directly on your machine, no cloud or API keys needed
+- **In-app model download** - Search and download GGUF models directly from Hugging Face without leaving the app
+- **Smart model info** - See file size, quantization type, estimated RAM usage, and size tier badges before downloading
 - **Chat interface** - Built-in chat panel with streaming responses
 - **Conversation history** - All chats are automatically saved as JSON and can be browsed, loaded, renamed, or deleted
 - **Note-aware context** - Toggle to include the current note as context for AI queries
@@ -80,9 +82,13 @@ Your notes are stored exactly where you choose - simply select any folder on you
 ### AI Models
 Leaf stores AI models in `~/leaf-models/`. To get started with the AI assistant:
 1. Open the AI panel by clicking the lightbulb icon in the sidebar
-2. Click the folder icon to open the models directory
-3. Download a `.gguf` model file from [Hugging Face](https://huggingface.co/models?library=gguf&sort=trending) and place it in the folder
-4. Select and load the model from the dropdown in the AI panel
+2. Click the **download** icon in the toolbar to open the Hugging Face download panel
+3. Search for a model (e.g. "llama 3.2", "phi", "qwen") and browse available GGUF files
+4. Check the **size tier badge** and **estimated RAM** to make sure it fits your machine
+5. Click the download button — the model is saved directly to `~/leaf-models/`
+6. Select and load the model from the dropdown in the AI panel
+
+> **Tip:** You can also manually place `.gguf` files in `~/leaf-models/` or click the folder icon to open the directory.
 
 ### Using Agent Mode
 Agent mode lets the AI edit your files directly with a safety net:
@@ -183,7 +189,8 @@ leaf/
 │   ├── preload.cjs             # Secure bridge between main/renderer
 │   ├── ai-service.cjs          # Local LLM inference service (node-llama-cpp)
 │   ├── agent-service.cjs       # Agent mode file editing with backup/restore
-│   └── conversation-service.cjs # Conversation persistence (JSON storage)
+│   ├── conversation-service.cjs # Conversation persistence (JSON storage)
+│   └── hf-download-service.cjs # Hugging Face model search & download
 ├── src/
 │   ├── components/
 │   │   ├── AiPanel.vue         # AI chat interface with conversation history
