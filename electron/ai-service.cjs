@@ -20,6 +20,12 @@ let isModelLoaded = false;
 let currentModelPath = null;
 let isGenerating = false;
 let currentAbortController = null; // For stopping generation
+let pendingConversationHistory = null; // Stored history to inject as summary on next prompt
+let trackedMessages = []; // All messages in current conversation (for auto-compaction)
+
+// Auto-compaction threshold: when token usage exceeds this % of context size,
+// the session is reset and a summary is injected on the next prompt.
+const COMPACTION_THRESHOLD = 0.90;
 
 /**
  * Ensure the models directory exists
@@ -193,6 +199,8 @@ async function unloadModel() {
         isModelLoaded = false;
         currentModelPath = null;
         isGenerating = false;
+        pendingConversationHistory = null;
+        trackedMessages = [];
 
         // Force garbage collection if available
         if (global.gc) {
@@ -228,8 +236,17 @@ async function chat(userMessage, onToken, noteContext = null) {
     try {
         // Build the prompt with optional note context
         let prompt = userMessage;
+
+        // If we have pending conversation history from a restored session,
+        // inject it as context summary and clear it (one-time injection)
+        if (pendingConversationHistory) {
+            const summary = buildConversationSummary(pendingConversationHistory);
+            pendingConversationHistory = null;
+            prompt = `Here is a summary of our previous conversation for context:\n\n---\n${summary}\n---\n\n${prompt}`;
+        }
+
         if (noteContext) {
-            prompt = `Here is the content of the current note for context:\n\n---\n${noteContext}\n---\n\nUser question: ${userMessage}`;
+            prompt = `Here is the content of the current note for context:\n\n---\n${noteContext}\n---\n\nUser question: ${prompt}`;
         }
 
         let fullResponse = '';
@@ -245,9 +262,36 @@ async function chat(userMessage, onToken, noteContext = null) {
             }
         });
 
+        // Track messages for auto-compaction
+        trackedMessages.push({ role: 'user', content: userMessage });
+        trackedMessages.push({ role: 'assistant', content: fullResponse });
+
+        // Check if we need to auto-compact the context
+        let compacted = false;
+        try {
+            const seq = session.sequence;
+            if (seq) {
+                const usage = seq.nextTokenIndex / seq.contextSize;
+                if (usage >= COMPACTION_THRESHOLD) {
+                    console.log(`Context usage at ${Math.round(usage * 100)}% — auto-compacting...`);
+                    // Store all tracked messages for summary injection
+                    pendingConversationHistory = [...trackedMessages];
+                    // Reset the LLM session (frees token memory)
+                    const { LlamaChatSession } = await import('node-llama-cpp');
+                    session = new LlamaChatSession({
+                        contextSequence: context.getSequence()
+                    });
+                    compacted = true;
+                    console.log('Auto-compaction complete. Summary will be injected on next prompt.');
+                }
+            }
+        } catch (compactErr) {
+            console.error('Auto-compaction check failed:', compactErr);
+        }
+
         isGenerating = false;
         currentAbortController = null;
-        return { success: true, response: fullResponse };
+        return { success: true, response: fullResponse, compacted };
     } catch (error) {
         isGenerating = false;
         currentAbortController = null;
@@ -279,6 +323,8 @@ async function resetChat() {
     }
 
     try {
+        pendingConversationHistory = null;
+        trackedMessages = [];
         const { LlamaChatSession } = await import('node-llama-cpp');
         session = new LlamaChatSession({
             contextSequence: context.getSequence()
@@ -287,6 +333,56 @@ async function resetChat() {
     } catch (error) {
         return { success: false, error: error.message };
     }
+}
+
+/**
+ * Store conversation history to be injected as context summary on the next prompt.
+ * This avoids re-processing all tokens through the model (which can crash Metal),
+ * and instead builds a compact summary that gets prepended to the next user message.
+ * @param {Array<{role: string, content: string}>} messages
+ * @returns {{success: boolean, error?: string}}
+ */
+async function restoreChatHistory(messages) {
+    if (!messages || messages.length === 0) {
+        pendingConversationHistory = null;
+        return { success: true };
+    }
+
+    try {
+        pendingConversationHistory = messages;
+        trackedMessages = [...messages]; // Also track them for future auto-compaction
+        console.log(`Stored ${messages.length} messages for context restoration`);
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to store chat history:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Build a compact summary of previous conversation messages.
+ * Truncates long messages to keep the summary within reasonable token limits.
+ * @param {Array<{role: string, content: string}>} messages
+ * @returns {string}
+ */
+function buildConversationSummary(messages) {
+    const MAX_MSG_LENGTH = 300;
+    const MAX_MESSAGES = 20;
+
+    // Take the most recent messages if conversation is very long
+    const recentMessages = messages.length > MAX_MESSAGES
+        ? messages.slice(-MAX_MESSAGES)
+        : messages;
+
+    const lines = recentMessages.map(m => {
+        const role = m.role === 'user' ? 'User' : 'Assistant';
+        const content = m.content.length > MAX_MSG_LENGTH
+            ? m.content.slice(0, MAX_MSG_LENGTH) + '...'
+            : m.content;
+        return `${role}: ${content}`;
+    });
+
+    return lines.join('\n');
 }
 
 /**
@@ -345,6 +441,7 @@ module.exports = {
     chat,
     stopChat,
     resetChat,
+    restoreChatHistory,
     getStatus,
     openModelsDir,
     DEFAULT_MODELS_DIR

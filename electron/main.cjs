@@ -977,6 +977,11 @@ ipcMain.handle('ai:resetChat', async () => {
     return await aiService.resetChat();
 });
 
+// Restore chat history into the current LLM session
+ipcMain.handle('ai:restoreChatHistory', async (event, messages) => {
+    return await aiService.restoreChatHistory(messages);
+});
+
 // Stop the current generation
 ipcMain.handle('ai:stopChat', async () => {
     return aiService.stopChat();

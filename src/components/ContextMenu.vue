@@ -4,7 +4,7 @@
       v-if="visible"
       ref="menuRef"
       class="context-menu"
-      :style="{ top: position.y + 'px', left: position.x + 'px' }"
+      :style="{ top: adjustedPosition.y + 'px', left: adjustedPosition.x + 'px' }"
       @click.stop
     >
       <div
@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onUnmounted } from 'vue';
+import { ref, watch, nextTick, onUnmounted } from 'vue';
 
 export interface ContextMenuItem {
   label: string;
@@ -43,6 +43,7 @@ const emit = defineEmits<{
 }>();
 
 const menuRef = ref<HTMLElement | null>(null);
+const adjustedPosition = ref({ x: 0, y: 0 });
 
 function handleItemClick(item: ContextMenuItem) {
   if (!item.disabled) {
@@ -65,6 +66,26 @@ function handleEscape(event: KeyboardEvent) {
 
 watch(() => props.visible, (visible) => {
   if (visible) {
+    // Start at the raw click position, then adjust after render
+    adjustedPosition.value = { x: props.position.x, y: props.position.y };
+    nextTick(() => {
+      if (menuRef.value) {
+        const rect = menuRef.value.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+        let { x, y } = props.position;
+
+        // If menu overflows bottom, shift it up
+        if (y + rect.height > viewportHeight) {
+          y = Math.max(0, viewportHeight - rect.height - 4);
+        }
+        // If menu overflows right, shift it left
+        if (x + rect.width > viewportWidth) {
+          x = Math.max(0, viewportWidth - rect.width - 4);
+        }
+        adjustedPosition.value = { x, y };
+      }
+    });
     // Add listeners when menu opens
     setTimeout(() => {
       document.addEventListener('click', handleClickOutside);

@@ -125,6 +125,7 @@ export interface AiLoadResult {
 export interface AiChatResult {
     success: boolean;
     response?: string;
+    compacted?: boolean;
     error?: string;
 }
 
@@ -352,6 +353,7 @@ export interface ElectronAPI {
     aiChat: (userMessage: string, noteContext?: string | null) => Promise<AiChatResult>;
     aiStopChat: () => Promise<AiSimpleResult>;
     aiResetChat: () => Promise<AiSimpleResult>;
+    aiRestoreChatHistory: (messages: Array<{ role: string, content: string }>) => Promise<AiSimpleResult>;
     aiGetStatus: () => Promise<AiStatus>;
     aiOpenModelsDir: () => Promise<AiSimpleResult>;
     onAiToken: (callback: (token: string) => void) => void;

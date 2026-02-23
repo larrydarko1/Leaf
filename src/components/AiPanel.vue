@@ -403,6 +403,15 @@
 					<div class="ai-message-content" v-else-if="msg.role === 'user'">
 						{{ msg.content }}
 					</div>
+					<!-- System message (e.g. auto-compaction notice) -->
+					<div v-else-if="msg.role === 'system'" class="ai-message-content ai-system-notice">
+						<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<circle cx="12" cy="12" r="10"/>
+							<line x1="12" y1="8" x2="12" y2="12"/>
+							<line x1="12" y1="16" x2="12.01" y2="16"/>
+						</svg>
+						<span>{{ msg.content }}</span>
+					</div>
 					<!-- Assistant message -->
 					<div 
 						v-else 
@@ -469,7 +478,7 @@
 					<span v-if="msg.role === 'assistant' && index === messages.length - 1 && isStreaming" class="ai-cursor">▊</span>
 					<!-- Message action buttons -->
 					<div 
-						v-if="msg.content && !(isStreaming && index >= messages.length - 2) && editingIndex !== index" 
+						v-if="msg.role !== 'system' && msg.content && !(isStreaming && index >= messages.length - 2) && editingIndex !== index" 
 						class="ai-message-actions"
 					>
 						<!-- Copy -->
@@ -643,7 +652,7 @@ marked.setOptions({
 });
 
 interface ChatMessage {
-	role: 'user' | 'assistant';
+	role: 'user' | 'assistant' | 'system';
 	content: string;
 	agentEdits?: AgentFileEdit[];
 }
@@ -1209,7 +1218,7 @@ async function sendMessage() {
 	
 	// Persist user message
 	if (currentConversationId.value) {
-		await window.electronAPI.conversationAddMessage(currentConversationId.value, userMsg);
+		await window.electronAPI.conversationAddMessage(currentConversationId.value, { role: 'user', content: userMsg.content });
 	}
 	
 	// Add empty assistant message for streaming
@@ -1278,6 +1287,14 @@ async function sendMessage() {
 			await window.electronAPI.conversationAddMessage(currentConversationId.value, {
 				role: 'assistant',
 				content: assistantMsg.content
+			});
+		}
+		
+		// If auto-compaction happened, notify the user with a system message
+		if (result && result.compacted) {
+			messages.value.push({
+				role: 'system',
+				content: 'Context memory was getting full — conversation has been summarized to free up space. All messages are preserved.'
 			});
 		}
 	} catch (error) {
@@ -1377,11 +1394,13 @@ async function saveCurrentConversation() {
 	try {
 		const result = await window.electronAPI.conversationLoad(currentConversationId.value);
 		if (result.success && result.conversation) {
-			result.conversation.messages = messages.value.map(m => ({
-				role: m.role,
-				content: m.content,
-				timestamp: new Date().toISOString()
-			}));
+			result.conversation.messages = messages.value
+				.filter(m => m.role !== 'system')
+				.map(m => ({
+					role: m.role as 'user' | 'assistant',
+					content: m.content,
+					timestamp: new Date().toISOString()
+				}));
 			result.conversation.tokenCount = conversationTokenCount.value;
 			await window.electronAPI.conversationSave(result.conversation);
 		}
@@ -1431,6 +1450,15 @@ async function loadConversation(id: string) {
 			
 			// Restore per-conversation token count
 			conversationTokenCount.value = result.conversation.tokenCount || 0;
+			
+			// Restore chat history into the LLM session so model has context
+			if (status.value.isModelLoaded && messages.value.length > 0) {
+				await window.electronAPI.aiRestoreChatHistory(
+					messages.value
+						.filter(m => m.role !== 'system')
+						.map(m => ({ role: m.role, content: m.content }))
+				);
+			}
 			
 			showHistory.value = false;
 			scrollToBottom();
@@ -1527,8 +1555,14 @@ async function loadPreviousModel() {
 		const result = await window.electronAPI.aiLoadModel(match.path);
 		if (result.success) {
 			await refreshStatus();
-			// If we have a conversation loaded, keep it (don't start new)
-			if (!currentConversationId.value) {
+			// If we have a conversation loaded, restore its history into the LLM session
+			if (currentConversationId.value && messages.value.length > 0) {
+				await window.electronAPI.aiRestoreChatHistory(
+					messages.value
+						.filter(m => m.role !== 'system')
+						.map(m => ({ role: m.role, content: m.content }))
+				);
+			} else if (!currentConversationId.value) {
 				await startNewConversation();
 			}
 			if (inputField.value) {
@@ -2160,6 +2194,14 @@ onUnmounted(() => {
 			justify-content: flex-start;
 		}
 	}
+
+	&.system {
+		justify-content: center;
+		
+		.ai-message-wrapper {
+			max-width: 95%;
+		}
+	}
 }
 
 .ai-message-wrapper {
@@ -2172,6 +2214,26 @@ onUnmounted(() => {
 	line-height: 1.55;
 	word-break: break-word;
 	white-space: pre-wrap;
+}
+
+// System notice (auto-compaction, etc.)
+.ai-system-notice {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	background: var(--bg-secondary, #2a2a2a);
+	border: 1px solid var(--border-color, #3a3a3a);
+	border-radius: 8px;
+	padding: 0.4rem 0.7rem;
+	font-size: 0.72rem;
+	color: var(--text2, #999);
+	font-style: italic;
+	white-space: normal;
+	
+	svg {
+		flex-shrink: 0;
+		opacity: 0.6;
+	}
 }
 
 // Markdown styles for assistant messages

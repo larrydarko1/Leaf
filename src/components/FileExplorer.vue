@@ -244,6 +244,16 @@ function handleKeyDown(e: KeyboardEvent) {
   // Don't navigate if we're renaming
   if (props.renamingFile || props.renamingFolder) return;
   
+  // Don't intercept arrow keys when focus is inside an editable element (e.g. the note editor)
+  const target = e.target as HTMLElement;
+  if (
+    target.tagName === 'TEXTAREA' ||
+    target.tagName === 'INPUT' ||
+    target.isContentEditable
+  ) {
+    return;
+  }
+  
   // Only handle arrow keys
   if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
   
