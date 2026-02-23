@@ -32,6 +32,8 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 - **Smart model info** - See file size, quantization type, estimated RAM usage, and size tier badges before downloading
 - **Chat interface** - Built-in chat panel with streaming responses
 - **Conversation history** - All chats are automatically saved as JSON and can be browsed, loaded, renamed, or deleted
+- **Conversation restore** - Reloading a model or switching conversations automatically restores context so the AI remembers what you discussed
+- **Auto context compaction** - When token memory reaches 90%, the AI automatically summarizes the conversation and frees context space — no data is lost, all messages stay visible
 - **Note-aware context** - Toggle to include the current note as context for AI queries
 - **Agent mode** - Let the AI read and edit your currently open file directly, with built-in version control (approve or revert every change)
 - **Model management** - Load and unload GGUF models from a dedicated models folder (`~/leaf-models/`)
