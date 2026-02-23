@@ -302,6 +302,29 @@ export interface HfDownloadResult {
     error?: string;
 }
 
+// Speech-to-Text types
+export interface SpeechInitResult {
+    success: boolean;
+    message?: string;
+    error?: string;
+}
+
+export interface SpeechTranscribeResult {
+    success: boolean;
+    text?: string;
+    error?: string;
+}
+
+export interface SpeechStatus {
+    isModelLoaded: boolean;
+    isModelLoading: boolean;
+}
+
+export interface SpeechStatusEvent {
+    status: 'loading' | 'ready' | 'error';
+    message: string;
+}
+
 export interface ElectronAPI {
     isElectron: () => boolean;
     openFolderDialog: () => Promise<string | null>;
@@ -365,6 +388,13 @@ export interface ElectronAPI {
     hfGetActiveDownloads: () => Promise<{ success: boolean; downloads: string[] }>;
     onHfDownloadProgress: (callback: (progress: HfDownloadProgress) => void) => void;
     removeHfDownloadProgressListener: () => void;
+
+    // Speech-to-Text (Whisper) operations
+    speechInit: () => Promise<SpeechInitResult>;
+    speechTranscribe: (audioData: number[]) => Promise<SpeechTranscribeResult>;
+    speechGetStatus: () => Promise<SpeechStatus>;
+    onSpeechStatus: (callback: (status: SpeechStatusEvent) => void) => void;
+    removeSpeechStatusListener: () => void;
 }
 
 declare global {

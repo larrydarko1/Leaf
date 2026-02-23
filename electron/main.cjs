@@ -938,6 +938,7 @@ const aiService = require('./ai-service.cjs');
 const conversationService = require('./conversation-service.cjs');
 const agentService = require('./agent-service.cjs');
 const hfDownloadService = require('./hf-download-service.cjs');
+const speechService = require('./speech-service.cjs');
 
 // Initialize conversation storage in app's userData directory
 conversationService.init(app.getPath('userData'));
@@ -1095,4 +1096,23 @@ ipcMain.handle('hf:cancelDownload', async (event, fileName) => {
 // Get active downloads
 ipcMain.handle('hf:getActiveDownloads', async () => {
     return { success: true, downloads: hfDownloadService.getActiveDownloads() };
+});
+
+// ============================
+// Speech-to-Text (Whisper) IPC Handlers
+// ============================
+
+// Initialize the Whisper model (downloads on first use, then local)
+ipcMain.handle('speech:init', async () => {
+    return await speechService.initModel(mainWindow);
+});
+
+// Transcribe an audio chunk (Float32 PCM at 16kHz mono)
+ipcMain.handle('speech:transcribe', async (event, audioData) => {
+    return await speechService.transcribe(audioData);
+});
+
+// Get speech service status
+ipcMain.handle('speech:getStatus', async () => {
+    return speechService.getStatus();
 });

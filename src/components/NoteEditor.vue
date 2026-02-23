@@ -257,6 +257,30 @@
         v-html="renderedMarkdown"
         @click="onMarkdownPreviewClick"
       ></div>
+
+      <!-- Dictation button for txt/md files -->
+      <button
+        v-if="isDictatable"
+        class="dictation-btn"
+        :class="{ active: isDictating, loading: isDictationLoading }"
+        :title="isDictating ? 'Stop dictation' : (isDictationLoading ? 'Loading Whisper model...' : 'Start dictation (Speech-to-Text)')"
+        :disabled="isDictationLoading"
+        @click="toggleDictation"
+      >
+        <!-- Microphone icon -->
+        <svg v-if="!isDictationLoading" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+          <line x1="12" y1="19" x2="12" y2="23"></line>
+          <line x1="8" y1="23" x2="16" y2="23"></line>
+        </svg>
+        <!-- Loading spinner -->
+        <svg v-else class="spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+        </svg>
+        <!-- Pulsing dot when active -->
+        <span v-if="isDictating" class="dictation-pulse"></span>
+      </button>
     </div>
     
     <div v-else class="editor-empty">
@@ -365,6 +389,16 @@ const pdfError = ref(false);
 // Markdown preview state
 const showPreview = ref(false);
 
+// Dictation (Speech-to-Text) state
+const isDictating = ref(false);
+const isDictationLoading = ref(false);
+let dictationStream: MediaStream | null = null;
+let dictationAudioContext: AudioContext | null = null;
+let dictationProcessor: ScriptProcessorNode | null = null;
+let dictationRawSamples: Float32Array[] = [];
+let dictationInterval: number | null = null;
+let whisperModelReady = false;
+
 // ODT rich text editor state
 const odtEditorRef = ref<HTMLDivElement | null>(null);
 const odtHtmlContent = ref('');
@@ -417,6 +451,13 @@ const isDrawingFile = computed(() => {
 const isOdtFile = computed(() => {
   if (!props.file) return false;
   return odtExtensions.includes(props.file.extension.toLowerCase());
+});
+
+// Check if current file supports dictation (txt or md only)
+const isDictatable = computed(() => {
+  if (!props.file) return false;
+  const ext = props.file.extension.toLowerCase();
+  return ext === '.txt' || ext === '.md';
 });
 
 // Render markdown for preview mode
@@ -809,6 +850,182 @@ async function handleDrawingSave(drawingContent: string) {
   }
 }
 
+// ============================
+// Dictation (Speech-to-Text) logic
+// ============================
+
+/**
+ * Resample audio from the native sample rate to 16kHz mono.
+ * Uses linear interpolation for simplicity.
+ */
+function resampleTo16kHz(input: Float32Array, inputSampleRate: number): Float32Array {
+  if (inputSampleRate === 16000) return input;
+  const ratio = inputSampleRate / 16000;
+  const newLength = Math.round(input.length / ratio);
+  const output = new Float32Array(newLength);
+  for (let i = 0; i < newLength; i++) {
+    const srcIdx = i * ratio;
+    const floor = Math.floor(srcIdx);
+    const frac = srcIdx - floor;
+    if (floor + 1 < input.length) {
+      output[i] = input[floor] * (1 - frac) + input[floor + 1] * frac;
+    } else {
+      output[i] = input[floor] || 0;
+    }
+  }
+  return output;
+}
+
+/**
+ * Toggle dictation on/off.
+ * On first use, initializes the Whisper model (downloads ~40MB if needed).
+ */
+async function toggleDictation() {
+  if (isDictating.value) {
+    stopDictation();
+    return;
+  }
+
+  // Initialize Whisper model if not yet ready
+  if (!whisperModelReady) {
+    isDictationLoading.value = true;
+    try {
+      const status = await window.electronAPI.speechGetStatus();
+      if (!status.isModelLoaded) {
+        const result = await window.electronAPI.speechInit();
+        if (!result.success) {
+          console.error('Failed to init Whisper:', result.error);
+          isDictationLoading.value = false;
+          return;
+        }
+      }
+      whisperModelReady = true;
+    } catch (err) {
+      console.error('Failed to init Whisper:', err);
+      isDictationLoading.value = false;
+      return;
+    }
+    isDictationLoading.value = false;
+  }
+
+  // Request microphone access
+  try {
+    dictationStream = await navigator.mediaDevices.getUserMedia({
+      audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true }
+    });
+  } catch (err) {
+    console.error('Microphone access denied:', err);
+    return;
+  }
+
+  // Set up Web Audio pipeline to capture raw PCM samples
+  dictationAudioContext = new AudioContext();
+  const source = dictationAudioContext.createMediaStreamSource(dictationStream);
+  // ScriptProcessorNode: buffer size 4096, 1 input channel, 1 output channel
+  dictationProcessor = dictationAudioContext.createScriptProcessor(4096, 1, 1);
+  dictationRawSamples = [];
+
+  dictationProcessor.onaudioprocess = (e) => {
+    const channelData = e.inputBuffer.getChannelData(0);
+    dictationRawSamples.push(new Float32Array(channelData));
+  };
+
+  source.connect(dictationProcessor);
+  dictationProcessor.connect(dictationAudioContext.destination);
+
+  isDictating.value = true;
+
+  // Process accumulated audio every 5 seconds
+  dictationInterval = window.setInterval(async () => {
+    if (dictationRawSamples.length === 0) return;
+
+    // Grab current samples and clear buffer
+    const chunks = dictationRawSamples.slice();
+    dictationRawSamples = [];
+
+    // Concatenate all chunks
+    const totalLength = chunks.reduce((sum, c) => sum + c.length, 0);
+    const fullAudio = new Float32Array(totalLength);
+    let offset = 0;
+    for (const chunk of chunks) {
+      fullAudio.set(chunk, offset);
+      offset += chunk.length;
+    }
+
+    // Resample to 16kHz
+    const nativeSampleRate = dictationAudioContext?.sampleRate || 44100;
+    const resampled = resampleTo16kHz(fullAudio, nativeSampleRate);
+
+    // Send to main process for Whisper inference
+    try {
+      const result = await window.electronAPI.speechTranscribe(Array.from(resampled));
+      if (result.success && result.text && result.text.length > 0) {
+        // Append transcribed text to the editor content
+        const trimmedText = result.text.trim();
+        if (trimmedText) {
+          // Add a space before new text if content doesn't end with whitespace
+          const needsSpace = content.value.length > 0 && !/\s$/.test(content.value);
+          content.value += (needsSpace ? ' ' : '') + trimmedText;
+          onContentChange();
+        }
+      }
+    } catch (err) {
+      console.error('Transcription error:', err);
+    }
+  }, 5000);
+}
+
+/**
+ * Stop dictation: release microphone, clean up audio nodes, clear interval.
+ */
+function stopDictation() {
+  isDictating.value = false;
+
+  if (dictationInterval) {
+    clearInterval(dictationInterval);
+    dictationInterval = null;
+  }
+
+  // Process any remaining audio before stopping
+  if (dictationRawSamples.length > 0 && dictationAudioContext) {
+    const chunks = dictationRawSamples.slice();
+    dictationRawSamples = [];
+    const totalLength = chunks.reduce((sum, c) => sum + c.length, 0);
+    const fullAudio = new Float32Array(totalLength);
+    let offset = 0;
+    for (const chunk of chunks) {
+      fullAudio.set(chunk, offset);
+      offset += chunk.length;
+    }
+    const nativeSampleRate = dictationAudioContext.sampleRate;
+    const resampled = resampleTo16kHz(fullAudio, nativeSampleRate);
+
+    // Fire-and-forget final transcription
+    window.electronAPI.speechTranscribe(Array.from(resampled)).then((result) => {
+      if (result.success && result.text && result.text.trim()) {
+        const needsSpace = content.value.length > 0 && !/\s$/.test(content.value);
+        content.value += (needsSpace ? ' ' : '') + result.text.trim();
+        onContentChange();
+      }
+    }).catch(() => {});
+  }
+
+  if (dictationProcessor) {
+    dictationProcessor.disconnect();
+    dictationProcessor = null;
+  }
+
+  if (dictationAudioContext) {
+    dictationAudioContext.close();
+    dictationAudioContext = null;
+  }
+
+  if (dictationStream) {
+    dictationStream.getTracks().forEach(track => track.stop());
+    dictationStream = null;
+  }
+}
+
 // Keyboard shortcuts
 function handleKeyboard(e: KeyboardEvent) {
   if ((e.metaKey || e.ctrlKey) && e.key === 's') {
@@ -855,6 +1072,12 @@ onUnmounted(() => {
   if (autoSaveTimeout) {
     clearTimeout(autoSaveTimeout);
   }
+  // Stop dictation if active
+  if (isDictating.value) {
+    stopDictation();
+  }
+  // Remove speech status listener
+  window.electronAPI.removeSpeechStatusListener();
 });
 </script>
 
@@ -1105,6 +1328,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
 }
 
 .editor-textarea {
@@ -1505,6 +1729,78 @@ onUnmounted(() => {
     font-size: 0.85rem;
     opacity: 0.7;
   }
+}
+
+// Dictation button
+.dictation-btn {
+  position: absolute;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--text3);
+  background: var(--base1);
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 20;
+  -webkit-app-region: no-drag;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+  &:hover {
+    background: var(--bg-hover, var(--text3));
+    color: var(--text1);
+    border-color: var(--text2);
+  }
+
+  &.active {
+    background: #e53e3e;
+    color: #fff;
+    border-color: #e53e3e;
+    box-shadow: 0 2px 12px rgba(229, 62, 62, 0.4);
+  }
+
+  &.loading {
+    opacity: 0.6;
+    cursor: wait;
+  }
+
+  &:disabled {
+    cursor: wait;
+  }
+
+  svg {
+    display: block;
+  }
+
+  .spin {
+    animation: spin 1.2s linear infinite;
+  }
+}
+
+.dictation-pulse {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #e53e3e;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
 }
 
 .editor-empty {

@@ -88,6 +88,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
     },
     removeHfDownloadProgressListener: () => {
         ipcRenderer.removeAllListeners('hf:downloadProgress');
+    },
+
+    // Speech-to-Text (Whisper) operations
+    speechInit: () => ipcRenderer.invoke('speech:init'),
+    speechTranscribe: (audioData) => ipcRenderer.invoke('speech:transcribe', audioData),
+    speechGetStatus: () => ipcRenderer.invoke('speech:getStatus'),
+    onSpeechStatus: (callback) => {
+        ipcRenderer.on('speech:status', (event, status) => callback(status));
+    },
+    removeSpeechStatusListener: () => {
+        ipcRenderer.removeAllListeners('speech:status');
     }
 });
 

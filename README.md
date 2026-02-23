@@ -20,6 +20,7 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 - **Video support** - Play videos directly in the app (`.mp4`, `.webm`, `.ogg`, `.mov`, `.avi`, `.mkv`)
 - **Audio support** - Play audio files directly in the app (`.mp3`, `.wav`, `.flac`, `.aac`, `.m4a`, `.ogg`, `.wma`, `.aiff`)
 - **Audio recording** - Record voice notes directly in the app and save as `.wav` files to your vault
+- **Speech-to-text dictation** - Dictate into `.txt` and `.md` files using local Whisper speech recognition — no cloud, no API keys
 - **File browser** - Navigate your notes with a tree-based folder structure
 - **Drag & drop organization** - Move files between folders with drag and drop
 - **Folder nesting** - Organize folders by dragging them into other folders
@@ -38,7 +39,7 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 - **Powered by llama.cpp** - Uses [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) bindings to [llama.cpp](https://github.com/ggml-org/llama.cpp) (both MIT licensed)
 
 ### Privacy & Storage
-- **100% Offline** - Works completely without internet connection
+- **100% Offline** - Works completely without internet connection (AI, dictation, and notes all run locally)
 - **Local-only** - Notes never leave your device
 - **User-accessible files** - Direct access to your vault folder
 - **No database** - Plain text files you can open anywhere
@@ -100,6 +101,16 @@ Agent mode lets the AI edit your files directly with a safety net:
 6. **Approve** keeps the change permanently; **Reject** reverts the file to its original content
 
 > Agent mode only operates on the currently open file and is scoped to your vault folder for security.
+
+### Using Dictation (Speech-to-Text)
+Leaf includes a built-in speech-to-text feature powered by [Whisper](https://github.com/openai/whisper) running 100% locally via ONNX:
+1. Open any `.txt` or `.md` file in the editor
+2. Click the **microphone icon** in the bottom-right corner of the editor
+3. On first use, the Whisper model loads from disk (a few seconds)
+4. Speak naturally — your speech is transcribed and appended to the file every ~5 seconds
+5. Click the microphone again to stop dictation
+
+> The Whisper model (~163 MB) is bundled with the app. No internet connection or API keys are needed — all inference runs on your CPU.
 
 Recommended models for getting started:
 | Model | Size | RAM Needed | Best For |
@@ -177,6 +188,7 @@ After building:
 - **Desktop:** Electron (Native macOS, Windows, Linux app)
 - **Frontend:** Vue 3, TypeScript, Vite, SCSS
 - **AI:** [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) + [llama.cpp](https://github.com/ggml-org/llama.cpp) (local LLM inference)
+- **Speech-to-Text:** [Whisper](https://github.com/openai/whisper) via [@huggingface/transformers](https://github.com/huggingface/transformers.js) + ONNX Runtime (local dictation)
 - **Storage:** Plain text files (txt, md), images, videos, and audio in your local vault
 - **Build Tools:** Vite + Electron Builder
 
@@ -190,7 +202,8 @@ leaf/
 │   ├── ai-service.cjs          # Local LLM inference service (node-llama-cpp)
 │   ├── agent-service.cjs       # Agent mode file editing with backup/restore
 │   ├── conversation-service.cjs # Conversation persistence (JSON storage)
-│   └── hf-download-service.cjs # Hugging Face model search & download
+│   ├── hf-download-service.cjs # Hugging Face model search & download
+│   └── speech-service.cjs      # Local Whisper speech-to-text service
 ├── src/
 │   ├── components/
 │   │   ├── AiPanel.vue         # AI chat interface with conversation history
@@ -201,6 +214,8 @@ leaf/
 │   ├── App.vue
 │   ├── main.ts
 │   └── style.scss
+├── models/
+│   └── whisper/                # Bundled Whisper ONNX model (speech-to-text)
 ├── build/                      # App icons
 ├── package.json
 └── vite.config.ts
