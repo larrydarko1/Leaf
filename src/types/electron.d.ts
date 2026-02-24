@@ -43,6 +43,19 @@ export interface AudioReadResult {
     error?: string;
 }
 
+export interface EmbedResolveResult {
+    success: boolean;
+    path?: string;
+    error?: string;
+}
+
+export interface CopyToVaultResult {
+    success: boolean;
+    fileName?: string;
+    path?: string;
+    error?: string;
+}
+
 export interface FileWriteResult {
     success: boolean;
     error?: string;
@@ -333,6 +346,8 @@ export interface ElectronAPI {
     readFile: (filePath: string) => Promise<FileReadResult>;
     readImage: (filePath: string) => Promise<ImageReadResult>;
     readAudio: (filePath: string) => Promise<AudioReadResult>;
+    resolveEmbedPath: (fileName: string, noteDir: string, vaultRoot: string) => Promise<EmbedResolveResult>;
+    copyFileToVault: (sourcePath: string, targetDir: string) => Promise<CopyToVaultResult>;
     readOdt: (filePath: string) => Promise<FileReadResult>;
     writeOdt: (filePath: string, content: string) => Promise<FileWriteResult>;
     createFolder: (parentPath: string, folderName: string) => Promise<FolderCreateResult>;

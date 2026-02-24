@@ -241,6 +241,90 @@ ipcMain.handle('fs:unwatchFolder', async () => {
     return { success: true };
 });
 
+// Copy an external file into the vault (for drag-and-drop embed)
+ipcMain.handle('file:copyToVault', async (event, sourcePath, targetDir) => {
+    try {
+        // Ensure target directory exists
+        await fs.mkdir(targetDir, { recursive: true });
+
+        let baseName = path.basename(sourcePath);
+        let targetPath = path.join(targetDir, baseName);
+
+        // Avoid overwriting: append (1), (2), etc. if file exists
+        let counter = 1;
+        const ext = path.extname(baseName);
+        const nameWithoutExt = baseName.slice(0, baseName.length - ext.length);
+        while (true) {
+            try {
+                await fs.access(targetPath);
+                // File exists, try next name
+                targetPath = path.join(targetDir, `${nameWithoutExt} (${counter})${ext}`);
+                baseName = `${nameWithoutExt} (${counter})${ext}`;
+                counter++;
+            } catch {
+                // File doesn't exist, we can use this name
+                break;
+            }
+        }
+
+        await fs.copyFile(sourcePath, targetPath);
+        return { success: true, fileName: baseName, path: targetPath };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+// Resolve an embed file path (Obsidian-style ![[file]] search)
+ipcMain.handle('file:resolveEmbedPath', async (event, fileName, noteDir, vaultRoot) => {
+    try {
+        // 1. Try exact relative path from the current note's directory
+        const relToNote = path.resolve(noteDir, fileName);
+        try {
+            await fs.access(relToNote);
+            return { success: true, path: relToNote };
+        } catch { }
+
+        // 2. Try relative to vault root
+        const relToVault = path.resolve(vaultRoot, fileName);
+        try {
+            await fs.access(relToVault);
+            return { success: true, path: relToVault };
+        } catch { }
+
+        // 3. Recursive search by filename in the entire vault
+        const targetName = path.basename(fileName);
+        async function findFileRecursive(dir) {
+            let entries;
+            try {
+                entries = await fs.readdir(dir, { withFileTypes: true });
+            } catch {
+                return null;
+            }
+            for (const entry of entries) {
+                if (entry.name.startsWith('.')) continue;
+                const fullPath = path.join(dir, entry.name);
+                if (entry.isFile() && entry.name === targetName) {
+                    return fullPath;
+                }
+                if (entry.isDirectory()) {
+                    const found = await findFileRecursive(fullPath);
+                    if (found) return found;
+                }
+            }
+            return null;
+        }
+
+        const found = await findFileRecursive(vaultRoot);
+        if (found) {
+            return { success: true, path: found };
+        }
+
+        return { success: false, error: 'File not found' };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
 // Read a file's content
 ipcMain.handle('file:read', async (event, filePath) => {
     try {

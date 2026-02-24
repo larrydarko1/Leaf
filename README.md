@@ -1,10 +1,10 @@
-# Leaf 
+<h1><img draggable=false src="src/assets/icon.png" alt="Leaf Logo" width="50" style="vertical-align:middle;"> leaf.</h1>
 
 ![License](https://img.shields.io/github/license/larrydarko1/leaf)
 ![Issues](https://img.shields.io/github/issues/larrydarko1/leaf)
 ![Pull Requests](https://img.shields.io/github/issues-pr/larrydarko1/leaf)
 
-Leaf is a **local-first, privacy-focused note-taking app** for desktop built with **Electron**, **Vue 3**, and TypeScript. Inspired by Obsidian, Leaf provides a clean, distraction-free environment for managing your notes. All your data stays on your device - no cloud, no database, no tracking.
+Leaf is a **local-first, privacy-focused note-taking app** for desktop built with **Electron**, **Vue 3**, and TypeScript. Inspired by [Obsidian](https://obsidian.md) and [LM Studio](https://lmstudio.ai), Leaf provides a clean, distraction-free environment for managing your notes with local AI capabilities. All your data stays on your device - no cloud, no database, no tracking.
 
 > **IMPORTANT:** This app runs natively on **Desktop** (macOS, Windows, Linux). All notes are stored in your local vault folder and never leave your device.
 
@@ -22,6 +22,8 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 - **Audio recording** - Record voice notes directly in the app and save as `.wav` files to your vault
 - **Speech-to-text dictation** - Dictate into `.txt` and `.md` files using local Whisper speech recognition — no cloud, no API keys
 - **File browser** - Navigate your notes with a tree-based folder structure
+- **Obsidian-style media embeds** - Use `![[image.png]]` syntax in Markdown to embed images, videos, audio, and PDFs inline — fully interoperable with Obsidian vaults
+- **Drag & drop embed** - Drag media files from the file explorer onto a Markdown note to automatically insert embed syntax
 - **Drag & drop organization** - Move files between folders with drag and drop
 - **Folder nesting** - Organize folders by dragging them into other folders
 - **Auto-save** - Changes save automatically as you type
@@ -191,7 +193,7 @@ After building:
 - **Frontend:** Vue 3, TypeScript, Vite, SCSS
 - **AI:** [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) + [llama.cpp](https://github.com/ggml-org/llama.cpp) (local LLM inference)
 - **Speech-to-Text:** [Whisper](https://github.com/openai/whisper) via [@huggingface/transformers](https://github.com/huggingface/transformers.js) + ONNX Runtime (local dictation)
-- **Storage:** Plain text files (txt, md), images, videos, and audio in your local vault
+- **Storage:** Plain text files (txt, md), images, videos, audio, and embedded media in your local vault
 - **Build Tools:** Vite + Electron Builder
 
 ## Project Structure
@@ -207,20 +209,34 @@ leaf/
 │   ├── hf-download-service.cjs # Hugging Face model search & download
 │   └── speech-service.cjs      # Local Whisper speech-to-text service
 ├── src/
+│   ├── assets/                 # App icons and images
 │   ├── components/
 │   │   ├── AiPanel.vue         # AI chat interface with conversation history
-│   │   ├── FileExplorer.vue
-│   │   └── NoteEditor.vue
+│   │   ├── AudioRecorder.vue   # Voice recording and audio capture
+│   │   ├── BookmarksPanel.vue  # Bookmarked notes panel
+│   │   ├── ContextMenu.vue     # Right-click context menu
+│   │   ├── DrawingCanvas.vue   # Freehand drawing canvas
+│   │   ├── FileExplorer.vue    # Vault file browser with drag & drop
+│   │   ├── FolderNode.vue      # Tree node for folder/file rendering
+│   │   ├── NoteEditor.vue      # Editor with Markdown preview & media embeds
+│   │   └── SearchPanel.vue     # Full-text search across vault
 │   ├── types/
-│   │   └── electron.d.ts
+│   │   └── electron.d.ts       # Electron API type definitions
 │   ├── App.vue
 │   ├── main.ts
-│   └── style.scss
+│   ├── style.scss
+│   └── vite-env.d.ts           # Vite environment type definitions
 ├── models/
 │   └── whisper/                # Bundled Whisper ONNX model (speech-to-text)
-├── build/                      # App icons
+├── public/                     # Static assets (demo screenshot, icons)
+├── build/                      # App icons for Electron Builder
+├── index.html                  # Electron entry HTML
 ├── package.json
-└── vite.config.ts
+├── vite.config.ts
+├── tsconfig.json               # Base TypeScript config
+├── tsconfig.app.json           # App TypeScript config
+├── tsconfig.node.json          # Node TypeScript config
+└── generate-icons.sh           # Icon generation script
 ```
 
 ## Contributing

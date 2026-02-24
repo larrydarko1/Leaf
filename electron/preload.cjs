@@ -12,6 +12,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // File system operations
     scanFolder: (folderPath) => ipcRenderer.invoke('files:scan', folderPath),
     readFile: (filePath) => ipcRenderer.invoke('file:read', filePath),
+    resolveEmbedPath: (fileName, noteDir, vaultRoot) => ipcRenderer.invoke('file:resolveEmbedPath', fileName, noteDir, vaultRoot),
+    copyFileToVault: (sourcePath, targetDir) => ipcRenderer.invoke('file:copyToVault', sourcePath, targetDir),
     readImage: (filePath) => ipcRenderer.invoke('file:readImage', filePath),
     readAudio: (filePath) => ipcRenderer.invoke('file:readAudio', filePath),
     readOdt: (filePath) => ipcRenderer.invoke('file:readOdt', filePath),

@@ -12,27 +12,26 @@
 // Theme color palettes - Light theme
 :root,
 :root[data-theme="light"] {
-  --text1: #000000;
-  --text2: #4a4a4a;
-  --text3: #cdcdcd;
-  --text-primary: #000000;
-  --text-muted: #666666;
-  --base1: #e8e8e8;
-  --base2: #000000;
-  --base3: #cdcdcd;
-  --base4: #ffffff;
+  --text1: #1d1d1f;
+  --text2: #6e6e73;
+  --text3: #e5e5ea;
+  --text-primary: #1d1d1f;
+  --text-muted: #8e8e93;
+  --base1: #f5f5f7;
+  --base2: #1d1d1f;
+  --base3: #ececee;
   --bg-primary: #ffffff;
-  --bg-secondary: #f5f5f5;
-  --bg-tertiary: #ebebeb;
-  --bg-hover: #e8e8e8;
-  --bg-selected: #d9d9d9;
-  --border-color: #d0d0d0;
+  --bg-secondary: #f5f5f7;
+  --bg-tertiary: #ececee;
+  --bg-hover: #e8e8ed;
+  --bg-selected: #dcdce0;
+  --border-color: #d2d2d7;
   --accent-color: #3EB489;
   --accent-color-alpha: rgba(62, 180, 137, 0.1);
   --danger-color: #dc3545;
   --danger-color-alpha: rgba(220, 53, 69, 0.15);
-  --scrollbar-thumb: #c0c0c0;
-  --scrollbar-thumb-hover: #a0a0a0;
+  --scrollbar-thumb: #c7c7cc;
+  --scrollbar-thumb-hover: #a1a1a6;
 }
 
 // Dark theme
@@ -45,7 +44,6 @@
   --base1: #121212;
   --base2: #ffffff;
   --base3: #282828;
-  --base4: #000000;
   --bg-primary: #1e1e1e;
   --bg-secondary: #181818;
   --bg-tertiary: #252525;
