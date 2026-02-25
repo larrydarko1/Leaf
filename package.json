@@ -50,9 +50,21 @@
       "output": "dist-electron"
     },
     "files": [
-      "dist/**/*",
-      "electron/**/*",
-      "node_modules/**/*"
+      "package.json",
+      {
+        "from": "dist",
+        "to": "dist",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "electron",
+        "to": "electron",
+        "filter": [
+          "**/*"
+        ]
+      }
     ],
     "extraResources": [
       "models/**"
