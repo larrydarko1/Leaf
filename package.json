@@ -6,10 +6,11 @@
   "main": "electron/main.cjs",
   "scripts": {
     "dev": "NODE_ENV=development concurrently \"vite\" \"wait-on http://localhost:3000 && electron .\"",
-    "build": "vue-tsc -b && vite build && electron-builder",
-    "build:mac": "vue-tsc -b && vite build && electron-builder --mac",
-    "build:win": "vue-tsc -b && vite build && electron-builder --win ",
-    "build:linux": "vue-tsc -b && vite build && electron-builder --linux"
+    "build": "vue-tsc -b && vite build",
+    "build:electron": "npm run build && electron-builder",
+    "build:mac": "npm run build && electron-builder --mac --publish never",
+    "build:win": "npm run build && electron-builder --win --publish never",
+    "build:linux": "npm run build && electron-builder --linux --publish never"
   },
   "dependencies": {
     "@huggingface/transformers": "^3.8.1",
