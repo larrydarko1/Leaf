@@ -1,7 +1,7 @@
 {
   "name": "leaf",
   "private": true,
-  "version": "1.4.3",
+  "version": "1.4.5",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -59,6 +59,29 @@
     "asarUnpack": [
       "models/**"
     ],
+    "dmg": {
+      "background": "build/dmg-background.png",
+      "icon": "build/icon.icns",
+      "iconSize": 100,
+      "iconTextSize": 14,
+      "title": "${productName} ${version}",
+      "window": {
+        "width": 660,
+        "height": 400
+      },
+      "contents": [
+        {
+          "x": 180,
+          "y": 260
+        },
+        {
+          "x": 480,
+          "y": 260,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
     "mac": {
       "category": "public.app-category.productivity",
       "identity": null,

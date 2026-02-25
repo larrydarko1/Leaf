@@ -54,13 +54,6 @@
 								</g>
 							</svg>
 							</button>
-							<button @click="createNewDrawing" class="btn-menu-icon" title="Create new drawing">
-								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-									<path d="M12 19l7-7 3 3-7 7-3-3z" fill="currentColor"/>
-									<path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" fill="currentColor"/>
-									<circle cx="11" cy="11" r="2" fill="var(--base1)"/>
-								</svg>
-							</button>
 						</div>
 
 						<!-- Tools pill -->
@@ -76,6 +69,13 @@
 							<button @click="toggleBookmarks" class="btn-menu-icon" :class="{ 'active': showBookmarksPanel }" title="Bookmarks">
 								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 									<path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="currentColor"/>
+								</svg>
+							</button>
+							<button @click="createNewDrawing" class="btn-menu-icon" title="Create new drawing">
+								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+									<path d="M12 19l7-7 3 3-7 7-3-3z" fill="currentColor"/>
+									<path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" fill="currentColor"/>
+									<circle cx="11" cy="11" r="2" fill="var(--base1)"/>
 								</svg>
 							</button>
 							<AudioRecorder 
