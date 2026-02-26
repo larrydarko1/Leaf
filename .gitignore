@@ -23,3 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 dist-electron
+
+# Whisper ONNX model files — download manually (see README)
+models/whisper/Xenova/whisper-tiny.en/onnx/

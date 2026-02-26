@@ -114,7 +114,31 @@ Leaf includes a built-in speech-to-text feature powered by [Whisper](https://git
 4. Speak naturally — your speech is transcribed and appended to the file every ~5 seconds
 5. Click the microphone again to stop dictation
 
-> The Whisper model (~163 MB) is bundled with the app. No internet connection or API keys are needed — all inference runs on your CPU.
+> **The Whisper ONNX model files are not included in this repository.** Before using dictation you need to download them manually — see the [setup step](#speech-to-text-model-setup) below.
+
+#### Speech-to-Text Model Setup
+
+The app uses [`Xenova/whisper-tiny.en`](https://huggingface.co/Xenova/whisper-tiny.en) from Hugging Face. Download the two required ONNX files and place them at the exact paths shown:
+
+```
+models/whisper/Xenova/whisper-tiny.en/onnx/encoder_model.onnx
+models/whisper/Xenova/whisper-tiny.en/onnx/decoder_model_merged.onnx
+```
+
+Download links (right-click → Save Link As):
+- [`encoder_model.onnx`](https://huggingface.co/Xenova/whisper-tiny.en/resolve/main/onnx/encoder_model.onnx)
+- [`decoder_model_merged.onnx`](https://huggingface.co/Xenova/whisper-tiny.en/resolve/main/onnx/decoder_model_merged.onnx)
+
+Or via `curl`:
+```sh
+mkdir -p models/whisper/Xenova/whisper-tiny.en/onnx
+curl -L -o models/whisper/Xenova/whisper-tiny.en/onnx/encoder_model.onnx \
+  https://huggingface.co/Xenova/whisper-tiny.en/resolve/main/onnx/encoder_model.onnx
+curl -L -o models/whisper/Xenova/whisper-tiny.en/onnx/decoder_model_merged.onnx \
+  https://huggingface.co/Xenova/whisper-tiny.en/resolve/main/onnx/decoder_model_merged.onnx
+```
+
+Once the files are in place, dictation works fully offline — no cloud or API keys needed.
 
 Recommended models for getting started:
 | Model | Size | RAM Needed | Best For |
@@ -227,7 +251,7 @@ leaf/
 │   ├── style.scss
 │   └── vite-env.d.ts           # Vite environment type definitions
 ├── models/
-│   └── whisper/                # Bundled Whisper ONNX model (speech-to-text)
+│   └── whisper/                # Whisper ONNX model (download manually — see README)
 ├── public/                     # Static assets (demo screenshot, icons)
 ├── build/                      # App icons for Electron Builder
 ├── index.html                  # Electron entry HTML
