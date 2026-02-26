@@ -677,7 +677,7 @@ async function handleFileMove(filePath: string, targetFolderPath: string) {
 			const result = await window.electronAPI.moveFile(file.path, absoluteTargetPath);
 			if (result.success && result.newPath) {
 				movedPaths.push(result.newPath);
-			} else {
+			} else if (result.error && !result.error.includes('ENOENT')) {
 				alert(`Failed to move ${file.name}: ${result.error}`);
 			}
 		}

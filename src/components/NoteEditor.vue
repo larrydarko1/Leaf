@@ -50,17 +50,49 @@
     
     <!-- Video player for video files -->
     <div v-else-if="file && isVideoFile" class="video-viewer">
-      <video 
-        v-if="videoUrl && !videoError"
-        ref="videoRef"
-        :src="videoUrl"
-        :key="videoUrl"
-        class="video-preview"
-        controls
-        @error="onVideoError"
-      >
-        Your browser does not support the video tag.
-      </video>
+      <div v-if="videoUrl && !videoError" class="video-player-wrapper">
+        <video 
+          ref="videoRef"
+          :src="videoUrl"
+          :key="videoUrl"
+          class="video-preview"
+          @error="onVideoError"
+          @loadedmetadata="onVideoLoaded"
+          @ended="onVideoEnded"
+          @click="toggleVideoPlayback"
+        ></video>
+        <div class="video-controls">
+          <button class="video-ctrl-btn" @click="toggleVideoPlayback" :title="videoPlaying ? 'Pause' : 'Play'">
+            <svg v-if="!videoPlaying" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+          </button>
+          <span class="video-time">{{ formatTime(videoCurrentTime) }}</span>
+          <div class="video-progress-wrapper" @click="seekVideo">
+            <div class="video-progress-track">
+              <div class="video-progress-fill" :style="{ width: videoProgressPercent + '%' }"></div>
+            </div>
+          </div>
+          <span class="video-time">{{ formatTime(videoDuration) }}</span>
+          <div class="video-volume-wrapper">
+            <button class="video-ctrl-btn" @click="toggleVideoMute" :title="videoVolume === 0 ? 'Unmute' : 'Mute'">
+              <svg v-if="videoVolume === 0" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <line x1="23" y1="9" x2="17" y2="15"></line>
+                <line x1="17" y1="9" x2="23" y2="15"></line>
+              </svg>
+              <svg v-else-if="videoVolume < 0.5" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+              </svg>
+              <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+              </svg>
+            </button>
+            <input type="range" class="video-volume-slider" min="0" max="1" step="0.01" :value="videoVolume" @input="onVideoVolumeChange" />
+          </div>
+        </div>
+      </div>
       <div v-if="videoError" class="video-error">
         <p>Failed to load video</p>
         <p class="video-error-hint">This format may not be supported</p>
@@ -104,17 +136,54 @@
         <div v-if="isLoadingAudio" class="audio-loading">
           <p>Loading audio...</p>
         </div>
+        <!-- Hidden native audio element -->
         <audio 
-          v-else-if="audioUrl && !audioError"
+          v-if="audioUrl && !audioError"
           ref="audioRef"
           :src="audioUrl"
           :key="audioUrl"
-          class="audio-preview"
-          controls
+          style="display: none;"
           @error="onAudioError"
-        >
-          Your browser does not support the audio element.
-        </audio>
+          @loadedmetadata="onAudioLoaded"
+          @ended="onAudioEnded"
+        ></audio>
+        <!-- Custom audio player UI -->
+        <div v-if="audioUrl && !audioError && !isLoadingAudio" class="custom-audio-player">
+          <button class="audio-play-btn" @click="toggleAudioPlayback" :title="audioPlaying ? 'Pause' : 'Play'">
+            <svg v-if="!audioPlaying" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+            <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="4" width="4" height="16" rx="1"/>
+              <rect x="14" y="4" width="4" height="16" rx="1"/>
+            </svg>
+          </button>
+          <span class="audio-time">{{ formatTime(audioCurrentTime) }}</span>
+          <div class="audio-progress-wrapper" @click="seekAudio">
+            <div class="audio-progress-track">
+              <div class="audio-progress-fill" :style="{ width: audioProgressPercent + '%' }"></div>
+            </div>
+          </div>
+          <span class="audio-time">{{ formatTime(audioDuration) }}</span>
+          <div class="audio-volume-wrapper">
+            <button class="audio-volume-btn" @click="toggleMute" :title="audioVolume === 0 ? 'Unmute' : 'Mute'">
+              <svg v-if="audioVolume === 0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <line x1="23" y1="9" x2="17" y2="15"></line>
+                <line x1="17" y1="9" x2="23" y2="15"></line>
+              </svg>
+              <svg v-else-if="audioVolume < 0.5" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+              </svg>
+              <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+              </svg>
+            </button>
+            <input type="range" class="audio-volume-slider" min="0" max="1" step="0.01" :value="audioVolume" @input="onVolumeChange" />
+          </div>
+        </div>
         <div v-if="audioError" class="audio-error">
           <p>Failed to load audio</p>
           <p class="audio-error-hint">This format may not be supported</p>
@@ -276,6 +345,7 @@
         class="markdown-preview-mode"
         v-html="renderedMarkdown"
         @click="onMarkdownPreviewClick"
+        @input="onMarkdownPreviewInput"
       ></div>
 
       <!-- Dictation button for txt/md files -->
@@ -391,12 +461,22 @@ const isLoadingImage = ref(false);
 // Video state
 const videoUrl = ref('');
 const videoRef = ref<HTMLVideoElement | null>(null);
+const videoPlaying = ref(false);
+const videoDuration = ref(0);
+const videoCurrentTime = ref(0);
+const videoVolume = ref(1);
+let videoRafId: number | null = null;
 
 // Audio state
 const audioUrl = ref('');
 const audioRef = ref<HTMLAudioElement | null>(null);
 const audioError = ref(false);
 const isLoadingAudio = ref(false);
+const audioPlaying = ref(false);
+const audioDuration = ref(0);
+const audioCurrentTime = ref(0);
+const audioVolume = ref(1);
+let audioRafId: number | null = null;
 
 // PDF state
 const pdfUrl = ref('');
@@ -583,9 +663,49 @@ const renderedMarkdown = computed(() => {
         return `<img src="${fileUrl}" alt="${altText}"${widthAttr}${heightAttr} class="embed-image" />`;
       }
       case 'video':
-        return `<div class="embed-video-container"><video src="${fileUrl}" controls class="embed-video"></video></div>`;
+        return `<div class="embed-video-container">
+          <video src="${fileUrl}" preload="metadata" class="embed-video"></video>
+          <div class="embed-video-controls">
+            <button class="embed-video-play" title="Play">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+            <span class="embed-video-time embed-video-current">0:00</span>
+            <div class="embed-video-progress">
+              <div class="embed-video-progress-track">
+                <div class="embed-video-progress-fill" style="width:0%"></div>
+              </div>
+            </div>
+            <span class="embed-video-time embed-video-duration">0:00</span>
+            <div class="embed-volume-wrapper">
+              <button class="embed-volume-btn" title="Mute">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+              </button>
+              <input type="range" class="embed-volume-slider" min="0" max="1" step="0.01" value="1" />
+            </div>
+          </div>
+        </div>`;
       case 'audio':
-        return `<div class="embed-audio-container"><audio src="${fileUrl}" controls class="embed-audio"></audio></div>`;
+        return `<div class="embed-audio-container">
+          <audio src="${fileUrl}" preload="metadata" class="embed-audio"></audio>
+          <div class="embed-audio-controls">
+            <button class="embed-audio-play" title="Play">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+            <span class="embed-audio-time embed-audio-current">0:00</span>
+            <div class="embed-audio-progress">
+              <div class="embed-audio-progress-track">
+                <div class="embed-audio-progress-fill" style="width:0%"></div>
+              </div>
+            </div>
+            <span class="embed-audio-time embed-audio-duration">0:00</span>
+            <div class="embed-volume-wrapper">
+              <button class="embed-volume-btn" title="Mute">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+              </button>
+              <input type="range" class="embed-volume-slider" min="0" max="1" step="0.01" value="1" />
+            </div>
+          </div>
+        </div>`;
       case 'pdf':
         return `<div class="embed-pdf-container"><iframe src="${fileUrl}" class="embed-pdf" frameborder="0"></iframe></div>`;
       case 'note':
@@ -595,13 +715,25 @@ const renderedMarkdown = computed(() => {
     }
   });
   
-  let html = marked.parse(processedContent, { async: false }) as string;
+  // Convert ==highlight== syntax to <mark> tags before parsing
+  const highlightedContent = processedContent.replace(/==((?!=).*?)==/g, '<mark>$1</mark>');
+  
+  // Convert - [/] half-complete tasks to a marked-compatible format with a marker
+  const halfTaskProcessed = highlightedContent.replace(/^(\s*)- \[\/\] /gm, '$1- [ ] <!-- half --> ');
+  
+  let html = marked.parse(halfTaskProcessed, { async: false }) as string;
   
   // Add data-task-index to task list items for toggling and remove disabled
+  // Also detect half-complete marker and add data-half attribute
   let taskIndex = 0;
   html = html.replace(/<li><input(.*?)>/g, (_match, attrs) => {
     const cleanAttrs = attrs.replace(/\s*disabled=""/g, '');
     return `<li class="task" data-task-index="${taskIndex++}"><input${cleanAttrs}>`;
+  });
+  
+  // Convert half-complete markers into data attribute on the checkbox
+  html = html.replace(/(<input[^>]*>)\s*<!-- half -->/g, (_match, inputTag) => {
+    return inputTag.replace('<input', '<input data-half="true"');
   });
   
   return html;
@@ -633,8 +765,162 @@ function onVideoError() {
   videoError.value = true;
 }
 
+function onVideoLoaded() {
+  if (videoRef.value) {
+    videoDuration.value = videoRef.value.duration;
+  }
+}
+
+function onVideoEnded() {
+  videoPlaying.value = false;
+  if (videoRafId) {
+    cancelAnimationFrame(videoRafId);
+    videoRafId = null;
+  }
+}
+
+function toggleVideoPlayback() {
+  if (!videoRef.value) return;
+  if (videoPlaying.value) {
+    videoRef.value.pause();
+    videoPlaying.value = false;
+    if (videoRafId) {
+      cancelAnimationFrame(videoRafId);
+      videoRafId = null;
+    }
+  } else {
+    videoRef.value.play();
+    videoPlaying.value = true;
+    updateVideoProgress();
+  }
+}
+
+function updateVideoProgress() {
+  if (videoRef.value) {
+    videoCurrentTime.value = videoRef.value.currentTime;
+  }
+  if (videoPlaying.value) {
+    videoRafId = requestAnimationFrame(updateVideoProgress);
+  }
+}
+
+const videoProgressPercent = computed(() => {
+  if (videoDuration.value === 0) return 0;
+  return (videoCurrentTime.value / videoDuration.value) * 100;
+});
+
+function seekVideo(event: MouseEvent) {
+  if (!videoRef.value || videoDuration.value === 0) return;
+  const wrapper = event.currentTarget as HTMLElement;
+  const rect = wrapper.getBoundingClientRect();
+  const percent = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+  videoRef.value.currentTime = percent * videoDuration.value;
+  videoCurrentTime.value = videoRef.value.currentTime;
+}
+
+function onVideoVolumeChange(event: Event) {
+  const value = parseFloat((event.target as HTMLInputElement).value);
+  videoVolume.value = value;
+  if (videoRef.value) {
+    videoRef.value.volume = value;
+  }
+}
+
+function toggleVideoMute() {
+  if (videoVolume.value > 0) {
+    videoVolume.value = 0;
+  } else {
+    videoVolume.value = 1;
+  }
+  if (videoRef.value) {
+    videoRef.value.volume = videoVolume.value;
+  }
+}
+
+function formatTime(seconds: number): string {
+  if (!seconds || !isFinite(seconds)) return '0:00';
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+// Alias for use in event delegation handlers
+const fmtTime = formatTime;
+
 function onAudioError() {
   audioError.value = true;
+}
+
+function onAudioLoaded() {
+  if (audioRef.value) {
+    audioDuration.value = audioRef.value.duration;
+  }
+}
+
+function onAudioEnded() {
+  audioPlaying.value = false;
+  if (audioRafId) {
+    cancelAnimationFrame(audioRafId);
+    audioRafId = null;
+  }
+}
+
+function toggleAudioPlayback() {
+  if (!audioRef.value) return;
+  if (audioPlaying.value) {
+    audioRef.value.pause();
+    audioPlaying.value = false;
+    if (audioRafId) {
+      cancelAnimationFrame(audioRafId);
+      audioRafId = null;
+    }
+  } else {
+    audioRef.value.play();
+    audioPlaying.value = true;
+    updateAudioProgress();
+  }
+}
+
+function updateAudioProgress() {
+  if (audioRef.value) {
+    audioCurrentTime.value = audioRef.value.currentTime;
+  }
+  if (audioPlaying.value) {
+    audioRafId = requestAnimationFrame(updateAudioProgress);
+  }
+}
+
+const audioProgressPercent = computed(() => {
+  if (audioDuration.value === 0) return 0;
+  return (audioCurrentTime.value / audioDuration.value) * 100;
+});
+
+function seekAudio(event: MouseEvent) {
+  if (!audioRef.value || audioDuration.value === 0) return;
+  const wrapper = event.currentTarget as HTMLElement;
+  const rect = wrapper.getBoundingClientRect();
+  const percent = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+  audioRef.value.currentTime = percent * audioDuration.value;
+  audioCurrentTime.value = audioRef.value.currentTime;
+}
+
+function onVolumeChange(event: Event) {
+  const value = parseFloat((event.target as HTMLInputElement).value);
+  audioVolume.value = value;
+  if (audioRef.value) {
+    audioRef.value.volume = value;
+  }
+}
+
+function toggleMute() {
+  if (audioVolume.value > 0) {
+    audioVolume.value = 0;
+  } else {
+    audioVolume.value = 1;
+  }
+  if (audioRef.value) {
+    audioRef.value.volume = audioVolume.value;
+  }
 }
 
 function onPdfError() {
@@ -681,7 +967,15 @@ watch(() => props.file, async (newFile) => {
   // Reset error states
   imageError.value = false;
   videoError.value = false;
+  videoPlaying.value = false;
+  videoCurrentTime.value = 0;
+  videoDuration.value = 0;
+  if (videoRafId) { cancelAnimationFrame(videoRafId); videoRafId = null; }
   audioError.value = false;
+  audioPlaying.value = false;
+  audioCurrentTime.value = 0;
+  audioDuration.value = 0;
+  if (audioRafId) { cancelAnimationFrame(audioRafId); audioRafId = null; }
   pdfError.value = false;
   imageUrl.value = '';
   videoUrl.value = '';
@@ -1046,25 +1340,191 @@ async function onFileDrop(event: DragEvent) {
   onContentChange();
 }
 
-// Handle clicks in markdown preview (for checkbox toggling)
+// Handle clicks in markdown preview (for checkbox toggling and embedded video)
 function onMarkdownPreviewClick(event: MouseEvent) {
-  const target = event.target as HTMLInputElement;
-  if (target.tagName === 'INPUT' && target.getAttribute('type') === 'checkbox') {
+  const target = event.target as HTMLElement;
+  
+  // --- Embedded video play/pause ---
+  const vidPlayBtn = target.closest('.embed-video-play') as HTMLElement;
+  if (vidPlayBtn) {
+    event.preventDefault();
+    const container = vidPlayBtn.closest('.embed-video-container') as HTMLElement;
+    if (!container) return;
+    const video = container.querySelector('video') as HTMLVideoElement;
+    if (!video) return;
+    if (video.paused) {
+      video.play();
+      vidPlayBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
+      const updateProgress = () => {
+        const fill = container.querySelector('.embed-video-progress-fill') as HTMLElement;
+        const curEl = container.querySelector('.embed-video-current') as HTMLElement;
+        if (fill && video.duration) fill.style.width = ((video.currentTime / video.duration) * 100) + '%';
+        if (curEl) curEl.textContent = fmtTime(video.currentTime);
+        if (!video.paused) requestAnimationFrame(updateProgress);
+      };
+      updateProgress();
+      video.onended = () => {
+        vidPlayBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+        const fill = container.querySelector('.embed-video-progress-fill') as HTMLElement;
+        if (fill) fill.style.width = '0%';
+        const curEl = container.querySelector('.embed-video-current') as HTMLElement;
+        if (curEl) curEl.textContent = '0:00';
+      };
+      video.onloadedmetadata = () => {
+        const durEl = container.querySelector('.embed-video-duration') as HTMLElement;
+        if (durEl) durEl.textContent = fmtTime(video.duration);
+      };
+      if (video.duration) {
+        const durEl = container.querySelector('.embed-video-duration') as HTMLElement;
+        if (durEl) durEl.textContent = fmtTime(video.duration);
+      }
+    } else {
+      video.pause();
+      vidPlayBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+    }
+    return;
+  }
+  
+  // --- Embedded audio play/pause ---
+  const audPlayBtn = target.closest('.embed-audio-play') as HTMLElement;
+  if (audPlayBtn) {
+    event.preventDefault();
+    const container = audPlayBtn.closest('.embed-audio-container') as HTMLElement;
+    if (!container) return;
+    const audio = container.querySelector('audio') as HTMLAudioElement;
+    if (!audio) return;
+    if (audio.paused) {
+      audio.play();
+      audPlayBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
+      const updateProgress = () => {
+        const fill = container.querySelector('.embed-audio-progress-fill') as HTMLElement;
+        const curEl = container.querySelector('.embed-audio-current') as HTMLElement;
+        if (fill && audio.duration) fill.style.width = ((audio.currentTime / audio.duration) * 100) + '%';
+        if (curEl) curEl.textContent = fmtTime(audio.currentTime);
+        if (!audio.paused) requestAnimationFrame(updateProgress);
+      };
+      updateProgress();
+      audio.onended = () => {
+        audPlayBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+        const fill = container.querySelector('.embed-audio-progress-fill') as HTMLElement;
+        if (fill) fill.style.width = '0%';
+        const curEl = container.querySelector('.embed-audio-current') as HTMLElement;
+        if (curEl) curEl.textContent = '0:00';
+      };
+      audio.onloadedmetadata = () => {
+        const durEl = container.querySelector('.embed-audio-duration') as HTMLElement;
+        if (durEl) durEl.textContent = fmtTime(audio.duration);
+      };
+      if (audio.duration) {
+        const durEl = container.querySelector('.embed-audio-duration') as HTMLElement;
+        if (durEl) durEl.textContent = fmtTime(audio.duration);
+      }
+    } else {
+      audio.pause();
+      audPlayBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+    }
+    return;
+  }
+  
+  // --- Embedded audio seek ---
+  const audProgress = target.closest('.embed-audio-progress') as HTMLElement;
+  if (audProgress) {
+    event.preventDefault();
+    const container = audProgress.closest('.embed-audio-container') as HTMLElement;
+    if (!container) return;
+    const audio = container.querySelector('audio') as HTMLAudioElement;
+    if (!audio || !audio.duration) return;
+    const rect = audProgress.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+    audio.currentTime = pct * audio.duration;
+    const fill = container.querySelector('.embed-audio-progress-fill') as HTMLElement;
+    if (fill) fill.style.width = (pct * 100) + '%';
+    const curEl = container.querySelector('.embed-audio-current') as HTMLElement;
+    if (curEl) curEl.textContent = fmtTime(audio.currentTime);
+    return;
+  }
+  
+  // --- Embedded video seek ---
+  const vidProgress = target.closest('.embed-video-progress') as HTMLElement;
+  if (vidProgress) {
+    event.preventDefault();
+    const container = vidProgress.closest('.embed-video-container') as HTMLElement;
+    if (!container) return;
+    const video = container.querySelector('video') as HTMLVideoElement;
+    if (!video || !video.duration) return;
+    const rect = vidProgress.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+    video.currentTime = pct * video.duration;
+    const fill = container.querySelector('.embed-video-progress-fill') as HTMLElement;
+    if (fill) fill.style.width = (pct * 100) + '%';
+    const curEl = container.querySelector('.embed-video-current') as HTMLElement;
+    if (curEl) curEl.textContent = fmtTime(video.currentTime);
+    return;
+  }
+  
+  // --- Click on embedded video to play/pause ---
+  const vidEl = target.closest('.embed-video') as HTMLVideoElement;
+  if (vidEl) {
+    event.preventDefault();
+    const container = vidEl.closest('.embed-video-container') as HTMLElement;
+    const playBtn = container?.querySelector('.embed-video-play') as HTMLElement;
+    if (playBtn) playBtn.click();
+    return;
+  }
+  
+  // --- Embedded mute toggle (works for both video and audio containers) ---
+  const muteBtn = target.closest('.embed-volume-btn') as HTMLElement;
+  if (muteBtn) {
+    event.preventDefault();
+    const container = muteBtn.closest('.embed-video-container, .embed-audio-container') as HTMLElement;
+    if (!container) return;
+    const media = (container.querySelector('video') || container.querySelector('audio')) as HTMLMediaElement;
+    if (!media) return;
+    const slider = container.querySelector('.embed-volume-slider') as HTMLInputElement;
+    const svgMuted = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
+    const svgLow = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>';
+    const svgHigh = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>';
+    if (media.volume > 0) {
+      media.dataset.prevVolume = String(media.volume);
+      media.volume = 0;
+      if (slider) slider.value = '0';
+      muteBtn.innerHTML = svgMuted;
+    } else {
+      const prev = parseFloat(media.dataset.prevVolume || '1');
+      media.volume = prev;
+      if (slider) slider.value = String(prev);
+      muteBtn.innerHTML = prev < 0.5 ? svgLow : svgHigh;
+    }
+    return;
+  }
+  
+  // --- Embedded volume slider (works for both video and audio containers) ---
+  const volSlider = target.closest('.embed-volume-slider') as HTMLInputElement;
+  if (volSlider) {
+    // Handled by 'input' event listener, but prevent click propagation
+    return;
+  }
+  
+  // --- Checkbox toggling ---
+  if (target.tagName === 'INPUT' && (target as HTMLInputElement).getAttribute('type') === 'checkbox') {
     event.preventDefault();
     const li = target.closest('li.task');
     if (!li) return;
     
-    // Toggle checkbox state in the raw content
+    // Toggle checkbox state: [ ] → [/] → [x] → [ ]
     const lines = content.value.split('\n');
     let taskIndex = 0;
     for (let i = 0; i < lines.length; i++) {
       const uncheckedMatch = lines[i].match(/^(\s*)- \[ \] /);
+      const halfMatch = lines[i].match(/^(\s*)- \[\/\] /);
       const checkedMatch = lines[i].match(/^(\s*)- \[x\] /i);
-      if (uncheckedMatch || checkedMatch) {
+      if (uncheckedMatch || halfMatch || checkedMatch) {
         const liTaskIndex = li.getAttribute('data-task-index');
         if (String(taskIndex) === liTaskIndex) {
           if (uncheckedMatch) {
-            lines[i] = lines[i].replace(/^(\s*)- \[ \]/, '$1- [x]');
+            lines[i] = lines[i].replace(/^(\s*)- \[ \]/, '$1- [/]');
+          } else if (halfMatch) {
+            lines[i] = lines[i].replace(/^(\s*)- \[\/\]/, '$1- [x]');
           } else {
             lines[i] = lines[i].replace(/^(\s*)- \[x\]/i, '$1- [ ]');
           }
@@ -1074,6 +1534,34 @@ function onMarkdownPreviewClick(event: MouseEvent) {
         }
         taskIndex++;
       }
+    }
+  }
+}
+
+// Handle input events in markdown preview (for embedded volume sliders)
+function onMarkdownPreviewInput(event: Event) {
+  const target = event.target as HTMLInputElement;
+  if (!target.classList.contains('embed-volume-slider')) return;
+  
+  const container = target.closest('.embed-video-container, .embed-audio-container') as HTMLElement;
+  if (!container) return;
+  const media = (container.querySelector('video') || container.querySelector('audio')) as HTMLMediaElement;
+  if (!media) return;
+  
+  const vol = parseFloat(target.value);
+  media.volume = vol;
+  
+  const muteBtn = container.querySelector('.embed-volume-btn') as HTMLElement;
+  if (muteBtn) {
+    const svgMuted = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
+    const svgLow = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>';
+    const svgHigh = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>';
+    if (vol === 0) {
+      muteBtn.innerHTML = svgMuted;
+    } else if (vol < 0.5) {
+      muteBtn.innerHTML = svgLow;
+    } else {
+      muteBtn.innerHTML = svgHigh;
     }
   }
 }
@@ -1321,11 +1809,7 @@ function handleKeyboard(e: KeyboardEvent) {
     if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
     
     e.preventDefault();
-    if (videoRef.value.paused) {
-      videoRef.value.play();
-    } else {
-      videoRef.value.pause();
-    }
+    toggleVideoPlayback();
   }
   
   // Spacebar to toggle audio play/pause (only when not in textarea)
@@ -1706,10 +2190,14 @@ onUnmounted(() => {
   line-height: 1.6;
   
   :deep(h1), :deep(h2), :deep(h3), :deep(h4), :deep(h5), :deep(h6) {
-    margin: 0;
+    margin: 1.2em 0 0.4em 0;
     font-weight: 600;
     color: var(--text1);
-    line-height: 1.6;
+    line-height: 1.4;
+
+    &:first-child {
+      margin-top: 0;
+    }
   }
   
   :deep(h1) { font-size: 2em; }
@@ -1721,7 +2209,7 @@ onUnmounted(() => {
   
   :deep(strong) {
     font-weight: 600;
-    color: var(--text1);
+    color: var(--accent-color);
   }
   
   :deep(em) { font-style: italic; }
@@ -1746,7 +2234,7 @@ onUnmounted(() => {
     border-radius: 6px;
     padding: 1em;
     overflow-x: auto;
-    margin: 0;
+    margin: 0.75em 0;
     
     code {
       background: none;
@@ -1758,14 +2246,14 @@ onUnmounted(() => {
   }
   
   :deep(mark) {
-    background: color-mix(in srgb, #ffeb3b 50%, transparent);
+    background: color-mix(in srgb, var(--accent-color) 20%, transparent);
     color: var(--text1);
-    padding: 0.1em 0.2em;
-    border-radius: 2px;
+    padding: 0.1em 0.3em;
+    border-radius: 4px;
   }
   
   :deep(ul), :deep(ol) {
-    margin: 0;
+    margin: 0.5em 0;
     padding-left: 1.5em;
   }
   
@@ -1774,17 +2262,63 @@ onUnmounted(() => {
     
     &.task {
       list-style: none;
+      display: flex;
+      align-items: baseline;
       
       input[type="checkbox"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        min-width: 16px;
+        border: 1.5px solid var(--text2);
+        border-radius: 4px;
+        background: transparent;
         margin-right: 0.5em;
         cursor: pointer;
+        position: relative;
+        top: 3px;
+        transition: all 0.15s ease;
+        flex-shrink: 0;
+
+        &:checked {
+          background: var(--accent-color);
+          border-color: var(--accent-color);
+        }
+
+        &:checked::after {
+          content: '';
+          position: absolute;
+          left: 4px;
+          top: 1px;
+          width: 5px;
+          height: 9px;
+          border: solid white;
+          border-width: 0 2px 2px 0;
+          transform: rotate(45deg);
+        }
+
+        &[data-half] {
+          background: linear-gradient(to top, var(--accent-color) 50%, transparent 50%);
+          border-color: var(--accent-color);
+        }
+
+        &:hover {
+          border-color: var(--accent-color);
+        }
+      }
+
+      &:has(input:checked) {
+        color: var(--text2);
+        text-decoration: line-through;
+        text-decoration-color: var(--text2);
       }
     }
   }
   
   :deep(table) {
     border-collapse: collapse;
-    margin: 0;
+    margin: 0.75em 0;
     width: auto;
   }
   
@@ -1815,7 +2349,7 @@ onUnmounted(() => {
   }
   
   :deep(blockquote) {
-    margin: 0;
+    margin: 0.75em 0;
     padding: 0 1em;
     border-left: 4px solid var(--accent-color);
     color: var(--text2);
@@ -1824,11 +2358,15 @@ onUnmounted(() => {
   :deep(hr) {
     border: none;
     border-top: 2px solid var(--text3);
-    margin: 0;
+    margin: 1em 0;
   }
   
   :deep(p) {
-    margin: 0;
+    margin: 0.5em 0;
+
+    &:first-child {
+      margin-top: 0;
+    }
   }
   
   // Obsidian-style embed styles
@@ -1842,22 +2380,207 @@ onUnmounted(() => {
   
   :deep(.embed-video-container) {
     margin: 0.5em 0;
+    max-width: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--text3);
+    background: #000;
     
     .embed-video {
       max-width: 100%;
       max-height: 500px;
-      border-radius: 8px;
       display: block;
+      cursor: pointer;
+      width: 100%;
+
+      &::-webkit-media-controls {
+        display: none !important;
+      }
+    }
+
+    .embed-video-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.7rem;
+      background: var(--bg-primary);
+      border-top: 1px solid var(--text3);
+    }
+
+    .embed-video-play {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      min-width: 28px;
+      border-radius: 50%;
+      border: none;
+      background: var(--accent-color);
+      color: white;
+      cursor: pointer;
+      padding: 0;
+      transition: all 0.15s ease;
+
+      &:hover {
+        transform: scale(1.08);
+        filter: brightness(1.1);
+      }
+    }
+
+    .embed-video-time {
+      font-size: 0.65rem;
+      color: var(--text2);
+      font-variant-numeric: tabular-nums;
+      min-width: 2.2em;
+      text-align: center;
+      user-select: none;
+    }
+
+    .embed-video-progress {
+      flex: 1;
+      cursor: pointer;
+      padding: 0.3rem 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .embed-video-progress-track {
+      width: 100%;
+      height: 3px;
+      background: var(--bg-hover);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .embed-video-progress-fill {
+      height: 100%;
+      background: var(--accent-color);
+      border-radius: 2px;
+      transition: width 0.05s linear;
     }
   }
   
   :deep(.embed-audio-container) {
     margin: 0.5em 0;
+    max-width: 500px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--text3);
+    background: var(--bg-primary);
     
     .embed-audio {
+      display: none;
+    }
+
+    .embed-audio-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.7rem;
+    }
+
+    .embed-audio-play {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      min-width: 28px;
+      border-radius: 50%;
+      border: none;
+      background: var(--accent-color);
+      color: white;
+      cursor: pointer;
+      padding: 0;
+      transition: all 0.15s ease;
+
+      &:hover {
+        transform: scale(1.08);
+        filter: brightness(1.1);
+      }
+    }
+
+    .embed-audio-time {
+      font-size: 0.65rem;
+      color: var(--text2);
+      font-variant-numeric: tabular-nums;
+      min-width: 2.2em;
+      text-align: center;
+      user-select: none;
+    }
+
+    .embed-audio-progress {
+      flex: 1;
+      cursor: pointer;
+      padding: 0.3rem 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .embed-audio-progress-track {
       width: 100%;
-      max-width: 500px;
-      border-radius: 8px;
+      height: 3px;
+      background: var(--bg-hover);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .embed-audio-progress-fill {
+      height: 100%;
+      background: var(--accent-color);
+      border-radius: 2px;
+      transition: width 0.05s linear;
+    }
+  }
+
+  // Shared volume controls for embedded media
+  :deep(.embed-volume-wrapper) {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-left: 0.2rem;
+  }
+
+  :deep(.embed-volume-btn) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.15s ease;
+
+    &:hover {
+      color: var(--text1);
+    }
+  }
+
+  :deep(.embed-volume-slider) {
+    width: 60px;
+    height: 3px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--bg-hover);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+
+    &::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      cursor: pointer;
+      border: none;
     }
   }
   
@@ -1995,12 +2718,129 @@ onUnmounted(() => {
   }
 }
 
-.video-preview {
+.video-player-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   max-width: 100%;
   max-height: 100%;
-  border-radius: 8px;
   position: relative;
   z-index: 1;
+  gap: 0;
+}
+
+.video-preview {
+  max-width: 100%;
+  max-height: calc(100% - 52px);
+  border-radius: 10px 10px 0 0;
+  display: block;
+  background: #000;
+  cursor: pointer;
+
+  &::-webkit-media-controls {
+    display: none !important;
+  }
+}
+
+.video-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.5rem 0.85rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--text3);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+}
+
+.video-ctrl-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent-color);
+  color: white;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+
+  &:hover {
+    transform: scale(1.08);
+    filter: brightness(1.1);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.video-time {
+  font-size: 0.7rem;
+  color: var(--text2);
+  font-variant-numeric: tabular-nums;
+  min-width: 2.5em;
+  text-align: center;
+  user-select: none;
+}
+
+.video-progress-wrapper {
+  flex: 1;
+  cursor: pointer;
+  padding: 0.4rem 0;
+  display: flex;
+  align-items: center;
+}
+
+.video-progress-track {
+  width: 100%;
+  height: 4px;
+  background: var(--bg-hover);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.video-progress-fill {
+  height: 100%;
+  background: var(--accent-color);
+  border-radius: 2px;
+  transition: width 0.05s linear;
+}
+
+.video-volume-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.video-volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 55px;
+  height: 4px;
+  background: var(--bg-hover);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+
+  &::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+  }
 }
 
 .video-error {
@@ -2117,9 +2957,123 @@ onUnmounted(() => {
   }
 }
 
-.audio-preview {
+.custom-audio-player {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   width: 100%;
-  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--text3);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.audio-play-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent-color);
+  color: white;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    transform: scale(1.08);
+    filter: brightness(1.1);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.audio-time {
+  font-size: 0.75rem;
+  color: var(--text2);
+  font-variant-numeric: tabular-nums;
+  min-width: 2.5em;
+  text-align: center;
+  user-select: none;
+}
+
+.audio-progress-wrapper {
+  flex: 1;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  display: flex;
+  align-items: center;
+}
+
+.audio-progress-track {
+  width: 100%;
+  height: 4px;
+  background: var(--bg-hover);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.audio-progress-fill {
+  height: 100%;
+  background: var(--accent-color);
+  border-radius: 2px;
+  transition: width 0.05s linear;
+}
+
+.audio-volume-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.audio-volume-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text2);
+  cursor: pointer;
+  padding: 0.2rem;
+  border-radius: 4px;
+  transition: color 0.15s;
+
+  &:hover {
+    color: var(--text1);
+  }
+}
+
+.audio-volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 60px;
+  height: 4px;
+  background: var(--bg-hover);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+
+  &::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+  }
 }
 
 .audio-error {
