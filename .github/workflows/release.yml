@@ -58,6 +58,14 @@ jobs:
 
       - run: npm ci
 
+      - name: Download Whisper ONNX model
+        run: |
+          mkdir -p models/whisper/Xenova/whisper-tiny.en/onnx
+          curl -L -o models/whisper/Xenova/whisper-tiny.en/onnx/encoder_model.onnx \
+            https://huggingface.co/Xenova/whisper-tiny.en/resolve/main/onnx/encoder_model.onnx
+          curl -L -o models/whisper/Xenova/whisper-tiny.en/onnx/decoder_model_merged.onnx \
+            https://huggingface.co/Xenova/whisper-tiny.en/resolve/main/onnx/decoder_model_merged.onnx
+
       - name: Build macOS DMG (unsigned)
         run: npm run build:mac
         env:
@@ -84,6 +92,15 @@ jobs:
 
       - run: npm ci
 
+      - name: Download Whisper ONNX model
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path models/whisper/Xenova/whisper-tiny.en/onnx
+          Invoke-WebRequest -Uri "https://huggingface.co/Xenova/whisper-tiny.en/resolve/main/onnx/encoder_model.onnx" `
+            -OutFile "models/whisper/Xenova/whisper-tiny.en/onnx/encoder_model.onnx"
+          Invoke-WebRequest -Uri "https://huggingface.co/Xenova/whisper-tiny.en/resolve/main/onnx/decoder_model_merged.onnx" `
+            -OutFile "models/whisper/Xenova/whisper-tiny.en/onnx/decoder_model_merged.onnx"
+
       - name: Build Windows EXE (unsigned)
         run: npm run build:win
         env:
@@ -108,6 +125,14 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      - name: Download Whisper ONNX model
+        run: |
+          mkdir -p models/whisper/Xenova/whisper-tiny.en/onnx
+          curl -L -o models/whisper/Xenova/whisper-tiny.en/onnx/encoder_model.onnx \
+            https://huggingface.co/Xenova/whisper-tiny.en/resolve/main/onnx/encoder_model.onnx
+          curl -L -o models/whisper/Xenova/whisper-tiny.en/onnx/decoder_model_merged.onnx \
+            https://huggingface.co/Xenova/whisper-tiny.en/resolve/main/onnx/decoder_model_merged.onnx
 
       - name: Build Linux AppImage
         run: npm run build:linux
