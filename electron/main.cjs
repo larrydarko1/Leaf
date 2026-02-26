@@ -1,5 +1,5 @@
 // Electron Main Process - Leaf note-taking app
-const { app, BrowserWindow, ipcMain, dialog, shell, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, Menu, screen } = require('electron');
 const path = require('path');
 const fs = require('fs').promises;
 const fsSync = require('fs');
@@ -15,11 +15,18 @@ function createWindow() {
         ? path.join(__dirname, '../build/icon.icns')
         : path.join(__dirname, '../build/icon.icns');
 
+    // Use percentage-based sizing relative to the user's display
+    const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+    const winWidth = Math.round(screenWidth * 0.75);   // 75% of screen width
+    const winHeight = Math.round(screenHeight * 0.8);   // 80% of screen height
+    const minW = Math.round(screenWidth * 0.45);        // 45% of screen width
+    const minH = Math.round(screenHeight * 0.5);        // 50% of screen height
+
     mainWindow = new BrowserWindow({
-        width: 1200,
-        height: 700,
-        minWidth: 1200,
-        minHeight: 700,
+        width: winWidth,
+        height: winHeight,
+        minWidth: minW,
+        minHeight: minH,
         icon: iconPath,
         webPreferences: {
             preload: path.join(__dirname, 'preload.cjs'),

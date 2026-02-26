@@ -3,7 +3,6 @@
     <div class="editor-header" v-if="file">
       <div class="file-info">
         <div class="file-title-container">
-          <h2 class="file-title">{{ getFileNameWithoutExtension(file.name) }}</h2>
           <div class="badge-with-toggle">
             <span class="file-extension-badge">{{ file.extension }}</span>
             <button 
@@ -22,6 +21,7 @@
               </svg>
             </button>
           </div>
+          <h2 class="file-title">{{ getFileNameWithoutExtension(file.name) }}</h2>
         </div>
       </div>
       <div class="editor-actions">
@@ -328,6 +328,94 @@
         </div>
       </div>
 
+      <!-- Markdown formatting toolbar -->
+      <div v-if="isMarkdownFile && !showPreview" class="md-toolbar">
+        <button class="md-toolbar-btn" title="Bold (⌘B)" @mousedown.prevent="mdFormatText('bold')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
+            <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
+          </svg>
+        </button>
+        <button class="md-toolbar-btn" title="Italic (⌘I)" @mousedown.prevent="mdFormatText('italic')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="4" x2="10" y2="4"></line>
+            <line x1="14" y1="20" x2="5" y2="20"></line>
+            <line x1="15" y1="4" x2="9" y2="20"></line>
+          </svg>
+        </button>
+        <button class="md-toolbar-btn" title="Strikethrough" @mousedown.prevent="mdFormatText('strikethrough')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.3 4.9c-2.3-.6-4.4-1-6.2-.9-2.7 0-5.3.7-5.3 3.1 0 1.4.8 2.3 2.3 3"></path>
+            <path d="M4 12h16"></path>
+            <path d="M17 16c0 2.3-2 4-5.5 4-2 0-3.7-.4-5.5-1.5"></path>
+          </svg>
+        </button>
+        <button class="md-toolbar-btn" title="Highlight (⌘⇧H)" @mousedown.prevent="mdFormatText('highlight')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+          </svg>
+        </button>
+        <button class="md-toolbar-btn" title="Inline code" @mousedown.prevent="mdFormatText('code')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+        </button>
+        <div class="md-toolbar-separator"></div>
+        <select class="md-toolbar-select" @change="mdInsertHeading($event)" title="Heading level">
+          <option value="" selected disabled>Heading</option>
+          <option value="1">H1</option>
+          <option value="2">H2</option>
+          <option value="3">H3</option>
+          <option value="4">H4</option>
+        </select>
+        <div class="md-toolbar-separator"></div>
+        <button class="md-toolbar-btn" title="Bullet list" @mousedown.prevent="mdFormatText('ul')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="8" y1="6" x2="21" y2="6"></line>
+            <line x1="8" y1="12" x2="21" y2="12"></line>
+            <line x1="8" y1="18" x2="21" y2="18"></line>
+            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+          </svg>
+        </button>
+        <button class="md-toolbar-btn" title="Numbered list" @mousedown.prevent="mdFormatText('ol')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="10" y1="6" x2="21" y2="6"></line>
+            <line x1="10" y1="12" x2="21" y2="12"></line>
+            <line x1="10" y1="18" x2="21" y2="18"></line>
+            <path d="M4 6h1v4"></path>
+            <path d="M4 10h2"></path>
+            <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"></path>
+          </svg>
+        </button>
+        <button class="md-toolbar-btn" title="Checkbox" @mousedown.prevent="mdFormatText('checkbox')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <path d="M9 12l2 2 4-4"></path>
+          </svg>
+        </button>
+        <div class="md-toolbar-separator"></div>
+        <button class="md-toolbar-btn" title="Blockquote" @mousedown.prevent="mdFormatText('quote')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M10 11H6a1 1 0 01-1-1V7a1 1 0 011-1h3a1 1 0 011 1v3a4 4 0 01-1.5 3.12A3.49 3.49 0 017 14a.5.5 0 010-1 2.5 2.5 0 001.73-.72A2.49 2.49 0 0010 11zM20 11h-4a1 1 0 01-1-1V7a1 1 0 011-1h3a1 1 0 011 1v3a4 4 0 01-1.5 3.12A3.49 3.49 0 0117 14a.5.5 0 010-1 2.5 2.5 0 001.73-.72A2.49 2.49 0 0020 11z"></path>
+          </svg>
+        </button>
+        <button class="md-toolbar-btn" title="Link (⌘K)" @mousedown.prevent="mdFormatText('link')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+          </svg>
+        </button>
+        <button class="md-toolbar-btn" title="Horizontal rule" @mousedown.prevent="mdFormatText('hr')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+          </svg>
+        </button>
+      </div>
+
       <!-- Edit mode -->
       <textarea
         ref="textareaRef"
@@ -337,6 +425,7 @@
         :class="{ 'code-editor': isCodeFile }"
         :placeholder="isCodeFile ? 'Start coding...' : 'Start writing...'"
         @input="onContentChange"
+        @keydown="onTextareaKeydown"
       ></textarea>
       
       <!-- Preview mode for markdown -->
@@ -1103,6 +1192,201 @@ function onOdtContentChange() {
     autoSaveTimeout = window.setTimeout(() => {
       saveFile();
     }, 3000);
+  }
+}
+
+// ============================
+// Markdown formatting toolbar logic
+// ============================
+
+/**
+ * Apply markdown formatting to the selected text in the textarea.
+ * Supports: bold, italic, strikethrough, highlight, code, ul, ol, checkbox, quote, link, hr
+ */
+function mdFormatText(format: string) {
+  const textarea = textareaRef.value;
+  if (!textarea) return;
+
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const selected = content.value.substring(start, end);
+  const before = content.value.substring(0, start);
+  const after = content.value.substring(end);
+
+  let replacement = '';
+  let cursorOffset = 0; // offset from start for cursor placement
+
+  switch (format) {
+    case 'bold':
+      replacement = `**${selected || 'bold text'}**`;
+      cursorOffset = selected ? replacement.length : 2; // place cursor after ** if no selection
+      break;
+    case 'italic':
+      replacement = `*${selected || 'italic text'}*`;
+      cursorOffset = selected ? replacement.length : 1;
+      break;
+    case 'strikethrough':
+      replacement = `~~${selected || 'strikethrough text'}~~`;
+      cursorOffset = selected ? replacement.length : 2;
+      break;
+    case 'highlight':
+      replacement = `==${selected || 'highlighted text'}==`;
+      cursorOffset = selected ? replacement.length : 2;
+      break;
+    case 'code':
+      if (selected.includes('\n')) {
+        // Multi-line: use code block
+        replacement = `\`\`\`\n${selected}\n\`\`\``;
+      } else {
+        replacement = `\`${selected || 'code'}\``;
+      }
+      cursorOffset = selected ? replacement.length : 1;
+      break;
+    case 'ul': {
+      if (selected) {
+        replacement = selected.split('\n').map(line => `- ${line}`).join('\n');
+      } else {
+        replacement = '- ';
+      }
+      cursorOffset = replacement.length;
+      break;
+    }
+    case 'ol': {
+      if (selected) {
+        replacement = selected.split('\n').map((line, i) => `${i + 1}. ${line}`).join('\n');
+      } else {
+        replacement = '1. ';
+      }
+      cursorOffset = replacement.length;
+      break;
+    }
+    case 'checkbox': {
+      if (selected) {
+        replacement = selected.split('\n').map(line => `- [ ] ${line}`).join('\n');
+      } else {
+        replacement = '- [ ] ';
+      }
+      cursorOffset = replacement.length;
+      break;
+    }
+    case 'quote': {
+      if (selected) {
+        replacement = selected.split('\n').map(line => `> ${line}`).join('\n');
+      } else {
+        replacement = '> ';
+      }
+      cursorOffset = replacement.length;
+      break;
+    }
+    case 'link':
+      if (selected) {
+        replacement = `[${selected}](url)`;
+        cursorOffset = replacement.length - 1; // place cursor before closing )
+      } else {
+        replacement = '[link text](url)';
+        cursorOffset = 1; // place cursor after [
+      }
+      break;
+    case 'hr':
+      replacement = `\n---\n`;
+      cursorOffset = replacement.length;
+      break;
+    default:
+      return;
+  }
+
+  content.value = before + replacement + after;
+
+  // Place cursor appropriately
+  nextTick(() => {
+    textarea.focus();
+    if (selected) {
+      // Select the replacement text
+      textarea.selectionStart = start;
+      textarea.selectionEnd = start + replacement.length;
+    } else {
+      // For wrapping formats, place cursor inside the markers to type
+      const innerStart = start + cursorOffset;
+      textarea.selectionStart = innerStart;
+      textarea.selectionEnd = innerStart;
+      // For placeholders, select the placeholder text
+      if (['bold', 'italic', 'strikethrough', 'highlight', 'code'].includes(format)) {
+        const markerLen = format === 'bold' || format === 'strikethrough' || format === 'highlight' ? 2 : 1;
+        const placeholder = replacement.substring(markerLen, replacement.length - markerLen);
+        textarea.selectionStart = start + markerLen;
+        textarea.selectionEnd = start + markerLen + placeholder.length;
+      }
+      if (format === 'link') {
+        // Select "link text"
+        textarea.selectionStart = start + 1;
+        textarea.selectionEnd = start + 10;
+      }
+    }
+  });
+
+  onContentChange();
+}
+
+/** Insert a markdown heading at the current line */
+function mdInsertHeading(event: Event) {
+  const select = event.target as HTMLSelectElement;
+  const level = parseInt(select.value);
+  if (isNaN(level)) return;
+
+  const textarea = textareaRef.value;
+  if (!textarea) return;
+
+  const start = textarea.selectionStart;
+  // Find the start of the current line
+  const lineStart = content.value.lastIndexOf('\n', start - 1) + 1;
+  const lineEnd = content.value.indexOf('\n', start);
+  const actualLineEnd = lineEnd === -1 ? content.value.length : lineEnd;
+  const currentLine = content.value.substring(lineStart, actualLineEnd);
+
+  // Strip any existing heading markers
+  const stripped = currentLine.replace(/^#{1,6}\s*/, '');
+  const prefix = '#'.repeat(level) + ' ';
+  const newLine = prefix + stripped;
+
+  content.value = content.value.substring(0, lineStart) + newLine + content.value.substring(actualLineEnd);
+
+  nextTick(() => {
+    textarea.focus();
+    const newCursor = lineStart + newLine.length;
+    textarea.selectionStart = newCursor;
+    textarea.selectionEnd = newCursor;
+  });
+
+  // Reset dropdown so it can be used again
+  select.value = '';
+  onContentChange();
+}
+
+/** Handle keyboard shortcuts for markdown formatting in the textarea */
+function onTextareaKeydown(event: KeyboardEvent) {
+  if (!isMarkdownFile.value) return;
+
+  if (event.metaKey || event.ctrlKey) {
+    switch (event.key.toLowerCase()) {
+      case 'b':
+        event.preventDefault();
+        mdFormatText('bold');
+        break;
+      case 'i':
+        event.preventDefault();
+        mdFormatText('italic');
+        break;
+      case 'k':
+        event.preventDefault();
+        mdFormatText('link');
+        break;
+      case 'h':
+        if (event.shiftKey) {
+          event.preventDefault();
+          mdFormatText('highlight');
+        }
+        break;
+    }
   }
 }
 
@@ -1905,6 +2189,7 @@ onUnmounted(() => {
 
 .file-title {
   margin: 0;
+  max-width: 50%;
   font-size: 1rem;
   font-weight: 600;
   color: var(--text1);
@@ -2104,6 +2389,76 @@ onUnmounted(() => {
     padding-left: 1em;
     margin: 0.5em 0;
     color: var(--text2);
+  }
+}
+
+.md-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 12px;
+  background: var(--bg-hover);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  -webkit-app-region: no-drag;
+}
+
+.md-toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 26px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text1);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: var(--bg-active);
+    border-color: var(--border-color);
+  }
+
+  &:active {
+    background: var(--accent-color, #4a9eff);
+    color: #fff;
+    border-color: var(--accent-color, #4a9eff);
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.md-toolbar-separator {
+  width: 1px;
+  height: 18px;
+  background: var(--border-color);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.md-toolbar-select {
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-color);
+  color: var(--text1);
+  font-size: 11px;
+  cursor: pointer;
+  outline: none;
+
+  &:hover {
+    border-color: var(--text2);
+  }
+
+  &:focus {
+    border-color: var(--accent-color, #4a9eff);
   }
 }
 
