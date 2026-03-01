@@ -6,6 +6,9 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('electronAPI', {
     isElectron: () => true,
 
+    // Open external URLs in the OS default browser
+    openExternal: (url) => ipcRenderer.invoke('shell:openExternal', url),
+
     // Dialog operations
     openFolderDialog: () => ipcRenderer.invoke('dialog:openFolder'),
 

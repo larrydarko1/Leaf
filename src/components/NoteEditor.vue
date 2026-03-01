@@ -513,6 +513,8 @@ const isSaving = ref(false);
 const imageError = ref(false);
 const videoError = ref(false);
 let autoSaveTimeout: number | null = null;
+let lastLoadedPath: string | null = null; // Track last loaded file path to skip redundant reloads
+let justSaved = false; // Flag to suppress reload triggered by our own save
 
 // Image file extensions
 const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico'];
@@ -825,8 +827,67 @@ const renderedMarkdown = computed(() => {
     return inputTag.replace('<input', '<input data-half="true"');
   });
   
+  // Wrap content under each heading into collapsible sections (Obsidian-style folding)
+  html = wrapHeadingSections(html);
+  
   return html;
 });
+
+/**
+ * Wraps content under each heading into collapsible <div> sections.
+ * Each heading gets a fold toggle arrow. Clicking it collapses/expands
+ * all content until the next heading of equal or higher level.
+ */
+function wrapHeadingSections(html: string): string {
+  // Parse the HTML into a temporary container
+  const temp = document.createElement('div');
+  temp.innerHTML = html;
+  
+  const children = Array.from(temp.childNodes);
+  const result = document.createElement('div');
+  
+  // Stack to track open sections: { level, wrapper }
+  const stack: { level: number; wrapper: HTMLElement }[] = [];
+  
+  function currentParent(): HTMLElement {
+    return stack.length > 0 ? stack[stack.length - 1].wrapper : result;
+  }
+  
+  for (const node of children) {
+    if (node instanceof HTMLElement && /^H[1-6]$/.test(node.tagName)) {
+      const level = parseInt(node.tagName[1]);
+      
+      // Close any open sections with equal or lower-level headings (higher or equal number)
+      while (stack.length > 0 && stack[stack.length - 1].level >= level) {
+        stack.pop();
+      }
+      
+      // Add fold toggle arrow to the heading
+      node.classList.add('collapsible-heading');
+      node.setAttribute('data-heading-level', String(level));
+      const arrow = document.createElement('span');
+      arrow.className = 'heading-fold-toggle';
+      arrow.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+      node.insertBefore(arrow, node.firstChild);
+      
+      // Append heading to current parent
+      currentParent().appendChild(node);
+      
+      // Create a collapsible content wrapper for content under this heading
+      const wrapper = document.createElement('div');
+      wrapper.className = 'heading-section-content';
+      wrapper.setAttribute('data-section-level', String(level));
+      currentParent().appendChild(wrapper);
+      
+      stack.push({ level, wrapper });
+    } else {
+      // Append content to the current innermost section, or to root if none
+      currentParent().appendChild(node);
+    }
+  }
+  
+  return result.innerHTML;
+}
 
 // Load image via IPC for reliable base64 data URL
 async function loadImage(filePath: string) {
@@ -1053,6 +1114,29 @@ function getFileNameWithoutExtension(fileName: string): string {
 
 // Watch for file changes
 watch(() => props.file, async (newFile) => {
+  // If the file path hasn't changed, skip the full reload.
+  // This prevents autosave-triggered FS watcher refreshes from overwriting content.
+  if (newFile && newFile.path === lastLoadedPath) {
+    // If we just saved, clear the flag and skip entirely
+    if (justSaved) {
+      justSaved = false;
+      return;
+    }
+    // Same file but not our save — could be an external change.
+    // Only reload if we have no unsaved changes (don't overwrite user's work).
+    if (!hasUnsavedChanges.value) {
+      const result = await window.electronAPI.readFile(newFile.path);
+      if (result.success && result.content !== undefined && result.content !== content.value) {
+        content.value = result.content;
+        originalContent.value = result.content;
+      }
+    }
+    return;
+  }
+
+  // Different file — do a full load with state reset
+  lastLoadedPath = newFile?.path || null;
+
   // Reset error states
   imageError.value = false;
   videoError.value = false;
@@ -1366,6 +1450,97 @@ function mdInsertHeading(event: Event) {
 function onTextareaKeydown(event: KeyboardEvent) {
   if (!isMarkdownFile.value) return;
 
+  // --- List continuation on Enter ---
+  if (event.key === 'Enter' && !event.shiftKey && !event.metaKey && !event.ctrlKey) {
+    const textarea = textareaRef.value;
+    if (!textarea) return;
+    
+    const pos = textarea.selectionStart;
+    const text = content.value;
+    
+    // Find the current line
+    const lineStart = text.lastIndexOf('\n', pos - 1) + 1;
+    const currentLine = text.substring(lineStart, pos);
+    
+    // Match unordered list: "  - " or "- " (with optional indentation)
+    const bulletMatch = currentLine.match(/^(\s*)- (\[[ x/]\] )?(.*)$/i);
+    // Match ordered list: "  1. " (with optional indentation)
+    const orderedMatch = currentLine.match(/^(\s*)(\d+)\. (.*)$/);
+    // Match checkbox task: "  - [ ] " or "  - [x] " or "  - [/] "  
+    // (already captured in bulletMatch with the checkbox group)
+    
+    if (bulletMatch) {
+      const indent = bulletMatch[1];
+      const checkbox = bulletMatch[2] || '';
+      const lineContent = bulletMatch[3];
+      
+      // If the line content is empty (just "- " or "- [ ] "), remove the marker
+      if (!lineContent.trim()) {
+        event.preventDefault();
+        const newText = text.substring(0, lineStart) + '\n' + text.substring(pos);
+        content.value = newText;
+        onContentChange();
+        // Set cursor after the newline
+        nextTick(() => {
+          if (textarea) {
+            textarea.selectionStart = textarea.selectionEnd = lineStart + 1;
+          }
+        });
+        return;
+      }
+      
+      // Continue the list with the same prefix
+      event.preventDefault();
+      const prefix = checkbox ? `${indent}- [ ] ` : `${indent}- `;
+      const insertion = '\n' + prefix;
+      const newText = text.substring(0, pos) + insertion + text.substring(pos);
+      content.value = newText;
+      onContentChange();
+      nextTick(() => {
+        if (textarea) {
+          const newPos = pos + insertion.length;
+          textarea.selectionStart = textarea.selectionEnd = newPos;
+        }
+      });
+      return;
+    }
+    
+    if (orderedMatch) {
+      const indent = orderedMatch[1];
+      const num = parseInt(orderedMatch[2]);
+      const lineContent = orderedMatch[3];
+      
+      // If the line content is empty (just "1. "), remove the marker
+      if (!lineContent.trim()) {
+        event.preventDefault();
+        const newText = text.substring(0, lineStart) + '\n' + text.substring(pos);
+        content.value = newText;
+        onContentChange();
+        nextTick(() => {
+          if (textarea) {
+            textarea.selectionStart = textarea.selectionEnd = lineStart + 1;
+          }
+        });
+        return;
+      }
+      
+      // Continue with the next number
+      event.preventDefault();
+      const prefix = `${indent}${num + 1}. `;
+      const insertion = '\n' + prefix;
+      const newText = text.substring(0, pos) + insertion + text.substring(pos);
+      content.value = newText;
+      onContentChange();
+      nextTick(() => {
+        if (textarea) {
+          const newPos = pos + insertion.length;
+          textarea.selectionStart = textarea.selectionEnd = newPos;
+        }
+      });
+      return;
+    }
+  }
+
   if (event.metaKey || event.ctrlKey) {
     switch (event.key.toLowerCase()) {
       case 'b':
@@ -1628,6 +1803,21 @@ async function onFileDrop(event: DragEvent) {
 function onMarkdownPreviewClick(event: MouseEvent) {
   const target = event.target as HTMLElement;
   
+  // --- Heading fold toggle ---
+  const foldToggle = target.closest('.heading-fold-toggle') as HTMLElement;
+  if (foldToggle) {
+    event.preventDefault();
+    event.stopPropagation();
+    const heading = foldToggle.closest('.collapsible-heading') as HTMLElement;
+    if (!heading) return;
+    const sectionContent = heading.nextElementSibling as HTMLElement;
+    if (sectionContent && sectionContent.classList.contains('heading-section-content')) {
+      const isCollapsed = sectionContent.classList.toggle('collapsed');
+      heading.classList.toggle('collapsed', isCollapsed);
+    }
+    return;
+  }
+  
   // --- Embedded video play/pause ---
   const vidPlayBtn = target.closest('.embed-video-play') as HTMLElement;
   if (vidPlayBtn) {
@@ -1869,6 +2059,7 @@ async function saveFile() {
       }
       originalContent.value = content.value;
       hasUnsavedChanges.value = false;
+      justSaved = true; // Suppress reload from our own FS watcher event
       emit('contentChanged', false);
       emit('save', content.value);
     } else {
@@ -2395,10 +2586,13 @@ onUnmounted(() => {
 .md-toolbar {
   display: flex;
   align-items: center;
-  gap: 2px;
-  padding: 4px 12px;
-  background: var(--bg-hover);
-  border-bottom: 1px solid var(--border-color);
+  justify-content: center;
+  gap: 3px;
+  padding: 6px 12px;
+  background: color-mix(in srgb, var(--base1) 60%, transparent);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border-bottom: 1px solid color-mix(in srgb, var(--text2) 12%, transparent);
   flex-shrink: 0;
   flex-wrap: wrap;
   -webkit-app-region: no-drag;
@@ -2409,23 +2603,23 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   width: 30px;
-  height: 26px;
-  border: 1px solid transparent;
-  border-radius: 4px;
+  height: 28px;
+  border: none;
+  border-radius: 8px;
   background: transparent;
-  color: var(--text1);
+  color: var(--text2);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition: all 0.15s ease;
 
   &:hover {
-    background: var(--bg-active);
-    border-color: var(--border-color);
+    background: color-mix(in srgb, var(--text2) 15%, transparent);
+    color: var(--text1);
   }
 
   &:active {
     background: var(--accent-color, #4a9eff);
     color: #fff;
-    border-color: var(--accent-color, #4a9eff);
+    transform: scale(0.92);
   }
 
   svg {
@@ -2436,29 +2630,33 @@ onUnmounted(() => {
 
 .md-toolbar-separator {
   width: 1px;
-  height: 18px;
-  background: var(--border-color);
+  height: 16px;
+  background: color-mix(in srgb, var(--text2) 20%, transparent);
   margin: 0 4px;
   flex-shrink: 0;
+  border-radius: 1px;
 }
 
 .md-toolbar-select {
   height: 26px;
-  padding: 0 6px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background: var(--bg-color);
+  padding: 0 8px;
+  border: 1px solid color-mix(in srgb, var(--text2) 15%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--text2) 8%, transparent);
   color: var(--text1);
   font-size: 11px;
   cursor: pointer;
   outline: none;
+  transition: all 0.15s ease;
 
   &:hover {
-    border-color: var(--text2);
+    border-color: color-mix(in srgb, var(--text2) 30%, transparent);
+    background: color-mix(in srgb, var(--text2) 15%, transparent);
   }
 
   &:focus {
     border-color: var(--accent-color, #4a9eff);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-color, #4a9eff) 20%, transparent);
   }
 }
 
@@ -2562,6 +2760,56 @@ onUnmounted(() => {
   :deep(h5) { font-size: 1em; }
   :deep(h6) { font-size: 0.9em; color: var(--text2); }
   
+  // Collapsible heading sections (Obsidian-style folding)
+  :deep(.collapsible-heading) {
+    position: relative;
+    cursor: default;
+    
+    .heading-fold-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      margin-right: 4px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+      vertical-align: middle;
+      border-radius: 3px;
+      color: var(--text2);
+      
+      svg {
+        transition: transform 0.2s ease;
+        transform: rotate(90deg);
+      }
+      
+      &:hover {
+        opacity: 1;
+        color: var(--accent-color);
+        background: color-mix(in srgb, var(--text2) 10%, transparent);
+      }
+    }
+    
+    &:hover .heading-fold-toggle {
+      opacity: 0.6;
+    }
+    
+    &.collapsed .heading-fold-toggle {
+      opacity: 0.6;
+      
+      svg {
+        transform: rotate(0deg);
+      }
+    }
+  }
+  
+  :deep(.heading-section-content) {
+    &.collapsed {
+      display: none;
+    }
+  }
+  
   :deep(strong) {
     font-weight: 600;
     color: var(--accent-color);
@@ -2617,8 +2865,6 @@ onUnmounted(() => {
     
     &.task {
       list-style: none;
-      display: flex;
-      align-items: baseline;
       
       input[type="checkbox"] {
         -webkit-appearance: none;
@@ -2634,7 +2880,8 @@ onUnmounted(() => {
         position: relative;
         top: 3px;
         transition: all 0.15s ease;
-        flex-shrink: 0;
+        display: inline-block;
+        vertical-align: baseline;
 
         &:checked {
           background: var(--accent-color);

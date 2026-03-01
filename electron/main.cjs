@@ -79,6 +79,27 @@ function createWindow() {
         mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
     }
 
+    // Open external links in the OS default browser instead of inside the app
+    mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+            shell.openExternal(url);
+        }
+        return { action: 'deny' };
+    });
+
+    mainWindow.webContents.on('will-navigate', (event, url) => {
+        // Allow loading the app itself (dev server or local file)
+        const appOrigin = process.env.NODE_ENV === 'development'
+            ? 'http://localhost:3000'
+            : 'file://';
+        if (!url.startsWith(appOrigin)) {
+            event.preventDefault();
+            if (url.startsWith('http://') || url.startsWith('https://')) {
+                shell.openExternal(url);
+            }
+        }
+    });
+
     // Show window when ready
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
@@ -110,6 +131,16 @@ app.on('window-all-closed', () => {
 // Handle errors
 process.on('uncaughtException', (error) => {
     console.error('Uncaught exception:', error);
+});
+
+// Open external URLs in the OS default browser
+ipcMain.handle('shell:openExternal', async (event, url) => {
+    // Only allow http/https URLs for security
+    if (typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://'))) {
+        await shell.openExternal(url);
+        return true;
+    }
+    return false;
 });
 
 // IPC Handlers for file system operations

@@ -212,6 +212,18 @@ const applyTheme = (theme: string) => {
 	document.documentElement.setAttribute('data-theme', theme);
 };
 
+// Intercept clicks on external links and open them in the OS default browser
+function handleExternalLinkClick(e: MouseEvent) {
+	const target = (e.target as HTMLElement)?.closest('a') as HTMLAnchorElement | null;
+	if (!target) return;
+	const href = target.getAttribute('href');
+	if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
+		e.preventDefault();
+		e.stopPropagation();
+		window.electronAPI.openExternal(href);
+	}
+}
+
 // Load saved folder path and theme from localStorage
 onMounted(() => {
 	const savedTheme = localStorage.getItem('leaf-theme');
@@ -227,11 +239,14 @@ onMounted(() => {
 	
 	// Add keyboard listener for F2 (rename)
 	window.addEventListener('keydown', handleKeydown);
+	// Intercept all external link clicks globally
+	document.addEventListener('click', handleExternalLinkClick, true);
 });
 
 onBeforeUnmount(() => {
 	stopFolderWatcher();
 	window.removeEventListener('keydown', handleKeydown);
+	document.removeEventListener('click', handleExternalLinkClick, true);
 });
 
 function handleKeydown(e: KeyboardEvent) {

@@ -341,6 +341,7 @@ export interface SpeechStatusEvent {
 
 export interface ElectronAPI {
     isElectron: () => boolean;
+    openExternal: (url: string) => Promise<boolean>;
     openFolderDialog: () => Promise<string | null>;
     scanFolder: (folderPath: string) => Promise<ScanResult>;
     readFile: (filePath: string) => Promise<FileReadResult>;
