@@ -66,11 +66,13 @@
         ]
       }
     ],
+    "afterPack": "./build/afterPack.cjs",
     "extraResources": [
       "models/**"
     ],
     "asarUnpack": [
-      "models/**"
+      "models/**",
+      "node_modules/onnxruntime-node/**"
     ],
     "dmg": {
       "background": "build/dmg-background.png",
@@ -97,8 +99,6 @@
     },
     "mac": {
       "category": "public.app-category.productivity",
-      "identity": null,
-      "sign": false,
       "target": [
         {
           "target": "dmg",

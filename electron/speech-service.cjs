@@ -19,8 +19,13 @@ function getModelCacheDir() {
     if (process.resourcesPath) {
         const prodPath = path.join(process.resourcesPath, 'models', 'whisper');
         const fs = require('fs');
-        if (fs.existsSync(prodPath)) return prodPath;
+        if (fs.existsSync(prodPath)) {
+            console.log('[Speech] Using production model path:', prodPath);
+            return prodPath;
+        }
+        console.warn('[Speech] Production path not found:', prodPath, '— falling back to dev path');
     }
+    console.log('[Speech] Using dev model path:', devPath);
     return devPath;
 }
 
@@ -34,9 +39,27 @@ async function getTransformers() {
     const transformers = await import('@huggingface/transformers');
 
     // Point cache to the bundled model directory
-    transformers.env.cacheDir = getModelCacheDir();
+    const cacheDir = getModelCacheDir();
+    transformers.env.cacheDir = cacheDir;
     // No remote downloads — model is already bundled
     transformers.env.allowRemoteModels = false;
+
+    // Verify model files exist before proceeding
+    const fs = require('fs');
+    const modelDir = path.join(cacheDir, 'Xenova', 'whisper-tiny.en');
+    const onnxDir = path.join(modelDir, 'onnx');
+    const requiredFiles = [
+        path.join(modelDir, 'config.json'),
+        path.join(onnxDir, 'encoder_model.onnx'),
+        path.join(onnxDir, 'decoder_model_merged.onnx'),
+    ];
+    for (const f of requiredFiles) {
+        if (!fs.existsSync(f)) {
+            console.error('[Speech] Missing required model file:', f);
+            throw new Error(`Missing model file: ${path.basename(f)}`);
+        }
+    }
+    console.log('[Speech] All model files verified at:', modelDir);
 
     pipelineFn = transformers.pipeline;
     return pipelineFn;
