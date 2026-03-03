@@ -1,7 +1,4 @@
-<div style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 0px">
-<img draggable=false src="src/assets/icon.png" alt="Leaf Logo" width="50">
-<h1 style="margin: 0; padding-top: 7px">leaf.</h1>
-</div>
+<div style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 6px"><img draggable="false" src="src/assets/icon.png" alt="Leaf Logo" width="50"><h1 style="margin: 0; padding: 0">leaf.</h1></div>
 
 ![License](https://img.shields.io/github/license/larrydarko1/leaf)
 ![Issues](https://img.shields.io/github/issues/larrydarko1/leaf)

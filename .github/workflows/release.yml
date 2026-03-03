@@ -172,7 +172,7 @@ jobs:
           generate_release_notes: true
           body: |
             ## Installation notes
-            These builds are **not notarized** with Apple. Your OS may show a warning when installing.
+            These builds are not signed with an official certificate, so your OS may show a security warning when installing.
             - **macOS**: Right-click the app → Open, then click Open in the dialog. If macOS says the app is "damaged", run: `xattr -cr /Applications/Leaf.app`
             - **Windows**: Click "More info" → "Run anyway"
             - **Linux**: `chmod +x` the AppImage before running
