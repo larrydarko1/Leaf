@@ -258,6 +258,24 @@
             </button>
           </div>
         </div>
+
+        <!-- Actions (only when element selected) -->
+        <div class="prop-section" v-if="selectedElement">
+          <div class="prop-actions">
+            <button @click="copySelected" class="action-btn" title="Copy (⌘C)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+            <button @click="duplicateSelected" class="action-btn" title="Duplicate (⌘D)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="13" height="13" rx="2"/><rect x="8" y="8" width="13" height="13" rx="2"/></svg>
+              Duplicate
+            </button>
+            <button @click="deleteSelected" class="action-btn action-btn--delete" title="Delete (⌫)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              Delete
+            </button>
+          </div>
+        </div>
       </div>
     </transition>
 
@@ -465,6 +483,7 @@ const effectiveTool = computed(() => spaceHeld.value ? 'hand' : currentTool.valu
 // Element State
 const elements = ref<CanvasElement[]>([]);
 const selectedId = ref<string | null>(null);
+const clipboard = ref<CanvasElement | null>(null);
 const creatingElement = ref<CanvasElement | null>(null);
 
 // Drag State
@@ -891,207 +910,179 @@ function drawElement(el: CanvasElement) {
     // ---- Architecture / Diagram Shapes ----
 
     case 'database': {
-      // Cylinder shape
+      // Matches the database SVG icon (24×24 viewBox)
       const dx = Math.min(el.x, el.x + el.width);
       const dy = Math.min(el.y, el.y + el.height);
       const dw = Math.abs(el.width);
       const dh = Math.abs(el.height);
-      const ellH = Math.min(dh * 0.18, dw * 0.35);
-      ctx.beginPath();
+      const dsx = dw / 24, dsy = dh / 24;
+      ctx.save();
+      ctx.translate(dx, dy);
+      ctx.scale(dsx, dsy);
+      ctx.lineWidth = el.strokeWidth / Math.sqrt(dsx * dsy);
+      // Body + bottom cap
+      const dbBodyPath = new Path2D('M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5');
+      if (hasFill) ctx.fill(dbBodyPath);
+      ctx.stroke(dbBodyPath);
+      // Middle divider
+      ctx.stroke(new Path2D('M3 12c0 1.66 4 3 9 3s9-1.34 9-3'));
       // Top ellipse
-      ctx.ellipse(dx + dw / 2, dy + ellH, dw / 2, ellH, 0, 0, Math.PI * 2);
-      if (hasFill) ctx.fill();
-      ctx.stroke();
-      // Body
-      ctx.beginPath();
-      ctx.moveTo(dx, dy + ellH);
-      ctx.lineTo(dx, dy + dh - ellH);
-      ctx.ellipse(dx + dw / 2, dy + dh - ellH, dw / 2, ellH, 0, Math.PI, 0, true);
-      ctx.lineTo(dx + dw, dy + ellH);
-      if (hasFill) ctx.fill();
-      ctx.stroke();
-      // Bottom ellipse stroke
-      ctx.beginPath();
-      ctx.ellipse(dx + dw / 2, dy + dh - ellH, dw / 2, ellH, 0, 0, Math.PI);
-      ctx.stroke();
+      const dbTopPath = new Path2D();
+      dbTopPath.ellipse(12, 5, 9, 3, 0, 0, Math.PI * 2);
+      if (hasFill) ctx.fill(dbTopPath);
+      ctx.stroke(dbTopPath);
+      ctx.restore();
       break;
     }
 
     case 'server': {
-      // Stacked server/rack shape (3 sections)
-      const sx = Math.min(el.x, el.x + el.width);
-      const sy = Math.min(el.y, el.y + el.height);
-      const sw = Math.abs(el.width);
-      const sh = Math.abs(el.height);
-      const sections = 3;
-      const secH = sh / sections;
-      const sr = Math.min(br, Math.min(sw, secH) / 2);
-      for (let s = 0; s < sections; s++) {
-        const sy2 = sy + s * secH;
-        ctx.beginPath();
-        ctx.roundRect(sx, sy2, sw, secH, sr);
-        if (hasFill) ctx.fill();
-        ctx.stroke();
-        // Status light
-        const lightR = Math.min(secH * 0.15, sw * 0.04);
-        const lightX = sx + sw - lightR * 3;
-        const lightY = sy2 + secH / 2;
-        ctx.beginPath();
-        ctx.arc(lightX, lightY, lightR, 0, Math.PI * 2);
-        ctx.fillStyle = '#4ade80';
-        ctx.fill();
-        // Restore fill
-        if (hasFill) ctx.fillStyle = el.fillColor;
-      }
+      // Matches the server SVG icon (24×24 viewBox) — 2 rack sections
+      const svrX = Math.min(el.x, el.x + el.width);
+      const svrY = Math.min(el.y, el.y + el.height);
+      const svrW = Math.abs(el.width);
+      const svrH = Math.abs(el.height);
+      const svrSX = svrW / 24, svrSY = svrH / 24;
+      ctx.save();
+      ctx.translate(svrX, svrY);
+      ctx.scale(svrSX, svrSY);
+      ctx.lineWidth = el.strokeWidth / Math.sqrt(svrSX * svrSY);
+      // Top section
+      ctx.beginPath();
+      ctx.roundRect(2, 2, 20, 8, 2);
+      if (hasFill) ctx.fill();
+      ctx.stroke();
+      // Bottom section
+      ctx.beginPath();
+      ctx.roundRect(2, 14, 20, 8, 2);
+      if (hasFill) ctx.fill();
+      ctx.stroke();
+      // Status lights
+      ctx.beginPath();
+      ctx.arc(6, 6, 1, 0, Math.PI * 2);
+      ctx.fillStyle = '#4ade80';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(6, 18, 1, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
       break;
     }
 
     case 'user': {
-      // Person / user icon
+      // Matches the user SVG icon (24×24 viewBox)
       const ux = Math.min(el.x, el.x + el.width);
       const uy = Math.min(el.y, el.y + el.height);
       const uw = Math.abs(el.width);
       const uh = Math.abs(el.height);
-      const headR = Math.min(uw, uh * 0.4) * 0.35;
-      const headCx = ux + uw / 2;
-      const headCy = uy + uh * 0.28;
+      const usx = uw / 24, usy = uh / 24;
+      ctx.save();
+      ctx.translate(ux, uy);
+      ctx.scale(usx, usy);
+      ctx.lineWidth = el.strokeWidth / Math.sqrt(usx * usy);
       // Head
       ctx.beginPath();
-      ctx.arc(headCx, headCy, headR, 0, Math.PI * 2);
+      ctx.arc(12, 8, 5, 0, Math.PI * 2);
       if (hasFill) ctx.fill();
       ctx.stroke();
-      // Body (shoulders + torso arc)
-      const bodyTop = headCy + headR + uh * 0.06;
-      const bodyBot = uy + uh;
-      const bodyW = uw * 0.7;
-      ctx.beginPath();
-      ctx.moveTo(headCx - bodyW / 2, bodyBot);
-      ctx.quadraticCurveTo(headCx - bodyW / 2, bodyTop, headCx, bodyTop);
-      ctx.quadraticCurveTo(headCx + bodyW / 2, bodyTop, headCx + bodyW / 2, bodyBot);
-      ctx.closePath();
-      if (hasFill) ctx.fill();
-      ctx.stroke();
+      // Body arc
+      ctx.stroke(new Path2D('M3 21c0-4.42 4-8 9-8s9 3.58 9 8'));
+      ctx.restore();
       break;
     }
 
     case 'cloud': {
-      const cx = Math.min(el.x, el.x + el.width);
-      const cy = Math.min(el.y, el.y + el.height);
-      const cw = Math.abs(el.width);
-      const ch = Math.abs(el.height);
-      ctx.beginPath();
-      // Cloud made of overlapping arcs
-      ctx.moveTo(cx + cw * 0.25, cy + ch * 0.65);
-      ctx.arc(cx + cw * 0.25, cy + ch * 0.52, cw * 0.17, Math.PI * 0.7, Math.PI * 1.9);
-      ctx.arc(cx + cw * 0.38, cy + ch * 0.32, cw * 0.18, Math.PI * 1.1, Math.PI * 1.85);
-      ctx.arc(cx + cw * 0.58, cy + ch * 0.25, cw * 0.2, Math.PI * 1.0, Math.PI * 1.8);
-      ctx.arc(cx + cw * 0.75, cy + ch * 0.38, cw * 0.17, Math.PI * 1.3, Math.PI * 0.3);
-      ctx.arc(cx + cw * 0.72, cy + ch * 0.58, cw * 0.16, Math.PI * 1.7, Math.PI * 0.5);
-      ctx.lineTo(cx + cw * 0.25, cy + ch * 0.65);
-      ctx.closePath();
-      if (hasFill) ctx.fill();
-      ctx.stroke();
+      // Matches the cloud SVG icon (24×24 viewBox)
+      const clx = Math.min(el.x, el.x + el.width);
+      const cly = Math.min(el.y, el.y + el.height);
+      const clw = Math.abs(el.width);
+      const clh = Math.abs(el.height);
+      const clsx = clw / 24, clsy = clh / 24;
+      ctx.save();
+      ctx.translate(clx, cly);
+      ctx.scale(clsx, clsy);
+      ctx.lineWidth = el.strokeWidth / Math.sqrt(clsx * clsy);
+      const cloudPath = new Path2D('M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z');
+      if (hasFill) ctx.fill(cloudPath);
+      ctx.stroke(cloudPath);
+      ctx.restore();
       break;
     }
 
     case 'document': {
-      // Page with curled bottom
+      // Matches the document SVG icon (24×24 viewBox) — page with folded corner + lines
       const ddx = Math.min(el.x, el.x + el.width);
       const ddy = Math.min(el.y, el.y + el.height);
       const ddw = Math.abs(el.width);
       const ddh = Math.abs(el.height);
-      const curl = ddh * 0.12;
-      ctx.beginPath();
-      ctx.moveTo(ddx, ddy);
-      ctx.lineTo(ddx + ddw, ddy);
-      ctx.lineTo(ddx + ddw, ddy + ddh - curl);
-      // Wavy bottom
-      ctx.bezierCurveTo(
-        ddx + ddw * 0.7, ddy + ddh - curl * 2.5,
-        ddx + ddw * 0.3, ddy + ddh + curl * 0.5,
-        ddx, ddy + ddh - curl
-      );
-      ctx.closePath();
-      if (hasFill) ctx.fill();
-      ctx.stroke();
+      const ddsx = ddw / 24, ddsy = ddh / 24;
+      ctx.save();
+      ctx.translate(ddx, ddy);
+      ctx.scale(ddsx, ddsy);
+      ctx.lineWidth = el.strokeWidth / Math.sqrt(ddsx * ddsy);
+      // Page body
+      const pagePath = new Path2D('M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z');
+      if (hasFill) ctx.fill(pagePath);
+      ctx.stroke(pagePath);
+      // Fold crease
+      ctx.stroke(new Path2D('M14 2 L14 8 L20 8'));
+      // Content lines
+      ctx.stroke(new Path2D('M8 13 L16 13'));
+      ctx.stroke(new Path2D('M8 17 L16 17'));
+      ctx.restore();
       break;
     }
 
     case 'hexagon': {
+      // Matches the hexagon SVG icon (24×24 viewBox)
       const hx = Math.min(el.x, el.x + el.width);
       const hy = Math.min(el.y, el.y + el.height);
       const hw = Math.abs(el.width);
       const hh = Math.abs(el.height);
-      const indent = hw * 0.22;
-      const pts = [
-        { x: hx + indent, y: hy },
-        { x: hx + hw - indent, y: hy },
-        { x: hx + hw, y: hy + hh / 2 },
-        { x: hx + hw - indent, y: hy + hh },
-        { x: hx + indent, y: hy + hh },
-        { x: hx, y: hy + hh / 2 },
-      ];
-      ctx.beginPath();
-      if (br > 0) {
-        drawRoundedPolygon(ctx, pts, br);
-      } else {
-        ctx.moveTo(pts[0].x, pts[0].y);
-        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-        ctx.closePath();
-      }
-      if (hasFill) ctx.fill();
-      ctx.stroke();
+      const hsx = hw / 24, hsy = hh / 24;
+      ctx.save();
+      ctx.translate(hx, hy);
+      ctx.scale(hsx, hsy);
+      ctx.lineWidth = el.strokeWidth / Math.sqrt(hsx * hsy);
+      const hexPath = new Path2D('M12 2 L22 7 L22 17 L12 22 L2 17 L2 7 Z');
+      if (hasFill) ctx.fill(hexPath);
+      ctx.stroke(hexPath);
+      ctx.restore();
       break;
     }
 
     case 'parallelogram': {
+      // Matches the parallelogram SVG icon (24×24 viewBox)
       const px = Math.min(el.x, el.x + el.width);
       const py = Math.min(el.y, el.y + el.height);
       const pw = Math.abs(el.width);
       const ph = Math.abs(el.height);
-      const skew = pw * 0.2;
-      const pts = [
-        { x: px + skew, y: py },
-        { x: px + pw, y: py },
-        { x: px + pw - skew, y: py + ph },
-        { x: px, y: py + ph },
-      ];
-      ctx.beginPath();
-      if (br > 0) {
-        drawRoundedPolygon(ctx, pts, br);
-      } else {
-        ctx.moveTo(pts[0].x, pts[0].y);
-        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-        ctx.closePath();
-      }
-      if (hasFill) ctx.fill();
-      ctx.stroke();
+      const psx = pw / 24, psy = ph / 24;
+      ctx.save();
+      ctx.translate(px, py);
+      ctx.scale(psx, psy);
+      ctx.lineWidth = el.strokeWidth / Math.sqrt(psx * psy);
+      const paraPath = new Path2D('M6 4 L22 4 L18 20 L2 20 Z');
+      if (hasFill) ctx.fill(paraPath);
+      ctx.stroke(paraPath);
+      ctx.restore();
       break;
     }
 
     case 'star': {
+      // Matches the star SVG icon (24×24 viewBox)
       const stx = Math.min(el.x, el.x + el.width);
       const sty = Math.min(el.y, el.y + el.height);
       const stw = Math.abs(el.width);
       const sth = Math.abs(el.height);
-      const scx = stx + stw / 2;
-      const scy = sty + sth / 2;
-      const outerR = Math.min(stw, sth) / 2;
-      const innerR = outerR * 0.4;
-      const spikes = 5;
-      const rot = -Math.PI / 2;
-      ctx.beginPath();
-      for (let i = 0; i < spikes * 2; i++) {
-        const r = i % 2 === 0 ? outerR : innerR;
-        const angle = rot + (i * Math.PI) / spikes;
-        const px = scx + r * Math.cos(angle);
-        const py = scy + r * Math.sin(angle);
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      }
-      ctx.closePath();
-      if (hasFill) ctx.fill();
-      ctx.stroke();
+      const stsx = stw / 24, stsy = sth / 24;
+      ctx.save();
+      ctx.translate(stx, sty);
+      ctx.scale(stsx, stsy);
+      ctx.lineWidth = el.strokeWidth / Math.sqrt(stsx * stsy);
+      const starPath = new Path2D('M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z');
+      if (hasFill) ctx.fill(starPath);
+      ctx.stroke(starPath);
+      ctx.restore();
       break;
     }
   }
@@ -1859,6 +1850,27 @@ function handleKeydown(e: KeyboardEvent) {
     return;
   }
 
+  // Copy
+  if ((e.metaKey || e.ctrlKey) && e.key === 'c' && !e.shiftKey) {
+    e.preventDefault();
+    copySelected();
+    return;
+  }
+
+  // Paste
+  if ((e.metaKey || e.ctrlKey) && e.key === 'v') {
+    e.preventDefault();
+    pasteClipboard();
+    return;
+  }
+
+  // Duplicate
+  if ((e.metaKey || e.ctrlKey) && e.key === 'd') {
+    e.preventDefault();
+    duplicateSelected();
+    return;
+  }
+
   // Select all
   if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
     e.preventDefault();
@@ -1981,6 +1993,45 @@ function saveToHistory() {
     history.value.shift();
     historyIndex.value--;
   }
+}
+
+// ================= Copy / Paste / Duplicate =================
+
+function copySelected() {
+  if (!selectedElement.value) return;
+  clipboard.value = JSON.parse(JSON.stringify(selectedElement.value));
+}
+
+function pasteClipboard() {
+  if (!clipboard.value) return;
+  const newEl: CanvasElement = {
+    ...JSON.parse(JSON.stringify(clipboard.value)),
+    id: crypto.randomUUID(),
+    x: clipboard.value.x + 20,
+    y: clipboard.value.y + 20,
+  };
+  elements.value.push(newEl);
+  selectedId.value = newEl.id;
+  // Update clipboard offset so repeated pastes cascade
+  clipboard.value = { ...JSON.parse(JSON.stringify(clipboard.value)), x: clipboard.value.x + 20, y: clipboard.value.y + 20 };
+  saveToHistory();
+  scheduleAutoSave();
+  renderScene();
+}
+
+function duplicateSelected() {
+  if (!selectedElement.value) return;
+  copySelected();
+  pasteClipboard();
+}
+
+function deleteSelected() {
+  if (!selectedId.value) return;
+  elements.value = elements.value.filter(el => el.id !== selectedId.value);
+  selectedId.value = null;
+  saveToHistory();
+  scheduleAutoSave();
+  renderScene();
 }
 
 function undo() {
@@ -2296,6 +2347,40 @@ canvas {
 
   &:last-child {
     margin-bottom: 0;
+  }
+}
+
+.prop-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text1);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.12s;
+  text-align: left;
+
+  &:hover {
+    background: var(--hover-bg, rgba(128,128,128,0.12));
+  }
+
+  &.action-btn--delete {
+    color: #e05555;
+
+    &:hover {
+      background: rgba(224, 85, 85, 0.1);
+    }
   }
 }
 

@@ -349,8 +349,6 @@ export interface ElectronAPI {
     readAudio: (filePath: string) => Promise<AudioReadResult>;
     resolveEmbedPath: (fileName: string, noteDir: string, vaultRoot: string) => Promise<EmbedResolveResult>;
     copyFileToVault: (sourcePath: string, targetDir: string) => Promise<CopyToVaultResult>;
-    readOdt: (filePath: string) => Promise<FileReadResult>;
-    writeOdt: (filePath: string, content: string) => Promise<FileWriteResult>;
     createFolder: (parentPath: string, folderName: string) => Promise<FolderCreateResult>;
     writeFile: (filePath: string, content: string) => Promise<FileWriteResult>;
     createFile: (folderPath: string, fileName: string) => Promise<FileCreateResult>;

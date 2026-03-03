@@ -199,110 +199,6 @@
       @save="handleDrawingSave"
       @content-changed="(hasChanges) => hasUnsavedChanges = hasChanges"
     />
-    
-    <!-- ODT rich text editor -->
-    <div 
-      v-else-if="file && isOdtFile"
-      class="odt-editor-container"
-    >
-      <div class="odt-toolbar">
-        <button 
-          class="toolbar-btn" 
-          :class="{ active: isFormatActive('bold') }"
-          title="Bold (⌘B)" 
-          @mousedown.prevent="execFormat('bold')"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
-            <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
-          </svg>
-        </button>
-        <button 
-          class="toolbar-btn" 
-          :class="{ active: isFormatActive('italic') }"
-          title="Italic (⌘I)" 
-          @mousedown.prevent="execFormat('italic')"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="19" y1="4" x2="10" y2="4"></line>
-            <line x1="14" y1="20" x2="5" y2="20"></line>
-            <line x1="15" y1="4" x2="9" y2="20"></line>
-          </svg>
-        </button>
-        <button 
-          class="toolbar-btn" 
-          :class="{ active: isFormatActive('underline') }"
-          title="Underline (⌘U)" 
-          @mousedown.prevent="execFormat('underline')"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"></path>
-            <line x1="4" y1="21" x2="20" y2="21"></line>
-          </svg>
-        </button>
-        <button 
-          class="toolbar-btn" 
-          :class="{ active: isFormatActive('strikeThrough') }"
-          title="Strikethrough" 
-          @mousedown.prevent="execFormat('strikeThrough')"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M17.3 4.9c-2.3-.6-4.4-1-6.2-.9-2.7 0-5.3.7-5.3 3.1 0 1.4.8 2.3 2.3 3"></path>
-            <path d="M4 12h16"></path>
-            <path d="M17 16c0 2.3-2 4-5.5 4-2 0-3.7-.4-5.5-1.5"></path>
-          </svg>
-        </button>
-        <div class="toolbar-separator"></div>
-        <select 
-          class="toolbar-select" 
-          @change="execHeading($event)" 
-          :value="currentHeadingLevel"
-          title="Paragraph format"
-        >
-          <option value="p">Normal</option>
-          <option value="h1">Heading 1</option>
-          <option value="h2">Heading 2</option>
-          <option value="h3">Heading 3</option>
-          <option value="h4">Heading 4</option>
-        </select>
-        <div class="toolbar-separator"></div>
-        <button 
-          class="toolbar-btn" 
-          title="Bullet list" 
-          @mousedown.prevent="execFormat('insertUnorderedList')"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="8" y1="6" x2="21" y2="6"></line>
-            <line x1="8" y1="12" x2="21" y2="12"></line>
-            <line x1="8" y1="18" x2="21" y2="18"></line>
-            <line x1="3" y1="6" x2="3.01" y2="6"></line>
-            <line x1="3" y1="12" x2="3.01" y2="12"></line>
-            <line x1="3" y1="18" x2="3.01" y2="18"></line>
-          </svg>
-        </button>
-        <button 
-          class="toolbar-btn" 
-          title="Numbered list" 
-          @mousedown.prevent="execFormat('insertOrderedList')"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="10" y1="6" x2="21" y2="6"></line>
-            <line x1="10" y1="12" x2="21" y2="12"></line>
-            <line x1="10" y1="18" x2="21" y2="18"></line>
-            <path d="M4 6h1v4"></path>
-            <path d="M4 10h2"></path>
-            <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"></path>
-          </svg>
-        </button>
-      </div>
-      <div 
-        ref="odtEditorRef"
-        class="odt-richtext-editor"
-        contenteditable="true"
-        @input="onOdtContentChange"
-        @keydown="onOdtKeydown"
-      ></div>
-    </div>
 
     <!-- Text editor for text files -->
     <div 
@@ -531,9 +427,6 @@ const pdfExtensions = ['.pdf'];
 // Drawing file extensions
 const drawingExtensions = ['.drawing'];
 
-// ODT document file extensions
-const odtExtensions = ['.odt'];
-
 // Code file extensions
 const codeExtensions = [
   '.py', '.js', '.jsx', '.ts', '.tsx', '.html', '.htm', '.css', '.scss', '.sass', '.less',
@@ -592,12 +485,6 @@ let dictationProcessor: ScriptProcessorNode | null = null;
 let dictationRawSamples: Float32Array[] = [];
 let dictationInterval: number | null = null;
 let whisperModelReady = false;
-
-// ODT rich text editor state
-const odtEditorRef = ref<HTMLDivElement | null>(null);
-const odtHtmlContent = ref('');
-const odtOriginalHtml = ref('');
-const currentHeadingLevel = ref('p');
 
 // Obsidian-style embed cache: maps filename -> resolved absolute path
 const embedCache = ref<Map<string, string>>(new Map());
@@ -687,12 +574,6 @@ const isMarkdownFile = computed(() => {
 const isDrawingFile = computed(() => {
   if (!props.file) return false;
   return drawingExtensions.includes(props.file.extension.toLowerCase());
-});
-
-// Check if current file is an ODT file
-const isOdtFile = computed(() => {
-  if (!props.file) return false;
-  return odtExtensions.includes(props.file.extension.toLowerCase());
 });
 
 // Check if current file supports dictation (txt or md only)
@@ -1193,9 +1074,6 @@ watch(() => props.file, async (newFile) => {
       content.value = '';
       originalContent.value = '';
       hasUnsavedChanges.value = false;
-    } else if (odtExtensions.includes(ext)) {
-      // Load ODT file content
-      await loadOdtFile(newFile);
     } else {
       // Load text content for text files
       await loadFile(newFile);
@@ -1230,52 +1108,6 @@ async function loadFile(file: FileInfo) {
     }
   } catch (error) {
     console.error('Error loading file:', error);
-  }
-}
-
-async function loadOdtFile(file: FileInfo) {
-  // Clear any pending auto-save when switching files
-  if (autoSaveTimeout) {
-    clearTimeout(autoSaveTimeout);
-    autoSaveTimeout = null;
-  }
-  
-  try {
-    const result = await window.electronAPI.readOdt(file.path);
-    if (result.success && result.content !== undefined) {
-      // Content is now HTML from the converter
-      odtHtmlContent.value = result.content;
-      odtOriginalHtml.value = result.content;
-      // Also store in content for save compatibility
-      content.value = result.content;
-      originalContent.value = result.content;
-      hasUnsavedChanges.value = false;
-    } else {
-      console.error('Failed to read ODT file:', result.error);
-    }
-  } catch (error) {
-    console.error('Error loading ODT file:', error);
-  }
-}
-
-// ODT rich text editor methods
-function onOdtContentChange() {
-  if (!odtEditorRef.value) return;
-  const currentHtml = odtEditorRef.value.innerHTML;
-  content.value = currentHtml;
-  hasUnsavedChanges.value = currentHtml !== odtOriginalHtml.value;
-  emit('contentChanged', hasUnsavedChanges.value);
-  
-  // Clear existing timeout
-  if (autoSaveTimeout) {
-    clearTimeout(autoSaveTimeout);
-  }
-  
-  // Auto-save after 3 seconds of inactivity
-  if (hasUnsavedChanges.value) {
-    autoSaveTimeout = window.setTimeout(() => {
-      saveFile();
-    }, 3000);
   }
 }
 
@@ -1564,82 +1396,6 @@ function onTextareaKeydown(event: KeyboardEvent) {
     }
   }
 }
-
-function onOdtKeydown(event: KeyboardEvent) {
-  // Handle keyboard shortcuts for formatting
-  if (event.metaKey || event.ctrlKey) {
-    switch (event.key.toLowerCase()) {
-      case 'b':
-        event.preventDefault();
-        execFormat('bold');
-        break;
-      case 'i':
-        event.preventDefault();
-        execFormat('italic');
-        break;
-      case 'u':
-        event.preventDefault();
-        execFormat('underline');
-        break;
-      case 's':
-        event.preventDefault();
-        saveFile();
-        break;
-    }
-  }
-}
-
-function execFormat(command: string) {
-  document.execCommand(command, false);
-  // Update heading level indicator
-  updateCurrentHeadingLevel();
-}
-
-function execHeading(event: Event) {
-  const select = event.target as HTMLSelectElement;
-  const value = select.value;
-  
-  if (value === 'p') {
-    document.execCommand('formatBlock', false, 'p');
-  } else {
-    document.execCommand('formatBlock', false, value);
-  }
-  currentHeadingLevel.value = value;
-}
-
-function isFormatActive(command: string): boolean {
-  try {
-    return document.queryCommandState(command);
-  } catch {
-    return false;
-  }
-}
-
-function updateCurrentHeadingLevel() {
-  const selection = window.getSelection();
-  if (!selection || !selection.rangeCount) return;
-  
-  let node: Node | null = selection.anchorNode;
-  while (node && node !== odtEditorRef.value) {
-    if (node instanceof HTMLElement) {
-      const tagName = node.tagName.toLowerCase();
-      if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tagName)) {
-        currentHeadingLevel.value = tagName;
-        return;
-      }
-    }
-    node = node.parentNode;
-  }
-  currentHeadingLevel.value = 'p';
-}
-
-// Watch odtHtmlContent and populate contenteditable div
-watch(odtHtmlContent, async (newHtml) => {
-  await nextTick();
-  if (odtEditorRef.value && newHtml) {
-    odtEditorRef.value.innerHTML = newHtml;
-  }
-});
 
 function onContentChange() {
   hasUnsavedChanges.value = content.value !== originalContent.value;
@@ -2046,17 +1802,8 @@ async function saveFile() {
   isSaving.value = true;
   
   try {
-    let result;
-    if (isOdtFile.value) {
-      const htmlContent = odtEditorRef.value?.innerHTML || content.value;
-      result = await window.electronAPI.writeOdt(props.file.path, htmlContent);
-    } else {
-      result = await window.electronAPI.writeFile(props.file.path, content.value);
-    }
+    const result = await window.electronAPI.writeFile(props.file.path, content.value);
     if (result.success) {
-      if (isOdtFile.value) {
-        odtOriginalHtml.value = odtEditorRef.value?.innerHTML || content.value;
-      }
       originalContent.value = content.value;
       hasUnsavedChanges.value = false;
       justSaved = true; // Suppress reload from our own FS watcher event
@@ -2459,130 +2206,6 @@ onUnmounted(() => {
   font-style: italic;
 }
 
-.odt-editor-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.odt-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 6px 12px;
-  background: var(--bg-hover);
-  border-bottom: 1px solid var(--border-color);
-  flex-shrink: 0;
-  flex-wrap: wrap;
-}
-
-.toolbar-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 28px;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--text1);
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  transition: background 0.15s, border-color 0.15s;
-  
-  &:hover {
-    background: var(--bg-active);
-    border-color: var(--border-color);
-  }
-  
-  &:active, &.active {
-    background: var(--accent-color, #4a9eff);
-    color: #fff;
-    border-color: var(--accent-color, #4a9eff);
-  }
-  
-  svg {
-    width: 16px;
-    height: 16px;
-  }
-}
-
-.toolbar-separator {
-  width: 1px;
-  height: 20px;
-  background: var(--border-color);
-  margin: 0 6px;
-  flex-shrink: 0;
-}
-
-.toolbar-select {
-  height: 28px;
-  padding: 0 6px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background: var(--bg-color);
-  color: var(--text1);
-  font-size: 12px;
-  cursor: pointer;
-  outline: none;
-  
-  &:hover {
-    border-color: var(--text2);
-  }
-  
-  &:focus {
-    border-color: var(--accent-color, #4a9eff);
-  }
-}
-
-.odt-richtext-editor {
-  flex: 1;
-  padding: 2rem;
-  overflow-y: auto;
-  outline: none;
-  color: var(--text1);
-  font-family: Georgia, 'Times New Roman', Times, serif;
-  font-size: 1rem;
-  line-height: 1.8;
-  cursor: text;
-  
-  &:empty::before {
-    content: 'Start typing...';
-    color: var(--text2);
-    opacity: 0.5;
-  }
-  
-  h1 { font-size: 2em; margin: 0.67em 0; font-weight: bold; }
-  h2 { font-size: 1.5em; margin: 0.75em 0; font-weight: bold; }
-  h3 { font-size: 1.17em; margin: 0.83em 0; font-weight: bold; }
-  h4 { font-size: 1em; margin: 1em 0; font-weight: bold; }
-  h5 { font-size: 0.83em; margin: 1.17em 0; font-weight: bold; }
-  h6 { font-size: 0.67em; margin: 1.33em 0; font-weight: bold; }
-  
-  p { margin: 0.5em 0; }
-  
-  ul, ol {
-    padding-left: 2em;
-    margin: 0.5em 0;
-  }
-  
-  li { margin: 0.25em 0; }
-  
-  a {
-    color: var(--accent-color, #4a9eff);
-    text-decoration: underline;
-  }
-  
-  blockquote {
-    border-left: 3px solid var(--border-color);
-    padding-left: 1em;
-    margin: 0.5em 0;
-    color: var(--text2);
-  }
-}
-
 .md-toolbar {
   display: flex;
   align-items: center;
@@ -2878,7 +2501,7 @@ onUnmounted(() => {
         margin-right: 0.5em;
         cursor: pointer;
         position: relative;
-        top: 3px;
+        top: 5.5px;
         transition: all 0.15s ease;
         display: inline-block;
         vertical-align: baseline;

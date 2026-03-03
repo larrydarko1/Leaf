@@ -86,8 +86,7 @@
         'media-video': isVideoFile,
         'media-audio': isAudioFile,
         'media-pdf': isPdfFile,
-        'media-drawing': isDrawingFile,
-        'media-odt': isOdtFile
+        'media-drawing': isDrawingFile
       }"
       :style="{ paddingLeft: (depth * 16 + 10) + 'px' }"
       draggable="true"
@@ -180,25 +179,6 @@
         <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
         <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
         <circle cx="11" cy="11" r="2"></circle>
-      </svg>
-      <!-- ODT document icon -->
-      <svg 
-        v-else-if="isOdtFile"
-        class="file-icon odt-icon" 
-        width="14" 
-        height="14" 
-        viewBox="0 0 24 24" 
-        fill="none" 
-        stroke="currentColor" 
-        stroke-width="2" 
-        stroke-linecap="round" 
-        stroke-linejoin="round"
-      >
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-        <polyline points="14 2 14 8 20 8"></polyline>
-        <line x1="16" y1="13" x2="8" y2="13"></line>
-        <line x1="16" y1="17" x2="8" y2="17"></line>
-        <polyline points="10 9 9 9 8 9"></polyline>
       </svg>
       <!-- Code icon for code files -->
       <svg 
@@ -342,9 +322,6 @@ const pdfExtensions = ['.pdf'];
 // Drawing file extensions
 const drawingExtensions = ['.drawing'];
 
-// ODT document file extensions
-const odtExtensions = ['.odt'];
-
 // Code file extensions
 const codeExtensions = [
   '.py', '.js', '.jsx', '.ts', '.tsx', '.html', '.htm', '.css', '.scss', '.sass', '.less',
@@ -379,11 +356,6 @@ const isPdfFile = computed(() => {
 const isDrawingFile = computed(() => {
   if (props.node.type !== 'file' || !props.node.file) return false;
   return drawingExtensions.includes(props.node.file.extension.toLowerCase());
-});
-
-const isOdtFile = computed(() => {
-  if (props.node.type !== 'file' || !props.node.file) return false;
-  return odtExtensions.includes(props.node.file.extension.toLowerCase());
 });
 
 const isCodeFile = computed(() => {
