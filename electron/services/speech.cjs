@@ -4,30 +4,12 @@
 // 100% offline — no network calls at runtime.
 
 const path = require('path');
+const { getWhisperModelDir } = require('../lib/paths.cjs');
 
 let pipelineFn = null;
 let transcriber = null;
 let isModelLoading = false;
 let isModelReady = false;
-
-// Model stored inside the project directory (bundled with the app)
-// In dev: <project>/models/whisper/   In prod: <resources>/models/whisper/
-function getModelCacheDir() {
-    // __dirname is electron/, so go one level up to project root
-    const devPath = path.join(__dirname, '..', 'models', 'whisper');
-    // In a packaged app, resources are at process.resourcesPath
-    if (process.resourcesPath) {
-        const prodPath = path.join(process.resourcesPath, 'models', 'whisper');
-        const fs = require('fs');
-        if (fs.existsSync(prodPath)) {
-            console.log('[Speech] Using production model path:', prodPath);
-            return prodPath;
-        }
-        console.warn('[Speech] Production path not found:', prodPath, '— falling back to dev path');
-    }
-    console.log('[Speech] Using dev model path:', devPath);
-    return devPath;
-}
 
 /**
  * Dynamically import @huggingface/transformers (ESM module from CJS)
@@ -39,7 +21,7 @@ async function getTransformers() {
     const transformers = await import('@huggingface/transformers');
 
     // Point cache to the bundled model directory
-    const cacheDir = getModelCacheDir();
+    const cacheDir = getWhisperModelDir();
     transformers.env.cacheDir = cacheDir;
     // No remote downloads — model is already bundled
     transformers.env.allowRemoteModels = false;

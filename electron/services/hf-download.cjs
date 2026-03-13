@@ -6,9 +6,7 @@ const https = require('https');
 const fs = require('fs');
 const fsPromises = require('fs').promises;
 const path = require('path');
-const os = require('os');
-
-const DEFAULT_MODELS_DIR = path.join(os.homedir(), 'leaf-models');
+const { DEFAULT_MODELS_DIR } = require('../lib/paths.cjs');
 
 // Track active downloads
 const activeDownloads = new Map();

@@ -7,42 +7,10 @@ const { ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs').promises;
 const fsSync = require('fs');
+const { ALLOWED_EXTENSIONS } = require('../lib/extensions.cjs');
+const { IMAGE_MIMETYPES, AUDIO_MIMETYPES } = require('../lib/mime.cjs');
 
 let folderWatcher = null;
-
-// ─── Helpers ────────────────────────────────────────────────────────────────
-
-const TEXT_EXTENSIONS = ['.txt', '.md'];
-const CODE_EXTENSIONS = [
-    '.py', '.js', '.jsx', '.ts', '.tsx', '.html', '.htm', '.css', '.scss', '.sass', '.less',
-    '.vue', '.svelte', '.json', '.xml', '.yaml', '.yml', '.toml', '.ini', '.conf', '.cfg',
-    '.sh', '.bash', '.zsh', '.fish', '.ps1', '.bat', '.cmd',
-    '.c', '.cpp', '.h', '.hpp', '.cs', '.java', '.kt', '.kts', '.go', '.rs', '.rb', '.php',
-    '.swift', '.m', '.mm', '.r', '.R', '.pl', '.pm', '.lua', '.sql', '.graphql', '.gql',
-    '.dockerfile', '.env', '.gitignore', '.gitattributes', '.editorconfig', '.eslintrc',
-    '.prettierrc', '.babelrc', '.npmrc', '.nvmrc', '.cjs',
-];
-const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico'];
-const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
-const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.flac', '.aac', '.m4a', '.ogg', '.wma', '.aiff'];
-const PDF_EXTENSIONS = ['.pdf'];
-const DRAWING_EXTENSIONS = ['.drawing'];
-
-const ALLOWED_EXTENSIONS = new Set([
-    ...TEXT_EXTENSIONS, ...CODE_EXTENSIONS, ...IMAGE_EXTENSIONS,
-    ...VIDEO_EXTENSIONS, ...AUDIO_EXTENSIONS, ...PDF_EXTENSIONS, ...DRAWING_EXTENSIONS,
-]);
-
-const IMAGE_MIMETYPES = {
-    '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
-    '.gif': 'image/gif', '.webp': 'image/webp', '.svg': 'image/svg+xml',
-    '.bmp': 'image/bmp', '.ico': 'image/x-icon',
-};
-const AUDIO_MIMETYPES = {
-    '.mp3': 'audio/mpeg', '.wav': 'audio/wav', '.flac': 'audio/flac',
-    '.aac': 'audio/aac', '.m4a': 'audio/mp4', '.ogg': 'audio/ogg',
-    '.wma': 'audio/x-ms-wma', '.aiff': 'audio/aiff',
-};
 
 async function scanFolder(folderPath, basePath = folderPath) {
     const files = [];

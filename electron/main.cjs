@@ -22,13 +22,13 @@ const path = require('path');
 const { pathToFileURL } = require('url');
 
 // ─── Service modules ─────────────────────────────────────────────────────────
-const fsService           = require('./fs-service.cjs');
-const mediaService        = require('./media-service.cjs');
-const aiService           = require('./ai-service.cjs');
-const conversationService = require('./conversation-service.cjs');
-const agentService        = require('./agent-service.cjs');
-const hfDownloadService   = require('./hf-download-service.cjs');
-const speechService       = require('./speech-service.cjs');
+const fsService = require('./services/fs.cjs');
+const mediaService = require('./services/media.cjs');
+const aiService = require('./services/ai.cjs');
+const conversationService = require('./services/conversation.cjs');
+const agentService = require('./services/agent.cjs');
+const hfDownloadService = require('./services/hf-download.cjs');
+const speechService = require('./services/speech.cjs');
 
 // ─── Window ──────────────────────────────────────────────────────────────────
 
@@ -43,16 +43,16 @@ function createWindow() {
     const { width: sw, height: sh } = screen.getPrimaryDisplay().workAreaSize;
 
     mainWindow = new BrowserWindow({
-        width:     Math.round(sw * 0.75),
-        height:    Math.round(sh * 0.80),
-        minWidth:  Math.round(sw * 0.45),
+        width: Math.round(sw * 0.75),
+        height: Math.round(sh * 0.80),
+        minWidth: Math.round(sw * 0.45),
         minHeight: Math.round(sh * 0.50),
         icon: iconPath,
         webPreferences: {
-            preload:          path.join(__dirname, 'preload.cjs'),
-            nodeIntegration:  false,   // never expose Node to the renderer
+            preload: path.join(__dirname, 'preload.cjs'),
+            nodeIntegration: false,   // never expose Node to the renderer
             contextIsolation: true,    // keep renderer and preload worlds isolated
-            sandbox:          false,   // required for preload to use require()
+            sandbox: false,   // required for preload to use require()
             // webSecurity stays at its default (true).
             // Local files (images, audio, video) are served through the
             // leaf:// custom protocol registered below — no need to disable
@@ -61,7 +61,7 @@ function createWindow() {
             spellcheck: true,
         },
         backgroundColor: '#1a1a1a',
-        titleBarStyle:   'hiddenInset',
+        titleBarStyle: 'hiddenInset',
         show: false,
     });
 
@@ -77,9 +77,9 @@ function createWindow() {
                 { label: 'Add to Dictionary', click: () => mainWindow.webContents.session.addWordToSpellCheckerDictionary(params.misspelledWord) },
                 { type: 'separator' },
             ] : []),
-            { role: 'cut',       visible: params.isEditable },
-            { role: 'copy',      visible: params.selectionText.length > 0 },
-            { role: 'paste',     visible: params.isEditable },
+            { role: 'cut', visible: params.isEditable },
+            { role: 'copy', visible: params.selectionText.length > 0 },
+            { role: 'paste', visible: params.isEditable },
             { type: 'separator', visible: params.isEditable || params.selectionText.length > 0 },
             { role: 'selectAll' },
         ]);
@@ -117,21 +117,7 @@ function createWindow() {
 // correct MIME types, replacing the need for webSecurity:false.
 // Usage from renderer: <img src="leaf:///absolute/path/to/file.png">
 
-const MIME_MAP = {
-    // Images
-    '.png': 'image/png',   '.jpg': 'image/jpeg',  '.jpeg': 'image/jpeg',
-    '.gif': 'image/gif',   '.webp': 'image/webp', '.svg': 'image/svg+xml',
-    '.bmp': 'image/bmp',   '.ico': 'image/x-icon',
-    // Audio
-    '.mp3': 'audio/mpeg',  '.wav': 'audio/wav',   '.flac': 'audio/flac',
-    '.aac': 'audio/aac',   '.m4a': 'audio/mp4',   '.ogg': 'audio/ogg',
-    '.wma': 'audio/x-ms-wma', '.aiff': 'audio/aiff',
-    // Video
-    '.mp4': 'video/mp4',   '.webm': 'video/webm', '.mov': 'video/quicktime',
-    '.avi': 'video/x-msvideo', '.mkv': 'video/x-matroska',
-    // Documents
-    '.pdf': 'application/pdf',
-};
+const { MIME_MAP } = require('./lib/mime.cjs');
 
 function registerLeafProtocol() {
     protocol.handle('leaf', (request) => {

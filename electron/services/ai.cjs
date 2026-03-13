@@ -5,10 +5,7 @@
 const path = require('path');
 const fs = require('fs').promises;
 const fsSync = require('fs');
-const os = require('os');
-
-// Default models directory: ~/leaf-models/
-const DEFAULT_MODELS_DIR = path.join(os.homedir(), 'leaf-models');
+const { DEFAULT_MODELS_DIR } = require('../lib/paths.cjs');
 
 let llama = null;       // Llama instance (from node-llama-cpp)
 let model = null;       // Currently loaded model
