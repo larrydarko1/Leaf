@@ -174,7 +174,22 @@ async function cleanup() {
     isModelLoading = false;
 }
 
+/**
+ * Wire up all speech IPC handlers.
+ * @param {Electron.IpcMain} ipc
+ * @param {() => Electron.BrowserWindow | null} getMainWindow
+ */
+function register(ipc, getMainWindow) {
+    ipc.handle('speech:init', async () => initModel(getMainWindow()));
+    ipc.handle('speech:transcribe', async (event, audioData) => {
+        if (!audioData) return { success: false, error: 'No audio data' };
+        return transcribe(audioData);
+    });
+    ipc.handle('speech:getStatus', async () => getStatus());
+}
+
 module.exports = {
+    register,
     initModel,
     transcribe,
     getStatus,

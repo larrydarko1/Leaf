@@ -257,7 +257,51 @@ async function renameConversation(id, newTitle) {
     }
 }
 
+/**
+ * Wire up all conversation persistence IPC handlers.
+ * @param {Electron.IpcMain} ipc
+ */
+function register(ipc) {
+    ipc.handle('conversations:list', async () => listConversations());
+
+    ipc.handle('conversations:create', async (event, modelName) => {
+        if (typeof modelName !== 'string') return { success: false, error: 'Invalid model name' };
+        return createConversation(modelName);
+    });
+
+    ipc.handle('conversations:load', async (event, id) => {
+        if (typeof id !== 'string') return { success: false, error: 'Invalid id' };
+        return loadConversation(id);
+    });
+
+    ipc.handle('conversations:save', async (event, conversation) => {
+        if (typeof conversation !== 'object' || conversation === null) return { success: false, error: 'Invalid conversation' };
+        return saveConversation(conversation);
+    });
+
+    ipc.handle('conversations:addMessage', async (event, conversationId, message) => {
+        if (typeof conversationId !== 'string' || typeof message !== 'object') return { success: false, error: 'Invalid arguments' };
+        return addMessage(conversationId, message);
+    });
+
+    ipc.handle('conversations:updateLastMessage', async (event, conversationId, content) => {
+        if (typeof conversationId !== 'string' || typeof content !== 'string') return { success: false, error: 'Invalid arguments' };
+        return updateLastMessage(conversationId, content);
+    });
+
+    ipc.handle('conversations:delete', async (event, id) => {
+        if (typeof id !== 'string') return { success: false, error: 'Invalid id' };
+        return deleteConversation(id);
+    });
+
+    ipc.handle('conversations:rename', async (event, id, newTitle) => {
+        if (typeof id !== 'string' || typeof newTitle !== 'string') return { success: false, error: 'Invalid arguments' };
+        return renameConversation(id, newTitle);
+    });
+}
+
 module.exports = {
+    register,
     init,
     createConversation,
     saveConversation,

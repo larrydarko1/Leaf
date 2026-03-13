@@ -237,7 +237,36 @@ async function cleanupAllPendingEdits() {
     }
 }
 
+/**
+ * Wire up all agent IPC handlers.
+ * @param {Electron.IpcMain} ipc
+ */
+function register(ipc) {
+    ipc.handle('agent:readFile', async (event, filePath, workspacePath) => {
+        if (typeof filePath !== 'string' || typeof workspacePath !== 'string') return { success: false, error: 'Invalid arguments' };
+        return readFileForAgent(filePath, workspacePath);
+    });
+
+    ipc.handle('agent:proposeEdit', async (event, filePath, newContent, workspacePath) => {
+        if (typeof filePath !== 'string' || typeof newContent !== 'string' || typeof workspacePath !== 'string') return { success: false, error: 'Invalid arguments' };
+        return proposeEdit(filePath, newContent, workspacePath);
+    });
+
+    ipc.handle('agent:approveEdit', async (event, editId) => {
+        if (typeof editId !== 'string') return { success: false, error: 'Invalid editId' };
+        return approveEdit(editId);
+    });
+
+    ipc.handle('agent:rejectEdit', async (event, editId) => {
+        if (typeof editId !== 'string') return { success: false, error: 'Invalid editId' };
+        return rejectEdit(editId);
+    });
+
+    ipc.handle('agent:getPendingEdits', async () => getPendingEdits());
+}
+
 module.exports = {
+    register,
     readFileForAgent,
     proposeEdit,
     approveEdit,

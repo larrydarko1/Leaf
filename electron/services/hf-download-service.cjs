@@ -445,7 +445,43 @@ function formatFileSize(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
+/**
+ * Wire up all Hugging Face download IPC handlers.
+ * @param {Electron.IpcMain} ipc
+ * @param {() => Electron.BrowserWindow | null} getMainWindow
+ */
+function register(ipc, getMainWindow) {
+    ipc.handle('hf:search', async (event, query) => {
+        if (typeof query !== 'string') return { success: false, error: 'Invalid query' };
+        return searchModels(query);
+    });
+
+    ipc.handle('hf:listFiles', async (event, repoId) => {
+        if (typeof repoId !== 'string') return { success: false, error: 'Invalid repoId' };
+        return listRepoFiles(repoId);
+    });
+
+    ipc.handle('hf:download', async (event, url, fileName) => {
+        if (typeof url !== 'string' || typeof fileName !== 'string') return { success: false, error: 'Invalid arguments' };
+        return downloadModel(url, fileName, (progress) => {
+            const win = getMainWindow();
+            if (win && !win.isDestroyed()) win.webContents.send('hf:downloadProgress', progress);
+        });
+    });
+
+    ipc.handle('hf:cancelDownload', async (event, fileName) => {
+        if (typeof fileName !== 'string') return { success: false, error: 'Invalid fileName' };
+        return cancelDownload(fileName);
+    });
+
+    ipc.handle('hf:getActiveDownloads', async () => ({
+        success: true,
+        downloads: getActiveDownloads(),
+    }));
+}
+
 module.exports = {
+    register,
     searchModels,
     listRepoFiles,
     downloadModel,

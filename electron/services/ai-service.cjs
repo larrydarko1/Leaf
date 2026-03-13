@@ -434,7 +434,47 @@ function formatFileSize(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
+/**
+ * Wire up all AI IPC handlers.
+ * @param {Electron.IpcMain} ipc
+ * @param {() => Electron.BrowserWindow | null} getMainWindow
+ */
+function register(ipc, getMainWindow) {
+    ipc.handle('ai:listModels', async () => listModels());
+
+    ipc.handle('ai:loadModel', async (event, modelPath) => {
+        if (typeof modelPath !== 'string') return { success: false, error: 'Invalid model path' };
+        return loadModel(modelPath);
+    });
+
+    ipc.handle('ai:unloadModel', async () => unloadModel());
+
+    ipc.handle('ai:chat', async (event, userMessage, noteContext) => {
+        if (typeof userMessage !== 'string') return { success: false, error: 'Invalid message' };
+        return chat(
+            userMessage,
+            (token) => {
+                const win = getMainWindow();
+                if (win && !win.isDestroyed()) win.webContents.send('ai:token', token);
+            },
+            noteContext,
+        );
+    });
+
+    ipc.handle('ai:stopChat', async () => stopChat());
+    ipc.handle('ai:resetChat', async () => resetChat());
+
+    ipc.handle('ai:restoreChatHistory', async (event, messages) => {
+        if (!Array.isArray(messages)) return { success: false, error: 'Invalid messages' };
+        return restoreChatHistory(messages);
+    });
+
+    ipc.handle('ai:getStatus', async () => getStatus());
+    ipc.handle('ai:openModelsDir', async () => openModelsDir());
+}
+
 module.exports = {
+    register,
     listModels,
     loadModel,
     unloadModel,
