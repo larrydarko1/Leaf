@@ -373,6 +373,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted, computed, nextTick } from 'vue';
+import { isImageFile as checkImage, isVideoFile as checkVideo, isAudioFile as checkAudio, isPdfFile as checkPdf, isCodeFile as checkCode, isMarkdownFile as checkMarkdown, isDrawingFile as checkDrawing } from '../utils/fileTypes';
 import { marked } from 'marked';
 import DrawingCanvas from './DrawingCanvas.vue';
 import type { FileInfo } from '../types/electron';
@@ -411,32 +412,6 @@ const videoError = ref(false);
 let autoSaveTimeout: number | null = null;
 let lastLoadedPath: string | null = null; // Track last loaded file path to skip redundant reloads
 let justSaved = false; // Flag to suppress reload triggered by our own save
-
-// Image file extensions
-const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico'];
-
-// Video file extensions
-const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
-
-// Audio file extensions
-const audioExtensions = ['.mp3', '.wav', '.flac', '.aac', '.m4a', '.ogg', '.wma', '.aiff'];
-
-// PDF file extensions
-const pdfExtensions = ['.pdf'];
-
-// Drawing file extensions
-const drawingExtensions = ['.drawing'];
-
-// Code file extensions
-const codeExtensions = [
-  '.py', '.js', '.jsx', '.ts', '.tsx', '.html', '.htm', '.css', '.scss', '.sass', '.less',
-  '.vue', '.svelte', '.json', '.xml', '.yaml', '.yml', '.toml', '.ini', '.conf', '.cfg',
-  '.sh', '.bash', '.zsh', '.fish', '.ps1', '.bat', '.cmd',
-  '.c', '.cpp', '.h', '.hpp', '.cs', '.java', '.kt', '.kts', '.go', '.rs', '.rb', '.php',
-  '.swift', '.m', '.mm', '.r', '.R', '.pl', '.pm', '.lua', '.sql', '.graphql', '.gql',
-  '.dockerfile', '.env', '.gitignore', '.gitattributes', '.editorconfig', '.eslintrc',
-  '.prettierrc', '.babelrc', '.npmrc', '.nvmrc'
-];
 
 // Image loading state
 const imageUrl = ref('');
@@ -525,56 +500,23 @@ async function resolveEmbeds(text: string) {
 
 // Helper: determine media type from file extension
 function getEmbedMediaType(fileName: string): 'image' | 'video' | 'audio' | 'pdf' | 'note' | 'unknown' {
-  const ext = '.' + fileName.split('.').pop()?.toLowerCase();
-  if (imageExtensions.includes(ext)) return 'image';
-  if (videoExtensions.includes(ext)) return 'video';
-  if (audioExtensions.includes(ext)) return 'audio';
+  const ext = '.' + fileName.split('.').pop()!.toLowerCase();
+  if (checkImage(ext)) return 'image';
+  if (checkVideo(ext)) return 'video';
+  if (checkAudio(ext)) return 'audio';
   if (ext === '.pdf') return 'pdf';
   if (ext === '.md' || ext === '.txt') return 'note';
   return 'unknown';
 }
 
 // Check if current file is an image
-const isImageFile = computed(() => {
-  if (!props.file) return false;
-  return imageExtensions.includes(props.file.extension.toLowerCase());
-});
-
-// Check if current file is a video
-const isVideoFile = computed(() => {
-  if (!props.file) return false;
-  return videoExtensions.includes(props.file.extension.toLowerCase());
-});
-
-// Check if current file is an audio file
-const isAudioFile = computed(() => {
-  if (!props.file) return false;
-  return audioExtensions.includes(props.file.extension.toLowerCase());
-});
-
-// Check if current file is a PDF file
-const isPdfFile = computed(() => {
-  if (!props.file) return false;
-  return pdfExtensions.includes(props.file.extension.toLowerCase());
-});
-
-// Check if current file is a code file
-const isCodeFile = computed(() => {
-  if (!props.file) return false;
-  return codeExtensions.includes(props.file.extension.toLowerCase());
-});
-
-// Check if current file is a markdown file
-const isMarkdownFile = computed(() => {
-  if (!props.file) return false;
-  return props.file.extension.toLowerCase() === '.md';
-});
-
-// Check if current file is a drawing file
-const isDrawingFile = computed(() => {
-  if (!props.file) return false;
-  return drawingExtensions.includes(props.file.extension.toLowerCase());
-});
+const isImageFile   = computed(() => !!props.file && checkImage(props.file.extension));
+const isVideoFile   = computed(() => !!props.file && checkVideo(props.file.extension));
+const isAudioFile   = computed(() => !!props.file && checkAudio(props.file.extension));
+const isPdfFile     = computed(() => !!props.file && checkPdf(props.file.extension));
+const isCodeFile    = computed(() => !!props.file && checkCode(props.file.extension));
+const isMarkdownFile = computed(() => !!props.file && checkMarkdown(props.file.extension));
+const isDrawingFile = computed(() => !!props.file && checkDrawing(props.file.extension));
 
 // Check if current file supports dictation (txt or md only)
 const isDictatable = computed(() => {
@@ -1044,31 +986,31 @@ watch(() => props.file, async (newFile) => {
     const ext = newFile.extension.toLowerCase();
     
     // Check if file is an image
-    if (imageExtensions.includes(ext)) {
+    if (checkImage(ext)) {
       // Load image via IPC
       await loadImage(newFile.path);
       // Clear text content for image files
       content.value = '';
       originalContent.value = '';
       hasUnsavedChanges.value = false;
-    } else if (videoExtensions.includes(ext)) {
-      // Set video URL using file:// protocol (webSecurity disabled allows this)
-      videoUrl.value = `file://${newFile.path}`;
+    } else if (checkVideo(ext)) {
+      // Set video URL using leaf:// protocol
+      videoUrl.value = `leaf://${newFile.path}`;
       videoError.value = false;
       // Clear text content for video files
       content.value = '';
       originalContent.value = '';
       hasUnsavedChanges.value = false;
-    } else if (audioExtensions.includes(ext)) {
+    } else if (checkAudio(ext)) {
       // Load audio via IPC for better format compatibility
       await loadAudio(newFile.path);
       // Clear text content for audio files
       content.value = '';
       originalContent.value = '';
       hasUnsavedChanges.value = false;
-    } else if (pdfExtensions.includes(ext)) {
-      // Set PDF URL using file:// protocol
-      pdfUrl.value = `file://${newFile.path}`;
+    } else if (checkPdf(ext)) {
+      // Set PDF URL using leaf:// protocol
+      pdfUrl.value = `leaf://${newFile.path}`;
       pdfError.value = false;
       // Clear text content for PDF files
       content.value = '';
@@ -1423,12 +1365,14 @@ function onContentChange() {
 // Drag-and-drop media embed logic
 // ============================
 
+import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS, AUDIO_EXTENSIONS, PDF_EXTENSIONS } from '../utils/fileTypes';
+
 // Embeddable file extensions
 const embeddableExtensions = [
-  ...imageExtensions,
-  ...videoExtensions,
-  ...audioExtensions,
-  ...pdfExtensions,
+  ...IMAGE_EXTENSIONS,
+  ...VIDEO_EXTENSIONS,
+  ...AUDIO_EXTENSIONS,
+  ...PDF_EXTENSIONS,
 ];
 
 function isEmbeddableFile(fileName: string): boolean {

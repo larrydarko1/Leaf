@@ -269,6 +269,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, nextTick } from 'vue';
 import type { FileInfo } from '../types/electron';
+import { isImageFile as checkImage, isVideoFile as checkVideo, isAudioFile as checkAudio, isPdfFile as checkPdf, isDrawingFile as checkDrawing, isCodeFile as checkCode } from '../utils/fileTypes';
 
 export interface TreeNode {
   path: string;
@@ -307,61 +308,12 @@ const renameInput = ref<HTMLInputElement | null>(null);
 const isDragging = ref(false);
 const isDragOver = ref(false);
 
-// Image file extensions
-const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico'];
-
-// Video file extensions
-const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
-
-// Audio file extensions
-const audioExtensions = ['.mp3', '.wav', '.flac', '.aac', '.m4a', '.ogg', '.wma', '.aiff'];
-
-// PDF file extensions
-const pdfExtensions = ['.pdf'];
-
-// Drawing file extensions
-const drawingExtensions = ['.drawing'];
-
-// Code file extensions
-const codeExtensions = [
-  '.py', '.js', '.jsx', '.ts', '.tsx', '.html', '.htm', '.css', '.scss', '.sass', '.less',
-  '.vue', '.svelte', '.json', '.xml', '.yaml', '.yml', '.toml', '.ini', '.conf', '.cfg',
-  '.sh', '.bash', '.zsh', '.fish', '.ps1', '.bat', '.cmd',
-  '.c', '.cpp', '.h', '.hpp', '.cs', '.java', '.kt', '.kts', '.go', '.rs', '.rb', '.php',
-  '.swift', '.m', '.mm', '.r', '.R', '.pl', '.pm', '.lua', '.sql', '.graphql', '.gql',
-  '.dockerfile', '.env', '.gitignore', '.gitattributes', '.editorconfig', '.eslintrc',
-  '.prettierrc', '.babelrc', '.npmrc', '.nvmrc'
-];
-
-const isImageFile = computed(() => {
-  if (props.node.type !== 'file' || !props.node.file) return false;
-  return imageExtensions.includes(props.node.file.extension.toLowerCase());
-});
-
-const isVideoFile = computed(() => {
-  if (props.node.type !== 'file' || !props.node.file) return false;
-  return videoExtensions.includes(props.node.file.extension.toLowerCase());
-});
-
-const isAudioFile = computed(() => {
-  if (props.node.type !== 'file' || !props.node.file) return false;
-  return audioExtensions.includes(props.node.file.extension.toLowerCase());
-});
-
-const isPdfFile = computed(() => {
-  if (props.node.type !== 'file' || !props.node.file) return false;
-  return pdfExtensions.includes(props.node.file.extension.toLowerCase());
-});
-
-const isDrawingFile = computed(() => {
-  if (props.node.type !== 'file' || !props.node.file) return false;
-  return drawingExtensions.includes(props.node.file.extension.toLowerCase());
-});
-
-const isCodeFile = computed(() => {
-  if (props.node.type !== 'file' || !props.node.file) return false;
-  return codeExtensions.includes(props.node.file.extension.toLowerCase());
-});
+const isImageFile   = computed(() => props.node.type === 'file' && checkImage(props.node.file?.extension ?? ''));
+const isVideoFile   = computed(() => props.node.type === 'file' && checkVideo(props.node.file?.extension ?? ''));
+const isAudioFile   = computed(() => props.node.type === 'file' && checkAudio(props.node.file?.extension ?? ''));
+const isPdfFile     = computed(() => props.node.type === 'file' && checkPdf(props.node.file?.extension ?? ''));
+const isDrawingFile = computed(() => props.node.type === 'file' && checkDrawing(props.node.file?.extension ?? ''));
+const isCodeFile    = computed(() => props.node.type === 'file' && checkCode(props.node.file?.extension ?? ''));
 
 const isExpanded = computed(() => {
   return props.node.type === 'folder' && props.expandedFolders.has(props.node.path);

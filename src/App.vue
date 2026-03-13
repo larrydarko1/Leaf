@@ -176,43 +176,50 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import FileExplorer from './components/FileExplorer.vue';
 import NoteEditor from './components/NoteEditor.vue';
 import SearchPanel from './components/SearchPanel.vue';
 import BookmarksPanel from './components/BookmarksPanel.vue';
 import AudioRecorder from './components/AudioRecorder.vue';
 import AiPanel from './components/AiPanel.vue';
-import type { FileInfo, FolderInfo } from './types/electron';
+import type { FileInfo } from './types/electron';
+import { useVault } from './composables/useVault';
+import { useFileSelection } from './composables/useFileSelection';
+import { useBookmarks } from './composables/useBookmarks';
 
 const noteEditorRef = ref<InstanceType<typeof NoteEditor> | null>(null);
 
+// --- Composables ---
+const vault = useVault();
+const selection = useFileSelection();
+const bookmarks = useBookmarks(() => vault.currentFolder.value);
+
+// Destructure reactive state for template bindings
+const { currentFolder, files, folders } = vault;
+const { selectedFiles, activeFile, selectedFolder } = selection;
+const { bookmarkedFiles, toggleBookmark, removeBookmark } = bookmarks;
+
+// --- UI state ---
 const currentTheme = ref('dark');
-const currentFolder = ref<string | null>(null);
-const files = ref<FileInfo[]>([]);
-const folders = ref<FolderInfo[]>([]);
-const selectedFiles = ref<FileInfo[]>([]); // Multiple selected files
-const activeFile = ref<FileInfo | null>(null); // The file being edited
-const lastSelectedIndex = ref<number>(-1); // For shift+click range selection
 const renamingFile = ref<FileInfo | null>(null);
-const selectedFolder = ref<string | null>(null);
 const renamingFolder = ref<string | null>(null);
 const showSearchPanel = ref(false);
 const showBookmarksPanel = ref(false);
 const showAiPanel = ref(false);
-const bookmarkedFiles = ref<string[]>([]); // Array of file paths
 
-// Computed property to get bookmarks key for current folder
-const bookmarksStorageKey = computed(() => {
-	return currentFolder.value ? `leaf-bookmarks-${currentFolder.value}` : null;
-});
-
-// Apply theme to document root
-const applyTheme = (theme: string) => {
+// --- Theme ---
+function applyTheme(theme: string) {
 	document.documentElement.setAttribute('data-theme', theme);
-};
+}
 
-// Intercept clicks on external links and open them in the OS default browser
+function toggleTheme() {
+	currentTheme.value = currentTheme.value === 'dark' ? 'light' : 'dark';
+	localStorage.setItem('leaf-theme', currentTheme.value);
+	applyTheme(currentTheme.value);
+}
+
+// --- External link interception ---
 function handleExternalLinkClick(e: MouseEvent) {
 	const target = (e.target as HTMLElement)?.closest('a') as HTMLAnchorElement | null;
 	if (!target) return;
@@ -224,27 +231,48 @@ function handleExternalLinkClick(e: MouseEvent) {
 	}
 }
 
-// Load saved folder path and theme from localStorage
+// --- File-list refresh (vault + selection sync) ---
+async function refreshFiles() {
+	await vault.refreshFiles();
+	selection.syncAfterRefresh(vault.files.value);
+}
+
+// --- Folder lifecycle ---
+async function selectFolder() {
+	const folderPath = await vault.openFolderDialog();
+	if (folderPath) {
+		selection.restoreFromStorage(vault.files.value);
+		bookmarks.loadBookmarks();
+	}
+}
+
+async function loadFolderPath(folderPath: string) {
+	await vault.loadFolder(folderPath);
+	selection.restoreFromStorage(vault.files.value);
+	bookmarks.loadBookmarks();
+}
+
+function changeFolder() {
+	vault.closeVault();
+	selection.clearSelection();
+}
+
+// --- Lifecycle ---
 onMounted(() => {
 	const savedTheme = localStorage.getItem('leaf-theme');
-	if (savedTheme) {
-		currentTheme.value = savedTheme;
-	}
+	if (savedTheme) currentTheme.value = savedTheme;
 	applyTheme(currentTheme.value);
-	
+
 	const savedFolder = localStorage.getItem('leaf-folder-path');
-	if (savedFolder) {
-		loadFolder(savedFolder);
-	}
-	
-	// Add keyboard listener for F2 (rename)
+	if (savedFolder) loadFolderPath(savedFolder);
+
+	vault.setExternalChangeCallback(() => refreshFiles());
 	window.addEventListener('keydown', handleKeydown);
-	// Intercept all external link clicks globally
 	document.addEventListener('click', handleExternalLinkClick, true);
 });
 
 onBeforeUnmount(() => {
-	stopFolderWatcher();
+	vault.closeVault();
 	window.removeEventListener('keydown', handleKeydown);
 	document.removeEventListener('click', handleExternalLinkClick, true);
 });
@@ -253,310 +281,65 @@ function handleKeydown(e: KeyboardEvent) {
 	if (e.key === 'F2') {
 		e.preventDefault();
 		if (activeFile.value && !renamingFile.value) {
-			renameSelectedFile();
+			startRenameFile(activeFile.value);
 		} else if (selectedFolder.value && !renamingFolder.value) {
-			renamingFolder.value = selectedFolder.value;
+			startRenameFolder(selectedFolder.value);
 		}
 	}
 }
 
-async function selectFolder() {
-	try {
-		const folderPath = await window.electronAPI.openFolderDialog();
-		if (folderPath) {
-			await loadFolder(folderPath);
-			// Save the folder path
-			localStorage.setItem('leaf-folder-path', folderPath);
-		}
-	} catch (error) {
-		console.error('Error selecting folder:', error);
-	}
-}
 
-async function loadFolder(folderPath: string) {
-	try {
-		const result = await window.electronAPI.scanFolder(folderPath);
-		if (result.success && result.files) {
-			currentFolder.value = folderPath;
-			files.value = result.files;
-			folders.value = result.folders || [];
 
-			// Start watching the folder for external changes
-			startFolderWatcher(folderPath);
-			
-			// Load bookmarks for this folder
-			loadBookmarks();
-			
-			// Try to restore the last selected file
-			const lastSelectedPath = localStorage.getItem('leaf-last-selected-file');
-			if (lastSelectedPath && selectedFiles.value.length === 0) {
-				const lastFile = files.value.find(f => f.path === lastSelectedPath);
-				if (lastFile) {
-					selectedFiles.value = [lastFile];
-					activeFile.value = lastFile;
-				} else if (files.value.length > 0) {
-					// File was deleted, select first file and update localStorage
-					selectedFiles.value = [files.value[0]];
-					activeFile.value = files.value[0];
-					localStorage.setItem('leaf-last-selected-file', files.value[0].path);
-				}
-			} else if (files.value.length > 0 && selectedFiles.value.length === 0) {
-				// No last selected file, select first file
-				selectedFiles.value = [files.value[0]];
-				activeFile.value = files.value[0];
-				localStorage.setItem('leaf-last-selected-file', files.value[0].path);
-			}
-		} else {
-			console.error('Failed to scan folder:', result.error);
-			alert('Failed to load folder: ' + result.error);
-		}
-	} catch (error) {
-		console.error('Error loading folder:', error);
-		alert('Error loading folder');
-	}
-}
-
-async function refreshFiles() {
-	if (currentFolder.value) {
-		const currentPaths = selectedFiles.value.map(f => f.path);
-		const activePath = activeFile.value?.path;
-		await loadFolder(currentFolder.value);
-		
-		// Reselect the same files if they still exist
-		if (currentPaths.length > 0) {
-			const stillExist = files.value.filter(f => currentPaths.includes(f.path));
-			if (stillExist.length > 0) {
-				selectedFiles.value = stillExist;
-				// Restore active file if it still exists
-				if (activePath) {
-					const activeStillExists = stillExist.find(f => f.path === activePath);
-					activeFile.value = activeStillExists || stillExist[0];
-				}
-			}
-		}
-	}
-}
-
-function changeFolder() {
-	stopFolderWatcher();
-	currentFolder.value = null;
-	files.value = [];
-	folders.value = [];
-	selectedFiles.value = [];
-	activeFile.value = null;
-	lastSelectedIndex.value = -1;
-	localStorage.removeItem('leaf-folder-path');
-	localStorage.removeItem('leaf-last-selected-file');
-}
-
+// --- File selection ---
 function handleFileSelect(file: FileInfo, event?: MouseEvent, visibleFiles?: FileInfo[]) {
-	selectedFolder.value = null; // Clear folder selection when file is selected
-	
-	// Use visibleFiles if provided (visual order), otherwise fall back to files.value
-	const fileList = visibleFiles || files.value;
-	const fileIndex = fileList.findIndex(f => f.path === file.path);
-	
-	if (event?.metaKey || event?.ctrlKey) {
-		// Cmd/Ctrl+Click: Toggle file in selection
-		const index = selectedFiles.value.findIndex(f => f.path === file.path);
-		if (index >= 0) {
-			// Remove from selection
-			selectedFiles.value.splice(index, 1);
-			// If we removed the active file, set a new active file
-			if (activeFile.value?.path === file.path) {
-				activeFile.value = selectedFiles.value[0] || null;
-			}
-		} else {
-			// Add to selection
-			selectedFiles.value.push(file);
-			activeFile.value = file; // Make this the active file
-		}
-		lastSelectedIndex.value = fileIndex;
-	} else if (event?.shiftKey && lastSelectedIndex.value >= 0) {
-		// Shift+Click: Select range from visual order
-		const start = Math.min(lastSelectedIndex.value, fileIndex);
-		const end = Math.max(lastSelectedIndex.value, fileIndex);
-		selectedFiles.value = fileList.slice(start, end + 1);
-		activeFile.value = file;
-	} else {
-		// Normal click: Select only this file
-		selectedFiles.value = [file];
-		activeFile.value = file;
-		lastSelectedIndex.value = fileIndex;
-	}
-	
-	// Save the active file path for next app launch
-	if (activeFile.value) {
-		localStorage.setItem('leaf-last-selected-file', activeFile.value.path);
-	}
+	selection.selectFile(file, event, visibleFiles);
 }
 
 function handleFolderSelect(folderPath: string) {
-	selectedFolder.value = folderPath;
-	selectedFiles.value = []; // Clear file selection when folder is selected
-	activeFile.value = null;
+	selection.selectFolder(folderPath);
 }
 
-// --- File system watcher for automatic vault refresh ---
-let fsWatcherDebounceTimer: ReturnType<typeof setTimeout> | null = null;
-
-async function startFolderWatcher(folderPath: string) {
-	try {
-		// Remove old listener before adding a new one
-		window.electronAPI.removeFsChangedListener();
-
-		window.electronAPI.onFsChanged(() => {
-			// Debounce: many FS events fire in rapid succession
-			if (fsWatcherDebounceTimer) clearTimeout(fsWatcherDebounceTimer);
-			fsWatcherDebounceTimer = setTimeout(() => {
-				refreshFiles();
-			}, 500);
-		});
-
-		await window.electronAPI.watchFolder(folderPath);
-	} catch (err) {
-		console.error('Failed to start folder watcher:', err);
-	}
-}
-
-function stopFolderWatcher() {
-	if (fsWatcherDebounceTimer) {
-		clearTimeout(fsWatcherDebounceTimer);
-		fsWatcherDebounceTimer = null;
-	}
-	window.electronAPI.removeFsChangedListener();
-	window.electronAPI.unwatchFolder();
-}
-
+// --- Editor events ---
 function handleFileSave() {
-	console.log('File saved:', activeFile.value?.name);
-	// Optionally refresh file metadata
 	refreshFiles();
 }
 
-/**
- * Handle file-changed event from AI panel (agent edits approved/rejected).
- * Reload the editor content if the changed file is currently active.
- */
 function handleAiFileChanged(changedPath: string) {
-	if (activeFile.value && activeFile.value.path === changedPath) {
+	if (activeFile.value?.path === changedPath) {
 		noteEditorRef.value?.reloadContent();
 	}
-	// Also refresh the file list in case a new file was created
 	refreshFiles();
 }
 
 async function handleRecordingSaved(filePath: string) {
-	console.log('Recording saved:', filePath);
-	// Refresh the file list to show the new recording
 	await refreshFiles();
-	// Select the new recording file
-	const recordingFile = files.value.find(f => f.path === filePath);
-	if (recordingFile) {
-		selectedFiles.value = [recordingFile];
-		activeFile.value = recordingFile;
-	}
+	const recordingFile = vault.files.value.find(f => f.path === filePath);
+	if (recordingFile) selection.openFile(recordingFile);
 }
 
+// --- Create ---
 async function createNewFile() {
-	if (!currentFolder.value) return;
-	
-	// Generate a unique filename
-	const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-	const fileName = `note-${timestamp}.md`;
-	
-	try {
-		const result = await window.electronAPI.createFile(currentFolder.value, fileName);
-		if (result.success && result.path) {
-			// Refresh the file list
-			await refreshFiles();
-			// Select the new file
-			const newFile = files.value.find(f => f.path === result.path);
-			if (newFile) {
-				selectedFiles.value = [newFile];
-				activeFile.value = newFile;
-			}
-		} else {
-			alert('Failed to create file: ' + result.error);
-		}
-	} catch (error) {
-		console.error('Error creating file:', error);
-		alert('Error creating file');
-	}
+	const newFile = await vault.createFile();
+	if (newFile) selection.openFile(newFile);
 }
 
 async function createNewDrawing() {
-	if (!currentFolder.value) return;
-	
-	// Generate a unique filename
-	const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-	const fileName = `drawing-${timestamp}.drawing`;
-	
-	// Create empty drawing data
-	const emptyDrawing = JSON.stringify({
-		version: 1,
-		strokes: [],
-		backgroundColor: '#1a1a1a'
-	}, null, 2);
-	
-	try {
-		const result = await window.electronAPI.createFile(currentFolder.value, fileName);
-		if (result.success && result.path) {
-			// Write initial drawing data
-			await window.electronAPI.writeFile(result.path, emptyDrawing);
-			// Refresh the file list
-			await refreshFiles();
-			// Select the new file
-			const newFile = files.value.find(f => f.path === result.path);
-			if (newFile) {
-				selectedFiles.value = [newFile];
-				activeFile.value = newFile;
-			}
-		} else {
-			alert('Failed to create drawing: ' + result.error);
-		}
-	} catch (error) {
-		console.error('Error creating drawing:', error);
-		alert('Error creating drawing');
-	}
+	const newFile = await vault.createDrawing();
+	if (newFile) selection.openFile(newFile);
 }
 
 async function createNewFolder() {
-	if (!currentFolder.value) return;
-	
-	// Generate a unique folder name with timestamp
-	const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-	const folderName = `folder-${timestamp}`;
-	
-	try {
-		const result = await window.electronAPI.createFolder(currentFolder.value, folderName);
-		if (result.success) {
-			// Refresh the file list to show the new folder
-			await refreshFiles();
-		} else {
-			console.error('Failed to create folder:', result.error);
-		}
-	} catch (error) {
-		console.error('Error creating folder:', error);
-	}
+	await vault.createFolder();
 }
 
-async function renameSelectedFile() {
-	if (!activeFile.value) return;
-	renamingFile.value = activeFile.value;
-}
-
+// --- Rename ---
 function startRenameFile(file: FileInfo) {
-	selectedFiles.value = [file];
-	activeFile.value = file;
-	selectedFolder.value = null;
+	selection.openFile(file);
 	renamingFile.value = file;
 }
 
 function startRenameFolder(folderPath: string) {
-	selectedFolder.value = folderPath;
-	selectedFiles.value = [];
-	activeFile.value = null;
+	selection.selectFolder(folderPath);
 	renamingFolder.value = folderPath;
 }
 
@@ -566,195 +349,50 @@ function cancelRename() {
 }
 
 async function handleFileRename(file: FileInfo, newName: string) {
-	const extension = file.name.substring(file.name.lastIndexOf('.'));
-	const newFileName = newName + extension;
-	
-	try {
-		const result = await window.electronAPI.renameFile(file.path, newFileName);
-		if (result.success && result.newPath) {
-			renamingFile.value = null;
-			// Refresh the file list
-			await refreshFiles();
-			// Select the renamed file
-			const renamedFile = files.value.find(f => f.path === result.newPath);
-			if (renamedFile) {
-				selectedFiles.value = [renamedFile];
-				activeFile.value = renamedFile;
-			}
-		} else {
-			renamingFile.value = null;
-			alert('Failed to rename file: ' + result.error);
-		}
-	} catch (error) {
-		renamingFile.value = null;
-		console.error('Error renaming file:', error);
-		alert('Error renaming file');
-	}
+	const renamed = await vault.renameFile(file, newName);
+	renamingFile.value = null;
+	if (renamed) selection.openFile(renamed);
 }
 
 async function handleFolderRename(folderPath: string, newName: string) {
-	if (!currentFolder.value) return;
-	
-	try {
-		// Convert relative path to absolute path
-		const absolutePath = currentFolder.value + '/' + folderPath;
-		
-		const result = await window.electronAPI.renameFolder(absolutePath, newName);
-		if (result.success && result.newPath) {
-			renamingFolder.value = null;
-			// Refresh the file list
-			await refreshFiles();
-			// Calculate the new relative path for selection
-			const parentPath = folderPath.includes('/') ? folderPath.substring(0, folderPath.lastIndexOf('/')) : '';
-			const newRelativePath = parentPath ? parentPath + '/' + newName : newName;
-			selectedFolder.value = newRelativePath;
-		} else {
-			renamingFolder.value = null;
-			alert('Failed to rename folder: ' + result.error);
-		}
-	} catch (error) {
-		renamingFolder.value = null;
-		console.error('Error renaming folder:', error);
-		alert('Error renaming folder');
-	}
+	const newRelativePath = await vault.renameFolder(folderPath, newName);
+	renamingFolder.value = null;
+	if (newRelativePath) selectedFolder.value = newRelativePath;
 }
 
 async function handleFolderDelete(folderPath: string) {
-	if (!currentFolder.value) return;
-	
-	try {
-		// Convert relative path to absolute path
-		const absolutePath = currentFolder.value + '/' + folderPath;
-		
-		const result = await window.electronAPI.deleteFolder(absolutePath);
-		if (result.success) {
-			selectedFolder.value = null;
-			// Refresh the file list
-			await refreshFiles();
-		} else {
-			alert('Failed to delete folder: ' + result.error);
-		}
-	} catch (error) {
-		console.error('Error deleting folder:', error);
-		alert('Error deleting folder');
-	}
+	const deleted = await vault.deleteFolder(folderPath);
+	if (deleted) selectedFolder.value = null;
 }
 
 async function handleFileDelete(file: FileInfo) {
-	try {
-		// If multiple files selected, delete all of them
-		const filesToDelete = selectedFiles.value.length > 1 ? selectedFiles.value : [file];
-
-		// Delete all selected files
-		for (const f of filesToDelete) {
-			const result = await window.electronAPI.deleteFile(f.path);
-			if (!result.success) {
-				alert(`Failed to delete ${f.name}: ${result.error}`);
-			}
-		}
-		
-		selectedFiles.value = [];
-		activeFile.value = null;
-		// Refresh the file list
-		await refreshFiles();
-		// Select another file if available
-		if (files.value.length > 0) {
-			selectedFiles.value = [files.value[0]];
-			activeFile.value = files.value[0];
-		}
-	} catch (error) {
-		console.error('Error deleting file:', error);
-		alert('Error deleting file');
-	}
+	const filesToDelete = selectedFiles.value.length > 1 ? selectedFiles.value : [file];
+	await vault.deleteFile(filesToDelete);
+	selection.clearSelection();
+	if (vault.files.value.length > 0) selection.openFile(vault.files.value[0]);
 }
 
 async function handleFileMove(filePath: string, targetFolderPath: string) {
-	if (!currentFolder.value) return;
-	
-	try {
-		let absoluteTargetPath: string;
-		
-		// Handle moving to root folder
-		if (targetFolderPath === '.' || targetFolderPath === '') {
-			absoluteTargetPath = currentFolder.value;
-		} else {
-			// Convert relative path to absolute path
-			absoluteTargetPath = currentFolder.value + '/' + targetFolderPath;
-		}
-		
-		// Move all selected files if multiple are selected
-		const filesToMove = selectedFiles.value.length > 1 
-			? selectedFiles.value 
-			: [files.value.find(f => f.path === filePath)].filter(Boolean) as FileInfo[];
-		
-		const movedPaths: string[] = [];
-		for (const file of filesToMove) {
-			const result = await window.electronAPI.moveFile(file.path, absoluteTargetPath);
-			if (result.success && result.newPath) {
-				movedPaths.push(result.newPath);
-			} else if (result.error && !result.error.includes('ENOENT')) {
-				alert(`Failed to move ${file.name}: ${result.error}`);
-			}
-		}
-		
-		if (movedPaths.length > 0) {
-			// Refresh the file list
-			await refreshFiles();
-			// Select the moved files
-			const movedFiles = files.value.filter(f => movedPaths.includes(f.path));
-			if (movedFiles.length > 0) {
-				selectedFiles.value = movedFiles;
-				activeFile.value = movedFiles[0];
-			}
-		}
-	} catch (error) {
-		console.error('Error moving file:', error);
-		alert('Error moving file');
+	const filePaths = selectedFiles.value.length > 1
+		? selectedFiles.value.map(f => f.path)
+		: [filePath];
+	const movedPaths = await vault.moveFiles(filePaths, targetFolderPath);
+	const movedFiles = vault.files.value.filter(f => movedPaths.includes(f.path));
+	if (movedFiles.length > 0) {
+		selectedFiles.value = movedFiles;
+		activeFile.value = movedFiles[0];
 	}
 }
 
 async function handleFolderMove(folderPath: string, targetFolderPath: string) {
-	if (!currentFolder.value) return;
-	
-	try {
-		// Convert relative folder path to absolute path
-		const absoluteFolderPath = currentFolder.value + '/' + folderPath;
-		
-		let absoluteTargetPath: string;
-		
-		// Handle moving to root folder
-		if (targetFolderPath === '.' || targetFolderPath === '') {
-			absoluteTargetPath = currentFolder.value;
-		} else {
-			// Convert relative path to absolute path
-			absoluteTargetPath = currentFolder.value + '/' + targetFolderPath;
-		}
-		
-		const result = await window.electronAPI.moveFolder(absoluteFolderPath, absoluteTargetPath);
-		if (result.success) {
-			selectedFolder.value = null;
-			// Refresh the file list
-			await refreshFiles();
-		} else {
-			alert('Failed to move folder: ' + result.error);
-		}
-	} catch (error) {
-		console.error('Error moving folder:', error);
-		alert('Error moving folder');
-	}
+	const moved = await vault.moveFolder(folderPath, targetFolderPath);
+	if (moved) selectedFolder.value = null;
 }
 
-function toggleTheme() {
-	currentTheme.value = currentTheme.value === 'dark' ? 'light' : 'dark';
-	localStorage.setItem('leaf-theme', currentTheme.value);
-	applyTheme(currentTheme.value);
-}
-
+// --- Panel toggles ---
 function toggleSearch() {
 	showSearchPanel.value = !showSearchPanel.value;
-	if (showSearchPanel.value) {
-		showBookmarksPanel.value = false;
-	}
+	if (showSearchPanel.value) showBookmarksPanel.value = false;
 }
 
 function closeSearch() {
@@ -762,66 +400,17 @@ function closeSearch() {
 }
 
 function handleSearchFileSelect(file: FileInfo, event?: MouseEvent) {
-	// Handle file selection from search panel (similar to regular file selection)
-	handleFileSelect(file, event);
+	selection.selectFile(file, event);
 }
 
 function handleSearchFileOpen(file: FileInfo) {
-	// Open the file (make it active and close search panel)
-	selectedFiles.value = [file];
-	activeFile.value = file;
+	selection.openFile(file);
 	showSearchPanel.value = false;
-	localStorage.setItem('leaf-last-selected-file', file.path);
-}
-
-// Bookmark functions
-function loadBookmarks() {
-	if (bookmarksStorageKey.value) {
-		try {
-			const saved = localStorage.getItem(bookmarksStorageKey.value);
-			if (saved) {
-				bookmarkedFiles.value = JSON.parse(saved);
-			} else {
-				bookmarkedFiles.value = [];
-			}
-		} catch (error) {
-			console.error('Error loading bookmarks:', error);
-			bookmarkedFiles.value = [];
-		}
-	}
-}
-
-function saveBookmarks() {
-	if (bookmarksStorageKey.value) {
-		localStorage.setItem(bookmarksStorageKey.value, JSON.stringify(bookmarkedFiles.value));
-	}
-}
-
-function toggleBookmark(filePath: string) {
-	const index = bookmarkedFiles.value.indexOf(filePath);
-	if (index >= 0) {
-		// Remove bookmark
-		bookmarkedFiles.value.splice(index, 1);
-	} else {
-		// Add bookmark
-		bookmarkedFiles.value.push(filePath);
-	}
-	saveBookmarks();
-}
-
-function removeBookmark(filePath: string) {
-	const index = bookmarkedFiles.value.indexOf(filePath);
-	if (index >= 0) {
-		bookmarkedFiles.value.splice(index, 1);
-		saveBookmarks();
-	}
 }
 
 function toggleBookmarks() {
 	showBookmarksPanel.value = !showBookmarksPanel.value;
-	if (showBookmarksPanel.value) {
-		showSearchPanel.value = false;
-	}
+	if (showBookmarksPanel.value) showSearchPanel.value = false;
 }
 
 function toggleAiPanel() {

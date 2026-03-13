@@ -641,33 +641,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
-import { marked } from 'marked';
-import type { FileInfo, AiModelInfo, AiStatus, ConversationMeta, HfSearchResult, HfRepoFile, HfModelInfo, HfDownloadProgress } from '../types/electron';
-
-// Configure marked for safe, clean rendering
-marked.setOptions({
-	breaks: true,
-	gfm: true,
-});
-
-interface ChatMessage {
-	role: 'user' | 'assistant' | 'system';
-	content: string;
-	agentEdits?: AgentFileEdit[];
-}
-
-// Agent mode: parsed file edit from AI response
-interface AgentFileEdit {
-	filePath: string;
-	newContent: string;
-	editId?: string;
-	originalContent?: string;
-	relativePath?: string;
-	isNewFile?: boolean;
-	status: 'pending' | 'approved' | 'rejected' | 'error';
-	error?: string;
-}
+import { ref, computed, onMounted } from 'vue';
+import type { FileInfo } from '../types/electron';
+import type { ChatMessage } from '../types/chat';
+import { useAIModel } from '../composables/useAIModel';
+import { useConversationHistory } from '../composables/useConversationHistory';
+import { useAgentMode } from '../composables/useAgentMode';
+import { useHfDownload } from '../composables/useHfDownload';
+import { useAIChat } from '../composables/useAIChat';
 
 const props = defineProps<{
 	activeFile: FileInfo | null;
@@ -679,1065 +660,162 @@ const emit = defineEmits<{
 	(e: 'file-changed', path: string): void;
 }>();
 
-// State
+// AI model composable
+const model = useAIModel();
+const {
+	status,
+	availableModels,
+	isLoading,
+	selectedModelPath,
+	lastUsedModelName,
+	isReady,
+	isAnyGenerating,
+	selectedModelLabel,
+	showDropdown,
+	// @ts-ignore - template ref, bound via ref="dropdownRef" in template
+	dropdownRef,
+	dropdownPosition,
+	previousModelMatch,
+	truncate,
+	toggleDropdown,
+	selectModel,
+	refreshModels,
+	refreshStatus,
+	openModelsFolder,
+} = model;
+
+// Shared messages state (passed to multiple composables)
 const messages = ref<ChatMessage[]>([]);
-const inputMessage = ref('');
-const isStreaming = ref(false);
-const isLoading = ref(false);
-const includeNoteContext = ref(false);
-const selectedModelPath = ref('');
-const availableModels = ref<AiModelInfo[]>([]);
-const status = ref<AiStatus>({
-	isModelLoaded: false,
-	currentModelPath: null,
-	currentModelName: null,
-	isGenerating: false,
-	modelsDir: '',
-	contextTokens: 0,
-	contextSize: 0
-});
 
-const copiedIndex = ref<number | null>(null);
-
-// Conversation persistence state
-const showHistory = ref(false);
-const conversationList = ref<ConversationMeta[]>([]);
-const currentConversationId = ref<string | null>(null);
-const renamingConversationId = ref<string | null>(null);
-const renameValue = ref('');
-const renameInputRef = ref<HTMLInputElement[] | null>(null);
-
-// Per-conversation token count
-const conversationTokenCount = ref(0);
-
-// Message editing state
-const editingIndex = ref<number | null>(null);
-const editContent = ref('');
-const editInputRef = ref<HTMLTextAreaElement[] | null>(null);
-
-// Agent mode state
-const agentMode = ref(false);
-
-// Track last used model name (from conversation) for quick reload
-const lastUsedModelName = ref<string | null>(null);
-
-// ============================
-// HF Download state
-// ============================
-const showHfPanel = ref(false);
-const hfSearchQuery = ref('');
-const hfSearchResults = ref<HfSearchResult[]>([]);
-const hfIsSearching = ref(false);
-const hfSelectedRepo = ref<string | null>(null);
-const hfRepoFiles = ref<HfRepoFile[]>([]);
-const hfModelInfo = ref<HfModelInfo | null>(null);
-const hfIsLoadingFiles = ref(false);
-const hfDownloadProgress = ref<HfDownloadProgress | null>(null);
-const hfActiveDownloads = ref<Set<string>>(new Set());
-
-// Find matching model in available models for quick reload
-const previousModelMatch = computed(() => {
-	if (!lastUsedModelName.value || status.value.isModelLoaded) return null;
-	return availableModels.value.find(m => 
-		m.name === lastUsedModelName.value || 
-		m.path.endsWith(lastUsedModelName.value!)
-	) || null;
-});
-
-// Unified "is ready" check
-const isReady = computed(() => {
-	return status.value.isModelLoaded;
-});
-
-const isAnyGenerating = computed(() => {
-	return status.value.isGenerating;
-});
-
-
-// Dropdown state
-const showDropdown = ref(false);
-const dropdownRef = ref<HTMLElement | null>(null);
-const dropdownPosition = ref<{ top: string; left: string; minWidth: string }>({ top: '0px', left: '0px', minWidth: '0px' });
-
-const selectedModelLabel = computed(() => {
-	if (!selectedModelPath.value) return 'Select a model...';
-	const model = availableModels.value.find(m => m.path === selectedModelPath.value);
-	return model ? truncate(model.name, 30) : 'Select a model...';
-});
-
-function truncate(text: string, max: number): string {
-	return text.length > max ? text.slice(0, max) + '...' : text;
-}
-
-function toggleDropdown() {
-	if (showDropdown.value) {
-		showDropdown.value = false;
-		return;
-	}
-	// Position the dropdown below the trigger
-	if (dropdownRef.value) {
-		const rect = dropdownRef.value.getBoundingClientRect();
-		const menuWidth = Math.min(rect.width + 60, window.innerWidth - rect.left - 12);
-		dropdownPosition.value = {
-			top: `${rect.bottom + 4}px`,
-			left: `${rect.left}px`,
-			minWidth: `${menuWidth}px`
-		};
-	}
-	showDropdown.value = true;
-}
-
-function selectModel(model: AiModelInfo) {
-	selectedModelPath.value = model.path;
-	showDropdown.value = false;
-}
-
-function handleDropdownClickOutside(event: MouseEvent) {
-	if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
-		showDropdown.value = false;
-	}
-}
-
-// Refs
-const messagesContainer = ref<HTMLElement | null>(null);
-const inputField = ref<HTMLTextAreaElement | null>(null);
-
-// Auto-scroll control: pause when user scrolls up during streaming
-const userScrolledUp = ref(false);
-
-function onMessagesScroll() {
-	if (!messagesContainer.value || !isStreaming.value) return;
-	const el = messagesContainer.value;
-	const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
-	userScrolledUp.value = !atBottom;
-}
-
-// Render markdown content
-function renderMarkdown(content: string): string {
-	if (!content) return '';
-	return marked.parse(content, { async: false }) as string;
-}
-
-// Copy message to clipboard
-async function copyMessage(content: string, index: number) {
-	try {
-		await navigator.clipboard.writeText(content);
-		copiedIndex.value = index;
-		setTimeout(() => {
-			if (copiedIndex.value === index) copiedIndex.value = null;
-		}, 2000);
-	} catch (err) {
-		console.error('Failed to copy:', err);
-	}
-}
-
-// ============================
-// Message editing, resend, delete
-// ============================
-
-// Start editing a user message
-function startEditMessage(index: number) {
-	if (messages.value[index]?.role !== 'user') return;
-	editingIndex.value = index;
-	editContent.value = messages.value[index].content;
-	nextTick(() => {
-		if (editInputRef.value && editInputRef.value.length > 0) {
-			editInputRef.value[0].focus();
-		}
-	});
-}
-
-// Cancel editing
-function cancelEditMessage() {
-	editingIndex.value = null;
-	editContent.value = '';
-}
-
-// Confirm edit: update message, remove everything after it, save
-async function confirmEditMessage(index: number) {
-	const newContent = editContent.value.trim();
-	if (!newContent) {
-		cancelEditMessage();
-		return;
-	}
-	
-	// Update the message content
-	messages.value[index].content = newContent;
-	
-	// Remove all messages after this one
-	messages.value.splice(index + 1);
-	
-	// Reset LLM session since context changed
-	await window.electronAPI.aiResetChat();
-	
-	// Reset token count since session was reset
-	conversationTokenCount.value = 0;
-	
-	// Save updated conversation
-	await saveCurrentConversation();
-	await saveTokenCountToConversation();
-	await refreshConversationList();
-	
-	editingIndex.value = null;
-	editContent.value = '';
-	
-	scrollToBottom();
-}
-
-// Resend a user message (must be the last message, no messages after it)
-async function resendMessage(index: number) {
-	const msg = messages.value[index];
-	if (msg.role !== 'user' || !status.value.isModelLoaded || status.value.isGenerating) return;
-	
-	// Reset the LLM session
-	await window.electronAPI.aiResetChat();
-	conversationTokenCount.value = 0;
-	
-	// Add empty assistant message for streaming
-	messages.value.push({ role: 'assistant', content: '' });
-	isStreaming.value = true;
-	userScrolledUp.value = false;
-	scrollToBottom(true);
-	
-	// Get note context if enabled
-	let noteContext: string | null = null;
-	if (includeNoteContext.value && props.activeFile) {
-		try {
-			const result = await window.electronAPI.readFile(props.activeFile.path);
-			if (result.success && result.content) {
-				noteContext = result.content;
-			}
-		} catch (error) {
-			console.error('Failed to read note for context:', error);
-		}
-	}
-	
-	try {
-		const result = await window.electronAPI.aiChat(msg.content, noteContext);
-		if (!result.success) {
-			const lastMsg = messages.value[messages.value.length - 1];
-			if (lastMsg.role === 'assistant') {
-				lastMsg.content = `Error: ${result.error}`;
-			}
-		}
-		
-		// Persist assistant response
-		const assistantMsg = messages.value[messages.value.length - 1];
-		if (currentConversationId.value && assistantMsg.role === 'assistant') {
-			await window.electronAPI.conversationAddMessage(currentConversationId.value, {
-				role: 'assistant',
-				content: assistantMsg.content
-			});
-		}
-	} catch (error) {
-		const lastMsg = messages.value[messages.value.length - 1];
-		if (lastMsg.role === 'assistant') {
-			lastMsg.content = `Error: ${(error as Error).message}`;
-		}
-	} finally {
-		isStreaming.value = false;
-		userScrolledUp.value = false;
-		await refreshStatus();
-		conversationTokenCount.value = status.value.contextTokens;
-		await saveTokenCountToConversation();
-		await refreshConversationList();
-		scrollToBottom(true);
-	}
-}
-
-// Delete the last message only
-async function deleteLastMessagePair() {
-	if (messages.value.length === 0 || isStreaming.value) return;
-	
-	// Remove only the last message
-	messages.value.pop();
-	
-	// Reset LLM session since context is invalid
-	await window.electronAPI.aiResetChat();
-	
-	// Reset token count
-	conversationTokenCount.value = 0;
-	
-	// Save updated conversation
-	await saveCurrentConversation();
-	await saveTokenCountToConversation();
-	await refreshConversationList();
-	
-	scrollToBottom();
-}
-
-// Regenerate the last assistant response
-async function regenerateLastResponse() {
-	if (messages.value.length < 2 || isStreaming.value) return;
-	
-	const lastMsg = messages.value[messages.value.length - 1];
-	if (lastMsg.role !== 'assistant') return;
-	
-	// Remove the assistant response
-	messages.value.pop();
-	
-	// Save the trimmed conversation
-	await saveCurrentConversation();
-	
-	// Resend the last user message (now the last message)
-	const lastIndex = messages.value.length - 1;
-	if (lastIndex >= 0 && messages.value[lastIndex].role === 'user') {
-		await resendMessage(lastIndex);
-	}
-}
-
-// ============================
-// Agent mode logic
-// ============================
-
-// Toggle agent mode on/off
-function toggleAgentMode() {
-	agentMode.value = !agentMode.value;
-}
-
-// Agent system prompt — instructs the model how to propose file edits
-const AGENT_SYSTEM_PROMPT = `You are an AI assistant with the ability to edit files. When the user asks you to modify a file, you MUST output your proposed changes using this exact format:
-
-<file_edit path="RELATIVE_FILE_PATH">
-NEW FILE CONTENT HERE
-</file_edit>
-
-Rules:
-- The path must be relative to the workspace root.
-- Include the COMPLETE new file content inside the tags.
-- You can include multiple <file_edit> blocks for multiple files.
-- Always explain what you changed before or after the edit block.
-- If the user just asks a question without requesting an edit, respond normally without <file_edit> tags.`;
-
-/**
- * Parse AI response for <file_edit> blocks
- */
-function parseAgentEdits(response: string): { cleanContent: string; edits: AgentFileEdit[] } {
-	const edits: AgentFileEdit[] = [];
-	const editRegex = /<file_edit\s+path="([^"]+)">\n?([\s\S]*?)<\/file_edit>/g;
-	let match;
-	let cleanContent = response;
-
-	while ((match = editRegex.exec(response)) !== null) {
-		const filePath = match[1];
-		const newContent = match[2].trimEnd();
-		edits.push({
-			filePath,
-			newContent,
-			status: 'pending'
-		});
-		// Remove edit block from displayed content
-		cleanContent = cleanContent.replace(match[0], '').trim();
-	}
-
-	return { cleanContent, edits };
-}
-
-/**
- * Process agent edits: propose each one to the backend
- */
-async function processAgentEdits(_msgIndex: number, edits: AgentFileEdit[]) {
-	if (!props.workspacePath) return;
-
-	for (let i = 0; i < edits.length; i++) {
-		const edit = edits[i];
-		const fullPath = pathHelper.resolve(props.workspacePath, edit.filePath);
-
-		try {
-			const result = await window.electronAPI.agentProposeEdit(
-				fullPath,
-				edit.newContent,
-				props.workspacePath
-			);
-
-			if (result.success) {
-				edit.editId = result.editId;
-				edit.originalContent = result.originalContent;
-				edit.newContent = result.newContent!;
-				edit.relativePath = result.relativePath;
-				edit.isNewFile = result.isNewFile;
-				edit.status = 'pending';
-			} else {
-				edit.status = 'error';
-				edit.error = result.error || 'Failed to propose edit';
-			}
-		} catch (err) {
-			edit.status = 'error';
-			edit.error = (err as Error).message;
-		}
-	}
-}
-
-// Simple path helper since we don't have Node's path in renderer
-const pathHelper = {
-	resolve: (...parts: string[]) => {
-		// Simple join — the backend handles proper resolution
-		return parts.filter(Boolean).join('/').replace(/\/+/g, '/');
-	}
-};
-
-/**
- * Approve an agent edit
- */
-async function approveAgentEdit(msgIndex: number, editIdx: number) {
-	const msg = messages.value[msgIndex];
-	if (!msg?.agentEdits?.[editIdx]) return;
-
-	const edit = msg.agentEdits[editIdx];
-	if (!edit.editId || edit.status !== 'pending') return;
-
-	try {
-		const result = await window.electronAPI.agentApproveEdit(edit.editId);
-		if (result.success) {
-			edit.status = 'approved';
-			emit('file-changed', edit.filePath);
-		} else {
-			edit.error = result.error || 'Failed to approve edit';
-		}
-	} catch (err) {
-		edit.error = (err as Error).message;
-	}
-}
-
-/**
- * Reject an agent edit (revert)
- */
-async function rejectAgentEdit(msgIndex: number, editIdx: number) {
-	const msg = messages.value[msgIndex];
-	if (!msg?.agentEdits?.[editIdx]) return;
-
-	const edit = msg.agentEdits[editIdx];
-	if (!edit.editId || edit.status !== 'pending') return;
-
-	try {
-		const result = await window.electronAPI.agentRejectEdit(edit.editId);
-		if (result.success) {
-			edit.status = 'rejected';
-			emit('file-changed', edit.filePath);
-		} else {
-			edit.error = result.error || 'Failed to reject edit';
-		}
-	} catch (err) {
-		edit.error = (err as Error).message;
-	}
-}
-
-// Scroll to bottom of messages
-function scrollToBottom(force = false) {
-	if (!force && userScrolledUp.value) return;
-	nextTick(() => {
-		if (messagesContainer.value) {
-			messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
-		}
-	});
-}
-
-// Load available models and current status
-async function refreshModels() {
-	try {
-		const result = await window.electronAPI.aiListModels();
-		if (result.success) {
-			availableModels.value = result.models;
-		}
-	} catch (error) {
-		console.error('Failed to list models:', error);
-	}
-}
-
-async function refreshStatus() {
-	try {
-		status.value = await window.electronAPI.aiGetStatus();
-	} catch (error) {
-		console.error('Failed to get AI status:', error);
-	}
-}
-
-// Load a model
-async function loadSelectedModel() {
-	if (!selectedModelPath.value) return;
-	
-	isLoading.value = true;
-	try {
-		const result = await window.electronAPI.aiLoadModel(selectedModelPath.value);
-		if (result.success) {
-			await refreshStatus();
-			await startNewConversation();
-		} else {
-			messages.value.push({
-				role: 'assistant',
-				content: `Failed to load model: ${result.error}`
-			});
-		}
-	} catch (error) {
-		console.error('Failed to load model:', error);
-	} finally {
-		isLoading.value = false;
-	}
-}
-
-// Unload current model
-async function unloadModel() {
-	try {
-		// Stop any in-progress generation first
-		if (status.value.isGenerating) {
-			await stopGeneration();
-		}
-		// Remember the model name for quick reload
-		if (status.value.currentModelName) {
-			lastUsedModelName.value = status.value.currentModelName;
-		}
-		// Save current conversation before unloading
-		await saveCurrentConversation();
-		await window.electronAPI.aiUnloadModel();
-		await refreshStatus();
-		// Keep messages and conversation visible (read-only) after unload
-		conversationTokenCount.value = 0;
-		// Auto-select the previous model in the dropdown for easy reload
-		if (previousModelMatch.value) {
-			selectedModelPath.value = previousModelMatch.value.path;
-		}
-	} catch (error) {
-		console.error('Failed to unload model:', error);
-	}
-}
-
-// Send a chat message
-async function sendMessage() {
-	const text = inputMessage.value.trim();
-	if (!text || !isReady.value || isAnyGenerating.value) return;
-	
-	// Create a new conversation if none exists
-	if (!currentConversationId.value) {
-		await createNewConversation();
-	}
-	
-	// Add user message
-	const userMsg: ChatMessage = { role: 'user', content: text };
-	messages.value.push(userMsg);
-	inputMessage.value = '';
-	
-	// Persist user message
-	if (currentConversationId.value) {
-		await window.electronAPI.conversationAddMessage(currentConversationId.value, { role: 'user', content: userMsg.content });
-	}
-	
-	// Add empty assistant message for streaming
-	messages.value.push({ role: 'assistant', content: '' });
-	isStreaming.value = true;
-	userScrolledUp.value = false;
-	scrollToBottom(true);
-	
-	// Build note context
-	let noteContext: string | null = null;
-	
-	if (agentMode.value && props.workspacePath && props.activeFile) {
-		// Agent mode: build context with system prompt + current file content
-		let agentContext = AGENT_SYSTEM_PROMPT + '\n\n';
-		
-		// Read the currently open file as the target
-		try {
-			const fileResult = await window.electronAPI.agentReadFile(props.activeFile.path, props.workspacePath);
-			if (fileResult.success && fileResult.content !== undefined) {
-				agentContext += `Current content of "${props.activeFile.name}" (${props.activeFile.relativePath}):\n\`\`\`\n${fileResult.content}\n\`\`\`\n\n`;
-			}
-		} catch (err) {
-			agentContext += `Note: Could not read "${props.activeFile.name}": ${(err as Error).message}\n\n`;
-		}
-		
-		noteContext = agentContext;
-	} else if (includeNoteContext.value && props.activeFile) {
-		// Normal mode: just include note context
-		try {
-			const result = await window.electronAPI.readFile(props.activeFile.path);
-			if (result.success && result.content) {
-				noteContext = result.content;
-			}
-		} catch (error) {
-			console.error('Failed to read note for context:', error);
-		}
-	}
-	
-	try {
-		let result;
-
-		result = await window.electronAPI.aiChat(text, noteContext);
-
-		if (!result.success) {
-			const lastMsg = messages.value[messages.value.length - 1];
-			if (lastMsg.role === 'assistant') {
-				lastMsg.content = `Error: ${result.error}`;
-			}
-		}
-		
-		// If agent mode, parse the response for file edits
-		const assistantMsg = messages.value[messages.value.length - 1];
-
-		if (agentMode.value && assistantMsg.role === 'assistant' && assistantMsg.content) {
-			const { cleanContent, edits } = parseAgentEdits(assistantMsg.content);
-			if (edits.length > 0) {
-				assistantMsg.content = cleanContent;
-				assistantMsg.agentEdits = edits;
-				const msgIdx = messages.value.length - 1;
-				await processAgentEdits(msgIdx, edits);
-			}
-		}
-		
-		// Persist assistant response
-		if (currentConversationId.value && assistantMsg.role === 'assistant') {
-			await window.electronAPI.conversationAddMessage(currentConversationId.value, {
-				role: 'assistant',
-				content: assistantMsg.content
-			});
-		}
-		
-		// If auto-compaction happened, notify the user with a system message
-		if (result && result.compacted) {
-			messages.value.push({
-				role: 'system',
-				content: 'Context memory was getting full — conversation has been summarized to free up space. All messages are preserved.'
-			});
-		}
-	} catch (error) {
-		const lastMsg = messages.value[messages.value.length - 1];
-		if (lastMsg.role === 'assistant') {
-			lastMsg.content = `Error: ${(error as Error).message}`;
-		}
-	} finally {
-		isStreaming.value = false;
-		userScrolledUp.value = false;
-		await refreshStatus();
-		conversationTokenCount.value = status.value.contextTokens;
-		await saveTokenCountToConversation();
-		await refreshConversationList();
-		scrollToBottom(true);
-	}
-}
-
-// Stop the current generation
-async function stopGeneration() {
-	try {
-		await window.electronAPI.aiStopChat();
-	} catch (error) {
-		console.error('Failed to stop generation:', error);
-	} finally {
-		isStreaming.value = false;
-		userScrolledUp.value = false;
-		await refreshStatus();
-		conversationTokenCount.value = status.value.contextTokens;
-		await saveTokenCountToConversation();
-	}
-}
-
-// ============================
-// Conversation persistence
-// ============================
-
-// Toggle history panel
-function toggleHistory() {
-	showHistory.value = !showHistory.value;
-	if (showHistory.value) {
-		refreshConversationList();
-	}
-}
-
-// Refresh conversation list
-async function refreshConversationList() {
-	try {
-		const result = await window.electronAPI.conversationList();
-		if (result.success) {
-			conversationList.value = result.conversations;
-		}
-	} catch (error) {
-		console.error('Failed to list conversations:', error);
-	}
-}
-
-// Create a new conversation (internal)
-async function createNewConversation() {
-	try {
-		const modelName = status.value.currentModelName || 'unknown';
-		const result = await window.electronAPI.conversationCreate(modelName);
-		if (result.success && result.conversation) {
-			currentConversationId.value = result.conversation.id;
-		}
-	} catch (error) {
-		console.error('Failed to create conversation:', error);
-	}
-}
-
-// Start a new conversation (user action)
-async function startNewConversation() {
-	// Save current conversation before starting a new one
-	await saveCurrentConversation();
-	
-	// Reset chat session in the model
-	try {
-		await window.electronAPI.aiResetChat();
-	} catch (error) {
-		console.error('Failed to reset chat:', error);
-	}
-	
-	messages.value = [];
-	currentConversationId.value = null;
-	conversationTokenCount.value = 0;
-	showHistory.value = false;
-	
-	if (inputField.value) {
-		inputField.value.focus();
-	}
-}
-
-// Save current conversation state
-async function saveCurrentConversation() {
-	if (!currentConversationId.value) return;
-	
-	try {
-		const result = await window.electronAPI.conversationLoad(currentConversationId.value);
-		if (result.success && result.conversation) {
-			result.conversation.messages = messages.value
-				.filter(m => m.role !== 'system')
-				.map(m => ({
-					role: m.role as 'user' | 'assistant',
-					content: m.content,
-					timestamp: new Date().toISOString()
-				}));
-			result.conversation.tokenCount = conversationTokenCount.value;
-			await window.electronAPI.conversationSave(result.conversation);
-		}
-	} catch (error) {
-		console.error('Failed to save conversation:', error);
-	}
-}
-
-// Persist token count to the current conversation
-async function saveTokenCountToConversation() {
-	if (!currentConversationId.value) return;
-	
-	try {
-		const result = await window.electronAPI.conversationLoad(currentConversationId.value);
-		if (result.success && result.conversation) {
-			result.conversation.tokenCount = conversationTokenCount.value;
-			await window.electronAPI.conversationSave(result.conversation);
-		}
-	} catch (error) {
-		console.error('Failed to save token count:', error);
-	}
-}
-
-// Load a conversation from history
-async function loadConversation(id: string) {
-	try {
-		// Save current conversation first
-		await saveCurrentConversation();
-		
-		const result = await window.electronAPI.conversationLoad(id);
-		if (result.success && result.conversation) {
-			// Only reset LLM session if a model is loaded
-			if (status.value.isModelLoaded) {
-				await window.electronAPI.aiResetChat();
-			}
-			
-			currentConversationId.value = result.conversation.id;
-			messages.value = result.conversation.messages.map(m => ({
-				role: m.role,
-				content: m.content
-			}));
-			
-			// Track the model used in this conversation for quick reload
-			if (result.conversation.model) {
-				lastUsedModelName.value = result.conversation.model;
-			}
-			
-			// Restore per-conversation token count
-			conversationTokenCount.value = result.conversation.tokenCount || 0;
-			
-			// Restore chat history into the LLM session so model has context
-			if (status.value.isModelLoaded && messages.value.length > 0) {
-				await window.electronAPI.aiRestoreChatHistory(
-					messages.value
-						.filter(m => m.role !== 'system')
-						.map(m => ({ role: m.role, content: m.content }))
-				);
-			}
-			
-			showHistory.value = false;
-			scrollToBottom();
-		}
-	} catch (error) {
-		console.error('Failed to load conversation:', error);
-	}
-}
-
-// Delete a conversation
-async function deleteConversation(id: string) {
-	try {
-		await window.electronAPI.conversationDelete(id);
-		
-		// If we deleted the current conversation, clear the view
-		if (currentConversationId.value === id) {
-			messages.value = [];
-			currentConversationId.value = null;
-			conversationTokenCount.value = 0;
-			await window.electronAPI.aiResetChat();
-		}
-		
-		await refreshConversationList();
-	} catch (error) {
-		console.error('Failed to delete conversation:', error);
-	}
-}
-
-// Start renaming a conversation
-function startRename(conv: ConversationMeta) {
-	renamingConversationId.value = conv.id;
-	renameValue.value = conv.title;
-	nextTick(() => {
-		if (renameInputRef.value && renameInputRef.value.length > 0) {
-			renameInputRef.value[0].focus();
-			renameInputRef.value[0].select();
-		}
-	});
-}
-
-// Confirm rename
-async function confirmRename(id: string) {
-	if (!renameValue.value.trim()) {
-		cancelRename();
-		return;
-	}
-	
-	try {
-		await window.electronAPI.conversationRename(id, renameValue.value.trim());
-		await refreshConversationList();
-	} catch (error) {
-		console.error('Failed to rename conversation:', error);
-	}
-	
-	renamingConversationId.value = null;
-	renameValue.value = '';
-}
-
-// Cancel rename
-function cancelRename() {
-	renamingConversationId.value = null;
-	renameValue.value = '';
-}
-
-// Format relative date for history items
-function formatRelativeDate(dateStr: string): string {
-	const date = new Date(dateStr);
-	const now = new Date();
-	const diffMs = now.getTime() - date.getTime();
-	const diffMin = Math.floor(diffMs / 60000);
-	const diffHr = Math.floor(diffMs / 3600000);
-	const diffDay = Math.floor(diffMs / 86400000);
-	
-	if (diffMin < 1) return 'just now';
-	if (diffMin < 60) return `${diffMin}m ago`;
-	if (diffHr < 24) return `${diffHr}h ago`;
-	if (diffDay < 7) return `${diffDay}d ago`;
-	return date.toLocaleDateString();
-}
-
-// Open history panel
-function openHistory() {
-	showHistory.value = true;
-	refreshConversationList();
-}
-
-// Load the previously used model (quick reload)
-async function loadPreviousModel() {
-	const match = previousModelMatch.value;
-	if (!match) return;
-	
-	isLoading.value = true;
-	try {
-		const result = await window.electronAPI.aiLoadModel(match.path);
-		if (result.success) {
-			await refreshStatus();
-			// If we have a conversation loaded, restore its history into the LLM session
-			if (currentConversationId.value && messages.value.length > 0) {
-				await window.electronAPI.aiRestoreChatHistory(
-					messages.value
-						.filter(m => m.role !== 'system')
-						.map(m => ({ role: m.role, content: m.content }))
-				);
-			} else if (!currentConversationId.value) {
-				await startNewConversation();
-			}
-			if (inputField.value) {
-				inputField.value.focus();
-			}
-		} else {
-			messages.value.push({
-				role: 'assistant',
-				content: `Failed to load model: ${result.error}`
-			});
-		}
-	} catch (error) {
-		console.error('Failed to load previous model:', error);
-	} finally {
-		isLoading.value = false;
-	}
-}
-
-// Open models directory
-async function openModelsFolder() {
-	try {
-		await window.electronAPI.aiOpenModelsDir();
-	} catch (error) {
-		console.error('Failed to open models dir:', error);
-	}
-}
-
-// ============================
-// Cloud AI functions
-// ============================
-
-// ============================
-// HF Model Download functions
-// ============================
-
-function toggleHfPanel() {
-	showHfPanel.value = !showHfPanel.value;
-	if (showHfPanel.value && hfSearchResults.value.length === 0) {
-		// Pre-populate with trending GGUF models
-		searchHfModels();
-	}
-}
-
-async function searchHfModels() {
-	hfIsSearching.value = true;
-	hfSelectedRepo.value = null;
-	hfRepoFiles.value = [];
-
-	try {
-		const result = await window.electronAPI.hfSearch(hfSearchQuery.value);
-		if (result.success && result.results) {
-			hfSearchResults.value = result.results;
-		} else {
-			hfSearchResults.value = [];
-		}
-	} catch (error) {
-		console.error('Failed to search HF:', error);
-		hfSearchResults.value = [];
-	} finally {
-		hfIsSearching.value = false;
-	}
-}
-
-async function selectHfRepo(repoId: string) {
-	hfSelectedRepo.value = repoId;
-	hfIsLoadingFiles.value = true;
-	hfRepoFiles.value = [];
-	hfModelInfo.value = null;
-
-	try {
-		const result = await window.electronAPI.hfListFiles(repoId);
-		if (result.success && result.files) {
-			hfRepoFiles.value = result.files;
-			hfModelInfo.value = result.modelInfo || null;
-		}
-	} catch (error) {
-		console.error('Failed to list HF repo files:', error);
-	} finally {
-		hfIsLoadingFiles.value = false;
-	}
-}
-
-async function downloadHfModel(file: HfRepoFile) {
-	if (hfActiveDownloads.value.has(file.name)) return;
-
-	hfActiveDownloads.value.add(file.name);
-
-	try {
-		const result = await window.electronAPI.hfDownload(file.downloadUrl, file.name);
-		if (result.success) {
-			// Refresh the models list after successful download
-			await refreshModels();
-		} else {
-			console.error('Download failed:', result.error);
-		}
-	} catch (error) {
-		console.error('Failed to download model:', error);
-	} finally {
-		hfActiveDownloads.value.delete(file.name);
-		hfDownloadProgress.value = null;
-	}
-}
-
-async function cancelHfDownload(fileName: string) {
-	try {
-		await window.electronAPI.hfCancelDownload(fileName);
-		hfActiveDownloads.value.delete(fileName);
-		hfDownloadProgress.value = null;
-	} catch (error) {
-		console.error('Failed to cancel download:', error);
-	}
-}
-
-function handleHfProgress(progress: HfDownloadProgress) {
-	hfDownloadProgress.value = progress;
-}
-
-function formatNumber(n: number): string {
-	if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
-	if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
-	return String(n);
-}
-
-// Token usage percentage
+// Conversation history composable
+const conversation = useConversationHistory(status, lastUsedModelName, messages);
+const {
+	showHistory,
+	conversationList,
+	currentConversationId,
+	conversationTokenCount,
+	renamingConversationId,
+	renameValue,
+	// @ts-ignore - template ref, bound via ref="renameInputRef" in template
+	renameInputRef,
+	toggleHistory,
+	openHistory,
+	refreshConversationList,
+	createNewConversation,
+	saveCurrentConversation,
+	saveTokenCountToConversation,
+	deleteConversation,
+	startRename,
+	confirmRename,
+	cancelRename,
+	formatRelativeDate,
+} = conversation;
+
+// Agent mode composable
+const agent = useAgentMode(
+	messages,
+	computed(() => props.workspacePath),
+	(path) => emit('file-changed', path)
+);
+const { agentMode, toggleAgentMode, parseAgentEdits, processAgentEdits, approveAgentEdit, rejectAgentEdit } = agent;
+
+// HF download composable
+const hf = useHfDownload(refreshModels);
+const {
+	showHfPanel,
+	hfSearchQuery,
+	hfSearchResults,
+	hfIsSearching,
+	hfSelectedRepo,
+	hfRepoFiles,
+	hfModelInfo,
+	hfIsLoadingFiles,
+	hfDownloadProgress,
+	hfActiveDownloads,
+	toggleHfPanel,
+	searchHfModels,
+	selectHfRepo,
+	downloadHfModel,
+	cancelHfDownload,
+	formatNumber,
+} = hf;
+
+// Chat composable
+const chat = useAIChat(
+	{ messages, status, conversationTokenCount, currentConversationId, agentMode,
+	  activeFile: computed(() => props.activeFile),
+	  workspacePath: computed(() => props.workspacePath) },
+	{ createNewConversation, saveCurrentConversation, saveTokenCountToConversation,
+	  refreshConversationList, refreshStatus, parseAgentEdits, processAgentEdits }
+);
+const {
+	// @ts-ignore - template ref, bound via ref="messagesContainer" in template
+	messagesContainer,
+	inputField, inputMessage, isStreaming, includeNoteContext,
+	copiedIndex, editingIndex, editContent,
+	// @ts-ignore - template ref, bound via ref="editInputRef" in template
+	editInputRef,
+	onMessagesScroll, renderMarkdown, copyMessage,
+	startEditMessage, cancelEditMessage, confirmEditMessage,
+	resendMessage, deleteLastMessagePair, regenerateLastResponse,
+	sendMessage, stopGeneration, scrollToBottom, formatTokenCount,
+} = chat;
+
+// Token bar display
 const tokenUsagePercent = computed(() => {
 	if (!status.value.contextSize) return 0;
 	return Math.min(100, Math.round((conversationTokenCount.value / status.value.contextSize) * 100));
 });
 
-// Format token count for display
-function formatTokenCount(n: number): string {
-	if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
-	return String(n);
-}
+// ============================
+// Orchestration wrappers
+// ============================
 
-// Token streaming handler
-function handleToken(token: string) {
-	const lastMsg = messages.value[messages.value.length - 1];
-	if (lastMsg && lastMsg.role === 'assistant') {
-		lastMsg.content += token;
-		scrollToBottom();
+async function loadSelectedModel() {
+	const result = await model.loadModel();
+	if (result.success) {
+		await startNewConversation();
+	} else {
+		messages.value.push({ role: 'assistant', content: `Failed to load model: ${result.error}` });
 	}
 }
 
-// Watch for streaming updates to auto-scroll
-watch(() => messages.value.length, () => {
+async function unloadModel() {
+	if (status.value.isGenerating) await stopGeneration();
+	await saveCurrentConversation();
+	await model.unloadModel();
+	conversationTokenCount.value = 0;
+}
+
+async function startNewConversation() {
+	await conversation.startNewConversation();
+	inputField.value?.focus();
+}
+
+async function loadConversation(id: string) {
+	await conversation.loadConversation(id);
 	scrollToBottom();
-});
+}
+
+async function loadPreviousModel() {
+	const hasConversation = !!currentConversationId.value;
+	const history = messages.value.map(m => ({ role: m.role, content: m.content }));
+	const result = await model.loadPreviousModel(history, hasConversation);
+	if (result.success) {
+		if (!hasConversation) await startNewConversation();
+		inputField.value?.focus();
+	} else if (result.error) {
+		messages.value.push({ role: 'assistant', content: `Failed to load model: ${result.error}` });
+	}
+}
 
 onMounted(async () => {
-	// Set up token streaming listener
-	window.electronAPI.onAiToken(handleToken);
-	
-	// Set up HF download progress listener
-	window.electronAPI.onHfDownloadProgress(handleHfProgress);
-	
-	// Dropdown click-outside listener
-	document.addEventListener('click', handleDropdownClickOutside);
-	
-	// Load initial state
 	await refreshStatus();
 	await refreshModels();
 	await refreshConversationList();
-	
-	// Focus input if model already loaded
 	if (status.value.isModelLoaded && inputField.value) {
 		inputField.value.focus();
 	}
-});
-
-onUnmounted(() => {
-	// Clean up listeners
-	window.electronAPI.removeAiTokenListener();
-	window.electronAPI.removeHfDownloadProgressListener();
-	document.removeEventListener('click', handleDropdownClickOutside);
 });
 </script>
 
