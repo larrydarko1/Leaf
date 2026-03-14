@@ -214,53 +214,67 @@ After building:
 
 ## Tech Stack
 - **Desktop:** Electron (Native macOS, Windows, Linux app)
-- **Frontend:** Vue 3, TypeScript, Vite, SCSS
+- **Frontend:** Vue 3, TypeScript, SCSS
 - **AI:** [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) + [llama.cpp](https://github.com/ggml-org/llama.cpp) (local LLM inference)
 - **Speech-to-Text:** [Whisper](https://github.com/openai/whisper) via [@huggingface/transformers](https://github.com/huggingface/transformers.js) + ONNX Runtime (local dictation)
 - **Storage:** Plain text files (txt, md), images, videos, audio, and embedded media in your local vault
-- **Build Tools:** Vite + Electron Builder
+- **Build Tools:** [electron-vite](https://electron-vite.org) + Electron Builder
 
 ## Project Structure
 
 ```
 leaf/
-├── electron/
-│   ├── main.cjs                # Electron main process
-│   ├── preload.cjs             # Secure bridge between main/renderer
-│   ├── ai-service.cjs          # Local LLM inference service (node-llama-cpp)
-│   ├── agent-service.cjs       # Agent mode file editing with backup/restore
-│   ├── conversation-service.cjs # Conversation persistence (JSON storage)
-│   ├── hf-download-service.cjs # Hugging Face model search & download
-│   └── speech-service.cjs      # Local Whisper speech-to-text service
 ├── src/
-│   ├── assets/                 # App icons and images
-│   ├── components/
-│   │   ├── AiPanel.vue         # AI chat interface with conversation history
-│   │   ├── AudioRecorder.vue   # Voice recording and audio capture
-│   │   ├── BookmarksPanel.vue  # Bookmarked notes panel
-│   │   ├── ContextMenu.vue     # Right-click context menu
-│   │   ├── DrawingCanvas.vue   # Freehand drawing canvas
-│   │   ├── FileExplorer.vue    # Vault file browser with drag & drop
-│   │   ├── FolderNode.vue      # Tree node for folder/file rendering
-│   │   ├── NoteEditor.vue      # Editor with Markdown preview & media embeds
-│   │   └── SearchPanel.vue     # Full-text search across vault
-│   ├── types/
-│   │   └── electron.d.ts       # Electron API type definitions
-│   ├── App.vue
-│   ├── main.ts
-│   ├── style.scss
-│   └── vite-env.d.ts           # Vite environment type definitions
+│   ├── main/                       # Electron main process
+│   │   ├── index.ts                # App entry point, window creation, protocol
+│   │   ├── lib/
+│   │   │   ├── extensions.ts       # Allowed file extensions list
+│   │   │   ├── mime.ts             # MIME type mappings
+│   │   │   └── paths.ts            # Default paths (models dir, whisper dir)
+│   │   └── services/
+│   │       ├── agent.ts            # Agent mode file editing with backup/restore
+│   │       ├── ai.ts               # Local LLM inference (node-llama-cpp)
+│   │       ├── conversation.ts     # Conversation persistence (JSON storage)
+│   │       ├── fs.ts               # File system operations & watcher
+│   │       ├── hf-download.ts      # Hugging Face model search & download
+│   │       ├── media.ts            # Audio recording & spellcheck
+│   │       └── speech.ts           # Local Whisper speech-to-text
+│   ├── preload/
+│   │   └── index.ts                # Secure bridge between main & renderer
+│   └── renderer/                   # Vue 3 frontend
+│       ├── index.html              # Entry HTML
+│       ├── main.ts                 # Vue bootstrap
+│       ├── App.vue
+│       ├── style.scss
+│       ├── assets/                 # App icons and images
+│       ├── components/
+│       │   ├── AiPanel.vue         # AI chat interface with conversation history
+│       │   ├── AudioRecorder.vue   # Voice recording and audio capture
+│       │   ├── BookmarksPanel.vue  # Bookmarked notes panel
+│       │   ├── ContextMenu.vue     # Right-click context menu
+│       │   ├── DrawingCanvas.vue   # Freehand drawing canvas
+│       │   ├── FileExplorer.vue    # Vault file browser with drag & drop
+│       │   ├── FolderNode.vue      # Tree node for folder/file rendering
+│       │   ├── NoteEditor.vue      # Editor with Markdown preview & media embeds
+│       │   └── SearchPanel.vue     # Full-text search across vault
+│       ├── composables/            # Vue composables (grouped by domain)
+│       │   ├── ai/                 # AI chat, model, agent, history, downloads
+│       │   ├── drawing/            # Canvas rendering, elements, interaction
+│       │   ├── editor/             # Markdown editor, media players, dictation
+│       │   ├── ui/                 # Context menu, keyboard navigation
+│       │   └── vault/              # File selection, folder tree, bookmarks
+│       ├── types/                  # TypeScript type definitions
+│       └── utils/                  # Shared utilities
 ├── models/
-│   └── whisper/                # Whisper ONNX model (download manually — see README)
-├── public/                     # Static assets (demo screenshot, icons)
-├── build/                      # App icons for Electron Builder
-├── index.html                  # Electron entry HTML
+│   └── whisper/                    # Whisper ONNX model (download manually — see above)
+├── public/                         # Static assets (demo screenshot)
+├── build/                          # App icons & packaging hooks for Electron Builder
+├── electron.vite.config.ts         # electron-vite config (main, preload, renderer)
 ├── package.json
-├── vite.config.ts
-├── tsconfig.json               # Base TypeScript config
-├── tsconfig.app.json           # App TypeScript config
-├── tsconfig.node.json          # Node TypeScript config
-└── generate-icons.sh           # Icon generation script
+├── tsconfig.json                   # Root TS config (project references)
+├── tsconfig.app.json               # Renderer TS config (DOM + Vue)
+├── tsconfig.node.json              # Main & preload TS config (Node)
+└── generate-icons.sh               # Icon generation script
 ```
 
 ## Contributing

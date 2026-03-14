@@ -1,7 +1,6 @@
 import { resolve } from 'path';
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite';
 import vue from '@vitejs/plugin-vue';
-import { configDefaults } from 'vitest/config';
 
 export default defineConfig({
     main: {
@@ -41,11 +40,6 @@ export default defineConfig({
                     manualChunks: undefined,
                 },
             },
-        },
-        test: {
-            globals: true,
-            environment: 'jsdom',
-            exclude: [...configDefaults.exclude],
         },
     },
 });
