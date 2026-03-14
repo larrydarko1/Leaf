@@ -1,11 +1,9 @@
 // MIME type maps — pure data, no dependencies.
 // Used by:
-//   main.cjs        → MIME_MAP  (leaf:// protocol handler)
-//   fs-service.cjs  → IMAGE_MIMETYPES, AUDIO_MIMETYPES  (file:readImage, file:readAudio)
+//   main.ts         → MIME_MAP  (leaf:// protocol handler)
+//   fs-service.ts   → IMAGE_MIMETYPES, AUDIO_MIMETYPES  (file:readImage, file:readAudio)
 
-'use strict';
-
-const IMAGE_MIMETYPES = {
+const IMAGE_MIMETYPES: Record<string, string> = {
     '.png': 'image/png',
     '.jpg': 'image/jpeg',
     '.jpeg': 'image/jpeg',
@@ -16,7 +14,7 @@ const IMAGE_MIMETYPES = {
     '.ico': 'image/x-icon',
 };
 
-const AUDIO_MIMETYPES = {
+const AUDIO_MIMETYPES: Record<string, string> = {
     '.mp3': 'audio/mpeg',
     '.wav': 'audio/wav',
     '.flac': 'audio/flac',
@@ -27,7 +25,7 @@ const AUDIO_MIMETYPES = {
     '.aiff': 'audio/aiff',
 };
 
-const VIDEO_MIMETYPES = {
+const VIDEO_MIMETYPES: Record<string, string> = {
     '.mp4': 'video/mp4',
     '.webm': 'video/webm',
     '.mov': 'video/quicktime',
@@ -37,11 +35,11 @@ const VIDEO_MIMETYPES = {
 
 // Full map used by the leaf:// protocol to serve any local file with the
 // correct Content-Type. Falls back to application/octet-stream if unknown.
-const MIME_MAP = {
+const MIME_MAP: Record<string, string> = {
     ...IMAGE_MIMETYPES,
     ...AUDIO_MIMETYPES,
     ...VIDEO_MIMETYPES,
     '.pdf': 'application/pdf',
 };
 
-module.exports = { IMAGE_MIMETYPES, AUDIO_MIMETYPES, VIDEO_MIMETYPES, MIME_MAP };
+export { IMAGE_MIMETYPES, AUDIO_MIMETYPES, VIDEO_MIMETYPES, MIME_MAP };

@@ -1,17 +1,13 @@
 // Media Service
 // Owns IPC handlers for audio recording saves and spellcheck suggestions.
 
-const { ipcMain } = require('electron');
-const path = require('path');
-const fs = require('fs').promises;
+import type { IpcMain } from 'electron';
+import path from 'path';
+import fs from 'fs/promises';
 
-/**
- * Wire up media IPC handlers.
- * @param {Electron.IpcMain} ipc
- */
-function register(ipc) {
+export function register(ipc: IpcMain): void {
     // Save an audio recording (base64-encoded WAV) to the vault
-    ipc.handle('audio:saveRecording', async (event, folderPath, fileName, base64Data) => {
+    ipc.handle('audio:saveRecording', async (_event, folderPath: string, fileName: string, base64Data: string) => {
         if (typeof folderPath !== 'string' || typeof fileName !== 'string' || typeof base64Data !== 'string') {
             return { success: false, error: 'Invalid arguments' };
         }
@@ -24,7 +20,7 @@ function register(ipc) {
             await fs.writeFile(filePath, Buffer.from(base64Data, 'base64'));
             return { success: true, path: filePath };
         } catch (error) {
-            return { success: false, error: error.message };
+            return { success: false, error: (error as Error).message };
         }
     });
 
@@ -34,5 +30,3 @@ function register(ipc) {
         return { success: true, suggestions: [] };
     });
 }
-
-module.exports = { register };

@@ -5,23 +5,31 @@
 //   - Approving edits (delete backup)
 //   - Rejecting edits (restore from backup)
 
-const path = require('path');
-const fs = require('fs').promises;
-const fsSync = require('fs');
-const crypto = require('crypto');
-const os = require('os');
+import type { IpcMain } from 'electron';
+import path from 'path';
+import fs from 'fs/promises';
+import { existsSync } from 'fs';
+import { randomUUID } from 'crypto';
+import os from 'os';
+
+interface EditRecord {
+    editId: string;
+    filePath: string;
+    relativePath: string;
+    backupPath: string;
+    originalContent: string;
+    newContent: string;
+    isNewFile: boolean;
+    timestamp: string;
+}
 
 // In-memory registry of pending edits
-// Map<editId, { filePath, backupPath, originalContent, newContent, timestamp }>
-const pendingEdits = new Map();
+const pendingEdits = new Map<string, EditRecord>();
 
 // Backup directory inside system temp
 const BACKUP_DIR = path.join(os.tmpdir(), 'leaf-agent-backups');
 
-/**
- * Ensure backup directory exists
- */
-async function ensureBackupDir() {
+async function ensureBackupDir(): Promise<void> {
     try {
         await fs.mkdir(BACKUP_DIR, { recursive: true });
     } catch (err) {
@@ -29,30 +37,19 @@ async function ensureBackupDir() {
     }
 }
 
-/**
- * Generate a unique edit ID
- */
-function generateEditId() {
-    return crypto.randomUUID();
+function generateEditId(): string {
+    return randomUUID();
 }
 
-/**
- * Read a file for the agent (scoped to workspace for security)
- * @param {string} filePath - Absolute path to the file
- * @param {string} workspacePath - The workspace root path (for security scoping)
- * @returns {{ success: boolean, content?: string, error?: string }}
- */
-async function readFileForAgent(filePath, workspacePath) {
+async function readFileForAgent(filePath: string, workspacePath: string): Promise<{ success: boolean; content?: string; filePath?: string; error?: string }> {
     try {
-        // Security: ensure the file is within the workspace
         const resolvedFile = path.resolve(filePath);
         const resolvedWorkspace = path.resolve(workspacePath);
         if (!resolvedFile.startsWith(resolvedWorkspace + path.sep) && resolvedFile !== resolvedWorkspace) {
             return { success: false, error: 'Access denied: file is outside the workspace.' };
         }
 
-        // Check file exists
-        if (!fsSync.existsSync(resolvedFile)) {
+        if (!existsSync(resolvedFile)) {
             return { success: false, error: `File not found: ${filePath}` };
         }
 
@@ -60,31 +57,21 @@ async function readFileForAgent(filePath, workspacePath) {
         return { success: true, content, filePath: resolvedFile };
     } catch (error) {
         console.error('Agent readFile error:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: (error as Error).message };
     }
 }
 
-/**
- * Propose an edit: back up the original file and write new content.
- * The edit is "pending" until the user approves or rejects it.
- * @param {string} filePath - Absolute path to the file
- * @param {string} newContent - The new file content proposed by the AI
- * @param {string} workspacePath - The workspace root path
- * @returns {{ success: boolean, editId?: string, error?: string }}
- */
-async function proposeEdit(filePath, newContent, workspacePath) {
+async function proposeEdit(filePath: string, newContent: string, workspacePath: string): Promise<{ success: boolean; editId?: string; filePath?: string; relativePath?: string; originalContent?: string; newContent?: string; isNewFile?: boolean; error?: string }> {
     try {
         const resolvedFile = path.resolve(filePath);
         const resolvedWorkspace = path.resolve(workspacePath);
 
-        // Security: ensure the file is within the workspace
         if (!resolvedFile.startsWith(resolvedWorkspace + path.sep) && resolvedFile !== resolvedWorkspace) {
             return { success: false, error: 'Access denied: file is outside the workspace.' };
         }
 
         await ensureBackupDir();
 
-        // Read original content (file may not exist yet for new files)
         let originalContent = '';
         let isNewFile = false;
         try {
@@ -93,21 +80,16 @@ async function proposeEdit(filePath, newContent, workspacePath) {
             isNewFile = true;
         }
 
-        // Create backup
         const editId = generateEditId();
         const backupPath = path.join(BACKUP_DIR, `${editId}.bak`);
 
-        // Save original content to backup (even if empty for new files)
         await fs.writeFile(backupPath, originalContent, 'utf-8');
 
-        // Write the new content to the file
-        // Ensure parent directory exists (for new files)
         const parentDir = path.dirname(resolvedFile);
         await fs.mkdir(parentDir, { recursive: true });
         await fs.writeFile(resolvedFile, newContent, 'utf-8');
 
-        // Register pending edit
-        const editRecord = {
+        const editRecord: EditRecord = {
             editId,
             filePath: resolvedFile,
             relativePath: path.relative(resolvedWorkspace, resolvedFile),
@@ -115,7 +97,7 @@ async function proposeEdit(filePath, newContent, workspacePath) {
             originalContent,
             newContent,
             isNewFile,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
         };
         pendingEdits.set(editId, editRecord);
 
@@ -127,90 +109,65 @@ async function proposeEdit(filePath, newContent, workspacePath) {
             relativePath: editRecord.relativePath,
             originalContent,
             newContent,
-            isNewFile
+            isNewFile,
         };
     } catch (error) {
         console.error('Agent proposeEdit error:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: (error as Error).message };
     }
 }
 
-/**
- * Approve a pending edit: the new content stays, backup is removed.
- * @param {string} editId
- * @returns {{ success: boolean, error?: string }}
- */
-async function approveEdit(editId) {
+async function approveEdit(editId: string): Promise<{ success: boolean; error?: string }> {
     try {
         const edit = pendingEdits.get(editId);
         if (!edit) {
             return { success: false, error: `Edit ${editId} not found or already resolved.` };
         }
 
-        // Remove backup file
         try {
             await fs.unlink(edit.backupPath);
-        } catch {
-            // Backup may already be removed
-        }
+        } catch { /* backup may already be removed */ }
 
         pendingEdits.delete(editId);
         console.log(`Agent: approved edit ${editId} for ${edit.relativePath}`);
         return { success: true };
     } catch (error) {
         console.error('Agent approveEdit error:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: (error as Error).message };
     }
 }
 
-/**
- * Reject a pending edit: restore original content from backup.
- * @param {string} editId
- * @returns {{ success: boolean, error?: string }}
- */
-async function rejectEdit(editId) {
+async function rejectEdit(editId: string): Promise<{ success: boolean; error?: string }> {
     try {
         const edit = pendingEdits.get(editId);
         if (!edit) {
             return { success: false, error: `Edit ${editId} not found or already resolved.` };
         }
 
-        // Restore original content from backup
         const backupContent = await fs.readFile(edit.backupPath, 'utf-8');
 
         if (edit.isNewFile && backupContent === '') {
-            // If it was a new file, delete it
             try {
                 await fs.unlink(edit.filePath);
-            } catch {
-                // File may already be removed
-            }
+            } catch { /* file may already be removed */ }
         } else {
-            // Restore the original content
             await fs.writeFile(edit.filePath, backupContent, 'utf-8');
         }
 
-        // Remove backup file
         try {
             await fs.unlink(edit.backupPath);
-        } catch {
-            // Already removed
-        }
+        } catch { /* already removed */ }
 
         pendingEdits.delete(editId);
         console.log(`Agent: rejected edit ${editId} for ${edit.relativePath} — reverted`);
         return { success: true };
     } catch (error) {
         console.error('Agent rejectEdit error:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: (error as Error).message };
     }
 }
 
-/**
- * Get all pending edits
- * @returns {{ success: boolean, edits: Array }}
- */
-function getPendingEdits() {
+function getPendingEdits(): { success: boolean; edits: object[] } {
     const edits = [];
     for (const [id, edit] of pendingEdits) {
         edits.push({
@@ -218,16 +175,13 @@ function getPendingEdits() {
             filePath: edit.filePath,
             relativePath: edit.relativePath,
             isNewFile: edit.isNewFile,
-            timestamp: edit.timestamp
+            timestamp: edit.timestamp,
         });
     }
     return { success: true, edits };
 }
 
-/**
- * Clean up all pending edits (restore all, used on shutdown)
- */
-async function cleanupAllPendingEdits() {
+export async function cleanupAllPendingEdits(): Promise<void> {
     for (const [editId] of pendingEdits) {
         try {
             await rejectEdit(editId);
@@ -237,40 +191,26 @@ async function cleanupAllPendingEdits() {
     }
 }
 
-/**
- * Wire up all agent IPC handlers.
- * @param {Electron.IpcMain} ipc
- */
-function register(ipc) {
-    ipc.handle('agent:readFile', async (event, filePath, workspacePath) => {
+export function register(ipc: IpcMain): void {
+    ipc.handle('agent:readFile', async (_event, filePath: string, workspacePath: string) => {
         if (typeof filePath !== 'string' || typeof workspacePath !== 'string') return { success: false, error: 'Invalid arguments' };
         return readFileForAgent(filePath, workspacePath);
     });
 
-    ipc.handle('agent:proposeEdit', async (event, filePath, newContent, workspacePath) => {
+    ipc.handle('agent:proposeEdit', async (_event, filePath: string, newContent: string, workspacePath: string) => {
         if (typeof filePath !== 'string' || typeof newContent !== 'string' || typeof workspacePath !== 'string') return { success: false, error: 'Invalid arguments' };
         return proposeEdit(filePath, newContent, workspacePath);
     });
 
-    ipc.handle('agent:approveEdit', async (event, editId) => {
+    ipc.handle('agent:approveEdit', async (_event, editId: string) => {
         if (typeof editId !== 'string') return { success: false, error: 'Invalid editId' };
         return approveEdit(editId);
     });
 
-    ipc.handle('agent:rejectEdit', async (event, editId) => {
+    ipc.handle('agent:rejectEdit', async (_event, editId: string) => {
         if (typeof editId !== 'string') return { success: false, error: 'Invalid editId' };
         return rejectEdit(editId);
     });
 
     ipc.handle('agent:getPendingEdits', async () => getPendingEdits());
 }
-
-module.exports = {
-    register,
-    readFileForAgent,
-    proposeEdit,
-    approveEdit,
-    rejectEdit,
-    getPendingEdits,
-    cleanupAllPendingEdits
-};

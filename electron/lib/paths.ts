@@ -1,13 +1,12 @@
 // App path constants and resolution helpers — pure Node, no Electron imports.
 // Used by:
-//   ai-service.cjs          → DEFAULT_MODELS_DIR
-//   hf-download-service.cjs → DEFAULT_MODELS_DIR
-//   speech-service.cjs      → getWhisperModelDir()
+//   ai-service.ts           → DEFAULT_MODELS_DIR
+//   hf-download-service.ts  → DEFAULT_MODELS_DIR
+//   speech-service.ts       → getWhisperModelDir()
 
-'use strict';
-
-const path = require('path');
-const os = require('os');
+import path from 'path';
+import os from 'os';
+import fs from 'fs';
 
 // Directory where the user stores their GGUF models: ~/leaf-models/
 const DEFAULT_MODELS_DIR = path.join(os.homedir(), 'leaf-models');
@@ -17,14 +16,14 @@ const DEFAULT_MODELS_DIR = path.join(os.homedir(), 'leaf-models');
  * In development  →  <repo>/models/whisper/
  * In production   →  <app>/Contents/Resources/models/whisper/
  *
- * __dirname here is electron/lib/, so ../../ reaches the repo root.
+ * After electron-vite bundles everything to out/main/index.js,
+ * __dirname points to out/main/, so ../../ reaches the repo root.
  */
-function getWhisperModelDir() {
+function getWhisperModelDir(): string {
     const devPath = path.join(__dirname, '../../models/whisper');
 
     if (process.resourcesPath) {
         const prodPath = path.join(process.resourcesPath, 'models/whisper');
-        const fs = require('fs');
         if (fs.existsSync(prodPath)) {
             console.log('[paths] Whisper model → production:', prodPath);
             return prodPath;
@@ -36,4 +35,4 @@ function getWhisperModelDir() {
     return devPath;
 }
 
-module.exports = { DEFAULT_MODELS_DIR, getWhisperModelDir };
+export { DEFAULT_MODELS_DIR, getWhisperModelDir };

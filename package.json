@@ -3,10 +3,10 @@
   "private": true,
   "version": "1.4.9",
   "type": "module",
-  "main": "electron/main.cjs",
+  "main": "out/main/index.js",
   "scripts": {
-    "dev": "NODE_ENV=development concurrently \"vite\" \"wait-on http://localhost:3000 && electron .\"",
-    "build": "vue-tsc -b && vite build",
+    "dev": "electron-vite dev",
+    "build": "vue-tsc -b && electron-vite build",
     "build:electron": "npm run build && electron-builder",
     "build:mac": "npm run build && electron-builder --mac --publish never",
     "build:win": "npm run build && electron-builder --win --publish never",
@@ -24,16 +24,15 @@
     "@vitejs/plugin-vue": "^6.0.0",
     "@vue/test-utils": "^2.4.6",
     "@vue/tsconfig": "^0.7.0",
-    "concurrently": "^9.2.1",
     "electron": "^40.0.0",
     "electron-builder": "^26.4.0",
+    "electron-vite": "^5.0.0",
     "jsdom": "^26.1.0",
     "sass-embedded": "^1.92.1",
     "typescript": "~5.8.3",
     "vite": "^7.0.0",
     "vitest": "^3.2.4",
-    "vue-tsc": "^2.2.10",
-    "wait-on": "^9.0.3"
+    "vue-tsc": "^2.2.10"
   },
   "description": "A local-first, privacy-focused note-taking app for desktop with built-in AI assistance. Simple interface for reading and editing txt and md files, plus support for loading local LLMs (GGUF format) for private, on-device chat and assistance. All notes and AI interactions stay on your device.",
   "author": "Lorenzo Mazzola",
@@ -51,15 +50,8 @@
     "files": [
       "package.json",
       {
-        "from": "dist",
-        "to": "dist",
-        "filter": [
-          "**/*"
-        ]
-      },
-      {
-        "from": "electron",
-        "to": "electron",
+        "from": "out",
+        "to": "out",
         "filter": [
           "**/*"
         ]

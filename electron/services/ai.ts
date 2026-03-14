@@ -1,33 +1,33 @@
 // AI Service - Manages local LLM inference via node-llama-cpp
-// This runs in the Electron main process and handles model loading, 
+// This runs in the Electron main process and handles model loading,
 // unloading, and chat inference with streaming token support.
 
-const path = require('path');
-const fs = require('fs').promises;
-const fsSync = require('fs');
-const { DEFAULT_MODELS_DIR } = require('../lib/paths.cjs');
+import type { IpcMain, BrowserWindow } from 'electron';
+import { shell } from 'electron';
+import path from 'path';
+import fs from 'fs/promises';
+import { existsSync } from 'fs';
+import { DEFAULT_MODELS_DIR } from '../lib/paths';
 
-let llama = null;       // Llama instance (from node-llama-cpp)
-let model = null;       // Currently loaded model
-let context = null;     // Active context
-let session = null;     // Active chat session
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let llama: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let model: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let context: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let session: any = null;
 
-// Track state
 let isModelLoaded = false;
-let currentModelPath = null;
+let currentModelPath: string | null = null;
 let isGenerating = false;
-let currentAbortController = null; // For stopping generation
-let pendingConversationHistory = null; // Stored history to inject as summary on next prompt
-let trackedMessages = []; // All messages in current conversation (for auto-compaction)
+let currentAbortController: AbortController | null = null;
+let pendingConversationHistory: Array<{ role: string; content: string }> | null = null;
+let trackedMessages: Array<{ role: string; content: string }> = [];
 
-// Auto-compaction threshold: when token usage exceeds this % of context size,
-// the session is reset and a summary is injected on the next prompt.
 const COMPACTION_THRESHOLD = 0.90;
 
-/**
- * Ensure the models directory exists
- */
-async function ensureModelsDir() {
+async function ensureModelsDir(): Promise<void> {
     try {
         await fs.mkdir(DEFAULT_MODELS_DIR, { recursive: true });
     } catch (err) {
@@ -35,47 +35,45 @@ async function ensureModelsDir() {
     }
 }
 
-/**
- * Dynamically import node-llama-cpp (ESM module from CJS)
- */
-async function getLlamaInstance() {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function getLlamaInstance(): Promise<any> {
     if (llama) return llama;
-
-    // node-llama-cpp is ESM, so we need dynamic import
     const { getLlama } = await import('node-llama-cpp');
     llama = await getLlama();
     return llama;
 }
 
-/**
- * List available .gguf model files in the models directory
- */
-/**
- * Filename prefixes/patterns that indicate non-model GGUF files
- * (e.g. multimodal projectors, tokenizers, adapters)
- */
 const NON_MODEL_PREFIXES = [
-    'mmproj-',        // multimodal projection files
-    'projector-',     // alternative projector naming
-    'tokenizer',      // tokenizer files
-    'adapter',        // LoRA adapter files
+    'mmproj-',
+    'projector-',
+    'tokenizer',
+    'adapter',
 ];
 
-/**
- * Check if a .gguf file is likely a loadable chat model
- * (filters out projectors, tokenizers, adapters, etc.)
- */
-function isModelFile(filename) {
+function isModelFile(filename: string): boolean {
     const lower = filename.toLowerCase();
     if (!lower.endsWith('.gguf')) return false;
     return !NON_MODEL_PREFIXES.some(prefix => lower.startsWith(prefix));
 }
 
-/**
- * Recursively scan a directory for .gguf model files
- */
-async function scanForModels(dir, baseDir) {
-    const models = [];
+function formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+interface ModelEntry {
+    name: string;
+    path: string;
+    size: number;
+    sizeFormatted: string;
+    modified: string;
+}
+
+async function scanForModels(dir: string, baseDir: string): Promise<ModelEntry[]> {
+    const models: ModelEntry[] = [];
     let entries;
 
     try {
@@ -88,7 +86,6 @@ async function scanForModels(dir, baseDir) {
         const fullPath = path.join(dir, entry.name);
 
         if (entry.isDirectory()) {
-            // Recurse into subdirectories (max 2 levels deep to avoid scanning too far)
             const depth = path.relative(baseDir, fullPath).split(path.sep).length;
             if (depth <= 2) {
                 const subModels = await scanForModels(fullPath, baseDir);
@@ -97,17 +94,14 @@ async function scanForModels(dir, baseDir) {
         } else if (entry.isFile() && isModelFile(entry.name)) {
             const stats = await fs.stat(fullPath);
             const relativePath = path.relative(baseDir, fullPath);
-            // Use folder/filename as display name if nested, otherwise just filename
-            const displayName = relativePath.includes(path.sep)
-                ? relativePath
-                : entry.name;
+            const displayName = relativePath.includes(path.sep) ? relativePath : entry.name;
 
             models.push({
                 name: displayName,
                 path: fullPath,
                 size: stats.size,
                 sizeFormatted: formatFileSize(stats.size),
-                modified: stats.mtime.toISOString()
+                modified: stats.mtime.toISOString(),
             });
         }
     }
@@ -115,33 +109,25 @@ async function scanForModels(dir, baseDir) {
     return models;
 }
 
-async function listModels() {
+async function listModels(): Promise<{ success: boolean; models: ModelEntry[]; modelsDir: string; error?: string }> {
     await ensureModelsDir();
 
     try {
         const models = await scanForModels(DEFAULT_MODELS_DIR, DEFAULT_MODELS_DIR);
-
-        // Sort by name for consistent ordering
         models.sort((a, b) => a.name.localeCompare(b.name));
-
         return { success: true, models, modelsDir: DEFAULT_MODELS_DIR };
     } catch (error) {
-        return { success: false, error: error.message, models: [], modelsDir: DEFAULT_MODELS_DIR };
+        return { success: false, error: (error as Error).message, models: [], modelsDir: DEFAULT_MODELS_DIR };
     }
 }
 
-/**
- * Load a model from a .gguf file path
- */
-async function loadModel(modelPath) {
+async function loadModel(modelPath: string): Promise<{ success: boolean; modelName?: string; error?: string }> {
     try {
-        // Unload existing model first
         if (isModelLoaded) {
             await unloadModel();
         }
 
-        // Check if file exists
-        if (!fsSync.existsSync(modelPath)) {
+        if (!existsSync(modelPath)) {
             return { success: false, error: `Model file not found: ${modelPath}` };
         }
 
@@ -149,22 +135,16 @@ async function loadModel(modelPath) {
 
         console.log(`Loading model: ${modelPath}`);
         model = await llamaInstance.loadModel({ modelPath });
-
         context = await model.createContext();
 
         const { LlamaChatSession } = await import('node-llama-cpp');
-        session = new LlamaChatSession({
-            contextSequence: context.getSequence()
-        });
+        session = new LlamaChatSession({ contextSequence: context.getSequence() });
 
         isModelLoaded = true;
         currentModelPath = modelPath;
 
         console.log('Model loaded successfully');
-        return {
-            success: true,
-            modelName: path.basename(modelPath)
-        };
+        return { success: true, modelName: path.basename(modelPath) };
     } catch (error) {
         console.error('Failed to load model:', error);
         isModelLoaded = false;
@@ -172,26 +152,15 @@ async function loadModel(modelPath) {
         model = null;
         context = null;
         session = null;
-        return { success: false, error: error.message };
+        return { success: false, error: (error as Error).message };
     }
 }
 
-/**
- * Unload the currently loaded model and free resources
- */
-async function unloadModel() {
+async function unloadModel(): Promise<{ success: boolean; error?: string }> {
     try {
-        if (session) {
-            session = null;
-        }
-        if (context) {
-            await context.dispose();
-            context = null;
-        }
-        if (model) {
-            await model.dispose();
-            model = null;
-        }
+        session = null;
+        if (context) { await context.dispose(); context = null; }
+        if (model) { await model.dispose(); model = null; }
 
         isModelLoaded = false;
         currentModelPath = null;
@@ -199,7 +168,6 @@ async function unloadModel() {
         pendingConversationHistory = null;
         trackedMessages = [];
 
-        // Force garbage collection if available
         if (global.gc) {
             global.gc();
         }
@@ -207,18 +175,15 @@ async function unloadModel() {
         return { success: true };
     } catch (error) {
         console.error('Failed to unload model:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: (error as Error).message };
     }
 }
 
-/**
- * Send a chat message and stream tokens back via callback
- * @param {string} userMessage - The user's message
- * @param {function} onToken - Callback for each generated token chunk
- * @param {string} [noteContext] - Optional note content to include as context
- * @returns {Promise<{success: boolean, response?: string, error?: string}>}
- */
-async function chat(userMessage, onToken, noteContext = null) {
+async function chat(
+    userMessage: string,
+    onToken: (token: string) => void,
+    noteContext: string | null = null
+): Promise<{ success: boolean; response?: string; compacted?: boolean; error?: string }> {
     if (!isModelLoaded || !session) {
         return { success: false, error: 'No model loaded. Please load a model first.' };
     }
@@ -231,11 +196,8 @@ async function chat(userMessage, onToken, noteContext = null) {
     currentAbortController = new AbortController();
 
     try {
-        // Build the prompt with optional note context
         let prompt = userMessage;
 
-        // If we have pending conversation history from a restored session,
-        // inject it as context summary and clear it (one-time injection)
         if (pendingConversationHistory) {
             const summary = buildConversationSummary(pendingConversationHistory);
             pendingConversationHistory = null;
@@ -248,22 +210,18 @@ async function chat(userMessage, onToken, noteContext = null) {
 
         let fullResponse = '';
 
-        const response = await session.prompt(prompt, {
+        await session.prompt(prompt, {
             signal: currentAbortController.signal,
             stopOnAbortSignal: true,
-            onTextChunk: (text) => {
+            onTextChunk: (text: string) => {
                 fullResponse += text;
-                if (onToken) {
-                    onToken(text);
-                }
-            }
+                onToken(text);
+            },
         });
 
-        // Track messages for auto-compaction
         trackedMessages.push({ role: 'user', content: userMessage });
         trackedMessages.push({ role: 'assistant', content: fullResponse });
 
-        // Check if we need to auto-compact the context
         let compacted = false;
         try {
             const seq = session.sequence;
@@ -271,13 +229,9 @@ async function chat(userMessage, onToken, noteContext = null) {
                 const usage = seq.nextTokenIndex / seq.contextSize;
                 if (usage >= COMPACTION_THRESHOLD) {
                     console.log(`Context usage at ${Math.round(usage * 100)}% — auto-compacting...`);
-                    // Store all tracked messages for summary injection
                     pendingConversationHistory = [...trackedMessages];
-                    // Reset the LLM session (frees token memory)
                     const { LlamaChatSession } = await import('node-llama-cpp');
-                    session = new LlamaChatSession({
-                        contextSequence: context.getSequence()
-                    });
+                    session = new LlamaChatSession({ contextSequence: context.getSequence() });
                     compacted = true;
                     console.log('Auto-compaction complete. Summary will be injected on next prompt.');
                 }
@@ -293,14 +247,11 @@ async function chat(userMessage, onToken, noteContext = null) {
         isGenerating = false;
         currentAbortController = null;
         console.error('Chat error:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: (error as Error).message };
     }
 }
 
-/**
- * Stop the currently running generation
- */
-function stopChat() {
+function stopChat(): { success: boolean; error?: string } {
     if (isGenerating && currentAbortController) {
         currentAbortController.abort();
         isGenerating = false;
@@ -311,10 +262,7 @@ function stopChat() {
     return { success: false, error: 'No generation in progress.' };
 }
 
-/**
- * Reset the chat session (clear conversation history)
- */
-async function resetChat() {
+async function resetChat(): Promise<{ success: boolean; error?: string }> {
     if (!isModelLoaded || !model || !context) {
         return { success: false, error: 'No model loaded.' };
     }
@@ -323,23 +271,14 @@ async function resetChat() {
         pendingConversationHistory = null;
         trackedMessages = [];
         const { LlamaChatSession } = await import('node-llama-cpp');
-        session = new LlamaChatSession({
-            contextSequence: context.getSequence()
-        });
+        session = new LlamaChatSession({ contextSequence: context.getSequence() });
         return { success: true };
     } catch (error) {
-        return { success: false, error: error.message };
+        return { success: false, error: (error as Error).message };
     }
 }
 
-/**
- * Store conversation history to be injected as context summary on the next prompt.
- * This avoids re-processing all tokens through the model (which can crash Metal),
- * and instead builds a compact summary that gets prepended to the next user message.
- * @param {Array<{role: string, content: string}>} messages
- * @returns {{success: boolean, error?: string}}
- */
-async function restoreChatHistory(messages) {
+async function restoreChatHistory(messages: Array<{ role: string; content: string }>): Promise<{ success: boolean; error?: string }> {
     if (!messages || messages.length === 0) {
         pendingConversationHistory = null;
         return { success: true };
@@ -347,45 +286,33 @@ async function restoreChatHistory(messages) {
 
     try {
         pendingConversationHistory = messages;
-        trackedMessages = [...messages]; // Also track them for future auto-compaction
+        trackedMessages = [...messages];
         console.log(`Stored ${messages.length} messages for context restoration`);
         return { success: true };
     } catch (error) {
         console.error('Failed to store chat history:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: (error as Error).message };
     }
 }
 
-/**
- * Build a compact summary of previous conversation messages.
- * Truncates long messages to keep the summary within reasonable token limits.
- * @param {Array<{role: string, content: string}>} messages
- * @returns {string}
- */
-function buildConversationSummary(messages) {
+function buildConversationSummary(messages: Array<{ role: string; content: string }>): string {
     const MAX_MSG_LENGTH = 300;
     const MAX_MESSAGES = 20;
 
-    // Take the most recent messages if conversation is very long
     const recentMessages = messages.length > MAX_MESSAGES
         ? messages.slice(-MAX_MESSAGES)
         : messages;
 
-    const lines = recentMessages.map(m => {
+    return recentMessages.map(m => {
         const role = m.role === 'user' ? 'User' : 'Assistant';
         const content = m.content.length > MAX_MSG_LENGTH
             ? m.content.slice(0, MAX_MSG_LENGTH) + '...'
             : m.content;
         return `${role}: ${content}`;
-    });
-
-    return lines.join('\n');
+    }).join('\n');
 }
 
-/**
- * Get current AI service status
- */
-function getStatus() {
+function getStatus(): object {
     let contextTokens = 0;
     let contextSize = 0;
 
@@ -396,9 +323,7 @@ function getStatus() {
                 contextTokens = seq.nextTokenIndex;
                 contextSize = seq.contextSize;
             }
-        } catch (e) {
-            // Sequence may not be available yet
-        }
+        } catch { /* sequence may not be available yet */ }
     }
 
     return {
@@ -408,45 +333,27 @@ function getStatus() {
         isGenerating,
         modelsDir: DEFAULT_MODELS_DIR,
         contextTokens,
-        contextSize
+        contextSize,
     };
 }
 
-/**
- * Open the models directory in the system file manager
- */
-async function openModelsDir() {
+async function openModelsDir(): Promise<{ success: boolean }> {
     await ensureModelsDir();
-    const { shell } = require('electron');
     await shell.openPath(DEFAULT_MODELS_DIR);
     return { success: true };
 }
 
-// Utility: format file size
-function formatFileSize(bytes) {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
-/**
- * Wire up all AI IPC handlers.
- * @param {Electron.IpcMain} ipc
- * @param {() => Electron.BrowserWindow | null} getMainWindow
- */
-function register(ipc, getMainWindow) {
+export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null): void {
     ipc.handle('ai:listModels', async () => listModels());
 
-    ipc.handle('ai:loadModel', async (event, modelPath) => {
+    ipc.handle('ai:loadModel', async (_event, modelPath: string) => {
         if (typeof modelPath !== 'string') return { success: false, error: 'Invalid model path' };
         return loadModel(modelPath);
     });
 
     ipc.handle('ai:unloadModel', async () => unloadModel());
 
-    ipc.handle('ai:chat', async (event, userMessage, noteContext) => {
+    ipc.handle('ai:chat', async (_event, userMessage: string, noteContext: string) => {
         if (typeof userMessage !== 'string') return { success: false, error: 'Invalid message' };
         return chat(
             userMessage,
@@ -461,7 +368,7 @@ function register(ipc, getMainWindow) {
     ipc.handle('ai:stopChat', async () => stopChat());
     ipc.handle('ai:resetChat', async () => resetChat());
 
-    ipc.handle('ai:restoreChatHistory', async (event, messages) => {
+    ipc.handle('ai:restoreChatHistory', async (_event, messages: Array<{ role: string; content: string }>) => {
         if (!Array.isArray(messages)) return { success: false, error: 'Invalid messages' };
         return restoreChatHistory(messages);
     });
@@ -469,17 +376,3 @@ function register(ipc, getMainWindow) {
     ipc.handle('ai:getStatus', async () => getStatus());
     ipc.handle('ai:openModelsDir', async () => openModelsDir());
 }
-
-module.exports = {
-    register,
-    listModels,
-    loadModel,
-    unloadModel,
-    chat,
-    stopChat,
-    resetChat,
-    restoreChatHistory,
-    getStatus,
-    openModelsDir,
-    DEFAULT_MODELS_DIR
-};

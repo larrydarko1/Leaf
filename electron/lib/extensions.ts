@@ -1,7 +1,5 @@
 // Allowed file extension sets for vault scanning — pure data, no dependencies.
-// Used by fs-service.cjs to decide which files to index.
-
-'use strict';
+// Used by fs-service.ts to decide which files to index.
 
 const TEXT_EXTENSIONS = ['.txt', '.md'];
 
@@ -21,7 +19,6 @@ const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.flac', '.aac', '.m4a', '.ogg', '.wma
 const PDF_EXTENSIONS = ['.pdf'];
 const DRAWING_EXTENSIONS = ['.drawing'];
 
-// Pre-built Set for O(1) membership checks during vault scanning
 const ALLOWED_EXTENSIONS = new Set([
     ...TEXT_EXTENSIONS,
     ...CODE_EXTENSIONS,
@@ -32,7 +29,7 @@ const ALLOWED_EXTENSIONS = new Set([
     ...DRAWING_EXTENSIONS,
 ]);
 
-module.exports = {
+export {
     TEXT_EXTENSIONS,
     CODE_EXTENSIONS,
     IMAGE_EXTENSIONS,

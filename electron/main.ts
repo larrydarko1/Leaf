@@ -7,28 +7,26 @@
 //   4. Register IPC handlers by delegating to each service module
 //
 // IPC handler ownership:
-//   fs-service      → file:*, folder:*, files:scan, fs:*, dialog:openFolder, file:resolveEmbedPath, file:copyToVault
-//   media-service   → audio:saveRecording, spellcheck:getSuggestions
-//   ai-service      → ai:*
+//   fs-service           → file:*, folder:*, files:scan, fs:*, dialog:openFolder, file:resolveEmbedPath, file:copyToVault
+//   media-service        → audio:saveRecording, spellcheck:getSuggestions
+//   ai-service           → ai:*
 //   conversation-service → conversations:*
-//   agent-service   → agent:*
+//   agent-service        → agent:*
 //   hf-download-service  → hf:*
-//   speech-service  → speech:*
+//   speech-service       → speech:*
 
-'use strict';
-
-const { app, BrowserWindow, ipcMain, shell, Menu, screen, protocol, net } = require('electron');
-const path = require('path');
-const { pathToFileURL } = require('url');
+import { app, BrowserWindow, ipcMain, shell, Menu, screen, protocol, net, session } from 'electron';
+import path from 'path';
+import { pathToFileURL } from 'url';
 
 // ─── Service modules ─────────────────────────────────────────────────────────
-const fsService = require('./services/fs.cjs');
-const mediaService = require('./services/media.cjs');
-const aiService = require('./services/ai.cjs');
-const conversationService = require('./services/conversation.cjs');
-const agentService = require('./services/agent.cjs');
-const hfDownloadService = require('./services/hf-download.cjs');
-const speechService = require('./services/speech.cjs');
+import * as fsService from './services/fs';
+import * as mediaService from './services/media';
+import * as aiService from './services/ai';
+import * as conversationService from './services/conversation';
+import * as agentService from './services/agent';
+import * as hfDownloadService from './services/hf-download';
+import * as speechService from './services/speech';
 
 // ─── Scheme privileges ───────────────────────────────────────────────────────
 // Must be called before app.whenReady(). Tells Chromium the leaf:// scheme
@@ -42,18 +40,18 @@ protocol.registerSchemesAsPrivileged([{
         supportFetchAPI: true,
         stream: true,
         bypassCSP: true,
-    }
+    },
 }]);
 
 // ─── Window ──────────────────────────────────────────────────────────────────
 
-let mainWindow = null;
+let mainWindow: BrowserWindow | null = null;
 
-/** @returns {Electron.BrowserWindow | null} */
-function getMainWindow() { return mainWindow; }
+function getMainWindow(): BrowserWindow | null { return mainWindow; }
 
-function createWindow() {
-    const iconPath = path.join(__dirname, '../build/icon.icns');
+function createWindow(): void {
+    // After electron-vite bundles to out/main/index.js, __dirname = out/main/
+    const iconPath = path.join(__dirname, '../../build/icon.icns');
 
     const { width: sw, height: sh } = screen.getPrimaryDisplay().workAreaSize;
 
@@ -64,10 +62,11 @@ function createWindow() {
         minHeight: Math.round(sh * 0.50),
         icon: iconPath,
         webPreferences: {
-            preload: path.join(__dirname, 'preload.cjs'),
+            // out/main/__dirname → ../../ → root → out/preload/index.mjs
+            preload: path.join(__dirname, '../preload/index.mjs'),
             nodeIntegration: false,   // never expose Node to the renderer
             contextIsolation: true,    // keep renderer and preload worlds isolated
-            sandbox: false,   // required for preload to use require()
+            sandbox: false,            // required for preload to use require()
             // webSecurity stays at its default (true).
             // Local files (images, audio, video) are served through the
             // leaf:// custom protocol registered below — no need to disable
@@ -81,32 +80,33 @@ function createWindow() {
     });
 
     // Context menu: spellcheck suggestions + standard editing actions
-    mainWindow.webContents.on('context-menu', (event, params) => {
+    mainWindow.webContents.on('context-menu', (_event, params) => {
         const menu = Menu.buildFromTemplate([
             ...params.dictionarySuggestions.map(s => ({
                 label: s,
-                click: () => mainWindow.webContents.replaceMisspelling(s),
+                click: () => mainWindow!.webContents.replaceMisspelling(s),
             })),
-            ...(params.dictionarySuggestions.length > 0 ? [{ type: 'separator' }] : []),
+            ...(params.dictionarySuggestions.length > 0 ? [{ type: 'separator' as const }] : []),
             ...(params.misspelledWord ? [
-                { label: 'Add to Dictionary', click: () => mainWindow.webContents.session.addWordToSpellCheckerDictionary(params.misspelledWord) },
-                { type: 'separator' },
+                { label: 'Add to Dictionary', click: () => mainWindow!.webContents.session.addWordToSpellCheckerDictionary(params.misspelledWord) },
+                { type: 'separator' as const },
             ] : []),
-            { role: 'cut', visible: params.isEditable },
-            { role: 'copy', visible: params.selectionText.length > 0 },
-            { role: 'paste', visible: params.isEditable },
-            { type: 'separator', visible: params.isEditable || params.selectionText.length > 0 },
-            { role: 'selectAll' },
+            { role: 'cut' as const, visible: params.isEditable },
+            { role: 'copy' as const, visible: params.selectionText.length > 0 },
+            { role: 'paste' as const, visible: params.isEditable },
+            { type: 'separator' as const, visible: params.isEditable || params.selectionText.length > 0 },
+            { role: 'selectAll' as const },
         ]);
         menu.popup();
     });
 
     // Load the app
-    if (process.env.NODE_ENV === 'development') {
-        mainWindow.loadURL('http://localhost:3000');
+    // electron-vite sets ELECTRON_RENDERER_URL in dev mode
+    if (process.env['ELECTRON_RENDERER_URL']) {
+        mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
         mainWindow.webContents.openDevTools();
     } else {
-        mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+        mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
     }
 
     // Keep external links out of the app window
@@ -116,14 +116,15 @@ function createWindow() {
     });
 
     mainWindow.webContents.on('will-navigate', (event, url) => {
-        const appOrigin = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'file://';
+        const isDevServer = !!process.env['ELECTRON_RENDERER_URL'];
+        const appOrigin = isDevServer ? process.env['ELECTRON_RENDERER_URL']! : 'file://';
         if (!url.startsWith(appOrigin) && !url.startsWith('leaf://')) {
             event.preventDefault();
             if (url.startsWith('http://') || url.startsWith('https://')) shell.openExternal(url);
         }
     });
 
-    mainWindow.once('ready-to-show', () => mainWindow.show());
+    mainWindow.once('ready-to-show', () => mainWindow!.show());
     mainWindow.on('closed', () => { mainWindow = null; });
 }
 
@@ -132,7 +133,7 @@ function createWindow() {
 // correct MIME types, replacing the need for webSecurity:false.
 // Usage from renderer: <img src="leaf://localhost/absolute/path/to/file.png">
 
-function registerLeafProtocol(ses) {
+function registerLeafProtocol(ses: Electron.Session): void {
     ses.protocol.handle('leaf', (request) => {
         // leaf://localhost/path/to/file  →  /path/to/file
         const filePath = decodeURIComponent(new URL(request.url).pathname);
@@ -148,7 +149,6 @@ function registerLeafProtocol(ses) {
 // ─── App lifecycle ────────────────────────────────────────────────────────────
 
 app.whenReady().then(() => {
-    const { session } = require('electron');
     const leafSession = session.fromPartition('persist:leaf');
 
     registerLeafProtocol(leafSession);
@@ -158,13 +158,12 @@ app.whenReady().then(() => {
     // In production (file:// origin) Electron denies all permission requests
     // by default, so we need an explicit handler.
     // Must target the partition session used by the BrowserWindow.
-    leafSession.setPermissionRequestHandler((webContents, permission, callback) => {
-        const allowed = permission === 'media' || permission === 'microphone' || permission === 'audioCapture';
-        callback(allowed);
+    leafSession.setPermissionRequestHandler((_webContents, permission, callback) => {
+        // 'media' covers microphone and camera access in Electron
+        callback(permission === 'media');
     });
-    leafSession.setPermissionCheckHandler((webContents, permission) => {
-        if (permission === 'media' || permission === 'microphone' || permission === 'audioCapture') return true;
-        return null;
+    leafSession.setPermissionCheckHandler((_webContents, permission) => {
+        return permission === 'media';
     });
 
     // ── Register IPC handlers ────────────────────────────────────────────────
@@ -179,7 +178,7 @@ app.whenReady().then(() => {
     speechService.register(ipcMain, getMainWindow);
 
     // Shell — open external URLs safely (http/https only)
-    ipcMain.handle('shell:openExternal', async (event, url) => {
+    ipcMain.handle('shell:openExternal', async (_event, url: string) => {
         if (typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://'))) {
             await shell.openExternal(url);
             return true;
