@@ -30,6 +30,21 @@ const agentService = require('./services/agent.cjs');
 const hfDownloadService = require('./services/hf-download.cjs');
 const speechService = require('./services/speech.cjs');
 
+// ─── Scheme privileges ───────────────────────────────────────────────────────
+// Must be called before app.whenReady(). Tells Chromium the leaf:// scheme
+// supports streaming (needed for video/audio playback with range requests),
+// is secure (needed for iframe PDF viewing), and supports fetch.
+protocol.registerSchemesAsPrivileged([{
+    scheme: 'leaf',
+    privileges: {
+        standard: true,
+        secure: true,
+        supportFetchAPI: true,
+        stream: true,
+        bypassCSP: true,
+    }
+}]);
+
 // ─── Window ──────────────────────────────────────────────────────────────────
 
 let mainWindow = null;
@@ -102,7 +117,7 @@ function createWindow() {
 
     mainWindow.webContents.on('will-navigate', (event, url) => {
         const appOrigin = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'file://';
-        if (!url.startsWith(appOrigin)) {
+        if (!url.startsWith(appOrigin) && !url.startsWith('leaf://')) {
             event.preventDefault();
             if (url.startsWith('http://') || url.startsWith('https://')) shell.openExternal(url);
         }
@@ -115,18 +130,17 @@ function createWindow() {
 // ─── Custom protocol: leaf:// ─────────────────────────────────────────────────
 // Serves local files (images, audio, video) to the renderer process with
 // correct MIME types, replacing the need for webSecurity:false.
-// Usage from renderer: <img src="leaf:///absolute/path/to/file.png">
+// Usage from renderer: <img src="leaf://localhost/absolute/path/to/file.png">
 
-const { MIME_MAP } = require('./lib/mime.cjs');
-
-function registerLeafProtocol() {
-    protocol.handle('leaf', (request) => {
-        // leaf:///path/to/file  →  /path/to/file
+function registerLeafProtocol(ses) {
+    ses.protocol.handle('leaf', (request) => {
+        // leaf://localhost/path/to/file  →  /path/to/file
         const filePath = decodeURIComponent(new URL(request.url).pathname);
-        const ext = path.extname(filePath).toLowerCase();
-        const mimeType = MIME_MAP[ext] ?? 'application/octet-stream';
+        // Forward the original request headers (including Range for video seeking)
+        // to net.fetch so that streaming/range responses work correctly.
         return net.fetch(pathToFileURL(filePath).toString(), {
-            headers: { 'Content-Type': mimeType },
+            method: request.method,
+            headers: request.headers,
         });
     });
 }
@@ -134,18 +148,21 @@ function registerLeafProtocol() {
 // ─── App lifecycle ────────────────────────────────────────────────────────────
 
 app.whenReady().then(() => {
-    registerLeafProtocol();
+    const { session } = require('electron');
+    const leafSession = session.fromPartition('persist:leaf');
+
+    registerLeafProtocol(leafSession);
     createWindow();
 
     // Grant microphone access for audio recording.
     // In production (file:// origin) Electron denies all permission requests
     // by default, so we need an explicit handler.
-    const { session } = require('electron');
-    session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
+    // Must target the partition session used by the BrowserWindow.
+    leafSession.setPermissionRequestHandler((webContents, permission, callback) => {
         const allowed = permission === 'media' || permission === 'microphone' || permission === 'audioCapture';
         callback(allowed);
     });
-    session.defaultSession.setPermissionCheckHandler((webContents, permission) => {
+    leafSession.setPermissionCheckHandler((webContents, permission) => {
         if (permission === 'media' || permission === 'microphone' || permission === 'audioCapture') return true;
         return null;
     });

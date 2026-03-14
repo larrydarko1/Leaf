@@ -39,6 +39,7 @@ const fmtTime = formatTime;
 
 // Audio player
 const { audioUrl, audioRef, audioError, isLoadingAudio, audioPlaying, audioDuration, audioCurrentTime, audioVolume, audioProgressPercent, onAudioError, onAudioLoaded, onAudioEnded, toggleAudioPlayback, seekAudio, onVolumeChange, toggleMute, loadAudio, reset: resetAudio } = useAudioPlayer();
+void audioRef; // bound as template ref via ref="audioRef"
 
 // PDF state
 const pdfUrl = ref('');
@@ -190,7 +191,7 @@ watch(() => props.file, async (newFile) => {
       hasUnsavedChanges.value = false;
     } else if (checkVideo(ext)) {
       // Set video URL using leaf:// protocol
-      videoUrl.value = `leaf://${newFile.path}`;
+      videoUrl.value = `leaf://localhost${newFile.path}`;
       videoError.value = false;
       // Clear text content for video files
       content.value = '';
@@ -205,7 +206,7 @@ watch(() => props.file, async (newFile) => {
       hasUnsavedChanges.value = false;
     } else if (checkPdf(ext)) {
       // Set PDF URL using leaf:// protocol
-      pdfUrl.value = `leaf://${newFile.path}`;
+      pdfUrl.value = `leaf://localhost${newFile.path}`;
       pdfError.value = false;
       // Clear text content for PDF files
       content.value = '';
@@ -251,17 +252,13 @@ function handleKeyboard(e: KeyboardEvent) {
   }
   
   // Spacebar to toggle audio play/pause (only when not in textarea)
-  if (e.key === ' ' && isAudioFile.value && audioRef.value) {
+  if (e.key === ' ' && isAudioFile.value) {
     // Don't trigger if user is typing in an input or textarea
     const target = e.target as HTMLElement;
     if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
-    
+
     e.preventDefault();
-    if (audioRef.value.paused) {
-      audioRef.value.play();
-    } else {
-      audioRef.value.pause();
-    }
+    toggleAudioPlayback();
   }
 }
 

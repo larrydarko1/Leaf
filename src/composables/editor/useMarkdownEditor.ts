@@ -120,7 +120,7 @@ export function useMarkdownEditor(
                 return `<div class="embed-placeholder" data-embed="${fileName}"><span class="embed-placeholder-icon">📎</span> <span>${fileName}</span></div>`;
             }
 
-            const fileUrl = `file://${encodeURI(resolvedPath).replace(/#/g, '%23')}`;
+            const fileUrl = `leaf://localhost${encodeURI(resolvedPath).replace(/#/g, '%23')}`;
             const mediaType = getEmbedMediaType(fileName);
 
             switch (mediaType) {
