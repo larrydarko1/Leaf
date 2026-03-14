@@ -184,9 +184,9 @@ import BookmarksPanel from './components/BookmarksPanel.vue';
 import AudioRecorder from './components/AudioRecorder.vue';
 import AiPanel from './components/AiPanel.vue';
 import type { FileInfo } from './types/electron';
-import { useVault } from './composables/useVault';
-import { useFileSelection } from './composables/useFileSelection';
-import { useBookmarks } from './composables/useBookmarks';
+import { useVault } from './composables/vault/useVault';
+import { useFileSelection } from './composables/vault/useFileSelection';
+import { useBookmarks } from './composables/vault/useBookmarks';
 
 const noteEditorRef = ref<InstanceType<typeof NoteEditor> | null>(null);
 

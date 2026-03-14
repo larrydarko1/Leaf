@@ -59,7 +59,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useListKeyboardNavigation } from '../composables/useListKeyboardNavigation';
+import { useListKeyboardNavigation } from '../composables/ui/useListKeyboardNavigation';
 import type { FileInfo } from '../types/electron';
 
 const props = defineProps<{

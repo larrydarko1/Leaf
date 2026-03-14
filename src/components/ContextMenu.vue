@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { useContextMenu } from '../composables/useContextMenu';
+import { useContextMenu } from '../composables/ui/useContextMenu';
 
 export interface ContextMenuItem {
   label: string;

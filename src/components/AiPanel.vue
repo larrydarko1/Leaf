@@ -644,11 +644,11 @@
 import { ref, computed, onMounted } from 'vue';
 import type { FileInfo } from '../types/electron';
 import type { ChatMessage } from '../types/chat';
-import { useAIModel } from '../composables/useAIModel';
-import { useConversationHistory } from '../composables/useConversationHistory';
-import { useAgentMode } from '../composables/useAgentMode';
-import { useHfDownload } from '../composables/useHfDownload';
-import { useAIChat } from '../composables/useAIChat';
+import { useAIModel } from '../composables/ai/useAIModel';
+import { useConversationHistory } from '../composables/ai/useConversationHistory';
+import { useAgentMode } from '../composables/ai/useAgentMode';
+import { useHfDownload } from '../composables/ai/useHfDownload';
+import { useAIChat } from '../composables/ai/useAIChat';
 
 const props = defineProps<{
 	activeFile: FileInfo | null;

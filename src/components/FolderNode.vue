@@ -270,6 +270,7 @@
 import { computed, ref, watch, nextTick } from 'vue';
 import type { FileInfo } from '../types/electron';
 import { isImageFile as checkImage, isVideoFile as checkVideo, isAudioFile as checkAudio, isPdfFile as checkPdf, isDrawingFile as checkDrawing, isCodeFile as checkCode } from '../utils/fileTypes';
+import { useTreeNodeDrag } from '../composables/vault/useTreeNodeDrag';
 
 export interface TreeNode {
   path: string;
@@ -305,8 +306,13 @@ const emit = defineEmits<{
 }>();
 
 const renameInput = ref<HTMLInputElement | null>(null);
-const isDragging = ref(false);
-const isDragOver = ref(false);
+
+const { isDragging, isDragOver, handleDragStart, handleDragEnd, handleDragOver, handleDragLeave, handleDrop } = useTreeNodeDrag(
+  () => props.node,
+  () => props.activeFile,
+  (filePath, target) => emit('moveFile', filePath, target),
+  (folderPath, target) => emit('moveFolder', folderPath, target)
+);
 
 const isImageFile   = computed(() => props.node.type === 'file' && checkImage(props.node.file?.extension ?? ''));
 const isVideoFile   = computed(() => props.node.type === 'file' && checkVideo(props.node.file?.extension ?? ''));
@@ -363,67 +369,6 @@ function handleFolderClick() {
 function handleFileClick(event: MouseEvent) {
   if (props.node.file) {
     emit('selectFile', props.node.file, event, undefined);
-  }
-}
-
-function handleDragStart(event: DragEvent) {
-  isDragging.value = true;
-  event.dataTransfer!.effectAllowed = 'move';
-  
-  if (props.node.type === 'file' && props.node.file) {
-    // Set data with type prefix for files
-    event.dataTransfer!.setData('text/plain', 'file:' + props.node.file.path);
-  } else if (props.node.type === 'folder') {
-    // Set data with type prefix for folders
-    event.dataTransfer!.setData('text/plain', 'folder:' + props.node.path);
-  }
-  
-  if (event.dataTransfer) {
-    event.dataTransfer.dropEffect = 'move';
-  }
-}
-
-function handleDragEnd() {
-  isDragging.value = false;
-}
-
-function handleDragOver(event: DragEvent) {
-  if (props.node.type === 'folder') {
-    event.preventDefault();
-    isDragOver.value = true;
-    if (event.dataTransfer) {
-      event.dataTransfer.dropEffect = 'move';
-    }
-  }
-}
-
-function handleDragLeave() {
-  isDragOver.value = false;
-}
-
-function handleDrop(event: DragEvent) {
-  isDragOver.value = false;
-  
-  if (props.node.type === 'folder') {
-    const data = event.dataTransfer?.getData('text/plain');
-    if (data) {
-      if (data.startsWith('file:')) {
-        const filePath = data.substring(5);
-        // Don't allow moving to the same folder the file is already in
-        const file = props.activeFile;
-        if (file && file.path === filePath && file.folder === props.node.path) {
-          return;
-        }
-        emit('moveFile', filePath, props.node.path);
-      } else if (data.startsWith('folder:')) {
-        const folderPath = data.substring(7);
-        // Don't allow moving a folder into itself or if it's the same folder
-        if (folderPath === props.node.path || props.node.path.startsWith(folderPath + '/')) {
-          return;
-        }
-        emit('moveFolder', folderPath, props.node.path);
-      }
-    }
   }
 }
 </script>
