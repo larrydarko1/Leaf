@@ -27,6 +27,7 @@
   },
   "include": [
     "electron.vite.config.ts",
-    "electron/**/*.ts"
+    "src/main/**/*.ts",
+    "src/preload/**/*.ts"
   ]
 }

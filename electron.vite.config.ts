@@ -9,7 +9,7 @@ export default defineConfig({
         build: {
             rollupOptions: {
                 input: {
-                    index: resolve(__dirname, 'electron/main.ts'),
+                    index: resolve(__dirname, 'src/main/index.ts'),
                 },
             },
         },
@@ -19,7 +19,7 @@ export default defineConfig({
         build: {
             rollupOptions: {
                 input: {
-                    index: resolve(__dirname, 'electron/preload.ts'),
+                    index: resolve(__dirname, 'src/preload/index.ts'),
                 },
             },
         },
@@ -27,7 +27,7 @@ export default defineConfig({
     renderer: {
         plugins: [vue()],
         base: './',
-        root: resolve(__dirname, '.'),
+        root: resolve(__dirname, 'src/renderer'),
         server: {
             port: 3000,
             strictPort: true,
@@ -35,7 +35,7 @@ export default defineConfig({
         build: {
             rollupOptions: {
                 input: {
-                    index: resolve(__dirname, 'index.html'),
+                    index: resolve(__dirname, 'src/renderer/index.html'),
                 },
                 output: {
                     manualChunks: undefined,
