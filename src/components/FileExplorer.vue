@@ -1,54 +1,3 @@
-<template>
-  <div class="file-explorer">
-    <div 
-      class="file-list"
-      :class="{ 'drag-over-root': isDragOverRoot }"
-      @dragover.prevent="handleRootDragOver"
-      @dragleave="handleRootDragLeave"
-      @drop.prevent="handleRootDrop"
-    >
-      <!-- Recursive folder tree component -->
-      <FolderNode
-        v-for="node in folderTree"
-        :key="node.path"
-        :node="node"
-        :depth="0"
-        :selected-files="selectedFiles"
-        :active-file="activeFile"
-        :renaming-file="renamingFile"
-        :selected-folder="selectedFolder"
-        :renaming-folder="renamingFolder"
-        :rename-value="renameValue"
-        :expanded-folders="expandedFolders"
-        :bookmarked-files="bookmarkedFiles"
-        @select-file="selectFile"
-        @select-folder="selectFolder"
-        @toggle-folder="toggleFolder"
-        @rename="confirmRename"
-        @cancel-rename="cancelRename"
-        @update-rename-value="renameValue = $event"
-        @context-menu="handleContextMenu"
-        @move-file="handleMoveFile"
-        @move-folder="handleMoveFolder"
-      />
-      
-      <div v-if="files.length === 0" class="empty-state">
-        <p>No files found.</p>
-        <p class="hint">Add text, code, or media files to get started.</p>
-      </div>
-    </div>
-    
-    <!-- Context Menu -->
-    <ContextMenu
-      :visible="contextMenu.visible"
-      :position="contextMenu.position"
-      :items="contextMenuItems"
-      @close="closeContextMenu"
-      @action="handleContextMenuAction"
-    />
-  </div>
-</template>
-
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
 import type { FileInfo, FolderInfo } from '../types/electron';
@@ -327,6 +276,57 @@ watch(() => props.renamingFolder, (newRenamingFolder) => {
   }
 });
 </script>
+
+<template>
+  <div class="file-explorer">
+    <div 
+      class="file-list"
+      :class="{ 'drag-over-root': isDragOverRoot }"
+      @dragover.prevent="handleRootDragOver"
+      @dragleave="handleRootDragLeave"
+      @drop.prevent="handleRootDrop"
+    >
+      <!-- Recursive folder tree component -->
+      <FolderNode
+        v-for="node in folderTree"
+        :key="node.path"
+        :node="node"
+        :depth="0"
+        :selected-files="selectedFiles"
+        :active-file="activeFile"
+        :renaming-file="renamingFile"
+        :selected-folder="selectedFolder"
+        :renaming-folder="renamingFolder"
+        :rename-value="renameValue"
+        :expanded-folders="expandedFolders"
+        :bookmarked-files="bookmarkedFiles"
+        @select-file="selectFile"
+        @select-folder="selectFolder"
+        @toggle-folder="toggleFolder"
+        @rename="confirmRename"
+        @cancel-rename="cancelRename"
+        @update-rename-value="renameValue = $event"
+        @context-menu="handleContextMenu"
+        @move-file="handleMoveFile"
+        @move-folder="handleMoveFolder"
+      />
+      
+      <div v-if="files.length === 0" class="empty-state">
+        <p>No files found.</p>
+        <p class="hint">Add text, code, or media files to get started.</p>
+      </div>
+    </div>
+    
+    <!-- Context Menu -->
+    <ContextMenu
+      :visible="contextMenu.visible"
+      :position="contextMenu.position"
+      :items="contextMenuItems"
+      @close="closeContextMenu"
+      @action="handleContextMenuAction"
+    />
+  </div>
+</template>
 
 <style scoped lang="scss">
 .file-explorer {

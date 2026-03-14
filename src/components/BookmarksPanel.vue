@@ -1,3 +1,57 @@
+<script setup lang="ts">
+import { computed } from 'vue';
+import { useListKeyboardNavigation } from '../composables/ui/useListKeyboardNavigation';
+import type { FileInfo } from '../types/electron';
+
+const props = defineProps<{
+  files: FileInfo[];
+  bookmarkedPaths: string[];
+  selectedFiles: FileInfo[];
+  activeFile: FileInfo | null;
+}>();
+
+const emit = defineEmits<{
+  selectFile: [file: FileInfo, event?: MouseEvent];
+  openFile: [file: FileInfo];
+  removeBookmark: [filePath: string];
+}>();
+
+// Get actual file objects for bookmarked paths
+const bookmarkedFiles = computed(() => {
+  return props.bookmarkedPaths
+    .map(path => props.files.find(f => f.path === path))
+    .filter((f): f is FileInfo => f !== undefined);
+});
+
+function isFileSelected(file: FileInfo): boolean {
+  return props.selectedFiles.some(f => f.path === file.path);
+}
+
+function selectFile(file: FileInfo, event?: MouseEvent) {
+  emit('selectFile', file, event);
+}
+
+function openFile(file: FileInfo) {
+  emit('openFile', file);
+}
+
+function removeBookmark(file: FileInfo) {
+  emit('removeBookmark', file.path);
+}
+
+useListKeyboardNavigation(
+  () => bookmarkedFiles.value,
+  {
+    onSelect: (file) => selectFile(file),
+    onOpen: (file) => openFile(file),
+  },
+  {
+    wrap: true,
+    getExternalIndex: () => bookmarkedFiles.value.findIndex(f => isFileSelected(f)),
+  }
+);
+</script>
+
 <template>
   <div class="bookmarks-panel">
     <div class="bookmarks-header">
@@ -56,60 +110,6 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { computed } from 'vue';
-import { useListKeyboardNavigation } from '../composables/ui/useListKeyboardNavigation';
-import type { FileInfo } from '../types/electron';
-
-const props = defineProps<{
-  files: FileInfo[];
-  bookmarkedPaths: string[];
-  selectedFiles: FileInfo[];
-  activeFile: FileInfo | null;
-}>();
-
-const emit = defineEmits<{
-  selectFile: [file: FileInfo, event?: MouseEvent];
-  openFile: [file: FileInfo];
-  removeBookmark: [filePath: string];
-}>();
-
-// Get actual file objects for bookmarked paths
-const bookmarkedFiles = computed(() => {
-  return props.bookmarkedPaths
-    .map(path => props.files.find(f => f.path === path))
-    .filter((f): f is FileInfo => f !== undefined);
-});
-
-function isFileSelected(file: FileInfo): boolean {
-  return props.selectedFiles.some(f => f.path === file.path);
-}
-
-function selectFile(file: FileInfo, event?: MouseEvent) {
-  emit('selectFile', file, event);
-}
-
-function openFile(file: FileInfo) {
-  emit('openFile', file);
-}
-
-function removeBookmark(file: FileInfo) {
-  emit('removeBookmark', file.path);
-}
-
-useListKeyboardNavigation(
-  () => bookmarkedFiles.value,
-  {
-    onSelect: (file) => selectFile(file),
-    onOpen: (file) => openFile(file),
-  },
-  {
-    wrap: true,
-    getExternalIndex: () => bookmarkedFiles.value.findIndex(f => isFileSelected(f)),
-  }
-);
-</script>
 
 <style scoped lang="scss">
 .bookmarks-panel {

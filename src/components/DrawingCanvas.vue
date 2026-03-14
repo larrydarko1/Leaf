@@ -1,341 +1,3 @@
-<template>
-  <div
-    class="excalidraw-container"
-    ref="containerEl"
-    tabindex="0"
-    @keydown="handleKeydown"
-    @keyup="handleKeyup"
-    @contextmenu.prevent
-  >
-    <!-- Floating Toolbar -->
-    <div class="floating-toolbar">
-      <div class="toolbar-inner">
-        <!-- Selection -->
-        <button
-          @click="selectTool('select')"
-          class="toolbar-btn"
-          :class="{ active: currentTool === 'select' }"
-          title="Selection — V"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24"><path d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87a.5.5 0 0 0 .35-.85L6.35 2.85a.5.5 0 0 0-.85.36z" fill="currentColor"/></svg>
-        </button>
-
-        <!-- Hand -->
-        <button
-          @click="selectTool('hand')"
-          class="toolbar-btn"
-          :class="{ active: currentTool === 'hand' }"
-          title="Hand (Pan) — H"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 9.5V6a2 2 0 0 0-4 0v8l-1.46-1.46a2 2 0 0 0-2.83 2.83L7 20.64A4 4 0 0 0 9.83 22H15a4 4 0 0 0 4-4v-5a2 2 0 0 0-4 0v1"/></svg>
-        </button>
-
-        <span class="toolbar-sep"></span>
-
-        <!-- Rectangle -->
-        <button
-          @click="selectTool('rectangle')"
-          class="toolbar-btn"
-          :class="{ active: currentTool === 'rectangle' }"
-          title="Rectangle — R"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-        </button>
-
-        <!-- Diamond -->
-        <button
-          @click="selectTool('diamond')"
-          class="toolbar-btn"
-          :class="{ active: currentTool === 'diamond' }"
-          title="Diamond — D"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12,2 22,12 12,22 2,12"/></svg>
-        </button>
-
-        <!-- Ellipse -->
-        <button
-          @click="selectTool('ellipse')"
-          class="toolbar-btn"
-          :class="{ active: currentTool === 'ellipse' }"
-          title="Ellipse — O"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/></svg>
-        </button>
-
-        <!-- Triangle -->
-        <button
-          @click="selectTool('triangle')"
-          class="toolbar-btn"
-          :class="{ active: currentTool === 'triangle' }"
-          title="Triangle — T"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12,3 22,21 2,21"/></svg>
-        </button>
-
-        <!-- Arrow -->
-        <button
-          @click="selectTool('arrow')"
-          class="toolbar-btn"
-          :class="{ active: currentTool === 'arrow' }"
-          title="Arrow — A"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="10,5 19,5 19,14"/></svg>
-        </button>
-
-        <!-- Line -->
-        <button
-          @click="selectTool('line')"
-          class="toolbar-btn"
-          :class="{ active: currentTool === 'line' }"
-          title="Line — L"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="5" y1="19" x2="19" y2="5"/></svg>
-        </button>
-
-        <span class="toolbar-sep"></span>
-
-        <!-- Freedraw -->
-        <button
-          @click="selectTool('freedraw')"
-          class="toolbar-btn"
-          :class="{ active: currentTool === 'freedraw' }"
-          title="Pen — P"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-        </button>
-
-        <!-- Text -->
-        <button
-          @click="selectTool('text')"
-          class="toolbar-btn"
-          :class="{ active: currentTool === 'text' }"
-          title="Text — X"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9.5" y1="20" x2="14.5" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
-        </button>
-
-        <!-- Eraser -->
-        <button
-          @click="selectTool('eraser')"
-          class="toolbar-btn"
-          :class="{ active: currentTool === 'eraser' }"
-          title="Eraser — E"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16c-.8-.8-.8-2 0-2.8L13.8 2.4c.8-.8 2-.8 2.8 0L21 6.8c.8.8.8 2 0 2.8L12 18"/></svg>
-        </button>
-
-        <span class="toolbar-sep"></span>
-
-        <!-- Architecture shapes dropdown -->
-        <div class="arch-dropdown" ref="archDropdownEl">
-          <button
-            @click="toggleArchDropdown"
-            class="toolbar-btn"
-            :class="{ active: isArchTool }"
-            title="Architecture Shapes"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <ellipse cx="12" cy="5" rx="9" ry="3"/>
-              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
-              <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/>
-            </svg>
-          </button>
-          <transition name="panel-fade">
-            <div v-if="archDropdownOpen" class="arch-dropdown-menu">
-              <button
-                v-for="shape in archShapes"
-                :key="shape.tool"
-                @click="selectArchTool(shape.tool)"
-                class="arch-shape-btn"
-                :class="{ active: currentTool === shape.tool }"
-                :title="shape.label"
-              >
-                <span class="arch-shape-icon" v-html="shape.icon"></span>
-                <span class="arch-shape-label">{{ shape.label }}</span>
-              </button>
-            </div>
-          </transition>
-        </div>
-      </div>
-    </div>
-
-    <!-- Properties Panel (left) -->
-    <transition name="panel-fade">
-      <div v-if="shouldShowProperties" class="properties-panel">
-        <!-- Stroke Color -->
-        <div class="prop-section">
-          <div class="prop-label">Stroke</div>
-          <div class="color-grid">
-            <button
-              v-for="c in strokeColorPalette"
-              :key="'s-' + c"
-              @click="setProperty('strokeColor', c)"
-              class="color-swatch"
-              :class="{ active: activeStrokeColor === c }"
-              :style="{ background: c }"
-            />
-          </div>
-        </div>
-
-        <!-- Fill Color (only for shapes) -->
-        <div class="prop-section" v-if="showFillOption">
-          <div class="prop-label">Background</div>
-          <div class="color-grid">
-            <button
-              @click="setProperty('fillColor', 'transparent')"
-              class="color-swatch transparent-swatch"
-              :class="{ active: activeFillColor === 'transparent' }"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16"><line x1="0" y1="16" x2="16" y2="0" stroke="currentColor" stroke-width="1.5"/></svg>
-            </button>
-            <button
-              v-for="c in fillColorPalette"
-              :key="'f-' + c"
-              @click="setProperty('fillColor', c)"
-              class="color-swatch"
-              :class="{ active: activeFillColor === c }"
-              :style="{ background: c }"
-            />
-          </div>
-        </div>
-
-        <!-- Stroke Width -->
-        <div class="prop-section">
-          <div class="prop-label">Stroke width</div>
-          <div class="stroke-width-row">
-            <button
-              v-for="w in strokeWidthOptions"
-              :key="w"
-              @click="setProperty('strokeWidth', w)"
-              class="stroke-width-btn"
-              :class="{ active: activeStrokeWidth === w }"
-            >
-              <span class="stroke-preview" :style="{ height: w + 'px' }"></span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Stroke Style -->
-        <div class="prop-section">
-          <div class="prop-label">Stroke style</div>
-          <div class="stroke-style-row">
-            <button
-              v-for="s in strokeStyleOptions"
-              :key="s.value"
-              @click="setProperty('strokeStyle', s.value)"
-              class="stroke-style-btn"
-              :class="{ active: activeStrokeStyle === s.value }"
-              :title="s.label"
-            >
-              <svg width="40" height="6" viewBox="0 0 40 6">
-                <line x1="0" y1="3" x2="40" y2="3" stroke="currentColor" stroke-width="2" :stroke-dasharray="s.dash"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <!-- Roundness -->
-        <div class="prop-section" v-if="showRoundnessOption">
-          <div class="prop-label">Roundness</div>
-          <div class="roundness-row">
-            <button
-              v-for="r in borderRadiusOptions"
-              :key="r.value"
-              @click="setProperty('borderRadius', r.value)"
-              class="roundness-btn"
-              :class="{ active: activeBorderRadius === r.value }"
-              :title="r.label"
-            >
-              <svg v-if="r.icon === 'sharp'" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
-                <rect x="2" y="2" width="16" height="16"/>
-              </svg>
-              <svg v-else-if="r.icon === 'round'" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
-                <rect x="2" y="2" width="16" height="16" rx="4"/>
-              </svg>
-              <svg v-else width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
-                <rect x="2" y="2" width="16" height="16" rx="8"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <!-- Actions (only when element selected) -->
-        <div class="prop-section" v-if="selectedElement">
-          <div class="prop-actions">
-            <button @click="copySelected" class="action-btn" title="Copy (⌘C)">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              Copy
-            </button>
-            <button @click="duplicateSelected" class="action-btn" title="Duplicate (⌘D)">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="13" height="13" rx="2"/><rect x="8" y="8" width="13" height="13" rx="2"/></svg>
-              Duplicate
-            </button>
-            <button @click="deleteSelected" class="action-btn action-btn--delete" title="Delete (⌫)">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-              Delete
-            </button>
-          </div>
-        </div>
-      </div>
-    </transition>
-
-    <!-- Canvas -->
-    <canvas
-      ref="canvas"
-      @pointerdown="onPointerDown"
-      @pointermove="onPointerMove"
-      @pointerup="onPointerUp"
-      @pointerleave="onPointerUp"
-      @dblclick="onDoubleClick"
-      @wheel.prevent="onWheel"
-      :style="{ cursor: canvasCursor }"
-    />
-
-    <!-- Text Editing Overlay -->
-    <textarea
-      v-if="textEditing"
-      ref="textInputEl"
-      v-model="textValue"
-      class="text-edit-overlay"
-      :style="textOverlayStyle"
-      @blur="finalizeText"
-      @keydown.escape.prevent="cancelText"
-      @keydown.enter.exact="onTextEnter"
-      @pointerdown.stop
-    />
-
-    <!-- Footer -->
-    <div class="canvas-footer">
-      <div class="footer-left">
-        <div class="zoom-controls">
-          <button @click="zoomToCenter(zoom - 0.1)" class="zoom-btn" title="Zoom out">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          </button>
-          <button @click="zoomToCenter(1)" class="zoom-value" title="Reset zoom">{{ zoomPercent }}%</button>
-          <button @click="zoomToCenter(zoom + 0.1)" class="zoom-btn" title="Zoom in">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          </button>
-        </div>
-      </div>
-      <div class="footer-center">
-        <button @click="undo" class="footer-btn" :disabled="historyIndex <= 0" title="Undo (⌘Z)">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
-        </button>
-        <button @click="redo" class="footer-btn" :disabled="historyIndex >= history.length - 1" title="Redo (⌘⇧Z)">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"/></svg>
-        </button>
-        <button @click="clearAll" class="footer-btn" title="Clear canvas">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-        </button>
-      </div>
-      <div class="footer-right">
-        <span v-if="isSaving" class="save-status saving">Saving...</span>
-        <span v-else-if="hasUnsavedChanges" class="save-status unsaved">Unsaved</span>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import type { ToolType, StrokeStyle } from '../types/drawing';
@@ -697,9 +359,345 @@ function setProperty(prop: string, value: any) {
     (defaultStyle.value as any)[prop] = value;
   }
 }
-
-
 </script>
+
+<template>
+  <div
+    class="excalidraw-container"
+    ref="containerEl"
+    tabindex="0"
+    @keydown="handleKeydown"
+    @keyup="handleKeyup"
+    @contextmenu.prevent
+  >
+    <!-- Floating Toolbar -->
+    <div class="floating-toolbar">
+      <div class="toolbar-inner">
+        <!-- Selection -->
+        <button
+          @click="selectTool('select')"
+          class="toolbar-btn"
+          :class="{ active: currentTool === 'select' }"
+          title="Selection — V"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24"><path d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87a.5.5 0 0 0 .35-.85L6.35 2.85a.5.5 0 0 0-.85.36z" fill="currentColor"/></svg>
+        </button>
+
+        <!-- Hand -->
+        <button
+          @click="selectTool('hand')"
+          class="toolbar-btn"
+          :class="{ active: currentTool === 'hand' }"
+          title="Hand (Pan) — H"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 9.5V6a2 2 0 0 0-4 0v8l-1.46-1.46a2 2 0 0 0-2.83 2.83L7 20.64A4 4 0 0 0 9.83 22H15a4 4 0 0 0 4-4v-5a2 2 0 0 0-4 0v1"/></svg>
+        </button>
+
+        <span class="toolbar-sep"></span>
+
+        <!-- Rectangle -->
+        <button
+          @click="selectTool('rectangle')"
+          class="toolbar-btn"
+          :class="{ active: currentTool === 'rectangle' }"
+          title="Rectangle — R"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+        </button>
+
+        <!-- Diamond -->
+        <button
+          @click="selectTool('diamond')"
+          class="toolbar-btn"
+          :class="{ active: currentTool === 'diamond' }"
+          title="Diamond — D"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12,2 22,12 12,22 2,12"/></svg>
+        </button>
+
+        <!-- Ellipse -->
+        <button
+          @click="selectTool('ellipse')"
+          class="toolbar-btn"
+          :class="{ active: currentTool === 'ellipse' }"
+          title="Ellipse — O"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/></svg>
+        </button>
+
+        <!-- Triangle -->
+        <button
+          @click="selectTool('triangle')"
+          class="toolbar-btn"
+          :class="{ active: currentTool === 'triangle' }"
+          title="Triangle — T"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12,3 22,21 2,21"/></svg>
+        </button>
+
+        <!-- Arrow -->
+        <button
+          @click="selectTool('arrow')"
+          class="toolbar-btn"
+          :class="{ active: currentTool === 'arrow' }"
+          title="Arrow — A"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="10,5 19,5 19,14"/></svg>
+        </button>
+
+        <!-- Line -->
+        <button
+          @click="selectTool('line')"
+          class="toolbar-btn"
+          :class="{ active: currentTool === 'line' }"
+          title="Line — L"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="5" y1="19" x2="19" y2="5"/></svg>
+        </button>
+
+        <span class="toolbar-sep"></span>
+
+        <!-- Freedraw -->
+        <button
+          @click="selectTool('freedraw')"
+          class="toolbar-btn"
+          :class="{ active: currentTool === 'freedraw' }"
+          title="Pen — P"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+        </button>
+
+        <!-- Text -->
+        <button
+          @click="selectTool('text')"
+          class="toolbar-btn"
+          :class="{ active: currentTool === 'text' }"
+          title="Text — X"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9.5" y1="20" x2="14.5" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        </button>
+
+        <!-- Eraser -->
+        <button
+          @click="selectTool('eraser')"
+          class="toolbar-btn"
+          :class="{ active: currentTool === 'eraser' }"
+          title="Eraser — E"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16c-.8-.8-.8-2 0-2.8L13.8 2.4c.8-.8 2-.8 2.8 0L21 6.8c.8.8.8 2 0 2.8L12 18"/></svg>
+        </button>
+
+        <span class="toolbar-sep"></span>
+
+        <!-- Architecture shapes dropdown -->
+        <div class="arch-dropdown" ref="archDropdownEl">
+          <button
+            @click="toggleArchDropdown"
+            class="toolbar-btn"
+            :class="{ active: isArchTool }"
+            title="Architecture Shapes"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <ellipse cx="12" cy="5" rx="9" ry="3"/>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+              <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/>
+            </svg>
+          </button>
+          <transition name="panel-fade">
+            <div v-if="archDropdownOpen" class="arch-dropdown-menu">
+              <button
+                v-for="shape in archShapes"
+                :key="shape.tool"
+                @click="selectArchTool(shape.tool)"
+                class="arch-shape-btn"
+                :class="{ active: currentTool === shape.tool }"
+                :title="shape.label"
+              >
+                <span class="arch-shape-icon" v-html="shape.icon"></span>
+                <span class="arch-shape-label">{{ shape.label }}</span>
+              </button>
+            </div>
+          </transition>
+        </div>
+      </div>
+    </div>
+
+    <!-- Properties Panel (left) -->
+    <transition name="panel-fade">
+      <div v-if="shouldShowProperties" class="properties-panel">
+        <!-- Stroke Color -->
+        <div class="prop-section">
+          <div class="prop-label">Stroke</div>
+          <div class="color-grid">
+            <button
+              v-for="c in strokeColorPalette"
+              :key="'s-' + c"
+              @click="setProperty('strokeColor', c)"
+              class="color-swatch"
+              :class="{ active: activeStrokeColor === c }"
+              :style="{ background: c }"
+            />
+          </div>
+        </div>
+
+        <!-- Fill Color (only for shapes) -->
+        <div class="prop-section" v-if="showFillOption">
+          <div class="prop-label">Background</div>
+          <div class="color-grid">
+            <button
+              @click="setProperty('fillColor', 'transparent')"
+              class="color-swatch transparent-swatch"
+              :class="{ active: activeFillColor === 'transparent' }"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16"><line x1="0" y1="16" x2="16" y2="0" stroke="currentColor" stroke-width="1.5"/></svg>
+            </button>
+            <button
+              v-for="c in fillColorPalette"
+              :key="'f-' + c"
+              @click="setProperty('fillColor', c)"
+              class="color-swatch"
+              :class="{ active: activeFillColor === c }"
+              :style="{ background: c }"
+            />
+          </div>
+        </div>
+
+        <!-- Stroke Width -->
+        <div class="prop-section">
+          <div class="prop-label">Stroke width</div>
+          <div class="stroke-width-row">
+            <button
+              v-for="w in strokeWidthOptions"
+              :key="w"
+              @click="setProperty('strokeWidth', w)"
+              class="stroke-width-btn"
+              :class="{ active: activeStrokeWidth === w }"
+            >
+              <span class="stroke-preview" :style="{ height: w + 'px' }"></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Stroke Style -->
+        <div class="prop-section">
+          <div class="prop-label">Stroke style</div>
+          <div class="stroke-style-row">
+            <button
+              v-for="s in strokeStyleOptions"
+              :key="s.value"
+              @click="setProperty('strokeStyle', s.value)"
+              class="stroke-style-btn"
+              :class="{ active: activeStrokeStyle === s.value }"
+              :title="s.label"
+            >
+              <svg width="40" height="6" viewBox="0 0 40 6">
+                <line x1="0" y1="3" x2="40" y2="3" stroke="currentColor" stroke-width="2" :stroke-dasharray="s.dash"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Roundness -->
+        <div class="prop-section" v-if="showRoundnessOption">
+          <div class="prop-label">Roundness</div>
+          <div class="roundness-row">
+            <button
+              v-for="r in borderRadiusOptions"
+              :key="r.value"
+              @click="setProperty('borderRadius', r.value)"
+              class="roundness-btn"
+              :class="{ active: activeBorderRadius === r.value }"
+              :title="r.label"
+            >
+              <svg v-if="r.icon === 'sharp'" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="2" y="2" width="16" height="16"/>
+              </svg>
+              <svg v-else-if="r.icon === 'round'" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="2" y="2" width="16" height="16" rx="4"/>
+              </svg>
+              <svg v-else width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="2" y="2" width="16" height="16" rx="8"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Actions (only when element selected) -->
+        <div class="prop-section" v-if="selectedElement">
+          <div class="prop-actions">
+            <button @click="copySelected" class="action-btn" title="Copy (⌘C)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+            <button @click="duplicateSelected" class="action-btn" title="Duplicate (⌘D)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="13" height="13" rx="2"/><rect x="8" y="8" width="13" height="13" rx="2"/></svg>
+              Duplicate
+            </button>
+            <button @click="deleteSelected" class="action-btn action-btn--delete" title="Delete (⌫)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- Canvas -->
+    <canvas
+      ref="canvas"
+      @pointerdown="onPointerDown"
+      @pointermove="onPointerMove"
+      @pointerup="onPointerUp"
+      @pointerleave="onPointerUp"
+      @dblclick="onDoubleClick"
+      @wheel.prevent="onWheel"
+      :style="{ cursor: canvasCursor }"
+    />
+
+    <!-- Text Editing Overlay -->
+    <textarea
+      v-if="textEditing"
+      ref="textInputEl"
+      v-model="textValue"
+      class="text-edit-overlay"
+      :style="textOverlayStyle"
+      @blur="finalizeText"
+      @keydown.escape.prevent="cancelText"
+      @keydown.enter.exact="onTextEnter"
+      @pointerdown.stop
+    />
+
+    <!-- Footer -->
+    <div class="canvas-footer">
+      <div class="footer-left">
+        <div class="zoom-controls">
+          <button @click="zoomToCenter(zoom - 0.1)" class="zoom-btn" title="Zoom out">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <button @click="zoomToCenter(1)" class="zoom-value" title="Reset zoom">{{ zoomPercent }}%</button>
+          <button @click="zoomToCenter(zoom + 0.1)" class="zoom-btn" title="Zoom in">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="footer-center">
+        <button @click="undo" class="footer-btn" :disabled="historyIndex <= 0" title="Undo (⌘Z)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+        </button>
+        <button @click="redo" class="footer-btn" :disabled="historyIndex >= history.length - 1" title="Redo (⌘⇧Z)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"/></svg>
+        </button>
+        <button @click="clearAll" class="footer-btn" title="Clear canvas">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+        </button>
+      </div>
+      <div class="footer-right">
+        <span v-if="isSaving" class="save-status saving">Saving...</span>
+        <span v-else-if="hasUnsavedChanges" class="save-status unsaved">Unsaved</span>
+      </div>
+    </div>
+  </div>
+</template>
 
 <style scoped lang="scss">
 .excalidraw-container {

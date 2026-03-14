@@ -1,5 +1,5 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import type { AiModelInfo, AiStatus } from '../types/electron';
+import type { AiModelInfo, AiStatus } from '../../types/ai';
 
 export function useAIModel() {
     const status = ref<AiStatus>({

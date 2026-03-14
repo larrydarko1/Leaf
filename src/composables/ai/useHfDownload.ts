@@ -1,5 +1,5 @@
 import { ref, onMounted, onUnmounted } from 'vue';
-import type { HfSearchResult, HfRepoFile, HfModelInfo, HfDownloadProgress } from '../types/electron';
+import type { HfSearchResult, HfRepoFile, HfModelInfo, HfDownloadProgress } from '../../types/hf';
 
 export function useHfDownload(onModelsRefresh: () => Promise<void>) {
     const showHfPanel = ref(false);

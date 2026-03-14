@@ -1,3 +1,182 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+import type { FileInfo } from '../types/electron';
+import type { ChatMessage } from '../types/chat';
+import { useAIModel } from '../composables/ai/useAIModel';
+import { useConversationHistory } from '../composables/ai/useConversationHistory';
+import { useAgentMode } from '../composables/ai/useAgentMode';
+import { useHfDownload } from '../composables/ai/useHfDownload';
+import { useAIChat } from '../composables/ai/useAIChat';
+
+const props = defineProps<{
+	activeFile: FileInfo | null;
+	workspacePath: string | null;
+}>();
+
+const emit = defineEmits<{
+	(e: 'close'): void;
+	(e: 'file-changed', path: string): void;
+}>();
+
+// AI model composable
+const model = useAIModel();
+const {
+	status,
+	availableModels,
+	isLoading,
+	selectedModelPath,
+	lastUsedModelName,
+	isReady,
+	isAnyGenerating,
+	selectedModelLabel,
+	showDropdown,
+	// @ts-ignore - template ref, bound via ref="dropdownRef" in template
+	dropdownRef,
+	dropdownPosition,
+	previousModelMatch,
+	truncate,
+	toggleDropdown,
+	selectModel,
+	refreshModels,
+	refreshStatus,
+	openModelsFolder,
+} = model;
+
+// Shared messages state (passed to multiple composables)
+const messages = ref<ChatMessage[]>([]);
+
+// Conversation history composable
+const conversation = useConversationHistory(status, lastUsedModelName, messages);
+const {
+	showHistory,
+	conversationList,
+	currentConversationId,
+	conversationTokenCount,
+	renamingConversationId,
+	renameValue,
+	// @ts-ignore - template ref, bound via ref="renameInputRef" in template
+	renameInputRef,
+	toggleHistory,
+	openHistory,
+	refreshConversationList,
+	createNewConversation,
+	saveCurrentConversation,
+	saveTokenCountToConversation,
+	deleteConversation,
+	startRename,
+	confirmRename,
+	cancelRename,
+	formatRelativeDate,
+} = conversation;
+
+// Agent mode composable
+const agent = useAgentMode(
+	messages,
+	computed(() => props.workspacePath),
+	(path) => emit('file-changed', path)
+);
+const { agentMode, toggleAgentMode, parseAgentEdits, processAgentEdits, approveAgentEdit, rejectAgentEdit } = agent;
+
+// HF download composable
+const hf = useHfDownload(refreshModels);
+const {
+	showHfPanel,
+	hfSearchQuery,
+	hfSearchResults,
+	hfIsSearching,
+	hfSelectedRepo,
+	hfRepoFiles,
+	hfModelInfo,
+	hfIsLoadingFiles,
+	hfDownloadProgress,
+	hfActiveDownloads,
+	toggleHfPanel,
+	searchHfModels,
+	selectHfRepo,
+	downloadHfModel,
+	cancelHfDownload,
+	formatNumber,
+} = hf;
+
+// Chat composable
+const chat = useAIChat(
+	{ messages, status, conversationTokenCount, currentConversationId, agentMode,
+	  activeFile: computed(() => props.activeFile),
+	  workspacePath: computed(() => props.workspacePath) },
+	{ createNewConversation, saveCurrentConversation, saveTokenCountToConversation,
+	  refreshConversationList, refreshStatus, parseAgentEdits, processAgentEdits }
+);
+const {
+	// @ts-ignore - template ref, bound via ref="messagesContainer" in template
+	messagesContainer,
+	inputField, inputMessage, isStreaming, includeNoteContext,
+	copiedIndex, editingIndex, editContent,
+	// @ts-ignore - template ref, bound via ref="editInputRef" in template
+	editInputRef,
+	onMessagesScroll, renderMarkdown, copyMessage,
+	startEditMessage, cancelEditMessage, confirmEditMessage,
+	resendMessage, deleteLastMessagePair, regenerateLastResponse,
+	sendMessage, stopGeneration, scrollToBottom, formatTokenCount,
+} = chat;
+
+// Token bar display
+const tokenUsagePercent = computed(() => {
+	if (!status.value.contextSize) return 0;
+	return Math.min(100, Math.round((conversationTokenCount.value / status.value.contextSize) * 100));
+});
+
+// ============================
+// Orchestration wrappers
+// ============================
+
+async function loadSelectedModel() {
+	const result = await model.loadModel();
+	if (result.success) {
+		await startNewConversation();
+	} else {
+		messages.value.push({ role: 'assistant', content: `Failed to load model: ${result.error}` });
+	}
+}
+
+async function unloadModel() {
+	if (status.value.isGenerating) await stopGeneration();
+	await saveCurrentConversation();
+	await model.unloadModel();
+	conversationTokenCount.value = 0;
+}
+
+async function startNewConversation() {
+	await conversation.startNewConversation();
+	inputField.value?.focus();
+}
+
+async function loadConversation(id: string) {
+	await conversation.loadConversation(id);
+	scrollToBottom();
+}
+
+async function loadPreviousModel() {
+	const hasConversation = !!currentConversationId.value;
+	const history = messages.value.map(m => ({ role: m.role, content: m.content }));
+	const result = await model.loadPreviousModel(history, hasConversation);
+	if (result.success) {
+		if (!hasConversation) await startNewConversation();
+		inputField.value?.focus();
+	} else if (result.error) {
+		messages.value.push({ role: 'assistant', content: `Failed to load model: ${result.error}` });
+	}
+}
+
+onMounted(async () => {
+	await refreshStatus();
+	await refreshModels();
+	await refreshConversationList();
+	if (status.value.isModelLoaded && inputField.value) {
+		inputField.value.focus();
+	}
+});
+</script>
+
 <template>
 	<div class="ai-panel">
 		<!-- Drag region matching the editor header height -->
@@ -639,185 +818,6 @@
 		</div>
 	</div>
 </template>
-
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import type { FileInfo } from '../types/electron';
-import type { ChatMessage } from '../types/chat';
-import { useAIModel } from '../composables/ai/useAIModel';
-import { useConversationHistory } from '../composables/ai/useConversationHistory';
-import { useAgentMode } from '../composables/ai/useAgentMode';
-import { useHfDownload } from '../composables/ai/useHfDownload';
-import { useAIChat } from '../composables/ai/useAIChat';
-
-const props = defineProps<{
-	activeFile: FileInfo | null;
-	workspacePath: string | null;
-}>();
-
-const emit = defineEmits<{
-	(e: 'close'): void;
-	(e: 'file-changed', path: string): void;
-}>();
-
-// AI model composable
-const model = useAIModel();
-const {
-	status,
-	availableModels,
-	isLoading,
-	selectedModelPath,
-	lastUsedModelName,
-	isReady,
-	isAnyGenerating,
-	selectedModelLabel,
-	showDropdown,
-	// @ts-ignore - template ref, bound via ref="dropdownRef" in template
-	dropdownRef,
-	dropdownPosition,
-	previousModelMatch,
-	truncate,
-	toggleDropdown,
-	selectModel,
-	refreshModels,
-	refreshStatus,
-	openModelsFolder,
-} = model;
-
-// Shared messages state (passed to multiple composables)
-const messages = ref<ChatMessage[]>([]);
-
-// Conversation history composable
-const conversation = useConversationHistory(status, lastUsedModelName, messages);
-const {
-	showHistory,
-	conversationList,
-	currentConversationId,
-	conversationTokenCount,
-	renamingConversationId,
-	renameValue,
-	// @ts-ignore - template ref, bound via ref="renameInputRef" in template
-	renameInputRef,
-	toggleHistory,
-	openHistory,
-	refreshConversationList,
-	createNewConversation,
-	saveCurrentConversation,
-	saveTokenCountToConversation,
-	deleteConversation,
-	startRename,
-	confirmRename,
-	cancelRename,
-	formatRelativeDate,
-} = conversation;
-
-// Agent mode composable
-const agent = useAgentMode(
-	messages,
-	computed(() => props.workspacePath),
-	(path) => emit('file-changed', path)
-);
-const { agentMode, toggleAgentMode, parseAgentEdits, processAgentEdits, approveAgentEdit, rejectAgentEdit } = agent;
-
-// HF download composable
-const hf = useHfDownload(refreshModels);
-const {
-	showHfPanel,
-	hfSearchQuery,
-	hfSearchResults,
-	hfIsSearching,
-	hfSelectedRepo,
-	hfRepoFiles,
-	hfModelInfo,
-	hfIsLoadingFiles,
-	hfDownloadProgress,
-	hfActiveDownloads,
-	toggleHfPanel,
-	searchHfModels,
-	selectHfRepo,
-	downloadHfModel,
-	cancelHfDownload,
-	formatNumber,
-} = hf;
-
-// Chat composable
-const chat = useAIChat(
-	{ messages, status, conversationTokenCount, currentConversationId, agentMode,
-	  activeFile: computed(() => props.activeFile),
-	  workspacePath: computed(() => props.workspacePath) },
-	{ createNewConversation, saveCurrentConversation, saveTokenCountToConversation,
-	  refreshConversationList, refreshStatus, parseAgentEdits, processAgentEdits }
-);
-const {
-	// @ts-ignore - template ref, bound via ref="messagesContainer" in template
-	messagesContainer,
-	inputField, inputMessage, isStreaming, includeNoteContext,
-	copiedIndex, editingIndex, editContent,
-	// @ts-ignore - template ref, bound via ref="editInputRef" in template
-	editInputRef,
-	onMessagesScroll, renderMarkdown, copyMessage,
-	startEditMessage, cancelEditMessage, confirmEditMessage,
-	resendMessage, deleteLastMessagePair, regenerateLastResponse,
-	sendMessage, stopGeneration, scrollToBottom, formatTokenCount,
-} = chat;
-
-// Token bar display
-const tokenUsagePercent = computed(() => {
-	if (!status.value.contextSize) return 0;
-	return Math.min(100, Math.round((conversationTokenCount.value / status.value.contextSize) * 100));
-});
-
-// ============================
-// Orchestration wrappers
-// ============================
-
-async function loadSelectedModel() {
-	const result = await model.loadModel();
-	if (result.success) {
-		await startNewConversation();
-	} else {
-		messages.value.push({ role: 'assistant', content: `Failed to load model: ${result.error}` });
-	}
-}
-
-async function unloadModel() {
-	if (status.value.isGenerating) await stopGeneration();
-	await saveCurrentConversation();
-	await model.unloadModel();
-	conversationTokenCount.value = 0;
-}
-
-async function startNewConversation() {
-	await conversation.startNewConversation();
-	inputField.value?.focus();
-}
-
-async function loadConversation(id: string) {
-	await conversation.loadConversation(id);
-	scrollToBottom();
-}
-
-async function loadPreviousModel() {
-	const hasConversation = !!currentConversationId.value;
-	const history = messages.value.map(m => ({ role: m.role, content: m.content }));
-	const result = await model.loadPreviousModel(history, hasConversation);
-	if (result.success) {
-		if (!hasConversation) await startNewConversation();
-		inputField.value?.focus();
-	} else if (result.error) {
-		messages.value.push({ role: 'assistant', content: `Failed to load model: ${result.error}` });
-	}
-}
-
-onMounted(async () => {
-	await refreshStatus();
-	await refreshModels();
-	await refreshConversationList();
-	if (status.value.isModelLoaded && inputField.value) {
-		inputField.value.focus();
-	}
-});
-</script>
 
 <style lang="scss" scoped>
 .ai-panel {

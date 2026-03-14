@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import type { FileInfo, FolderInfo } from '../types/electron';
+import type { FileInfo, FolderInfo } from '../../types/electron';
 
 export function useVault() {
     const currentFolder = ref<string | null>(null);

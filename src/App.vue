@@ -1,3 +1,246 @@
+<script setup lang="ts">
+import { ref, onMounted, onBeforeUnmount } from 'vue';
+import FileExplorer from './components/FileExplorer.vue';
+import NoteEditor from './components/NoteEditor.vue';
+import SearchPanel from './components/SearchPanel.vue';
+import BookmarksPanel from './components/BookmarksPanel.vue';
+import AudioRecorder from './components/AudioRecorder.vue';
+import AiPanel from './components/AiPanel.vue';
+import type { FileInfo } from './types/electron';
+import { useVault } from './composables/vault/useVault';
+import { useFileSelection } from './composables/vault/useFileSelection';
+import { useBookmarks } from './composables/vault/useBookmarks';
+
+const noteEditorRef = ref<InstanceType<typeof NoteEditor> | null>(null);
+
+// --- Composables ---
+const vault = useVault();
+const selection = useFileSelection();
+const bookmarks = useBookmarks(() => vault.currentFolder.value);
+
+// Destructure reactive state for template bindings
+const { currentFolder, files, folders } = vault;
+const { selectedFiles, activeFile, selectedFolder } = selection;
+const { bookmarkedFiles, toggleBookmark, removeBookmark } = bookmarks;
+
+// --- UI state ---
+const currentTheme = ref('dark');
+const renamingFile = ref<FileInfo | null>(null);
+const renamingFolder = ref<string | null>(null);
+const showSearchPanel = ref(false);
+const showBookmarksPanel = ref(false);
+const showAiPanel = ref(false);
+
+// --- Theme ---
+function applyTheme(theme: string) {
+	document.documentElement.setAttribute('data-theme', theme);
+}
+
+function toggleTheme() {
+	currentTheme.value = currentTheme.value === 'dark' ? 'light' : 'dark';
+	localStorage.setItem('leaf-theme', currentTheme.value);
+	applyTheme(currentTheme.value);
+}
+
+// --- External link interception ---
+function handleExternalLinkClick(e: MouseEvent) {
+	const target = (e.target as HTMLElement)?.closest('a') as HTMLAnchorElement | null;
+	if (!target) return;
+	const href = target.getAttribute('href');
+	if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
+		e.preventDefault();
+		e.stopPropagation();
+		window.electronAPI.openExternal(href);
+	}
+}
+
+// --- File-list refresh (vault + selection sync) ---
+async function refreshFiles() {
+	await vault.refreshFiles();
+	selection.syncAfterRefresh(vault.files.value);
+}
+
+// --- Folder lifecycle ---
+async function selectFolder() {
+	const folderPath = await vault.openFolderDialog();
+	if (folderPath) {
+		selection.restoreFromStorage(vault.files.value);
+		bookmarks.loadBookmarks();
+	}
+}
+
+async function loadFolderPath(folderPath: string) {
+	await vault.loadFolder(folderPath);
+	selection.restoreFromStorage(vault.files.value);
+	bookmarks.loadBookmarks();
+}
+
+function changeFolder() {
+	vault.closeVault();
+	selection.clearSelection();
+}
+
+// --- Lifecycle ---
+onMounted(() => {
+	const savedTheme = localStorage.getItem('leaf-theme');
+	if (savedTheme) currentTheme.value = savedTheme;
+	applyTheme(currentTheme.value);
+
+	const savedFolder = localStorage.getItem('leaf-folder-path');
+	if (savedFolder) loadFolderPath(savedFolder);
+
+	vault.setExternalChangeCallback(() => refreshFiles());
+	window.addEventListener('keydown', handleKeydown);
+	document.addEventListener('click', handleExternalLinkClick, true);
+});
+
+onBeforeUnmount(() => {
+	vault.closeVault();
+	window.removeEventListener('keydown', handleKeydown);
+	document.removeEventListener('click', handleExternalLinkClick, true);
+});
+
+function handleKeydown(e: KeyboardEvent) {
+	if (e.key === 'F2') {
+		e.preventDefault();
+		if (activeFile.value && !renamingFile.value) {
+			startRenameFile(activeFile.value);
+		} else if (selectedFolder.value && !renamingFolder.value) {
+			startRenameFolder(selectedFolder.value);
+		}
+	}
+}
+
+
+
+// --- File selection ---
+function handleFileSelect(file: FileInfo, event?: MouseEvent, visibleFiles?: FileInfo[]) {
+	selection.selectFile(file, event, visibleFiles);
+}
+
+function handleFolderSelect(folderPath: string) {
+	selection.selectFolder(folderPath);
+}
+
+// --- Editor events ---
+function handleFileSave() {
+	refreshFiles();
+}
+
+function handleAiFileChanged(changedPath: string) {
+	if (activeFile.value?.path === changedPath) {
+		noteEditorRef.value?.reloadContent();
+	}
+	refreshFiles();
+}
+
+async function handleRecordingSaved(filePath: string) {
+	await refreshFiles();
+	const recordingFile = vault.files.value.find((f: FileInfo) => f.path === filePath);
+	if (recordingFile) selection.openFile(recordingFile);
+}
+
+// --- Create ---
+async function createNewFile() {
+	const newFile = await vault.createFile();
+	if (newFile) selection.openFile(newFile);
+}
+
+async function createNewDrawing() {
+	const newFile = await vault.createDrawing();
+	if (newFile) selection.openFile(newFile);
+}
+
+async function createNewFolder() {
+	await vault.createFolder();
+}
+
+// --- Rename ---
+function startRenameFile(file: FileInfo) {
+	selection.openFile(file);
+	renamingFile.value = file;
+}
+
+function startRenameFolder(folderPath: string) {
+	selection.selectFolder(folderPath);
+	renamingFolder.value = folderPath;
+}
+
+function cancelRename() {
+	renamingFile.value = null;
+	renamingFolder.value = null;
+}
+
+async function handleFileRename(file: FileInfo, newName: string) {
+	const renamed = await vault.renameFile(file, newName);
+	renamingFile.value = null;
+	if (renamed) selection.openFile(renamed);
+}
+
+async function handleFolderRename(folderPath: string, newName: string) {
+	const newRelativePath = await vault.renameFolder(folderPath, newName);
+	renamingFolder.value = null;
+	if (newRelativePath) selectedFolder.value = newRelativePath;
+}
+
+async function handleFolderDelete(folderPath: string) {
+	const deleted = await vault.deleteFolder(folderPath);
+	if (deleted) selectedFolder.value = null;
+}
+
+async function handleFileDelete(file: FileInfo) {
+	const filesToDelete = selectedFiles.value.length > 1 ? selectedFiles.value : [file];
+	await vault.deleteFile(filesToDelete);
+	selection.clearSelection();
+	if (vault.files.value.length > 0) selection.openFile(vault.files.value[0]);
+}
+
+async function handleFileMove(filePath: string, targetFolderPath: string) {
+	const filePaths = selectedFiles.value.length > 1
+		? selectedFiles.value.map((f: FileInfo) => f.path)
+		: [filePath];
+	const movedPaths = await vault.moveFiles(filePaths, targetFolderPath);
+	const movedFiles = vault.files.value.filter((f: FileInfo) => movedPaths.includes(f.path));
+	if (movedFiles.length > 0) {
+		selectedFiles.value = movedFiles;
+		activeFile.value = movedFiles[0];
+	}
+}
+
+async function handleFolderMove(folderPath: string, targetFolderPath: string) {
+	const moved = await vault.moveFolder(folderPath, targetFolderPath);
+	if (moved) selectedFolder.value = null;
+}
+
+// --- Panel toggles ---
+function toggleSearch() {
+	showSearchPanel.value = !showSearchPanel.value;
+	if (showSearchPanel.value) showBookmarksPanel.value = false;
+}
+
+function closeSearch() {
+	showSearchPanel.value = false;
+}
+
+function handleSearchFileSelect(file: FileInfo, event?: MouseEvent) {
+	selection.selectFile(file, event);
+}
+
+function handleSearchFileOpen(file: FileInfo) {
+	selection.openFile(file);
+	showSearchPanel.value = false;
+}
+
+function toggleBookmarks() {
+	showBookmarksPanel.value = !showBookmarksPanel.value;
+	if (showBookmarksPanel.value) showSearchPanel.value = false;
+}
+
+function toggleAiPanel() {
+	showAiPanel.value = !showAiPanel.value;
+}
+</script>
+
 <template>
 	<div id="app">
 		<div class="leaf-app">
@@ -5,7 +248,7 @@
 			<div v-if="!currentFolder" class="welcome-screen">
 				<div class="welcome-content">
 					<div class="welcome-logo">
-						<img draggable="false" src="./assets/icon.png" alt="Leaf" class="welcome-logo-icon" />
+						<img draggable="false" src="./assets/icons/icon.png" alt="Leaf" class="welcome-logo-icon" />
 						<span class="welcome-logo-text">leaf.</span>
 					</div>
 
@@ -174,249 +417,6 @@
 		</div>
 	</div>
 </template>
-
-<script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue';
-import FileExplorer from './components/FileExplorer.vue';
-import NoteEditor from './components/NoteEditor.vue';
-import SearchPanel from './components/SearchPanel.vue';
-import BookmarksPanel from './components/BookmarksPanel.vue';
-import AudioRecorder from './components/AudioRecorder.vue';
-import AiPanel from './components/AiPanel.vue';
-import type { FileInfo } from './types/electron';
-import { useVault } from './composables/vault/useVault';
-import { useFileSelection } from './composables/vault/useFileSelection';
-import { useBookmarks } from './composables/vault/useBookmarks';
-
-const noteEditorRef = ref<InstanceType<typeof NoteEditor> | null>(null);
-
-// --- Composables ---
-const vault = useVault();
-const selection = useFileSelection();
-const bookmarks = useBookmarks(() => vault.currentFolder.value);
-
-// Destructure reactive state for template bindings
-const { currentFolder, files, folders } = vault;
-const { selectedFiles, activeFile, selectedFolder } = selection;
-const { bookmarkedFiles, toggleBookmark, removeBookmark } = bookmarks;
-
-// --- UI state ---
-const currentTheme = ref('dark');
-const renamingFile = ref<FileInfo | null>(null);
-const renamingFolder = ref<string | null>(null);
-const showSearchPanel = ref(false);
-const showBookmarksPanel = ref(false);
-const showAiPanel = ref(false);
-
-// --- Theme ---
-function applyTheme(theme: string) {
-	document.documentElement.setAttribute('data-theme', theme);
-}
-
-function toggleTheme() {
-	currentTheme.value = currentTheme.value === 'dark' ? 'light' : 'dark';
-	localStorage.setItem('leaf-theme', currentTheme.value);
-	applyTheme(currentTheme.value);
-}
-
-// --- External link interception ---
-function handleExternalLinkClick(e: MouseEvent) {
-	const target = (e.target as HTMLElement)?.closest('a') as HTMLAnchorElement | null;
-	if (!target) return;
-	const href = target.getAttribute('href');
-	if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
-		e.preventDefault();
-		e.stopPropagation();
-		window.electronAPI.openExternal(href);
-	}
-}
-
-// --- File-list refresh (vault + selection sync) ---
-async function refreshFiles() {
-	await vault.refreshFiles();
-	selection.syncAfterRefresh(vault.files.value);
-}
-
-// --- Folder lifecycle ---
-async function selectFolder() {
-	const folderPath = await vault.openFolderDialog();
-	if (folderPath) {
-		selection.restoreFromStorage(vault.files.value);
-		bookmarks.loadBookmarks();
-	}
-}
-
-async function loadFolderPath(folderPath: string) {
-	await vault.loadFolder(folderPath);
-	selection.restoreFromStorage(vault.files.value);
-	bookmarks.loadBookmarks();
-}
-
-function changeFolder() {
-	vault.closeVault();
-	selection.clearSelection();
-}
-
-// --- Lifecycle ---
-onMounted(() => {
-	const savedTheme = localStorage.getItem('leaf-theme');
-	if (savedTheme) currentTheme.value = savedTheme;
-	applyTheme(currentTheme.value);
-
-	const savedFolder = localStorage.getItem('leaf-folder-path');
-	if (savedFolder) loadFolderPath(savedFolder);
-
-	vault.setExternalChangeCallback(() => refreshFiles());
-	window.addEventListener('keydown', handleKeydown);
-	document.addEventListener('click', handleExternalLinkClick, true);
-});
-
-onBeforeUnmount(() => {
-	vault.closeVault();
-	window.removeEventListener('keydown', handleKeydown);
-	document.removeEventListener('click', handleExternalLinkClick, true);
-});
-
-function handleKeydown(e: KeyboardEvent) {
-	if (e.key === 'F2') {
-		e.preventDefault();
-		if (activeFile.value && !renamingFile.value) {
-			startRenameFile(activeFile.value);
-		} else if (selectedFolder.value && !renamingFolder.value) {
-			startRenameFolder(selectedFolder.value);
-		}
-	}
-}
-
-
-
-// --- File selection ---
-function handleFileSelect(file: FileInfo, event?: MouseEvent, visibleFiles?: FileInfo[]) {
-	selection.selectFile(file, event, visibleFiles);
-}
-
-function handleFolderSelect(folderPath: string) {
-	selection.selectFolder(folderPath);
-}
-
-// --- Editor events ---
-function handleFileSave() {
-	refreshFiles();
-}
-
-function handleAiFileChanged(changedPath: string) {
-	if (activeFile.value?.path === changedPath) {
-		noteEditorRef.value?.reloadContent();
-	}
-	refreshFiles();
-}
-
-async function handleRecordingSaved(filePath: string) {
-	await refreshFiles();
-	const recordingFile = vault.files.value.find(f => f.path === filePath);
-	if (recordingFile) selection.openFile(recordingFile);
-}
-
-// --- Create ---
-async function createNewFile() {
-	const newFile = await vault.createFile();
-	if (newFile) selection.openFile(newFile);
-}
-
-async function createNewDrawing() {
-	const newFile = await vault.createDrawing();
-	if (newFile) selection.openFile(newFile);
-}
-
-async function createNewFolder() {
-	await vault.createFolder();
-}
-
-// --- Rename ---
-function startRenameFile(file: FileInfo) {
-	selection.openFile(file);
-	renamingFile.value = file;
-}
-
-function startRenameFolder(folderPath: string) {
-	selection.selectFolder(folderPath);
-	renamingFolder.value = folderPath;
-}
-
-function cancelRename() {
-	renamingFile.value = null;
-	renamingFolder.value = null;
-}
-
-async function handleFileRename(file: FileInfo, newName: string) {
-	const renamed = await vault.renameFile(file, newName);
-	renamingFile.value = null;
-	if (renamed) selection.openFile(renamed);
-}
-
-async function handleFolderRename(folderPath: string, newName: string) {
-	const newRelativePath = await vault.renameFolder(folderPath, newName);
-	renamingFolder.value = null;
-	if (newRelativePath) selectedFolder.value = newRelativePath;
-}
-
-async function handleFolderDelete(folderPath: string) {
-	const deleted = await vault.deleteFolder(folderPath);
-	if (deleted) selectedFolder.value = null;
-}
-
-async function handleFileDelete(file: FileInfo) {
-	const filesToDelete = selectedFiles.value.length > 1 ? selectedFiles.value : [file];
-	await vault.deleteFile(filesToDelete);
-	selection.clearSelection();
-	if (vault.files.value.length > 0) selection.openFile(vault.files.value[0]);
-}
-
-async function handleFileMove(filePath: string, targetFolderPath: string) {
-	const filePaths = selectedFiles.value.length > 1
-		? selectedFiles.value.map(f => f.path)
-		: [filePath];
-	const movedPaths = await vault.moveFiles(filePaths, targetFolderPath);
-	const movedFiles = vault.files.value.filter(f => movedPaths.includes(f.path));
-	if (movedFiles.length > 0) {
-		selectedFiles.value = movedFiles;
-		activeFile.value = movedFiles[0];
-	}
-}
-
-async function handleFolderMove(folderPath: string, targetFolderPath: string) {
-	const moved = await vault.moveFolder(folderPath, targetFolderPath);
-	if (moved) selectedFolder.value = null;
-}
-
-// --- Panel toggles ---
-function toggleSearch() {
-	showSearchPanel.value = !showSearchPanel.value;
-	if (showSearchPanel.value) showBookmarksPanel.value = false;
-}
-
-function closeSearch() {
-	showSearchPanel.value = false;
-}
-
-function handleSearchFileSelect(file: FileInfo, event?: MouseEvent) {
-	selection.selectFile(file, event);
-}
-
-function handleSearchFileOpen(file: FileInfo) {
-	selection.openFile(file);
-	showSearchPanel.value = false;
-}
-
-function toggleBookmarks() {
-	showBookmarksPanel.value = !showBookmarksPanel.value;
-	if (showBookmarksPanel.value) showSearchPanel.value = false;
-}
-
-function toggleAiPanel() {
-	showAiPanel.value = !showAiPanel.value;
-}
-</script>
 
 <style lang="scss">
 #app {

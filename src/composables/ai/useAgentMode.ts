@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 import type { Ref } from 'vue';
-import type { ChatMessage, AgentFileEdit } from '../types/chat';
+import type { ChatMessage, AgentFileEdit } from '../../types/chat';
 
 export const AGENT_SYSTEM_PROMPT = `You are an AI assistant with the ability to edit files. When the user asks you to modify a file, you MUST output your proposed changes using this exact format:
 

@@ -1,3 +1,110 @@
+<script setup lang="ts">
+import { computed, ref, watch, nextTick } from 'vue';
+import type { FileInfo } from '../types/electron';
+import { isImageFile as checkImage, isVideoFile as checkVideo, isAudioFile as checkAudio, isPdfFile as checkPdf, isDrawingFile as checkDrawing, isCodeFile as checkCode } from '../utils/fileTypes';
+import { useTreeNodeDrag } from '../composables/vault/useTreeNodeDrag';
+
+export interface TreeNode {
+  path: string;
+  name: string;
+  type: 'folder' | 'file';
+  children?: TreeNode[];
+  file?: FileInfo;
+}
+
+const props = defineProps<{
+  node: TreeNode;
+  depth: number;
+  selectedFiles: FileInfo[];
+  activeFile: FileInfo | null;
+  renamingFile: FileInfo | null;
+  selectedFolder: string | null;
+  renamingFolder: string | null;
+  renameValue: string;
+  expandedFolders: Set<string>;
+  bookmarkedFiles?: string[];
+}>();
+
+const emit = defineEmits<{
+  selectFile: [file: FileInfo, event?: MouseEvent, visibleFiles?: FileInfo[]];
+  selectFolder: [path: string];
+  toggleFolder: [path: string];
+  rename: [];
+  cancelRename: [];
+  updateRenameValue: [value: string];
+  contextMenu: [type: 'file' | 'folder', path: string, event: MouseEvent];
+  moveFile: [filePath: string, targetFolderPath: string];
+  moveFolder: [folderPath: string, targetFolderPath: string];
+}>();
+
+const renameInput = ref<HTMLInputElement | null>(null);
+
+const { isDragging, isDragOver, handleDragStart, handleDragEnd, handleDragOver, handleDragLeave, handleDrop } = useTreeNodeDrag(
+  () => props.node,
+  () => props.activeFile,
+  (filePath, target) => emit('moveFile', filePath, target),
+  (folderPath, target) => emit('moveFolder', folderPath, target)
+);
+
+const isImageFile   = computed(() => props.node.type === 'file' && checkImage(props.node.file?.extension ?? ''));
+const isVideoFile   = computed(() => props.node.type === 'file' && checkVideo(props.node.file?.extension ?? ''));
+const isAudioFile   = computed(() => props.node.type === 'file' && checkAudio(props.node.file?.extension ?? ''));
+const isPdfFile     = computed(() => props.node.type === 'file' && checkPdf(props.node.file?.extension ?? ''));
+const isDrawingFile = computed(() => props.node.type === 'file' && checkDrawing(props.node.file?.extension ?? ''));
+const isCodeFile    = computed(() => props.node.type === 'file' && checkCode(props.node.file?.extension ?? ''));
+
+const isExpanded = computed(() => {
+  return props.node.type === 'folder' && props.expandedFolders.has(props.node.path);
+});
+
+const isRenaming = computed(() => {
+  if (props.node.type === 'file') {
+    return props.renamingFile?.path === props.node.file?.path;
+  } else if (props.node.type === 'folder') {
+    return props.renamingFolder === props.node.path;
+  }
+  return false;
+});
+
+const isSelected = computed(() => {
+  if (props.node.type === 'file') {
+    return props.selectedFiles.some(f => f.path === props.node.file?.path);
+  } else if (props.node.type === 'folder') {
+    return props.selectedFolder === props.node.path;
+  }
+  return false;
+});
+
+const isActive = computed(() => {
+  if (props.node.type === 'file') {
+    return props.activeFile?.path === props.node.file?.path;
+  }
+  return false;
+});
+
+watch(isRenaming, (renaming) => {
+  if (renaming) {
+    nextTick(() => {
+      if (renameInput.value) {
+        renameInput.value.focus();
+        renameInput.value.select();
+      }
+    });
+  }
+});
+
+function handleFolderClick() {
+  // Single click selects the folder
+  emit('selectFolder', props.node.path);
+}
+
+function handleFileClick(event: MouseEvent) {
+  if (props.node.file) {
+    emit('selectFile', props.node.file, event, undefined);
+  }
+}
+</script>
+
 <template>
   <div class="tree-node">
     <div
@@ -265,113 +372,6 @@
     </template>
   </div>
 </template>
-
-<script setup lang="ts">
-import { computed, ref, watch, nextTick } from 'vue';
-import type { FileInfo } from '../types/electron';
-import { isImageFile as checkImage, isVideoFile as checkVideo, isAudioFile as checkAudio, isPdfFile as checkPdf, isDrawingFile as checkDrawing, isCodeFile as checkCode } from '../utils/fileTypes';
-import { useTreeNodeDrag } from '../composables/vault/useTreeNodeDrag';
-
-export interface TreeNode {
-  path: string;
-  name: string;
-  type: 'folder' | 'file';
-  children?: TreeNode[];
-  file?: FileInfo;
-}
-
-const props = defineProps<{
-  node: TreeNode;
-  depth: number;
-  selectedFiles: FileInfo[];
-  activeFile: FileInfo | null;
-  renamingFile: FileInfo | null;
-  selectedFolder: string | null;
-  renamingFolder: string | null;
-  renameValue: string;
-  expandedFolders: Set<string>;
-  bookmarkedFiles?: string[];
-}>();
-
-const emit = defineEmits<{
-  selectFile: [file: FileInfo, event?: MouseEvent, visibleFiles?: FileInfo[]];
-  selectFolder: [path: string];
-  toggleFolder: [path: string];
-  rename: [];
-  cancelRename: [];
-  updateRenameValue: [value: string];
-  contextMenu: [type: 'file' | 'folder', path: string, event: MouseEvent];
-  moveFile: [filePath: string, targetFolderPath: string];
-  moveFolder: [folderPath: string, targetFolderPath: string];
-}>();
-
-const renameInput = ref<HTMLInputElement | null>(null);
-
-const { isDragging, isDragOver, handleDragStart, handleDragEnd, handleDragOver, handleDragLeave, handleDrop } = useTreeNodeDrag(
-  () => props.node,
-  () => props.activeFile,
-  (filePath, target) => emit('moveFile', filePath, target),
-  (folderPath, target) => emit('moveFolder', folderPath, target)
-);
-
-const isImageFile   = computed(() => props.node.type === 'file' && checkImage(props.node.file?.extension ?? ''));
-const isVideoFile   = computed(() => props.node.type === 'file' && checkVideo(props.node.file?.extension ?? ''));
-const isAudioFile   = computed(() => props.node.type === 'file' && checkAudio(props.node.file?.extension ?? ''));
-const isPdfFile     = computed(() => props.node.type === 'file' && checkPdf(props.node.file?.extension ?? ''));
-const isDrawingFile = computed(() => props.node.type === 'file' && checkDrawing(props.node.file?.extension ?? ''));
-const isCodeFile    = computed(() => props.node.type === 'file' && checkCode(props.node.file?.extension ?? ''));
-
-const isExpanded = computed(() => {
-  return props.node.type === 'folder' && props.expandedFolders.has(props.node.path);
-});
-
-const isRenaming = computed(() => {
-  if (props.node.type === 'file') {
-    return props.renamingFile?.path === props.node.file?.path;
-  } else if (props.node.type === 'folder') {
-    return props.renamingFolder === props.node.path;
-  }
-  return false;
-});
-
-const isSelected = computed(() => {
-  if (props.node.type === 'file') {
-    return props.selectedFiles.some(f => f.path === props.node.file?.path);
-  } else if (props.node.type === 'folder') {
-    return props.selectedFolder === props.node.path;
-  }
-  return false;
-});
-
-const isActive = computed(() => {
-  if (props.node.type === 'file') {
-    return props.activeFile?.path === props.node.file?.path;
-  }
-  return false;
-});
-
-watch(isRenaming, (renaming) => {
-  if (renaming) {
-    nextTick(() => {
-      if (renameInput.value) {
-        renameInput.value.focus();
-        renameInput.value.select();
-      }
-    });
-  }
-});
-
-function handleFolderClick() {
-  // Single click selects the folder
-  emit('selectFolder', props.node.path);
-}
-
-function handleFileClick(event: MouseEvent) {
-  if (props.node.file) {
-    emit('selectFile', props.node.file, event, undefined);
-  }
-}
-</script>
 
 <style scoped lang="scss">
 .tree-node {

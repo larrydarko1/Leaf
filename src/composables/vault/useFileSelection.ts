@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import type { FileInfo } from '../types/electron';
+import type { FileInfo } from '../../types/electron';
 
 export function useFileSelection() {
     const selectedFiles = ref<FileInfo[]>([]);

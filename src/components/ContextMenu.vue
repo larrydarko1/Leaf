@@ -1,26 +1,3 @@
-<template>
-  <Teleport to="body">
-    <div
-      v-if="visible"
-      ref="menuRef"
-      class="context-menu"
-      :style="{ top: adjustedPosition.y + 'px', left: adjustedPosition.x + 'px' }"
-      @click.stop
-    >
-      <div
-        v-for="item in items"
-        :key="item.label"
-        class="context-menu-item"
-        :class="{ disabled: item.disabled }"
-        @click="handleItemClick(item)"
-      >
-        <span class="menu-label">{{ item.label }}</span>
-        <span v-if="item.shortcut" class="menu-shortcut">{{ item.shortcut }}</span>
-      </div>
-    </div>
-  </Teleport>
-</template>
-
 <script setup lang="ts">
 import { useContextMenu } from '../composables/ui/useContextMenu';
 
@@ -47,6 +24,7 @@ const { menuRef, adjustedPosition } = useContextMenu(
   () => props.position,
   () => emit('close')
 );
+void menuRef; // used as template ref via ref="menuRef"
 
 function handleItemClick(item: ContextMenuItem) {
   if (!item.disabled) {
@@ -55,6 +33,29 @@ function handleItemClick(item: ContextMenuItem) {
   }
 }
 </script>
+
+<template>
+  <Teleport to="body">
+    <div
+      v-if="visible"
+      ref="menuRef"
+      class="context-menu"
+      :style="{ top: adjustedPosition.y + 'px', left: adjustedPosition.x + 'px' }"
+      @click.stop
+    >
+      <div
+        v-for="item in items"
+        :key="item.label"
+        class="context-menu-item"
+        :class="{ disabled: item.disabled }"
+        @click="handleItemClick(item)"
+      >
+        <span class="menu-label">{{ item.label }}</span>
+        <span v-if="item.shortcut" class="menu-shortcut">{{ item.shortcut }}</span>
+      </div>
+    </div>
+  </Teleport>
+</template>
 
 <style scoped lang="scss">
 .context-menu {

@@ -1,8 +1,9 @@
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import type { Ref } from 'vue';
 import { marked } from 'marked';
-import type { FileInfo, AiStatus } from '../types/electron';
-import type { ChatMessage, AgentFileEdit } from '../types/chat';
+import type { FileInfo } from '../../types/electron';
+import type { AiStatus } from '../../types/ai';
+import type { ChatMessage, AgentFileEdit } from '../../types/chat';
 import { AGENT_SYSTEM_PROMPT } from './useAgentMode';
 
 // Configure marked once at module level

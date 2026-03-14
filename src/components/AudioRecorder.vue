@@ -1,3 +1,13 @@
+<script setup lang="ts">
+import { useAudioRecorder } from '../composables/useAudioRecorder';
+
+const props = defineProps<{ currentFolder: string | null }>();
+const emit  = defineEmits<{ recordingSaved: [filePath: string] }>();
+
+const { isRecording, hasPermission, formattedDuration, toggle } =
+  useAudioRecorder(() => props.currentFolder, (path) => emit('recordingSaved', path));
+</script>
+
 <template>
   <button 
     @click="toggle"
@@ -17,16 +27,6 @@
     </svg>
   </button>
 </template>
-
-<script setup lang="ts">
-import { useAudioRecorder } from '../composables/useAudioRecorder';
-
-const props = defineProps<{ currentFolder: string | null }>();
-const emit  = defineEmits<{ recordingSaved: [filePath: string] }>();
-
-const { isRecording, hasPermission, formattedDuration, toggle } =
-  useAudioRecorder(() => props.currentFolder, (path) => emit('recordingSaved', path));
-</script>
 
 <style scoped lang="scss">
 .btn-menu-icon {
