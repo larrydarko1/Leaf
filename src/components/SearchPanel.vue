@@ -45,7 +45,7 @@
           :class="{
             'active': activeFile?.path === file.path,
             'selected': isFileSelected(file),
-            'keyboard-selected': keyboardSelectedIndex === index
+            'keyboard-selected': selectedIndex === index
           }"
           @click="selectFile(file, $event)"
           @dblclick="openFile(file)"
@@ -67,7 +67,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
+import { useListKeyboardNavigation } from '../composables/useListKeyboardNavigation';
 import type { FileInfo } from '../types/electron';
 
 const props = defineProps<{
@@ -84,7 +85,6 @@ const emit = defineEmits<{
 
 const searchInput = ref<HTMLInputElement | null>(null);
 const searchQuery = ref('');
-const keyboardSelectedIndex = ref(-1);
 
 // Focus the search input when mounted
 onMounted(() => {
@@ -136,21 +136,32 @@ const searchResults = computed(() => {
   return results;
 });
 
-// Watch search results to reset keyboard selection
-watch(searchResults, () => {
-  keyboardSelectedIndex.value = -1;
-});
+const { selectedIndex, resetIndex } = useListKeyboardNavigation<FileInfo>(
+  () => searchResults.value,
+  {
+    onSelect: (file) => emit('selectFile', file),
+    onOpen: openSelectedResult,
+    onEscape: () => { if (searchQuery.value) clearSearch(); else emit('close'); },
+  },
+  {
+    wrap: false,
+    scrollSelector: '.search-result-item.keyboard-selected',
+    ignoreWhen: (target) =>
+      (target.tagName === 'TEXTAREA' || target.isContentEditable) &&
+      target !== (searchInput.value as HTMLElement | null),
+  }
+);
+
+// Reset keyboard selection when search results change
+watch(searchResults, resetIndex);
 
 function isFileSelected(file: FileInfo): boolean {
   return props.selectedFiles.some(f => f.path === file.path);
 }
 
 function selectFile(file: FileInfo, event?: MouseEvent) {
-  // Update keyboard selected index when clicking
   const index = searchResults.value.findIndex(f => f.path === file.path);
-  if (index >= 0) {
-    keyboardSelectedIndex.value = index;
-  }
+  if (index >= 0) selectedIndex.value = index;
   emit('selectFile', file, event);
 }
 
@@ -160,64 +171,14 @@ function openFile(file: FileInfo) {
 
 function clearSearch() {
   searchQuery.value = '';
-  keyboardSelectedIndex.value = -1;
+  resetIndex();
   searchInput.value?.focus();
 }
 
-function navigateDown() {
-  if (searchResults.value.length === 0) return;
-  
-  if (keyboardSelectedIndex.value < 0) {
-    keyboardSelectedIndex.value = 0;
-  } else {
-    keyboardSelectedIndex.value = Math.min(
-      keyboardSelectedIndex.value + 1,
-      searchResults.value.length - 1
-    );
-  }
-  
-  const nextFile = searchResults.value[keyboardSelectedIndex.value];
-  if (nextFile) {
-    selectFile(nextFile);
-  }
-  
-  scrollToSelectedItem();
-}
-
-function navigateUp() {
-  if (searchResults.value.length === 0) return;
-  
-  if (keyboardSelectedIndex.value < 0) {
-    keyboardSelectedIndex.value = 0;
-  } else {
-    keyboardSelectedIndex.value = Math.max(keyboardSelectedIndex.value - 1, 0);
-  }
-  
-  const prevFile = searchResults.value[keyboardSelectedIndex.value];
-  if (prevFile) {
-    selectFile(prevFile);
-  }
-  
-  scrollToSelectedItem();
-}
-
-function scrollToSelectedItem() {
-  // Wait for DOM update
-  setTimeout(() => {
-    const selectedElement = document.querySelector('.search-result-item.keyboard-selected');
-    if (selectedElement) {
-      selectedElement.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest'
-      });
-    }
-  }, 0);
-}
-
 function openSelectedResult() {
-  if (keyboardSelectedIndex.value >= 0 && keyboardSelectedIndex.value < searchResults.value.length) {
-    const file = searchResults.value[keyboardSelectedIndex.value];
-    openFile(file);
+  const idx = selectedIndex.value;
+  if (idx >= 0 && idx < searchResults.value.length) {
+    openFile(searchResults.value[idx]);
   }
 }
 
@@ -229,42 +190,6 @@ function highlightMatch(text: string): string {
   const regex = new RegExp(`(${query})`, 'gi');
   return text.replace(regex, '<mark>$1</mark>');
 }
-
-// Handle keyboard navigation
-function handleKeyDown(e: KeyboardEvent) {
-  // Don't intercept keyboard events when user is typing in a textarea or contenteditable
-  // but allow navigation when in the search input itself
-  const target = e.target as HTMLElement;
-  if ((target.tagName === 'TEXTAREA' || target.isContentEditable) && target !== searchInput.value) {
-    return;
-  }
-  
-  if (e.key === 'ArrowDown') {
-    e.preventDefault();
-    navigateDown();
-  } else if (e.key === 'ArrowUp') {
-    e.preventDefault();
-    navigateUp();
-  } else if (e.key === 'Enter' && keyboardSelectedIndex.value >= 0) {
-    e.preventDefault();
-    openSelectedResult();
-  } else if (e.key === 'Escape') {
-    if (searchQuery.value) {
-      clearSearch();
-    } else {
-      emit('close');
-    }
-  }
-}
-
-// Handle Escape key to close search panel
-onMounted(() => {
-  window.addEventListener('keydown', handleKeyDown);
-});
-
-onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeyDown);
-});
 </script>
 
 <style scoped lang="scss">

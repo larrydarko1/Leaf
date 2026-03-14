@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick, onUnmounted } from 'vue';
+import { useContextMenu } from '../composables/useContextMenu';
 
 export interface ContextMenuItem {
   label: string;
@@ -42,8 +42,11 @@ const emit = defineEmits<{
   action: [action: string];
 }>();
 
-const menuRef = ref<HTMLElement | null>(null);
-const adjustedPosition = ref({ x: 0, y: 0 });
+const { menuRef, adjustedPosition } = useContextMenu(
+  () => props.visible,
+  () => props.position,
+  () => emit('close')
+);
 
 function handleItemClick(item: ContextMenuItem) {
   if (!item.disabled) {
@@ -51,60 +54,6 @@ function handleItemClick(item: ContextMenuItem) {
     emit('close');
   }
 }
-
-function handleClickOutside(event: MouseEvent) {
-  if (menuRef.value && !menuRef.value.contains(event.target as Node)) {
-    emit('close');
-  }
-}
-
-function handleEscape(event: KeyboardEvent) {
-  if (event.key === 'Escape') {
-    emit('close');
-  }
-}
-
-watch(() => props.visible, (visible) => {
-  if (visible) {
-    // Start at the raw click position, then adjust after render
-    adjustedPosition.value = { x: props.position.x, y: props.position.y };
-    nextTick(() => {
-      if (menuRef.value) {
-        const rect = menuRef.value.getBoundingClientRect();
-        const viewportHeight = window.innerHeight;
-        const viewportWidth = window.innerWidth;
-        let { x, y } = props.position;
-
-        // If menu overflows bottom, shift it up
-        if (y + rect.height > viewportHeight) {
-          y = Math.max(0, viewportHeight - rect.height - 4);
-        }
-        // If menu overflows right, shift it left
-        if (x + rect.width > viewportWidth) {
-          x = Math.max(0, viewportWidth - rect.width - 4);
-        }
-        adjustedPosition.value = { x, y };
-      }
-    });
-    // Add listeners when menu opens
-    setTimeout(() => {
-      document.addEventListener('click', handleClickOutside);
-      document.addEventListener('contextmenu', handleClickOutside);
-      document.addEventListener('keydown', handleEscape);
-    }, 0);
-  } else {
-    // Remove listeners when menu closes
-    document.removeEventListener('click', handleClickOutside);
-    document.removeEventListener('contextmenu', handleClickOutside);
-    document.removeEventListener('keydown', handleEscape);
-  }
-});
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside);
-  document.removeEventListener('contextmenu', handleClickOutside);
-  document.removeEventListener('keydown', handleEscape);
-});
 </script>
 
 <style scoped lang="scss">

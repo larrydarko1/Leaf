@@ -58,7 +58,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted } from 'vue';
+import { computed } from 'vue';
+import { useListKeyboardNavigation } from '../composables/useListKeyboardNavigation';
 import type { FileInfo } from '../types/electron';
 
 const props = defineProps<{
@@ -97,67 +98,17 @@ function removeBookmark(file: FileInfo) {
   emit('removeBookmark', file.path);
 }
 
-// Keyboard navigation
-function handleKeyDown(event: KeyboardEvent) {
-  if (bookmarkedFiles.value.length === 0) return;
-
-  // Don't intercept keyboard events when user is typing in an input or textarea
-  const target = event.target as HTMLElement;
-  if (target.tagName === 'TEXTAREA' || 
-      target.tagName === 'INPUT' || 
-      target.isContentEditable) {
-    return;
+useListKeyboardNavigation(
+  () => bookmarkedFiles.value,
+  {
+    onSelect: (file) => selectFile(file),
+    onOpen: (file) => openFile(file),
+  },
+  {
+    wrap: true,
+    getExternalIndex: () => bookmarkedFiles.value.findIndex(f => isFileSelected(f)),
   }
-
-  if (event.key === 'ArrowDown') {
-    event.preventDefault();
-    // Find the currently selected file
-    const currentIndex = bookmarkedFiles.value.findIndex(f => isFileSelected(f));
-    let nextIndex;
-    
-    if (currentIndex === -1 || currentIndex === bookmarkedFiles.value.length - 1) {
-      nextIndex = 0; // Select first if none selected or at end
-    } else {
-      nextIndex = currentIndex + 1;
-    }
-    
-    const nextFile = bookmarkedFiles.value[nextIndex];
-    if (nextFile) {
-      selectFile(nextFile);
-    }
-  } else if (event.key === 'ArrowUp') {
-    event.preventDefault();
-    // Find the currently selected file
-    const currentIndex = bookmarkedFiles.value.findIndex(f => isFileSelected(f));
-    let prevIndex;
-    
-    if (currentIndex === -1 || currentIndex === 0) {
-      prevIndex = bookmarkedFiles.value.length - 1; // Select last if none selected or at start
-    } else {
-      prevIndex = currentIndex - 1;
-    }
-    
-    const prevFile = bookmarkedFiles.value[prevIndex];
-    if (prevFile) {
-      selectFile(prevFile);
-    }
-  } else if (event.key === 'Enter') {
-    event.preventDefault();
-    // Open the currently selected file
-    const selectedFile = bookmarkedFiles.value.find(f => isFileSelected(f));
-    if (selectedFile) {
-      openFile(selectedFile);
-    }
-  }
-}
-
-onMounted(() => {
-  window.addEventListener('keydown', handleKeyDown);
-});
-
-onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeyDown);
-});
+);
 </script>
 
 <style scoped lang="scss">
