@@ -121,6 +121,27 @@ async function listModels(): Promise<{ success: boolean; models: ModelEntry[]; m
     }
 }
 
+// Architectures whose Metal (GPU) backend has known execution failures.
+// For these we force CPU-only inference (gpuLayers: 0).
+// - mistral3: 262K-context YaRN model; Metal command buffers fail on decode
+//   with status 5 (MTLCommandBufferStatusError) on Apple Silicon.
+const CPU_ONLY_ARCHITECTURES = new Set(['mistral3']);
+
+async function getModelLoadOptions(modelPath: string): Promise<{ gpuLayers?: number }> {
+    try {
+        const { readGgufFileInfo } = await import('node-llama-cpp');
+        const info = await readGgufFileInfo(modelPath);
+        const arch = info.metadata?.['general']?.['architecture'] as string | undefined;
+        if (arch && CPU_ONLY_ARCHITECTURES.has(arch.toLowerCase())) {
+            console.log(`[ai] Architecture '${arch}' requires CPU-only inference — disabling GPU layers.`);
+            return { gpuLayers: 0 };
+        }
+    } catch (err) {
+        console.warn('[ai] Could not read GGUF metadata, using default load options:', err);
+    }
+    return {};
+}
+
 async function loadModel(modelPath: string): Promise<{ success: boolean; modelName?: string; error?: string }> {
     try {
         if (isModelLoaded) {
@@ -141,7 +162,8 @@ async function loadModel(modelPath: string): Promise<{ success: boolean; modelNa
         const llamaInstance = await getLlamaInstance();
 
         console.log(`Loading model: ${modelPath}`);
-        model = await llamaInstance.loadModel({ modelPath });
+        const loadOptions = await getModelLoadOptions(modelPath);
+        model = await llamaInstance.loadModel({ modelPath, ...loadOptions });
         context = await model.createContext();
 
         const { LlamaChatSession } = await import('node-llama-cpp');
@@ -238,7 +260,13 @@ async function chat(
                     console.log(`Context usage at ${Math.round(usage * 100)}% — auto-compacting...`);
                     pendingConversationHistory = [...trackedMessages];
                     const { LlamaChatSession } = await import('node-llama-cpp');
-                    session = new LlamaChatSession({ contextSequence: context.getSequence() });
+                    // Reuse existing sequence to avoid exhausting sequence slots
+                    if (seq && !seq.disposed) {
+                        await seq.clearHistory();
+                        session = new LlamaChatSession({ contextSequence: seq });
+                    } else {
+                        session = new LlamaChatSession({ contextSequence: context.getSequence() });
+                    }
                     compacted = true;
                     console.log('Auto-compaction complete. Summary will be injected on next prompt.');
                 }
@@ -278,7 +306,16 @@ async function resetChat(): Promise<{ success: boolean; error?: string }> {
         pendingConversationHistory = null;
         trackedMessages = [];
         const { LlamaChatSession } = await import('node-llama-cpp');
-        session = new LlamaChatSession({ contextSequence: context.getSequence() });
+        // Reuse the existing sequence (clear its KV cache) instead of
+        // calling context.getSequence() which allocates a new slot and
+        // can exhaust the context's sequence limit, crashing Metal.
+        const existingSeq = session?.sequence;
+        if (existingSeq && !existingSeq.disposed) {
+            await existingSeq.clearHistory();
+            session = new LlamaChatSession({ contextSequence: existingSeq });
+        } else {
+            session = new LlamaChatSession({ contextSequence: context.getSequence() });
+        }
         return { success: true };
     } catch (error) {
         return { success: false, error: (error as Error).message };

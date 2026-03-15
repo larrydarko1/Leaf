@@ -15,7 +15,7 @@
 //   hf-download-service  → hf:*
 //   speech-service       → speech:*
 
-import { app, BrowserWindow, ipcMain, shell, Menu, screen, protocol, net, session } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, Menu, screen, protocol, net, session, clipboard } from 'electron';
 import path from 'path';
 import { pathToFileURL } from 'url';
 
@@ -176,6 +176,11 @@ app.whenReady().then(() => {
     agentService.register(ipcMain);
     hfDownloadService.register(ipcMain, getMainWindow);
     speechService.register(ipcMain, getMainWindow);
+
+    // Clipboard
+    ipcMain.handle('clipboard:write', (_event, text: string) => {
+        if (typeof text === 'string') clipboard.writeText(text);
+    });
 
     // Shell — open external URLs safely (http/https only)
     ipcMain.handle('shell:openExternal', async (_event, url: string) => {

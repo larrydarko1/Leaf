@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue';
 import type { AiModelInfo, AiStatus } from '../../types/ai';
 
 defineProps<{
@@ -7,17 +8,13 @@ defineProps<{
     isLoading: boolean;
     selectedModelPath: string | null;
     selectedModelLabel: string;
-    showDropdown: boolean;
-    dropdownRef: HTMLElement | null;
-    dropdownPosition: Record<string, string>;
     showHfPanel: boolean;
     showHistory: boolean;
     agentMode: boolean;
     isAnyGenerating: boolean;
 }>();
 
-defineEmits<{
-    (e: 'toggle-dropdown'): void;
+const emit = defineEmits<{
     (e: 'select-model', model: AiModelInfo): void;
     (e: 'load-model'): void;
     (e: 'unload-model'): void;
@@ -29,6 +26,42 @@ defineEmits<{
     (e: 'new-conversation'): void;
     (e: 'close'): void;
 }>();
+
+// Dropdown state managed locally — the DOM element lives here
+const dropdownRef = ref<HTMLElement | null>(null);
+const showDropdown = ref(false);
+const dropdownPosition = ref<Record<string, string>>({});
+
+function toggleDropdown() {
+    if (showDropdown.value) {
+        showDropdown.value = false;
+        return;
+    }
+    if (dropdownRef.value) {
+        const rect = dropdownRef.value.getBoundingClientRect();
+        const menuWidth = Math.min(rect.width + 60, window.innerWidth - rect.left - 12);
+        dropdownPosition.value = {
+            top: `${rect.bottom + 4}px`,
+            left: `${rect.left}px`,
+            minWidth: `${menuWidth}px`,
+        };
+    }
+    showDropdown.value = true;
+}
+
+function handleSelectModel(model: AiModelInfo) {
+    showDropdown.value = false;
+    emit('select-model', model);
+}
+
+function handleClickOutside(event: MouseEvent) {
+    if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
+        showDropdown.value = false;
+    }
+}
+
+onMounted(() => document.addEventListener('click', handleClickOutside));
+onUnmounted(() => document.removeEventListener('click', handleClickOutside));
 
 function truncate(str: string, len: number): string {
     return str.length > len ? str.slice(0, len) + '…' : str;
@@ -43,7 +76,7 @@ function truncate(str: string, len: number): string {
                     <button 
                         class="ai-dropdown-trigger" 
                         :disabled="isLoading" 
-                        @click="$emit('toggle-dropdown')"
+                        @click="toggleDropdown()"
                     >
                         <span class="ai-dropdown-label">{{ selectedModelLabel }}</span>
                         <svg class="ai-dropdown-chevron" :class="{ open: showDropdown }" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -67,7 +100,7 @@ function truncate(str: string, len: number): string {
                                 :key="m.path" 
                                 class="ai-dropdown-item"
                                 :class="{ selected: selectedModelPath === m.path }"
-                                @click="$emit('select-model', m)"
+                                @click="handleSelectModel(m)"
                             >
                                 <span class="ai-dropdown-item-name">{{ truncate(m.name, 30) }}</span>
                                 <span class="ai-dropdown-item-size">{{ m.sizeFormatted }}</span>

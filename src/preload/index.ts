@@ -94,6 +94,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.removeAllListeners('hf:downloadProgress');
     },
 
+    // Clipboard
+    writeClipboard: (text: string) => ipcRenderer.invoke('clipboard:write', text),
+
     // Speech-to-Text (Whisper) operations
     speechInit: () => ipcRenderer.invoke('speech:init'),
     speechTranscribe: (audioData: number[]) => ipcRenderer.invoke('speech:transcribe', audioData),

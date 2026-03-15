@@ -82,7 +82,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
 
     async function copyMessage(content: string, index: number) {
         try {
-            await navigator.clipboard.writeText(content);
+            await window.electronAPI.writeClipboard(content);
             copiedIndex.value = index;
             setTimeout(() => { if (copiedIndex.value === index) copiedIndex.value = null; }, 2000);
         } catch (err) {

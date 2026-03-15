@@ -186,6 +186,9 @@ export interface ElectronAPI {
     onHfDownloadProgress: (callback: (progress: HfDownloadProgress) => void) => void;
     removeHfDownloadProgressListener: () => void;
 
+    // Clipboard
+    writeClipboard: (text: string) => Promise<void>;
+
     // Speech-to-Text (Whisper) operations
     speechInit: () => Promise<SpeechInitResult>;
     speechTranscribe: (audioData: number[]) => Promise<SpeechTranscribeResult>;
