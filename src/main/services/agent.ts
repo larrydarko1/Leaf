@@ -11,6 +11,7 @@ import fs from 'fs/promises';
 import { existsSync } from 'fs';
 import { randomUUID } from 'crypto';
 import os from 'os';
+import { assertInsideBoundary } from '../lib/validation';
 
 interface EditRecord {
     editId: string;
@@ -43,11 +44,7 @@ function generateEditId(): string {
 
 async function readFileForAgent(filePath: string, workspacePath: string): Promise<{ success: boolean; content?: string; filePath?: string; error?: string }> {
     try {
-        const resolvedFile = path.resolve(filePath);
-        const resolvedWorkspace = path.resolve(workspacePath);
-        if (!resolvedFile.startsWith(resolvedWorkspace + path.sep) && resolvedFile !== resolvedWorkspace) {
-            return { success: false, error: 'Access denied: file is outside the workspace.' };
-        }
+        const resolvedFile = assertInsideBoundary(filePath, workspacePath);
 
         if (!existsSync(resolvedFile)) {
             return { success: false, error: `File not found: ${filePath}` };
@@ -63,12 +60,8 @@ async function readFileForAgent(filePath: string, workspacePath: string): Promis
 
 async function proposeEdit(filePath: string, newContent: string, workspacePath: string): Promise<{ success: boolean; editId?: string; filePath?: string; relativePath?: string; originalContent?: string; newContent?: string; isNewFile?: boolean; error?: string }> {
     try {
-        const resolvedFile = path.resolve(filePath);
+        const resolvedFile = assertInsideBoundary(filePath, workspacePath);
         const resolvedWorkspace = path.resolve(workspacePath);
-
-        if (!resolvedFile.startsWith(resolvedWorkspace + path.sep) && resolvedFile !== resolvedWorkspace) {
-            return { success: false, error: 'Access denied: file is outside the workspace.' };
-        }
 
         await ensureBackupDir();
 

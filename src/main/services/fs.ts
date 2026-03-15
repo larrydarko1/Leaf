@@ -11,8 +11,36 @@ import { watch } from 'fs';
 import type { FSWatcher } from 'fs';
 import { ALLOWED_EXTENSIONS } from '../lib/extensions';
 import { IMAGE_MIMETYPES, AUDIO_MIMETYPES } from '../lib/mime';
+import { assertInsideBoundary } from '../lib/validation';
 
 let folderWatcher: FSWatcher | null = null;
+
+// The vault root is set when the user opens a folder (via files:scan).
+// All subsequent file operations are validated against this root.
+let vaultRoot: string | null = null;
+
+/** Returns the active vault root, or null if no vault is open. */
+export function getVaultRoot(): string | null {
+    return vaultRoot;
+}
+
+/** Close the folder watcher if active. Called during app shutdown. */
+export function cleanup(): void {
+    if (folderWatcher) {
+        folderWatcher.close();
+        folderWatcher = null;
+    }
+}
+
+function requireVaultRoot(): string {
+    if (!vaultRoot) throw new Error('No vault is open.');
+    return vaultRoot;
+}
+
+/** Resolve `p` and assert it lives inside the active vault. */
+function assertInsideVault(p: string): string {
+    return assertInsideBoundary(p, requireVaultRoot());
+}
 
 interface FileEntry {
     name: string;
@@ -92,10 +120,11 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
         return result.canceled ? null : result.filePaths[0];
     });
 
-    // Scan vault
+    // Scan vault — this also sets the active vault root for boundary checks
     ipc.handle('files:scan', async (_event, folderPath: string) => {
         if (typeof folderPath !== 'string') return { success: false, error: 'Invalid path' };
         try {
+            vaultRoot = path.resolve(folderPath);
             const result = await scanFolder(folderPath);
             return { success: true, files: result.files, folders: result.folders };
         } catch (error) {
@@ -125,17 +154,29 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
     });
 
     // Resolve ![[embed]] path
-    ipc.handle('file:resolveEmbedPath', async (_event, fileName: string, noteDir: string, vaultRoot: string) => {
-        if (typeof fileName !== 'string' || typeof noteDir !== 'string' || typeof vaultRoot !== 'string') {
+    ipc.handle('file:resolveEmbedPath', async (_event, fileName: string, noteDir: string, embedVaultRoot: string) => {
+        if (typeof fileName !== 'string' || typeof noteDir !== 'string' || typeof embedVaultRoot !== 'string') {
             return { success: false, error: 'Invalid arguments' };
         }
         try {
+            const root = requireVaultRoot();
+            // Both noteDir and embedVaultRoot must be inside the active vault
+            assertInsideBoundary(noteDir, root);
+            assertInsideBoundary(embedVaultRoot, root);
+
             const relToNote = path.resolve(noteDir, fileName);
-            try { await fs.access(relToNote); return { success: true, path: relToNote }; } catch { /* not found here */ }
-            const relToVault = path.resolve(vaultRoot, fileName);
-            try { await fs.access(relToVault); return { success: true, path: relToVault }; } catch { /* not found here */ }
-            const found = await findFileRecursive(vaultRoot, path.basename(fileName));
-            if (found) return { success: true, path: found };
+            if (relToNote.startsWith(root + path.sep) || relToNote === root) {
+                try { await fs.access(relToNote); return { success: true, path: relToNote }; } catch { /* not found here */ }
+            }
+            const relToVault = path.resolve(embedVaultRoot, fileName);
+            if (relToVault.startsWith(root + path.sep) || relToVault === root) {
+                try { await fs.access(relToVault); return { success: true, path: relToVault }; } catch { /* not found here */ }
+            }
+            const found = await findFileRecursive(embedVaultRoot, path.basename(fileName));
+            if (found) {
+                assertInsideBoundary(found, root);
+                return { success: true, path: found };
+            }
             return { success: false, error: 'File not found' };
         } catch (error) {
             return { success: false, error: (error as Error).message };
@@ -148,6 +189,8 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
             return { success: false, error: 'Invalid arguments' };
         }
         try {
+            // Source can be anywhere (user dragged from Finder), but target must be inside vault
+            assertInsideVault(targetDir);
             await fs.mkdir(targetDir, { recursive: true });
             let baseName = path.basename(sourcePath);
             let targetPath = path.join(targetDir, baseName);
@@ -169,6 +212,7 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
     ipc.handle('file:read', async (_event, filePath: string) => {
         if (typeof filePath !== 'string') return { success: false, error: 'Invalid path' };
         try {
+            assertInsideVault(filePath);
             const content = await fs.readFile(filePath, 'utf-8');
             return { success: true, content };
         } catch (error) {
@@ -180,6 +224,7 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
     ipc.handle('file:readImage', async (_event, filePath: string) => {
         if (typeof filePath !== 'string') return { success: false, error: 'Invalid path' };
         try {
+            assertInsideVault(filePath);
             const ext = path.extname(filePath).toLowerCase();
             const mimeType = IMAGE_MIMETYPES[ext] ?? 'image/png';
             const buf = await fs.readFile(filePath);
@@ -193,6 +238,7 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
     ipc.handle('file:readAudio', async (_event, filePath: string) => {
         if (typeof filePath !== 'string') return { success: false, error: 'Invalid path' };
         try {
+            assertInsideVault(filePath);
             const ext = path.extname(filePath).toLowerCase();
             const mimeType = AUDIO_MIMETYPES[ext] ?? 'audio/mpeg';
             const buf = await fs.readFile(filePath);
@@ -202,11 +248,14 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
         }
     });
 
-    // Write text file
+    // Write text file (atomic: write to .tmp then rename)
     ipc.handle('file:write', async (_event, filePath: string, content: string) => {
         if (typeof filePath !== 'string' || typeof content !== 'string') return { success: false, error: 'Invalid arguments' };
         try {
-            await fs.writeFile(filePath, content, 'utf-8');
+            assertInsideVault(filePath);
+            const tmp = filePath + '.tmp';
+            await fs.writeFile(tmp, content, 'utf-8');
+            await fs.rename(tmp, filePath);
             return { success: true };
         } catch (error) {
             return { success: false, error: (error as Error).message };
@@ -217,7 +266,9 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
     ipc.handle('file:create', async (_event, folderPath: string, fileName: string) => {
         if (typeof folderPath !== 'string' || typeof fileName !== 'string') return { success: false, error: 'Invalid arguments' };
         try {
+            assertInsideVault(folderPath);
             const filePath = path.join(folderPath, fileName);
+            assertInsideVault(filePath);
             await fs.writeFile(filePath, '', 'utf-8');
             return { success: true, path: filePath };
         } catch (error) {
@@ -229,7 +280,9 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
     ipc.handle('folder:create', async (_event, parentPath: string, folderName: string) => {
         if (typeof parentPath !== 'string' || typeof folderName !== 'string') return { success: false, error: 'Invalid arguments' };
         try {
+            assertInsideVault(parentPath);
             const folderPath = path.join(parentPath, folderName);
+            assertInsideVault(folderPath);
             try { await fs.access(folderPath); return { success: false, error: 'A folder with this name already exists' }; } catch { /* doesn't exist yet — good */ }
             await fs.mkdir(folderPath, { recursive: true });
             return { success: true, path: folderPath };
@@ -242,6 +295,7 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
     ipc.handle('file:delete', async (_event, filePath: string) => {
         if (typeof filePath !== 'string') return { success: false, error: 'Invalid path' };
         try {
+            assertInsideVault(filePath);
             await shell.trashItem(filePath);
             return { success: true };
         } catch (error) {
@@ -253,7 +307,9 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
     ipc.handle('file:rename', async (_event, oldPath: string, newFileName: string) => {
         if (typeof oldPath !== 'string' || typeof newFileName !== 'string') return { success: false, error: 'Invalid arguments' };
         try {
+            assertInsideVault(oldPath);
             const newPath = path.join(path.dirname(oldPath), newFileName);
+            assertInsideVault(newPath);
             try { await fs.access(newPath); return { success: false, error: 'A file with this name already exists' }; } catch { /* good */ }
             await fs.rename(oldPath, newPath);
             return { success: true, newPath };
@@ -266,7 +322,9 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
     ipc.handle('folder:rename', async (_event, oldPath: string, newFolderName: string) => {
         if (typeof oldPath !== 'string' || typeof newFolderName !== 'string') return { success: false, error: 'Invalid arguments' };
         try {
+            assertInsideVault(oldPath);
             const newPath = path.join(path.dirname(oldPath), newFolderName);
+            assertInsideVault(newPath);
             try { await fs.access(newPath); return { success: false, error: 'A folder with this name already exists' }; } catch { /* good */ }
             await fs.rename(oldPath, newPath);
             return { success: true, newPath };
@@ -279,6 +337,7 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
     ipc.handle('folder:delete', async (_event, folderPath: string) => {
         if (typeof folderPath !== 'string') return { success: false, error: 'Invalid path' };
         try {
+            assertInsideVault(folderPath);
             await shell.trashItem(folderPath);
             return { success: true };
         } catch (error) {
@@ -290,6 +349,8 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
     ipc.handle('file:move', async (_event, filePath: string, targetFolderPath: string) => {
         if (typeof filePath !== 'string' || typeof targetFolderPath !== 'string') return { success: false, error: 'Invalid arguments' };
         try {
+            assertInsideVault(filePath);
+            assertInsideVault(targetFolderPath);
             const newPath = path.join(targetFolderPath, path.basename(filePath));
             if (filePath === newPath) return { success: true, newPath };
             try { await fs.access(newPath); return { success: false, error: 'A file with this name already exists in the target folder' }; } catch { /* good */ }
@@ -304,6 +365,8 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
     ipc.handle('folder:move', async (_event, folderPath: string, targetFolderPath: string) => {
         if (typeof folderPath !== 'string' || typeof targetFolderPath !== 'string') return { success: false, error: 'Invalid arguments' };
         try {
+            assertInsideVault(folderPath);
+            assertInsideVault(targetFolderPath);
             const newPath = path.join(targetFolderPath, path.basename(folderPath));
             if (folderPath === newPath) return { success: true, newPath };
             if (targetFolderPath.startsWith(folderPath + path.sep) || targetFolderPath === folderPath) {

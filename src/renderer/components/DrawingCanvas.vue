@@ -346,25 +346,28 @@ function selectTool(tool: ToolType) {
 
 // ================= Properties =================
 
-function setProperty(prop: string, value: any) {
+// Style properties that can be set on both elements and the default style
+type StyleKey = 'strokeColor' | 'fillColor' | 'strokeWidth' | 'strokeStyle' | 'borderRadius';
+
+function setProperty(prop: StyleKey, value: string | number) {
   // Update selected element if any
   if (selectedElement.value) {
-    (selectedElement.value as any)[prop] = value;
+    selectedElement.value[prop] = value as never;
     saveToHistory();
     scheduleAutoSave();
     renderScene();
   }
   // Always update default style
   if (prop in defaultStyle.value) {
-    (defaultStyle.value as any)[prop] = value;
+    defaultStyle.value[prop] = value as never;
   }
 }
 </script>
 
 <template>
   <div
-    class="excalidraw-container"
     ref="containerEl"
+    class="excalidraw-container"
     tabindex="0"
     @keydown="handleKeydown"
     @keyup="handleKeyup"
@@ -375,20 +378,20 @@ function setProperty(prop: string, value: any) {
       <div class="toolbar-inner">
         <!-- Selection -->
         <button
-          @click="selectTool('select')"
           class="toolbar-btn"
           :class="{ active: currentTool === 'select' }"
           title="Selection — V"
+          @click="selectTool('select')"
         >
           <svg width="20" height="20" viewBox="0 0 24 24"><path d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87a.5.5 0 0 0 .35-.85L6.35 2.85a.5.5 0 0 0-.85.36z" fill="currentColor"/></svg>
         </button>
 
         <!-- Hand -->
         <button
-          @click="selectTool('hand')"
           class="toolbar-btn"
           :class="{ active: currentTool === 'hand' }"
           title="Hand (Pan) — H"
+          @click="selectTool('hand')"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 9.5V6a2 2 0 0 0-4 0v8l-1.46-1.46a2 2 0 0 0-2.83 2.83L7 20.64A4 4 0 0 0 9.83 22H15a4 4 0 0 0 4-4v-5a2 2 0 0 0-4 0v1"/></svg>
         </button>
@@ -397,60 +400,60 @@ function setProperty(prop: string, value: any) {
 
         <!-- Rectangle -->
         <button
-          @click="selectTool('rectangle')"
           class="toolbar-btn"
           :class="{ active: currentTool === 'rectangle' }"
           title="Rectangle — R"
+          @click="selectTool('rectangle')"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
         </button>
 
         <!-- Diamond -->
         <button
-          @click="selectTool('diamond')"
           class="toolbar-btn"
           :class="{ active: currentTool === 'diamond' }"
           title="Diamond — D"
+          @click="selectTool('diamond')"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12,2 22,12 12,22 2,12"/></svg>
         </button>
 
         <!-- Ellipse -->
         <button
-          @click="selectTool('ellipse')"
           class="toolbar-btn"
           :class="{ active: currentTool === 'ellipse' }"
           title="Ellipse — O"
+          @click="selectTool('ellipse')"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/></svg>
         </button>
 
         <!-- Triangle -->
         <button
-          @click="selectTool('triangle')"
           class="toolbar-btn"
           :class="{ active: currentTool === 'triangle' }"
           title="Triangle — T"
+          @click="selectTool('triangle')"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12,3 22,21 2,21"/></svg>
         </button>
 
         <!-- Arrow -->
         <button
-          @click="selectTool('arrow')"
           class="toolbar-btn"
           :class="{ active: currentTool === 'arrow' }"
           title="Arrow — A"
+          @click="selectTool('arrow')"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="10,5 19,5 19,14"/></svg>
         </button>
 
         <!-- Line -->
         <button
-          @click="selectTool('line')"
           class="toolbar-btn"
           :class="{ active: currentTool === 'line' }"
           title="Line — L"
+          @click="selectTool('line')"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="5" y1="19" x2="19" y2="5"/></svg>
         </button>
@@ -459,30 +462,30 @@ function setProperty(prop: string, value: any) {
 
         <!-- Freedraw -->
         <button
-          @click="selectTool('freedraw')"
           class="toolbar-btn"
           :class="{ active: currentTool === 'freedraw' }"
           title="Pen — P"
+          @click="selectTool('freedraw')"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
         </button>
 
         <!-- Text -->
         <button
-          @click="selectTool('text')"
           class="toolbar-btn"
           :class="{ active: currentTool === 'text' }"
           title="Text — X"
+          @click="selectTool('text')"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9.5" y1="20" x2="14.5" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
         </button>
 
         <!-- Eraser -->
         <button
-          @click="selectTool('eraser')"
           class="toolbar-btn"
           :class="{ active: currentTool === 'eraser' }"
           title="Eraser — E"
+          @click="selectTool('eraser')"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16c-.8-.8-.8-2 0-2.8L13.8 2.4c.8-.8 2-.8 2.8 0L21 6.8c.8.8.8 2 0 2.8L12 18"/></svg>
         </button>
@@ -490,12 +493,12 @@ function setProperty(prop: string, value: any) {
         <span class="toolbar-sep"></span>
 
         <!-- Architecture shapes dropdown -->
-        <div class="arch-dropdown" ref="archDropdownEl">
+        <div ref="archDropdownEl" class="arch-dropdown">
           <button
-            @click="toggleArchDropdown"
             class="toolbar-btn"
             :class="{ active: isArchTool }"
             title="Architecture Shapes"
+            @click="toggleArchDropdown"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <ellipse cx="12" cy="5" rx="9" ry="3"/>
@@ -508,10 +511,10 @@ function setProperty(prop: string, value: any) {
               <button
                 v-for="shape in archShapes"
                 :key="shape.tool"
-                @click="selectArchTool(shape.tool)"
                 class="arch-shape-btn"
                 :class="{ active: currentTool === shape.tool }"
                 :title="shape.label"
+                @click="selectArchTool(shape.tool)"
               >
                 <span class="arch-shape-icon" v-html="shape.icon"></span>
                 <span class="arch-shape-label">{{ shape.label }}</span>
@@ -532,32 +535,32 @@ function setProperty(prop: string, value: any) {
             <button
               v-for="c in strokeColorPalette"
               :key="'s-' + c"
-              @click="setProperty('strokeColor', c)"
               class="color-swatch"
               :class="{ active: activeStrokeColor === c }"
               :style="{ background: c }"
+              @click="setProperty('strokeColor', c)"
             />
           </div>
         </div>
 
         <!-- Fill Color (only for shapes) -->
-        <div class="prop-section" v-if="showFillOption">
+        <div v-if="showFillOption" class="prop-section">
           <div class="prop-label">Background</div>
           <div class="color-grid">
             <button
-              @click="setProperty('fillColor', 'transparent')"
               class="color-swatch transparent-swatch"
               :class="{ active: activeFillColor === 'transparent' }"
+              @click="setProperty('fillColor', 'transparent')"
             >
               <svg width="16" height="16" viewBox="0 0 16 16"><line x1="0" y1="16" x2="16" y2="0" stroke="currentColor" stroke-width="1.5"/></svg>
             </button>
             <button
               v-for="c in fillColorPalette"
               :key="'f-' + c"
-              @click="setProperty('fillColor', c)"
               class="color-swatch"
               :class="{ active: activeFillColor === c }"
               :style="{ background: c }"
+              @click="setProperty('fillColor', c)"
             />
           </div>
         </div>
@@ -569,9 +572,9 @@ function setProperty(prop: string, value: any) {
             <button
               v-for="w in strokeWidthOptions"
               :key="w"
-              @click="setProperty('strokeWidth', w)"
               class="stroke-width-btn"
               :class="{ active: activeStrokeWidth === w }"
+              @click="setProperty('strokeWidth', w)"
             >
               <span class="stroke-preview" :style="{ height: w + 'px' }"></span>
             </button>
@@ -585,10 +588,10 @@ function setProperty(prop: string, value: any) {
             <button
               v-for="s in strokeStyleOptions"
               :key="s.value"
-              @click="setProperty('strokeStyle', s.value)"
               class="stroke-style-btn"
               :class="{ active: activeStrokeStyle === s.value }"
               :title="s.label"
+              @click="setProperty('strokeStyle', s.value)"
             >
               <svg width="40" height="6" viewBox="0 0 40 6">
                 <line x1="0" y1="3" x2="40" y2="3" stroke="currentColor" stroke-width="2" :stroke-dasharray="s.dash"/>
@@ -598,16 +601,16 @@ function setProperty(prop: string, value: any) {
         </div>
 
         <!-- Roundness -->
-        <div class="prop-section" v-if="showRoundnessOption">
+        <div v-if="showRoundnessOption" class="prop-section">
           <div class="prop-label">Roundness</div>
           <div class="roundness-row">
             <button
               v-for="r in borderRadiusOptions"
               :key="r.value"
-              @click="setProperty('borderRadius', r.value)"
               class="roundness-btn"
               :class="{ active: activeBorderRadius === r.value }"
               :title="r.label"
+              @click="setProperty('borderRadius', r.value)"
             >
               <svg v-if="r.icon === 'sharp'" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
                 <rect x="2" y="2" width="16" height="16"/>
@@ -623,17 +626,17 @@ function setProperty(prop: string, value: any) {
         </div>
 
         <!-- Actions (only when element selected) -->
-        <div class="prop-section" v-if="selectedElement">
+        <div v-if="selectedElement" class="prop-section">
           <div class="prop-actions">
-            <button @click="copySelected" class="action-btn" title="Copy (⌘C)">
+            <button class="action-btn" title="Copy (⌘C)" @click="copySelected">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
               Copy
             </button>
-            <button @click="duplicateSelected" class="action-btn" title="Duplicate (⌘D)">
+            <button class="action-btn" title="Duplicate (⌘D)" @click="duplicateSelected">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="13" height="13" rx="2"/><rect x="8" y="8" width="13" height="13" rx="2"/></svg>
               Duplicate
             </button>
-            <button @click="deleteSelected" class="action-btn action-btn--delete" title="Delete (⌫)">
+            <button class="action-btn action-btn--delete" title="Delete (⌫)" @click="deleteSelected">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
               Delete
             </button>
@@ -645,13 +648,13 @@ function setProperty(prop: string, value: any) {
     <!-- Canvas -->
     <canvas
       ref="canvas"
+      :style="{ cursor: canvasCursor }"
       @pointerdown="onPointerDown"
       @pointermove="onPointerMove"
       @pointerup="onPointerUp"
       @pointerleave="onPointerUp"
       @dblclick="onDoubleClick"
       @wheel.prevent="onWheel"
-      :style="{ cursor: canvasCursor }"
     />
 
     <!-- Text Editing Overlay -->
@@ -671,23 +674,23 @@ function setProperty(prop: string, value: any) {
     <div class="canvas-footer">
       <div class="footer-left">
         <div class="zoom-controls">
-          <button @click="zoomToCenter(zoom - 0.1)" class="zoom-btn" title="Zoom out">
+          <button class="zoom-btn" title="Zoom out" @click="zoomToCenter(zoom - 0.1)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
-          <button @click="zoomToCenter(1)" class="zoom-value" title="Reset zoom">{{ zoomPercent }}%</button>
-          <button @click="zoomToCenter(zoom + 0.1)" class="zoom-btn" title="Zoom in">
+          <button class="zoom-value" title="Reset zoom" @click="zoomToCenter(1)">{{ zoomPercent }}%</button>
+          <button class="zoom-btn" title="Zoom in" @click="zoomToCenter(zoom + 0.1)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
         </div>
       </div>
       <div class="footer-center">
-        <button @click="undo" class="footer-btn" :disabled="historyIndex <= 0" title="Undo (⌘Z)">
+        <button class="footer-btn" :disabled="historyIndex <= 0" title="Undo (⌘Z)" @click="undo">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
         </button>
-        <button @click="redo" class="footer-btn" :disabled="historyIndex >= history.length - 1" title="Redo (⌘⇧Z)">
+        <button class="footer-btn" :disabled="historyIndex >= history.length - 1" title="Redo (⌘⇧Z)" @click="redo">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"/></svg>
         </button>
-        <button @click="clearAll" class="footer-btn" title="Clear canvas">
+        <button class="footer-btn" title="Clear canvas" @click="clearAll">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
         </button>
       </div>

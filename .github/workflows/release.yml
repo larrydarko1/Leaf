@@ -22,7 +22,7 @@ jobs:
       tag: ${{ steps.pkg.outputs.tag }}
       exists: ${{ steps.check.outputs.exists }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Read version from package.json
         id: pkg
@@ -49,9 +49,9 @@ jobs:
     if: needs.version.outputs.exists == 'false'
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -71,7 +71,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: mac-dmg
           path: dist-electron/*.dmg
@@ -82,9 +82,9 @@ jobs:
     if: needs.version.outputs.exists == 'false'
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -105,7 +105,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: win-exe
           path: dist-electron/*.exe
@@ -116,9 +116,9 @@ jobs:
     if: needs.version.outputs.exists == 'false'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -138,7 +138,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: linux-appimage
           path: dist-electron/*.AppImage
@@ -148,7 +148,7 @@ jobs:
     needs: [version, build-mac, build-win, build-linux]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Create tag
         run: |
@@ -157,7 +157,7 @@ jobs:
           git tag -a "${{ needs.version.outputs.tag }}" -m "Release ${{ needs.version.outputs.tag }}"
           git push origin "${{ needs.version.outputs.tag }}"
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           path: artifacts
           merge-multiple: true

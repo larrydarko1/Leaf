@@ -1,6 +1,6 @@
 // Type definitions for Electron API
 import type {
-    AiModelInfo, AiListModelsResult, AiLoadResult, AiChatResult, AiStatus, AiSimpleResult,
+    AiListModelsResult, AiLoadResult, AiChatResult, AiStatus, AiSimpleResult,
     ConversationMessage, Conversation, ConversationListResult, ConversationCreateResult, ConversationLoadResult,
     AgentReadFileResult, AgentProposeEditResult, AgentEditResult, AgentPendingEditsResult,
 } from './ai';

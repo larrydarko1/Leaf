@@ -170,7 +170,7 @@ app.whenReady().then(() => {
     conversationService.init(app.getPath('userData'));
 
     fsService.register(ipcMain, getMainWindow);
-    mediaService.register(ipcMain);
+    mediaService.register(ipcMain, fsService.getVaultRoot);
     aiService.register(ipcMain, getMainWindow);
     conversationService.register(ipcMain);
     agentService.register(ipcMain);
@@ -193,6 +193,15 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
+});
+
+// ─── Graceful shutdown ────────────────────────────────────────────────────────
+// Clean up resources held by services before the process exits.
+app.on('before-quit', async () => {
+    fsService.cleanup();
+    await agentService.cleanupAllPendingEdits();
+    await aiService.cleanup();
+    await speechService.cleanup();
 });
 
 process.on('uncaughtException', (error) => {

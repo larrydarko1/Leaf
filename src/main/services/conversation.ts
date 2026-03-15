@@ -9,8 +9,16 @@ import path from 'path';
 import fs from 'fs/promises';
 import { existsSync, mkdirSync } from 'fs';
 import { randomUUID } from 'crypto';
+import { assertSafeFileName, assertInsideBoundary } from '../lib/validation';
 
 let conversationsDir: string | null = null;
+
+/** Write content to a file atomically: write to .tmp, then rename into place. */
+async function writeFileAtomic(filePath: string, data: string): Promise<void> {
+    const tmp = filePath + '.tmp';
+    await fs.writeFile(tmp, data, 'utf-8');
+    await fs.rename(tmp, filePath);
+}
 
 interface Message {
     role: 'user' | 'assistant';
@@ -52,7 +60,11 @@ function deriveTitle(messages: Message[]): string {
 }
 
 function getConversationPath(id: string): string {
-    return path.join(conversationsDir!, `${id}.json`);
+    // Prevent path traversal via crafted IDs like "../../etc/passwd"
+    assertSafeFileName(id);
+    const filePath = path.join(conversationsDir!, `${id}.json`);
+    assertInsideBoundary(filePath, conversationsDir!);
+    return filePath;
 }
 
 export async function createConversation(modelName: string): Promise<{ success: boolean; conversation?: Conversation; error?: string }> {
@@ -68,10 +80,9 @@ export async function createConversation(modelName: string): Promise<{ success: 
             tokenCount: 0,
         };
 
-        await fs.writeFile(
+        await writeFileAtomic(
             getConversationPath(conversation.id),
-            JSON.stringify(conversation, null, 2),
-            'utf-8'
+            JSON.stringify(conversation, null, 2)
         );
 
         return { success: true, conversation };
@@ -88,10 +99,9 @@ export async function saveConversation(conversation: Conversation): Promise<{ su
             conversation.title = deriveTitle(conversation.messages);
         }
 
-        await fs.writeFile(
+        await writeFileAtomic(
             getConversationPath(conversation.id),
-            JSON.stringify(conversation, null, 2),
-            'utf-8'
+            JSON.stringify(conversation, null, 2)
         );
 
         return { success: true };
@@ -174,7 +184,7 @@ export async function listConversations(): Promise<{ success: boolean; conversat
             }
         }
 
-        conversations.sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+        conversations.sort((a, b) => new Date(b.updatedAt as string).getTime() - new Date(a.updatedAt as string).getTime());
 
         return { success: true, conversations };
     } catch (error) {

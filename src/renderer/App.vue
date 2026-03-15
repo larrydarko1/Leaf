@@ -252,7 +252,7 @@ function toggleAiPanel() {
 						<span class="welcome-logo-text">leaf.</span>
 					</div>
 
-					<button @click="selectFolder" class="btn-primary">
+					<button class="btn-primary" @click="selectFolder">
 						Select Folder
 					</button>
 				</div>
@@ -265,7 +265,7 @@ function toggleAiPanel() {
 					<div class="sidebar-menu">
 						<!-- Workspace pill -->
 						<div class="menu-pill">
-							<button @click="changeFolder" class="btn-menu-icon" title="Change folder">
+							<button class="btn-menu-icon" title="Change folder" @click="changeFolder">
 								<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
 									<path fill-rule="evenodd" clip-rule="evenodd" d="M9.70725 2.4087C9 3.03569 9 4.18259 9 6.4764V17.5236C9 19.8174 9 20.9643 9.70725 21.5913C10.4145 22.2183 11.4955 22.0297 13.6576 21.6526L15.9864 21.2465C18.3809 20.8288 19.5781 20.62 20.2891 19.7417C21 18.8635 21 17.5933 21 15.0529V8.94711C21 6.40671 21 5.13652 20.2891 4.25826C19.5781 3.37999 18.3809 3.17118 15.9864 2.75354L13.6576 2.34736C11.4955 1.97026 10.4145 1.78171 9.70725 2.4087ZM12 10.1686C12.4142 10.1686 12.75 10.52 12.75 10.9535V13.0465C12.75 13.48 12.4142 13.8314 12 13.8314C11.5858 13.8314 11.25 13.48 11.25 13.0465V10.9535C11.25 10.52 11.5858 10.1686 12 10.1686Z"></path>
 									<path d="M7.54717 4.5C5.48889 4.503 4.41599 4.54826 3.73223 5.23202C3 5.96425 3 7.14276 3 9.49979V14.4998C3 16.8568 3 18.0353 3.73223 18.7676C4.41599 19.4513 5.48889 19.4966 7.54717 19.4996C7.49985 18.8763 7.49992 18.1557 7.50001 17.3768V6.6227C7.49992 5.84388 7.49985 5.1233 7.54717 4.5Z"></path>
@@ -275,7 +275,7 @@ function toggleAiPanel() {
 
 						<!-- Create actions pill -->
 						<div class="menu-pill">
-							<button @click="createNewFile" class="btn-menu-icon" title="Create new note">
+							<button class="btn-menu-icon" title="Create new note" @click="createNewFile">
 							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 								<g id="SVGRepo_iconCarrier">
 									<path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C13.4992 2 14.7004 2 15.6773 2.07361C15.5629 2.3601 15.5 2.6727 15.5 3V3.5H15C13.6193 3.5 12.5 4.61929 12.5 6C12.5 7.38071 13.6193 8.5 15 8.5H15.5V9C15.5 10.3807 16.6193 11.5 18 11.5C18.8178 11.5 19.5439 11.1073 20 10.5002V14C20 17.7712 20 19.6569 18.8284 20.8284C17.6569 22 15.7712 22 12 22C8.22876 22 6.34315 22 5.17157 20.8284C4 19.6569 4 17.7712 4 14V10C4 6.22876 4 4.34315 5.17157 3.17157C6.34315 2 8.22876 2 12 2ZM8 11C7.44772 11 7 11.4477 7 12C7 12.5523 7.44772 13 8 13H12C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11H8ZM8 14C7.44772 14 7 14.4477 7 15C7 15.5523 7.44772 16 8 16H14C14.5523 16 15 15.5523 15 15C15 14.4477 14.5523 14 14 14H8ZM8 17C7.44772 17 7 17.4477 7 18C7 18.5523 7.44772 19 8 19H12C12.5523 19 13 18.5523 13 18C13 17.4477 12.5523 17 12 17H8Z" fill="currentColor"></path>
@@ -284,7 +284,7 @@ function toggleAiPanel() {
 								</g>
 								</svg>
 							</button>
-							<button @click="createNewFolder" class="btn-menu-icon" title="Create new folder">
+							<button class="btn-menu-icon" title="Create new folder" @click="createNewFolder">
 							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 								<defs>
 									<mask id="folderMask">
@@ -301,7 +301,7 @@ function toggleAiPanel() {
 
 						<!-- Tools pill -->
 						<div class="menu-pill">
-							<button @click="toggleSearch" class="btn-menu-icon" :class="{ 'active': showSearchPanel }" title="Search files">
+							<button class="btn-menu-icon" :class="{ 'active': showSearchPanel }" title="Search files" @click="toggleSearch">
 								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 									<g id="SVGRepo_iconCarrier">
 										<rect width="24" height="24" fill="transparent"></rect>
@@ -309,12 +309,12 @@ function toggleAiPanel() {
 									</g>
 								</svg>
 							</button>
-							<button @click="toggleBookmarks" class="btn-menu-icon" :class="{ 'active': showBookmarksPanel }" title="Bookmarks">
+							<button class="btn-menu-icon" :class="{ 'active': showBookmarksPanel }" title="Bookmarks" @click="toggleBookmarks">
 								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 									<path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="currentColor"/>
 								</svg>
 							</button>
-							<button @click="createNewDrawing" class="btn-menu-icon" title="Create new drawing">
+							<button class="btn-menu-icon" title="Create new drawing" @click="createNewDrawing">
 								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 									<path d="M12 19l7-7 3 3-7 7-3-3z" fill="currentColor"/>
 									<path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" fill="currentColor"/>
@@ -330,13 +330,13 @@ function toggleAiPanel() {
 						<!-- Bottom pill: AI + Theme -->
 						<div class="menu-spacer"></div>
 						<div class="menu-pill">
-							<button @click="toggleAiPanel" class="btn-menu-icon" :class="{ 'active': showAiPanel }" title="AI Assistant">
+							<button class="btn-menu-icon" :class="{ 'active': showAiPanel }" title="AI Assistant" @click="toggleAiPanel">
 								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 									<path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/>
 									<line x1="9" y1="21" x2="15" y2="21"/>
 								</svg>
 							</button>
-							<button @click="toggleTheme" class="btn-menu-icon" title="Toggle theme">
+							<button class="btn-menu-icon" title="Toggle theme" @click="toggleTheme">
 								<svg v-if="currentTheme === 'dark'" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 									<g id="SVGRepo_iconCarrier">
 										<path d="M17 12C17 14.7614 14.7614 17 12 17C9.23858 17 7 14.7614 7 12C7 9.23858 9.23858 7 12 7C14.7614 7 17 9.23858 17 12Z" fill="currentColor"></path>

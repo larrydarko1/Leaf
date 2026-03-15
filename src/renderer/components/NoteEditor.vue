@@ -300,16 +300,16 @@ onUnmounted(() => {
 
 <template>
   <div class="note-editor">
-    <div class="editor-header" v-if="file">
+    <div v-if="file" class="editor-header">
       <div class="file-info">
         <div class="file-title-container">
           <div class="badge-with-toggle">
             <span class="file-extension-badge">{{ file.extension }}</span>
             <button 
               v-if="isMarkdownFile"
-              @click="showPreview = !showPreview"
               class="preview-toggle"
               :title="showPreview ? 'Edit' : 'Preview'"
+              @click="showPreview = !showPreview"
             >
               <svg v-if="showPreview" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -353,8 +353,8 @@ onUnmounted(() => {
       <div v-if="videoUrl && !videoError" class="video-player-wrapper">
         <video 
           ref="videoRef"
-          :src="videoUrl"
           :key="videoUrl"
+          :src="videoUrl"
           class="video-preview"
           @error="onVideoError"
           @loadedmetadata="onVideoLoaded"
@@ -362,7 +362,7 @@ onUnmounted(() => {
           @click="toggleVideoPlayback"
         ></video>
         <div class="video-controls">
-          <button class="video-ctrl-btn" @click="toggleVideoPlayback" :title="videoPlaying ? 'Pause' : 'Play'">
+          <button class="video-ctrl-btn" :title="videoPlaying ? 'Pause' : 'Play'" @click="toggleVideoPlayback">
             <svg v-if="!videoPlaying" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
             <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
           </button>
@@ -374,7 +374,7 @@ onUnmounted(() => {
           </div>
           <span class="video-time">{{ formatTime(videoDuration) }}</span>
           <div class="video-volume-wrapper">
-            <button class="video-ctrl-btn" @click="toggleVideoMute" :title="videoVolume === 0 ? 'Unmute' : 'Mute'">
+            <button class="video-ctrl-btn" :title="videoVolume === 0 ? 'Unmute' : 'Mute'" @click="toggleVideoMute">
               <svg v-if="videoVolume === 0" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                 <line x1="23" y1="9" x2="17" y2="15"></line>
@@ -440,8 +440,8 @@ onUnmounted(() => {
         <audio 
           v-if="audioUrl && !audioError"
           ref="audioRef"
-          :src="audioUrl"
           :key="audioUrl"
+          :src="audioUrl"
           style="display: none;"
           @error="onAudioError"
           @loadedmetadata="onAudioLoaded"
@@ -449,7 +449,7 @@ onUnmounted(() => {
         ></audio>
         <!-- Custom audio player UI -->
         <div v-if="audioUrl && !audioError && !isLoadingAudio" class="custom-audio-player">
-          <button class="audio-play-btn" @click="toggleAudioPlayback" :title="audioPlaying ? 'Pause' : 'Play'">
+          <button class="audio-play-btn" :title="audioPlaying ? 'Pause' : 'Play'" @click="toggleAudioPlayback">
             <svg v-if="!audioPlaying" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
               <path d="M8 5v14l11-7z"/>
             </svg>
@@ -466,7 +466,7 @@ onUnmounted(() => {
           </div>
           <span class="audio-time">{{ formatTime(audioDuration) }}</span>
           <div class="audio-volume-wrapper">
-            <button class="audio-volume-btn" @click="toggleMute" :title="audioVolume === 0 ? 'Unmute' : 'Mute'">
+            <button class="audio-volume-btn" :title="audioVolume === 0 ? 'Unmute' : 'Mute'" @click="toggleMute">
               <svg v-if="audioVolume === 0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                 <line x1="23" y1="9" x2="17" y2="15"></line>
@@ -559,7 +559,7 @@ onUnmounted(() => {
           </svg>
         </button>
         <div class="md-toolbar-separator"></div>
-        <select class="md-toolbar-select" @change="mdInsertHeading($event)" title="Heading level">
+        <select class="md-toolbar-select" title="Heading level" @change="mdInsertHeading($event)">
           <option value="" selected disabled>Heading</option>
           <option value="1">H1</option>
           <option value="2">H2</option>
@@ -614,8 +614,8 @@ onUnmounted(() => {
 
       <!-- Edit mode -->
       <textarea
-        ref="textareaRef"
         v-if="!showPreview || !isMarkdownFile"
+        ref="textareaRef"
         v-model="content"
         class="editor-textarea"
         :class="{ 'code-editor': isCodeFile }"
@@ -628,9 +628,9 @@ onUnmounted(() => {
       <div 
         v-if="showPreview && isMarkdownFile"
         class="markdown-preview-mode"
-        v-html="renderedMarkdown"
         @click="onMarkdownPreviewClick"
         @input="onMarkdownPreviewInput"
+        v-html="renderedMarkdown"
       ></div>
 
       <!-- Dictation button for txt/md files -->

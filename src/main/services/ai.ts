@@ -127,6 +127,13 @@ async function loadModel(modelPath: string): Promise<{ success: boolean; modelNa
             await unloadModel();
         }
 
+        // Only allow loading models from the designated models directory
+        const resolvedModel = path.resolve(modelPath);
+        const resolvedModelsDir = path.resolve(DEFAULT_MODELS_DIR);
+        if (resolvedModel !== resolvedModelsDir && !resolvedModel.startsWith(resolvedModelsDir + path.sep)) {
+            return { success: false, error: 'Access denied: model must be inside the models directory.' };
+        }
+
         if (!existsSync(modelPath)) {
             return { success: false, error: `Model file not found: ${modelPath}` };
         }
@@ -375,4 +382,11 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
 
     ipc.handle('ai:getStatus', async () => getStatus());
     ipc.handle('ai:openModelsDir', async () => openModelsDir());
+}
+
+/** Graceful shutdown: unload the model and free resources. */
+export async function cleanup(): Promise<void> {
+    if (isModelLoaded) {
+        await unloadModel();
+    }
 }

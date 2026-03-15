@@ -1,6 +1,6 @@
 import { ref, nextTick } from 'vue';
 import type { Ref } from 'vue';
-import type { CanvasElement, DrawingDataV2 } from '../../types/drawing';
+import type { CanvasElement, DrawingDataV2, ElementType } from '../../types/drawing';
 
 export function useDrawingPersistence(
     canvas: Ref<HTMLCanvasElement | null>,
@@ -85,7 +85,18 @@ export function useDrawingPersistence(
 
     // ================= Migration =================
 
-    function migrateV1(data: any): CanvasElement[] {
+    interface V1Stroke {
+        tool: string;
+        color: string;
+        size: number;
+        shape?: { type: string; x1: number; y1: number; x2: number; y2: number; fill?: boolean };
+        points?: { x: number; y: number }[];
+    }
+    interface V1Data {
+        strokes?: V1Stroke[];
+    }
+
+    function migrateV1(data: V1Data): CanvasElement[] {
         const result: CanvasElement[] = [];
         if (!data.strokes) return result;
 
@@ -97,7 +108,7 @@ export function useDrawingPersistence(
                 const isLine = s.type === 'line' || s.type === 'arrow';
                 const el: CanvasElement = {
                     id: genId(),
-                    type: s.type,
+                    type: s.type as ElementType,
                     x: isLine ? s.x1 : Math.min(s.x1, s.x2),
                     y: isLine ? s.y1 : Math.min(s.y1, s.y2),
                     width: isLine ? s.x2 - s.x1 : Math.abs(s.x2 - s.x1),

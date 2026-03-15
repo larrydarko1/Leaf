@@ -10,11 +10,11 @@ const { isRecording, hasPermission, formattedDuration, toggle } =
 
 <template>
   <button 
-    @click="toggle"
     class="btn-menu-icon"
     :class="{ 'recording': isRecording }"
     :title="isRecording ? `Stop recording (${formattedDuration})` : 'Record audio'"
     :disabled="!hasPermission && !isRecording"
+    @click="toggle"
   >
     <svg v-if="!isRecording" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <!-- Microphone icon -->

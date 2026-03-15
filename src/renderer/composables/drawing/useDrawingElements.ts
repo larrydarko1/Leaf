@@ -122,7 +122,7 @@ export function useDrawingElements() {
     ];
 
     function isShapeTool(tool: string): tool is ElementType {
-        return shapeTools.includes(tool as any);
+        return shapeTools.includes(tool as ElementType);
     }
 
     return {

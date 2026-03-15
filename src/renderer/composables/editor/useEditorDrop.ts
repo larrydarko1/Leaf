@@ -87,7 +87,7 @@ export function useEditorDrop(
             const noteDir = file.path.substring(0, file.path.lastIndexOf('/'));
 
             for (const droppedFile of files) {
-                const filePath = (droppedFile as any).path as string;
+                const filePath = (droppedFile as unknown as { path: string }).path;
                 if (!filePath) continue;
                 if (!isEmbeddableFile(droppedFile.name)) continue;
 

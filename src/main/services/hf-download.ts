@@ -8,6 +8,19 @@ import { createWriteStream } from 'fs';
 import fs from 'fs/promises';
 import path from 'path';
 import { DEFAULT_MODELS_DIR } from '../lib/paths';
+import { assertSafeFileName } from '../lib/validation';
+
+// Only allow downloads from Hugging Face domains
+const ALLOWED_DOWNLOAD_HOSTS = ['huggingface.co', 'cdn-lfs.hf.co', 'cdn-lfs-us-1.hf.co', 'cdn-lfs.huggingface.co'];
+
+function assertAllowedDownloadUrl(url: string): void {
+    let parsed: URL;
+    try { parsed = new URL(url); } catch { throw new Error('Invalid download URL.'); }
+    if (parsed.protocol !== 'https:') throw new Error('Only HTTPS downloads are allowed.');
+    if (!ALLOWED_DOWNLOAD_HOSTS.includes(parsed.hostname)) {
+        throw new Error(`Downloads are only allowed from Hugging Face (got ${parsed.hostname}).`);
+    }
+}
 
 interface DownloadEntry {
     abortController: { aborted: boolean };
@@ -74,13 +87,13 @@ async function searchModels(query: string): Promise<{ success: boolean; results?
 
 function extractQuantType(filename: string): string | null {
     const patterns = [
-        /[_\-\.](IQ[1-4]_[A-Z]+)/i,
-        /[_\-\.](Q[0-9]+_K_[A-Z]+)/i,
-        /[_\-\.](Q[0-9]+_K)/i,
-        /[_\-\.](Q[0-9]+_[0-9]+)/i,
-        /[_\-\.](BF16)/i,
-        /[_\-\.](F16)/i,
-        /[_\-\.](F32)/i,
+        /[_\-.](IQ[1-4]_[A-Z]+)/i,
+        /[_\-.](Q[0-9]+_K_[A-Z]+)/i,
+        /[_\-.](Q[0-9]+_K)/i,
+        /[_\-.](Q[0-9]+_[0-9]+)/i,
+        /[_\-.](BF16)/i,
+        /[_\-.](F16)/i,
+        /[_\-.](F32)/i,
     ];
 
     for (const pat of patterns) {
@@ -257,6 +270,10 @@ async function downloadModel(
     fileName: string,
     onProgress: (p: ProgressInfo) => void
 ): Promise<{ success: boolean; filePath?: string; error?: string }> {
+    // Validate URL against whitelist and filename against traversal
+    assertAllowedDownloadUrl(url);
+    assertSafeFileName(fileName);
+
     await fs.mkdir(DEFAULT_MODELS_DIR, { recursive: true });
 
     const filePath = path.join(DEFAULT_MODELS_DIR, fileName);
@@ -289,6 +306,12 @@ async function downloadModel(
 
             const req = https.request(options, (res) => {
                 if (res.statusCode! >= 300 && res.statusCode! < 400 && res.headers.location) {
+                    // Validate redirect targets against the same whitelist
+                    try { assertAllowedDownloadUrl(res.headers.location); } catch (err) {
+                        activeDownloads.delete(fileName);
+                        resolve({ success: false, error: (err as Error).message });
+                        return;
+                    }
                     doRequest(res.headers.location);
                     return;
                 }
