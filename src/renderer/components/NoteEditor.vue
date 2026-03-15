@@ -3,9 +3,11 @@ import { ref, watch, onMounted, onUnmounted, computed } from 'vue';
 import { isImageFile as checkImage, isVideoFile as checkVideo, isAudioFile as checkAudio, isPdfFile as checkPdf, isCodeFile as checkCode, isMarkdownFile as checkMarkdown, isDrawingFile as checkDrawing } from '../utils/fileTypes';
 import { marked } from 'marked';
 import DrawingCanvas from './DrawingCanvas.vue';
+import ImageViewer from './editor/ImageViewer.vue';
+import VideoViewer from './editor/VideoViewer.vue';
+import AudioViewer from './editor/AudioViewer.vue';
+import PdfViewer from './editor/PdfViewer.vue';
 import type { FileInfo } from '../types/electron';
-import { useVideoPlayer } from '../composables/editor/useVideoPlayer';
-import { useAudioPlayer } from '../composables/editor/useAudioPlayer';
 import { useEmbedResolver } from '../composables/editor/useEmbedResolver';
 import { useEditorDrop } from '../composables/editor/useEditorDrop';
 import { useDictation } from '../composables/editor/useDictation';
@@ -27,23 +29,6 @@ const emit = defineEmits<{
   save: [content: string];
   contentChanged: [hasChanges: boolean];
 }>();
-
-// Image loading state
-const imageUrl = ref('');
-const isLoadingImage = ref(false);
-const imageError = ref(false);
-
-// Video player
-const { videoUrl, videoRef, videoError, videoPlaying, videoDuration, videoCurrentTime, videoVolume, videoProgressPercent, formatTime, onVideoError, onVideoLoaded, onVideoEnded, toggleVideoPlayback, seekVideo, onVideoVolumeChange, toggleVideoMute, reset: resetVideo } = useVideoPlayer();
-const fmtTime = formatTime;
-
-// Audio player
-const { audioUrl, audioRef, audioError, isLoadingAudio, audioPlaying, audioDuration, audioCurrentTime, audioVolume, audioProgressPercent, onAudioError, onAudioLoaded, onAudioEnded, toggleAudioPlayback, seekAudio, onVolumeChange, toggleMute, loadAudio, reset: resetAudio } = useAudioPlayer();
-void audioRef; // bound as template ref via ref="audioRef"
-
-// PDF state
-const pdfUrl = ref('');
-const pdfError = ref(false);
 
 // Textarea ref for cursor position on drop
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
@@ -91,6 +76,14 @@ const isDictatable = computed(() => {
   return ext === '.txt' || ext === '.md';
 });
 
+// Simple time formatter for markdown embed controls
+function formatTime(seconds: number): string {
+  if (!seconds || !isFinite(seconds)) return '0:00';
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
 // Markdown editor: preview state, toolbar, keyboard, preview event handlers
 const { showPreview, renderedMarkdown, mdFormatText, mdInsertHeading, onTextareaKeydown, onMarkdownPreviewClick, onMarkdownPreviewInput } = useMarkdownEditor(
   () => isMarkdownFile.value,
@@ -100,42 +93,8 @@ const { showPreview, renderedMarkdown, mdFormatText, mdInsertHeading, onTextarea
   getEmbedMediaType,
   textareaRef,
   onContentChange,
-  fmtTime
+  formatTime
 );
-
-// Load image via IPC for reliable base64 data URL
-async function loadImage(filePath: string) {
-  isLoadingImage.value = true;
-  imageError.value = false;
-  imageUrl.value = '';
-  
-  try {
-    const result = await window.electronAPI.readImage(filePath);
-    if (result.success && result.dataUrl) {
-      imageUrl.value = result.dataUrl;
-    } else {
-      console.error('Failed to load image:', result.error);
-      imageError.value = true;
-    }
-  } catch (error) {
-    console.error('Error loading image:', error);
-    imageError.value = true;
-  } finally {
-    isLoadingImage.value = false;
-  }
-}
-
-function onPdfError() {
-  pdfError.value = true;
-}
-
-function onImageLoad() {
-  imageError.value = false;
-}
-
-function onImageError() {
-  imageError.value = true;
-}
 
 function getFileNameWithoutExtension(fileName: string): string {
   const lastDotIndex = fileName.lastIndexOf('.');
@@ -167,53 +126,19 @@ watch(() => props.file, async (newFile) => {
   // Different file — do a full load with state reset
   lastLoadedPath.value = newFile?.path || null;
 
-  // Reset error states
-  imageError.value = false;
-  resetVideo();
-  resetAudio();
-  pdfError.value = false;
-  imageUrl.value = '';
-  pdfUrl.value = '';
-  
   // Clear embed cache when switching files
   clearEmbedCache();
   
   if (newFile) {
     const ext = newFile.extension.toLowerCase();
     
-    // Check if file is an image
-    if (checkImage(ext)) {
-      // Load image via IPC
-      await loadImage(newFile.path);
-      // Clear text content for image files
-      content.value = '';
-      originalContent.value = '';
-      hasUnsavedChanges.value = false;
-    } else if (checkVideo(ext)) {
-      // Set video URL using leaf:// protocol
-      videoUrl.value = `leaf://localhost${newFile.path}`;
-      videoError.value = false;
-      // Clear text content for video files
-      content.value = '';
-      originalContent.value = '';
-      hasUnsavedChanges.value = false;
-    } else if (checkAudio(ext)) {
-      // Load audio via IPC for better format compatibility
-      await loadAudio(newFile.path);
-      // Clear text content for audio files
-      content.value = '';
-      originalContent.value = '';
-      hasUnsavedChanges.value = false;
-    } else if (checkPdf(ext)) {
-      // Set PDF URL using leaf:// protocol
-      pdfUrl.value = `leaf://localhost${newFile.path}`;
-      pdfError.value = false;
-      // Clear text content for PDF files
+    if (checkImage(ext) || checkVideo(ext) || checkAudio(ext) || checkPdf(ext)) {
+      // Media file: clear text state (sub-components handle their own loading)
       content.value = '';
       originalContent.value = '';
       hasUnsavedChanges.value = false;
     } else {
-      // Load text content for text files
+      // Text file: load content
       await loadFile(newFile);
     }
   } else {
@@ -240,31 +165,10 @@ function handleKeyboard(e: KeyboardEvent) {
     e.preventDefault();
     saveFile();
   }
-  
-  // Spacebar to toggle video play/pause (only when not in textarea)
-  if (e.key === ' ' && isVideoFile.value && videoRef.value) {
-    // Don't trigger if user is typing in an input or textarea
-    const target = e.target as HTMLElement;
-    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
-    
-    e.preventDefault();
-    toggleVideoPlayback();
-  }
-  
-  // Spacebar to toggle audio play/pause (only when not in textarea)
-  if (e.key === ' ' && isAudioFile.value) {
-    // Don't trigger if user is typing in an input or textarea
-    const target = e.target as HTMLElement;
-    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
-
-    e.preventDefault();
-    toggleAudioPlayback();
-  }
 }
 
 // Prevent Electron from navigating when files are dropped anywhere on the window
 function preventGlobalDrop(event: DragEvent) {
-  // Only prevent default to stop navigation; don't stopPropagation so Vue handlers still fire
   event.preventDefault();
 }
 function preventGlobalDragOver(event: DragEvent) {
@@ -284,16 +188,12 @@ onMounted(() => {
 // Cleanup
 onUnmounted(() => {
   clearAutoSaveTimeout();
-  // Stop dictation if active
   if (isDictating.value) {
     stopDictation();
   }
-  // Remove speech status listener
   window.electronAPI.removeSpeechStatusListener();
-  // Remove global drag-drop listeners
   document.removeEventListener('drop', preventGlobalDrop, true);
   document.removeEventListener('dragover', preventGlobalDragOver, true);
-  // Remove keyboard listener
   window.removeEventListener('keydown', handleKeyboard);
 });
 </script>
@@ -330,166 +230,11 @@ onUnmounted(() => {
       </div>
     </div>
     
-    <!-- Image viewer for image files -->
-    <div v-if="file && isImageFile" class="image-viewer">
-      <div v-if="isLoadingImage" class="image-loading">
-        <p>Loading image...</p>
-      </div>
-      <img 
-        v-else-if="imageUrl && !imageError"
-        :src="imageUrl" 
-        :alt="file.name"
-        class="image-preview"
-        @load="onImageLoad"
-        @error="onImageError"
-      />
-      <div v-if="imageError" class="image-error">
-        <p>Failed to load image</p>
-      </div>
-    </div>
-    
-    <!-- Video player for video files -->
-    <div v-else-if="file && isVideoFile" class="video-viewer">
-      <div v-if="videoUrl && !videoError" class="video-player-wrapper">
-        <video 
-          ref="videoRef"
-          :key="videoUrl"
-          :src="videoUrl"
-          class="video-preview"
-          @error="onVideoError"
-          @loadedmetadata="onVideoLoaded"
-          @ended="onVideoEnded"
-          @click="toggleVideoPlayback"
-        ></video>
-        <div class="video-controls">
-          <button class="video-ctrl-btn" :title="videoPlaying ? 'Pause' : 'Play'" @click="toggleVideoPlayback">
-            <svg v-if="!videoPlaying" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-            <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
-          </button>
-          <span class="video-time">{{ formatTime(videoCurrentTime) }}</span>
-          <div class="video-progress-wrapper" @click="seekVideo">
-            <div class="video-progress-track">
-              <div class="video-progress-fill" :style="{ width: videoProgressPercent + '%' }"></div>
-            </div>
-          </div>
-          <span class="video-time">{{ formatTime(videoDuration) }}</span>
-          <div class="video-volume-wrapper">
-            <button class="video-ctrl-btn" :title="videoVolume === 0 ? 'Unmute' : 'Mute'" @click="toggleVideoMute">
-              <svg v-if="videoVolume === 0" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                <line x1="23" y1="9" x2="17" y2="15"></line>
-                <line x1="17" y1="9" x2="23" y2="15"></line>
-              </svg>
-              <svg v-else-if="videoVolume < 0.5" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-              </svg>
-              <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-              </svg>
-            </button>
-            <input type="range" class="video-volume-slider" min="0" max="1" step="0.01" :value="videoVolume" @input="onVideoVolumeChange" />
-          </div>
-        </div>
-      </div>
-      <div v-if="videoError" class="video-error">
-        <p>Failed to load video</p>
-        <p class="video-error-hint">This format may not be supported</p>
-      </div>
-    </div>
-    
-    <!-- PDF viewer for PDF files -->
-    <div v-else-if="file && isPdfFile" class="pdf-viewer">
-      <iframe 
-        v-if="pdfUrl && !pdfError"
-        :src="pdfUrl"
-        class="pdf-preview"
-        @error="onPdfError"
-      >
-      </iframe>
-      <div v-if="pdfError" class="pdf-error">
-        <p>Failed to load PDF</p>
-        <p class="pdf-error-hint">This file may be corrupted or in an unsupported format</p>
-      </div>
-    </div>
-    
-    <!-- Audio player for audio files -->
-    <div v-else-if="file && isAudioFile" class="audio-viewer">
-      <div class="audio-container">
-        <div class="audio-icon">
-          <svg 
-            width="80" 
-            height="80" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            stroke-width="1.5" 
-            stroke-linecap="round" 
-            stroke-linejoin="round"
-          >
-            <path d="M9 18V5l12-2v13"></path>
-            <circle cx="6" cy="18" r="3"></circle>
-            <circle cx="18" cy="16" r="3"></circle>
-          </svg>
-        </div>
-        <div v-if="isLoadingAudio" class="audio-loading">
-          <p>Loading audio...</p>
-        </div>
-        <!-- Hidden native audio element -->
-        <audio 
-          v-if="audioUrl && !audioError"
-          ref="audioRef"
-          :key="audioUrl"
-          :src="audioUrl"
-          style="display: none;"
-          @error="onAudioError"
-          @loadedmetadata="onAudioLoaded"
-          @ended="onAudioEnded"
-        ></audio>
-        <!-- Custom audio player UI -->
-        <div v-if="audioUrl && !audioError && !isLoadingAudio" class="custom-audio-player">
-          <button class="audio-play-btn" :title="audioPlaying ? 'Pause' : 'Play'" @click="toggleAudioPlayback">
-            <svg v-if="!audioPlaying" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M8 5v14l11-7z"/>
-            </svg>
-            <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="6" y="4" width="4" height="16" rx="1"/>
-              <rect x="14" y="4" width="4" height="16" rx="1"/>
-            </svg>
-          </button>
-          <span class="audio-time">{{ formatTime(audioCurrentTime) }}</span>
-          <div class="audio-progress-wrapper" @click="seekAudio">
-            <div class="audio-progress-track">
-              <div class="audio-progress-fill" :style="{ width: audioProgressPercent + '%' }"></div>
-            </div>
-          </div>
-          <span class="audio-time">{{ formatTime(audioDuration) }}</span>
-          <div class="audio-volume-wrapper">
-            <button class="audio-volume-btn" :title="audioVolume === 0 ? 'Unmute' : 'Mute'" @click="toggleMute">
-              <svg v-if="audioVolume === 0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                <line x1="23" y1="9" x2="17" y2="15"></line>
-                <line x1="17" y1="9" x2="23" y2="15"></line>
-              </svg>
-              <svg v-else-if="audioVolume < 0.5" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-              </svg>
-              <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-              </svg>
-            </button>
-            <input type="range" class="audio-volume-slider" min="0" max="1" step="0.01" :value="audioVolume" @input="onVolumeChange" />
-          </div>
-        </div>
-        <div v-if="audioError" class="audio-error">
-          <p>Failed to load audio</p>
-          <p class="audio-error-hint">This format may not be supported</p>
-        </div>
-      </div>
-    </div>
+    <!-- Media viewers -->
+    <ImageViewer v-if="file && isImageFile" :file-path="file.path" :file-name="file.name" />
+    <VideoViewer v-else-if="file && isVideoFile" :file-path="file.path" />
+    <PdfViewer v-else-if="file && isPdfFile" :file-path="file.path" />
+    <AudioViewer v-else-if="file && isAudioFile" :file-path="file.path" />
     
     <!-- Drawing canvas for drawing files -->
     <DrawingCanvas
@@ -1439,469 +1184,6 @@ onUnmounted(() => {
     .embed-placeholder-icon {
       font-size: 1em;
     }
-  }
-}
-
-.image-viewer {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  overflow: auto;
-  -webkit-app-region: no-drag;
-  background: var(--base1);
-  position: relative;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: url('../assets/images/pattern.png');
-    background-size: cover;
-    background-position: center;
-    opacity: 0.01;
-    pointer-events: none;
-  }
-}
-
-.image-preview {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  border-radius: 8px;
-  position: relative;
-  z-index: 1;
-}
-
-.image-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--text2);
-  position: relative;
-  z-index: 1;
-  
-  p {
-    margin: 0.5rem 0;
-    font-size: 1rem;
-  }
-}
-
-.image-error {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--text2);
-  position: relative;
-  z-index: 1;
-  
-  p {
-    margin: 0.5rem 0;
-    font-size: 1rem;
-  }
-}
-
-.video-viewer {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  overflow: auto;
-  -webkit-app-region: no-drag;
-  background: var(--base1);
-  position: relative;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: url('../assets/images/pattern.png');
-    background-size: cover;
-    background-position: center;
-    opacity: 0.01;
-    pointer-events: none;
-  }
-}
-
-.video-player-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  max-width: 100%;
-  max-height: 100%;
-  position: relative;
-  z-index: 1;
-  gap: 0;
-}
-
-.video-preview {
-  max-width: 100%;
-  max-height: calc(100% - 52px);
-  border-radius: 10px 10px 0 0;
-  display: block;
-  background: #000;
-  cursor: pointer;
-
-  &::-webkit-media-controls {
-    display: none !important;
-  }
-}
-
-.video-controls {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  width: 100%;
-  padding: 0.5rem 0.85rem;
-  background: var(--bg-primary);
-  border: 1px solid var(--text3);
-  border-top: none;
-  border-radius: 0 0 10px 10px;
-}
-
-.video-ctrl-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  min-width: 30px;
-  border-radius: 50%;
-  border: none;
-  background: var(--accent-color);
-  color: white;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  padding: 0;
-
-  &:hover {
-    transform: scale(1.08);
-    filter: brightness(1.1);
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
-}
-
-.video-time {
-  font-size: 0.7rem;
-  color: var(--text2);
-  font-variant-numeric: tabular-nums;
-  min-width: 2.5em;
-  text-align: center;
-  user-select: none;
-}
-
-.video-progress-wrapper {
-  flex: 1;
-  cursor: pointer;
-  padding: 0.4rem 0;
-  display: flex;
-  align-items: center;
-}
-
-.video-progress-track {
-  width: 100%;
-  height: 4px;
-  background: var(--bg-hover);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.video-progress-fill {
-  height: 100%;
-  background: var(--accent-color);
-  border-radius: 2px;
-  transition: width 0.05s linear;
-}
-
-.video-volume-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.video-volume-slider {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 55px;
-  height: 4px;
-  background: var(--bg-hover);
-  border-radius: 2px;
-  outline: none;
-  cursor: pointer;
-
-  &::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: var(--accent-color);
-    cursor: pointer;
-    transition: transform 0.1s;
-  }
-
-  &::-webkit-slider-thumb:hover {
-    transform: scale(1.2);
-  }
-}
-
-.video-error {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--text2);
-  position: relative;
-  z-index: 1;
-  
-  p {
-    margin: 0.5rem 0;
-    font-size: 1rem;
-  }
-  
-  .video-error-hint {
-    font-size: 0.85rem;
-    opacity: 0.7;
-  }
-}
-
-.pdf-viewer {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  overflow: hidden;
-  -webkit-app-region: no-drag;
-  background: var(--base1);
-  position: relative;
-}
-
-.pdf-preview {
-  width: 100%;
-  height: 100%;
-  border: none;
-  position: relative;
-  z-index: 1;
-}
-
-.pdf-error {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--text2);
-  position: relative;
-  z-index: 1;
-  
-  p {
-    margin: 0.5rem 0;
-    font-size: 1rem;
-  }
-  
-  .pdf-error-hint {
-    font-size: 0.85rem;
-    opacity: 0.7;
-  }
-}
-
-.audio-viewer {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  overflow: auto;
-  -webkit-app-region: no-drag;
-  background: var(--base1);
-  position: relative;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: url('../assets/images/pattern.png');
-    background-size: cover;
-    background-position: center;
-    opacity: 0.01;
-    pointer-events: none;
-  }
-}
-
-.audio-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2rem;
-  max-width: 500px;
-  width: 100%;
-  position: relative;
-  z-index: 1;
-}
-
-.audio-icon {
-  color: var(--text2);
-  opacity: 0.6;
-}
-
-.audio-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--text2);
-  position: relative;
-  z-index: 1;
-  
-  p {
-    margin: 0.5rem 0;
-    font-size: 1rem;
-  }
-}
-
-.custom-audio-player {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  width: 100%;
-  padding: 0.75rem 1rem;
-  background: var(--bg-primary);
-  border: 1px solid var(--text3);
-  border-radius: 12px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-.audio-play-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  border-radius: 50%;
-  border: none;
-  background: var(--accent-color);
-  color: white;
-  cursor: pointer;
-  transition: all 0.15s ease;
-
-  &:hover {
-    transform: scale(1.08);
-    filter: brightness(1.1);
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
-}
-
-.audio-time {
-  font-size: 0.75rem;
-  color: var(--text2);
-  font-variant-numeric: tabular-nums;
-  min-width: 2.5em;
-  text-align: center;
-  user-select: none;
-}
-
-.audio-progress-wrapper {
-  flex: 1;
-  cursor: pointer;
-  padding: 0.5rem 0;
-  display: flex;
-  align-items: center;
-}
-
-.audio-progress-track {
-  width: 100%;
-  height: 4px;
-  background: var(--bg-hover);
-  border-radius: 2px;
-  overflow: hidden;
-  position: relative;
-}
-
-.audio-progress-fill {
-  height: 100%;
-  background: var(--accent-color);
-  border-radius: 2px;
-  transition: width 0.05s linear;
-}
-
-.audio-volume-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.audio-volume-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  color: var(--text2);
-  cursor: pointer;
-  padding: 0.2rem;
-  border-radius: 4px;
-  transition: color 0.15s;
-
-  &:hover {
-    color: var(--text1);
-  }
-}
-
-.audio-volume-slider {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 60px;
-  height: 4px;
-  background: var(--bg-hover);
-  border-radius: 2px;
-  outline: none;
-  cursor: pointer;
-
-  &::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: var(--accent-color);
-    cursor: pointer;
-    transition: transform 0.1s;
-  }
-
-  &::-webkit-slider-thumb:hover {
-    transform: scale(1.2);
-  }
-}
-
-.audio-error {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--text2);
-  position: relative;
-  z-index: 1;
-  
-  p {
-    margin: 0.5rem 0;
-    font-size: 1rem;
-  }
-  
-  .audio-error-hint {
-    font-size: 0.85rem;
-    opacity: 0.7;
   }
 }
 
