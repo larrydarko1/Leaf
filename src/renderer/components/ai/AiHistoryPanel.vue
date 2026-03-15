@@ -11,13 +11,16 @@ const props = defineProps<{
 
 const renameInputRef = ref<HTMLInputElement[]>();
 
-watch(() => props.renamingConversationId, async (id) => {
-    if (id) {
-        await nextTick();
-        renameInputRef.value?.[0]?.focus();
-        renameInputRef.value?.[0]?.select();
-    }
-});
+watch(
+    () => props.renamingConversationId,
+    async (id) => {
+        if (id) {
+            await nextTick();
+            renameInputRef.value?.[0]?.focus();
+            renameInputRef.value?.[0]?.select();
+        }
+    },
+);
 
 defineEmits<{
     (e: 'load', id: string): void;
@@ -49,12 +52,10 @@ function formatRelativeDate(dateStr: string): string {
             <span class="ai-history-title">History</span>
         </div>
         <div class="ai-history-list">
-            <div v-if="conversationList.length === 0" class="ai-history-empty">
-                No conversations yet
-            </div>
-            <div 
-                v-for="conv in conversationList" 
-                :key="conv.id" 
+            <div v-if="conversationList.length === 0" class="ai-history-empty">No conversations yet</div>
+            <div
+                v-for="conv in conversationList"
+                :key="conv.id"
                 class="ai-history-item"
                 :class="{ active: currentConversationId === conv.id }"
                 @click="$emit('load', conv.id)"
@@ -78,24 +79,38 @@ function formatRelativeDate(dateStr: string): string {
                     </span>
                 </div>
                 <div class="ai-history-item-actions" @click.stop>
-                    <button 
-                        class="ai-btn-icon ai-btn-tiny" 
-                        title="Rename"
-                        @click="$emit('start-rename', conv)"
-                    >
-                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    <button class="ai-btn-icon ai-btn-tiny" title="Rename" @click="$emit('start-rename', conv)">
+                        <svg
+                            width="9"
+                            height="9"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                         </svg>
                     </button>
-                    <button 
-                        class="ai-btn-icon ai-btn-tiny ai-btn-danger" 
+                    <button
+                        class="ai-btn-icon ai-btn-tiny ai-btn-danger"
                         title="Delete"
                         @click="$emit('delete', conv.id)"
                     >
-                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="3 6 5 6 21 6"/>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        <svg
+                            width="9"
+                            height="9"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                         </svg>
                     </button>
                 </div>
@@ -153,12 +168,16 @@ function formatRelativeDate(dateStr: string): string {
 
     &:hover {
         background: var(--bg-hover);
-        .ai-history-item-actions { opacity: 1; }
+        .ai-history-item-actions {
+            opacity: 1;
+        }
     }
 
     &.active {
         background: var(--bg-hover);
-        .ai-history-item-title { color: var(--accent-color); }
+        .ai-history-item-title {
+            color: var(--accent-color);
+        }
     }
 }
 
@@ -217,10 +236,22 @@ function formatRelativeDate(dateStr: string): string {
     justify-content: center;
     transition: all 0.2s;
     flex-shrink: 0;
-    &:hover:not(:disabled) { background: var(--bg-hover); color: var(--text1); }
-    &:disabled { opacity: 0.3; cursor: not-allowed; }
+    &:hover:not(:disabled) {
+        background: var(--bg-hover);
+        color: var(--text1);
+    }
+    &:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
 }
 
-.ai-btn-tiny { padding: 0.2rem !important; }
-.ai-btn-danger { &:hover:not(:disabled) { color: var(--danger-color); } }
+.ai-btn-tiny {
+    padding: 0.2rem !important;
+}
+.ai-btn-danger {
+    &:hover:not(:disabled) {
+        color: var(--danger-color);
+    }
+}
 </style>

@@ -94,7 +94,10 @@ export function useVideoPlayer() {
     }
 
     function reset() {
-        if (videoRafId) { cancelAnimationFrame(videoRafId); videoRafId = null; }
+        if (videoRafId) {
+            cancelAnimationFrame(videoRafId);
+            videoRafId = null;
+        }
         videoError.value = false;
         videoPlaying.value = false;
         videoCurrentTime.value = 0;
@@ -103,9 +106,22 @@ export function useVideoPlayer() {
     }
 
     return {
-        videoUrl, videoRef, videoError, videoPlaying, videoDuration,
-        videoCurrentTime, videoVolume, videoProgressPercent, formatTime,
-        onVideoError, onVideoLoaded, onVideoEnded, toggleVideoPlayback,
-        seekVideo, onVideoVolumeChange, toggleVideoMute, reset,
+        videoUrl,
+        videoRef,
+        videoError,
+        videoPlaying,
+        videoDuration,
+        videoCurrentTime,
+        videoVolume,
+        videoProgressPercent,
+        formatTime,
+        onVideoError,
+        onVideoLoaded,
+        onVideoEnded,
+        toggleVideoPlayback,
+        seekVideo,
+        onVideoVolumeChange,
+        toggleVideoMute,
+        reset,
     };
 }

@@ -17,14 +17,13 @@ Rules:
 
 // Simple path helper — the backend handles proper resolution
 const pathHelper = {
-    resolve: (...parts: string[]) =>
-        parts.filter(Boolean).join('/').replace(/\/+/g, '/')
+    resolve: (...parts: string[]) => parts.filter(Boolean).join('/').replace(/\/+/g, '/'),
 };
 
 export function useAgentMode(
     messages: Ref<ChatMessage[]>,
     workspacePath: { readonly value: string | null },
-    onFileChanged: (path: string) => void
+    onFileChanged: (path: string) => void,
 ) {
     const agentMode = ref(false);
 
@@ -52,7 +51,7 @@ export function useAgentMode(
                 const result = await window.electronAPI.agentProposeEdit(
                     fullPath,
                     edit.newContent,
-                    workspacePath.value
+                    workspacePath.value,
                 );
                 if (result.success) {
                     edit.editId = result.editId;
@@ -77,9 +76,15 @@ export function useAgentMode(
         if (!edit?.editId || edit.status !== 'pending') return;
         try {
             const result = await window.electronAPI.agentApproveEdit(edit.editId);
-            if (result.success) { edit.status = 'approved'; onFileChanged(edit.filePath); }
-            else { edit.error = result.error || 'Failed to approve edit'; }
-        } catch (err) { edit.error = (err as Error).message; }
+            if (result.success) {
+                edit.status = 'approved';
+                onFileChanged(edit.filePath);
+            } else {
+                edit.error = result.error || 'Failed to approve edit';
+            }
+        } catch (err) {
+            edit.error = (err as Error).message;
+        }
     }
 
     async function rejectAgentEdit(msgIndex: number, editIdx: number) {
@@ -87,9 +92,15 @@ export function useAgentMode(
         if (!edit?.editId || edit.status !== 'pending') return;
         try {
             const result = await window.electronAPI.agentRejectEdit(edit.editId);
-            if (result.success) { edit.status = 'rejected'; onFileChanged(edit.filePath); }
-            else { edit.error = result.error || 'Failed to reject edit'; }
-        } catch (err) { edit.error = (err as Error).message; }
+            if (result.success) {
+                edit.status = 'rejected';
+                onFileChanged(edit.filePath);
+            } else {
+                edit.error = result.error || 'Failed to reject edit';
+            }
+        } catch (err) {
+            edit.error = (err as Error).message;
+        }
     }
 
     return {

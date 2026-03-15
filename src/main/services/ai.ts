@@ -25,7 +25,7 @@ let currentAbortController: AbortController | null = null;
 let pendingConversationHistory: Array<{ role: string; content: string }> | null = null;
 let trackedMessages: Array<{ role: string; content: string }> = [];
 
-const COMPACTION_THRESHOLD = 0.90;
+const COMPACTION_THRESHOLD = 0.9;
 
 async function ensureModelsDir(): Promise<void> {
     try {
@@ -43,17 +43,12 @@ async function getLlamaInstance(): Promise<any> {
     return llama;
 }
 
-const NON_MODEL_PREFIXES = [
-    'mmproj-',
-    'projector-',
-    'tokenizer',
-    'adapter',
-];
+const NON_MODEL_PREFIXES = ['mmproj-', 'projector-', 'tokenizer', 'adapter'];
 
 function isModelFile(filename: string): boolean {
     const lower = filename.toLowerCase();
     if (!lower.endsWith('.gguf')) return false;
-    return !NON_MODEL_PREFIXES.some(prefix => lower.startsWith(prefix));
+    return !NON_MODEL_PREFIXES.some((prefix) => lower.startsWith(prefix));
 }
 
 function formatFileSize(bytes: number): string {
@@ -188,8 +183,14 @@ async function loadModel(modelPath: string): Promise<{ success: boolean; modelNa
 async function unloadModel(): Promise<{ success: boolean; error?: string }> {
     try {
         session = null;
-        if (context) { await context.dispose(); context = null; }
-        if (model) { await model.dispose(); model = null; }
+        if (context) {
+            await context.dispose();
+            context = null;
+        }
+        if (model) {
+            await model.dispose();
+            model = null;
+        }
 
         isModelLoaded = false;
         currentModelPath = null;
@@ -211,7 +212,7 @@ async function unloadModel(): Promise<{ success: boolean; error?: string }> {
 async function chat(
     userMessage: string,
     onToken: (token: string) => void,
-    noteContext: string | null = null
+    noteContext: string | null = null,
 ): Promise<{ success: boolean; response?: string; compacted?: boolean; error?: string }> {
     if (!isModelLoaded || !session) {
         return { success: false, error: 'No model loaded. Please load a model first.' };
@@ -322,7 +323,9 @@ async function resetChat(): Promise<{ success: boolean; error?: string }> {
     }
 }
 
-async function restoreChatHistory(messages: Array<{ role: string; content: string }>): Promise<{ success: boolean; error?: string }> {
+async function restoreChatHistory(
+    messages: Array<{ role: string; content: string }>,
+): Promise<{ success: boolean; error?: string }> {
     if (!messages || messages.length === 0) {
         pendingConversationHistory = null;
         return { success: true };
@@ -343,17 +346,15 @@ function buildConversationSummary(messages: Array<{ role: string; content: strin
     const MAX_MSG_LENGTH = 300;
     const MAX_MESSAGES = 20;
 
-    const recentMessages = messages.length > MAX_MESSAGES
-        ? messages.slice(-MAX_MESSAGES)
-        : messages;
+    const recentMessages = messages.length > MAX_MESSAGES ? messages.slice(-MAX_MESSAGES) : messages;
 
-    return recentMessages.map(m => {
-        const role = m.role === 'user' ? 'User' : 'Assistant';
-        const content = m.content.length > MAX_MSG_LENGTH
-            ? m.content.slice(0, MAX_MSG_LENGTH) + '...'
-            : m.content;
-        return `${role}: ${content}`;
-    }).join('\n');
+    return recentMessages
+        .map((m) => {
+            const role = m.role === 'user' ? 'User' : 'Assistant';
+            const content = m.content.length > MAX_MSG_LENGTH ? m.content.slice(0, MAX_MSG_LENGTH) + '...' : m.content;
+            return `${role}: ${content}`;
+        })
+        .join('\n');
 }
 
 function getStatus(): object {
@@ -367,7 +368,9 @@ function getStatus(): object {
                 contextTokens = seq.nextTokenIndex;
                 contextSize = seq.contextSize;
             }
-        } catch { /* sequence may not be available yet */ }
+        } catch {
+            /* sequence may not be available yet */
+        }
     }
 
     return {

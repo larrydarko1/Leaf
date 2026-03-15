@@ -11,7 +11,7 @@ export function useMarkdownRender(
     content: Ref<string>,
     embedCacheVersion: Ref<number>,
     embedCache: Ref<Map<string, string>>,
-    getEmbedMediaType: (fileName: string) => string
+    getEmbedMediaType: (fileName: string) => string,
 ) {
     /**
      * Wraps content under each heading into collapsible <div> sections.
@@ -43,7 +43,8 @@ export function useMarkdownRender(
                 node.setAttribute('data-heading-level', String(level));
                 const arrow = document.createElement('span');
                 arrow.className = 'heading-fold-toggle';
-                arrow.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+                arrow.innerHTML =
+                    '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
                 node.insertBefore(arrow, node.firstChild);
 
                 currentParent().appendChild(node);

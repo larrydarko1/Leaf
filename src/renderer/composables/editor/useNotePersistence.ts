@@ -15,7 +15,7 @@ export function useNotePersistence(
     isMarkdownFile: () => boolean,
     resolveEmbeds: (content: string) => void,
     onSave: (content: string) => void,
-    onContentChanged: (hasChanges: boolean) => void
+    onContentChanged: (hasChanges: boolean) => void,
 ) {
     const content = ref('');
     const originalContent = ref('');

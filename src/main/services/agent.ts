@@ -42,7 +42,10 @@ function generateEditId(): string {
     return randomUUID();
 }
 
-async function readFileForAgent(filePath: string, workspacePath: string): Promise<{ success: boolean; content?: string; filePath?: string; error?: string }> {
+async function readFileForAgent(
+    filePath: string,
+    workspacePath: string,
+): Promise<{ success: boolean; content?: string; filePath?: string; error?: string }> {
     try {
         const resolvedFile = assertInsideBoundary(filePath, workspacePath);
 
@@ -58,7 +61,20 @@ async function readFileForAgent(filePath: string, workspacePath: string): Promis
     }
 }
 
-async function proposeEdit(filePath: string, newContent: string, workspacePath: string): Promise<{ success: boolean; editId?: string; filePath?: string; relativePath?: string; originalContent?: string; newContent?: string; isNewFile?: boolean; error?: string }> {
+async function proposeEdit(
+    filePath: string,
+    newContent: string,
+    workspacePath: string,
+): Promise<{
+    success: boolean;
+    editId?: string;
+    filePath?: string;
+    relativePath?: string;
+    originalContent?: string;
+    newContent?: string;
+    isNewFile?: boolean;
+    error?: string;
+}> {
     try {
         const resolvedFile = assertInsideBoundary(filePath, workspacePath);
         const resolvedWorkspace = path.resolve(workspacePath);
@@ -119,7 +135,9 @@ async function approveEdit(editId: string): Promise<{ success: boolean; error?: 
 
         try {
             await fs.unlink(edit.backupPath);
-        } catch { /* backup may already be removed */ }
+        } catch {
+            /* backup may already be removed */
+        }
 
         pendingEdits.delete(editId);
         console.log(`Agent: approved edit ${editId} for ${edit.relativePath}`);
@@ -142,14 +160,18 @@ async function rejectEdit(editId: string): Promise<{ success: boolean; error?: s
         if (edit.isNewFile && backupContent === '') {
             try {
                 await fs.unlink(edit.filePath);
-            } catch { /* file may already be removed */ }
+            } catch {
+                /* file may already be removed */
+            }
         } else {
             await fs.writeFile(edit.filePath, backupContent, 'utf-8');
         }
 
         try {
             await fs.unlink(edit.backupPath);
-        } catch { /* already removed */ }
+        } catch {
+            /* already removed */
+        }
 
         pendingEdits.delete(editId);
         console.log(`Agent: rejected edit ${editId} for ${edit.relativePath} — reverted`);
@@ -186,12 +208,14 @@ export async function cleanupAllPendingEdits(): Promise<void> {
 
 export function register(ipc: IpcMain): void {
     ipc.handle('agent:readFile', async (_event, filePath: string, workspacePath: string) => {
-        if (typeof filePath !== 'string' || typeof workspacePath !== 'string') return { success: false, error: 'Invalid arguments' };
+        if (typeof filePath !== 'string' || typeof workspacePath !== 'string')
+            return { success: false, error: 'Invalid arguments' };
         return readFileForAgent(filePath, workspacePath);
     });
 
     ipc.handle('agent:proposeEdit', async (_event, filePath: string, newContent: string, workspacePath: string) => {
-        if (typeof filePath !== 'string' || typeof newContent !== 'string' || typeof workspacePath !== 'string') return { success: false, error: 'Invalid arguments' };
+        if (typeof filePath !== 'string' || typeof newContent !== 'string' || typeof workspacePath !== 'string')
+            return { success: false, error: 'Invalid arguments' };
         return proposeEdit(filePath, newContent, workspacePath);
     });
 

@@ -74,7 +74,13 @@ async function scanFolder(folderPath: string, basePath = folderPath): Promise<Sc
             const fullPath = path.join(folderPath, entry.name);
             const relativePath = path.relative(basePath, fullPath);
             if (entry.isDirectory()) {
-                folders.push({ name: entry.name, path: fullPath, relativePath, type: 'folder', folder: path.dirname(relativePath) });
+                folders.push({
+                    name: entry.name,
+                    path: fullPath,
+                    relativePath,
+                    type: 'folder',
+                    folder: path.dirname(relativePath),
+                });
                 const sub = await scanFolder(fullPath, basePath);
                 files.push(...sub.files);
                 folders.push(...sub.folders);
@@ -82,7 +88,15 @@ async function scanFolder(folderPath: string, basePath = folderPath): Promise<Sc
                 const ext = path.extname(entry.name).toLowerCase();
                 if (ALLOWED_EXTENSIONS.has(ext)) {
                     const stats = await fs.stat(fullPath);
-                    files.push({ name: entry.name, path: fullPath, relativePath, extension: ext, size: stats.size, modified: stats.mtime.toISOString(), folder: path.dirname(relativePath) });
+                    files.push({
+                        name: entry.name,
+                        path: fullPath,
+                        relativePath,
+                        extension: ext,
+                        size: stats.size,
+                        modified: stats.mtime.toISOString(),
+                        folder: path.dirname(relativePath),
+                    });
                 }
             }
         }
@@ -94,7 +108,11 @@ async function scanFolder(folderPath: string, basePath = folderPath): Promise<Sc
 
 async function findFileRecursive(dir: string, targetName: string): Promise<string | null> {
     let entries;
-    try { entries = await fs.readdir(dir, { withFileTypes: true }); } catch { return null; }
+    try {
+        entries = await fs.readdir(dir, { withFileTypes: true });
+    } catch {
+        return null;
+    }
     for (const entry of entries) {
         if (entry.name.startsWith('.')) continue;
         const fullPath = path.join(dir, entry.name);
@@ -108,7 +126,6 @@ async function findFileRecursive(dir: string, targetName: string): Promise<strin
 }
 
 export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null): void {
-
     // Open folder dialog
     ipc.handle('dialog:openFolder', async () => {
         const win = getMainWindow();
@@ -136,7 +153,10 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
     ipc.handle('fs:watchFolder', async (_event, folderPath: string) => {
         if (typeof folderPath !== 'string') return { success: false, error: 'Invalid path' };
         try {
-            if (folderWatcher) { folderWatcher.close(); folderWatcher = null; }
+            if (folderWatcher) {
+                folderWatcher.close();
+                folderWatcher = null;
+            }
             folderWatcher = watch(folderPath, { recursive: true }, (eventType, filename) => {
                 const win = getMainWindow();
                 if (win && !win.isDestroyed()) win.webContents.send('fs:changed', { eventType, filename });
@@ -149,7 +169,10 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
     });
 
     ipc.handle('fs:unwatchFolder', async () => {
-        if (folderWatcher) { folderWatcher.close(); folderWatcher = null; }
+        if (folderWatcher) {
+            folderWatcher.close();
+            folderWatcher = null;
+        }
         return { success: true };
     });
 
@@ -166,11 +189,21 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
 
             const relToNote = path.resolve(noteDir, fileName);
             if (relToNote.startsWith(root + path.sep) || relToNote === root) {
-                try { await fs.access(relToNote); return { success: true, path: relToNote }; } catch { /* not found here */ }
+                try {
+                    await fs.access(relToNote);
+                    return { success: true, path: relToNote };
+                } catch {
+                    /* not found here */
+                }
             }
             const relToVault = path.resolve(embedVaultRoot, fileName);
             if (relToVault.startsWith(root + path.sep) || relToVault === root) {
-                try { await fs.access(relToVault); return { success: true, path: relToVault }; } catch { /* not found here */ }
+                try {
+                    await fs.access(relToVault);
+                    return { success: true, path: relToVault };
+                } catch {
+                    /* not found here */
+                }
             }
             const found = await findFileRecursive(embedVaultRoot, path.basename(fileName));
             if (found) {
@@ -198,8 +231,14 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
             const ext = path.extname(baseName);
             const stem = baseName.slice(0, baseName.length - ext.length);
             while (true) {
-                try { await fs.access(targetPath); targetPath = path.join(targetDir, `${stem} (${counter})${ext}`); baseName = path.basename(targetPath); counter++; }
-                catch { break; }
+                try {
+                    await fs.access(targetPath);
+                    targetPath = path.join(targetDir, `${stem} (${counter})${ext}`);
+                    baseName = path.basename(targetPath);
+                    counter++;
+                } catch {
+                    break;
+                }
             }
             await fs.copyFile(sourcePath, targetPath);
             return { success: true, fileName: baseName, path: targetPath };
@@ -250,7 +289,8 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
 
     // Write text file (atomic: write to .tmp then rename)
     ipc.handle('file:write', async (_event, filePath: string, content: string) => {
-        if (typeof filePath !== 'string' || typeof content !== 'string') return { success: false, error: 'Invalid arguments' };
+        if (typeof filePath !== 'string' || typeof content !== 'string')
+            return { success: false, error: 'Invalid arguments' };
         try {
             assertInsideVault(filePath);
             const tmp = filePath + '.tmp';
@@ -264,7 +304,8 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
 
     // Create file
     ipc.handle('file:create', async (_event, folderPath: string, fileName: string) => {
-        if (typeof folderPath !== 'string' || typeof fileName !== 'string') return { success: false, error: 'Invalid arguments' };
+        if (typeof folderPath !== 'string' || typeof fileName !== 'string')
+            return { success: false, error: 'Invalid arguments' };
         try {
             assertInsideVault(folderPath);
             const filePath = path.join(folderPath, fileName);
@@ -278,12 +319,18 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
 
     // Create folder
     ipc.handle('folder:create', async (_event, parentPath: string, folderName: string) => {
-        if (typeof parentPath !== 'string' || typeof folderName !== 'string') return { success: false, error: 'Invalid arguments' };
+        if (typeof parentPath !== 'string' || typeof folderName !== 'string')
+            return { success: false, error: 'Invalid arguments' };
         try {
             assertInsideVault(parentPath);
             const folderPath = path.join(parentPath, folderName);
             assertInsideVault(folderPath);
-            try { await fs.access(folderPath); return { success: false, error: 'A folder with this name already exists' }; } catch { /* doesn't exist yet — good */ }
+            try {
+                await fs.access(folderPath);
+                return { success: false, error: 'A folder with this name already exists' };
+            } catch {
+                /* doesn't exist yet — good */
+            }
             await fs.mkdir(folderPath, { recursive: true });
             return { success: true, path: folderPath };
         } catch (error) {
@@ -305,12 +352,18 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
 
     // Rename file
     ipc.handle('file:rename', async (_event, oldPath: string, newFileName: string) => {
-        if (typeof oldPath !== 'string' || typeof newFileName !== 'string') return { success: false, error: 'Invalid arguments' };
+        if (typeof oldPath !== 'string' || typeof newFileName !== 'string')
+            return { success: false, error: 'Invalid arguments' };
         try {
             assertInsideVault(oldPath);
             const newPath = path.join(path.dirname(oldPath), newFileName);
             assertInsideVault(newPath);
-            try { await fs.access(newPath); return { success: false, error: 'A file with this name already exists' }; } catch { /* good */ }
+            try {
+                await fs.access(newPath);
+                return { success: false, error: 'A file with this name already exists' };
+            } catch {
+                /* good */
+            }
             await fs.rename(oldPath, newPath);
             return { success: true, newPath };
         } catch (error) {
@@ -320,12 +373,18 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
 
     // Rename folder
     ipc.handle('folder:rename', async (_event, oldPath: string, newFolderName: string) => {
-        if (typeof oldPath !== 'string' || typeof newFolderName !== 'string') return { success: false, error: 'Invalid arguments' };
+        if (typeof oldPath !== 'string' || typeof newFolderName !== 'string')
+            return { success: false, error: 'Invalid arguments' };
         try {
             assertInsideVault(oldPath);
             const newPath = path.join(path.dirname(oldPath), newFolderName);
             assertInsideVault(newPath);
-            try { await fs.access(newPath); return { success: false, error: 'A folder with this name already exists' }; } catch { /* good */ }
+            try {
+                await fs.access(newPath);
+                return { success: false, error: 'A folder with this name already exists' };
+            } catch {
+                /* good */
+            }
             await fs.rename(oldPath, newPath);
             return { success: true, newPath };
         } catch (error) {
@@ -347,13 +406,19 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
 
     // Move file
     ipc.handle('file:move', async (_event, filePath: string, targetFolderPath: string) => {
-        if (typeof filePath !== 'string' || typeof targetFolderPath !== 'string') return { success: false, error: 'Invalid arguments' };
+        if (typeof filePath !== 'string' || typeof targetFolderPath !== 'string')
+            return { success: false, error: 'Invalid arguments' };
         try {
             assertInsideVault(filePath);
             assertInsideVault(targetFolderPath);
             const newPath = path.join(targetFolderPath, path.basename(filePath));
             if (filePath === newPath) return { success: true, newPath };
-            try { await fs.access(newPath); return { success: false, error: 'A file with this name already exists in the target folder' }; } catch { /* good */ }
+            try {
+                await fs.access(newPath);
+                return { success: false, error: 'A file with this name already exists in the target folder' };
+            } catch {
+                /* good */
+            }
             await fs.rename(filePath, newPath);
             return { success: true, newPath };
         } catch (error) {
@@ -363,7 +428,8 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
 
     // Move folder
     ipc.handle('folder:move', async (_event, folderPath: string, targetFolderPath: string) => {
-        if (typeof folderPath !== 'string' || typeof targetFolderPath !== 'string') return { success: false, error: 'Invalid arguments' };
+        if (typeof folderPath !== 'string' || typeof targetFolderPath !== 'string')
+            return { success: false, error: 'Invalid arguments' };
         try {
             assertInsideVault(folderPath);
             assertInsideVault(targetFolderPath);
@@ -372,7 +438,12 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
             if (targetFolderPath.startsWith(folderPath + path.sep) || targetFolderPath === folderPath) {
                 return { success: false, error: 'Cannot move a folder into itself' };
             }
-            try { await fs.access(newPath); return { success: false, error: 'A folder with this name already exists in the target folder' }; } catch { /* good */ }
+            try {
+                await fs.access(newPath);
+                return { success: false, error: 'A folder with this name already exists in the target folder' };
+            } catch {
+                /* good */
+            }
             await fs.rename(folderPath, newPath);
             return { success: true, newPath };
         } catch (error) {

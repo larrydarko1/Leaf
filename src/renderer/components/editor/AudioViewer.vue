@@ -83,7 +83,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                 ref="audioRef"
                 :key="audioUrl"
                 :src="audioUrl"
-                style="display: none;"
+                style="display: none"
                 @error="onAudioError"
                 @loadedmetadata="onAudioLoaded"
                 @ended="onAudioEnded"
@@ -92,11 +92,11 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
             <div v-if="audioUrl && !audioError && !isLoadingAudio" class="custom-audio-player">
                 <button class="audio-play-btn" :title="audioPlaying ? 'Pause' : 'Play'" @click="toggleAudioPlayback">
                     <svg v-if="!audioPlaying" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M8 5v14l11-7z"/>
+                        <path d="M8 5v14l11-7z" />
                     </svg>
                     <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <rect x="6" y="4" width="4" height="16" rx="1"/>
-                        <rect x="14" y="4" width="4" height="16" rx="1"/>
+                        <rect x="6" y="4" width="4" height="16" rx="1" />
+                        <rect x="14" y="4" width="4" height="16" rx="1" />
                     </svg>
                 </button>
                 <span class="audio-time">{{ formatTime(audioCurrentTime) }}</span>
@@ -108,21 +108,59 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                 <span class="audio-time">{{ formatTime(audioDuration) }}</span>
                 <div class="audio-volume-wrapper">
                     <button class="audio-volume-btn" :title="audioVolume === 0 ? 'Unmute' : 'Mute'" @click="toggleMute">
-                        <svg v-if="audioVolume === 0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg
+                            v-if="audioVolume === 0"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                             <line x1="23" y1="9" x2="17" y2="15"></line>
                             <line x1="17" y1="9" x2="23" y2="15"></line>
                         </svg>
-                        <svg v-else-if="audioVolume < 0.5" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg
+                            v-else-if="audioVolume < 0.5"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                             <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
                         </svg>
-                        <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg
+                            v-else
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                             <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
                         </svg>
                     </button>
-                    <input type="range" class="audio-volume-slider" min="0" max="1" step="0.01" :value="audioVolume" @input="onVolumeChange" />
+                    <input
+                        type="range"
+                        class="audio-volume-slider"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        :value="audioVolume"
+                        @input="onVolumeChange"
+                    />
                 </div>
             </div>
             <div v-if="audioError" class="audio-error">

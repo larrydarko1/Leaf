@@ -19,10 +19,7 @@ function resampleTo16kHz(input: Float32Array, inputSampleRate: number): Float32A
     return output;
 }
 
-export function useDictation(
-    content: Ref<string>,
-    onContentChange: () => void
-) {
+export function useDictation(content: Ref<string>, onContentChange: () => void) {
     const isDictating = ref(false);
     const isDictationLoading = ref(false);
 
@@ -62,7 +59,7 @@ export function useDictation(
 
         try {
             dictationStream = await navigator.mediaDevices.getUserMedia({
-                audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true }
+                audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
             });
         } catch (err) {
             console.error('Microphone access denied:', err);
@@ -138,13 +135,16 @@ export function useDictation(
             const nativeSampleRate = dictationAudioContext.sampleRate;
             const resampled = resampleTo16kHz(fullAudio, nativeSampleRate);
 
-            window.electronAPI.speechTranscribe(Array.from(resampled)).then((result) => {
-                if (result.success && result.text && result.text.trim()) {
-                    const needsSpace = content.value.length > 0 && !/\s$/.test(content.value);
-                    content.value += (needsSpace ? ' ' : '') + result.text.trim();
-                    onContentChange();
-                }
-            }).catch(() => { });
+            window.electronAPI
+                .speechTranscribe(Array.from(resampled))
+                .then((result) => {
+                    if (result.success && result.text && result.text.trim()) {
+                        const needsSpace = content.value.length > 0 && !/\s$/.test(content.value);
+                        content.value += (needsSpace ? ' ' : '') + result.text.trim();
+                        onContentChange();
+                    }
+                })
+                .catch(() => {});
         }
 
         if (dictationProcessor) {
@@ -158,7 +158,7 @@ export function useDictation(
         }
 
         if (dictationStream) {
-            dictationStream.getTracks().forEach(track => track.stop());
+            dictationStream.getTracks().forEach((track) => track.stop());
             dictationStream = null;
         }
     }

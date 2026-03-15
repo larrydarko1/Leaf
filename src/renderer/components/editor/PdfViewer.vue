@@ -20,12 +20,7 @@ watch(
 
 <template>
     <div class="pdf-viewer">
-        <iframe
-            v-if="pdfUrl && !hasError"
-            :src="pdfUrl"
-            class="pdf-preview"
-            @error="hasError = true"
-        />
+        <iframe v-if="pdfUrl && !hasError" :src="pdfUrl" class="pdf-preview" @error="hasError = true" />
         <div v-if="hasError" class="pdf-error">
             <p>Failed to load PDF</p>
             <p class="pdf-error-hint">This file may be corrupted or in an unsupported format</p>

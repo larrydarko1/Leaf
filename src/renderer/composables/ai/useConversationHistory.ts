@@ -6,7 +6,7 @@ import type { ChatMessage } from '../../types/chat';
 export function useConversationHistory(
     status: Ref<AiStatus>,
     lastUsedModelName: Ref<string | null>,
-    messages: Ref<ChatMessage[]>
+    messages: Ref<ChatMessage[]>,
 ) {
     const showHistory = ref(false);
     const conversationList = ref<ConversationMeta[]>([]);
@@ -73,11 +73,11 @@ export function useConversationHistory(
             const result = await window.electronAPI.conversationLoad(currentConversationId.value);
             if (result.success && result.conversation) {
                 result.conversation.messages = messages.value
-                    .filter(m => m.role !== 'system')
-                    .map(m => ({
+                    .filter((m) => m.role !== 'system')
+                    .map((m) => ({
                         role: m.role as 'user' | 'assistant',
                         content: m.content,
-                        timestamp: new Date().toISOString()
+                        timestamp: new Date().toISOString(),
                     }));
                 result.conversation.tokenCount = conversationTokenCount.value;
                 await window.electronAPI.conversationSave(result.conversation);
@@ -113,9 +113,9 @@ export function useConversationHistory(
                     await window.electronAPI.aiResetChat();
                 }
                 currentConversationId.value = result.conversation.id;
-                messages.value = result.conversation.messages.map(m => ({
+                messages.value = result.conversation.messages.map((m) => ({
                     role: m.role,
-                    content: m.content
+                    content: m.content,
                 }));
                 if (result.conversation.model) {
                     lastUsedModelName.value = result.conversation.model;
@@ -124,8 +124,8 @@ export function useConversationHistory(
                 if (status.value.isModelLoaded && messages.value.length > 0) {
                     await window.electronAPI.aiRestoreChatHistory(
                         messages.value
-                            .filter(m => m.role !== 'system')
-                            .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }))
+                            .filter((m) => m.role !== 'system')
+                            .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
                     );
                 }
                 showHistory.value = false;
@@ -162,7 +162,10 @@ export function useConversationHistory(
     }
 
     async function confirmRename(id: string) {
-        if (!renameValue.value.trim()) { cancelRename(); return; }
+        if (!renameValue.value.trim()) {
+            cancelRename();
+            return;
+        }
         try {
             await window.electronAPI.conversationRename(id, renameValue.value.trim());
             await refreshConversationList();

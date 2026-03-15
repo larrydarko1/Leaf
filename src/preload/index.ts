@@ -15,22 +15,29 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // File system operations
     scanFolder: (folderPath: string) => ipcRenderer.invoke('files:scan', folderPath),
     readFile: (filePath: string) => ipcRenderer.invoke('file:read', filePath),
-    resolveEmbedPath: (fileName: string, noteDir: string, vaultRoot: string) => ipcRenderer.invoke('file:resolveEmbedPath', fileName, noteDir, vaultRoot),
-    copyFileToVault: (sourcePath: string, targetDir: string) => ipcRenderer.invoke('file:copyToVault', sourcePath, targetDir),
+    resolveEmbedPath: (fileName: string, noteDir: string, vaultRoot: string) =>
+        ipcRenderer.invoke('file:resolveEmbedPath', fileName, noteDir, vaultRoot),
+    copyFileToVault: (sourcePath: string, targetDir: string) =>
+        ipcRenderer.invoke('file:copyToVault', sourcePath, targetDir),
     readImage: (filePath: string) => ipcRenderer.invoke('file:readImage', filePath),
     readAudio: (filePath: string) => ipcRenderer.invoke('file:readAudio', filePath),
     writeFile: (filePath: string, content: string) => ipcRenderer.invoke('file:write', filePath, content),
     createFile: (folderPath: string, fileName: string) => ipcRenderer.invoke('file:create', folderPath, fileName),
-    createFolder: (parentPath: string, folderName: string) => ipcRenderer.invoke('folder:create', parentPath, folderName),
+    createFolder: (parentPath: string, folderName: string) =>
+        ipcRenderer.invoke('folder:create', parentPath, folderName),
     deleteFile: (filePath: string) => ipcRenderer.invoke('file:delete', filePath),
     renameFile: (filePath: string, newFileName: string) => ipcRenderer.invoke('file:rename', filePath, newFileName),
-    renameFolder: (folderPath: string, newFolderName: string) => ipcRenderer.invoke('folder:rename', folderPath, newFolderName),
+    renameFolder: (folderPath: string, newFolderName: string) =>
+        ipcRenderer.invoke('folder:rename', folderPath, newFolderName),
     deleteFolder: (folderPath: string) => ipcRenderer.invoke('folder:delete', folderPath),
-    moveFile: (filePath: string, targetFolderPath: string) => ipcRenderer.invoke('file:move', filePath, targetFolderPath),
-    moveFolder: (folderPath: string, targetFolderPath: string) => ipcRenderer.invoke('folder:move', folderPath, targetFolderPath),
+    moveFile: (filePath: string, targetFolderPath: string) =>
+        ipcRenderer.invoke('file:move', filePath, targetFolderPath),
+    moveFolder: (folderPath: string, targetFolderPath: string) =>
+        ipcRenderer.invoke('folder:move', folderPath, targetFolderPath),
 
     // Audio recording
-    saveAudioRecording: (folderPath: string, fileName: string, base64Data: string) => ipcRenderer.invoke('audio:saveRecording', folderPath, fileName, base64Data),
+    saveAudioRecording: (folderPath: string, fileName: string, base64Data: string) =>
+        ipcRenderer.invoke('audio:saveRecording', folderPath, fileName, base64Data),
 
     // Spellcheck
     getSpellingSuggestions: (word: string) => ipcRenderer.invoke('spellcheck:getSuggestions', word),
@@ -59,14 +66,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
     conversationCreate: (modelName: string) => ipcRenderer.invoke('conversations:create', modelName),
     conversationLoad: (id: string) => ipcRenderer.invoke('conversations:load', id),
     conversationSave: (conversation: object) => ipcRenderer.invoke('conversations:save', conversation),
-    conversationAddMessage: (conversationId: string, message: object) => ipcRenderer.invoke('conversations:addMessage', conversationId, message),
-    conversationUpdateLastMessage: (conversationId: string, content: string) => ipcRenderer.invoke('conversations:updateLastMessage', conversationId, content),
+    conversationAddMessage: (conversationId: string, message: object) =>
+        ipcRenderer.invoke('conversations:addMessage', conversationId, message),
+    conversationUpdateLastMessage: (conversationId: string, content: string) =>
+        ipcRenderer.invoke('conversations:updateLastMessage', conversationId, content),
     conversationDelete: (id: string) => ipcRenderer.invoke('conversations:delete', id),
     conversationRename: (id: string, newTitle: string) => ipcRenderer.invoke('conversations:rename', id, newTitle),
 
     // Agent mode operations
-    agentReadFile: (filePath: string, workspacePath: string) => ipcRenderer.invoke('agent:readFile', filePath, workspacePath),
-    agentProposeEdit: (filePath: string, newContent: string, workspacePath: string) => ipcRenderer.invoke('agent:proposeEdit', filePath, newContent, workspacePath),
+    agentReadFile: (filePath: string, workspacePath: string) =>
+        ipcRenderer.invoke('agent:readFile', filePath, workspacePath),
+    agentProposeEdit: (filePath: string, newContent: string, workspacePath: string) =>
+        ipcRenderer.invoke('agent:proposeEdit', filePath, newContent, workspacePath),
     agentApproveEdit: (editId: string) => ipcRenderer.invoke('agent:approveEdit', editId),
     agentRejectEdit: (editId: string) => ipcRenderer.invoke('agent:rejectEdit', editId),
     agentGetPendingEdits: () => ipcRenderer.invoke('agent:getPendingEdits'),

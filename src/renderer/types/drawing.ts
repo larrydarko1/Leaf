@@ -1,12 +1,41 @@
 export type ToolType =
-    | 'select' | 'hand' | 'rectangle' | 'ellipse' | 'diamond' | 'triangle'
-    | 'line' | 'arrow' | 'freedraw' | 'text' | 'eraser'
-    | 'database' | 'server' | 'user' | 'cloud' | 'document' | 'hexagon' | 'parallelogram' | 'star';
+    | 'select'
+    | 'hand'
+    | 'rectangle'
+    | 'ellipse'
+    | 'diamond'
+    | 'triangle'
+    | 'line'
+    | 'arrow'
+    | 'freedraw'
+    | 'text'
+    | 'eraser'
+    | 'database'
+    | 'server'
+    | 'user'
+    | 'cloud'
+    | 'document'
+    | 'hexagon'
+    | 'parallelogram'
+    | 'star';
 
 export type ElementType =
-    | 'rectangle' | 'ellipse' | 'diamond' | 'triangle'
-    | 'line' | 'arrow' | 'freedraw' | 'text'
-    | 'database' | 'server' | 'user' | 'cloud' | 'document' | 'hexagon' | 'parallelogram' | 'star';
+    | 'rectangle'
+    | 'ellipse'
+    | 'diamond'
+    | 'triangle'
+    | 'line'
+    | 'arrow'
+    | 'freedraw'
+    | 'text'
+    | 'database'
+    | 'server'
+    | 'user'
+    | 'cloud'
+    | 'document'
+    | 'hexagon'
+    | 'parallelogram'
+    | 'star';
 
 export type StrokeStyle = 'solid' | 'dashed' | 'dotted';
 

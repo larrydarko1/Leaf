@@ -15,21 +15,36 @@ export function useDrawingElements() {
     const clipboard = ref<CanvasElement | null>(null);
 
     const selectedElement = computed(() =>
-        selectedId.value ? elements.value.find(el => el.id === selectedId.value) ?? null : null
+        selectedId.value ? (elements.value.find((el) => el.id === selectedId.value) ?? null) : null,
     );
 
     // ================= Helpers =================
 
     function isShapeElement(el: CanvasElement): boolean {
-        return ['rectangle', 'ellipse', 'diamond', 'triangle',
-            'database', 'server', 'user', 'cloud', 'document', 'hexagon', 'parallelogram', 'star'].includes(el.type);
+        return [
+            'rectangle',
+            'ellipse',
+            'diamond',
+            'triangle',
+            'database',
+            'server',
+            'user',
+            'cloud',
+            'document',
+            'hexagon',
+            'parallelogram',
+            'star',
+        ].includes(el.type);
     }
 
     // ================= Bounds =================
 
     function getElementBounds(el: CanvasElement) {
         if (el.type === 'freedraw' && el.points && el.points.length > 0) {
-            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            let minX = Infinity,
+                minY = Infinity,
+                maxX = -Infinity,
+                maxY = -Infinity;
             for (const p of el.points) {
                 minX = Math.min(minX, el.x + p.x);
                 minY = Math.min(minY, el.y + p.y);
@@ -65,12 +80,14 @@ export function useDrawingElements() {
     // ================= Hit Testing =================
 
     function distanceToSegment(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {
-        const dx = x2 - x1, dy = y2 - y1;
+        const dx = x2 - x1,
+            dy = y2 - y1;
         const len2 = dx * dx + dy * dy;
         if (len2 === 0) return Math.sqrt((px - x1) ** 2 + (py - y1) ** 2);
         let t = ((px - x1) * dx + (py - y1) * dy) / len2;
         t = Math.max(0, Math.min(1, t));
-        const nx = x1 + t * dx, ny = y1 + t * dy;
+        const nx = x1 + t * dx,
+            ny = y1 + t * dy;
         return Math.sqrt((px - nx) ** 2 + (py - ny) ** 2);
     }
 
@@ -84,7 +101,10 @@ export function useDrawingElements() {
             for (let i = 1; i < el.points.length; i++) {
                 const p1 = el.points[i - 1];
                 const p2 = el.points[i];
-                if (distanceToSegment(wx, wy, el.x + p1.x, el.y + p1.y, el.x + p2.x, el.y + p2.y) <= t + el.strokeWidth / 2) {
+                if (
+                    distanceToSegment(wx, wy, el.x + p1.x, el.y + p1.y, el.x + p2.x, el.y + p2.y) <=
+                    t + el.strokeWidth / 2
+                ) {
                     return true;
                 }
             }
@@ -117,8 +137,20 @@ export function useDrawingElements() {
     // ================= Element Type Checks =================
 
     const shapeTools: Array<CanvasElement['type'] | 'select' | 'hand' | 'eraser' | 'freedraw' | 'text'> = [
-        'rectangle', 'ellipse', 'diamond', 'triangle', 'line', 'arrow',
-        'database', 'server', 'user', 'cloud', 'document', 'hexagon', 'parallelogram', 'star',
+        'rectangle',
+        'ellipse',
+        'diamond',
+        'triangle',
+        'line',
+        'arrow',
+        'database',
+        'server',
+        'user',
+        'cloud',
+        'document',
+        'hexagon',
+        'parallelogram',
+        'star',
     ];
 
     function isShapeTool(tool: string): tool is ElementType {

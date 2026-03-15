@@ -30,8 +30,17 @@ interface AiChatActions {
 }
 
 export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
-    const { messages, status, conversationTokenCount, currentConversationId, agentMode, activeFile, workspacePath } = deps;
-    const { createNewConversation, saveCurrentConversation, saveTokenCountToConversation, refreshConversationList, refreshStatus, parseAgentEdits, processAgentEdits } = actions;
+    const { messages, status, conversationTokenCount, currentConversationId, agentMode, activeFile, workspacePath } =
+        deps;
+    const {
+        createNewConversation,
+        saveCurrentConversation,
+        saveTokenCountToConversation,
+        refreshConversationList,
+        refreshStatus,
+        parseAgentEdits,
+        processAgentEdits,
+    } = actions;
 
     // DOM refs (bound via template ref="...")
     const messagesContainer = ref<HTMLElement | null>(null);
@@ -84,7 +93,9 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         try {
             await window.electronAPI.writeClipboard(content);
             copiedIndex.value = index;
-            setTimeout(() => { if (copiedIndex.value === index) copiedIndex.value = null; }, 2000);
+            setTimeout(() => {
+                if (copiedIndex.value === index) copiedIndex.value = null;
+            }, 2000);
         } catch (err) {
             console.error('Failed to copy:', err);
         }
@@ -110,7 +121,10 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
 
     async function confirmEditMessage(index: number) {
         const newContent = editContent.value.trim();
-        if (!newContent) { cancelEditMessage(); return; }
+        if (!newContent) {
+            cancelEditMessage();
+            return;
+        }
         messages.value[index].content = newContent;
         messages.value.splice(index + 1);
         await window.electronAPI.aiResetChat();
@@ -141,7 +155,9 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
             try {
                 const result = await window.electronAPI.readFile(activeFile.value.path);
                 if (result.success && result.content) noteContext = result.content;
-            } catch (error) { console.error('Failed to read note for context:', error); }
+            } catch (error) {
+                console.error('Failed to read note for context:', error);
+            }
         }
         try {
             const result = await window.electronAPI.aiChat(msg.content, noteContext);
@@ -152,7 +168,8 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
             const assistantMsg = messages.value[messages.value.length - 1];
             if (currentConversationId.value && assistantMsg.role === 'assistant') {
                 await window.electronAPI.conversationAddMessage(currentConversationId.value, {
-                    role: 'assistant', content: assistantMsg.content
+                    role: 'assistant',
+                    content: assistantMsg.content,
                 });
             }
         } catch (error) {
@@ -205,7 +222,8 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         inputMessage.value = '';
         if (currentConversationId.value) {
             await window.electronAPI.conversationAddMessage(currentConversationId.value, {
-                role: 'user', content: userMsg.content
+                role: 'user',
+                content: userMsg.content,
             });
         }
         messages.value.push({ role: 'assistant', content: '' });
@@ -229,7 +247,9 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
             try {
                 const result = await window.electronAPI.readFile(activeFile.value.path);
                 if (result.success && result.content) noteContext = result.content;
-            } catch (error) { console.error('Failed to read note for context:', error); }
+            } catch (error) {
+                console.error('Failed to read note for context:', error);
+            }
         }
 
         try {
@@ -249,13 +269,15 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
             }
             if (currentConversationId.value && assistantMsg.role === 'assistant') {
                 await window.electronAPI.conversationAddMessage(currentConversationId.value, {
-                    role: 'assistant', content: assistantMsg.content
+                    role: 'assistant',
+                    content: assistantMsg.content,
                 });
             }
             if (result && result.compacted) {
                 messages.value.push({
                     role: 'system',
-                    content: 'Context memory was getting full — conversation has been summarized to free up space. All messages are preserved.'
+                    content:
+                        'Context memory was getting full — conversation has been summarized to free up space. All messages are preserved.',
                 });
             }
         } catch (error) {
@@ -303,10 +325,19 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         return String(n);
     }
 
-    watch(() => messages.value.length, () => { scrollToBottom(); });
+    watch(
+        () => messages.value.length,
+        () => {
+            scrollToBottom();
+        },
+    );
 
-    onMounted(() => { window.electronAPI.onAiToken(handleToken); });
-    onUnmounted(() => { window.electronAPI.removeAiTokenListener(); });
+    onMounted(() => {
+        window.electronAPI.onAiToken(handleToken);
+    });
+    onUnmounted(() => {
+        window.electronAPI.removeAiTokenListener();
+    });
 
     return {
         messagesContainer,

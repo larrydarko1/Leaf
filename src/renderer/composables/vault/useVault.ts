@@ -104,7 +104,7 @@ export function useVault() {
             const result = await window.electronAPI.createFile(currentFolder.value, fileName);
             if (result.success && result.path) {
                 await refreshFiles();
-                return files.value.find(f => f.path === result.path) ?? null;
+                return files.value.find((f) => f.path === result.path) ?? null;
             }
             alert('Failed to create file: ' + result.error);
             return null;
@@ -125,7 +125,7 @@ export function useVault() {
             if (result.success && result.path) {
                 await window.electronAPI.writeFile(result.path, emptyDrawing);
                 await refreshFiles();
-                return files.value.find(f => f.path === result.path) ?? null;
+                return files.value.find((f) => f.path === result.path) ?? null;
             }
             alert('Failed to create drawing: ' + result.error);
             return null;
@@ -158,7 +158,7 @@ export function useVault() {
             const result = await window.electronAPI.renameFile(file.path, newBaseName + extension);
             if (result.success && result.newPath) {
                 await refreshFiles();
-                return files.value.find(f => f.path === result.newPath) ?? null;
+                return files.value.find((f) => f.path === result.newPath) ?? null;
             }
             alert('Failed to rename file: ' + result.error);
             return null;
@@ -224,9 +224,10 @@ export function useVault() {
 
     async function moveFiles(filePaths: string[], targetRelativePath: string): Promise<string[]> {
         if (!currentFolder.value) return [];
-        const absoluteTarget = (targetRelativePath === '.' || targetRelativePath === '')
-            ? currentFolder.value
-            : currentFolder.value + '/' + targetRelativePath;
+        const absoluteTarget =
+            targetRelativePath === '.' || targetRelativePath === ''
+                ? currentFolder.value
+                : currentFolder.value + '/' + targetRelativePath;
         const movedPaths: string[] = [];
         for (const path of filePaths) {
             try {
@@ -248,9 +249,10 @@ export function useVault() {
     async function moveFolder(relativePath: string, targetRelativePath: string): Promise<boolean> {
         if (!currentFolder.value) return false;
         const absolutePath = currentFolder.value + '/' + relativePath;
-        const absoluteTarget = (targetRelativePath === '.' || targetRelativePath === '')
-            ? currentFolder.value
-            : currentFolder.value + '/' + targetRelativePath;
+        const absoluteTarget =
+            targetRelativePath === '.' || targetRelativePath === ''
+                ? currentFolder.value
+                : currentFolder.value + '/' + targetRelativePath;
         try {
             const result = await window.electronAPI.moveFolder(absolutePath, absoluteTarget);
             if (result.success) {

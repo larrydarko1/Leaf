@@ -15,7 +15,11 @@ const ALLOWED_DOWNLOAD_HOSTS = ['huggingface.co', 'cdn-lfs.hf.co', 'cdn-lfs-us-1
 
 function assertAllowedDownloadUrl(url: string): void {
     let parsed: URL;
-    try { parsed = new URL(url); } catch { throw new Error('Invalid download URL.'); }
+    try {
+        parsed = new URL(url);
+    } catch {
+        throw new Error('Invalid download URL.');
+    }
     if (parsed.protocol !== 'https:') throw new Error('Only HTTPS downloads are allowed.');
     if (!ALLOWED_DOWNLOAD_HOSTS.includes(parsed.hostname)) {
         throw new Error(`Downloads are only allowed from Hugging Face (got ${parsed.hostname}).`);
@@ -31,21 +35,24 @@ interface DownloadEntry {
 // Track active downloads
 const activeDownloads = new Map<string, DownloadEntry>();
 
-function hfApiGet(apiPath: string): Promise<any> { // eslint-disable-line @typescript-eslint/no-explicit-any
+function hfApiGet(apiPath: string): Promise<any> {
+    // eslint-disable-line @typescript-eslint/no-explicit-any
     return new Promise((resolve, reject) => {
         const options = {
             hostname: 'huggingface.co',
             path: apiPath,
             method: 'GET',
             headers: {
-                'Accept': 'application/json',
+                Accept: 'application/json',
                 'User-Agent': 'Leaf-App/1.0',
             },
         };
 
         const req = https.request(options, (res) => {
             let body = '';
-            res.on('data', (chunk: string) => { body += chunk; });
+            res.on('data', (chunk: string) => {
+                body += chunk;
+            });
             res.on('end', () => {
                 if (res.statusCode !== 200) {
                     reject(new Error(`HTTP ${res.statusCode}`));
@@ -69,7 +76,7 @@ async function searchModels(query: string): Promise<{ success: boolean; results?
         const apiPath = `/api/models?search=${encodeURIComponent(searchQuery)}&filter=gguf&sort=downloads&direction=-1&limit=20`;
         const models: any[] = await hfApiGet(apiPath); // eslint-disable-line @typescript-eslint/no-explicit-any
 
-        const results = models.map(m => ({
+        const results = models.map((m) => ({
             id: m.modelId || m.id,
             author: m.author || m.modelId?.split('/')[0] || '',
             name: m.modelId?.split('/').pop() || m.id,
@@ -128,7 +135,10 @@ function formatFileSize(bytes: number): string {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-interface TreeFile { path: string; size: number; }
+interface TreeFile {
+    path: string;
+    size: number;
+}
 
 async function fetchTree(repoId: string, treePath: string): Promise<TreeFile[]> {
     const apiPath = `/api/models/${repoId}/tree/main${treePath ? '/' + treePath : ''}`;
@@ -137,7 +147,7 @@ async function fetchTree(repoId: string, treePath: string): Promise<TreeFile[]> 
     let files: TreeFile[] = [];
     for (const entry of entries) {
         if (entry.type === 'file') {
-            const size = (entry.lfs && entry.lfs.size) ? entry.lfs.size : (entry.size || 0);
+            const size = entry.lfs && entry.lfs.size ? entry.lfs.size : entry.size || 0;
             files.push({ path: entry.path, size });
         } else if (entry.type === 'directory') {
             const subFiles = await fetchTree(repoId, entry.path);
@@ -149,7 +159,8 @@ async function fetchTree(repoId: string, treePath: string): Promise<TreeFile[]> 
 
 async function listRepoFiles(repoId: string): Promise<object> {
     try {
-        const [modelData, treeFiles]: [any, TreeFile[]] = await Promise.all([ // eslint-disable-line @typescript-eslint/no-explicit-any
+        const [modelData, treeFiles]: [any, TreeFile[]] = await Promise.all([
+            // eslint-disable-line @typescript-eslint/no-explicit-any
             hfApiGet(`/api/models/${repoId}`),
             fetchTree(repoId, ''),
         ]);
@@ -159,7 +170,7 @@ async function listRepoFiles(repoId: string): Promise<object> {
         const contextLength = ggufMeta.context_length || null;
         const totalParamSize = ggufMeta.total || null;
 
-        const ggufTreeFiles = treeFiles.filter(f => f.path.endsWith('.gguf'));
+        const ggufTreeFiles = treeFiles.filter((f) => f.path.endsWith('.gguf'));
 
         if (ggufTreeFiles.length === 0) {
             return {
@@ -172,7 +183,10 @@ async function listRepoFiles(repoId: string): Promise<object> {
         }
 
         const shardPattern = /^(.+)-(\d{5})-of-(\d{5})\.gguf$/;
-        const shardGroups = new Map<string, { files: TreeFile[]; totalShards: number; baseName: string; dir: string }>();
+        const shardGroups = new Map<
+            string,
+            { files: TreeFile[]; totalShards: number; baseName: string; dir: string }
+        >();
         const standaloneFiles: TreeFile[] = [];
 
         for (const f of ggufTreeFiles) {
@@ -218,7 +232,7 @@ async function listRepoFiles(repoId: string): Promise<object> {
             const displayName = `${group.baseName}.gguf (${group.files.length} parts)`;
             const shardFiles = group.files
                 .sort((a, b) => a.path.localeCompare(b.path))
-                .map(f => ({
+                .map((f) => ({
                     name: f.path.split('/').pop(),
                     path: f.path,
                     size: f.size,
@@ -249,7 +263,12 @@ async function listRepoFiles(repoId: string): Promise<object> {
         return {
             success: true,
             files: resultFiles,
-            modelInfo: { architecture, contextLength, totalParamSize, totalParamSizeFormatted: formatFileSize(totalParamSize || 0) },
+            modelInfo: {
+                architecture,
+                contextLength,
+                totalParamSize,
+                totalParamSizeFormatted: formatFileSize(totalParamSize || 0),
+            },
             repoId,
             repoName: modelData.modelId || repoId,
         };
@@ -268,7 +287,7 @@ interface ProgressInfo {
 async function downloadModel(
     url: string,
     fileName: string,
-    onProgress: (p: ProgressInfo) => void
+    onProgress: (p: ProgressInfo) => void,
 ): Promise<{ success: boolean; filePath?: string; error?: string }> {
     // Validate URL against whitelist and filename against traversal
     assertAllowedDownloadUrl(url);
@@ -284,7 +303,9 @@ async function downloadModel(
         if (existing.size > 0) {
             return { success: false, error: 'Model file already exists. Delete it first to re-download.' };
         }
-    } catch { /* file doesn't exist — good */ }
+    } catch {
+        /* file doesn't exist — good */
+    }
 
     if (activeDownloads.has(fileName)) {
         return { success: false, error: 'This model is already being downloaded.' };
@@ -307,7 +328,9 @@ async function downloadModel(
             const req = https.request(options, (res) => {
                 if (res.statusCode! >= 300 && res.statusCode! < 400 && res.headers.location) {
                     // Validate redirect targets against the same whitelist
-                    try { assertAllowedDownloadUrl(res.headers.location); } catch (err) {
+                    try {
+                        assertAllowedDownloadUrl(res.headers.location);
+                    } catch (err) {
                         activeDownloads.delete(fileName);
                         resolve({ success: false, error: (err as Error).message });
                         return;
@@ -351,7 +374,11 @@ async function downloadModel(
                     writeStream.close();
 
                     if (abortController.aborted) {
-                        try { await fs.unlink(tempPath); } catch { /* ignore */ }
+                        try {
+                            await fs.unlink(tempPath);
+                        } catch {
+                            /* ignore */
+                        }
                         activeDownloads.delete(fileName);
                         resolve({ success: false, error: 'Download cancelled.' });
                         return;
@@ -369,14 +396,22 @@ async function downloadModel(
 
                 res.on('error', async (err) => {
                     writeStream.close();
-                    try { await fs.unlink(tempPath); } catch { /* ignore */ }
+                    try {
+                        await fs.unlink(tempPath);
+                    } catch {
+                        /* ignore */
+                    }
                     activeDownloads.delete(fileName);
                     resolve({ success: false, error: `Download error: ${err.message}` });
                 });
             });
 
             req.on('error', async (err) => {
-                try { await fs.unlink(tempPath); } catch { /* ignore */ }
+                try {
+                    await fs.unlink(tempPath);
+                } catch {
+                    /* ignore */
+                }
                 activeDownloads.delete(fileName);
                 resolve({ success: false, error: `Network error: ${err.message}` });
             });
@@ -398,7 +433,9 @@ async function cancelDownload(fileName: string): Promise<{ success: boolean; err
 
     try {
         await fs.unlink(download.tempPath);
-    } catch { /* ignore */ }
+    } catch {
+        /* ignore */
+    }
 
     activeDownloads.delete(fileName);
     return { success: true };
@@ -420,7 +457,8 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
     });
 
     ipc.handle('hf:download', async (_event, url: string, fileName: string) => {
-        if (typeof url !== 'string' || typeof fileName !== 'string') return { success: false, error: 'Invalid arguments' };
+        if (typeof url !== 'string' || typeof fileName !== 'string')
+            return { success: false, error: 'Invalid arguments' };
         return downloadModel(url, fileName, (progress) => {
             const win = getMainWindow();
             if (win && !win.isDestroyed()) win.webContents.send('hf:downloadProgress', progress);

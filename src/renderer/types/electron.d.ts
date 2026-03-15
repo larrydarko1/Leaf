@@ -1,8 +1,19 @@
 // Type definitions for Electron API
 import type {
-    AiListModelsResult, AiLoadResult, AiChatResult, AiStatus, AiSimpleResult,
-    ConversationMessage, Conversation, ConversationListResult, ConversationCreateResult, ConversationLoadResult,
-    AgentReadFileResult, AgentProposeEditResult, AgentEditResult, AgentPendingEditsResult,
+    AiListModelsResult,
+    AiLoadResult,
+    AiChatResult,
+    AiStatus,
+    AiSimpleResult,
+    ConversationMessage,
+    Conversation,
+    ConversationListResult,
+    ConversationCreateResult,
+    ConversationLoadResult,
+    AgentReadFileResult,
+    AgentProposeEditResult,
+    AgentEditResult,
+    AgentPendingEditsResult,
 } from './ai';
 import type { HfSearchResponse, HfListFilesResponse, HfDownloadProgress, HfDownloadResult } from './hf';
 import type { SpeechInitResult, SpeechTranscribeResult, SpeechStatus, SpeechStatusEvent } from './speech';
@@ -148,7 +159,7 @@ export interface ElectronAPI {
     aiChat: (userMessage: string, noteContext?: string | null) => Promise<AiChatResult>;
     aiStopChat: () => Promise<AiSimpleResult>;
     aiResetChat: () => Promise<AiSimpleResult>;
-    aiRestoreChatHistory: (messages: Array<{ role: string, content: string }>) => Promise<AiSimpleResult>;
+    aiRestoreChatHistory: (messages: Array<{ role: string; content: string }>) => Promise<AiSimpleResult>;
     aiGetStatus: () => Promise<AiStatus>;
     aiOpenModelsDir: () => Promise<AiSimpleResult>;
     onAiToken: (callback: (token: string) => void) => void;

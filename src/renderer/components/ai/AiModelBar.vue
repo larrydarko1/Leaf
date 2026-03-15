@@ -73,31 +73,29 @@ function truncate(str: string, len: number): string {
         <div class="ai-model-pill">
             <div v-if="!status.isModelLoaded" class="ai-model-selector">
                 <div ref="dropdownRef" class="ai-dropdown">
-                    <button 
-                        class="ai-dropdown-trigger" 
-                        :disabled="isLoading" 
-                        @click="toggleDropdown()"
-                    >
+                    <button class="ai-dropdown-trigger" :disabled="isLoading" @click="toggleDropdown()">
                         <span class="ai-dropdown-label">{{ selectedModelLabel }}</span>
-                        <svg class="ai-dropdown-chevron" :class="{ open: showDropdown }" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="6 9 12 15 18 9"/>
+                        <svg
+                            class="ai-dropdown-chevron"
+                            :class="{ open: showDropdown }"
+                            width="10"
+                            height="10"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <polyline points="6 9 12 15 18 9" />
                         </svg>
                     </button>
                     <Teleport to="body">
-                        <div 
-                            v-if="showDropdown" 
-                            class="ai-dropdown-menu"
-                            :style="dropdownPosition"
-                        >
-                            <div 
-                                v-if="availableModels.length === 0" 
-                                class="ai-dropdown-empty"
-                            >
-                                No models found
-                            </div>
-                            <div 
-                                v-for="m in availableModels" 
-                                :key="m.path" 
+                        <div v-if="showDropdown" class="ai-dropdown-menu" :style="dropdownPosition">
+                            <div v-if="availableModels.length === 0" class="ai-dropdown-empty">No models found</div>
+                            <div
+                                v-for="m in availableModels"
+                                :key="m.path"
                                 class="ai-dropdown-item"
                                 :class="{ selected: selectedModelPath === m.path }"
                                 @click="handleSelectModel(m)"
@@ -108,20 +106,30 @@ function truncate(str: string, len: number): string {
                         </div>
                     </Teleport>
                 </div>
-                <button 
-                    class="ai-btn-small" 
-                    :disabled="!selectedModelPath || isLoading" 
-                    @click="$emit('load-model')"
-                >
+                <button class="ai-btn-small" :disabled="!selectedModelPath || isLoading" @click="$emit('load-model')">
                     {{ isLoading ? '...' : 'Load' }}
                 </button>
             </div>
             <div v-else class="ai-model-status">
                 <span class="ai-model-indicator"></span>
                 <span class="ai-model-name">{{ status.currentModelName }}</span>
-                <button class="ai-btn-icon ai-btn-danger" title="Unload model" :disabled="status.isGenerating" @click="$emit('unload-model')">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <button
+                    class="ai-btn-icon ai-btn-danger"
+                    title="Unload model"
+                    :disabled="status.isGenerating"
+                    @click="$emit('unload-model')"
+                >
+                    <svg
+                        width="10"
+                        height="10"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                     </svg>
                 </button>
             </div>
@@ -129,65 +137,117 @@ function truncate(str: string, len: number): string {
         <div class="ai-bar-actions">
             <button class="ai-btn-icon" title="Open models folder" @click="$emit('open-models-folder')">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.12.28.256.554.53L11 4c.816.816 1.224 1.224 1.712 1.495.274.15.56.263.86.348.536.153 1.113.153 2.268.153h.374c2.632 0 3.949 0 4.804.77.079.07.154.145.224.224C22 7.85 22 9.166 22 11.798V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14V6.95z"/>
+                    <path
+                        d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.12.28.256.554.53L11 4c.816.816 1.224 1.224 1.712 1.495.274.15.56.263.86.348.536.153 1.113.153 2.268.153h.374c2.632 0 3.949 0 4.804.77.079.07.154.145.224.224C22 7.85 22 9.166 22 11.798V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14V6.95z"
+                    />
                 </svg>
             </button>
-            <button 
-                class="ai-btn-icon" 
-                :class="{ 'ai-btn-active': showHfPanel }" 
+            <button
+                class="ai-btn-icon"
+                :class="{ 'ai-btn-active': showHfPanel }"
                 title="Download models from Hugging Face"
                 @click="$emit('toggle-hf-panel')"
             >
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <polyline points="7 10 12 15 17 10"/>
-                    <line x1="12" y1="15" x2="12" y2="3"/>
+                <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
             </button>
             <button class="ai-btn-icon" title="Refresh model list" @click="$emit('refresh-models')">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="23 4 23 10 17 10"/>
-                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <polyline points="23 4 23 10 17 10" />
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
                 </svg>
             </button>
-            <button 
-                class="ai-btn-icon" 
-                :class="{ 'ai-btn-active': showHistory }" 
+            <button
+                class="ai-btn-icon"
+                :class="{ 'ai-btn-active': showHistory }"
                 title="Conversation history"
                 @click="$emit('toggle-history')"
             >
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polyline points="12 6 12 12 16 14"/>
+                <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
                 </svg>
             </button>
-            <button 
+            <button
                 v-if="status.isModelLoaded"
-                class="ai-btn-icon" 
-                :class="{ 'ai-btn-active': agentMode }" 
+                class="ai-btn-icon"
+                :class="{ 'ai-btn-active': agentMode }"
                 title="Agent mode — AI can read and edit files"
                 @click="$emit('toggle-agent-mode')"
             >
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                    <path d="M2 17l10 5 10-5"/>
-                    <path d="M2 12l10 5 10-5"/>
+                <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                    <path d="M2 17l10 5 10-5" />
+                    <path d="M2 12l10 5 10-5" />
                 </svg>
             </button>
-            <button 
-                class="ai-btn-icon" 
-                title="New conversation" 
-                @click="$emit('new-conversation')"
-            >
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"/>
-                    <line x1="5" y1="12" x2="19" y2="12"/>
+            <button class="ai-btn-icon" title="New conversation" @click="$emit('new-conversation')">
+                <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
             </button>
             <button class="ai-btn-icon" title="Close" @click="$emit('close')">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
+                <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
             </button>
         </div>
@@ -244,8 +304,13 @@ function truncate(str: string, len: number): string {
     border-radius: 6px;
     transition: background 0.15s;
 
-    &:hover:not(:disabled) { background: var(--bg-hover); }
-    &:disabled { opacity: 0.5; cursor: not-allowed; }
+    &:hover:not(:disabled) {
+        background: var(--bg-hover);
+    }
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
 }
 
 .ai-dropdown-label {
@@ -261,7 +326,9 @@ function truncate(str: string, len: number): string {
     flex-shrink: 0;
     color: var(--text2);
     transition: transform 0.2s;
-    &.open { transform: rotate(180deg); }
+    &.open {
+        transform: rotate(180deg);
+    }
 }
 
 .ai-dropdown-menu {
@@ -299,8 +366,13 @@ function truncate(str: string, len: number): string {
     color: var(--text1);
     transition: background 0.12s;
 
-    &:hover { background: var(--bg-hover); }
-    &.selected { background: var(--bg-hover); color: var(--accent-color); }
+    &:hover {
+        background: var(--bg-hover);
+    }
+    &.selected {
+        background: var(--bg-hover);
+        color: var(--accent-color);
+    }
 }
 
 .ai-dropdown-item-name {
@@ -367,12 +439,20 @@ function truncate(str: string, len: number): string {
     transition: all 0.2s;
     flex-shrink: 0;
 
-    &:hover:not(:disabled) { background: var(--bg-hover); color: var(--text1); }
-    &:disabled { opacity: 0.3; cursor: not-allowed; }
+    &:hover:not(:disabled) {
+        background: var(--bg-hover);
+        color: var(--text1);
+    }
+    &:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
 }
 
 .ai-btn-danger {
-    &:hover:not(:disabled) { color: var(--danger-color); }
+    &:hover:not(:disabled) {
+        color: var(--danger-color);
+    }
 }
 
 .ai-btn-active {
@@ -391,9 +471,17 @@ function truncate(str: string, len: number): string {
     cursor: pointer;
     white-space: nowrap;
     flex-shrink: 0;
-    transition: opacity 0.2s, transform 0.15s;
+    transition:
+        opacity 0.2s,
+        transform 0.15s;
 
-    &:hover:not(:disabled) { opacity: 0.85; transform: scale(1.03); }
-    &:disabled { opacity: 0.4; cursor: not-allowed; }
+    &:hover:not(:disabled) {
+        opacity: 0.85;
+        transform: scale(1.03);
+    }
+    &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
 }
 </style>

@@ -6,7 +6,7 @@ export function useTreeNodeDrag(
     getNode: () => TreeNode,
     getActiveFile: () => FileInfo | null,
     onMoveFile: (filePath: string, targetFolderPath: string) => void,
-    onMoveFolder: (folderPath: string, targetFolderPath: string) => void
+    onMoveFolder: (folderPath: string, targetFolderPath: string) => void,
 ) {
     const isDragging = ref(false);
     const isDragOver = ref(false);

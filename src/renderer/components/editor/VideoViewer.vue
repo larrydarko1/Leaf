@@ -62,8 +62,13 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
             ></video>
             <div class="video-controls">
                 <button class="video-ctrl-btn" :title="videoPlaying ? 'Pause' : 'Play'" @click="toggleVideoPlayback">
-                    <svg v-if="!videoPlaying" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                    <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+                    <svg v-if="!videoPlaying" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z" />
+                    </svg>
+                    <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <rect x="6" y="4" width="4" height="16" rx="1" />
+                        <rect x="14" y="4" width="4" height="16" rx="1" />
+                    </svg>
                 </button>
                 <span class="video-time">{{ formatTime(videoCurrentTime) }}</span>
                 <div class="video-progress-wrapper" @click="seekVideo">
@@ -73,22 +78,64 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                 </div>
                 <span class="video-time">{{ formatTime(videoDuration) }}</span>
                 <div class="video-volume-wrapper">
-                    <button class="video-ctrl-btn" :title="videoVolume === 0 ? 'Unmute' : 'Mute'" @click="toggleVideoMute">
-                        <svg v-if="videoVolume === 0" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <button
+                        class="video-ctrl-btn"
+                        :title="videoVolume === 0 ? 'Unmute' : 'Mute'"
+                        @click="toggleVideoMute"
+                    >
+                        <svg
+                            v-if="videoVolume === 0"
+                            width="15"
+                            height="15"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                             <line x1="23" y1="9" x2="17" y2="15"></line>
                             <line x1="17" y1="9" x2="23" y2="15"></line>
                         </svg>
-                        <svg v-else-if="videoVolume < 0.5" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg
+                            v-else-if="videoVolume < 0.5"
+                            width="15"
+                            height="15"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                             <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
                         </svg>
-                        <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg
+                            v-else
+                            width="15"
+                            height="15"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                             <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
                         </svg>
                     </button>
-                    <input type="range" class="video-volume-slider" min="0" max="1" step="0.01" :value="videoVolume" @input="onVideoVolumeChange" />
+                    <input
+                        type="range"
+                        class="video-volume-slider"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        :value="videoVolume"
+                        @input="onVideoVolumeChange"
+                    />
                 </div>
             </div>
         </div>

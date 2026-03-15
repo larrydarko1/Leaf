@@ -5,7 +5,7 @@ import type { TreeNode } from '../../components/FolderNode.vue';
 export function useFolderTree(
     getFiles: () => FileInfo[],
     getFolders: () => FolderInfo[] | undefined,
-    getCurrentFolder: () => string | null
+    getCurrentFolder: () => string | null,
 ) {
     const expandedFolders = ref<Set<string>>(new Set());
 
@@ -20,14 +20,14 @@ export function useFolderTree(
         const files = getFiles();
 
         if (folders) {
-            folders.forEach(folder => paths.add(folder.relativePath));
+            folders.forEach((folder) => paths.add(folder.relativePath));
         }
 
-        files.forEach(file => {
+        files.forEach((file) => {
             if (file.folder === '.') return;
             const parts = file.folder.split(/[/\\]/);
             let currentPath = '';
-            parts.forEach(part => {
+            parts.forEach((part) => {
                 currentPath = currentPath ? `${currentPath}/${part}` : part;
                 paths.add(currentPath);
             });
@@ -44,31 +44,31 @@ export function useFolderTree(
 
         // First pass: create folder nodes from explicit folders list
         if (folders) {
-            folders.forEach(folder => {
+            folders.forEach((folder) => {
                 if (!folderMap.has(folder.relativePath)) {
                     folderMap.set(folder.relativePath, {
                         path: folder.relativePath,
                         name: folder.name,
                         type: 'folder',
-                        children: []
+                        children: [],
                     });
                 }
             });
         }
 
         // Second pass: create folder nodes from file paths (backwards compatibility)
-        files.forEach(file => {
+        files.forEach((file) => {
             if (file.folder === '.') return;
             const parts = file.folder.split(/[/\\]/);
             let currentPath = '';
-            parts.forEach(part => {
+            parts.forEach((part) => {
                 currentPath = currentPath ? `${currentPath}/${part}` : part;
                 if (!folderMap.has(currentPath)) {
                     folderMap.set(currentPath, {
                         path: currentPath,
                         name: part,
                         type: 'folder',
-                        children: []
+                        children: [],
                     });
                 }
             });
@@ -86,12 +86,12 @@ export function useFolderTree(
         });
 
         // Fourth pass: add files to their folders and root
-        files.forEach(file => {
+        files.forEach((file) => {
             const fileNode: TreeNode = {
                 path: file.path,
                 name: getFileNameWithoutExtension(file.name),
                 type: 'file',
-                file
+                file,
             };
             if (file.folder === '.') {
                 root.push(fileNode);
@@ -107,7 +107,9 @@ export function useFolderTree(
                 if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
                 return a.name.localeCompare(b.name);
             });
-            nodes.forEach(node => { if (node.children) sortNodes(node.children); });
+            nodes.forEach((node) => {
+                if (node.children) sortNodes(node.children);
+            });
         };
         sortNodes(root);
         return root;
@@ -134,9 +136,7 @@ export function useFolderTree(
     });
 
     const visibleFiles = computed(() =>
-        flattenedItems.value
-            .filter(item => item.type === 'file' && item.file)
-            .map(item => item.file!)
+        flattenedItems.value.filter((item) => item.type === 'file' && item.file).map((item) => item.file!),
     );
 
     function toggleFolder(folderPath: string) {
@@ -149,31 +149,36 @@ export function useFolderTree(
     }
 
     // Load expanded folders state from localStorage when vault changes
-    watch(getCurrentFolder, (newFolder) => {
-        if (newFolder) {
-            const saved = localStorage.getItem(`leaf-expanded-folders-${newFolder}`);
-            if (saved) {
-                try {
-                    expandedFolders.value = new Set(JSON.parse(saved));
-                } catch {
+    watch(
+        getCurrentFolder,
+        (newFolder) => {
+            if (newFolder) {
+                const saved = localStorage.getItem(`leaf-expanded-folders-${newFolder}`);
+                if (saved) {
+                    try {
+                        expandedFolders.value = new Set(JSON.parse(saved));
+                    } catch {
+                        expandedFolders.value = new Set(allFolderPaths.value);
+                    }
+                } else {
                     expandedFolders.value = new Set(allFolderPaths.value);
                 }
-            } else {
-                expandedFolders.value = new Set(allFolderPaths.value);
             }
-        }
-    }, { immediate: true });
+        },
+        { immediate: true },
+    );
 
     // Persist expanded folders state to localStorage
-    watch(expandedFolders, (newExpanded) => {
-        const currentFolder = getCurrentFolder();
-        if (currentFolder) {
-            localStorage.setItem(
-                `leaf-expanded-folders-${currentFolder}`,
-                JSON.stringify(Array.from(newExpanded))
-            );
-        }
-    }, { deep: true });
+    watch(
+        expandedFolders,
+        (newExpanded) => {
+            const currentFolder = getCurrentFolder();
+            if (currentFolder) {
+                localStorage.setItem(`leaf-expanded-folders-${currentFolder}`, JSON.stringify(Array.from(newExpanded)));
+            }
+        },
+        { deep: true },
+    );
 
     return { expandedFolders, folderTree, flattenedItems, visibleFiles, toggleFolder, getFileNameWithoutExtension };
 }

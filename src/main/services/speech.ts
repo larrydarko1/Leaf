@@ -52,7 +52,9 @@ async function getTransformers(): Promise<any> {
     return pipelineFn;
 }
 
-async function initModel(mainWindow: BrowserWindow | null): Promise<{ success: boolean; message?: string; error?: string }> {
+async function initModel(
+    mainWindow: BrowserWindow | null,
+): Promise<{ success: boolean; message?: string; error?: string }> {
     if (transcriber) {
         return { success: true, message: 'Model already loaded' };
     }
@@ -72,11 +74,7 @@ async function initModel(mainWindow: BrowserWindow | null): Promise<{ success: b
             });
         }
 
-        transcriber = await pipeline(
-            'automatic-speech-recognition',
-            'Xenova/whisper-tiny.en',
-            { revision: 'main' }
-        );
+        transcriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny.en', { revision: 'main' });
 
         isModelReady = true;
         isModelLoading = false;
@@ -115,7 +113,7 @@ async function transcribe(audioData: number[]): Promise<{ success: boolean; text
         const float32Audio = new Float32Array(audioData);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const result: any = await transcriber(float32Audio);
-        const text = typeof result === 'string' ? result : (result.text || '');
+        const text = typeof result === 'string' ? result : result.text || '';
         return { success: true, text: text.trim() };
     } catch (error) {
         console.error('[Speech] Transcription error:', error);

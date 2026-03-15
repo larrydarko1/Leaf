@@ -70,7 +70,7 @@ export function useDrawingInteraction(
     // Keyboard modifier state
     const spaceHeld = ref(false);
     const shiftHeld = ref(false);
-    const effectiveTool = computed<ToolType>(() => spaceHeld.value ? 'hand' : currentTool.value);
+    const effectiveTool = computed<ToolType>(() => (spaceHeld.value ? 'hand' : currentTool.value));
 
     // ================= Pointer Events =================
 
@@ -113,7 +113,7 @@ export function useDrawingInteraction(
         if (tool === 'select') {
             const handleHit = hitTestHandle(worldPt.x, worldPt.y, zoom.value);
             if (handleHit) {
-                const el = elements.value.find(e => e.id === handleHit.elementId)!;
+                const el = elements.value.find((e) => e.id === handleHit.elementId)!;
                 dragAction.value = 'resize';
                 dragHandle.value = handleHit.handle;
                 dragOriginal.value = { x: el.x, y: el.y, width: el.width, height: el.height };
@@ -141,7 +141,7 @@ export function useDrawingInteraction(
             const hit = hitTestElement(worldPt.x, worldPt.y, zoom.value);
             if (hit) {
                 erasedIds.value.push(hit.id);
-                elements.value = elements.value.filter(el => el.id !== hit.id);
+                elements.value = elements.value.filter((el) => el.id !== hit.id);
                 if (selectedId.value === hit.id) selectedId.value = null;
                 renderScene();
             }
@@ -254,7 +254,7 @@ export function useDrawingInteraction(
                 const hit = hitTestElement(worldPt.x, worldPt.y, zoom.value);
                 if (hit && !erasedIds.value.includes(hit.id)) {
                     erasedIds.value.push(hit.id);
-                    elements.value = elements.value.filter(el => el.id !== hit.id);
+                    elements.value = elements.value.filter((el) => el.id !== hit.id);
                     if (selectedId.value === hit.id) selectedId.value = null;
                     renderScene();
                 }
@@ -276,8 +276,14 @@ export function useDrawingInteraction(
                 if (!creatingElement.value) break;
                 const el = creatingElement.value;
                 if (!['line', 'arrow'].includes(el.type)) {
-                    if (el.width < 0) { el.x += el.width; el.width = -el.width; }
-                    if (el.height < 0) { el.y += el.height; el.height = -el.height; }
+                    if (el.width < 0) {
+                        el.x += el.width;
+                        el.width = -el.width;
+                    }
+                    if (el.height < 0) {
+                        el.y += el.height;
+                        el.height = -el.height;
+                    }
                 }
                 if (Math.abs(el.width) > MIN_ELEMENT_SIZE || Math.abs(el.height) > MIN_ELEMENT_SIZE) {
                     elements.value.push(el);
@@ -304,10 +310,15 @@ export function useDrawingInteraction(
                     break;
                 }
                 const pts = creatingElement.value.points;
-                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                let minX = Infinity,
+                    minY = Infinity,
+                    maxX = -Infinity,
+                    maxY = -Infinity;
                 for (const p of pts) {
-                    minX = Math.min(minX, p.x); minY = Math.min(minY, p.y);
-                    maxX = Math.max(maxX, p.x); maxY = Math.max(maxY, p.y);
+                    minX = Math.min(minX, p.x);
+                    minY = Math.min(minY, p.y);
+                    maxX = Math.max(maxX, p.x);
+                    maxY = Math.max(maxY, p.y);
                 }
                 creatingElement.value.width = maxX - minX;
                 creatingElement.value.height = maxY - minY;
@@ -347,8 +358,10 @@ export function useDrawingInteraction(
             if (handle === 'start') {
                 const endX = orig.x + orig.width;
                 const endY = orig.y + orig.height;
-                el.x = wx; el.y = wy;
-                el.width = endX - wx; el.height = endY - wy;
+                el.x = wx;
+                el.y = wy;
+                el.width = endX - wx;
+                el.height = endY - wy;
             } else {
                 el.width = wx - el.x;
                 el.height = wy - el.y;
@@ -356,22 +369,30 @@ export function useDrawingInteraction(
             return;
         }
 
-        const ox = orig.x, oy = orig.y, ow = orig.width, oh = orig.height;
+        const ox = orig.x,
+            oy = orig.y,
+            ow = orig.width,
+            oh = orig.height;
         switch (handle) {
             case 'nw':
-                el.x = wx; el.y = wy;
-                el.width = ox + ow - wx; el.height = oy + oh - wy;
+                el.x = wx;
+                el.y = wy;
+                el.width = ox + ow - wx;
+                el.height = oy + oh - wy;
                 break;
             case 'ne':
                 el.y = wy;
-                el.width = wx - ox; el.height = oy + oh - wy;
+                el.width = wx - ox;
+                el.height = oy + oh - wy;
                 break;
             case 'sw':
                 el.x = wx;
-                el.width = ox + ow - wx; el.height = wy - oy;
+                el.width = ox + ow - wx;
+                el.height = wy - oy;
                 break;
             case 'se':
-                el.width = wx - ox; el.height = wy - oy;
+                el.width = wx - ox;
+                el.height = wy - oy;
                 break;
         }
     }
@@ -429,12 +450,16 @@ export function useDrawingInteraction(
             return;
         }
 
-        if (e.key === 'Shift') { shiftHeld.value = true; return; }
+        if (e.key === 'Shift') {
+            shiftHeld.value = true;
+            return;
+        }
 
         if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
             e.preventDefault();
             e.stopPropagation();
-            if (e.shiftKey) redo(); else undo();
+            if (e.shiftKey) redo();
+            else undo();
             return;
         }
 
@@ -479,17 +504,27 @@ export function useDrawingInteraction(
 
         if (!e.metaKey && !e.ctrlKey && !e.altKey) {
             const toolMap: Record<string, ToolType> = {
-                v: 'select', '1': 'select',
-                h: 'hand', '2': 'hand',
-                r: 'rectangle', '3': 'rectangle',
-                d: 'diamond', '4': 'diamond',
-                o: 'ellipse', '5': 'ellipse',
+                v: 'select',
+                '1': 'select',
+                h: 'hand',
+                '2': 'hand',
+                r: 'rectangle',
+                '3': 'rectangle',
+                d: 'diamond',
+                '4': 'diamond',
+                o: 'ellipse',
+                '5': 'ellipse',
                 t: 'triangle',
-                a: 'arrow', '6': 'arrow',
-                l: 'line', '7': 'line',
-                p: 'freedraw', '8': 'freedraw',
-                x: 'text', '9': 'text',
-                e: 'eraser', '0': 'eraser',
+                a: 'arrow',
+                '6': 'arrow',
+                l: 'line',
+                '7': 'line',
+                p: 'freedraw',
+                '8': 'freedraw',
+                x: 'text',
+                '9': 'text',
+                e: 'eraser',
+                '0': 'eraser',
             };
             const tool = toolMap[e.key.toLowerCase()];
             if (tool) {

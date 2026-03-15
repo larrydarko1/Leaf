@@ -23,24 +23,44 @@ defineEmits<{
 <template>
     <div class="ai-input-area">
         <div v-if="agentMode" class="ai-agent-indicator">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="16 18 22 12 16 6"/>
-                <polyline points="8 6 2 12 8 18"/>
+            <svg
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+                <polyline points="16 18 22 12 16 6" />
+                <polyline points="8 6 2 12 8 18" />
             </svg>
             <span v-if="activeFile" class="ai-agent-file-name">Agent · {{ activeFile.name }}</span>
             <span v-else class="ai-agent-no-file">Agent · No file open</span>
         </div>
         <div v-if="includeNoteContext && activeFile" class="ai-context-hint">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/>
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z" />
             </svg>
             {{ activeFile.name }}
         </div>
         <div class="ai-input-row">
             <label class="ai-context-toggle" title="Include current note as context">
-                <input :checked="includeNoteContext" type="checkbox" :disabled="!activeFile" @change="$emit('update:includeNoteContext', ($event.target as HTMLInputElement).checked)" />
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" :class="{ 'ai-context-active': includeNoteContext && activeFile }">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/>
+                <input
+                    :checked="includeNoteContext"
+                    type="checkbox"
+                    :disabled="!activeFile"
+                    @change="$emit('update:includeNoteContext', ($event.target as HTMLInputElement).checked)"
+                />
+                <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    :class="{ 'ai-context-active': includeNoteContext && activeFile }"
+                >
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z" />
                 </svg>
             </label>
             <textarea
@@ -53,24 +73,31 @@ defineEmits<{
                 @input="$emit('update:inputMessage', ($event.target as HTMLTextAreaElement).value)"
                 @keydown.enter.exact.prevent="$emit('send')"
             />
-            <button 
-                v-if="isStreaming"
-                class="ai-btn-send ai-btn-stop" 
-                title="Stop generating" 
-                @click="$emit('stop')"
-            >
+            <button v-if="isStreaming" class="ai-btn-send ai-btn-stop" title="Stop generating" @click="$emit('stop')">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--base1)" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="6" y="6" width="12" height="12" rx="2" ry="2"/>
+                    <rect x="6" y="6" width="12" height="12" rx="2" ry="2" />
                 </svg>
             </button>
-            <button 
+            <button
                 v-else
-                class="ai-btn-send" 
-                :disabled="!inputMessage.trim() || !isReady || isStreaming" 
+                class="ai-btn-send"
+                :disabled="!inputMessage.trim() || !isReady || isStreaming"
                 title="Send message"
                 @click="$emit('send')"
             >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M10 14L13 21L20 4L3 11L6.5 12.5" stroke="var(--base1)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g id="SVGRepo_iconCarrier">
+                        <path
+                            d="M10 14L13 21L20 4L3 11L6.5 12.5"
+                            stroke="var(--base1)"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        ></path>
+                    </g>
+                </svg>
             </button>
         </div>
     </div>
@@ -91,8 +118,13 @@ defineEmits<{
     color: var(--accent-color);
     padding: 0 0.25rem 0.4rem;
     flex-wrap: wrap;
-    svg { flex-shrink: 0; }
-    span { font-weight: 600; white-space: nowrap; }
+    svg {
+        flex-shrink: 0;
+    }
+    span {
+        font-weight: 600;
+        white-space: nowrap;
+    }
 }
 
 .ai-context-hint {
@@ -116,7 +148,9 @@ defineEmits<{
     border-radius: 12px;
     padding: 0.2rem 0.2rem 0.2rem 0.35rem;
     transition: border-color 0.2s;
-    &:focus-within { border-color: var(--accent-color); }
+    &:focus-within {
+        border-color: var(--accent-color);
+    }
 }
 
 .ai-context-toggle {
@@ -128,12 +162,21 @@ defineEmits<{
     color: var(--text2);
     flex-shrink: 0;
     border-radius: 6px;
-    transition: color 0.15s, background 0.15s;
-    input { display: none; }
-    &:hover { color: var(--text1); background: var(--bg-hover); }
+    transition:
+        color 0.15s,
+        background 0.15s;
+    input {
+        display: none;
+    }
+    &:hover {
+        color: var(--text1);
+        background: var(--bg-hover);
+    }
 }
 
-.ai-context-active { color: var(--accent-color) !important; }
+.ai-context-active {
+    color: var(--accent-color) !important;
+}
 
 .ai-input {
     flex: 1;
@@ -148,9 +191,16 @@ defineEmits<{
     resize: none;
     overflow-y: auto;
     max-height: 120px;
-    &::placeholder { color: var(--text2); }
-    &:focus { outline: none; }
-    &:disabled { opacity: 0.5; cursor: not-allowed; }
+    &::placeholder {
+        color: var(--text2);
+    }
+    &:focus {
+        outline: none;
+    }
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
 }
 
 .ai-btn-send {
@@ -165,13 +215,25 @@ defineEmits<{
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    transition: opacity 0.2s, transform 0.15s, color 0.15s;
-    &:hover:not(:disabled) { opacity: 0.85; transform: scale(1.05); }
-    &:disabled { opacity: 0.3; cursor: not-allowed; }
+    transition:
+        opacity 0.2s,
+        transform 0.15s,
+        color 0.15s;
+    &:hover:not(:disabled) {
+        opacity: 0.85;
+        transform: scale(1.05);
+    }
+    &:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
 
     &.ai-btn-stop {
         background: var(--danger-color, #e74c3c);
-        &:hover { opacity: 0.85; transform: scale(1.05); }
+        &:hover {
+            opacity: 0.85;
+            transform: scale(1.05);
+        }
     }
 }
 </style>

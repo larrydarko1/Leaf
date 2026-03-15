@@ -9,7 +9,7 @@ export function useAIModel() {
         isGenerating: false,
         modelsDir: '',
         contextTokens: 0,
-        contextSize: 0
+        contextSize: 0,
     });
 
     const availableModels = ref<AiModelInfo[]>([]);
@@ -21,15 +21,18 @@ export function useAIModel() {
     const showDropdown = ref(false);
     const dropdownRef = ref<HTMLElement | null>(null);
     const dropdownPosition = ref<{ top: string; left: string; minWidth: string }>({
-        top: '0px', left: '0px', minWidth: '0px'
+        top: '0px',
+        left: '0px',
+        minWidth: '0px',
     });
 
     const previousModelMatch = computed(() => {
         if (!lastUsedModelName.value || status.value.isModelLoaded) return null;
-        return availableModels.value.find(m =>
-            m.name === lastUsedModelName.value ||
-            m.path.endsWith(lastUsedModelName.value!)
-        ) || null;
+        return (
+            availableModels.value.find(
+                (m) => m.name === lastUsedModelName.value || m.path.endsWith(lastUsedModelName.value!),
+            ) || null
+        );
     });
 
     const isReady = computed(() => status.value.isModelLoaded);
@@ -37,7 +40,7 @@ export function useAIModel() {
 
     const selectedModelLabel = computed(() => {
         if (!selectedModelPath.value) return 'Select a model...';
-        const model = availableModels.value.find(m => m.path === selectedModelPath.value);
+        const model = availableModels.value.find((m) => m.path === selectedModelPath.value);
         return model ? truncate(model.name, 30) : 'Select a model...';
     });
 
@@ -46,14 +49,17 @@ export function useAIModel() {
     }
 
     function toggleDropdown() {
-        if (showDropdown.value) { showDropdown.value = false; return; }
+        if (showDropdown.value) {
+            showDropdown.value = false;
+            return;
+        }
         if (dropdownRef.value) {
             const rect = dropdownRef.value.getBoundingClientRect();
             const menuWidth = Math.min(rect.width + 60, window.innerWidth - rect.left - 12);
             dropdownPosition.value = {
                 top: `${rect.bottom + 4}px`,
                 left: `${rect.left}px`,
-                minWidth: `${menuWidth}px`
+                minWidth: `${menuWidth}px`,
             };
         }
         showDropdown.value = true;
@@ -127,15 +133,15 @@ export function useAIModel() {
      */
     async function loadPreviousModel(
         chatHistory: { role: string; content: string }[],
-        hasActiveConversation: boolean
+        hasActiveConversation: boolean,
     ): Promise<{ success: boolean; error?: string }> {
         const result = await loadModel(previousModelMatch.value?.path ?? '');
         if (result.success && hasActiveConversation && chatHistory.length > 0) {
             try {
                 await window.electronAPI.aiRestoreChatHistory(
                     chatHistory
-                        .filter(m => m.role !== 'system')
-                        .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }))
+                        .filter((m) => m.role !== 'system')
+                        .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
                 );
             } catch (err) {
                 console.error('Failed to restore chat history:', err);

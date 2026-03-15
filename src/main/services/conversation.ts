@@ -52,7 +52,7 @@ function generateId(): string {
 }
 
 function deriveTitle(messages: Message[]): string {
-    const firstUserMsg = messages.find(m => m.role === 'user');
+    const firstUserMsg = messages.find((m) => m.role === 'user');
     if (!firstUserMsg) return 'New Conversation';
     const text = firstUserMsg.content.trim();
     if (text.length <= 60) return text;
@@ -67,7 +67,9 @@ function getConversationPath(id: string): string {
     return filePath;
 }
 
-export async function createConversation(modelName: string): Promise<{ success: boolean; conversation?: Conversation; error?: string }> {
+export async function createConversation(
+    modelName: string,
+): Promise<{ success: boolean; conversation?: Conversation; error?: string }> {
     try {
         const now = new Date().toISOString();
         const conversation: Conversation = {
@@ -80,10 +82,7 @@ export async function createConversation(modelName: string): Promise<{ success: 
             tokenCount: 0,
         };
 
-        await writeFileAtomic(
-            getConversationPath(conversation.id),
-            JSON.stringify(conversation, null, 2)
-        );
+        await writeFileAtomic(getConversationPath(conversation.id), JSON.stringify(conversation, null, 2));
 
         return { success: true, conversation };
     } catch (error) {
@@ -99,10 +98,7 @@ export async function saveConversation(conversation: Conversation): Promise<{ su
             conversation.title = deriveTitle(conversation.messages);
         }
 
-        await writeFileAtomic(
-            getConversationPath(conversation.id),
-            JSON.stringify(conversation, null, 2)
-        );
+        await writeFileAtomic(getConversationPath(conversation.id), JSON.stringify(conversation, null, 2));
 
         return { success: true };
     } catch (error) {
@@ -111,7 +107,10 @@ export async function saveConversation(conversation: Conversation): Promise<{ su
     }
 }
 
-export async function addMessage(conversationId: string, message: Message): Promise<{ success: boolean; error?: string }> {
+export async function addMessage(
+    conversationId: string,
+    message: Message,
+): Promise<{ success: boolean; error?: string }> {
     try {
         const conversation = await getConversation(conversationId);
         if (!conversation) {
@@ -128,7 +127,10 @@ export async function addMessage(conversationId: string, message: Message): Prom
     }
 }
 
-export async function updateLastMessage(conversationId: string, content: string): Promise<{ success: boolean; error?: string }> {
+export async function updateLastMessage(
+    conversationId: string,
+    content: string,
+): Promise<{ success: boolean; error?: string }> {
     try {
         const conversation = await getConversation(conversationId);
         if (!conversation) {
@@ -184,7 +186,9 @@ export async function listConversations(): Promise<{ success: boolean; conversat
             }
         }
 
-        conversations.sort((a, b) => new Date(b.updatedAt as string).getTime() - new Date(a.updatedAt as string).getTime());
+        conversations.sort(
+            (a, b) => new Date(b.updatedAt as string).getTime() - new Date(a.updatedAt as string).getTime(),
+        );
 
         return { success: true, conversations };
     } catch (error) {
@@ -193,7 +197,9 @@ export async function listConversations(): Promise<{ success: boolean; conversat
     }
 }
 
-export async function loadConversation(id: string): Promise<{ success: boolean; conversation?: Conversation; error?: string }> {
+export async function loadConversation(
+    id: string,
+): Promise<{ success: boolean; conversation?: Conversation; error?: string }> {
     try {
         const conversation = await getConversation(id);
         if (!conversation) {
@@ -243,17 +249,20 @@ export function register(ipc: IpcMain): void {
     });
 
     ipc.handle('conversations:save', async (_event, conversation: Conversation) => {
-        if (typeof conversation !== 'object' || conversation === null) return { success: false, error: 'Invalid conversation' };
+        if (typeof conversation !== 'object' || conversation === null)
+            return { success: false, error: 'Invalid conversation' };
         return saveConversation(conversation);
     });
 
     ipc.handle('conversations:addMessage', async (_event, conversationId: string, message: Message) => {
-        if (typeof conversationId !== 'string' || typeof message !== 'object') return { success: false, error: 'Invalid arguments' };
+        if (typeof conversationId !== 'string' || typeof message !== 'object')
+            return { success: false, error: 'Invalid arguments' };
         return addMessage(conversationId, message);
     });
 
     ipc.handle('conversations:updateLastMessage', async (_event, conversationId: string, content: string) => {
-        if (typeof conversationId !== 'string' || typeof content !== 'string') return { success: false, error: 'Invalid arguments' };
+        if (typeof conversationId !== 'string' || typeof content !== 'string')
+            return { success: false, error: 'Invalid arguments' };
         return updateLastMessage(conversationId, content);
     });
 
@@ -263,7 +272,8 @@ export function register(ipc: IpcMain): void {
     });
 
     ipc.handle('conversations:rename', async (_event, id: string, newTitle: string) => {
-        if (typeof id !== 'string' || typeof newTitle !== 'string') return { success: false, error: 'Invalid arguments' };
+        if (typeof id !== 'string' || typeof newTitle !== 'string')
+            return { success: false, error: 'Invalid arguments' };
         return renameConversation(id, newTitle);
     });
 }

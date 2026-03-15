@@ -11,7 +11,6 @@ export function useDrawingHistory(
     scheduleAutoSave: () => void,
     renderScene: () => void,
 ) {
-
     // ================= History =================
 
     function saveToHistory() {
@@ -88,7 +87,7 @@ export function useDrawingHistory(
 
     function deleteSelected() {
         if (!selectedId.value) return;
-        elements.value = elements.value.filter(el => el.id !== selectedId.value);
+        elements.value = elements.value.filter((el) => el.id !== selectedId.value);
         selectedId.value = null;
         saveToHistory();
         scheduleAutoSave();

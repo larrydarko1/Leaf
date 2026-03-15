@@ -5,10 +5,7 @@
 import { ref, computed, onUnmounted } from 'vue';
 import { convertWebMToWav, arrayBufferToBase64 } from '../utils/audio';
 
-export function useAudioRecorder(
-    getCurrentFolder: () => string | null,
-    onSaved: (filePath: string) => void,
-) {
+export function useAudioRecorder(getCurrentFolder: () => string | null, onSaved: (filePath: string) => void) {
     const isRecording = ref(false);
     const hasPermission = ref(true);
     const duration = ref(0);
@@ -19,7 +16,9 @@ export function useAudioRecorder(
     let durationInterval: number | null = null;
 
     const formattedDuration = computed(() => {
-        const m = Math.floor(duration.value / 60).toString().padStart(2, '0');
+        const m = Math.floor(duration.value / 60)
+            .toString()
+            .padStart(2, '0');
         const s = (duration.value % 60).toString().padStart(2, '0');
         return `${m}:${s}`;
     });
@@ -49,15 +48,22 @@ export function useAudioRecorder(
     function stop() {
         if (mediaRecorder?.state !== 'inactive') mediaRecorder?.stop();
 
-        stream?.getTracks().forEach(t => t.stop());
+        stream?.getTracks().forEach((t) => t.stop());
         stream = null;
 
-        if (durationInterval) { clearInterval(durationInterval); durationInterval = null; }
+        if (durationInterval) {
+            clearInterval(durationInterval);
+            durationInterval = null;
+        }
         isRecording.value = false;
     }
 
     async function toggle() {
-        if (isRecording.value) { stop(); } else { await start(); }
+        if (isRecording.value) {
+            stop();
+        } else {
+            await start();
+        }
     }
 
     async function save() {
@@ -79,7 +85,9 @@ export function useAudioRecorder(
     }
 
     // Release the microphone if the component unmounts mid-recording
-    onUnmounted(() => { if (isRecording.value) stop(); });
+    onUnmounted(() => {
+        if (isRecording.value) stop();
+    });
 
     return { isRecording, hasPermission, formattedDuration, toggle };
 }

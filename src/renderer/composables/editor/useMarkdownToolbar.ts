@@ -8,7 +8,7 @@ export function useMarkdownToolbar(
     isMarkdownFile: () => boolean,
     content: Ref<string>,
     textareaRef: Ref<HTMLTextAreaElement | null>,
-    onContentChange: () => void
+    onContentChange: () => void,
 ) {
     /**
      * Apply markdown formatting to the selected text in the textarea.
@@ -54,7 +54,10 @@ export function useMarkdownToolbar(
                 break;
             case 'ul': {
                 if (selected) {
-                    replacement = selected.split('\n').map(line => `- ${line}`).join('\n');
+                    replacement = selected
+                        .split('\n')
+                        .map((line) => `- ${line}`)
+                        .join('\n');
                 } else {
                     replacement = '- ';
                 }
@@ -63,7 +66,10 @@ export function useMarkdownToolbar(
             }
             case 'ol': {
                 if (selected) {
-                    replacement = selected.split('\n').map((line, i) => `${i + 1}. ${line}`).join('\n');
+                    replacement = selected
+                        .split('\n')
+                        .map((line, i) => `${i + 1}. ${line}`)
+                        .join('\n');
                 } else {
                     replacement = '1. ';
                 }
@@ -72,7 +78,10 @@ export function useMarkdownToolbar(
             }
             case 'checkbox': {
                 if (selected) {
-                    replacement = selected.split('\n').map(line => `- [ ] ${line}`).join('\n');
+                    replacement = selected
+                        .split('\n')
+                        .map((line) => `- [ ] ${line}`)
+                        .join('\n');
                 } else {
                     replacement = '- [ ] ';
                 }
@@ -81,7 +90,10 @@ export function useMarkdownToolbar(
             }
             case 'quote': {
                 if (selected) {
-                    replacement = selected.split('\n').map(line => `> ${line}`).join('\n');
+                    replacement = selected
+                        .split('\n')
+                        .map((line) => `> ${line}`)
+                        .join('\n');
                 } else {
                     replacement = '> ';
                 }

@@ -1,10 +1,7 @@
 import { ref } from 'vue';
 import { isImageFile as checkImage, isVideoFile as checkVideo, isAudioFile as checkAudio } from '../../utils/fileTypes';
 
-export function useEmbedResolver(
-    getFile: () => { path: string } | null,
-    getWorkspacePath: () => string | null
-) {
+export function useEmbedResolver(getFile: () => { path: string } | null, getWorkspacePath: () => string | null) {
     const embedCache = ref<Map<string, string>>(new Map());
     const embedCacheVersion = ref(0);
 

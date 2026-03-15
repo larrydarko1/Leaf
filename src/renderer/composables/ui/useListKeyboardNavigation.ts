@@ -23,16 +23,14 @@ export function useListKeyboardNavigation<T>(
          * Default: ignores INPUT, TEXTAREA, and contentEditable elements.
          */
         ignoreWhen?: (target: HTMLElement) => boolean;
-    } = {}
+    } = {},
 ) {
     const {
         wrap = true,
         getExternalIndex,
         scrollSelector,
         ignoreWhen = (target) =>
-            target.tagName === 'INPUT' ||
-            target.tagName === 'TEXTAREA' ||
-            target.isContentEditable,
+            target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable,
     } = options;
 
     const selectedIndex = ref(-1);

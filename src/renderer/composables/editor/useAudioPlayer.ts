@@ -109,7 +109,10 @@ export function useAudioPlayer() {
     }
 
     function reset() {
-        if (audioRafId) { cancelAnimationFrame(audioRafId); audioRafId = null; }
+        if (audioRafId) {
+            cancelAnimationFrame(audioRafId);
+            audioRafId = null;
+        }
         audioError.value = false;
         audioPlaying.value = false;
         audioCurrentTime.value = 0;
@@ -118,9 +121,23 @@ export function useAudioPlayer() {
     }
 
     return {
-        audioUrl, audioRef, audioError, isLoadingAudio, audioPlaying,
-        audioDuration, audioCurrentTime, audioVolume, audioProgressPercent,
-        onAudioError, onAudioLoaded, onAudioEnded, toggleAudioPlayback,
-        seekAudio, onVolumeChange, toggleMute, loadAudio, reset,
+        audioUrl,
+        audioRef,
+        audioError,
+        isLoadingAudio,
+        audioPlaying,
+        audioDuration,
+        audioCurrentTime,
+        audioVolume,
+        audioProgressPercent,
+        onAudioError,
+        onAudioLoaded,
+        onAudioEnded,
+        toggleAudioPlayback,
+        seekAudio,
+        onVolumeChange,
+        toggleMute,
+        loadAudio,
+        reset,
     };
 }

@@ -35,9 +35,18 @@ function formatNumber(n: number): string {
         <div class="ai-hf-header">
             <span class="ai-hf-title">Download Models</span>
             <button class="ai-btn-icon ai-btn-tiny" title="Close" @click="$emit('close')">
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
+                <svg
+                    width="9"
+                    height="9"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
             </button>
         </div>
@@ -50,18 +59,36 @@ function formatNumber(n: number): string {
                 @keydown.enter.prevent="$emit('search')"
             />
             <button class="ai-btn-icon" :disabled="hfIsSearching" title="Search" @click="$emit('search')">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8"/>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                <svg
+                    width="10"
+                    height="10"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
             </button>
         </div>
 
         <!-- Back button when viewing files -->
         <button v-if="hfSelectedRepo" class="ai-hf-back-btn" @click="$emit('back')">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="19" y1="12" x2="5" y2="12"/>
-                <polyline points="12 19 5 12 12 5"/>
+            <svg
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+                <line x1="19" y1="12" x2="5" y2="12" />
+                <polyline points="12 19 5 12 12 5" />
             </svg>
             Back to results
         </button>
@@ -76,30 +103,68 @@ function formatNumber(n: number): string {
                     <span class="ai-hf-repo-title">{{ hfSelectedRepo }}</span>
                     <div v-if="hfModelInfo" class="ai-hf-model-meta">
                         <span v-if="hfModelInfo.architecture" class="ai-hf-meta-tag" title="Model Architecture">
-                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><path d="M16 14a4 4 0 0 0-8 0v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4z"/></svg>
+                            <svg
+                                width="9"
+                                height="9"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z" />
+                                <path d="M16 14a4 4 0 0 0-8 0v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4z" />
+                            </svg>
                             {{ hfModelInfo.architecture }}
                         </span>
                         <span v-if="hfModelInfo.contextLength" class="ai-hf-meta-tag" title="Context Window">
-                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+                            <svg
+                                width="9"
+                                height="9"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <polyline points="4 7 4 4 20 4 20 7" />
+                                <line x1="9" y1="20" x2="15" y2="20" />
+                                <line x1="12" y1="4" x2="12" y2="20" />
+                            </svg>
                             {{ formatNumber(hfModelInfo.contextLength) }} tokens
                         </span>
-                        <span v-if="hfModelInfo.totalParamSize" class="ai-hf-meta-tag" title="Total Parameter Size (unquantized)">
-                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73L13 2.27a2 2 0 0 0-2 0L4 6.27A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                        <span
+                            v-if="hfModelInfo.totalParamSize"
+                            class="ai-hf-meta-tag"
+                            title="Total Parameter Size (unquantized)"
+                        >
+                            <svg
+                                width="9"
+                                height="9"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path
+                                    d="M21 16V8a2 2 0 0 0-1-1.73L13 2.27a2 2 0 0 0-2 0L4 6.27A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+                                />
+                            </svg>
                             {{ hfModelInfo.totalParamSizeFormatted }} params
                         </span>
                     </div>
                 </div>
-                <div 
-                    v-for="file in hfRepoFiles" 
-                    :key="file.name" 
-                    class="ai-hf-file-item"
-                >
+                <div v-for="file in hfRepoFiles" :key="file.name" class="ai-hf-file-item">
                     <div class="ai-hf-file-info">
                         <div class="ai-hf-file-top-row">
                             <span class="ai-hf-file-name">{{ file.name }}</span>
-                            <span 
-                                v-if="file.tier" 
-                                class="ai-hf-tier-badge" 
+                            <span
+                                v-if="file.tier"
+                                class="ai-hf-tier-badge"
                                 :class="'ai-hf-tier-' + file.tier.color"
                                 :title="file.tier.description"
                             >
@@ -108,43 +173,100 @@ function formatNumber(n: number): string {
                         </div>
                         <div class="ai-hf-file-details">
                             <span class="ai-hf-file-size" title="Download size">{{ file.sizeFormatted }}</span>
-                            <span v-if="file.quantType" class="ai-hf-quant-badge" title="Quantization type">{{ file.quantType }}</span>
-                            <span v-if="file.estimatedRamFormatted" class="ai-hf-ram-estimate" title="Estimated RAM needed for inference">
+                            <span v-if="file.quantType" class="ai-hf-quant-badge" title="Quantization type">{{
+                                file.quantType
+                            }}</span>
+                            <span
+                                v-if="file.estimatedRamFormatted"
+                                class="ai-hf-ram-estimate"
+                                title="Estimated RAM needed for inference"
+                            >
                                 RAM: ~{{ file.estimatedRamFormatted }}
                             </span>
-                            <span v-if="file.isSharded" class="ai-hf-shard-info" title="Model is split into multiple files">
+                            <span
+                                v-if="file.isSharded"
+                                class="ai-hf-shard-info"
+                                title="Model is split into multiple files"
+                            >
                                 {{ file.shardCount }} parts
                             </span>
                         </div>
                     </div>
                     <div class="ai-hf-file-actions">
                         <template v-if="hfActiveDownloads.has(file.name)">
-                            <div v-if="hfDownloadProgress && hfDownloadProgress.fileName === file.name" class="ai-hf-progress">
+                            <div
+                                v-if="hfDownloadProgress && hfDownloadProgress.fileName === file.name"
+                                class="ai-hf-progress"
+                            >
                                 <div class="ai-hf-progress-bar">
-                                    <div class="ai-hf-progress-fill" :style="{ width: hfDownloadProgress.percent + '%' }"></div>
+                                    <div
+                                        class="ai-hf-progress-fill"
+                                        :style="{ width: hfDownloadProgress.percent + '%' }"
+                                    ></div>
                                 </div>
                                 <span class="ai-hf-progress-text">{{ hfDownloadProgress.percent }}%</span>
                             </div>
-                            <button class="ai-btn-icon ai-btn-tiny ai-btn-danger" title="Cancel" @click="$emit('cancel-download', file.name)">
-                                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="18" y1="6" x2="6" y2="18"/>
-                                    <line x1="6" y1="6" x2="18" y2="18"/>
+                            <button
+                                class="ai-btn-icon ai-btn-tiny ai-btn-danger"
+                                title="Cancel"
+                                @click="$emit('cancel-download', file.name)"
+                            >
+                                <svg
+                                    width="9"
+                                    height="9"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
                                 </svg>
                             </button>
                         </template>
-                        <button v-else-if="file.isSharded" class="ai-hf-download-btn ai-hf-download-sharded" title="Download all parts to ~/leaf-models/" @click="$emit('download', file)">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                <polyline points="7 10 12 15 17 10"/>
-                                <line x1="12" y1="15" x2="12" y2="3"/>
+                        <button
+                            v-else-if="file.isSharded"
+                            class="ai-hf-download-btn ai-hf-download-sharded"
+                            title="Download all parts to ~/leaf-models/"
+                            @click="$emit('download', file)"
+                        >
+                            <svg
+                                width="10"
+                                height="10"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="7 10 12 15 17 10" />
+                                <line x1="12" y1="15" x2="12" y2="3" />
                             </svg>
                             <span class="ai-hf-download-label">All</span>
                         </button>
-                        <button v-else class="ai-hf-download-btn" title="Download to ~/leaf-models/" @click="$emit('download', file)">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                <polyline points="7 10 12 15 17 10"/>
-                                <line x1="12" y1="15" x2="12" y2="3"/>
+                        <button
+                            v-else
+                            class="ai-hf-download-btn"
+                            title="Download to ~/leaf-models/"
+                            @click="$emit('download', file)"
+                        >
+                            <svg
+                                width="10"
+                                height="10"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="7 10 12 15 17 10" />
+                                <line x1="12" y1="15" x2="12" y2="3" />
                             </svg>
                         </button>
                     </div>
@@ -158,9 +280,9 @@ function formatNumber(n: number): string {
 
             <!-- Search results -->
             <template v-else-if="hfSearchResults.length > 0">
-                <div 
-                    v-for="repo in hfSearchResults" 
-                    :key="repo.id" 
+                <div
+                    v-for="repo in hfSearchResults"
+                    :key="repo.id"
                     class="ai-hf-result-item"
                     @click="$emit('select-repo', repo.id)"
                 >
@@ -171,16 +293,23 @@ function formatNumber(n: number): string {
                             <span title="Likes">♥ {{ formatNumber(repo.likes) }}</span>
                         </span>
                     </div>
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="9 18 15 12 9 6"/>
+                    <svg
+                        width="10"
+                        height="10"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <polyline points="9 18 15 12 9 6" />
                     </svg>
                 </div>
             </template>
 
             <!-- Empty state -->
-            <div v-else-if="!hfIsSearching" class="ai-hf-empty">
-                Search for GGUF models on Hugging Face
-            </div>
+            <div v-else-if="!hfIsSearching" class="ai-hf-empty">Search for GGUF models on Hugging Face</div>
         </div>
     </div>
 </template>
@@ -219,7 +348,9 @@ function formatNumber(n: number): string {
     border: 1px solid var(--text3);
     border-radius: 8px;
     padding: 0.15rem 0.15rem 0.15rem 0.5rem;
-    &:focus-within { border-color: var(--accent-color); }
+    &:focus-within {
+        border-color: var(--accent-color);
+    }
 }
 
 .ai-hf-search-input {
@@ -232,7 +363,9 @@ function formatNumber(n: number): string {
     font-size: 0.75rem;
     font-family: inherit;
     outline: none;
-    &::placeholder { color: var(--text2); }
+    &::placeholder {
+        color: var(--text2);
+    }
 }
 
 .ai-hf-back-btn {
@@ -248,7 +381,10 @@ function formatNumber(n: number): string {
     cursor: pointer;
     border-radius: 6px;
     transition: all 0.15s;
-    &:hover { color: var(--text1); background: var(--bg-hover); }
+    &:hover {
+        color: var(--text1);
+        background: var(--bg-hover);
+    }
 }
 
 .ai-hf-results {
@@ -257,7 +393,8 @@ function formatNumber(n: number): string {
     padding: 0 0.5rem 0.5rem;
 }
 
-.ai-hf-loading, .ai-hf-empty {
+.ai-hf-loading,
+.ai-hf-empty {
     font-size: 0.75rem;
     color: var(--text2);
     text-align: center;
@@ -272,7 +409,9 @@ function formatNumber(n: number): string {
     border-radius: 8px;
     cursor: pointer;
     transition: background 0.12s;
-    &:hover { background: var(--bg-hover); }
+    &:hover {
+        background: var(--bg-hover);
+    }
 }
 
 .ai-hf-result-info {
@@ -325,7 +464,10 @@ function formatNumber(n: number): string {
             display: inline-flex;
             align-items: center;
             gap: 0.2rem;
-            svg { flex-shrink: 0; opacity: 0.7; }
+            svg {
+                flex-shrink: 0;
+                opacity: 0.7;
+            }
         }
     }
 }
@@ -337,7 +479,9 @@ function formatNumber(n: number): string {
     padding: 0.45rem 0.55rem;
     border-radius: 8px;
     transition: background 0.12s;
-    &:hover { background: var(--bg-hover); }
+    &:hover {
+        background: var(--bg-hover);
+    }
 }
 
 .ai-hf-file-info {
@@ -370,10 +514,22 @@ function formatNumber(n: number): string {
     white-space: nowrap;
     flex-shrink: 0;
 
-    &.ai-hf-tier-green { background: rgba(40, 167, 69, 0.15); color: #28a745; }
-    &.ai-hf-tier-blue { background: rgba(0, 123, 255, 0.15); color: #007bff; }
-    &.ai-hf-tier-orange { background: rgba(255, 165, 0, 0.15); color: #e69500; }
-    &.ai-hf-tier-red { background: rgba(220, 53, 69, 0.15); color: #dc3545; }
+    &.ai-hf-tier-green {
+        background: rgba(40, 167, 69, 0.15);
+        color: #28a745;
+    }
+    &.ai-hf-tier-blue {
+        background: rgba(0, 123, 255, 0.15);
+        color: #007bff;
+    }
+    &.ai-hf-tier-orange {
+        background: rgba(255, 165, 0, 0.15);
+        color: #e69500;
+    }
+    &.ai-hf-tier-red {
+        background: rgba(220, 53, 69, 0.15);
+        color: #dc3545;
+    }
 }
 
 .ai-hf-file-details {
@@ -383,7 +539,10 @@ function formatNumber(n: number): string {
     align-items: center;
 }
 
-.ai-hf-file-size { font-size: 0.62rem; color: var(--text2); }
+.ai-hf-file-size {
+    font-size: 0.62rem;
+    color: var(--text2);
+}
 
 .ai-hf-quant-badge {
     font-size: 0.58rem;
@@ -395,9 +554,18 @@ function formatNumber(n: number): string {
     font-family: 'SF Mono', 'Fira Code', monospace;
 }
 
-.ai-hf-ram-estimate { font-size: 0.6rem; color: var(--text2); opacity: 0.85; }
+.ai-hf-ram-estimate {
+    font-size: 0.6rem;
+    color: var(--text2);
+    opacity: 0.85;
+}
 
-.ai-hf-shard-info { font-size: 0.58rem; color: var(--text2); opacity: 0.7; font-style: italic; }
+.ai-hf-shard-info {
+    font-size: 0.58rem;
+    color: var(--text2);
+    opacity: 0.7;
+    font-style: italic;
+}
 
 .ai-hf-file-actions {
     display: flex;
@@ -420,9 +588,17 @@ function formatNumber(n: number): string {
     gap: 0.2rem;
     transition: all 0.15s;
 
-    &:hover { background: var(--accent-color); color: var(--base1); }
-    &.ai-hf-download-sharded { padding: 0.2rem 0.4rem; }
-    .ai-hf-download-label { font-size: 0.58rem; font-weight: 600; }
+    &:hover {
+        background: var(--accent-color);
+        color: var(--base1);
+    }
+    &.ai-hf-download-sharded {
+        padding: 0.2rem 0.4rem;
+    }
+    .ai-hf-download-label {
+        font-size: 0.58rem;
+        font-weight: 600;
+    }
 }
 
 .ai-hf-progress {
@@ -466,10 +642,22 @@ function formatNumber(n: number): string {
     justify-content: center;
     transition: all 0.2s;
     flex-shrink: 0;
-    &:hover:not(:disabled) { background: var(--bg-hover); color: var(--text1); }
-    &:disabled { opacity: 0.3; cursor: not-allowed; }
+    &:hover:not(:disabled) {
+        background: var(--bg-hover);
+        color: var(--text1);
+    }
+    &:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
 }
 
-.ai-btn-tiny { padding: 0.2rem !important; }
-.ai-btn-danger { &:hover:not(:disabled) { color: var(--danger-color); } }
+.ai-btn-tiny {
+    padding: 0.2rem !important;
+}
+.ai-btn-danger {
+    &:hover:not(:disabled) {
+        color: var(--danger-color);
+    }
+}
 </style>

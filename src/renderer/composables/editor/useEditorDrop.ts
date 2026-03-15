@@ -2,12 +2,7 @@ import { ref } from 'vue';
 import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS, AUDIO_EXTENSIONS, PDF_EXTENSIONS } from '../../utils/fileTypes';
 import type { Ref } from 'vue';
 
-const embeddableExtensions = [
-    ...IMAGE_EXTENSIONS,
-    ...VIDEO_EXTENSIONS,
-    ...AUDIO_EXTENSIONS,
-    ...PDF_EXTENSIONS,
-];
+const embeddableExtensions = [...IMAGE_EXTENSIONS, ...VIDEO_EXTENSIONS, ...AUDIO_EXTENSIONS, ...PDF_EXTENSIONS];
 
 function isEmbeddableFile(fileName: string): boolean {
     const ext = '.' + fileName.split('.').pop()?.toLowerCase();
@@ -28,7 +23,7 @@ export function useEditorDrop(
     textareaRef: Ref<HTMLTextAreaElement | null>,
     showPreview: Ref<boolean>,
     content: Ref<string>,
-    onContentChange: () => void
+    onContentChange: () => void,
 ) {
     const isDragOverEditor = ref(false);
     let dragCounter = 0;

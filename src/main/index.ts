@@ -32,22 +32,26 @@ import * as speechService from './services/speech';
 // Must be called before app.whenReady(). Tells Chromium the leaf:// scheme
 // supports streaming (needed for video/audio playback with range requests),
 // is secure (needed for iframe PDF viewing), and supports fetch.
-protocol.registerSchemesAsPrivileged([{
-    scheme: 'leaf',
-    privileges: {
-        standard: true,
-        secure: true,
-        supportFetchAPI: true,
-        stream: true,
-        bypassCSP: true,
+protocol.registerSchemesAsPrivileged([
+    {
+        scheme: 'leaf',
+        privileges: {
+            standard: true,
+            secure: true,
+            supportFetchAPI: true,
+            stream: true,
+            bypassCSP: true,
+        },
     },
-}]);
+]);
 
 // ─── Window ──────────────────────────────────────────────────────────────────
 
 let mainWindow: BrowserWindow | null = null;
 
-function getMainWindow(): BrowserWindow | null { return mainWindow; }
+function getMainWindow(): BrowserWindow | null {
+    return mainWindow;
+}
 
 function createWindow(): void {
     // After electron-vite bundles to out/main/index.js, __dirname = out/main/
@@ -57,16 +61,16 @@ function createWindow(): void {
 
     mainWindow = new BrowserWindow({
         width: Math.round(sw * 0.75),
-        height: Math.round(sh * 0.80),
+        height: Math.round(sh * 0.8),
         minWidth: Math.round(sw * 0.45),
-        minHeight: Math.round(sh * 0.50),
+        minHeight: Math.round(sh * 0.5),
         icon: iconPath,
         webPreferences: {
             // out/main/__dirname → ../../ → root → out/preload/index.mjs
             preload: path.join(__dirname, '../preload/index.mjs'),
-            nodeIntegration: false,   // never expose Node to the renderer
-            contextIsolation: true,    // keep renderer and preload worlds isolated
-            sandbox: false,            // required for preload to use require()
+            nodeIntegration: false, // never expose Node to the renderer
+            contextIsolation: true, // keep renderer and preload worlds isolated
+            sandbox: false, // required for preload to use require()
             // webSecurity stays at its default (true).
             // Local files (images, audio, video) are served through the
             // leaf:// custom protocol registered below — no need to disable
@@ -82,15 +86,21 @@ function createWindow(): void {
     // Context menu: spellcheck suggestions + standard editing actions
     mainWindow.webContents.on('context-menu', (_event, params) => {
         const menu = Menu.buildFromTemplate([
-            ...params.dictionarySuggestions.map(s => ({
+            ...params.dictionarySuggestions.map((s) => ({
                 label: s,
                 click: () => mainWindow!.webContents.replaceMisspelling(s),
             })),
             ...(params.dictionarySuggestions.length > 0 ? [{ type: 'separator' as const }] : []),
-            ...(params.misspelledWord ? [
-                { label: 'Add to Dictionary', click: () => mainWindow!.webContents.session.addWordToSpellCheckerDictionary(params.misspelledWord) },
-                { type: 'separator' as const },
-            ] : []),
+            ...(params.misspelledWord
+                ? [
+                      {
+                          label: 'Add to Dictionary',
+                          click: () =>
+                              mainWindow!.webContents.session.addWordToSpellCheckerDictionary(params.misspelledWord),
+                      },
+                      { type: 'separator' as const },
+                  ]
+                : []),
             { role: 'cut' as const, visible: params.isEditable },
             { role: 'copy' as const, visible: params.selectionText.length > 0 },
             { role: 'paste' as const, visible: params.isEditable },
@@ -125,7 +135,9 @@ function createWindow(): void {
     });
 
     mainWindow.once('ready-to-show', () => mainWindow!.show());
-    mainWindow.on('closed', () => { mainWindow = null; });
+    mainWindow.on('closed', () => {
+        mainWindow = null;
+    });
 }
 
 // ─── Custom protocol: leaf:// ─────────────────────────────────────────────────

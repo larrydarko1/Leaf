@@ -24,12 +24,23 @@ export function useMarkdownEditor(
     getEmbedMediaType: (fileName: string) => string,
     textareaRef: Ref<HTMLTextAreaElement | null>,
     onContentChange: () => void,
-    formatTime: (seconds: number) => string
+    formatTime: (seconds: number) => string,
 ) {
     const showPreview = ref(false);
 
-    const { renderedMarkdown } = useMarkdownRender(isMarkdownFile, content, embedCacheVersion, embedCache, getEmbedMediaType);
-    const { mdFormatText, mdInsertHeading, onTextareaKeydown } = useMarkdownToolbar(isMarkdownFile, content, textareaRef, onContentChange);
+    const { renderedMarkdown } = useMarkdownRender(
+        isMarkdownFile,
+        content,
+        embedCacheVersion,
+        embedCache,
+        getEmbedMediaType,
+    );
+    const { mdFormatText, mdInsertHeading, onTextareaKeydown } = useMarkdownToolbar(
+        isMarkdownFile,
+        content,
+        textareaRef,
+        onContentChange,
+    );
     const { onMarkdownPreviewClick, onMarkdownPreviewInput } = useMarkdownPreview(content, onContentChange, formatTime);
 
     return {

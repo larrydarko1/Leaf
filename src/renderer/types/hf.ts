@@ -16,8 +16,8 @@ export interface HfSearchResponse {
 }
 
 export interface HfModelTier {
-    label: string;   // 'Small' | 'Medium' | 'Large' | 'Very Large' | 'Extreme'
-    color: string;   // 'green' | 'blue' | 'orange' | 'red'
+    label: string; // 'Small' | 'Medium' | 'Large' | 'Very Large' | 'Extreme'
+    color: string; // 'green' | 'blue' | 'orange' | 'red'
     description: string;
 }
 

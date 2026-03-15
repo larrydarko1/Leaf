@@ -53,7 +53,7 @@ export function useTextEditing(
         const fontSize = (textEditFontSize.value || 20) * zoom.value;
         const style: Record<string, string> = {
             fontSize: fontSize + 'px',
-            lineHeight: (fontSize * 1.3) + 'px',
+            lineHeight: fontSize * 1.3 + 'px',
             color: textEditColor.value || defaultStyle.value.strokeColor,
             textAlign: textEditCentered.value ? 'center' : 'left',
         };
@@ -64,10 +64,10 @@ export function useTextEditing(
                 textEditBounds.value.y + textEditBounds.value.height,
             );
             const pad = 8 * zoom.value;
-            style.left = (tl.x + pad) + 'px';
-            style.top = (tl.y + pad) + 'px';
-            style.width = (br.x - tl.x - pad * 2) + 'px';
-            style.height = (br.y - tl.y - pad * 2) + 'px';
+            style.left = tl.x + pad + 'px';
+            style.top = tl.y + pad + 'px';
+            style.width = br.x - tl.x - pad * 2 + 'px';
+            style.height = br.y - tl.y - pad * 2 + 'px';
         } else {
             style.left = screen.x + 'px';
             style.top = screen.y + 'px';
@@ -140,14 +140,14 @@ export function useTextEditing(
 
         if (!txt) {
             if (editingElementId.value && !wasCentered) {
-                const el = elements.value.find(e => e.id === editingElementId.value);
+                const el = elements.value.find((e) => e.id === editingElementId.value);
                 if (el && el.type === 'text') {
-                    elements.value = elements.value.filter(el => el.id !== editingElementId.value);
+                    elements.value = elements.value.filter((el) => el.id !== editingElementId.value);
                     if (selectedId.value === editingElementId.value) selectedId.value = null;
                 }
             }
             if (editingElementId.value && wasCentered) {
-                const el = elements.value.find(e => e.id === editingElementId.value);
+                const el = elements.value.find((e) => e.id === editingElementId.value);
                 if (el) {
                     el.text = undefined;
                     el.fontSize = undefined;
@@ -177,7 +177,7 @@ export function useTextEditing(
         ctx.restore();
 
         if (editingElementId.value) {
-            const el = elements.value.find(e => e.id === editingElementId.value);
+            const el = elements.value.find((e) => e.id === editingElementId.value);
             if (el) {
                 el.text = txt;
                 el.fontSize = fs;

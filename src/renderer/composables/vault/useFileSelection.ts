@@ -11,10 +11,10 @@ export function useFileSelection() {
         selectedFolder.value = null;
 
         const fileList = visibleFiles ?? [];
-        const fileIndex = fileList.findIndex(f => f.path === file.path);
+        const fileIndex = fileList.findIndex((f) => f.path === file.path);
 
         if (event?.metaKey || event?.ctrlKey) {
-            const index = selectedFiles.value.findIndex(f => f.path === file.path);
+            const index = selectedFiles.value.findIndex((f) => f.path === file.path);
             if (index >= 0) {
                 selectedFiles.value.splice(index, 1);
                 if (activeFile.value?.path === file.path) {
@@ -66,14 +66,14 @@ export function useFileSelection() {
      */
     function syncAfterRefresh(availableFiles: FileInfo[]): FileInfo | null {
         if (selectedFiles.value.length === 0) return null;
-        const previousPaths = selectedFiles.value.map(f => f.path);
+        const previousPaths = selectedFiles.value.map((f) => f.path);
         const previousActivePath = activeFile.value?.path;
 
-        const stillExist = availableFiles.filter(f => previousPaths.includes(f.path));
+        const stillExist = availableFiles.filter((f) => previousPaths.includes(f.path));
         if (stillExist.length > 0) {
             selectedFiles.value = stillExist;
             if (previousActivePath) {
-                activeFile.value = stillExist.find(f => f.path === previousActivePath) ?? stillExist[0];
+                activeFile.value = stillExist.find((f) => f.path === previousActivePath) ?? stillExist[0];
             } else {
                 activeFile.value = stillExist[0];
             }
@@ -90,7 +90,7 @@ export function useFileSelection() {
     function restoreFromStorage(availableFiles: FileInfo[]) {
         const lastPath = localStorage.getItem('leaf-last-selected-file');
         if (lastPath) {
-            const lastFile = availableFiles.find(f => f.path === lastPath);
+            const lastFile = availableFiles.find((f) => f.path === lastPath);
             if (lastFile) {
                 selectedFiles.value = [lastFile];
                 activeFile.value = lastFile;

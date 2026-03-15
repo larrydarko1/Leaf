@@ -21,8 +21,8 @@ export function useCanvasRenderer(
     let ctx: CanvasRenderingContext2D | null = null;
     let dpr = 1;
 
-    const canvasBg = computed(() => isDark.value ? '#1e1e1e' : '#ffffff');
-    const gridColor = computed(() => isDark.value ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)');
+    const canvasBg = computed(() => (isDark.value ? '#1e1e1e' : '#ffffff'));
+    const gridColor = computed(() => (isDark.value ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'));
 
     // ================= Canvas Setup =================
 
@@ -42,8 +42,12 @@ export function useCanvasRenderer(
         renderScene();
     }
 
-    function cssWidth() { return canvas.value ? canvas.value.width / dpr : 0; }
-    function cssHeight() { return canvas.value ? canvas.value.height / dpr : 0; }
+    function cssWidth() {
+        return canvas.value ? canvas.value.width / dpr : 0;
+    }
+    function cssHeight() {
+        return canvas.value ? canvas.value.height / dpr : 0;
+    }
 
     // ================= Coordinate Transforms =================
 
@@ -134,9 +138,14 @@ export function useCanvasRenderer(
         ctx.lineJoin = 'round';
 
         switch (el.strokeStyle) {
-            case 'dashed': ctx.setLineDash([12, 8]); break;
-            case 'dotted': ctx.setLineDash([2, 5]); break;
-            default: ctx.setLineDash([]);
+            case 'dashed':
+                ctx.setLineDash([12, 8]);
+                break;
+            case 'dotted':
+                ctx.setLineDash([2, 5]);
+                break;
+            default:
+                ctx.setLineDash([]);
         }
 
         const hasFill = el.fillColor && el.fillColor !== 'transparent';
@@ -176,12 +185,16 @@ export function useCanvasRenderer(
                 const dhh = Math.abs(el.height) / 2;
                 ctx.beginPath();
                 if (br > 0) {
-                    drawRoundedPolygon(ctx, [
-                        { x: dcx, y: dcy - dhh },
-                        { x: dcx + dhw, y: dcy },
-                        { x: dcx, y: dcy + dhh },
-                        { x: dcx - dhw, y: dcy },
-                    ], br);
+                    drawRoundedPolygon(
+                        ctx,
+                        [
+                            { x: dcx, y: dcy - dhh },
+                            { x: dcx + dhw, y: dcy },
+                            { x: dcx, y: dcy + dhh },
+                            { x: dcx - dhw, y: dcy },
+                        ],
+                        br,
+                    );
                 } else {
                     ctx.moveTo(dcx, dcy - dhh);
                     ctx.lineTo(dcx + dhw, dcy);
@@ -200,11 +213,15 @@ export function useCanvasRenderer(
                 const th = Math.abs(el.height);
                 ctx.beginPath();
                 if (br > 0) {
-                    drawRoundedPolygon(ctx, [
-                        { x: tx + tw / 2, y: ty },
-                        { x: tx + tw, y: ty + th },
-                        { x: tx, y: ty + th },
-                    ], br);
+                    drawRoundedPolygon(
+                        ctx,
+                        [
+                            { x: tx + tw / 2, y: ty },
+                            { x: tx + tw, y: ty + th },
+                            { x: tx, y: ty + th },
+                        ],
+                        br,
+                    );
                 } else {
                     ctx.moveTo(tx + tw / 2, ty);
                     ctx.lineTo(tx + tw, ty + th);
@@ -223,8 +240,10 @@ export function useCanvasRenderer(
                 break;
             }
             case 'arrow': {
-                const ax1 = el.x, ay1 = el.y;
-                const ax2 = el.x + el.width, ay2 = el.y + el.height;
+                const ax1 = el.x,
+                    ay1 = el.y;
+                const ax2 = el.x + el.width,
+                    ay2 = el.y + el.height;
                 ctx.beginPath();
                 ctx.moveTo(ax1, ay1);
                 ctx.lineTo(ax2, ay2);
@@ -233,9 +252,15 @@ export function useCanvasRenderer(
                 const headLen = Math.max(el.strokeWidth * 4, 14);
                 ctx.beginPath();
                 ctx.moveTo(ax2, ay2);
-                ctx.lineTo(ax2 - headLen * Math.cos(angle - Math.PI / 6), ay2 - headLen * Math.sin(angle - Math.PI / 6));
+                ctx.lineTo(
+                    ax2 - headLen * Math.cos(angle - Math.PI / 6),
+                    ay2 - headLen * Math.sin(angle - Math.PI / 6),
+                );
                 ctx.moveTo(ax2, ay2);
-                ctx.lineTo(ax2 - headLen * Math.cos(angle + Math.PI / 6), ay2 - headLen * Math.sin(angle + Math.PI / 6));
+                ctx.lineTo(
+                    ax2 - headLen * Math.cos(angle + Math.PI / 6),
+                    ay2 - headLen * Math.sin(angle + Math.PI / 6),
+                );
                 ctx.stroke();
                 break;
             }
@@ -270,7 +295,8 @@ export function useCanvasRenderer(
                 const dy = Math.min(el.y, el.y + el.height);
                 const dw = Math.abs(el.width);
                 const dh = Math.abs(el.height);
-                const dsx = dw / 24, dsy = dh / 24;
+                const dsx = dw / 24,
+                    dsy = dh / 24;
                 ctx.save();
                 ctx.translate(dx, dy);
                 ctx.scale(dsx, dsy);
@@ -291,7 +317,8 @@ export function useCanvasRenderer(
                 const svrY = Math.min(el.y, el.y + el.height);
                 const svrW = Math.abs(el.width);
                 const svrH = Math.abs(el.height);
-                const svrSX = svrW / 24, svrSY = svrH / 24;
+                const svrSX = svrW / 24,
+                    svrSY = svrH / 24;
                 ctx.save();
                 ctx.translate(svrX, svrY);
                 ctx.scale(svrSX, svrSY);
@@ -319,7 +346,8 @@ export function useCanvasRenderer(
                 const uy = Math.min(el.y, el.y + el.height);
                 const uw = Math.abs(el.width);
                 const uh = Math.abs(el.height);
-                const usx = uw / 24, usy = uh / 24;
+                const usx = uw / 24,
+                    usy = uh / 24;
                 ctx.save();
                 ctx.translate(ux, uy);
                 ctx.scale(usx, usy);
@@ -337,7 +365,8 @@ export function useCanvasRenderer(
                 const cly = Math.min(el.y, el.y + el.height);
                 const clw = Math.abs(el.width);
                 const clh = Math.abs(el.height);
-                const clsx = clw / 24, clsy = clh / 24;
+                const clsx = clw / 24,
+                    clsy = clh / 24;
                 ctx.save();
                 ctx.translate(clx, cly);
                 ctx.scale(clsx, clsy);
@@ -353,7 +382,8 @@ export function useCanvasRenderer(
                 const ddy = Math.min(el.y, el.y + el.height);
                 const ddw = Math.abs(el.width);
                 const ddh = Math.abs(el.height);
-                const ddsx = ddw / 24, ddsy = ddh / 24;
+                const ddsx = ddw / 24,
+                    ddsy = ddh / 24;
                 ctx.save();
                 ctx.translate(ddx, ddy);
                 ctx.scale(ddsx, ddsy);
@@ -372,7 +402,8 @@ export function useCanvasRenderer(
                 const hy = Math.min(el.y, el.y + el.height);
                 const hw = Math.abs(el.width);
                 const hh = Math.abs(el.height);
-                const hsx = hw / 24, hsy = hh / 24;
+                const hsx = hw / 24,
+                    hsy = hh / 24;
                 ctx.save();
                 ctx.translate(hx, hy);
                 ctx.scale(hsx, hsy);
@@ -388,7 +419,8 @@ export function useCanvasRenderer(
                 const py = Math.min(el.y, el.y + el.height);
                 const pw = Math.abs(el.width);
                 const ph = Math.abs(el.height);
-                const psx = pw / 24, psy = ph / 24;
+                const psx = pw / 24,
+                    psy = ph / 24;
                 ctx.save();
                 ctx.translate(px, py);
                 ctx.scale(psx, psy);
@@ -404,12 +436,15 @@ export function useCanvasRenderer(
                 const sty = Math.min(el.y, el.y + el.height);
                 const stw = Math.abs(el.width);
                 const sth = Math.abs(el.height);
-                const stsx = stw / 24, stsy = sth / 24;
+                const stsx = stw / 24,
+                    stsy = sth / 24;
                 ctx.save();
                 ctx.translate(stx, sty);
                 ctx.scale(stsx, stsy);
                 ctx.lineWidth = el.strokeWidth / Math.sqrt(stsx * stsy);
-                const starPath = new Path2D('M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z');
+                const starPath = new Path2D(
+                    'M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z',
+                );
                 if (hasFill) ctx.fill(starPath);
                 ctx.stroke(starPath);
                 ctx.restore();

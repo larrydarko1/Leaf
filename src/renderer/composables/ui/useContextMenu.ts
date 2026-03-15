@@ -3,7 +3,7 @@ import { ref, watch, nextTick, onUnmounted } from 'vue';
 export function useContextMenu(
     getVisible: () => boolean,
     getPosition: () => { x: number; y: number },
-    onClose: () => void
+    onClose: () => void,
 ) {
     const menuRef = ref<HTMLElement | null>(null);
     const adjustedPosition = ref({ x: 0, y: 0 });

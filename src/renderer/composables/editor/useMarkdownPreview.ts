@@ -7,7 +7,7 @@ import type { Ref } from 'vue';
 export function useMarkdownPreview(
     content: Ref<string>,
     onContentChange: () => void,
-    formatTime: (seconds: number) => string
+    formatTime: (seconds: number) => string,
 ) {
     /** Handle clicks in markdown preview (checkbox toggling, embedded media controls) */
     function onMarkdownPreviewClick(event: MouseEvent) {
@@ -38,17 +38,19 @@ export function useMarkdownPreview(
             if (!video) return;
             if (video.paused) {
                 video.play();
-                vidPlayBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
+                vidPlayBtn.innerHTML =
+                    '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
                 const updateProgress = () => {
                     const fill = container.querySelector('.embed-video-progress-fill') as HTMLElement;
                     const curEl = container.querySelector('.embed-video-current') as HTMLElement;
-                    if (fill && video.duration) fill.style.width = ((video.currentTime / video.duration) * 100) + '%';
+                    if (fill && video.duration) fill.style.width = (video.currentTime / video.duration) * 100 + '%';
                     if (curEl) curEl.textContent = formatTime(video.currentTime);
                     if (!video.paused) requestAnimationFrame(updateProgress);
                 };
                 updateProgress();
                 video.onended = () => {
-                    vidPlayBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+                    vidPlayBtn.innerHTML =
+                        '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
                     const fill = container.querySelector('.embed-video-progress-fill') as HTMLElement;
                     if (fill) fill.style.width = '0%';
                     const curEl = container.querySelector('.embed-video-current') as HTMLElement;
@@ -64,7 +66,8 @@ export function useMarkdownPreview(
                 }
             } else {
                 video.pause();
-                vidPlayBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+                vidPlayBtn.innerHTML =
+                    '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
             }
             return;
         }
@@ -79,17 +82,19 @@ export function useMarkdownPreview(
             if (!audio) return;
             if (audio.paused) {
                 audio.play();
-                audPlayBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
+                audPlayBtn.innerHTML =
+                    '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
                 const updateProgress = () => {
                     const fill = container.querySelector('.embed-audio-progress-fill') as HTMLElement;
                     const curEl = container.querySelector('.embed-audio-current') as HTMLElement;
-                    if (fill && audio.duration) fill.style.width = ((audio.currentTime / audio.duration) * 100) + '%';
+                    if (fill && audio.duration) fill.style.width = (audio.currentTime / audio.duration) * 100 + '%';
                     if (curEl) curEl.textContent = formatTime(audio.currentTime);
                     if (!audio.paused) requestAnimationFrame(updateProgress);
                 };
                 updateProgress();
                 audio.onended = () => {
-                    audPlayBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+                    audPlayBtn.innerHTML =
+                        '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
                     const fill = container.querySelector('.embed-audio-progress-fill') as HTMLElement;
                     if (fill) fill.style.width = '0%';
                     const curEl = container.querySelector('.embed-audio-current') as HTMLElement;
@@ -105,7 +110,8 @@ export function useMarkdownPreview(
                 }
             } else {
                 audio.pause();
-                audPlayBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+                audPlayBtn.innerHTML =
+                    '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
             }
             return;
         }
@@ -122,7 +128,7 @@ export function useMarkdownPreview(
             const pct = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
             audio.currentTime = pct * audio.duration;
             const fill = container.querySelector('.embed-audio-progress-fill') as HTMLElement;
-            if (fill) fill.style.width = (pct * 100) + '%';
+            if (fill) fill.style.width = pct * 100 + '%';
             const curEl = container.querySelector('.embed-audio-current') as HTMLElement;
             if (curEl) curEl.textContent = formatTime(audio.currentTime);
             return;
@@ -140,7 +146,7 @@ export function useMarkdownPreview(
             const pct = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
             video.currentTime = pct * video.duration;
             const fill = container.querySelector('.embed-video-progress-fill') as HTMLElement;
-            if (fill) fill.style.width = (pct * 100) + '%';
+            if (fill) fill.style.width = pct * 100 + '%';
             const curEl = container.querySelector('.embed-video-current') as HTMLElement;
             if (curEl) curEl.textContent = formatTime(video.currentTime);
             return;
@@ -165,9 +171,12 @@ export function useMarkdownPreview(
             const media = (container.querySelector('video') || container.querySelector('audio')) as HTMLMediaElement;
             if (!media) return;
             const slider = container.querySelector('.embed-volume-slider') as HTMLInputElement;
-            const svgMuted = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
-            const svgLow = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>';
-            const svgHigh = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>';
+            const svgMuted =
+                '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
+            const svgLow =
+                '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>';
+            const svgHigh =
+                '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>';
             if (media.volume > 0) {
                 media.dataset.prevVolume = String(media.volume);
                 media.volume = 0;
@@ -236,9 +245,12 @@ export function useMarkdownPreview(
 
         const muteBtn = container.querySelector('.embed-volume-btn') as HTMLElement;
         if (muteBtn) {
-            const svgMuted = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2"15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
-            const svgLow = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>';
-            const svgHigh = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>';
+            const svgMuted =
+                '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2"15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
+            const svgLow =
+                '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>';
+            const svgHigh =
+                '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>';
             if (vol === 0) {
                 muteBtn.innerHTML = svgMuted;
             } else if (vol < 0.5) {

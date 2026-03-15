@@ -121,11 +121,15 @@ export function useDrawingPersistence(
                 };
                 result.push(el);
             } else if (stroke.points && stroke.points.length > 1) {
-                let minX = Infinity, minY = Infinity;
-                let maxX = -Infinity, maxY = -Infinity;
+                let minX = Infinity,
+                    minY = Infinity;
+                let maxX = -Infinity,
+                    maxY = -Infinity;
                 for (const p of stroke.points) {
-                    minX = Math.min(minX, p.x); minY = Math.min(minY, p.y);
-                    maxX = Math.max(maxX, p.x); maxY = Math.max(maxY, p.y);
+                    minX = Math.min(minX, p.x);
+                    minY = Math.min(minY, p.y);
+                    maxX = Math.max(maxX, p.x);
+                    maxY = Math.max(maxY, p.y);
                 }
                 const el: CanvasElement = {
                     id: genId(),
@@ -153,6 +157,8 @@ export function useDrawingPersistence(
         scheduleAutoSave,
         saveDrawing,
         loadDrawing,
-        cleanup: () => { if (autoSaveTimeout) clearTimeout(autoSaveTimeout); },
+        cleanup: () => {
+            if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+        },
     };
 }
