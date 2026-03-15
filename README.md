@@ -162,7 +162,7 @@ Each conversation is stored as a separate `.json` file containing the model used
 ## Getting Started
 
 ### Prerequisites
-- Node.js (v18+ recommended)
+- Node.js (v22+ recommended)
 - npm
 
 ### Setup
@@ -182,6 +182,30 @@ npm install
 ```sh
 npm run dev
 ```
+
+### Testing & Code Quality
+
+```sh
+# Run all unit tests
+npm test
+
+# Run tests in watch mode (re-runs on file changes)
+npm run test:watch
+
+# Lint source code
+npm run lint
+
+# Auto-fix lint issues
+npm run lint:fix
+
+# Check formatting
+npm run format:check
+
+# Auto-format source code
+npm run format
+```
+
+Tests live in the `tests/` directory and mirror the `src/` structure. The CI pipeline runs type-checking, building, and all tests on every push and pull request — the release pipeline only triggers if CI passes.
 
 ### Building for Production
 
@@ -219,6 +243,8 @@ After building:
 - **Speech-to-Text:** [Whisper](https://github.com/openai/whisper) via [@huggingface/transformers](https://github.com/huggingface/transformers.js) + ONNX Runtime (local dictation)
 - **Storage:** Plain text files (txt, md), images, videos, audio, and embedded media in your local vault
 - **Build Tools:** [electron-vite](https://electron-vite.org) + Electron Builder
+- **Testing:** [Vitest](https://vitest.dev) + [Vue Test Utils](https://test-utils.vuejs.org)
+- **Linting:** [ESLint](https://eslint.org) (flat config) + [typescript-eslint](https://typescript-eslint.io) + [Prettier](https://prettier.io)
 
 ## Project Structure
 
@@ -230,7 +256,8 @@ leaf/
 │   │   ├── lib/
 │   │   │   ├── extensions.ts       # Allowed file extensions list
 │   │   │   ├── mime.ts             # MIME type mappings
-│   │   │   └── paths.ts            # Default paths (models dir, whisper dir)
+│   │   │   ├── paths.ts            # Default paths (models dir, whisper dir)
+│   │   │   └── validation.ts       # Path traversal & filename validation
 │   │   └── services/
 │   │       ├── agent.ts            # Agent mode file editing with backup/restore
 │   │       ├── ai.ts               # Local LLM inference (node-llama-cpp)
@@ -248,7 +275,7 @@ leaf/
 │       ├── style.scss
 │       ├── assets/                 # App icons and images
 │       ├── components/
-│       │   ├── AiPanel.vue         # AI chat interface with conversation history
+│       │   ├── AiPanel.vue         # AI chat panel (orchestrator)
 │       │   ├── AudioRecorder.vue   # Voice recording and audio capture
 │       │   ├── BookmarksPanel.vue  # Bookmarked notes panel
 │       │   ├── ContextMenu.vue     # Right-click context menu
@@ -256,24 +283,51 @@ leaf/
 │       │   ├── FileExplorer.vue    # Vault file browser with drag & drop
 │       │   ├── FolderNode.vue      # Tree node for folder/file rendering
 │       │   ├── NoteEditor.vue      # Editor with Markdown preview & media embeds
-│       │   └── SearchPanel.vue     # Full-text search across vault
+│       │   ├── SearchPanel.vue     # Full-text search across vault
+│       │   ├── ai/                 # AI sub-components
+│       │   │   ├── AiHfPanel.vue       # Hugging Face model browser & download
+│       │   │   ├── AiHistoryPanel.vue  # Conversation history sidebar
+│       │   │   ├── AiInputArea.vue     # Chat input with agent mode toggle
+│       │   │   ├── AiMessageList.vue   # Message rendering with streaming
+│       │   │   └── AiModelBar.vue      # Model selector and status bar
+│       │   └── editor/             # Media viewer sub-components
+│       │       ├── AudioViewer.vue     # Audio player with waveform controls
+│       │       ├── ImageViewer.vue     # Image viewer with zoom
+│       │       ├── PdfViewer.vue       # PDF embed viewer
+│       │       └── VideoViewer.vue     # Video player with custom controls
 │       ├── composables/            # Vue composables (grouped by domain)
+│       │   ├── useAudioRecorder.ts # Audio recording composable
 │       │   ├── ai/                 # AI chat, model, agent, history, downloads
 │       │   ├── drawing/            # Canvas rendering, elements, interaction
 │       │   ├── editor/             # Markdown editor, media players, dictation
 │       │   ├── ui/                 # Context menu, keyboard navigation
 │       │   └── vault/              # File selection, folder tree, bookmarks
 │       ├── types/                  # TypeScript type definitions
-│       └── utils/                  # Shared utilities
+│       └── utils/                  # Shared utilities (file types, audio encoding)
+├── tests/                          # Unit tests (mirrors src/ structure)
+│   ├── main/                       # Main process tests
+│   │   ├── extensions.test.ts
+│   │   ├── mime.test.ts
+│   │   └── paths.test.ts
+│   └── renderer/                   # Renderer process tests
+│       ├── audio.test.ts
+│       ├── fileTypes.test.ts
+│       └── useMarkdownToolbar.test.ts
 ├── models/
 │   └── whisper/                    # Whisper ONNX model (download manually — see above)
 ├── public/                         # Static assets (demo screenshot)
 ├── build/                          # App icons & packaging hooks for Electron Builder
+├── .github/workflows/              # CI/CD pipelines
+│   ├── ci.yml                      # Type-check, build, test on every push/PR
+│   └── release.yml                 # Multi-platform build & GitHub Release
 ├── electron.vite.config.ts         # electron-vite config (main, preload, renderer)
+├── vitest.config.ts                # Test runner config (jsdom environment)
+├── eslint.config.js                # ESLint flat config (TypeScript + Vue + Prettier)
+├── .prettierrc                     # Prettier formatting rules
 ├── package.json
 ├── tsconfig.json                   # Root TS config (project references)
-├── tsconfig.app.json               # Renderer TS config (DOM + Vue)
-├── tsconfig.node.json              # Main & preload TS config (Node)
+├── tsconfig.app.json               # Renderer TS config (DOM + Vue, strict)
+├── tsconfig.node.json              # Main & preload TS config (Node, strict)
 └── generate-icons.sh               # Icon generation script
 ```
 
