@@ -358,11 +358,13 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
             assertInsideVault(oldPath);
             const newPath = path.join(path.dirname(oldPath), newFileName);
             assertInsideVault(newPath);
-            try {
-                await fs.access(newPath);
-                return { success: false, error: 'A file with this name already exists' };
-            } catch {
-                /* good */
+            if (oldPath.toLowerCase() !== newPath.toLowerCase()) {
+                try {
+                    await fs.access(newPath);
+                    return { success: false, error: 'A file with this name already exists' };
+                } catch {
+                    /* good */
+                }
             }
             await fs.rename(oldPath, newPath);
             return { success: true, newPath };
@@ -379,11 +381,13 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
             assertInsideVault(oldPath);
             const newPath = path.join(path.dirname(oldPath), newFolderName);
             assertInsideVault(newPath);
-            try {
-                await fs.access(newPath);
-                return { success: false, error: 'A folder with this name already exists' };
-            } catch {
-                /* good */
+            if (oldPath.toLowerCase() !== newPath.toLowerCase()) {
+                try {
+                    await fs.access(newPath);
+                    return { success: false, error: 'A folder with this name already exists' };
+                } catch {
+                    /* good */
+                }
             }
             await fs.rename(oldPath, newPath);
             return { success: true, newPath };

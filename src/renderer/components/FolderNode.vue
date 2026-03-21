@@ -181,7 +181,7 @@ function handleFileClick(event: MouseEvent) {
                 :value="renameValue"
                 class="folder-name-input"
                 @input="$emit('updateRenameValue', ($event.target as HTMLInputElement).value)"
-                @keydown.enter="$emit('rename')"
+                @keydown.enter="($event.target as HTMLInputElement).blur()"
                 @keydown.esc="$emit('cancelRename')"
                 @blur="$emit('rename')"
                 @click.stop
@@ -333,7 +333,7 @@ function handleFileClick(event: MouseEvent) {
                 :value="renameValue"
                 class="file-name-input"
                 @input="$emit('updateRenameValue', ($event.target as HTMLInputElement).value)"
-                @keydown.enter="$emit('rename')"
+                @keydown.enter="($event.target as HTMLInputElement).blur()"
                 @keydown.esc="$emit('cancelRename')"
                 @blur="$emit('rename')"
                 @click.stop
