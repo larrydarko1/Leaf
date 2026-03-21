@@ -173,10 +173,12 @@ export function useMarkdownRender(
 
         // Add data-task-index to task list items for toggling and remove disabled
         // Also detect half-complete marker and add data-half attribute
+        // Handles both tight lists (<li><input>) and loose lists (<li><p><input>)
         let taskIndex = 0;
-        html = html.replace(/<li><input(.*?)>/g, (_match, attrs) => {
+        html = html.replace(/<li>(<p>)?<input(.*?)>/g, (_match, pTag, attrs) => {
             const cleanAttrs = attrs.replace(/\s*disabled=""/g, '');
-            return `<li class="task" data-task-index="${taskIndex++}"><input${cleanAttrs}>`;
+            const openP = pTag ?? '';
+            return `<li class="task" data-task-index="${taskIndex++}">${openP}<input${cleanAttrs}>`;
         });
 
         // Convert half-complete markers into data attribute on the checkbox
