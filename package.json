@@ -1,145 +1,145 @@
 {
-  "name": "leaf",
-  "private": true,
-  "version": "1.5.1",
-  "type": "module",
-  "main": "out/main/index.js",
-  "scripts": {
-    "dev": "electron-vite dev",
-    "build": "vue-tsc -b && electron-vite build",
-    "build:electron": "npm run build && electron-builder",
-    "build:mac": "npm run build && electron-builder --mac --publish never",
-    "build:win": "npm run build && electron-builder --win --publish never",
-    "build:linux": "npm run build && electron-builder --linux --publish never",
-    "lint": "eslint src/",
-    "lint:fix": "eslint src/ --fix",
-    "format": "prettier --write \"src/**/*.{ts,vue,scss,json}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,vue,scss,json}\"",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "prepare": "husky"
-  },
-  "lint-staged": {
-    "*.{ts,vue}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.{scss,json,md}": [
-      "prettier --write"
-    ]
-  },
-  "dependencies": {
-    "@huggingface/transformers": "^3.8.1",
-    "marked": "^17.0.1",
-    "node-llama-cpp": "^3.15.1",
-    "onnxruntime-node": "^1.24.2",
-    "vue": "^3.5.17"
-  },
-  "devDependencies": {
-    "@commitlint/cli": "^20.5.0",
-    "@commitlint/config-conventional": "^20.5.0",
-    "@eslint/js": "^10.0.1",
-    "@types/node": "^24.0.13",
-    "@vitejs/plugin-vue": "^6.0.0",
-    "@vue/test-utils": "^2.4.6",
-    "@vue/tsconfig": "^0.7.0",
-    "electron": "^40.0.0",
-    "electron-builder": "^26.4.0",
-    "electron-vite": "^5.0.0",
-    "eslint": "^10.0.3",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-vue": "^10.8.0",
-    "globals": "^17.4.0",
-    "husky": "^9.1.7",
-    "jsdom": "^26.1.0",
-    "lint-staged": "^16.4.0",
-    "prettier": "^3.8.1",
-    "sass-embedded": "^1.92.1",
-    "typescript": "~5.8.3",
-    "typescript-eslint": "^8.57.0",
-    "vite": "^7.0.0",
-    "vitest": "^3.2.4",
-    "vue-tsc": "^2.2.10"
-  },
-  "description": "A local-first, privacy-focused note-taking app for desktop with built-in AI assistance. Simple interface for reading and editing txt and md files, plus support for loading local LLMs (GGUF format) for private, on-device chat and assistance. All notes and AI interactions stay on your device.",
-  "author": "Lorenzo Mazzola",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/larrydarko1/leaf.git"
-  },
-  "build": {
-    "appId": "com.leaf.app",
-    "productName": "Leaf",
-    "directories": {
-      "output": "dist-electron"
+    "name": "leaf",
+    "private": true,
+    "version": "1.5.2",
+    "type": "module",
+    "main": "out/main/index.js",
+    "scripts": {
+        "dev": "electron-vite dev",
+        "build": "vue-tsc -b && electron-vite build",
+        "build:electron": "npm run build && electron-builder",
+        "build:mac": "npm run build && electron-builder --mac --publish never",
+        "build:win": "npm run build && electron-builder --win --publish never",
+        "build:linux": "npm run build && electron-builder --linux --publish never",
+        "lint": "eslint src/",
+        "lint:fix": "eslint src/ --fix",
+        "format": "prettier --write \"src/**/*.{ts,vue,scss,json}\"",
+        "format:check": "prettier --check \"src/**/*.{ts,vue,scss,json}\"",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "prepare": "husky"
     },
-    "files": [
-      "package.json",
-      {
-        "from": "out",
-        "to": "out",
-        "filter": [
-          "**/*"
+    "lint-staged": {
+        "*.{ts,vue}": [
+            "eslint --fix",
+            "prettier --write"
+        ],
+        "*.{scss,json,md}": [
+            "prettier --write"
         ]
-      }
-    ],
-    "afterPack": "./build/afterPack.cjs",
-    "extraResources": [
-      "models/**"
-    ],
-    "asarUnpack": [
-      "models/**",
-      "node_modules/onnxruntime-node/**"
-    ],
-    "dmg": {
-      "background": "build/dmg-background.png",
-      "icon": "build/icon.icns",
-      "iconSize": 100,
-      "iconTextSize": 14,
-      "title": "${productName} ${version}",
-      "window": {
-        "width": 660,
-        "height": 400
-      },
-      "contents": [
-        {
-          "x": 180,
-          "y": 260
+    },
+    "dependencies": {
+        "@huggingface/transformers": "^3.8.1",
+        "marked": "^17.0.1",
+        "node-llama-cpp": "^3.15.1",
+        "onnxruntime-node": "^1.24.2",
+        "vue": "^3.5.17"
+    },
+    "devDependencies": {
+        "@commitlint/cli": "^20.5.0",
+        "@commitlint/config-conventional": "^20.5.0",
+        "@eslint/js": "^10.0.1",
+        "@types/node": "^24.0.13",
+        "@vitejs/plugin-vue": "^6.0.0",
+        "@vue/test-utils": "^2.4.6",
+        "@vue/tsconfig": "^0.7.0",
+        "electron": "^40.0.0",
+        "electron-builder": "^26.4.0",
+        "electron-vite": "^5.0.0",
+        "eslint": "^10.0.3",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-vue": "^10.8.0",
+        "globals": "^17.4.0",
+        "husky": "^9.1.7",
+        "jsdom": "^26.1.0",
+        "lint-staged": "^16.4.0",
+        "prettier": "^3.8.1",
+        "sass-embedded": "^1.92.1",
+        "typescript": "~5.8.3",
+        "typescript-eslint": "^8.57.0",
+        "vite": "^7.0.0",
+        "vitest": "^3.2.4",
+        "vue-tsc": "^2.2.10"
+    },
+    "description": "A local-first, privacy-focused note-taking app for desktop with built-in AI assistance. Simple interface for reading and editing txt and md files, plus support for loading local LLMs (GGUF format) for private, on-device chat and assistance. All notes and AI interactions stay on your device.",
+    "author": "Lorenzo Mazzola",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/larrydarko1/leaf.git"
+    },
+    "build": {
+        "appId": "com.leaf.app",
+        "productName": "Leaf",
+        "directories": {
+            "output": "dist-electron"
         },
-        {
-          "x": 480,
-          "y": 260,
-          "type": "link",
-          "path": "/Applications"
+        "files": [
+            "package.json",
+            {
+                "from": "out",
+                "to": "out",
+                "filter": [
+                    "**/*"
+                ]
+            }
+        ],
+        "afterPack": "./build/afterPack.cjs",
+        "extraResources": [
+            "models/**"
+        ],
+        "asarUnpack": [
+            "models/**",
+            "node_modules/onnxruntime-node/**"
+        ],
+        "dmg": {
+            "background": "build/dmg-background.png",
+            "icon": "build/icon.icns",
+            "iconSize": 100,
+            "iconTextSize": 14,
+            "title": "${productName} ${version}",
+            "window": {
+                "width": 660,
+                "height": 400
+            },
+            "contents": [
+                {
+                    "x": 180,
+                    "y": 260
+                },
+                {
+                    "x": 480,
+                    "y": 260,
+                    "type": "link",
+                    "path": "/Applications"
+                }
+            ]
+        },
+        "mac": {
+            "category": "public.app-category.productivity",
+            "identity": null,
+            "target": [
+                {
+                    "target": "dmg",
+                    "arch": [
+                        "arm64",
+                        "x64"
+                    ]
+                }
+            ],
+            "icon": "build/icon.icns"
+        },
+        "win": {
+            "target": [
+                "nsis"
+            ],
+            "icon": "build/icon.ico"
+        },
+        "linux": {
+            "target": [
+                "AppImage"
+            ],
+            "category": "Utility"
         }
-      ]
-    },
-    "mac": {
-      "category": "public.app-category.productivity",
-      "identity": null,
-      "target": [
-        {
-          "target": "dmg",
-          "arch": [
-            "arm64",
-            "x64"
-          ]
-        }
-      ],
-      "icon": "build/icon.icns"
-    },
-    "win": {
-      "target": [
-        "nsis"
-      ],
-      "icon": "build/icon.ico"
-    },
-    "linux": {
-      "target": [
-        "AppImage"
-      ],
-      "category": "Utility"
     }
-  }
 }
