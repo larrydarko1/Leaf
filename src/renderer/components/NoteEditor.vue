@@ -918,15 +918,15 @@ onUnmounted(() => {
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            position: absolute;
+            left: -22px;
+            top: 50%;
+            transform: translateY(-50%);
             width: 18px;
             height: 18px;
-            margin-right: 4px;
             cursor: pointer;
             opacity: 0;
-            transition:
-                opacity 0.15s ease,
-                transform 0.15s ease;
-            vertical-align: middle;
+            transition: opacity 0.15s ease;
             border-radius: 3px;
             color: var(--text2);
 
@@ -1019,34 +1019,89 @@ onUnmounted(() => {
 
         &.task {
             list-style: none;
+            position: relative;
 
-            input[type='checkbox'] {
-                -webkit-appearance: none;
-                appearance: none;
-                width: 16px;
-                height: 16px;
-                min-width: 16px;
-                border: 1.5px solid var(--text2);
-                border-radius: 4px;
-                background: transparent;
-                margin-right: 0.5em;
+            // Fold toggle arrow (only on parent tasks with nested lists)
+            .task-fold-toggle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                position: absolute;
+                left: -18px;
+                top: 3px;
+                width: 14px;
+                height: 14px;
                 cursor: pointer;
-                position: relative;
-                top: 5.5px;
-                transition: all 0.15s ease;
-                display: inline-block;
-                vertical-align: baseline;
+                opacity: 0.3;
+                color: var(--text2);
+                transition: opacity 0.15s ease;
 
-                &:checked {
-                    background: var(--accent-color);
-                    border-color: var(--accent-color);
+                svg {
+                    transition: transform 0.2s ease;
+                    transform: rotate(90deg); // pointing down = expanded
                 }
 
-                &:checked::after {
+                &:hover {
+                    opacity: 1;
+                }
+            }
+
+            &.task-collapsed {
+                > .task-fold-toggle svg {
+                    transform: rotate(0deg); // pointing right = collapsed
+                }
+
+                > ul,
+                > ol {
+                    display: none;
+                }
+            }
+
+            .task-label {
+                display: inline-flex;
+                align-items: center;
+                cursor: pointer;
+                gap: 0;
+                margin-right: 0.5em;
+                vertical-align: middle;
+
+                input[type='checkbox'] {
+                    position: absolute;
+                    opacity: 0;
+                    width: 0;
+                    height: 0;
+                }
+
+                .custom-checkbox {
+                    width: 18px;
+                    height: 18px;
+                    min-width: 18px;
+                    background-color: var(--text3, #ddd);
+                    border-radius: 5px;
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+                    transition:
+                        background-color 0.3s ease,
+                        box-shadow 0.3s ease;
+                    position: relative;
+                }
+
+                input[type='checkbox']:checked + .custom-checkbox {
+                    background-color: #4caf50;
+                    box-shadow: 0 0 8px #4caf5088;
+                }
+
+                input[type='checkbox'][data-half] + .custom-checkbox {
+                    background: linear-gradient(to top, #4caf50 50%, var(--text3, #ddd) 50%);
+                    box-shadow: 0 0 6px #4caf5055;
+                }
+
+                // Fully-checked: checkmark
+                .custom-checkbox::after {
                     content: '';
                     position: absolute;
-                    left: 4px;
-                    top: 1px;
+                    display: none;
+                    left: 5px;
+                    top: 2px;
                     width: 5px;
                     height: 9px;
                     border: solid white;
@@ -1054,20 +1109,17 @@ onUnmounted(() => {
                     transform: rotate(45deg);
                 }
 
-                &[data-half] {
-                    background: linear-gradient(to top, var(--accent-color) 50%, transparent 50%);
-                    border-color: var(--accent-color);
-                }
-
-                &:hover {
-                    border-color: var(--accent-color);
+                input[type='checkbox']:checked + .custom-checkbox::after {
+                    display: block;
                 }
             }
 
-            &:has(input:checked) {
-                color: var(--text2);
+            // Apply strikethrough only to .task-text (the span/p wrapping text content),
+            // never to the li itself — this prevents text-decoration painting into nested lists
+            &:has(> label > input:checked) > .task-text {
                 text-decoration: line-through;
                 text-decoration-color: var(--text2);
+                color: var(--text2);
             }
         }
     }
@@ -1119,11 +1171,19 @@ onUnmounted(() => {
     }
 
     :deep(p) {
-        margin: 0.5em 0;
+        margin: 0.75em 0;
 
         &:first-child {
             margin-top: 0;
         }
+    }
+
+    :deep(.md-blank-line) {
+        height: 0.75em;
+    }
+
+    :deep(.md-list-gap) {
+        height: 0.5em;
     }
 
     // Obsidian-style embed styles

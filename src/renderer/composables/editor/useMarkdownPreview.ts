@@ -28,6 +28,16 @@ export function useMarkdownPreview(
             return;
         }
 
+        // --- Task list fold toggle ---
+        const taskFoldToggle = target.closest('.task-fold-toggle') as HTMLElement;
+        if (taskFoldToggle) {
+            event.preventDefault();
+            event.stopPropagation();
+            const li = taskFoldToggle.closest('li.task') as HTMLElement;
+            li?.classList.toggle('task-collapsed');
+            return;
+        }
+
         // --- Embedded video play/pause ---
         const vidPlayBtn = target.closest('.embed-video-play') as HTMLElement;
         if (vidPlayBtn) {

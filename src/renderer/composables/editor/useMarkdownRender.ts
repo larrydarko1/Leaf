@@ -169,25 +169,89 @@ export function useMarkdownRender(
         // Convert - [/] half-complete tasks to a marked-compatible format with a marker
         const halfTaskProcessed = highlightedContent.replace(/^(\s*)- \[\/\] /gm, '$1- [ ] <!-- half --> ');
 
-        let html = marked.parse(halfTaskProcessed, { async: false }) as string;
+        // Preserve blank lines between same-level list items.
+        // A single blank line between list items makes marked render a "loose list" (adds <p> wrappers)
+        // but doesn't produce any visual spacing at the blank-line position.
+        // Fix: inject a raw HTML div with blank-line padding so marked treats it as a standalone block
+        // between two separate <ul> elements, not as inline content inside a list item.
+        const withListGaps = halfTaskProcessed.replace(
+            /^([ \t]*[-*+] .+)\n\n(?=[ \t]*[-*+] )/gm,
+            '$1\n\n<div class="md-list-gap"></div>\n\n',
+        );
 
-        // Add data-task-index to task list items for toggling and remove disabled
-        // Also detect half-complete marker and add data-half attribute
-        // Handles both tight lists (<li><input>) and loose lists (<li><p><input>)
-        let taskIndex = 0;
-        html = html.replace(/<li>(<p>)?<input(.*?)>/g, (_match, pTag, attrs) => {
-            const cleanAttrs = attrs.replace(/\s*disabled=""/g, '');
-            const openP = pTag ?? '';
-            return `<li class="task" data-task-index="${taskIndex++}">${openP}<input${cleanAttrs}>`;
+        // Preserve extra blank lines: convert 3+ consecutive newlines into a blank-line placeholder
+        // so that multiple blank lines between paragraphs produce visible vertical space
+        const withBlankLines = withListGaps.replace(/\n{3,}/g, (match) => {
+            const extraBlanks = Math.floor(match.length / 2) - 1;
+            return '\n\n' + '[[MD_BLANK_LINE]]\n\n'.repeat(extraBlanks);
         });
 
+        let html = marked.parse(withBlankLines, { async: false }) as string;
+
+        // Replace blank-line placeholders with spacer divs
+        html = html.replace(/<p>\[\[MD_BLANK_LINE\]\]<\/p>\n?/g, '<div class="md-blank-line"></div>\n');
+
         // Convert half-complete markers into data attribute on the checkbox
+        // Must happen BEFORE label wrapping — otherwise the span/label tags break the regex match
         html = html.replace(/(<input[^>]*>)\s*<!-- half -->/g, (_match, inputTag) => {
             return inputTag.replace('<input', '<input data-half="true"');
         });
 
+        // Add data-task-index to task list items for toggling and remove disabled
+        // Also detect half-complete marker and add data-half attribute
+        // Handles both tight lists (<li><input>) and loose lists (<li><p><input>)
+        // Wrap each checkbox in a <label> with a sibling <span class="custom-checkbox"> for custom styling
+        let taskIndex = 0;
+        html = html.replace(/<li>(<p>)?<input(.*?)>/g, (_match, pTag, attrs) => {
+            const cleanAttrs = attrs.replace(/\s*disabled=""/g, '');
+            const openP = pTag ?? '';
+            return `<li class="task" data-task-index="${taskIndex++}">${openP}<label class="task-label"><input${cleanAttrs}><span class="custom-checkbox"></span></label>`;
+        });
+
         // Wrap content under each heading into collapsible sections
         html = wrapHeadingSections(html);
+
+        // DOM pass: tag text content with .task-text so text-decoration: line-through
+        // only paints the task text itself, not nested lists (which are siblings, not children).
+        // Also add fold toggles for parent items with nested lists.
+        const taskTemp = document.createElement('div');
+        taskTemp.innerHTML = html;
+        taskTemp.querySelectorAll('li.task').forEach((li) => {
+            // Collect direct children that are the text content of this item
+            // (not the label, not nested lists, not fold toggles)
+            const textNodes: ChildNode[] = [];
+            for (const child of Array.from(li.childNodes)) {
+                if (child instanceof HTMLElement) {
+                    const tag = child.tagName;
+                    if (tag === 'UL' || tag === 'OL') continue;
+                    if (child.classList.contains('task-label') || child.classList.contains('task-fold-toggle'))
+                        continue;
+                    // Loose list: <p> already wraps the text content — just mark it
+                    if (tag === 'P') {
+                        child.classList.add('task-text');
+                        continue;
+                    }
+                }
+                textNodes.push(child);
+            }
+            // Tight list: bare text nodes — wrap in a span
+            if (textNodes.length > 0) {
+                const span = document.createElement('span');
+                span.className = 'task-text';
+                li.insertBefore(span, textNodes[0]);
+                for (const node of textNodes) span.appendChild(node);
+            }
+
+            // Fold toggle for parent items with nested lists
+            if (li.querySelector(':scope > ul, :scope > ol')) {
+                const toggle = document.createElement('span');
+                toggle.className = 'task-fold-toggle';
+                toggle.innerHTML =
+                    '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+                li.insertBefore(toggle, li.firstChild);
+            }
+        });
+        html = taskTemp.innerHTML;
 
         return html;
     });
