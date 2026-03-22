@@ -35,8 +35,8 @@ interface DownloadEntry {
 // Track active downloads
 const activeDownloads = new Map<string, DownloadEntry>();
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function hfApiGet(apiPath: string): Promise<any> {
-    // eslint-disable-line @typescript-eslint/no-explicit-any
     return new Promise((resolve, reject) => {
         const options = {
             hostname: 'huggingface.co',
@@ -159,8 +159,8 @@ async function fetchTree(repoId: string, treePath: string): Promise<TreeFile[]> 
 
 async function listRepoFiles(repoId: string): Promise<object> {
     try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const [modelData, treeFiles]: [any, TreeFile[]] = await Promise.all([
-            // eslint-disable-line @typescript-eslint/no-explicit-any
             hfApiGet(`/api/models/${repoId}`),
             fetchTree(repoId, ''),
         ]);

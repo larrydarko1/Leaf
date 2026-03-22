@@ -25,6 +25,8 @@ const emit = defineEmits<{
 
 // AI model composable
 const model = useAIModel();
+// Template refs - used in template but not in script
+/* eslint-disable @typescript-eslint/no-unused-vars */
 const {
     status,
     availableModels,
@@ -44,6 +46,7 @@ const {
     refreshStatus,
     openModelsFolder,
 } = model;
+/* eslint-enable @typescript-eslint/no-unused-vars */
 
 // Shared messages state (passed to multiple composables)
 const messages = ref<ChatMessage[]>([]);
