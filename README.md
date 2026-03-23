@@ -4,16 +4,20 @@
 ![Issues](https://img.shields.io/github/issues/larrydarko1/leaf)
 ![Pull Requests](https://img.shields.io/github/issues-pr/larrydarko1/leaf)
 
+If you find Leaf useful, consider [giving it a star ⭐](https://github.com/larrydarko1/leaf) — it helps others discover the project!
+
 Leaf is a **local-first, privacy-focused note-taking app** for desktop built with **Electron**, **Vue 3**, and TypeScript. Inspired by [Obsidian](https://obsidian.md) and [LM Studio](https://lmstudio.ai), Leaf provides a clean, distraction-free environment for managing your notes with local AI capabilities. All your data stays on your device - no cloud, no database, no tracking.
 
 > **IMPORTANT:** This app runs natively on **Desktop** (macOS, Windows, Linux). All notes are stored in your local vault folder and never leave your device.
 
 # Demo
+
 ![Leaf Demo](./public/demo.png)
 
 ## Features
 
 ### Note Management
+
 - **Vault-based system** - Select any folder as your vault
 - **Multi-format support** - Read and edit `.txt` and `.md` (Markdown) files
 - **Image support** - View images directly in the app (`.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.svg`, `.bmp`, `.ico`)
@@ -29,6 +33,7 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 - **Auto-save** - Changes save automatically as you type
 
 ### AI Assistant (Local LLM)
+
 - **100% local inference** - Run AI models directly on your machine, no cloud or API keys needed
 - **In-app model download** - Search and download GGUF models directly from Hugging Face without leaving the app
 - **Smart model info** - See file size, quantization type, estimated RAM usage, and size tier badges before downloading
@@ -43,6 +48,7 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 - **Powered by llama.cpp** - Uses [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) bindings to [llama.cpp](https://github.com/ggml-org/llama.cpp) (both MIT licensed)
 
 ### Privacy & Storage
+
 - **100% Offline** - Works completely without internet connection (AI, dictation, and notes all run locally)
 - **Local-only** - Notes never leave your device
 - **User-accessible files** - Direct access to your vault folder
@@ -50,6 +56,7 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 - **No tracking** - Zero telemetry or data collection
 
 ### Design
+
 - **Obsidian-inspired UI** - Clean, familiar interface
 - **Dark mode** - Easy on the eyes
 - **Distraction-free** - Focus on your writing
@@ -59,6 +66,7 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 Leaf is built with privacy and security as core principles:
 
 ### Privacy Guarantees
+
 - **No telemetry** - We don't collect any usage data, analytics, or crash reports
 - **No network requests** - The app works 100% offline and makes zero external connections
 - **No cloud sync** - Your notes never leave your device unless you explicitly copy them
@@ -66,18 +74,22 @@ Leaf is built with privacy and security as core principles:
 - **Local AI** - AI inference runs entirely on your hardware; no data is sent to any server
 
 ### Security Architecture
+
 - **Sandboxed renderer** - Context isolation prevents unauthorized system access
 - **Local file system only** - File operations are limited to your selected vault folder
 - **No remote code execution** - All code runs locally on your device
 - **Open source** - Full transparency - audit the code yourself
 
 ### Reporting Security Issues
-If you discover a security vulnerability, please open an issue on the [GitHub repository](https://github.com/larrydarko1/leaf/issues). 
+
+If you discover a security vulnerability, please open an issue on the [GitHub repository](https://github.com/larrydarko1/leaf/issues).
 
 ## Data Storage
 
 ### Your Notes
+
 Your notes are stored exactly where you choose - simply select any folder on your system as your vault. Common locations:
+
 - **macOS:** `~/Documents/Notes/`, `~/Desktop/MyVault/`
 - **Windows:** `C:\Users\YourName\Documents\Notes\`, `D:\MyVault\`
 - **Linux:** `~/Documents/Notes/`, `~/notes/`
@@ -85,7 +97,9 @@ Your notes are stored exactly where you choose - simply select any folder on you
 > **Note:** Your vault folder can be anywhere on your system. Use it with other apps, back it up to external drives, sync with git - it's just plain text files!
 
 ### AI Models
+
 Leaf stores AI models in `~/leaf-models/`. To get started with the AI assistant:
+
 1. Open the AI panel by clicking the lightbulb icon in the sidebar
 2. Click the **download** icon in the toolbar to open the Hugging Face download panel
 3. Search for a model (e.g. "llama 3.2", "phi", "qwen") and browse available GGUF files
@@ -96,7 +110,9 @@ Leaf stores AI models in `~/leaf-models/`. To get started with the AI assistant:
 > **Tip:** You can also manually place `.gguf` files in `~/leaf-models/` or click the folder icon to open the directory.
 
 ### Using Agent Mode
+
 Agent mode lets the AI edit your files directly with a safety net:
+
 1. Open a file in the editor
 2. Open the AI panel and load a model
 3. Click the **Agent mode** button (code brackets icon) in the toolbar — the indicator shows the current file name
@@ -107,7 +123,9 @@ Agent mode lets the AI edit your files directly with a safety net:
 > Agent mode only operates on the currently open file and is scoped to your vault folder for security.
 
 ### Using Dictation (Speech-to-Text)
+
 Leaf includes a built-in speech-to-text feature powered by [Whisper](https://github.com/openai/whisper) running 100% locally via ONNX:
+
 1. Open any `.txt` or `.md` file in the editor
 2. Click the **microphone icon** in the bottom-right corner of the editor
 3. On first use, the Whisper model loads from disk (a few seconds)
@@ -126,10 +144,12 @@ models/whisper/Xenova/whisper-tiny.en/onnx/decoder_model_merged.onnx
 ```
 
 Download links (right-click → Save Link As):
+
 - [`encoder_model.onnx`](https://huggingface.co/Xenova/whisper-tiny.en/resolve/main/onnx/encoder_model.onnx)
 - [`decoder_model_merged.onnx`](https://huggingface.co/Xenova/whisper-tiny.en/resolve/main/onnx/decoder_model_merged.onnx)
 
 Or via `curl`:
+
 ```sh
 mkdir -p models/whisper/Xenova/whisper-tiny.en/onnx
 curl -L -o models/whisper/Xenova/whisper-tiny.en/onnx/encoder_model.onnx \
@@ -149,10 +169,13 @@ Recommended models for getting started:
 | Llama 3.1 8B Q4 | ~4.5 GB | ~8 GB | Best quality |
 
 ### App Settings
+
 Leaf stores minimal app preferences (like your last opened folder path) automatically. No configuration needed.
 
 ### Conversation History
+
 AI conversations are automatically saved as JSON files in Electron's standard `userData` directory:
+
 - **macOS:** `~/Library/Application Support/Leaf/conversations/`
 - **Windows:** `%APPDATA%\Leaf\conversations\`
 - **Linux:** `~/.config/Leaf/conversations/`
@@ -162,23 +185,27 @@ Each conversation is stored as a separate `.json` file containing the model used
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js (v22+ recommended)
 - npm
 
 ### Setup
 
 1. **Clone the repository**
+
 ```sh
 git clone https://github.com/larrydarko1/leaf.git
 cd leaf
 ```
 
 2. **Install dependencies**
+
 ```sh
 npm install
 ```
 
 3. **Run in development mode**
+
 ```sh
 npm run dev
 ```
@@ -224,6 +251,7 @@ npm run build:linux
 ```
 
 The built installers will be in the `dist-electron/` directory:
+
 - **macOS:** `.dmg` installer
 - **Windows:** `.exe` installer (NSIS)
 - **Linux:** `.AppImage` file
@@ -231,12 +259,14 @@ The built installers will be in the `dist-electron/` directory:
 ### Installing the App
 
 After building:
+
 1. Navigate to `dist-electron/`
 2. Double-click the installer for your platform
 3. Follow installation prompts
 4. Launch "Leaf" from your Applications folder
 
 ## Tech Stack
+
 - **Desktop:** Electron (Native macOS, Windows, Linux app)
 - **Frontend:** Vue 3, TypeScript, SCSS
 - **AI:** [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) + [llama.cpp](https://github.com/ggml-org/llama.cpp) (local LLM inference)
@@ -332,12 +362,15 @@ leaf/
 ```
 
 ## Contributing
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
+
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
 ## Acknowledgments
+
 - Inspired by [Obsidian](https://obsidian.md/) for the vault-based note-taking approach
 - Local AI powered by [llama.cpp](https://github.com/ggml-org/llama.cpp) and [node-llama-cpp](https://github.com/withcatai/node-llama-cpp)
 
