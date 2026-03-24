@@ -21,6 +21,7 @@ import { useEditorDrop } from '../composables/editor/useEditorDrop';
 import { useDictation } from '../composables/editor/useDictation';
 import { useNotePersistence } from '../composables/editor/useNotePersistence';
 import { useMarkdownEditor } from '../composables/editor/useMarkdownEditor';
+import { useLazyEmbeds } from '../composables/editor/useLazyEmbeds';
 
 // Configure marked for clean rendering
 marked.setOptions({
@@ -40,6 +41,7 @@ const emit = defineEmits<{
 
 // Textarea ref for cursor position on drop
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
+const previewRef = ref<HTMLElement | null>(null);
 
 // Obsidian-style embed resolver (must be initialized before useNotePersistence)
 const {
@@ -129,6 +131,9 @@ const {
     onContentChange,
     formatTime,
 );
+
+// Lazy-load embedded media when it scrolls into the preview viewport
+useLazyEmbeds(previewRef, renderedMarkdown);
 
 function getFileNameWithoutExtension(fileName: string): string {
     const lastDotIndex = fileName.lastIndexOf('.');
@@ -523,6 +528,7 @@ onUnmounted(() => {
             <!-- Preview mode for markdown -->
             <div
                 v-if="showPreview && isMarkdownFile"
+                ref="previewRef"
                 class="markdown-preview-mode"
                 @click="onMarkdownPreviewClick"
                 @input="onMarkdownPreviewInput"

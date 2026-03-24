@@ -15,21 +15,36 @@ export function useEmbedResolver(getFile: () => { path: string } | null, getWork
         if (matches.length === 0) return;
 
         const noteDir = file.path.substring(0, file.path.lastIndexOf('/'));
-        let changed = false;
 
+        // Collect unique unresolved filenames
+        const fileNames = new Set<string>();
         for (const match of matches) {
             const inner = match[1];
             const fileName = inner.split('|')[0].split('#')[0].trim();
-            if (!fileName || embedCache.value.has(fileName)) continue;
+            if (fileName && !embedCache.value.has(fileName)) {
+                fileNames.add(fileName);
+            }
+        }
+        if (fileNames.size === 0) return;
 
-            try {
-                const result = await window.electronAPI.resolveEmbedPath(fileName, noteDir, workspacePath);
-                if (result.success && result.path) {
-                    embedCache.value.set(fileName, result.path);
-                    changed = true;
+        // Resolve all embeds in parallel — single cache version bump at the end
+        const results = await Promise.all(
+            [...fileNames].map(async (fileName) => {
+                try {
+                    const result = await window.electronAPI.resolveEmbedPath(fileName, noteDir, workspacePath);
+                    return { fileName, result };
+                } catch (err) {
+                    console.error('Failed to resolve embed:', fileName, err);
+                    return null;
                 }
-            } catch (err) {
-                console.error('Failed to resolve embed:', fileName, err);
+            }),
+        );
+
+        let changed = false;
+        for (const entry of results) {
+            if (entry?.result.success && entry.result.path) {
+                embedCache.value.set(entry.fileName, entry.result.path);
+                changed = true;
             }
         }
 

@@ -27,3 +27,5 @@ dist-electron
 
 # Whisper ONNX model files — download manually (see README)
 models/whisper/Xenova/whisper-tiny.en/onnx/
+
+prompts

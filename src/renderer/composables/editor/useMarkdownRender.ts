@@ -108,11 +108,11 @@ export function useMarkdownRender(
                             altText = displayOptions;
                         }
                     }
-                    return `<img src="${fileUrl}" alt="${altText}"${widthAttr}${heightAttr} class="embed-image" />`;
+                    return `<img src="${fileUrl}" alt="${altText}"${widthAttr}${heightAttr} class="embed-image" loading="lazy" />`;
                 }
                 case 'video':
                     return `<div class="embed-video-container">
-          <video src="${fileUrl}" preload="metadata" class="embed-video"></video>
+          <video src="${fileUrl}" preload="none" data-lazy-preload="metadata" class="embed-video"></video>
           <div class="embed-video-controls">
             <button class="embed-video-play" title="Play">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
@@ -134,7 +134,7 @@ export function useMarkdownRender(
         </div>`;
                 case 'audio':
                     return `<div class="embed-audio-container">
-          <audio src="${fileUrl}" preload="metadata" class="embed-audio"></audio>
+          <audio src="${fileUrl}" preload="none" data-lazy-preload="metadata" class="embed-audio"></audio>
           <div class="embed-audio-controls">
             <button class="embed-audio-play" title="Play">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
@@ -155,7 +155,7 @@ export function useMarkdownRender(
           </div>
         </div>`;
                 case 'pdf':
-                    return `<div class="embed-pdf-container"><iframe src="${fileUrl}" class="embed-pdf" frameborder="0"></iframe></div>`;
+                    return `<div class="embed-pdf-container"><iframe src="${fileUrl}" class="embed-pdf" frameborder="0" loading="lazy"></iframe></div>`;
                 case 'note':
                     return `<div class="embed-note-link"><a href="#" data-embed-note="${resolvedPath}">📄 ${fileName}</a></div>`;
                 default:
