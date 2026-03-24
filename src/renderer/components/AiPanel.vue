@@ -204,8 +204,6 @@ onMounted(async () => {
 
 <template>
     <div class="ai-panel">
-        <div class="ai-drag-region"></div>
-
         <AiModelBar
             :status="status"
             :available-models="availableModels"
@@ -324,11 +322,5 @@ onMounted(async () => {
     border-left: 1px solid var(--text3);
     width: 340px;
     min-width: 280px;
-}
-
-.ai-drag-region {
-    height: 50px;
-    -webkit-app-region: drag;
-    flex-shrink: 0;
 }
 </style>

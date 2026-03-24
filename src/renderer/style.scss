@@ -72,11 +72,6 @@ body,
     -webkit-tap-highlight-color: transparent;
 }
 
-/* Electron window dragging support */
-#app {
-    -webkit-app-region: drag;
-}
-
 /* Make interactive elements clickable */
 button,
 input,
@@ -85,22 +80,7 @@ select,
 a,
 [role='button'],
 .clickable {
-    -webkit-app-region: no-drag;
     cursor: pointer;
-}
-
-/* Allow scrolling on content containers */
-[class*='content'],
-[class*='list'],
-[class*='body'],
-[class*='container'],
-[class*='wrapper'],
-[class*='entries'],
-[class*='items'],
-.modal,
-.popup,
-.dropdown-menu {
-    -webkit-app-region: no-drag;
 }
 
 /* Custom scrollbar styling */

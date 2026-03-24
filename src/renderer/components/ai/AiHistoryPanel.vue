@@ -126,7 +126,6 @@ function formatRelativeDate(dateStr: string): string {
     display: flex;
     flex-direction: column;
     border-bottom: 1px solid var(--text3);
-    -webkit-app-region: no-drag;
 }
 
 .ai-history-header {

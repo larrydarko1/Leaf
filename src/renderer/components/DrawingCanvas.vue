@@ -1059,7 +1059,6 @@ canvas {
     left: 50%;
     transform: translateX(-50%);
     z-index: 20;
-    -webkit-app-region: no-drag;
 }
 
 .toolbar-inner {
@@ -1195,7 +1194,6 @@ canvas {
         0 4px 16px rgba(0, 0, 0, 0.04);
     padding: 12px;
     z-index: 15;
-    -webkit-app-region: no-drag;
 }
 
 .panel-fade-enter-active,
@@ -1440,7 +1438,6 @@ canvas {
     backdrop-filter: blur(8px);
     border-top: 1px solid var(--border-color, #e0e0e0);
     z-index: 15;
-    -webkit-app-region: no-drag;
 }
 
 .footer-left,

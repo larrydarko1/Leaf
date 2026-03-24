@@ -79,7 +79,7 @@ function createWindow(): void {
             spellcheck: true,
         },
         backgroundColor: '#1a1a1a',
-        titleBarStyle: 'hiddenInset',
+        title: '',
         show: false,
     });
 

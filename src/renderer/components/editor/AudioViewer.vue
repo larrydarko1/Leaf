@@ -179,7 +179,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
     justify-content: center;
     padding: 2rem;
     overflow: auto;
-    -webkit-app-region: no-drag;
     background: var(--base1);
     position: relative;
 

@@ -261,7 +261,6 @@ function truncate(str: string, len: number): string {
     gap: 0.5rem;
     padding: 0.5rem 0.75rem;
     flex-shrink: 0;
-    -webkit-app-region: no-drag;
 }
 
 .ai-model-pill {

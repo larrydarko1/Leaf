@@ -36,7 +36,6 @@ watch(
     justify-content: center;
     padding: 0;
     overflow: hidden;
-    -webkit-app-region: no-drag;
     background: var(--base1);
     position: relative;
 }

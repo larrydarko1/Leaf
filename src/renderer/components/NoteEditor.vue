@@ -613,7 +613,6 @@ onUnmounted(() => {
     background: transparent;
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    -webkit-app-region: drag;
     position: sticky;
     top: 0;
     z-index: 10;
@@ -628,7 +627,6 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    -webkit-app-region: drag;
     user-select: none;
 }
 
@@ -701,7 +699,6 @@ onUnmounted(() => {
     align-items: center;
     gap: 0.5rem;
     font-size: 0.75rem;
-    -webkit-app-region: no-drag;
 }
 
 .unsaved-indicator {
@@ -725,7 +722,6 @@ onUnmounted(() => {
     border-bottom: 1px solid color-mix(in srgb, var(--text2) 12%, transparent);
     flex-shrink: 0;
     flex-wrap: wrap;
-    -webkit-app-region: no-drag;
 }
 
 .md-toolbar-btn {
@@ -843,7 +839,6 @@ onUnmounted(() => {
     line-height: 1.6;
     resize: none;
     cursor: text;
-    -webkit-app-region: no-drag;
 
     &::placeholder {
         color: var(--text2);
@@ -868,7 +863,6 @@ onUnmounted(() => {
     background: transparent;
     color: var(--text1);
     overflow: auto;
-    -webkit-app-region: no-drag;
     font-family: Helvetica, sans-serif;
     font-size: 1rem;
     line-height: 1.6;
@@ -1467,7 +1461,6 @@ onUnmounted(() => {
     cursor: pointer;
     transition: all 0.2s ease;
     z-index: 20;
-    -webkit-app-region: no-drag;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 
     &:hover {
@@ -1538,7 +1531,6 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    -webkit-app-region: drag;
 }
 
 .empty-message {

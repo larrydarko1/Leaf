@@ -255,7 +255,6 @@ function toggleAiPanel() {
             <!-- Main app interface -->
             <div v-else class="app-layout">
                 <div class="left-column">
-                    <div class="sidebar-header"></div>
                     <div class="sidebar-menu">
                         <!-- Workspace pill -->
                         <div class="menu-pill">
@@ -475,7 +474,6 @@ function toggleAiPanel() {
                     </div>
                 </div>
                 <aside class="sidebar">
-                    <div class="sidebar-header"></div>
                     <FileExplorer
                         v-if="!showSearchPanel && !showBookmarksPanel"
                         :files="files"
@@ -657,7 +655,6 @@ function toggleAiPanel() {
     gap: 0.4rem;
     padding: 0.5rem 0.35rem;
     background: var(--bg-secondary);
-    -webkit-app-region: drag;
     flex: 1;
     overflow-y: auto;
 }
@@ -671,14 +668,6 @@ function toggleAiPanel() {
     overflow: hidden;
 }
 
-.sidebar-header {
-    height: 50px;
-    background: var(--base1);
-    border-bottom: 1px solid var(--text3);
-    -webkit-app-region: drag;
-    flex-shrink: 0;
-}
-
 .menu-pill {
     display: flex;
     flex-direction: column;
@@ -688,7 +677,6 @@ function toggleAiPanel() {
     border: 1px solid var(--text3);
     border-radius: 10px;
     padding: 0.15rem;
-    -webkit-app-region: no-drag;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
 }
@@ -717,7 +705,6 @@ function toggleAiPanel() {
     display: flex;
     align-items: center;
     justify-content: center;
-    -webkit-app-region: no-drag;
 
     &:hover:not(:disabled) {
         background: var(--bg-hover);

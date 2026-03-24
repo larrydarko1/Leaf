@@ -465,7 +465,6 @@ function formatTokenCount(n: number): string {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    -webkit-app-region: no-drag;
 }
 
 .ai-empty-state {
@@ -1011,7 +1010,6 @@ function formatTokenCount(n: number): string {
     gap: 0.5rem;
     padding: 0 0.75rem;
     flex-shrink: 0;
-    -webkit-app-region: no-drag;
 }
 
 .ai-token-bar-track {

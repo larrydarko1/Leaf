@@ -1,4 +1,4 @@
-<h1>leaf.</h1>
+# leaf.
 
 ![License](https://img.shields.io/github/license/larrydarko1/leaf)
 ![Issues](https://img.shields.io/github/issues/larrydarko1/leaf)
