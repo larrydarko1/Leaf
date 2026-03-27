@@ -189,7 +189,7 @@ export interface ElectronAPI {
     removeFsChangedListener: () => void;
 
     // Hugging Face model download operations
-    hfSearch: (query: string) => Promise<HfSearchResponse>;
+    hfSearch: (query: string, sort?: string, offset?: number) => Promise<HfSearchResponse>;
     hfListFiles: (repoId: string) => Promise<HfListFilesResponse>;
     hfDownload: (url: string, fileName: string) => Promise<HfDownloadResult>;
     hfCancelDownload: (fileName: string) => Promise<AiSimpleResult>;

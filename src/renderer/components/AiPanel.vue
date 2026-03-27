@@ -93,8 +93,14 @@ const {
     hfIsLoadingFiles,
     hfDownloadProgress,
     hfActiveDownloads,
+    hfDownloadError,
+    hfSortBy,
+    hfHasMore,
+    hfIsLoadingMore,
     toggleHfPanel,
     searchHfModels,
+    loadMoreResults,
+    changeSortBy,
     selectHfRepo,
     downloadHfModel,
     cancelHfDownload,
@@ -237,11 +243,17 @@ onMounted(async () => {
             :hf-is-loading-files="hfIsLoadingFiles"
             :hf-download-progress="hfDownloadProgress"
             :hf-active-downloads="hfActiveDownloads"
+            :hf-download-error="hfDownloadError"
+            :hf-sort-by="hfSortBy"
+            :hf-has-more="hfHasMore"
+            :hf-is-loading-more="hfIsLoadingMore"
             @update:hf-search-query="hfSearchQuery = $event"
             @search="searchHfModels"
             @select-repo="selectHfRepo"
             @download="downloadHfModel"
             @cancel-download="cancelHfDownload"
+            @change-sort="changeSortBy"
+            @load-more="loadMoreResults"
             @back="
                 hfSelectedRepo = null;
                 hfRepoFiles = [];

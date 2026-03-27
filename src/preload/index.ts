@@ -93,7 +93,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     },
 
     // Hugging Face model download operations
-    hfSearch: (query: string) => ipcRenderer.invoke('hf:search', query),
+    hfSearch: (query: string, sort?: string, offset?: number) => ipcRenderer.invoke('hf:search', query, sort, offset),
     hfListFiles: (repoId: string) => ipcRenderer.invoke('hf:listFiles', repoId),
     hfDownload: (url: string, fileName: string) => ipcRenderer.invoke('hf:download', url, fileName),
     hfCancelDownload: (fileName: string) => ipcRenderer.invoke('hf:cancelDownload', fileName),

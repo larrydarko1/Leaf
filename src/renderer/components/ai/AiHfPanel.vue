@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { HfRepoFile, HfModelInfo, HfSearchResult, HfDownloadProgress } from '../../types/hf';
+import type { HfRepoFile, HfModelInfo, HfSearchResult, HfDownloadProgress, HfSortOption } from '../../types/hf';
 
 defineProps<{
     hfSearchQuery: string;
@@ -11,6 +11,10 @@ defineProps<{
     hfIsLoadingFiles: boolean;
     hfDownloadProgress: HfDownloadProgress | null;
     hfActiveDownloads: Set<string>;
+    hfDownloadError: string | null;
+    hfSortBy: HfSortOption;
+    hfHasMore: boolean;
+    hfIsLoadingMore: boolean;
 }>();
 
 defineEmits<{
@@ -19,9 +23,18 @@ defineEmits<{
     (e: 'select-repo', id: string): void;
     (e: 'download', file: HfRepoFile): void;
     (e: 'cancel-download', fileName: string): void;
+    (e: 'change-sort', sort: HfSortOption): void;
+    (e: 'load-more'): void;
     (e: 'back'): void;
     (e: 'close'): void;
 }>();
+
+const sortOptions: { value: HfSortOption; label: string }[] = [
+    { value: 'downloads', label: 'Downloads' },
+    { value: 'likes', label: 'Likes' },
+    { value: 'lastModified', label: 'Recent' },
+    { value: 'trending', label: 'Trending' },
+];
 
 function formatNumber(n: number): string {
     if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
@@ -75,6 +88,19 @@ function formatNumber(n: number): string {
             </button>
         </div>
 
+        <!-- Sort bar -->
+        <div v-if="!hfSelectedRepo" class="ai-hf-sort-bar">
+            <button
+                v-for="opt in sortOptions"
+                :key="opt.value"
+                class="ai-hf-sort-btn"
+                :class="{ active: hfSortBy === opt.value }"
+                @click="$emit('change-sort', opt.value)"
+            >
+                {{ opt.label }}
+            </button>
+        </div>
+
         <!-- Back button when viewing files -->
         <button v-if="hfSelectedRepo" class="ai-hf-back-btn" @click="$emit('back')">
             <svg
@@ -94,6 +120,9 @@ function formatNumber(n: number): string {
         </button>
 
         <div class="ai-hf-results">
+            <!-- Download error message -->
+            <div v-if="hfDownloadError" class="ai-hf-error">{{ hfDownloadError }}</div>
+
             <!-- Loading state -->
             <div v-if="hfIsSearching || hfIsLoadingFiles" class="ai-hf-loading">Searching...</div>
 
@@ -288,10 +317,16 @@ function formatNumber(n: number): string {
                 >
                     <div class="ai-hf-result-info">
                         <span class="ai-hf-result-name">{{ repo.id }}</span>
-                        <span class="ai-hf-result-meta">
+                        <div class="ai-hf-result-meta">
                             <span title="Downloads">↓ {{ formatNumber(repo.downloads) }}</span>
                             <span title="Likes">♥ {{ formatNumber(repo.likes) }}</span>
-                        </span>
+                            <span v-if="repo.architecture" class="ai-hf-result-tag" title="Architecture">{{
+                                repo.architecture
+                            }}</span>
+                            <span v-if="repo.parameterCount" class="ai-hf-result-tag" title="Parameters">{{
+                                repo.parameterCount
+                            }}</span>
+                        </div>
                     </div>
                     <svg
                         width="10"
@@ -306,6 +341,16 @@ function formatNumber(n: number): string {
                         <polyline points="9 18 15 12 9 6" />
                     </svg>
                 </div>
+
+                <!-- Load more button -->
+                <button
+                    v-if="hfHasMore"
+                    class="ai-hf-load-more"
+                    :disabled="hfIsLoadingMore"
+                    @click="$emit('load-more')"
+                >
+                    {{ hfIsLoadingMore ? 'Loading...' : 'Load more' }}
+                </button>
             </template>
 
             <!-- Empty state -->
@@ -367,6 +412,37 @@ function formatNumber(n: number): string {
     }
 }
 
+.ai-hf-sort-bar {
+    display: flex;
+    gap: 0.2rem;
+    margin: 0 0.5rem 0.4rem;
+    padding: 0.15rem;
+    background: var(--bg-primary);
+    border-radius: 6px;
+}
+
+.ai-hf-sort-btn {
+    flex: 1;
+    padding: 0.2rem 0.3rem;
+    background: none;
+    border: none;
+    color: var(--text2);
+    font-size: 0.62rem;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+    &:hover {
+        color: var(--text1);
+        background: var(--bg-hover);
+    }
+    &.active {
+        color: var(--text1);
+        background: var(--bg-hover);
+        font-weight: 600;
+    }
+}
+
 .ai-hf-back-btn {
     display: flex;
     align-items: center;
@@ -390,6 +466,16 @@ function formatNumber(n: number): string {
     flex: 1;
     overflow-y: auto;
     padding: 0 0.5rem 0.5rem;
+}
+
+.ai-hf-error {
+    padding: 0.4rem 0.75rem;
+    margin: 0.25rem 0.75rem;
+    font-size: 0.68rem;
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.08);
+    border-radius: 6px;
+    border: 1px solid rgba(231, 76, 60, 0.15);
 }
 
 .ai-hf-loading,
@@ -430,10 +516,44 @@ function formatNumber(n: number): string {
 
 .ai-hf-result-meta {
     display: flex;
-    gap: 0.5rem;
+    flex-wrap: wrap;
+    gap: 0.35rem;
     font-size: 0.65rem;
     color: var(--text2);
     opacity: 0.7;
+    align-items: center;
+}
+
+.ai-hf-result-tag {
+    font-size: 0.58rem;
+    background: var(--bg-hover);
+    padding: 0.05rem 0.3rem;
+    border-radius: 3px;
+    white-space: nowrap;
+}
+
+.ai-hf-load-more {
+    display: block;
+    width: 100%;
+    padding: 0.45rem;
+    margin-top: 0.25rem;
+    background: none;
+    border: 1px dashed var(--text3);
+    color: var(--text2);
+    font-size: 0.68rem;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.15s;
+    &:hover:not(:disabled) {
+        color: var(--text1);
+        border-color: var(--text2);
+        background: var(--bg-hover);
+    }
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
 }
 
 .ai-hf-repo-header {

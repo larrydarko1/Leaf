@@ -1,4 +1,6 @@
 // Hugging Face model download types
+export type HfSortOption = 'downloads' | 'likes' | 'lastModified' | 'trending';
+
 export interface HfSearchResult {
     id: string;
     author: string;
@@ -7,11 +9,14 @@ export interface HfSearchResult {
     likes: number;
     tags: string[];
     lastModified: string;
+    architecture: string | null;
+    parameterCount: string | null;
 }
 
 export interface HfSearchResponse {
     success: boolean;
     results?: HfSearchResult[];
+    hasMore?: boolean;
     error?: string;
 }
 

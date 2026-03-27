@@ -10,8 +10,14 @@ import path from 'path';
 import { DEFAULT_MODELS_DIR } from '../lib/paths';
 import { assertSafeFileName } from '../lib/validation';
 
-// Only allow downloads from Hugging Face domains
-const ALLOWED_DOWNLOAD_HOSTS = ['huggingface.co', 'cdn-lfs.hf.co', 'cdn-lfs-us-1.hf.co', 'cdn-lfs.huggingface.co'];
+// Only allow downloads from Hugging Face domains (including XetHub CDN)
+const ALLOWED_DOWNLOAD_SUFFIXES = ['.hf.co', '.huggingface.co'];
+const ALLOWED_DOWNLOAD_EXACT = ['huggingface.co', 'hf.co'];
+
+function isAllowedDownloadHost(hostname: string): boolean {
+    if (ALLOWED_DOWNLOAD_EXACT.includes(hostname)) return true;
+    return ALLOWED_DOWNLOAD_SUFFIXES.some((suffix) => hostname.endsWith(suffix));
+}
 
 function assertAllowedDownloadUrl(url: string): void {
     let parsed: URL;
@@ -21,7 +27,7 @@ function assertAllowedDownloadUrl(url: string): void {
         throw new Error('Invalid download URL.');
     }
     if (parsed.protocol !== 'https:') throw new Error('Only HTTPS downloads are allowed.');
-    if (!ALLOWED_DOWNLOAD_HOSTS.includes(parsed.hostname)) {
+    if (!isAllowedDownloadHost(parsed.hostname)) {
         throw new Error(`Downloads are only allowed from Hugging Face (got ${parsed.hostname}).`);
     }
 }
@@ -70,23 +76,68 @@ function hfApiGet(apiPath: string): Promise<any> {
     });
 }
 
-async function searchModels(query: string): Promise<{ success: boolean; results?: object[]; error?: string }> {
+const RESULTS_PER_PAGE = 20;
+
+type SortOption = 'downloads' | 'likes' | 'lastModified' | 'trending';
+
+function formatParamCount(n: number): string {
+    if (n >= 1e12) return (n / 1e12).toFixed(1) + 'T';
+    if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
+    if (n >= 1e6) return (n / 1e6).toFixed(0) + 'M';
+    return String(n);
+}
+
+async function searchModels(
+    query: string,
+    sort: SortOption = 'downloads',
+    offset: number = 0,
+): Promise<{ success: boolean; results?: object[]; hasMore?: boolean; error?: string }> {
     try {
-        const searchQuery = query ? `${query} gguf` : 'gguf';
-        const apiPath = `/api/models?search=${encodeURIComponent(searchQuery)}&filter=gguf&sort=downloads&direction=-1&limit=20`;
+        const searchQuery = query.trim() || '';
+        const limit = RESULTS_PER_PAGE + 1; // fetch one extra to detect hasMore
+
+        let sortParam: string;
+        let directionParam: string;
+        if (sort === 'trending') {
+            sortParam = 'trendingScore';
+            directionParam = '-1';
+        } else if (sort === 'lastModified') {
+            sortParam = 'lastModified';
+            directionParam = '-1';
+        } else if (sort === 'likes') {
+            sortParam = 'likes';
+            directionParam = '-1';
+        } else {
+            sortParam = 'downloads';
+            directionParam = '-1';
+        }
+
+        const expands = ['gguf', 'downloads', 'likes', 'author', 'tags', 'lastModified']
+            .map((f) => `expand[]=${f}`)
+            .join('&');
+        const apiPath = `/api/models?search=${encodeURIComponent(searchQuery)}&filter=gguf&sort=${sortParam}&direction=${directionParam}&limit=${limit}&offset=${offset}&${expands}`;
         const models: any[] = await hfApiGet(apiPath); // eslint-disable-line @typescript-eslint/no-explicit-any
 
-        const results = models.map((m) => ({
-            id: m.modelId || m.id,
-            author: m.author || m.modelId?.split('/')[0] || '',
-            name: m.modelId?.split('/').pop() || m.id,
-            downloads: m.downloads || 0,
-            likes: m.likes || 0,
-            tags: m.tags || [],
-            lastModified: m.lastModified || '',
-        }));
+        const hasMore = models.length > RESULTS_PER_PAGE;
+        const sliced = hasMore ? models.slice(0, RESULTS_PER_PAGE) : models;
 
-        return { success: true, results };
+        const results = sliced.map((m) => {
+            const gguf = m.gguf || {};
+            const paramCount = gguf.total || null;
+            return {
+                id: m.modelId || m.id,
+                author: m.author || (m.id ? m.id.split('/')[0] : ''),
+                name: m.id ? m.id.split('/').pop() : m.modelId || '',
+                downloads: m.downloads || 0,
+                likes: m.likes || 0,
+                tags: m.tags || [],
+                lastModified: m.lastModified || '',
+                architecture: gguf.architecture || null,
+                parameterCount: paramCount ? formatParamCount(paramCount) : null,
+            };
+        });
+
+        return { success: true, results, hasMore };
     } catch (err) {
         return { success: false, error: `Search failed: ${(err as Error).message}` };
     }
@@ -446,9 +497,12 @@ function getActiveDownloads(): string[] {
 }
 
 export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null): void {
-    ipc.handle('hf:search', async (_event, query: string) => {
+    ipc.handle('hf:search', async (_event, query: string, sort?: string, offset?: number) => {
         if (typeof query !== 'string') return { success: false, error: 'Invalid query' };
-        return searchModels(query);
+        const validSorts: SortOption[] = ['downloads', 'likes', 'lastModified', 'trending'];
+        const resolvedSort = validSorts.includes(sort as SortOption) ? (sort as SortOption) : 'downloads';
+        const resolvedOffset = typeof offset === 'number' && offset >= 0 ? offset : 0;
+        return searchModels(query, resolvedSort, resolvedOffset);
     });
 
     ipc.handle('hf:listFiles', async (_event, repoId: string) => {
@@ -459,10 +513,14 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
     ipc.handle('hf:download', async (_event, url: string, fileName: string) => {
         if (typeof url !== 'string' || typeof fileName !== 'string')
             return { success: false, error: 'Invalid arguments' };
-        return downloadModel(url, fileName, (progress) => {
-            const win = getMainWindow();
-            if (win && !win.isDestroyed()) win.webContents.send('hf:downloadProgress', progress);
-        });
+        try {
+            return await downloadModel(url, fileName, (progress) => {
+                const win = getMainWindow();
+                if (win && !win.isDestroyed()) win.webContents.send('hf:downloadProgress', progress);
+            });
+        } catch (err) {
+            return { success: false, error: (err as Error).message };
+        }
     });
 
     ipc.handle('hf:cancelDownload', async (_event, fileName: string) => {
