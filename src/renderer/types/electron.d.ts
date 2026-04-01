@@ -146,6 +146,10 @@ export interface ElectronAPI {
     createFile: (folderPath: string, fileName: string) => Promise<FileCreateResult>;
     deleteFile: (filePath: string) => Promise<FileDeleteResult>;
     renameFile: (filePath: string, newFileName: string) => Promise<FileRenameResult>;
+    updateEmbedRefs: (
+        oldFileName: string,
+        newFileName: string,
+    ) => Promise<{ success: boolean; updatedCount?: number; error?: string }>;
     renameFolder: (folderPath: string, newFolderName: string) => Promise<FolderRenameResult>;
     deleteFolder: (folderPath: string) => Promise<FolderDeleteResult>;
     moveFile: (filePath: string, targetFolderPath: string) => Promise<FileMoveResult>;

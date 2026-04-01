@@ -153,10 +153,18 @@ export function useVault() {
     }
 
     async function renameFile(file: FileInfo, newBaseName: string): Promise<FileInfo | null> {
+        const oldFileName = file.name;
         const extension = file.name.substring(file.name.lastIndexOf('.'));
+        const newFileName = newBaseName + extension;
         try {
-            const result = await window.electronAPI.renameFile(file.path, newBaseName + extension);
+            const result = await window.electronAPI.renameFile(file.path, newFileName);
             if (result.success && result.newPath) {
+                // Cascade: update ![[embed]] references in all md files
+                if (oldFileName !== newFileName) {
+                    window.electronAPI
+                        .updateEmbedRefs(oldFileName, newFileName)
+                        .catch((err) => console.error('Failed to update embed references:', err));
+                }
                 await refreshFiles();
                 return files.value.find((f) => f.path === result.newPath) ?? null;
             }

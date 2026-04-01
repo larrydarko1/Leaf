@@ -373,6 +373,38 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
         }
     });
 
+    // Update embed references across all markdown files when a file is renamed
+    ipc.handle('file:updateEmbedRefs', async (_event, oldFileName: string, newFileName: string) => {
+        if (typeof oldFileName !== 'string' || typeof newFileName !== 'string')
+            return { success: false, error: 'Invalid arguments' };
+        try {
+            const root = requireVaultRoot();
+            const { files: allFiles } = await scanFolder(root);
+            const mdFiles = allFiles.filter((f) => f.extension === '.md');
+            let updatedCount = 0;
+
+            // Match ![[oldFileName]] with optional |options or #heading suffixes
+            const oldBase = oldFileName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const embedRegex = new RegExp(`(!\\[\\[)${oldBase}((?:[|#][^\\]]*)?\\]\\])`, 'g');
+
+            for (const file of mdFiles) {
+                const content = await fs.readFile(file.path, 'utf-8');
+                if (!embedRegex.test(content)) {
+                    embedRegex.lastIndex = 0;
+                    continue;
+                }
+                embedRegex.lastIndex = 0;
+                const updated = content.replace(embedRegex, `$1${newFileName}$2`);
+                await fs.writeFile(file.path, updated, 'utf-8');
+                updatedCount++;
+            }
+
+            return { success: true, updatedCount };
+        } catch (error) {
+            return { success: false, error: (error as Error).message };
+        }
+    });
+
     // Rename folder
     ipc.handle('folder:rename', async (_event, oldPath: string, newFolderName: string) => {
         if (typeof oldPath !== 'string' || typeof newFolderName !== 'string')
