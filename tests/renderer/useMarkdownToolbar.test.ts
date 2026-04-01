@@ -22,7 +22,9 @@ describe('useMarkdownToolbar', () => {
             () => true,
             content,
             textareaRef,
-            () => { changeCount++; }
+            () => {
+                changeCount++;
+            },
         );
         mdFormatText = toolbar.mdFormatText;
         mdInsertHeading = toolbar.mdInsertHeading;
@@ -296,6 +298,38 @@ describe('useMarkdownToolbar', () => {
             await nextTick();
             expect(content.value).toBe('  - nested item\n  - ');
         });
+
+        it('renumbers consecutive items below when inserting new ordered line', async () => {
+            setSelection('1. first\n2. second\n3. third', 8, 8); // end of "1. first"
+            pressEnter();
+            await nextTick();
+            expect(content.value).toBe('1. first\n2. \n3. second\n4. third');
+        });
+
+        it('does not renumber below when empty ordered item is removed (gap created)', async () => {
+            setSelection('1. item\n2. \n3. alpha\n4. beta', 11, 11); // end of "2. "
+            pressEnter();
+            await nextTick();
+            // Removing creates a blank line gap, so no renumbering
+            expect(content.value).toBe('1. item\n\n\n3. alpha\n4. beta');
+        });
+
+        it('stops renumbering at a blank line gap', async () => {
+            setSelection('1. first\n2. second\n\n5. unrelated', 8, 8);
+            pressEnter();
+            await nextTick();
+            // Only the consecutive block (2. second) gets renumbered, the gap stops it
+            expect(content.value).toBe('1. first\n2. \n3. second\n\n5. unrelated');
+        });
+
+        it('renumbers with matching indentation only', async () => {
+            setSelection('1. first\n  1. nested\n2. second', 8, 8);
+            pressEnter();
+            await nextTick();
+            // "  1. nested" has different indentation, stops renumbering at top level
+            // but "2. second" after it won't be reached
+            expect(content.value).toBe('1. first\n2. \n  1. nested\n2. second');
+        });
     });
 
     describe('onTextareaKeydown — keyboard shortcuts', () => {
@@ -347,7 +381,7 @@ describe('useMarkdownToolbar', () => {
                 () => false,
                 nonMdContent,
                 taRef,
-                () => { }
+                () => {},
             );
 
             ta.value = '- item';

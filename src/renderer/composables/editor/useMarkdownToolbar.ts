@@ -2,6 +2,32 @@ import { nextTick } from 'vue';
 import type { Ref } from 'vue';
 
 /**
+ * Renumber consecutive ordered list items starting from a given position in the text.
+ * Only renumbers lines with the same indentation level that form an unbroken sequence.
+ */
+function renumberOrderedList(text: string, fromPos: number, indent: string, startNum: number): string {
+    const before = text.substring(0, fromPos);
+    const after = text.substring(fromPos);
+    const lines = after.split('\n');
+    const pattern = new RegExp(`^${indent.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\d+)\\. `);
+    let num = startNum;
+    let changed = false;
+
+    for (let i = 0; i < lines.length; i++) {
+        const match = lines[i].match(pattern);
+        if (!match) break; // Stop at first non-matching line (gap or different content)
+        const oldNum = parseInt(match[1]);
+        if (oldNum !== num) {
+            lines[i] = lines[i].replace(pattern, `${indent}${num}. `);
+            changed = true;
+        }
+        num++;
+    }
+
+    return changed ? before + lines.join('\n') : text;
+}
+
+/**
  * Handles markdown toolbar formatting actions and textarea keyboard shortcuts.
  */
 export function useMarkdownToolbar(
@@ -231,7 +257,6 @@ export function useMarkdownToolbar(
                 const indent = orderedMatch[1];
                 const num = parseInt(orderedMatch[2]);
                 const lineContent = orderedMatch[3];
-
                 if (!lineContent.trim()) {
                     event.preventDefault();
                     const newText = text.substring(0, lineStart) + '\n' + text.substring(pos);
@@ -248,7 +273,14 @@ export function useMarkdownToolbar(
                 event.preventDefault();
                 const prefix = `${indent}${num + 1}. `;
                 const insertion = '\n' + prefix;
-                const newText = text.substring(0, pos) + insertion + text.substring(pos);
+                let newText = text.substring(0, pos) + insertion + text.substring(pos);
+
+                // Renumber consecutive ordered list items below the new line
+                const nextLineStart = newText.indexOf('\n', pos + insertion.length);
+                if (nextLineStart !== -1) {
+                    newText = renumberOrderedList(newText, nextLineStart + 1, indent, num + 2);
+                }
+
                 content.value = newText;
                 onContentChange();
                 nextTick(() => {
