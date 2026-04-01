@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted, computed } from 'vue';
+import { ref, watch, onMounted, onUnmounted, computed, shallowRef } from 'vue';
 import {
     isImageFile as checkImage,
     isVideoFile as checkVideo,
@@ -9,7 +9,6 @@ import {
     isMarkdownFile as checkMarkdown,
     isDrawingFile as checkDrawing,
 } from '../utils/fileTypes';
-import { marked } from 'marked';
 import DrawingCanvas from './DrawingCanvas.vue';
 import ImageViewer from './editor/ImageViewer.vue';
 import VideoViewer from './editor/VideoViewer.vue';
@@ -20,14 +19,12 @@ import { useEmbedResolver } from '../composables/editor/useEmbedResolver';
 import { useEditorDrop } from '../composables/editor/useEditorDrop';
 import { useDictation } from '../composables/editor/useDictation';
 import { useNotePersistence } from '../composables/editor/useNotePersistence';
-import { useMarkdownEditor } from '../composables/editor/useMarkdownEditor';
-import { useLazyEmbeds } from '../composables/editor/useLazyEmbeds';
-
-// Configure marked for clean rendering
-marked.setOptions({
-    breaks: true,
-    gfm: true,
-});
+import { useCodemirror } from '../composables/editor/useCodemirror';
+import { useCodemirrorToolbar, markdownKeymap } from '../composables/editor/cm-toolbar';
+import { createMarkdownWidgetsPlugin } from '../composables/editor/cm-markdown-widgets';
+import { leafEditorTheme } from '../composables/editor/cm-theme';
+import { listContinuationKeymap } from '../composables/editor/cm-list-continuation';
+import { keymap, EditorView } from '@codemirror/view';
 
 const props = defineProps<{
     file: FileInfo | null;
@@ -39,9 +36,10 @@ const emit = defineEmits<{
     contentChanged: [hasChanges: boolean];
 }>();
 
-// Textarea ref for cursor position on drop
+// CodeMirror container ref (replaces textarea + preview)
+const cmContainerRef = ref<HTMLElement | null>(null);
+// Textarea ref for plain-text (non-markdown) files
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
-const previewRef = ref<HTMLElement | null>(null);
 
 // Obsidian-style embed resolver (must be initialized before useNotePersistence)
 const {
@@ -104,36 +102,77 @@ const isDictatable = computed(() => {
     return ext === '.txt' || ext === '.md';
 });
 
-// Simple time formatter for markdown embed controls
-function formatTime(seconds: number): string {
-    if (!seconds || !isFinite(seconds)) return '0:00';
-    const m = Math.floor(seconds / 60);
-    const s = Math.floor(seconds % 60);
-    return `${m}:${s.toString().padStart(2, '0')}`;
-}
+// CodeMirror markdown editor (live preview mode)
+const cmViewRef = shallowRef<EditorView | null>(null);
 
-// Markdown editor: preview state, toolbar, keyboard, preview event handlers
-const {
-    showPreview,
-    renderedMarkdown,
-    mdFormatText,
-    mdInsertHeading,
-    onTextareaKeydown,
-    onMarkdownPreviewClick,
-    onMarkdownPreviewInput,
-} = useMarkdownEditor(
-    () => isMarkdownFile.value,
+// Build CodeMirror extensions for markdown: live-preview, widgets, toolbar keybindings, list continuation
+const markdownWidgetsPlugin = createMarkdownWidgetsPlugin(embedCache, embedCacheVersion, getEmbedMediaType);
+const cmExtensions = [
+    markdownWidgetsPlugin,
+    listContinuationKeymap,
+    leafEditorTheme,
+    keymap.of(markdownKeymap(cmViewRef)),
+    keymap.of([
+        {
+            key: 'Mod-s',
+            run: () => {
+                saveFile();
+                return true;
+            },
+        },
+    ]),
+    // Prevent CM6 from inserting raw text when files are dropped
+    // (the actual embed insertion is handled by useEditorDrop on the parent container)
+    EditorView.domEventHandlers({
+        drop(event) {
+            const dt = event.dataTransfer;
+            if (!dt) return false;
+            const plain = dt.getData('text/plain');
+            if ((plain && plain.startsWith('file:')) || dt.types.includes('Files')) {
+                return true; // mark handled — CM6 won't insert raw text
+            }
+            return false;
+        },
+    }),
+];
+
+// Only mount CodeMirror when we have a markdown file
+const shouldUseCM = computed(() => isMarkdownFile.value);
+
+// A reactive file identifier — changes whenever a different file is loaded,
+// telling CodeMirror to fully reset its state (undo history, scroll, cursor).
+const cmFileId = computed(() => props.file?.path ?? null);
+
+// Create CodeMirror instance (will mount/unmount reactively via v-if)
+const { view: cmView } = useCodemirror(
+    cmContainerRef,
     content,
-    embedCacheVersion,
-    embedCache,
-    getEmbedMediaType,
-    textareaRef,
     onContentChange,
-    formatTime,
+    cmExtensions,
+    'Start writing...',
+    cmFileId,
 );
 
-// Lazy-load embedded media when it scrolls into the preview viewport
-useLazyEmbeds(previewRef, renderedMarkdown);
+// Keep the shared ref in sync
+watch(
+    cmView,
+    (v) => {
+        cmViewRef.value = v;
+    },
+    { immediate: true },
+);
+
+// When embed cache updates (async resolution), poke CodeMirror so the
+// widget plugin re-evaluates and renders the newly resolved embeds.
+watch(embedCacheVersion, () => {
+    const v = cmViewRef.value;
+    if (!v) return;
+    // Dispatch a no-op transaction to trigger plugin update() calls
+    v.dispatch({});
+});
+
+// Toolbar commands backed by CodeMirror
+const { mdFormatText, mdInsertHeading } = useCodemirrorToolbar(cmViewRef);
 
 function getFileNameWithoutExtension(fileName: string): string {
     const lastDotIndex = fileName.lastIndexOf('.');
@@ -191,7 +230,8 @@ watch(
     { immediate: true },
 );
 
-// Editor drag-and-drop
+// Editor drag-and-drop (showPreview no longer needed — always in live-preview mode)
+const showPreview = ref(false); // kept for useEditorDrop API compat, always false now
 const { isDragOverEditor, onEditorDragEnter, onEditorDragOver, onEditorDragLeave, onFileDrop } = useEditorDrop(
     isMarkdownFile,
     () => props.file,
@@ -200,6 +240,7 @@ const { isDragOverEditor, onEditorDragEnter, onEditorDragOver, onEditorDragLeave
     showPreview,
     content,
     onContentChange,
+    cmViewRef,
 );
 
 // Keyboard shortcuts
@@ -248,37 +289,6 @@ onUnmounted(() => {
                 <div class="file-title-container">
                     <div class="badge-with-toggle">
                         <span class="file-extension-badge">{{ file.extension }}</span>
-                        <button
-                            v-if="isMarkdownFile"
-                            class="preview-toggle"
-                            :title="showPreview ? 'Edit' : 'Preview'"
-                            @click="showPreview = !showPreview"
-                        >
-                            <svg
-                                v-if="showPreview"
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                            >
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                            </svg>
-                            <svg
-                                v-else
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                            >
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                <circle cx="12" cy="12" r="3"></circle>
-                            </svg>
-                        </button>
                     </div>
                     <h2 class="file-title">{{ getFileNameWithoutExtension(file.name) }}</h2>
                 </div>
@@ -334,8 +344,8 @@ onUnmounted(() => {
                 </div>
             </div>
 
-            <!-- Markdown formatting toolbar -->
-            <div v-if="isMarkdownFile && !showPreview" class="md-toolbar">
+            <!-- Markdown formatting toolbar (always visible for markdown files) -->
+            <div v-if="isMarkdownFile" class="md-toolbar">
                 <button class="md-toolbar-btn" title="Bold (⌘B)" @mousedown.prevent="mdFormatText('bold')">
                     <svg
                         width="14"
@@ -513,27 +523,19 @@ onUnmounted(() => {
                 </button>
             </div>
 
-            <!-- Edit mode -->
+            <!-- CodeMirror live-preview editor for markdown files -->
+            <div v-if="isMarkdownFile" ref="cmContainerRef" class="cm-editor-container"></div>
+
+            <!-- Plain textarea for non-markdown text files -->
             <textarea
-                v-if="!showPreview || !isMarkdownFile"
+                v-if="!isMarkdownFile"
                 ref="textareaRef"
                 v-model="content"
                 class="editor-textarea"
                 :class="{ 'code-editor': isCodeFile }"
                 :placeholder="isCodeFile ? 'Start coding...' : 'Start writing...'"
                 @input="onContentChange"
-                @keydown="onTextareaKeydown"
             ></textarea>
-
-            <!-- Preview mode for markdown -->
-            <div
-                v-if="showPreview && isMarkdownFile"
-                ref="previewRef"
-                class="markdown-preview-mode"
-                @click="onMarkdownPreviewClick"
-                @input="onMarkdownPreviewInput"
-                v-html="renderedMarkdown"
-            ></div>
 
             <!-- Dictation button for txt/md files -->
             <button
@@ -654,7 +656,7 @@ onUnmounted(() => {
     flex-shrink: 0;
 
     .file-extension-badge {
-        border-radius: 3px 0 0 3px;
+        border-radius: 3px;
     }
 }
 
@@ -671,33 +673,6 @@ onUnmounted(() => {
     border-radius: 3px;
     opacity: 0.7;
     flex-shrink: 0;
-}
-
-.preview-toggle {
-    background: transparent;
-    border: 1px solid $base2;
-    border-left: none;
-    border-radius: 0 3px 3px 0;
-    padding: 0.2rem 0.35rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: $base2;
-    opacity: 0.7;
-    transition: all 0.2s ease;
-    flex-shrink: 0;
-    height: 100%;
-
-    &:hover {
-        background: $base2;
-        color: $base1;
-        opacity: 1;
-    }
-
-    svg {
-        display: block;
-    }
 }
 
 .editor-actions {
@@ -800,6 +775,19 @@ onUnmounted(() => {
     position: relative;
 }
 
+.cm-editor-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    :deep(.cm-editor) {
+        flex: 1;
+        height: 100%;
+        overflow: hidden;
+    }
+}
+
 .drop-overlay {
     position: absolute;
     inset: 0;
@@ -860,593 +848,6 @@ onUnmounted(() => {
         white-space: pre;
         overflow-wrap: normal;
         word-wrap: normal;
-    }
-}
-
-.markdown-preview-mode {
-    flex: 1;
-    padding: 2rem;
-    background: transparent;
-    color: $text1;
-    overflow: auto;
-    font-family: $font-family;
-    font-size: $font-size-base;
-    line-height: $line-height;
-
-    :deep(h1),
-    :deep(h2),
-    :deep(h3),
-    :deep(h4),
-    :deep(h5),
-    :deep(h6) {
-        margin: 1.2em 0 0.4em 0;
-        font-weight: 600;
-        color: $text1;
-        line-height: 1.4;
-
-        &:first-child {
-            margin-top: 0;
-        }
-    }
-
-    :deep(h1) {
-        font-size: 2em;
-    }
-    :deep(h2) {
-        font-size: 1.5em;
-    }
-    :deep(h3) {
-        font-size: 1.25em;
-    }
-    :deep(h4) {
-        font-size: 1.1em;
-    }
-    :deep(h5) {
-        font-size: 1em;
-    }
-    :deep(h6) {
-        font-size: 0.9em;
-        color: $text2;
-    }
-
-    // Collapsible heading sections (Obsidian-style folding)
-    :deep(.collapsible-heading) {
-        position: relative;
-        cursor: default;
-
-        .heading-fold-toggle {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            position: absolute;
-            left: -22px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-            opacity: 0;
-            transition: opacity 0.15s ease;
-            border-radius: 3px;
-            color: $text2;
-
-            svg {
-                transition: transform 0.2s ease;
-                transform: rotate(90deg);
-            }
-
-            &:hover {
-                opacity: 1;
-                color: $accent-color;
-                background: color-mix(in srgb, var(--text2) 10%, transparent);
-            }
-        }
-
-        &:hover .heading-fold-toggle {
-            opacity: 0.6;
-        }
-
-        &.collapsed .heading-fold-toggle {
-            opacity: 0.6;
-
-            svg {
-                transform: rotate(0deg);
-            }
-        }
-    }
-
-    :deep(.heading-section-content) {
-        &.collapsed {
-            display: none;
-        }
-    }
-
-    :deep(strong) {
-        font-weight: 600;
-        color: $accent-color;
-    }
-
-    :deep(em) {
-        font-style: italic;
-    }
-
-    :deep(del) {
-        text-decoration: line-through;
-        opacity: 0.7;
-    }
-
-    :deep(code) {
-        font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Menlo', 'Consolas', monospace;
-        font-size: 0.9em;
-        background: color-mix(in srgb, var(--text2) 15%, transparent);
-        padding: 0.2em 0.4em;
-        border-radius: 3px;
-        color: $base2;
-    }
-
-    :deep(pre) {
-        background: color-mix(in srgb, var(--text2) 10%, transparent);
-        border: 1px solid $text3;
-        border-radius: 6px;
-        padding: 1em;
-        overflow-x: auto;
-        margin: 0.75em 0;
-
-        code {
-            background: none;
-            padding: 0;
-            color: $text1;
-            font-size: 0.875em;
-            line-height: 1.5;
-        }
-    }
-
-    :deep(mark) {
-        background: color-mix(in srgb, var(--accent-color) 20%, transparent);
-        color: $text1;
-        padding: 0.1em 0.3em;
-        border-radius: 4px;
-    }
-
-    :deep(ul),
-    :deep(ol) {
-        margin: 0.5em 0;
-        padding-left: 1.5em;
-    }
-
-    :deep(li) {
-        margin: 0;
-
-        &.task {
-            list-style: none;
-            position: relative;
-
-            // Fold toggle arrow (only on parent tasks with nested lists)
-            .task-fold-toggle {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                position: absolute;
-                left: -18px;
-                top: 3px;
-                width: 14px;
-                height: 14px;
-                cursor: pointer;
-                opacity: 0.3;
-                color: $text2;
-                transition: opacity 0.15s ease;
-
-                svg {
-                    transition: transform 0.2s ease;
-                    transform: rotate(90deg); // pointing down = expanded
-                }
-
-                &:hover {
-                    opacity: 1;
-                }
-            }
-
-            &.task-collapsed {
-                > .task-fold-toggle svg {
-                    transform: rotate(0deg); // pointing right = collapsed
-                }
-
-                > ul,
-                > ol {
-                    display: none;
-                }
-            }
-
-            .task-label {
-                display: inline-flex;
-                align-items: center;
-                cursor: pointer;
-                gap: 0;
-                margin-right: 0.5em;
-                vertical-align: middle;
-
-                input[type='checkbox'] {
-                    position: absolute;
-                    opacity: 0;
-                    width: 0;
-                    height: 0;
-                }
-
-                .custom-checkbox {
-                    width: 18px;
-                    height: 18px;
-                    min-width: 18px;
-                    background-color: $text3;
-                    border-radius: 5px;
-                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-                    transition:
-                        background-color 0.3s ease,
-                        box-shadow 0.3s ease;
-                    position: relative;
-                }
-
-                input[type='checkbox']:checked + .custom-checkbox {
-                    background-color: #4caf50;
-                    box-shadow: 0 0 8px #4caf5088;
-                }
-
-                input[type='checkbox'][data-half] + .custom-checkbox {
-                    background: linear-gradient(to top, #4caf50 50%, var(--text3, #ddd) 50%);
-                    box-shadow: 0 0 6px #4caf5055;
-                }
-
-                // Fully-checked: checkmark
-                .custom-checkbox::after {
-                    content: '';
-                    position: absolute;
-                    display: none;
-                    left: 5px;
-                    top: 2px;
-                    width: 5px;
-                    height: 9px;
-                    border: solid $text1;
-                    border-width: 0 2px 2px 0;
-                    transform: rotate(45deg);
-                }
-
-                input[type='checkbox']:checked + .custom-checkbox::after {
-                    display: block;
-                }
-            }
-
-            // Apply strikethrough only to .task-text (the span/p wrapping text content),
-            // never to the li itself — this prevents text-decoration painting into nested lists
-            &:has(> label > input:checked) > .task-text {
-                text-decoration: line-through;
-                text-decoration-color: $text2;
-                color: $text2;
-            }
-        }
-    }
-
-    :deep(table) {
-        border-collapse: collapse;
-        margin: 0.75em 0;
-        width: auto;
-    }
-
-    :deep(th),
-    :deep(td) {
-        border: 1px solid $text3;
-        padding: 0.5em 1em;
-    }
-
-    :deep(thead tr) {
-        background: color-mix(in srgb, var(--text2) 10%, transparent);
-        font-weight: 600;
-    }
-
-    :deep(a) {
-        color: $accent-color;
-        text-decoration: none;
-
-        &:hover {
-            text-decoration: underline;
-        }
-    }
-
-    :deep(img) {
-        max-width: 100%;
-        height: auto;
-        border-radius: 8px;
-        display: block;
-    }
-
-    :deep(blockquote) {
-        margin: 0.75em 0;
-        padding: 0 1em;
-        border-left: 4px solid $accent-color;
-        color: $text2;
-    }
-
-    :deep(hr) {
-        border: none;
-        border-top: 2px solid $text3;
-        margin: 1em 0;
-    }
-
-    :deep(p) {
-        margin: 0.75em 0;
-
-        &:first-child {
-            margin-top: 0;
-        }
-    }
-
-    :deep(.md-blank-line) {
-        height: 0.75em;
-    }
-
-    :deep(.md-list-gap) {
-        height: 0.5em;
-    }
-
-    // Obsidian-style embed styles
-    :deep(.embed-image) {
-        max-width: 100%;
-        height: auto;
-        border-radius: 8px;
-        display: block;
-        margin: 0.5em 0;
-    }
-
-    :deep(.embed-video-container) {
-        margin: 0.5em 0;
-        max-width: 100%;
-        border-radius: 10px;
-        overflow: hidden;
-        border: 1px solid $text3;
-        background: #000;
-
-        .embed-video {
-            max-width: 100%;
-            max-height: 500px;
-            display: block;
-            cursor: pointer;
-            width: 100%;
-
-            &::-webkit-media-controls {
-                display: none !important;
-            }
-        }
-
-        .embed-video-controls {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.4rem 0.7rem;
-            background: $bg-primary;
-            border-top: 1px solid $text3;
-        }
-
-        .embed-video-play {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 28px;
-            height: 28px;
-            min-width: 28px;
-            border-radius: 50%;
-            border: none;
-            background: $accent-color;
-            color: $text1;
-            cursor: pointer;
-            padding: 0;
-            transition: all 0.15s ease;
-
-            &:hover {
-                transform: scale(1.08);
-                filter: brightness(1.1);
-            }
-        }
-
-        .embed-video-time {
-            font-size: 0.65rem;
-            color: $text2;
-            font-variant-numeric: tabular-nums;
-            min-width: 2.2em;
-            text-align: center;
-            user-select: none;
-        }
-
-        .embed-video-progress {
-            flex: 1;
-            cursor: pointer;
-            padding: 0.3rem 0;
-            display: flex;
-            align-items: center;
-        }
-
-        .embed-video-progress-track {
-            width: 100%;
-            height: 3px;
-            background: $bg-hover;
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .embed-video-progress-fill {
-            height: 100%;
-            background: $accent-color;
-            border-radius: 2px;
-            transition: width 0.05s linear;
-        }
-    }
-
-    :deep(.embed-audio-container) {
-        margin: 0.5em 0;
-        max-width: 500px;
-        border-radius: 10px;
-        overflow: hidden;
-        border: 1px solid $text3;
-        background: $bg-primary;
-
-        .embed-audio {
-            display: none;
-        }
-
-        .embed-audio-controls {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.4rem 0.7rem;
-        }
-
-        .embed-audio-play {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 28px;
-            height: 28px;
-            min-width: 28px;
-            border-radius: 50%;
-            border: none;
-            background: $accent-color;
-            color: $text1;
-            cursor: pointer;
-            padding: 0;
-            transition: all 0.15s ease;
-
-            &:hover {
-                transform: scale(1.08);
-                filter: brightness(1.1);
-            }
-        }
-
-        .embed-audio-time {
-            font-size: 0.65rem;
-            color: $text2;
-            font-variant-numeric: tabular-nums;
-            min-width: 2.2em;
-            text-align: center;
-            user-select: none;
-        }
-
-        .embed-audio-progress {
-            flex: 1;
-            cursor: pointer;
-            padding: 0.3rem 0;
-            display: flex;
-            align-items: center;
-        }
-
-        .embed-audio-progress-track {
-            width: 100%;
-            height: 3px;
-            background: $bg-hover;
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .embed-audio-progress-fill {
-            height: 100%;
-            background: $accent-color;
-            border-radius: 2px;
-            transition: width 0.05s linear;
-        }
-    }
-
-    // Shared volume controls for embedded media
-    :deep(.embed-volume-wrapper) {
-        display: flex;
-        align-items: center;
-        gap: 0.3rem;
-        margin-left: 0.2rem;
-    }
-
-    :deep(.embed-volume-btn) {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 24px;
-        height: 24px;
-        min-width: 24px;
-        border-radius: 4px;
-        border: none;
-        background: transparent;
-        color: $text2;
-        cursor: pointer;
-        padding: 0;
-        transition: color 0.15s ease;
-
-        &:hover {
-            color: $text1;
-        }
-    }
-
-    :deep(.embed-volume-slider) {
-        width: 60px;
-        height: 3px;
-        -webkit-appearance: none;
-        appearance: none;
-        background: $bg-hover;
-        border-radius: 2px;
-        outline: none;
-        cursor: pointer;
-
-        &::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: $accent-color;
-            cursor: pointer;
-            border: none;
-        }
-    }
-
-    :deep(.embed-pdf-container) {
-        margin: 0.5em 0;
-        border: 1px solid $text3;
-        border-radius: 8px;
-        overflow: hidden;
-
-        .embed-pdf {
-            width: 100%;
-            height: 600px;
-            border: none;
-            display: block;
-        }
-    }
-
-    :deep(.embed-note-link) {
-        margin: 0.5em 0;
-        padding: 0.5em 0.75em;
-        background: color-mix(in srgb, var(--text2) 8%, transparent);
-        border: 1px solid $text3;
-        border-radius: 6px;
-
-        a {
-            color: $accent-color;
-            text-decoration: none;
-
-            &:hover {
-                text-decoration: underline;
-            }
-        }
-    }
-
-    :deep(.embed-placeholder) {
-        margin: 0.5em 0;
-        padding: 0.5em 0.75em;
-        background: color-mix(in srgb, var(--text2) 6%, transparent);
-        border: 1px dashed $text3;
-        border-radius: 6px;
-        color: $text2;
-        font-size: 0.9em;
-        display: flex;
-        align-items: center;
-        gap: 0.4em;
-
-        .embed-placeholder-icon {
-            font-size: 1em;
-        }
     }
 }
 

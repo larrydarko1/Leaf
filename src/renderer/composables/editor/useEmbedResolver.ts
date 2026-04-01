@@ -45,6 +45,10 @@ export function useEmbedResolver(getFile: () => { path: string } | null, getWork
             if (entry?.result.success && entry.result.path) {
                 embedCache.value.set(entry.fileName, entry.result.path);
                 changed = true;
+            } else if (entry) {
+                // Cache negative results so we don't re-resolve on every keystroke
+                embedCache.value.set(entry.fileName, '');
+                changed = true;
             }
         }
 

@@ -1,6 +1,7 @@
 import { ref } from 'vue';
 import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS, AUDIO_EXTENSIONS, PDF_EXTENSIONS } from '../../utils/fileTypes';
-import type { Ref } from 'vue';
+import type { Ref, ShallowRef } from 'vue';
+import type { EditorView } from '@codemirror/view';
 
 const embeddableExtensions = [...IMAGE_EXTENSIONS, ...VIDEO_EXTENSIONS, ...AUDIO_EXTENSIONS, ...PDF_EXTENSIONS];
 
@@ -24,6 +25,7 @@ export function useEditorDrop(
     showPreview: Ref<boolean>,
     content: Ref<string>,
     onContentChange: () => void,
+    cmViewRef?: ShallowRef<EditorView | null>,
 ) {
     const isDragOverEditor = ref(false);
     let dragCounter = 0;
@@ -107,8 +109,30 @@ export function useEditorDrop(
 
         const embedString = embedTexts.join('\n');
 
-        // Insert at cursor position in textarea, or append at end
-        if (textareaRef.value && (!showPreview.value || !isMarkdownFile.value)) {
+        // Insert via CodeMirror when available (markdown files)
+        const cmView = cmViewRef?.value;
+        if (cmView) {
+            const cursor = cmView.state.selection.main.head;
+            const doc = cmView.state.doc;
+            const before = cursor > 0 ? doc.sliceString(cursor - 1, cursor) : '\n';
+            const after = cursor < doc.length ? doc.sliceString(cursor, cursor + 1) : '\n';
+
+            const needNewlineBefore = before !== '\n';
+            const needNewlineAfter = after !== '\n';
+            const insertion = (needNewlineBefore ? '\n' : '') + embedString + (needNewlineAfter ? '\n' : '');
+
+            cmView.dispatch({
+                changes: { from: cursor, insert: insertion },
+            });
+            // Move cursor to start of the line AFTER the embed so the widget renders
+            // (the embed line must not be "active" for the widget to show)
+            const afterInsertPos = cursor + insertion.length;
+            const afterLine = cmView.state.doc.lineAt(afterInsertPos);
+            cmView.dispatch({
+                selection: { anchor: afterLine.from },
+            });
+            cmView.focus();
+        } else if (textareaRef.value && (!showPreview.value || !isMarkdownFile.value)) {
             const textarea = textareaRef.value;
             const start = textarea.selectionStart;
             const end = textarea.selectionEnd;

@@ -27,11 +27,16 @@ export function useNotePersistence(
     const justSaved = ref(false);
 
     let autoSaveTimeout: number | null = null;
+    let embedResolveTimeout: number | null = null;
 
     async function loadFile(file: FileInfo) {
         if (autoSaveTimeout) {
             clearTimeout(autoSaveTimeout);
             autoSaveTimeout = null;
+        }
+        if (embedResolveTimeout) {
+            clearTimeout(embedResolveTimeout);
+            embedResolveTimeout = null;
         }
         try {
             const result = await window.electronAPI.readFile(file.path);
@@ -56,8 +61,12 @@ export function useNotePersistence(
 
         if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
 
+        // Debounce embed resolution — avoid IPC storms on every keystroke
         if (isMarkdownFile() && content.value.includes('![[')) {
-            resolveEmbeds(content.value);
+            if (embedResolveTimeout) clearTimeout(embedResolveTimeout);
+            embedResolveTimeout = window.setTimeout(() => {
+                resolveEmbeds(content.value);
+            }, 500);
         }
 
         if (hasUnsavedChanges.value) {
@@ -115,6 +124,10 @@ export function useNotePersistence(
         if (autoSaveTimeout) {
             clearTimeout(autoSaveTimeout);
             autoSaveTimeout = null;
+        }
+        if (embedResolveTimeout) {
+            clearTimeout(embedResolveTimeout);
+            embedResolveTimeout = null;
         }
     }
 

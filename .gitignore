@@ -29,3 +29,4 @@ dist-electron
 models/whisper/Xenova/whisper-tiny.en/onnx/
 
 prompts
+example
