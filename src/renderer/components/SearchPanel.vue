@@ -346,11 +346,6 @@ function highlightMatch(text: string): string {
             color: $text1;
         }
     }
-
-    &.keyboard-selected {
-        outline: 2px solid $accent-color;
-        outline-offset: -2px;
-    }
 }
 
 .file-info {

@@ -283,6 +283,14 @@ function handleSearchFileOpen(file: FileInfo) {
     showSearchPanel.value = false;
 }
 
+function handleTabSwitch(index: number) {
+    editorTabs.switchTab(index);
+    const file = editorTabs.activeFile.value;
+    if (file) {
+        selection.openFile(file);
+    }
+}
+
 function toggleBookmarks() {
     showBookmarksPanel.value = !showBookmarksPanel.value;
     if (showBookmarksPanel.value) showSearchPanel.value = false;
@@ -578,7 +586,7 @@ function toggleAiPanel() {
                     <TabBar
                         :tabs="editorTabs.tabs.value"
                         :active-index="editorTabs.activeIndex.value"
-                        @switch="editorTabs.switchTab"
+                        @switch="handleTabSwitch"
                         @close="editorTabs.closeTab"
                     />
                     <NoteEditor
