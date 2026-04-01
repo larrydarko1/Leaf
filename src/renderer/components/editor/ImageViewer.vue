@@ -62,7 +62,7 @@ watch(
     justify-content: center;
     padding: 2rem;
     overflow: auto;
-    background: var(--base1);
+    background: $base1;
     position: relative;
 
     &::before {
@@ -91,7 +91,7 @@ watch(
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: var(--text2);
+    color: $text2;
     position: relative;
     z-index: 1;
 
@@ -106,7 +106,7 @@ watch(
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: var(--text2);
+    color: $text2;
     position: relative;
     z-index: 1;
 

@@ -46,13 +46,13 @@ const { isRecording, hasPermission, formattedDuration, toggle } = useAudioRecord
 <style scoped lang="scss">
 .btn-menu-icon {
     &.recording {
-        color: var(--danger-color);
-        background: var(--danger-color-alpha);
+        color: $danger-color;
+        background: $danger-color-alpha;
         animation: pulse 1.5s ease-in-out infinite;
 
         &:hover {
-            background: var(--danger-color-alpha);
-            color: var(--danger-color);
+            background: $danger-color-alpha;
+            color: $danger-color;
         }
     }
 }

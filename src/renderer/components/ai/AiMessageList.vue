@@ -478,13 +478,13 @@ function formatTokenCount(n: number): string {
 }
 
 .ai-empty-icon {
-    color: var(--text3);
+    color: $text3;
     margin-bottom: 0.75rem;
 }
 
 .ai-empty-text {
     font-size: 0.8rem;
-    color: var(--text2);
+    color: $text2;
     line-height: 1.5;
     margin: 0;
 }
@@ -492,16 +492,16 @@ function formatTokenCount(n: number): string {
 .ai-btn-secondary {
     padding: 0.5rem 1rem;
     background: transparent;
-    color: var(--text2);
-    border: 1px solid var(--text3);
+    color: $text2;
+    border: 1px solid $text3;
     border-radius: 6px;
     font-size: 0.8rem;
     cursor: pointer;
     transition: all 0.2s;
     margin-top: 0.5rem;
     &:hover {
-        color: var(--text1);
-        border-color: var(--text2);
+        color: $text1;
+        border-color: $text2;
     }
 }
 
@@ -518,8 +518,8 @@ function formatTokenCount(n: number): string {
             max-width: 85%;
         }
         .ai-message-content {
-            background: var(--accent-color);
-            color: var(--text1);
+            background: $accent-color;
+            color: $text1;
             border-radius: 12px 12px 2px 12px;
         }
         .ai-message-actions {
@@ -533,8 +533,8 @@ function formatTokenCount(n: number): string {
             max-width: 90%;
         }
         .ai-message-content {
-            background: var(--bg-primary);
-            color: var(--text1);
+            background: $bg-primary;
+            color: $text1;
             border-radius: 12px 12px 12px 2px;
         }
         .ai-message-actions {
@@ -636,10 +636,10 @@ function formatTokenCount(n: number): string {
         }
     }
     :deep(blockquote) {
-        border-left: 3px solid var(--accent-color);
+        border-left: 3px solid $accent-color;
         margin: 0.4em 0;
         padding: 0.2em 0.6em;
-        color: var(--text2);
+        color: $text2;
     }
     :deep(table) {
         border-collapse: collapse;
@@ -648,7 +648,7 @@ function formatTokenCount(n: number): string {
         font-size: 0.9em;
         th,
         td {
-            border: 1px solid var(--text3);
+            border: 1px solid $text3;
             padding: 0.3em 0.5em;
             text-align: left;
         }
@@ -658,11 +658,11 @@ function formatTokenCount(n: number): string {
     }
     :deep(hr) {
         border: none;
-        border-top: 1px solid var(--text3);
+        border-top: 1px solid $text3;
         margin: 0.5em 0;
     }
     :deep(a) {
-        color: var(--accent-color);
+        color: $accent-color;
         text-decoration: underline;
     }
     :deep(strong) {
@@ -683,7 +683,7 @@ function formatTokenCount(n: number): string {
 .ai-btn-action {
     background: none;
     border: none;
-    color: var(--text2);
+    color: $text2;
     cursor: pointer;
     padding: 3px 4px;
     border-radius: 4px;
@@ -694,8 +694,8 @@ function formatTokenCount(n: number): string {
     align-items: center;
     justify-content: center;
     &:hover {
-        color: var(--text1);
-        background: var(--bg-hover);
+        color: $text1;
+        background: $bg-hover;
     }
     &.ai-btn-action-danger:hover {
         color: #e55;
@@ -714,9 +714,9 @@ function formatTokenCount(n: number): string {
     min-height: 2.5rem;
     max-height: 8rem;
     padding: 0.5rem 0.65rem;
-    background: var(--bg-primary);
-    color: var(--text1);
-    border: 1px solid var(--accent-color);
+    background: $bg-primary;
+    color: $text1;
+    border: 1px solid $accent-color;
     border-radius: 8px;
     font-size: 0.82rem;
     font-family: inherit;
@@ -724,8 +724,8 @@ function formatTokenCount(n: number): string {
     resize: vertical;
     outline: none;
     &:focus {
-        border-color: var(--accent-color);
-        box-shadow: 0 0 0 1px var(--accent-color);
+        border-color: $accent-color;
+        box-shadow: 0 0 0 1px $accent-color;
     }
 }
 
@@ -737,7 +737,7 @@ function formatTokenCount(n: number): string {
 
 .ai-cursor {
     animation: blink 0.8s step-end infinite;
-    color: var(--accent-color);
+    color: $accent-color;
     font-size: 0.9em;
 }
 @keyframes blink {
@@ -749,7 +749,7 @@ function formatTokenCount(n: number): string {
 .ai-btn-icon {
     background: none;
     border: none;
-    color: var(--text2);
+    color: $text2;
     cursor: pointer;
     padding: 0.3rem;
     border-radius: 4px;
@@ -759,8 +759,8 @@ function formatTokenCount(n: number): string {
     transition: all 0.2s;
     flex-shrink: 0;
     &:hover:not(:disabled) {
-        background: var(--bg-hover);
-        color: var(--text1);
+        background: $bg-hover;
+        color: $text1;
     }
 }
 
@@ -778,13 +778,13 @@ function formatTokenCount(n: number): string {
 }
 
 .ai-agent-edit-card {
-    background: var(--bg-primary);
-    border: 1px solid var(--text3);
+    background: $bg-primary;
+    border: 1px solid $text3;
     border-radius: 10px;
     overflow: hidden;
     transition: border-color 0.2s;
     &.pending {
-        border-color: var(--accent-color);
+        border-color: $accent-color;
         border-style: dashed;
     }
     &.approved {
@@ -804,7 +804,7 @@ function formatTokenCount(n: number): string {
     align-items: center;
     justify-content: space-between;
     padding: 0.5rem 0.65rem;
-    border-bottom: 1px solid var(--text3);
+    border-bottom: 1px solid $text3;
     background: rgba(0, 0, 0, 0.05);
 }
 
@@ -819,7 +819,7 @@ function formatTokenCount(n: number): string {
 .ai-agent-edit-filename {
     font-size: 0.75rem;
     font-family: 'SF Mono', 'Fira Code', monospace;
-    color: var(--text1);
+    color: $text1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -834,8 +834,8 @@ function formatTokenCount(n: number): string {
     letter-spacing: 0.04em;
     flex-shrink: 0;
     &.new {
-        background: var(--accent-color);
-        color: var(--base1);
+        background: $accent-color;
+        color: $base1;
     }
 }
 
@@ -855,18 +855,18 @@ function formatTokenCount(n: number): string {
 }
 
 .ai-agent-diff-details {
-    border-bottom: 1px solid var(--text3);
+    border-bottom: 1px solid $text3;
 }
 
 .ai-agent-diff-summary {
     padding: 0.35rem 0.65rem;
     font-size: 0.72rem;
-    color: var(--text2);
+    color: $text2;
     cursor: pointer;
     user-select: none;
     transition: color 0.15s;
     &:hover {
-        color: var(--text1);
+        color: $text1;
     }
 }
 
@@ -890,8 +890,8 @@ function formatTokenCount(n: number): string {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: var(--text2);
-    border-bottom: 1px solid var(--text3);
+    color: $text2;
+    border-bottom: 1px solid $text3;
 }
 
 .ai-agent-diff-code {
@@ -902,7 +902,7 @@ function formatTokenCount(n: number): string {
     margin: 0;
     white-space: pre-wrap;
     word-break: break-all;
-    color: var(--text1);
+    color: $text1;
     max-height: 140px;
     overflow-y: auto;
 }
@@ -911,7 +911,7 @@ function formatTokenCount(n: number): string {
     padding: 0.4rem 0.65rem;
     font-size: 0.72rem;
     color: #e74c3c;
-    border-bottom: 1px solid var(--text3);
+    border-bottom: 1px solid $text3;
 }
 
 .ai-agent-edit-actions {
@@ -956,8 +956,8 @@ function formatTokenCount(n: number): string {
     justify-content: space-between;
     gap: 0.5rem;
     padding: 0.5rem 0.75rem;
-    background: var(--bg-primary);
-    border-top: 1px solid var(--text3);
+    background: $bg-primary;
+    border-top: 1px solid $text3;
     flex-shrink: 0;
 }
 
@@ -966,7 +966,7 @@ function formatTokenCount(n: number): string {
     align-items: center;
     gap: 0.4rem;
     font-size: 0.72rem;
-    color: var(--text2);
+    color: $text2;
     svg {
         flex-shrink: 0;
         opacity: 0.7;
@@ -978,8 +978,8 @@ function formatTokenCount(n: number): string {
     align-items: center;
     gap: 0.3rem;
     padding: 0.3rem 0.6rem;
-    background: var(--accent-color);
-    color: var(--base1);
+    background: $accent-color;
+    color: $base1;
     border: none;
     border-radius: 7px;
     font-size: 0.7rem;
@@ -1015,14 +1015,14 @@ function formatTokenCount(n: number): string {
 .ai-token-bar-track {
     flex: 1;
     height: 3px;
-    background: var(--text3);
+    background: $text3;
     border-radius: 2px;
     overflow: hidden;
 }
 
 .ai-token-bar-fill {
     height: 100%;
-    background: var(--accent-color);
+    background: $accent-color;
     border-radius: 2px;
     transition: width 0.3s ease;
     &.warning {
@@ -1035,7 +1035,7 @@ function formatTokenCount(n: number): string {
 
 .ai-token-label {
     font-size: 0.62rem;
-    color: var(--text2);
+    color: $text2;
     white-space: nowrap;
     flex-shrink: 0;
     font-variant-numeric: tabular-nums;

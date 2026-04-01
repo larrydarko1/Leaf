@@ -169,12 +169,12 @@ useListKeyboardNavigation(
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: var(--bg-secondary);
+    background: $bg-secondary;
 }
 
 .bookmarks-header {
     padding: 0.65rem 0.75rem;
-    border-bottom: 1px solid var(--text3);
+    border-bottom: 1px solid $text3;
 }
 
 .header-title {
@@ -187,19 +187,19 @@ useListKeyboardNavigation(
         margin: 0;
         font-size: 0.78rem;
         font-weight: 600;
-        color: var(--text-primary);
+        color: $text-primary;
         text-transform: uppercase;
         letter-spacing: 0.04em;
     }
 
     .star-icon {
-        color: var(--accent-color);
+        color: $accent-color;
     }
 }
 
 .bookmarks-info {
     font-size: 12px;
-    color: var(--text-muted);
+    color: $text-muted;
 }
 
 .bookmarks-results {
@@ -215,7 +215,7 @@ useListKeyboardNavigation(
     justify-content: center;
     padding: 48px 24px;
     text-align: center;
-    color: var(--text-muted);
+    color: $text-muted;
 
     .empty-icon {
         opacity: 0.3;
@@ -228,13 +228,13 @@ useListKeyboardNavigation(
 
         &:first-of-type {
             font-weight: 500;
-            color: var(--text-primary);
+            color: $text-primary;
         }
     }
 
     .hint {
         font-size: 12px;
-        color: var(--text-muted);
+        color: $text-muted;
         margin-top: 8px;
     }
 }
@@ -252,7 +252,7 @@ useListKeyboardNavigation(
     user-select: none;
 
     &:hover {
-        background: var(--bg-hover);
+        background: $bg-hover;
 
         .unbookmark-btn {
             opacity: 1;
@@ -260,15 +260,15 @@ useListKeyboardNavigation(
     }
 
     &.selected {
-        background: var(--bg-selected);
+        background: $bg-selected;
     }
 
     &.active {
-        background: var(--bg-selected);
-        color: var(--text1);
+        background: $bg-selected;
+        color: $text1;
 
         .unbookmark-btn {
-            color: var(--text1);
+            color: $text1;
             opacity: 0.7;
 
             &:hover {
@@ -286,7 +286,7 @@ useListKeyboardNavigation(
 
 .file-icon {
     flex-shrink: 0;
-    color: var(--text-muted);
+    color: $text-muted;
 }
 
 .file-details {
@@ -307,7 +307,7 @@ useListKeyboardNavigation(
 
 .file-path {
     font-size: 11px;
-    color: var(--text-muted);
+    color: $text-muted;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -321,15 +321,15 @@ useListKeyboardNavigation(
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--text-muted);
+    color: $text-muted;
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s;
     opacity: 0;
 
     &:hover {
-        background: var(--bg-tertiary);
-        color: var(--text-primary);
+        background: $bg-tertiary;
+        color: $text-primary;
     }
 }
 
@@ -343,11 +343,11 @@ useListKeyboardNavigation(
 }
 
 .bookmarks-results::-webkit-scrollbar-thumb {
-    background: var(--scrollbar-thumb);
+    background: $scrollbar-thumb;
     border-radius: 3px;
 
     &:hover {
-        background: var(--scrollbar-thumb-hover);
+        background: $scrollbar-thumb-hover;
     }
 }
 </style>

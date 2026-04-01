@@ -1,10 +1,10 @@
 import { resolve } from 'path';
-import { defineConfig, externalizeDepsPlugin } from 'electron-vite';
+import { defineConfig } from 'electron-vite';
 import vue from '@vitejs/plugin-vue';
+import { fileURLToPath } from 'url';
 
 export default defineConfig({
     main: {
-        plugins: [externalizeDepsPlugin()],
         build: {
             rollupOptions: {
                 input: {
@@ -14,7 +14,6 @@ export default defineConfig({
         },
     },
     preload: {
-        plugins: [externalizeDepsPlugin()],
         build: {
             rollupOptions: {
                 input: {
@@ -25,6 +24,21 @@ export default defineConfig({
     },
     renderer: {
         plugins: [vue()],
+        resolve: {
+            alias: {
+                '@': fileURLToPath(new URL('./src/renderer', import.meta.url)),
+            },
+        },
+        css: {
+            preprocessorOptions: {
+                scss: {
+                    additionalData: (source: string, filename: string) =>
+                        filename.endsWith('style.scss')
+                            ? source
+                            : `@use 'sass:color';\n@use '@/style' as *;\n${source}`,
+                },
+            },
+        },
         base: './',
         root: resolve(__dirname, 'src/renderer'),
         server: {

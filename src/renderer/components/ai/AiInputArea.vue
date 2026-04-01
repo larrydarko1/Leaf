@@ -74,7 +74,7 @@ defineEmits<{
                 @keydown.enter.exact.prevent="$emit('send')"
             />
             <button v-if="isStreaming" class="ai-btn-send ai-btn-stop" title="Stop generating" @click="$emit('stop')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--base1)" xmlns="http://www.w3.org/2000/svg">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="$base1" xmlns="http://www.w3.org/2000/svg">
                     <rect x="6" y="6" width="12" height="12" rx="2" ry="2" />
                 </svg>
             </button>
@@ -91,7 +91,7 @@ defineEmits<{
                     <g id="SVGRepo_iconCarrier">
                         <path
                             d="M10 14L13 21L20 4L3 11L6.5 12.5"
-                            stroke="var(--base1)"
+                            stroke="$base1"
                             stroke-width="1.5"
                             stroke-linecap="round"
                             stroke-linejoin="round"
@@ -114,7 +114,7 @@ defineEmits<{
     align-items: center;
     gap: 0.35rem;
     font-size: 0.7rem;
-    color: var(--accent-color);
+    color: $accent-color;
     padding: 0 0.25rem 0.4rem;
     flex-wrap: wrap;
     svg {
@@ -131,7 +131,7 @@ defineEmits<{
     align-items: center;
     gap: 0.35rem;
     font-size: 0.7rem;
-    color: var(--accent-color);
+    color: $accent-color;
     padding: 0 0.25rem 0.4rem;
     white-space: nowrap;
     overflow: hidden;
@@ -142,13 +142,13 @@ defineEmits<{
     display: flex;
     align-items: center;
     gap: 0;
-    background: var(--bg-primary);
-    border: 1px solid var(--text3);
+    background: $bg-primary;
+    border: 1px solid $text3;
     border-radius: 12px;
     padding: 0.2rem 0.2rem 0.2rem 0.35rem;
     transition: border-color 0.2s;
     &:focus-within {
-        border-color: var(--accent-color);
+        border-color: $accent-color;
     }
 }
 
@@ -158,7 +158,7 @@ defineEmits<{
     justify-content: center;
     cursor: pointer;
     padding: 0.3rem;
-    color: var(--text2);
+    color: $text2;
     flex-shrink: 0;
     border-radius: 6px;
     transition:
@@ -168,13 +168,13 @@ defineEmits<{
         display: none;
     }
     &:hover {
-        color: var(--text1);
-        background: var(--bg-hover);
+        color: $text1;
+        background: $bg-hover;
     }
 }
 
 .ai-context-active {
-    color: var(--accent-color) !important;
+    color: $accent-color !important;
 }
 
 .ai-input {
@@ -182,7 +182,7 @@ defineEmits<{
     min-width: 0;
     padding: 0.4rem 0.5rem;
     background: transparent;
-    color: var(--text1);
+    color: $text1;
     border: none;
     font-size: 0.82rem;
     font-family: inherit;
@@ -191,7 +191,7 @@ defineEmits<{
     overflow-y: auto;
     max-height: 120px;
     &::placeholder {
-        color: var(--text2);
+        color: $text2;
     }
     &:focus {
         outline: none;
@@ -203,8 +203,8 @@ defineEmits<{
 }
 
 .ai-btn-send {
-    background: var(--accent-color);
-    color: var(--text1);
+    background: $accent-color;
+    color: $text1;
     border: none;
     border-radius: 8px;
     width: 30px;

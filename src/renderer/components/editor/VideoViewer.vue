@@ -154,7 +154,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
     justify-content: center;
     padding: 2rem;
     overflow: auto;
-    background: var(--base1);
+    background: $base1;
     position: relative;
 
     &::before {
@@ -199,8 +199,8 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
     gap: 0.6rem;
     width: 100%;
     padding: 0.5rem 0.85rem;
-    background: var(--bg-primary);
-    border: 1px solid var(--text3);
+    background: $bg-primary;
+    border: 1px solid $text3;
     border-top: none;
     border-radius: 0 0 10px 10px;
 }
@@ -214,7 +214,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
     min-width: 30px;
     border-radius: 50%;
     border: none;
-    background: var(--accent-color);
+    background: $accent-color;
     color: white;
     cursor: pointer;
     transition: all 0.15s ease;
@@ -232,7 +232,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 
 .video-time {
     font-size: 0.7rem;
-    color: var(--text2);
+    color: $text2;
     font-variant-numeric: tabular-nums;
     min-width: 2.5em;
     text-align: center;
@@ -250,14 +250,14 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 .video-progress-track {
     width: 100%;
     height: 4px;
-    background: var(--bg-hover);
+    background: $bg-hover;
     border-radius: 2px;
     overflow: hidden;
 }
 
 .video-progress-fill {
     height: 100%;
-    background: var(--accent-color);
+    background: $accent-color;
     border-radius: 2px;
     transition: width 0.05s linear;
 }
@@ -273,7 +273,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
     appearance: none;
     width: 55px;
     height: 4px;
-    background: var(--bg-hover);
+    background: $bg-hover;
     border-radius: 2px;
     outline: none;
     cursor: pointer;
@@ -284,7 +284,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
         width: 12px;
         height: 12px;
         border-radius: 50%;
-        background: var(--accent-color);
+        background: $accent-color;
         cursor: pointer;
         transition: transform 0.1s;
     }
@@ -299,7 +299,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: var(--text2);
+    color: $text2;
     position: relative;
     z-index: 1;
 

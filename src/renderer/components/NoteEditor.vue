@@ -641,7 +641,7 @@ onUnmounted(() => {
     max-width: 50%;
     font-size: 1rem;
     font-weight: 600;
-    color: var(--text1);
+    color: $text1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -665,9 +665,9 @@ onUnmounted(() => {
     font-size: 0.625rem;
     font-weight: 500;
     text-transform: uppercase;
-    color: var(--base2);
+    color: $base2;
     background: transparent;
-    border: 1px solid var(--base2);
+    border: 1px solid $base2;
     border-radius: 3px;
     opacity: 0.7;
     flex-shrink: 0;
@@ -675,7 +675,7 @@ onUnmounted(() => {
 
 .preview-toggle {
     background: transparent;
-    border: 1px solid var(--base2);
+    border: 1px solid $base2;
     border-left: none;
     border-radius: 0 3px 3px 0;
     padding: 0.2rem 0.35rem;
@@ -683,15 +683,15 @@ onUnmounted(() => {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    color: var(--base2);
+    color: $base2;
     opacity: 0.7;
     transition: all 0.2s ease;
     flex-shrink: 0;
     height: 100%;
 
     &:hover {
-        background: var(--base2);
-        color: var(--base1);
+        background: $base2;
+        color: $base1;
         opacity: 1;
     }
 
@@ -708,11 +708,11 @@ onUnmounted(() => {
 }
 
 .unsaved-indicator {
-    color: var(--base2);
+    color: $base2;
 }
 
 .saving-indicator {
-    color: var(--text2);
+    color: $text2;
     font-style: italic;
 }
 
@@ -739,13 +739,13 @@ onUnmounted(() => {
     border: none;
     border-radius: 8px;
     background: transparent;
-    color: var(--text2);
+    color: $text2;
     cursor: pointer;
     transition: all 0.15s ease;
 
     &:hover {
         background: color-mix(in srgb, var(--text2) 15%, transparent);
-        color: var(--text1);
+        color: $text1;
     }
 
     &:active {
@@ -775,7 +775,7 @@ onUnmounted(() => {
     border: 1px solid color-mix(in srgb, var(--text2) 15%, transparent);
     border-radius: 8px;
     background: color-mix(in srgb, var(--text2) 8%, transparent);
-    color: var(--text1);
+    color: $text1;
     font-size: 11px;
     cursor: pointer;
     outline: none;
@@ -787,7 +787,7 @@ onUnmounted(() => {
     }
 
     &:focus {
-        border-color: var(--accent-color, #4a9eff);
+        border-color: $accent-color;
         box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-color, #4a9eff) 20%, transparent);
     }
 }
@@ -809,7 +809,7 @@ onUnmounted(() => {
     justify-content: center;
     background: color-mix(in srgb, var(--base1) 85%, transparent);
     backdrop-filter: blur(4px);
-    border: 2px dashed var(--accent-color, #6366f1);
+    border: 2px dashed $accent-color;
     border-radius: 8px;
     margin: 0.5rem;
     pointer-events: none;
@@ -820,7 +820,7 @@ onUnmounted(() => {
     flex-direction: column;
     align-items: center;
     gap: 0.5rem;
-    color: var(--accent-color, #6366f1);
+    color: $accent-color;
 
     svg {
         opacity: 0.8;
@@ -837,17 +837,17 @@ onUnmounted(() => {
     flex: 1;
     padding: 2rem;
     background: transparent;
-    color: var(--text1);
+    color: $text1;
     border: none;
     outline: none;
-    font-family: Helvetica, sans-serif;
+    font-family: $font-family;
     font-size: 1rem;
     line-height: 1.6;
     resize: none;
     cursor: text;
 
     &::placeholder {
-        color: var(--text2);
+        color: $text2;
     }
 
     &.code-editor {
@@ -867,11 +867,11 @@ onUnmounted(() => {
     flex: 1;
     padding: 2rem;
     background: transparent;
-    color: var(--text1);
+    color: $text1;
     overflow: auto;
-    font-family: Helvetica, sans-serif;
-    font-size: 1rem;
-    line-height: 1.6;
+    font-family: $font-family;
+    font-size: $font-size-base;
+    line-height: $line-height;
 
     :deep(h1),
     :deep(h2),
@@ -881,7 +881,7 @@ onUnmounted(() => {
     :deep(h6) {
         margin: 1.2em 0 0.4em 0;
         font-weight: 600;
-        color: var(--text1);
+        color: $text1;
         line-height: 1.4;
 
         &:first-child {
@@ -906,7 +906,7 @@ onUnmounted(() => {
     }
     :deep(h6) {
         font-size: 0.9em;
-        color: var(--text2);
+        color: $text2;
     }
 
     // Collapsible heading sections (Obsidian-style folding)
@@ -928,7 +928,7 @@ onUnmounted(() => {
             opacity: 0;
             transition: opacity 0.15s ease;
             border-radius: 3px;
-            color: var(--text2);
+            color: $text2;
 
             svg {
                 transition: transform 0.2s ease;
@@ -937,7 +937,7 @@ onUnmounted(() => {
 
             &:hover {
                 opacity: 1;
-                color: var(--accent-color);
+                color: $accent-color;
                 background: color-mix(in srgb, var(--text2) 10%, transparent);
             }
         }
@@ -963,7 +963,7 @@ onUnmounted(() => {
 
     :deep(strong) {
         font-weight: 600;
-        color: var(--accent-color);
+        color: $accent-color;
     }
 
     :deep(em) {
@@ -981,12 +981,12 @@ onUnmounted(() => {
         background: color-mix(in srgb, var(--text2) 15%, transparent);
         padding: 0.2em 0.4em;
         border-radius: 3px;
-        color: var(--base2);
+        color: $base2;
     }
 
     :deep(pre) {
         background: color-mix(in srgb, var(--text2) 10%, transparent);
-        border: 1px solid var(--text3);
+        border: 1px solid $text3;
         border-radius: 6px;
         padding: 1em;
         overflow-x: auto;
@@ -995,7 +995,7 @@ onUnmounted(() => {
         code {
             background: none;
             padding: 0;
-            color: var(--text1);
+            color: $text1;
             font-size: 0.875em;
             line-height: 1.5;
         }
@@ -1003,7 +1003,7 @@ onUnmounted(() => {
 
     :deep(mark) {
         background: color-mix(in srgb, var(--accent-color) 20%, transparent);
-        color: var(--text1);
+        color: $text1;
         padding: 0.1em 0.3em;
         border-radius: 4px;
     }
@@ -1033,7 +1033,7 @@ onUnmounted(() => {
                 height: 14px;
                 cursor: pointer;
                 opacity: 0.3;
-                color: var(--text2);
+                color: $text2;
                 transition: opacity 0.15s ease;
 
                 svg {
@@ -1076,7 +1076,7 @@ onUnmounted(() => {
                     width: 18px;
                     height: 18px;
                     min-width: 18px;
-                    background-color: var(--text3, #ddd);
+                    background-color: $text3;
                     border-radius: 5px;
                     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
                     transition:
@@ -1104,7 +1104,7 @@ onUnmounted(() => {
                     top: 2px;
                     width: 5px;
                     height: 9px;
-                    border: solid white;
+                    border: solid $text1;
                     border-width: 0 2px 2px 0;
                     transform: rotate(45deg);
                 }
@@ -1118,8 +1118,8 @@ onUnmounted(() => {
             // never to the li itself — this prevents text-decoration painting into nested lists
             &:has(> label > input:checked) > .task-text {
                 text-decoration: line-through;
-                text-decoration-color: var(--text2);
-                color: var(--text2);
+                text-decoration-color: $text2;
+                color: $text2;
             }
         }
     }
@@ -1132,7 +1132,7 @@ onUnmounted(() => {
 
     :deep(th),
     :deep(td) {
-        border: 1px solid var(--text3);
+        border: 1px solid $text3;
         padding: 0.5em 1em;
     }
 
@@ -1142,7 +1142,7 @@ onUnmounted(() => {
     }
 
     :deep(a) {
-        color: var(--accent-color);
+        color: $accent-color;
         text-decoration: none;
 
         &:hover {
@@ -1160,13 +1160,13 @@ onUnmounted(() => {
     :deep(blockquote) {
         margin: 0.75em 0;
         padding: 0 1em;
-        border-left: 4px solid var(--accent-color);
-        color: var(--text2);
+        border-left: 4px solid $accent-color;
+        color: $text2;
     }
 
     :deep(hr) {
         border: none;
-        border-top: 2px solid var(--text3);
+        border-top: 2px solid $text3;
         margin: 1em 0;
     }
 
@@ -1200,7 +1200,7 @@ onUnmounted(() => {
         max-width: 100%;
         border-radius: 10px;
         overflow: hidden;
-        border: 1px solid var(--text3);
+        border: 1px solid $text3;
         background: #000;
 
         .embed-video {
@@ -1220,8 +1220,8 @@ onUnmounted(() => {
             align-items: center;
             gap: 0.5rem;
             padding: 0.4rem 0.7rem;
-            background: var(--bg-primary);
-            border-top: 1px solid var(--text3);
+            background: $bg-primary;
+            border-top: 1px solid $text3;
         }
 
         .embed-video-play {
@@ -1233,8 +1233,8 @@ onUnmounted(() => {
             min-width: 28px;
             border-radius: 50%;
             border: none;
-            background: var(--accent-color);
-            color: white;
+            background: $accent-color;
+            color: $text1;
             cursor: pointer;
             padding: 0;
             transition: all 0.15s ease;
@@ -1247,7 +1247,7 @@ onUnmounted(() => {
 
         .embed-video-time {
             font-size: 0.65rem;
-            color: var(--text2);
+            color: $text2;
             font-variant-numeric: tabular-nums;
             min-width: 2.2em;
             text-align: center;
@@ -1265,14 +1265,14 @@ onUnmounted(() => {
         .embed-video-progress-track {
             width: 100%;
             height: 3px;
-            background: var(--bg-hover);
+            background: $bg-hover;
             border-radius: 2px;
             overflow: hidden;
         }
 
         .embed-video-progress-fill {
             height: 100%;
-            background: var(--accent-color);
+            background: $accent-color;
             border-radius: 2px;
             transition: width 0.05s linear;
         }
@@ -1283,8 +1283,8 @@ onUnmounted(() => {
         max-width: 500px;
         border-radius: 10px;
         overflow: hidden;
-        border: 1px solid var(--text3);
-        background: var(--bg-primary);
+        border: 1px solid $text3;
+        background: $bg-primary;
 
         .embed-audio {
             display: none;
@@ -1306,8 +1306,8 @@ onUnmounted(() => {
             min-width: 28px;
             border-radius: 50%;
             border: none;
-            background: var(--accent-color);
-            color: white;
+            background: $accent-color;
+            color: $text1;
             cursor: pointer;
             padding: 0;
             transition: all 0.15s ease;
@@ -1320,7 +1320,7 @@ onUnmounted(() => {
 
         .embed-audio-time {
             font-size: 0.65rem;
-            color: var(--text2);
+            color: $text2;
             font-variant-numeric: tabular-nums;
             min-width: 2.2em;
             text-align: center;
@@ -1338,14 +1338,14 @@ onUnmounted(() => {
         .embed-audio-progress-track {
             width: 100%;
             height: 3px;
-            background: var(--bg-hover);
+            background: $bg-hover;
             border-radius: 2px;
             overflow: hidden;
         }
 
         .embed-audio-progress-fill {
             height: 100%;
-            background: var(--accent-color);
+            background: $accent-color;
             border-radius: 2px;
             transition: width 0.05s linear;
         }
@@ -1369,13 +1369,13 @@ onUnmounted(() => {
         border-radius: 4px;
         border: none;
         background: transparent;
-        color: var(--text2);
+        color: $text2;
         cursor: pointer;
         padding: 0;
         transition: color 0.15s ease;
 
         &:hover {
-            color: var(--text1);
+            color: $text1;
         }
     }
 
@@ -1384,7 +1384,7 @@ onUnmounted(() => {
         height: 3px;
         -webkit-appearance: none;
         appearance: none;
-        background: var(--bg-hover);
+        background: $bg-hover;
         border-radius: 2px;
         outline: none;
         cursor: pointer;
@@ -1395,7 +1395,7 @@ onUnmounted(() => {
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            background: var(--accent-color);
+            background: $accent-color;
             cursor: pointer;
             border: none;
         }
@@ -1403,7 +1403,7 @@ onUnmounted(() => {
 
     :deep(.embed-pdf-container) {
         margin: 0.5em 0;
-        border: 1px solid var(--text3);
+        border: 1px solid $text3;
         border-radius: 8px;
         overflow: hidden;
 
@@ -1419,11 +1419,11 @@ onUnmounted(() => {
         margin: 0.5em 0;
         padding: 0.5em 0.75em;
         background: color-mix(in srgb, var(--text2) 8%, transparent);
-        border: 1px solid var(--text3);
+        border: 1px solid $text3;
         border-radius: 6px;
 
         a {
-            color: var(--accent-color);
+            color: $accent-color;
             text-decoration: none;
 
             &:hover {
@@ -1436,9 +1436,9 @@ onUnmounted(() => {
         margin: 0.5em 0;
         padding: 0.5em 0.75em;
         background: color-mix(in srgb, var(--text2) 6%, transparent);
-        border: 1px dashed var(--text3);
+        border: 1px dashed $text3;
         border-radius: 6px;
-        color: var(--text2);
+        color: $text2;
         font-size: 0.9em;
         display: flex;
         align-items: center;
@@ -1458,9 +1458,9 @@ onUnmounted(() => {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    border: 1px solid var(--text3);
-    background: var(--base1);
-    color: var(--text2);
+    border: 1px solid $text3;
+    background: $base1;
+    color: $text2;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1470,15 +1470,15 @@ onUnmounted(() => {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 
     &:hover {
-        background: var(--bg-hover, var(--text3));
-        color: var(--text1);
-        border-color: var(--text2);
+        background: $bg-hover;
+        color: $text1;
+        border-color: $text2;
     }
 
     &.active {
-        background: #e53e3e;
-        color: #fff;
-        border-color: #e53e3e;
+        background: $danger-color;
+        color: $text1;
+        border-color: $danger-color;
         box-shadow: 0 2px 12px rgba(229, 62, 62, 0.4);
     }
 
@@ -1507,7 +1507,7 @@ onUnmounted(() => {
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background: #e53e3e;
+    background: $danger-color;
     animation: pulse 1.5s ease-in-out infinite;
 }
 
@@ -1541,7 +1541,7 @@ onUnmounted(() => {
 
 .empty-message {
     text-align: center;
-    color: var(--text2);
+    color: $text2;
 
     .empty-logo {
         display: flex;
@@ -1560,7 +1560,7 @@ onUnmounted(() => {
         font-family: 'Inter', sans-serif;
         font-size: 4rem;
         font-weight: 600;
-        color: var(--text1);
+        color: $text1;
         letter-spacing: -0.02em;
         cursor: default;
     }
@@ -1572,7 +1572,7 @@ onUnmounted(() => {
 
     .hint {
         font-size: 0.9rem;
-        color: var(--text2);
+        color: $text2;
     }
 }
 </style>

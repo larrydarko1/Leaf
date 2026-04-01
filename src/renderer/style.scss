@@ -1,78 +1,208 @@
-:root {
-    font-family: 'Helvetica', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-    line-height: 1.6;
-    font-weight: 400;
+/**
+ * Global stylesheet — imported once in main.ts.
+ *
+ * All design tokens and global styles live here.
+ * Variables are auto-injected into every Vue SFC via
+ * vite.config.ts (css.preprocessorOptions.scss.additionalData).
+ *
+ * ── Theme architecture ────────────────────────────────────────────────────────
+ * Colors live exclusively as CSS custom properties so they can swap at runtime.
+ * Each $theme-* map is compiled by emit-theme() into a [data-theme="…"] block.
+ * JS drives switching by setting data-theme on <html>.
+ *
+ * ⚠  Do NOT pass $color-* aliases into SCSS color functions (rgba, darken…).
+ *    They resolve to var(--color-*) at runtime, which SCSS can't compute.
+ *    Use CSS color-mix() instead:
+ *      color-mix(in srgb, var(--color-accent) 12%, transparent)
+ */
 
+// ── Theme maps ────────────────────────────────────────────────────────────────
+
+// Dark theme
+$theme-dark: (
+    text1: #ffffff,
+    text2: #b0b0b0,
+    text3: #282828,
+    text-primary: #ffffff,
+    text-muted: #888888,
+    base1: #121212,
+    base2: #ffffff,
+    base3: #282828,
+    bg-primary: #1e1e1e,
+    bg-secondary: #181818,
+    bg-tertiary: #252525,
+    bg-hover: #2a2a2a,
+    bg-selected: #333333,
+    border-color: #333333,
+    accent-color: #3eb489,
+    accent-color-alpha: rgba(62, 180, 137, 0.15),
+    danger-color: #dc3545,
+    danger-color-alpha: rgba(220, 53, 69, 0.15),
+    scrollbar-thumb: #444444,
+    scrollbar-thumb-hover: #555555,
+);
+
+// Light theme
+$theme-light: (
+    text1: #1d1d1f,
+    text2: #6e6e73,
+    text3: #e5e5ea,
+    text-primary: #1d1d1f,
+    text-muted: #8e8e93,
+    base1: #f5f5f7,
+    base2: #1d1d1f,
+    base3: #ececee,
+    bg-primary: #ffffff,
+    bg-secondary: #f5f5f7,
+    bg-tertiary: #ececee,
+    bg-hover: #e8e8ed,
+    bg-selected: #dcdce0,
+    border-color: #d2d2d7,
+    accent-color: #3eb489,
+    accent-color-alpha: rgba(62, 180, 137, 0.1),
+    danger-color: #dc3545,
+    danger-color-alpha: rgba(220, 53, 69, 0.15),
+    scrollbar-thumb: #c7c7cc,
+    scrollbar-thumb-hover: #a1a1a6,
+);
+
+// ── Theme mixin ───────────────────────────────────────────────────────────────
+
+@mixin emit-theme($map, $scheme: dark) {
+    color-scheme: $scheme;
+
+    @each $key, $value in $map {
+        --#{$key}: #{$value};
+    }
+}
+
+// ── Theme emission ────────────────────────────────────────────────────────────
+
+// :root acts as the default (no data-theme set = dark).
+// JS always sets data-theme, but :root fallback prevents a flash on first paint.
+:root,
+[data-theme='dark'] {
+    @include emit-theme($theme-dark, dark);
+}
+
+[data-theme='light'] {
+    @include emit-theme($theme-light, light);
+}
+
+// ── Typography ────────────────────────────────────────────────────────────────
+
+$font-family: 'Helvetica', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+$line-height: 1.6;
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+$font-size-xs: 0.75rem;
+$font-size-sm: 0.875rem;
+$font-size-base: 1rem;
+$font-size-lg: 1.125rem;
+$font-size-xl: 1.25rem;
+$font-size-2xl: 1.5rem;
+
+// ── Spacing scale (4px grid) ──────────────────────────────────────────────────
+
+$space-1: 0.25rem;
+$space-2: 0.5rem;
+$space-3: 0.75rem;
+$space-4: 1rem;
+$space-5: 1.25rem;
+$space-6: 1.5rem;
+$space-8: 2rem;
+
+// ── Layout ────────────────────────────────────────────────────────────────────
+
+$border-radius-sm: 4px;
+$border-radius: 6px;
+$border-radius-lg: 8px;
+$border-radius-xl: 12px;
+
+// ── Motion ────────────────────────────────────────────────────────────────────
+
+$transition-fast: 0.1s ease;
+$transition-base: 0.2s ease;
+$transition-slow: 0.35s ease;
+
+// ── Z-index scale ─────────────────────────────────────────────────────────────
+
+$z-base: 0;
+$z-raised: 10;
+$z-overlay: 100;
+$z-modal: 200;
+
+// ── SCSS ALIASES ───────────────────────────────────────────────────────────────
+// Maps CSS custom properties to SCSS variables for use in components.
+
+$text1: var(--text1);
+$text2: var(--text2);
+$text3: var(--text3);
+$text-primary: var(--text-primary);
+$text-muted: var(--text-muted);
+$base1: var(--base1);
+$base2: var(--base2);
+$base3: var(--base3);
+$bg-primary: var(--bg-primary);
+$bg-secondary: var(--bg-secondary);
+$bg-tertiary: var(--bg-tertiary);
+$bg-hover: var(--bg-hover);
+$bg-selected: var(--bg-selected);
+$border-color: var(--border-color);
+$accent-color: var(--accent-color);
+$accent-color-alpha: var(--accent-color-alpha);
+$danger-color: var(--danger-color);
+$danger-color-alpha: var(--danger-color-alpha);
+$scrollbar-thumb: var(--scrollbar-thumb);
+$scrollbar-thumb-hover: var(--scrollbar-thumb-hover);
+
+// ── GLOBAL RESET & BASE STYLES ────────────────────────────────────────────────
+// ── Universal box-sizing ──────────────────────────────────────────────────────
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+// ── Root ───────────────────────────────────────────────────────────────────────
+
+:root {
+    font-family: $font-family;
+    line-height: $line-height;
+    font-weight: $font-weight-normal;
+    color: $text1;
+    background-color: $bg-primary;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
 
-// Theme color palettes - Light theme
-:root,
-:root[data-theme='light'] {
-    --text1: #1d1d1f;
-    --text2: #6e6e73;
-    --text3: #e5e5ea;
-    --text-primary: #1d1d1f;
-    --text-muted: #8e8e93;
-    --base1: #f5f5f7;
-    --base2: #1d1d1f;
-    --base3: #ececee;
-    --bg-primary: #ffffff;
-    --bg-secondary: #f5f5f7;
-    --bg-tertiary: #ececee;
-    --bg-hover: #e8e8ed;
-    --bg-selected: #dcdce0;
-    --border-color: #d2d2d7;
-    --accent-color: #3eb489;
-    --accent-color-alpha: rgba(62, 180, 137, 0.1);
-    --danger-color: #dc3545;
-    --danger-color-alpha: rgba(220, 53, 69, 0.15);
-    --scrollbar-thumb: #c7c7cc;
-    --scrollbar-thumb-hover: #a1a1a6;
+// ── Html, Body, App ───────────────────────────────────────────────────────────
+
+html {
+    scroll-behavior: smooth;
+
+    @media (prefers-reduced-motion: reduce) {
+        scroll-behavior: auto;
+    }
 }
 
-// Dark theme
-:root[data-theme='dark'] {
-    --text1: #ffffff;
-    --text2: #b0b0b0;
-    --text3: #282828;
-    --text-primary: #ffffff;
-    --text-muted: #888888;
-    --base1: #121212;
-    --base2: #ffffff;
-    --base3: #282828;
-    --bg-primary: #1e1e1e;
-    --bg-secondary: #181818;
-    --bg-tertiary: #252525;
-    --bg-hover: #2a2a2a;
-    --bg-selected: #333333;
-    --border-color: #333333;
-    --accent-color: #3eb489;
-    --accent-color-alpha: rgba(62, 180, 137, 0.15);
-    --danger-color: #dc3545;
-    --danger-color-alpha: rgba(220, 53, 69, 0.15);
-    --scrollbar-thumb: #444444;
-    --scrollbar-thumb-hover: #555555;
-}
-
-* {
-    box-sizing: border-box;
-}
-
-html,
 body,
+html,
 #app {
     height: 100%;
     margin: 0;
     padding: 0;
     overflow: hidden;
-    -webkit-tap-highlight-color: transparent;
 }
 
-/* Make interactive elements clickable */
+// ── Interactive elements ──────────────────────────────────────────────────────
+
 button,
 input,
 textarea,
@@ -83,7 +213,8 @@ a,
     cursor: pointer;
 }
 
-/* Custom scrollbar styling */
+// ── Scrollbar ─────────────────────────────────────────────────────────────────
+
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -94,38 +225,24 @@ a,
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--scrollbar-thumb);
+    background: $scrollbar-thumb;
     border-radius: 3px;
+    transition: background $transition-base;
 
     &:hover {
-        background: var(--scrollbar-thumb-hover);
+        background: $scrollbar-thumb-hover;
     }
 }
 
-/* Focus visible styling */
+// ── Focus & Selection ─────────────────────────────────────────────────────────
+
 :focus-visible {
-    outline: 1.5px solid var(--accent-color);
+    outline: 1.5px solid $accent-color;
     outline-offset: -1.5px;
     border-radius: 4px;
 }
 
-/* Selection color */
 ::selection {
-    background: var(--accent-color-alpha);
-    color: var(--text1);
-}
-
-/* Better font scaling on mobile */
-@media (max-width: 768px) {
-    html {
-        -webkit-text-size-adjust: 100%;
-        text-size-adjust: 100%;
-    }
-}
-
-/* Smooth scrolling for all devices */
-@media (prefers-reduced-motion: no-preference) {
-    html {
-        scroll-behavior: smooth;
-    }
+    background: $accent-color-alpha;
+    color: $text1;
 }

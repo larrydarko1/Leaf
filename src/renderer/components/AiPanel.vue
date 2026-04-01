@@ -330,8 +330,8 @@ onMounted(async () => {
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: var(--base1);
-    border-left: 1px solid var(--text3);
+    background: $base1;
+    border-left: 1px solid $text3;
     width: 340px;
     min-width: 280px;
 }

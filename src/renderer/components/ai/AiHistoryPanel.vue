@@ -125,7 +125,7 @@ function formatRelativeDate(dateStr: string): string {
     max-height: 45%;
     display: flex;
     flex-direction: column;
-    border-bottom: 1px solid var(--text3);
+    border-bottom: 1px solid $text3;
 }
 
 .ai-history-header {
@@ -138,7 +138,7 @@ function formatRelativeDate(dateStr: string): string {
 .ai-history-title {
     font-size: 0.72rem;
     font-weight: 600;
-    color: var(--text2);
+    color: $text2;
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
@@ -151,7 +151,7 @@ function formatRelativeDate(dateStr: string): string {
 
 .ai-history-empty {
     font-size: 0.75rem;
-    color: var(--text2);
+    color: $text2;
     text-align: center;
     padding: 1rem 0;
 }
@@ -166,16 +166,16 @@ function formatRelativeDate(dateStr: string): string {
     transition: background 0.12s;
 
     &:hover {
-        background: var(--bg-hover);
+        background: $bg-hover;
         .ai-history-item-actions {
             opacity: 1;
         }
     }
 
     &.active {
-        background: var(--bg-hover);
+        background: $bg-hover;
         .ai-history-item-title {
-            color: var(--accent-color);
+            color: $accent-color;
         }
     }
 }
@@ -190,7 +190,7 @@ function formatRelativeDate(dateStr: string): string {
 
 .ai-history-item-title {
     font-size: 0.78rem;
-    color: var(--text1);
+    color: $text1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -199,7 +199,7 @@ function formatRelativeDate(dateStr: string): string {
 
 .ai-history-item-meta {
     font-size: 0.66rem;
-    color: var(--text2);
+    color: $text2;
     opacity: 0.7;
 }
 
@@ -213,9 +213,9 @@ function formatRelativeDate(dateStr: string): string {
 
 .ai-history-rename-input {
     width: 100%;
-    background: var(--bg-primary);
-    color: var(--text1);
-    border: 1px solid var(--accent-color);
+    background: $bg-primary;
+    color: $text1;
+    border: 1px solid $accent-color;
     border-radius: 4px;
     padding: 0.15rem 0.35rem;
     font-size: 0.78rem;
@@ -226,7 +226,7 @@ function formatRelativeDate(dateStr: string): string {
 .ai-btn-icon {
     background: none;
     border: none;
-    color: var(--text2);
+    color: $text2;
     cursor: pointer;
     padding: 0.3rem;
     border-radius: 4px;
@@ -236,8 +236,8 @@ function formatRelativeDate(dateStr: string): string {
     transition: all 0.2s;
     flex-shrink: 0;
     &:hover:not(:disabled) {
-        background: var(--bg-hover);
-        color: var(--text1);
+        background: $bg-hover;
+        color: $text1;
     }
     &:disabled {
         opacity: 0.3;
@@ -250,7 +250,7 @@ function formatRelativeDate(dateStr: string): string {
 }
 .ai-btn-danger {
     &:hover:not(:disabled) {
-        color: var(--danger-color);
+        color: $danger-color;
     }
 }
 </style>

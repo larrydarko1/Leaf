@@ -36,7 +36,7 @@ watch(
     justify-content: center;
     padding: 0;
     overflow: hidden;
-    background: var(--base1);
+    background: $base1;
     position: relative;
 }
 
@@ -53,7 +53,7 @@ watch(
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: var(--text2);
+    color: $text2;
     position: relative;
     z-index: 1;
 

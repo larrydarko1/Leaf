@@ -233,31 +233,31 @@ function highlightMatch(text: string): string {
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: var(--bg-secondary);
+    background: $bg-secondary;
 }
 
 .search-header {
     padding: 0.65rem 0.75rem;
-    border-bottom: 1px solid var(--text3);
+    border-bottom: 1px solid $text3;
 }
 
 .search-input-wrapper {
     position: relative;
     display: flex;
     align-items: center;
-    background: var(--bg-primary);
-    border: 1px solid var(--text3);
+    background: $bg-primary;
+    border: 1px solid $text3;
     border-radius: 10px;
     padding: 0.35rem 0.6rem;
     transition: border-color 0.2s;
 
     &:focus-within {
-        border-color: var(--accent-color);
+        border-color: $accent-color;
     }
 }
 
 .search-icon {
-    color: var(--text-muted);
+    color: $text-muted;
     flex-shrink: 0;
     margin-right: 8px;
 }
@@ -266,13 +266,13 @@ function highlightMatch(text: string): string {
     flex: 1;
     border: none;
     background: none;
-    color: var(--text-primary);
+    color: $text-primary;
     font-size: 0.8rem;
     outline: none;
     font-family: inherit;
 
     &::placeholder {
-        color: var(--text-muted);
+        color: $text-muted;
     }
 }
 
@@ -283,22 +283,22 @@ function highlightMatch(text: string): string {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--text-muted);
+    color: $text-muted;
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s;
     margin-left: 4px;
 
     &:hover {
-        background: var(--bg-tertiary);
-        color: var(--text-primary);
+        background: $bg-tertiary;
+        color: $text-primary;
     }
 }
 
 .search-info {
     margin-top: 8px;
     font-size: 12px;
-    color: var(--text-muted);
+    color: $text-muted;
 }
 
 .search-results {
@@ -313,7 +313,7 @@ function highlightMatch(text: string): string {
     justify-content: center;
     padding: 48px 24px;
     text-align: center;
-    color: var(--text-muted);
+    color: $text-muted;
     font-size: 14px;
 }
 
@@ -330,25 +330,25 @@ function highlightMatch(text: string): string {
     user-select: none;
 
     &:hover {
-        background: var(--bg-hover);
+        background: $bg-hover;
     }
 
     &.selected {
-        background: var(--bg-selected);
+        background: $bg-selected;
     }
 
     &.active {
-        background: var(--bg-selected);
-        color: var(--text1);
+        background: $bg-selected;
+        color: $text1;
 
         .file-path,
         .file-icon {
-            color: var(--text1);
+            color: $text1;
         }
     }
 
     &.keyboard-selected {
-        outline: 2px solid var(--accent-color);
+        outline: 2px solid $accent-color;
         outline-offset: -2px;
     }
 }
@@ -361,7 +361,7 @@ function highlightMatch(text: string): string {
 
 .file-icon {
     flex-shrink: 0;
-    color: var(--text-muted);
+    color: $text-muted;
 }
 
 .file-details {
@@ -380,8 +380,8 @@ function highlightMatch(text: string): string {
     text-overflow: ellipsis;
 
     :deep(mark) {
-        background: var(--accent-color-alpha);
-        color: var(--accent-color);
+        background: $accent-color-alpha;
+        color: $accent-color;
         padding: 1px 2px;
         border-radius: 3px;
         font-weight: 600;
@@ -390,7 +390,7 @@ function highlightMatch(text: string): string {
 
 .file-path {
     font-size: 11px;
-    color: var(--text-muted);
+    color: $text-muted;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -406,11 +406,11 @@ function highlightMatch(text: string): string {
 }
 
 .search-results::-webkit-scrollbar-thumb {
-    background: var(--scrollbar-thumb);
+    background: $scrollbar-thumb;
     border-radius: 3px;
 
     &:hover {
-        background: var(--scrollbar-thumb-hover);
+        background: $scrollbar-thumb-hover;
     }
 }
 </style>

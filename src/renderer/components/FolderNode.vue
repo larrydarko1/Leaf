@@ -410,22 +410,22 @@ function handleFileClick(event: MouseEvent) {
     gap: 0.4rem;
 
     &:hover {
-        background: var(--bg-hover);
+        background: $bg-hover;
         margin: 1px 10px 1px 10px;
     }
 }
 
 .folder-item {
-    color: var(--text1);
+    color: $text1;
     font-size: 0.875rem;
     font-weight: 500;
 
     &.active {
-        background: var(--bg-selected);
+        background: $bg-selected;
         margin: 1px 10px 1px 10px;
 
         .folder-name {
-            color: var(--accent-color);
+            color: $accent-color;
             font-weight: 500;
         }
     }
@@ -440,14 +440,14 @@ function handleFileClick(event: MouseEvent) {
     }
 
     &.drag-over {
-        background: var(--accent-color-alpha) !important;
-        border: 2px dashed var(--accent-color);
+        background: $accent-color-alpha !important;
+        border: 2px dashed $accent-color;
         margin: 1px 10px 1px 10px;
     }
 
     .chevron {
         flex-shrink: 0;
-        color: var(--text2);
+        color: $text2;
         transition: transform 0.2s ease;
         margin-left: 0.125rem;
         cursor: pointer;
@@ -459,7 +459,7 @@ function handleFileClick(event: MouseEvent) {
 
     .folder-icon {
         flex-shrink: 0;
-        color: var(--text2);
+        color: $text2;
         opacity: 0.8;
     }
 
@@ -473,9 +473,9 @@ function handleFileClick(event: MouseEvent) {
     .folder-name-input {
         flex: 1;
         font-size: 0.875rem;
-        color: var(--text1);
-        background: var(--bg-primary);
-        border: 1px solid var(--border-color);
+        color: $text1;
+        background: $bg-primary;
+        border: 1px solid $border-color;
         border-radius: 5px;
         padding: 0.15rem 0.35rem;
         outline: none;
@@ -485,8 +485,8 @@ function handleFileClick(event: MouseEvent) {
         transition: background 0.15s ease;
 
         &:focus {
-            background: var(--bg-primary);
-            border-color: var(--accent-color);
+            background: $bg-primary;
+            border-color: $accent-color;
         }
     }
 }
@@ -494,7 +494,7 @@ function handleFileClick(event: MouseEvent) {
 .file-item {
     // Selected but not active (multi-select)
     &.selected {
-        background: var(--bg-selected);
+        background: $bg-selected;
         margin: 1px 10px 1px 10px;
 
         .file-name {
@@ -504,11 +504,11 @@ function handleFileClick(event: MouseEvent) {
 
     // Active file (being edited)
     &.active {
-        background: var(--bg-selected);
+        background: $bg-selected;
         margin: 1px 10px 1px 10px;
 
         .file-name {
-            color: var(--text1);
+            color: $text1;
             font-weight: 500;
         }
 
@@ -528,13 +528,13 @@ function handleFileClick(event: MouseEvent) {
 
     .file-icon {
         flex-shrink: 0;
-        color: var(--text2);
+        color: $text2;
         opacity: 0.7;
         margin: 1px 10px 1px 10px;
     }
 
     &.media-drawing .drawing-icon {
-        color: var(--text2);
+        color: $text2;
         opacity: 0.9;
     }
 }
@@ -542,7 +542,7 @@ function handleFileClick(event: MouseEvent) {
 .file-name {
     flex: 1;
     font-size: 0.875rem;
-    color: var(--text1);
+    color: $text1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -551,7 +551,7 @@ function handleFileClick(event: MouseEvent) {
 
 .bookmark-star {
     flex-shrink: 0;
-    color: var(--accent-color);
+    color: $accent-color;
     margin-left: 4px;
     opacity: 0.8;
 }
@@ -564,9 +564,9 @@ function handleFileClick(event: MouseEvent) {
 .file-name-input {
     flex: 1;
     font-size: 0.875rem;
-    color: var(--text1);
-    background: var(--bg-primary);
-    border: 1px solid var(--border-color);
+    color: $text1;
+    background: $bg-primary;
+    border: 1px solid $border-color;
     border-radius: 5px;
     padding: 0.15rem 0.35rem;
     outline: none;
@@ -576,8 +576,8 @@ function handleFileClick(event: MouseEvent) {
     transition: background 0.15s ease;
 
     &:focus {
-        background: var(--bg-primary);
-        border-color: var(--accent-color);
+        background: $bg-primary;
+        border-color: $accent-color;
     }
 }
 </style>

@@ -60,9 +60,9 @@ function handleItemClick(item: ContextMenuItem) {
 <style scoped lang="scss">
 .context-menu {
     position: fixed;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
+    background: $bg-secondary;
+    border: 1px solid $border-color;
+    color: $text-primary;
     border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     padding: 0.25rem 0;
@@ -79,12 +79,12 @@ function handleItemClick(item: ContextMenuItem) {
     padding: 0.5rem 0.75rem;
     cursor: pointer;
     transition: background 0.15s ease;
-    color: var(--text-primary);
+    color: $text-primary;
     font-size: 0.875rem;
     gap: 1rem;
 
     &:hover:not(.disabled) {
-        background: var(--bg-hover);
+        background: $bg-hover;
     }
 
     &.disabled {
@@ -98,7 +98,7 @@ function handleItemClick(item: ContextMenuItem) {
 }
 
 .menu-shortcut {
-    color: var(--text2);
+    color: $text2;
     font-size: 0.75rem;
     opacity: 0.7;
 }

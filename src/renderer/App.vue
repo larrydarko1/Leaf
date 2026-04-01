@@ -550,8 +550,8 @@ function toggleAiPanel() {
     flex-direction: column;
     width: 100%;
     height: 100%;
-    background: var(--base1);
-    color: var(--text1);
+    background: $base1;
+    color: $text1;
 }
 
 // Welcome Screen

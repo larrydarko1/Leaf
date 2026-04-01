@@ -266,8 +266,8 @@ function truncate(str: string, len: number): string {
 .ai-model-pill {
     flex: 1;
     min-width: 0;
-    background: var(--bg-primary);
-    border: 1px solid var(--text3);
+    background: $bg-primary;
+    border: 1px solid $text3;
     border-radius: 10px;
     padding: 0.2rem 0.35rem;
     display: flex;
@@ -295,7 +295,7 @@ function truncate(str: string, len: number): string {
     width: 100%;
     padding: 0.25rem 0.4rem;
     background: transparent;
-    color: var(--text1);
+    color: $text1;
     border: none;
     font-size: 0.75rem;
     cursor: pointer;
@@ -304,7 +304,7 @@ function truncate(str: string, len: number): string {
     transition: background 0.15s;
 
     &:hover:not(:disabled) {
-        background: var(--bg-hover);
+        background: $bg-hover;
     }
     &:disabled {
         opacity: 0.5;
@@ -318,12 +318,12 @@ function truncate(str: string, len: number): string {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: var(--text2);
+    color: $text2;
 }
 
 .ai-dropdown-chevron {
     flex-shrink: 0;
-    color: var(--text2);
+    color: $text2;
     transition: transform 0.2s;
     &.open {
         transform: rotate(180deg);
@@ -332,8 +332,8 @@ function truncate(str: string, len: number): string {
 
 .ai-dropdown-menu {
     position: fixed;
-    background: var(--bg-secondary, var(--bg-primary));
-    border: 1px solid var(--text3);
+    background: var(--bg-secondary, $bg-primary);
+    border: 1px solid $text3;
     border-radius: 8px;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
     padding: 0.3rem;
@@ -349,7 +349,7 @@ function truncate(str: string, len: number): string {
 .ai-dropdown-empty {
     padding: 0.5rem 0.65rem;
     font-size: 0.75rem;
-    color: var(--text2);
+    color: $text2;
     text-align: center;
 }
 
@@ -362,15 +362,15 @@ function truncate(str: string, len: number): string {
     border-radius: 5px;
     cursor: pointer;
     font-size: 0.75rem;
-    color: var(--text1);
+    color: $text1;
     transition: background 0.12s;
 
     &:hover {
-        background: var(--bg-hover);
+        background: $bg-hover;
     }
     &.selected {
-        background: var(--bg-hover);
-        color: var(--accent-color);
+        background: $bg-hover;
+        color: $accent-color;
     }
 }
 
@@ -384,7 +384,7 @@ function truncate(str: string, len: number): string {
 .ai-dropdown-item-size {
     flex-shrink: 0;
     font-size: 0.68rem;
-    color: var(--text2);
+    color: $text2;
     opacity: 0.7;
 }
 
@@ -400,15 +400,15 @@ function truncate(str: string, len: number): string {
 .ai-model-indicator {
     width: 7px;
     height: 7px;
-    background: var(--accent-color);
+    background: $accent-color;
     border-radius: 50%;
     flex-shrink: 0;
-    box-shadow: 0 0 4px var(--accent-color);
+    box-shadow: 0 0 4px $accent-color;
 }
 
 .ai-model-name {
     font-size: 0.75rem;
-    color: var(--text2);
+    color: $text2;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -419,8 +419,8 @@ function truncate(str: string, len: number): string {
     align-items: center;
     gap: 0.125rem;
     flex-shrink: 0;
-    background: var(--bg-primary);
-    border: 1px solid var(--text3);
+    background: $bg-primary;
+    border: 1px solid $text3;
     border-radius: 10px;
     padding: 0.15rem 0.2rem;
 }
@@ -428,7 +428,7 @@ function truncate(str: string, len: number): string {
 .ai-btn-icon {
     background: none;
     border: none;
-    color: var(--text2);
+    color: $text2;
     cursor: pointer;
     padding: 0.3rem;
     border-radius: 4px;
@@ -439,8 +439,8 @@ function truncate(str: string, len: number): string {
     flex-shrink: 0;
 
     &:hover:not(:disabled) {
-        background: var(--bg-hover);
-        color: var(--text1);
+        background: $bg-hover;
+        color: $text1;
     }
     &:disabled {
         opacity: 0.3;
@@ -450,19 +450,19 @@ function truncate(str: string, len: number): string {
 
 .ai-btn-danger {
     &:hover:not(:disabled) {
-        color: var(--danger-color);
+        color: $danger-color;
     }
 }
 
 .ai-btn-active {
-    color: var(--accent-color) !important;
-    background: var(--bg-hover);
+    color: $accent-color !important;
+    background: $bg-hover;
 }
 
 .ai-btn-small {
     padding: 0.25rem 0.55rem;
-    background: var(--accent-color);
-    color: var(--base1);
+    background: $accent-color;
+    color: $base1;
     border: none;
     border-radius: 7px;
     font-size: 0.72rem;

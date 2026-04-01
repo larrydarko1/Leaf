@@ -365,7 +365,7 @@ function formatNumber(n: number): string {
     max-height: 50%;
     display: flex;
     flex-direction: column;
-    border-bottom: 1px solid var(--text3);
+    border-bottom: 1px solid $text3;
 }
 
 .ai-hf-header {
@@ -378,7 +378,7 @@ function formatNumber(n: number): string {
 .ai-hf-title {
     font-size: 0.72rem;
     font-weight: 600;
-    color: var(--text2);
+    color: $text2;
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
@@ -388,12 +388,12 @@ function formatNumber(n: number): string {
     align-items: center;
     gap: 0.25rem;
     margin: 0 0.5rem 0.4rem;
-    background: var(--bg-primary);
-    border: 1px solid var(--text3);
+    background: $bg-primary;
+    border: 1px solid $text3;
     border-radius: 8px;
     padding: 0.15rem 0.15rem 0.15rem 0.5rem;
     &:focus-within {
-        border-color: var(--accent-color);
+        border-color: $accent-color;
     }
 }
 
@@ -402,13 +402,13 @@ function formatNumber(n: number): string {
     min-width: 0;
     padding: 0.3rem 0;
     background: transparent;
-    color: var(--text1);
+    color: $text1;
     border: none;
     font-size: 0.75rem;
     font-family: inherit;
     outline: none;
     &::placeholder {
-        color: var(--text2);
+        color: $text2;
     }
 }
 
@@ -417,7 +417,7 @@ function formatNumber(n: number): string {
     gap: 0.2rem;
     margin: 0 0.5rem 0.4rem;
     padding: 0.15rem;
-    background: var(--bg-primary);
+    background: $bg-primary;
     border-radius: 6px;
 }
 
@@ -426,19 +426,19 @@ function formatNumber(n: number): string {
     padding: 0.2rem 0.3rem;
     background: none;
     border: none;
-    color: var(--text2);
+    color: $text2;
     font-size: 0.62rem;
     font-family: inherit;
     cursor: pointer;
     border-radius: 4px;
     transition: all 0.15s;
     &:hover {
-        color: var(--text1);
-        background: var(--bg-hover);
+        color: $text1;
+        background: $bg-hover;
     }
     &.active {
-        color: var(--text1);
-        background: var(--bg-hover);
+        color: $text1;
+        background: $bg-hover;
         font-weight: 600;
     }
 }
@@ -451,14 +451,14 @@ function formatNumber(n: number): string {
     margin: 0 0.5rem 0.3rem;
     background: none;
     border: none;
-    color: var(--text2);
+    color: $text2;
     font-size: 0.72rem;
     cursor: pointer;
     border-radius: 6px;
     transition: all 0.15s;
     &:hover {
-        color: var(--text1);
-        background: var(--bg-hover);
+        color: $text1;
+        background: $bg-hover;
     }
 }
 
@@ -481,7 +481,7 @@ function formatNumber(n: number): string {
 .ai-hf-loading,
 .ai-hf-empty {
     font-size: 0.75rem;
-    color: var(--text2);
+    color: $text2;
     text-align: center;
     padding: 1rem 0;
 }
@@ -495,7 +495,7 @@ function formatNumber(n: number): string {
     cursor: pointer;
     transition: background 0.12s;
     &:hover {
-        background: var(--bg-hover);
+        background: $bg-hover;
     }
 }
 
@@ -509,7 +509,7 @@ function formatNumber(n: number): string {
 
 .ai-hf-result-name {
     font-size: 0.75rem;
-    color: var(--text1);
+    color: $text1;
     word-break: break-word;
     line-height: 1.3;
 }
@@ -519,14 +519,14 @@ function formatNumber(n: number): string {
     flex-wrap: wrap;
     gap: 0.35rem;
     font-size: 0.65rem;
-    color: var(--text2);
+    color: $text2;
     opacity: 0.7;
     align-items: center;
 }
 
 .ai-hf-result-tag {
     font-size: 0.58rem;
-    background: var(--bg-hover);
+    background: $bg-hover;
     padding: 0.05rem 0.3rem;
     border-radius: 3px;
     white-space: nowrap;
@@ -538,17 +538,17 @@ function formatNumber(n: number): string {
     padding: 0.45rem;
     margin-top: 0.25rem;
     background: none;
-    border: 1px dashed var(--text3);
-    color: var(--text2);
+    border: 1px dashed $text3;
+    color: $text2;
     font-size: 0.68rem;
     font-family: inherit;
     cursor: pointer;
     border-radius: 6px;
     transition: all 0.15s;
     &:hover:not(:disabled) {
-        color: var(--text1);
-        border-color: var(--text2);
-        background: var(--bg-hover);
+        color: $text1;
+        border-color: $text2;
+        background: $bg-hover;
     }
     &:disabled {
         opacity: 0.5;
@@ -563,7 +563,7 @@ function formatNumber(n: number): string {
         display: block;
         font-size: 0.72rem;
         font-weight: 600;
-        color: var(--text1);
+        color: $text1;
         word-break: break-word;
     }
 
@@ -575,8 +575,8 @@ function formatNumber(n: number): string {
 
         .ai-hf-meta-tag {
             font-size: 0.62rem;
-            color: var(--text2);
-            background: var(--bg-hover);
+            color: $text2;
+            background: $bg-hover;
             padding: 0.15rem 0.4rem;
             border-radius: 4px;
             white-space: nowrap;
@@ -599,7 +599,7 @@ function formatNumber(n: number): string {
     border-radius: 8px;
     transition: background 0.12s;
     &:hover {
-        background: var(--bg-hover);
+        background: $bg-hover;
     }
 }
 
@@ -619,7 +619,7 @@ function formatNumber(n: number): string {
 
 .ai-hf-file-name {
     font-size: 0.72rem;
-    color: var(--text1);
+    color: $text1;
     word-break: break-all;
     line-height: 1.3;
     font-family: 'SF Mono', 'Fira Code', monospace;
@@ -660,14 +660,14 @@ function formatNumber(n: number): string {
 
 .ai-hf-file-size {
     font-size: 0.62rem;
-    color: var(--text2);
+    color: $text2;
 }
 
 .ai-hf-quant-badge {
     font-size: 0.58rem;
     font-weight: 500;
     background: rgba(108, 117, 125, 0.15);
-    color: var(--text2);
+    color: $text2;
     padding: 0.05rem 0.3rem;
     border-radius: 3px;
     font-family: 'SF Mono', 'Fira Code', monospace;
@@ -675,13 +675,13 @@ function formatNumber(n: number): string {
 
 .ai-hf-ram-estimate {
     font-size: 0.6rem;
-    color: var(--text2);
+    color: $text2;
     opacity: 0.85;
 }
 
 .ai-hf-shard-info {
     font-size: 0.58rem;
-    color: var(--text2);
+    color: $text2;
     opacity: 0.7;
     font-style: italic;
 }
@@ -696,8 +696,8 @@ function formatNumber(n: number): string {
 
 .ai-hf-download-btn {
     background: none;
-    border: 1px solid var(--accent-color);
-    color: var(--accent-color);
+    border: 1px solid $accent-color;
+    color: $accent-color;
     cursor: pointer;
     padding: 0.25rem;
     border-radius: 5px;
@@ -708,8 +708,8 @@ function formatNumber(n: number): string {
     transition: all 0.15s;
 
     &:hover {
-        background: var(--accent-color);
-        color: var(--base1);
+        background: $accent-color;
+        color: $base1;
     }
     &.ai-hf-download-sharded {
         padding: 0.2rem 0.4rem;
@@ -730,21 +730,21 @@ function formatNumber(n: number): string {
 .ai-hf-progress-bar {
     flex: 1;
     height: 3px;
-    background: var(--text3);
+    background: $text3;
     border-radius: 2px;
     overflow: hidden;
 }
 
 .ai-hf-progress-fill {
     height: 100%;
-    background: var(--accent-color);
+    background: $accent-color;
     border-radius: 2px;
     transition: width 0.3s ease;
 }
 
 .ai-hf-progress-text {
     font-size: 0.62rem;
-    color: var(--text2);
+    color: $text2;
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
 }
@@ -752,7 +752,7 @@ function formatNumber(n: number): string {
 .ai-btn-icon {
     background: none;
     border: none;
-    color: var(--text2);
+    color: $text2;
     cursor: pointer;
     padding: 0.3rem;
     border-radius: 4px;
@@ -762,8 +762,8 @@ function formatNumber(n: number): string {
     transition: all 0.2s;
     flex-shrink: 0;
     &:hover:not(:disabled) {
-        background: var(--bg-hover);
-        color: var(--text1);
+        background: $bg-hover;
+        color: $text1;
     }
     &:disabled {
         opacity: 0.3;
@@ -776,7 +776,7 @@ function formatNumber(n: number): string {
 }
 .ai-btn-danger {
     &:hover:not(:disabled) {
-        color: var(--danger-color);
+        color: $danger-color;
     }
 }
 </style>

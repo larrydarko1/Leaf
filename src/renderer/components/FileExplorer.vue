@@ -335,7 +335,7 @@ watch(
     flex-direction: column;
     flex: 1;
     min-height: 0;
-    background: var(--bg-secondary);
+    background: $bg-secondary;
     overflow: hidden;
 }
 
@@ -360,16 +360,16 @@ watch(
     }
 
     &:hover::-webkit-scrollbar-thumb {
-        background: var(--scrollbar-thumb);
+        background: $scrollbar-thumb;
     }
 
     &:hover::-webkit-scrollbar-thumb:hover {
-        background: var(--scrollbar-thumb-hover);
+        background: $scrollbar-thumb-hover;
     }
 
     &.drag-over-root {
-        background: var(--bg-hover);
-        outline: 2px dashed var(--text2);
+        background: $bg-hover;
+        outline: 2px dashed $text2;
         outline-offset: -4px;
     }
 }
@@ -377,7 +377,7 @@ watch(
 .empty-state {
     padding: 2rem 1rem;
     text-align: center;
-    color: var(--text2);
+    color: $text2;
 
     p {
         margin: 0.5rem 0;
@@ -386,7 +386,7 @@ watch(
 
     .hint {
         font-size: 0.8rem;
-        color: var(--text2);
+        color: $text2;
     }
 }
 </style>

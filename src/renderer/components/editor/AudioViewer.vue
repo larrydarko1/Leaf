@@ -179,7 +179,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
     justify-content: center;
     padding: 2rem;
     overflow: auto;
-    background: var(--base1);
+    background: $base1;
     position: relative;
 
     &::before {
@@ -206,7 +206,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 }
 
 .audio-icon {
-    color: var(--text2);
+    color: $text2;
     opacity: 0.6;
 }
 
@@ -215,7 +215,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: var(--text2);
+    color: $text2;
     position: relative;
     z-index: 1;
 
@@ -231,8 +231,8 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
     gap: 0.75rem;
     width: 100%;
     padding: 0.75rem 1rem;
-    background: var(--bg-primary);
-    border: 1px solid var(--text3);
+    background: $bg-primary;
+    border: 1px solid $text3;
     border-radius: 12px;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -247,7 +247,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
     min-width: 36px;
     border-radius: 50%;
     border: none;
-    background: var(--accent-color);
+    background: $accent-color;
     color: white;
     cursor: pointer;
     transition: all 0.15s ease;
@@ -264,7 +264,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 
 .audio-time {
     font-size: 0.75rem;
-    color: var(--text2);
+    color: $text2;
     font-variant-numeric: tabular-nums;
     min-width: 2.5em;
     text-align: center;
@@ -282,7 +282,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 .audio-progress-track {
     width: 100%;
     height: 4px;
-    background: var(--bg-hover);
+    background: $bg-hover;
     border-radius: 2px;
     overflow: hidden;
     position: relative;
@@ -290,7 +290,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 
 .audio-progress-fill {
     height: 100%;
-    background: var(--accent-color);
+    background: $accent-color;
     border-radius: 2px;
     transition: width 0.05s linear;
 }
@@ -307,14 +307,14 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
     justify-content: center;
     background: none;
     border: none;
-    color: var(--text2);
+    color: $text2;
     cursor: pointer;
     padding: 0.2rem;
     border-radius: 4px;
     transition: color 0.15s;
 
     &:hover {
-        color: var(--text1);
+        color: $text1;
     }
 }
 
@@ -323,7 +323,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
     appearance: none;
     width: 60px;
     height: 4px;
-    background: var(--bg-hover);
+    background: $bg-hover;
     border-radius: 2px;
     outline: none;
     cursor: pointer;
@@ -334,7 +334,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
         width: 12px;
         height: 12px;
         border-radius: 50%;
-        background: var(--accent-color);
+        background: $accent-color;
         cursor: pointer;
         transition: transform 0.1s;
     }
@@ -349,7 +349,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: var(--text2);
+    color: $text2;
     position: relative;
     z-index: 1;
 

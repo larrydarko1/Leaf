@@ -1231,7 +1231,7 @@ canvas {
     border-radius: 6px;
     border: none;
     background: transparent;
-    color: var(--text1);
+    color: $text1;
     font-size: 12px;
     cursor: pointer;
     transition: background 0.12s;
