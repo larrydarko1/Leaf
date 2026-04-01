@@ -2,6 +2,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import FileExplorer from './components/FileExplorer.vue';
 import NoteEditor from './components/NoteEditor.vue';
+import TabBar from './components/TabBar.vue';
 import SearchPanel from './components/SearchPanel.vue';
 import BookmarksPanel from './components/BookmarksPanel.vue';
 import AudioRecorder from './components/AudioRecorder.vue';
@@ -10,6 +11,7 @@ import type { FileInfo } from './types/electron';
 import { useVault } from './composables/vault/useVault';
 import { useFileSelection } from './composables/vault/useFileSelection';
 import { useBookmarks } from './composables/vault/useBookmarks';
+import { useEditorTabs } from './composables/editor/useEditorTabs';
 
 const noteEditorRef = ref<InstanceType<typeof NoteEditor> | null>(null);
 
@@ -17,10 +19,12 @@ const noteEditorRef = ref<InstanceType<typeof NoteEditor> | null>(null);
 const vault = useVault();
 const selection = useFileSelection();
 const bookmarks = useBookmarks(() => vault.currentFolder.value);
+const editorTabs = useEditorTabs();
 
 // Destructure reactive state for template bindings
 const { currentFolder, files, folders } = vault;
-const { selectedFiles, activeFile, selectedFolder } = selection;
+const { selectedFiles, selectedFolder } = selection;
+const activeFile = editorTabs.activeFile;
 const { bookmarkedFiles, toggleBookmark, removeBookmark } = bookmarks;
 
 // --- UI state ---
@@ -58,13 +62,17 @@ function handleExternalLinkClick(e: MouseEvent) {
 async function refreshFiles() {
     await vault.refreshFiles();
     selection.syncAfterRefresh(vault.files.value);
+    editorTabs.syncTabFiles(vault.files.value);
 }
 
 // --- Folder lifecycle ---
 async function selectFolder() {
     const folderPath = await vault.openFolderDialog();
     if (folderPath) {
+        editorTabs.clearTabs();
         selection.restoreFromStorage(vault.files.value);
+        const restored = selection.activeFile.value;
+        if (restored) editorTabs.openTab(restored);
         bookmarks.loadBookmarks();
     }
 }
@@ -72,12 +80,15 @@ async function selectFolder() {
 async function loadFolderPath(folderPath: string) {
     await vault.loadFolder(folderPath);
     selection.restoreFromStorage(vault.files.value);
+    const restored = selection.activeFile.value;
+    if (restored) editorTabs.openTab(restored);
     bookmarks.loadBookmarks();
 }
 
 function changeFolder() {
     vault.closeVault();
     selection.clearSelection();
+    editorTabs.clearTabs();
 }
 
 // --- Lifecycle ---
@@ -114,6 +125,10 @@ function handleKeydown(e: KeyboardEvent) {
 // --- File selection ---
 function handleFileSelect(file: FileInfo, event?: MouseEvent, visibleFiles?: FileInfo[]) {
     selection.selectFile(file, event, visibleFiles);
+    // Open/activate a tab for the single active file (ignore multi-select)
+    if (!event?.shiftKey) {
+        editorTabs.openTab(file);
+    }
 }
 
 function handleFolderSelect(folderPath: string) {
@@ -122,7 +137,21 @@ function handleFolderSelect(folderPath: string) {
 
 // --- Editor events ---
 function handleFileSave() {
+    // Mark the active tab as saved
+    if (activeFile.value) {
+        const tab = editorTabs.tabs.value.find((t) => t.file.path === activeFile.value!.path);
+        if (tab && tab.content !== null) {
+            editorTabs.markTabSaved(activeFile.value.path, tab.content);
+        }
+    }
     refreshFiles();
+}
+
+function handleContentChanged(hasChanges: boolean) {
+    if (activeFile.value) {
+        const tab = editorTabs.tabs.value.find((t) => t.file.path === activeFile.value!.path);
+        if (tab) tab.hasUnsavedChanges = hasChanges;
+    }
 }
 
 function handleAiFileChanged(changedPath: string) {
@@ -135,18 +164,27 @@ function handleAiFileChanged(changedPath: string) {
 async function handleRecordingSaved(filePath: string) {
     await refreshFiles();
     const recordingFile = vault.files.value.find((f: FileInfo) => f.path === filePath);
-    if (recordingFile) selection.openFile(recordingFile);
+    if (recordingFile) {
+        selection.openFile(recordingFile);
+        editorTabs.openTab(recordingFile);
+    }
 }
 
 // --- Create ---
 async function createNewFile() {
     const newFile = await vault.createFile();
-    if (newFile) selection.openFile(newFile);
+    if (newFile) {
+        selection.openFile(newFile);
+        editorTabs.openTab(newFile);
+    }
 }
 
 async function createNewDrawing() {
     const newFile = await vault.createDrawing();
-    if (newFile) selection.openFile(newFile);
+    if (newFile) {
+        selection.openFile(newFile);
+        editorTabs.openTab(newFile);
+    }
 }
 
 async function createNewFolder() {
@@ -156,6 +194,7 @@ async function createNewFolder() {
 // --- Rename ---
 function startRenameFile(file: FileInfo) {
     selection.openFile(file);
+    editorTabs.openTab(file);
     renamingFile.value = file;
 }
 
@@ -172,7 +211,10 @@ function cancelRename() {
 async function handleFileRename(file: FileInfo, newName: string) {
     const renamed = await vault.renameFile(file, newName);
     renamingFile.value = null;
-    if (renamed) selection.openFile(renamed);
+    if (renamed) {
+        editorTabs.renameTabFile(file.path, renamed);
+        selection.openFile(renamed);
+    }
 }
 
 async function handleFolderRename(folderPath: string, newName: string) {
@@ -188,9 +230,20 @@ async function handleFolderDelete(folderPath: string) {
 
 async function handleFileDelete(file: FileInfo) {
     const filesToDelete = selectedFiles.value.length > 1 ? selectedFiles.value : [file];
+    const deletedPaths = filesToDelete.map((f) => f.path);
     await vault.deleteFile(filesToDelete);
+    // Close deleted tabs (iterate in reverse so indices stay valid)
+    const indicesToClose = deletedPaths
+        .map((p) => editorTabs.tabs.value.findIndex((t) => t.file.path === p))
+        .filter((i) => i !== -1)
+        .sort((a, b) => b - a);
+    indicesToClose.forEach((idx) => editorTabs.closeTab(idx));
     selection.clearSelection();
-    if (vault.files.value.length > 0) selection.openFile(vault.files.value[0]);
+    if (vault.files.value.length > 0) {
+        const next = vault.files.value[0];
+        selection.openFile(next);
+        editorTabs.openTab(next);
+    }
 }
 
 async function handleFileMove(filePath: string, targetFolderPath: string) {
@@ -199,7 +252,8 @@ async function handleFileMove(filePath: string, targetFolderPath: string) {
     const movedFiles = vault.files.value.filter((f: FileInfo) => movedPaths.includes(f.path));
     if (movedFiles.length > 0) {
         selectedFiles.value = movedFiles;
-        activeFile.value = movedFiles[0];
+        selection.openFile(movedFiles[0]);
+        editorTabs.openTab(movedFiles[0]);
     }
 }
 
@@ -220,10 +274,12 @@ function closeSearch() {
 
 function handleSearchFileSelect(file: FileInfo, event?: MouseEvent) {
     selection.selectFile(file, event);
+    editorTabs.openTab(file);
 }
 
 function handleSearchFileOpen(file: FileInfo) {
     selection.openFile(file);
+    editorTabs.openTab(file);
     showSearchPanel.value = false;
 }
 
@@ -519,11 +575,18 @@ function toggleAiPanel() {
                     />
                 </aside>
                 <main class="main-content">
+                    <TabBar
+                        :tabs="editorTabs.tabs.value"
+                        :active-index="editorTabs.activeIndex.value"
+                        @switch="editorTabs.switchTab"
+                        @close="editorTabs.closeTab"
+                    />
                     <NoteEditor
                         ref="noteEditorRef"
                         :file="activeFile"
                         :workspace-path="currentFolder"
                         @save="handleFileSave"
+                        @content-changed="handleContentChanged"
                     />
                 </main>
                 <AiPanel
@@ -560,7 +623,7 @@ function toggleAiPanel() {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--base1);
+    background: $base1;
 }
 
 .welcome-content {
@@ -583,10 +646,10 @@ function toggleAiPanel() {
 }
 
 .welcome-logo-text {
-    font-family: 'Inter', sans-serif;
+    font-family: $font-family;
     font-size: 5rem;
     font-weight: 600;
-    color: var(--text1);
+    color: $text1;
     letter-spacing: -0.02em;
     cursor: default;
 }
@@ -595,20 +658,20 @@ function toggleAiPanel() {
     font-size: 3rem;
     font-weight: 600;
     margin: 0 0 0.5rem 0;
-    color: var(--text1);
+    color: $text1;
 }
 
 .app-subtitle {
     font-size: 1.2rem;
-    color: var(--text2);
+    color: $text2;
     margin: 0 0 2rem 0;
 }
 
 .btn-primary {
     padding: 0.65rem 1.5rem;
-    background: var(--bg-primary);
-    color: var(--text1);
-    border: 1px solid var(--text3);
+    background: $bg-primary;
+    color: $text1;
+    border: 1px solid $text3;
     border-radius: 10px;
     font-size: 0.85rem;
     font-weight: 500;
@@ -618,8 +681,8 @@ function toggleAiPanel() {
     -webkit-backdrop-filter: blur(8px);
 
     &:hover {
-        background: var(--bg-hover);
-        border-color: var(--text2);
+        background: $bg-hover;
+        border-color: $text2;
         transform: scale(1.03);
     }
 
@@ -631,7 +694,7 @@ function toggleAiPanel() {
 .hint {
     margin-top: 1rem;
     font-size: 0.82rem;
-    color: var(--text2);
+    color: $text2;
 }
 
 // Main App Layout
@@ -644,7 +707,7 @@ function toggleAiPanel() {
 .left-column {
     display: flex;
     flex-direction: column;
-    background: var(--bg-secondary);
+    background: $bg-secondary;
     flex-shrink: 0;
 }
 
@@ -654,7 +717,7 @@ function toggleAiPanel() {
     align-items: center;
     gap: 0.4rem;
     padding: 0.5rem 0.35rem;
-    background: var(--bg-secondary);
+    background: $bg-secondary;
     flex: 1;
     overflow-y: auto;
 }
@@ -663,8 +726,8 @@ function toggleAiPanel() {
     width: 260px;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid var(--text3);
-    background: var(--base3);
+    border-right: 1px solid $text3;
+    background: $base3;
     overflow: hidden;
 }
 
@@ -673,8 +736,8 @@ function toggleAiPanel() {
     flex-direction: column;
     align-items: center;
     gap: 0.1rem;
-    background: var(--bg-selected);
-    border: 1px solid var(--text3);
+    background: $bg-selected;
+    border: 1px solid $text3;
     border-radius: 10px;
     padding: 0.15rem;
     backdrop-filter: blur(8px);
@@ -688,7 +751,7 @@ function toggleAiPanel() {
 .menu-divider {
     height: 1px;
     width: 14px;
-    background: var(--text2);
+    background: $text2;
     margin: 0.3rem 0;
     opacity: 0.25;
     border-radius: 1px;
@@ -697,7 +760,7 @@ function toggleAiPanel() {
 .btn-menu-icon {
     background: none;
     border: none;
-    color: var(--text2);
+    color: $text2;
     cursor: pointer;
     padding: 0.375rem;
     border-radius: 7px;
@@ -707,13 +770,13 @@ function toggleAiPanel() {
     justify-content: center;
 
     &:hover:not(:disabled) {
-        background: var(--bg-hover);
-        color: var(--text1);
+        background: $bg-hover;
+        color: $text1;
     }
 
     &.active {
-        background: var(--accent-color-alpha);
-        color: var(--accent-color);
+        background: $accent-color-alpha;
+        color: $accent-color;
     }
 
     &:disabled {
