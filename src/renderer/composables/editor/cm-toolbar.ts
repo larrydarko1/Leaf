@@ -2,10 +2,7 @@ import { EditorView } from '@codemirror/view';
 import { type EditorState, EditorSelection } from '@codemirror/state';
 import type { ShallowRef } from 'vue';
 
-/**
- * CodeMirror-based markdown toolbar commands.
- * Replaces the old textarea-based useMarkdownToolbar.
- */
+/** CodeMirror-based markdown toolbar commands. */
 export function useCodemirrorToolbar(view: ShallowRef<EditorView | null>) {
     /** Wrap selection with markers, or insert placeholder text with markers. */
     function wrapSelection(openMarker: string, closeMarker: string, placeholder: string) {
