@@ -21,7 +21,7 @@ import { useDictation } from '../composables/editor/useDictation';
 import { useNotePersistence } from '../composables/editor/useNotePersistence';
 import { useCodemirror } from '../composables/editor/useCodemirror';
 import { useCodemirrorToolbar, markdownKeymap } from '../composables/editor/cm-toolbar';
-import { createMarkdownWidgetsPlugin } from '../composables/editor/cm-markdown-widgets';
+import { createMarkdownWidgetsPlugin, interactiveExtension } from '../composables/editor/cm-markdown-widgets';
 import { leafEditorTheme } from '../composables/editor/cm-theme';
 import { listContinuationKeymap } from '../composables/editor/cm-list-continuation';
 import { keymap, EditorView } from '@codemirror/view';
@@ -109,6 +109,7 @@ const cmViewRef = shallowRef<EditorView | null>(null);
 const markdownWidgetsPlugin = createMarkdownWidgetsPlugin(embedCache, embedCacheVersion, getEmbedMediaType);
 const cmExtensions = [
     markdownWidgetsPlugin,
+    interactiveExtension,
     listContinuationKeymap,
     leafEditorTheme,
     keymap.of(markdownKeymap(cmViewRef)),

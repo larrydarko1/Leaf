@@ -3,9 +3,27 @@ import { EditorState, type Extension } from '@codemirror/state';
 import { EditorView, keymap, placeholder as cmPlaceholder, drawSelection } from '@codemirror/view';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { defaultKeymap, indentWithTab, history, historyKeymap } from '@codemirror/commands';
-import { syntaxHighlighting, defaultHighlightStyle, indentOnInput } from '@codemirror/language';
+import { syntaxHighlighting, HighlightStyle, indentOnInput } from '@codemirror/language';
+import { tags } from '@lezer/highlight';
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
+
+/**
+ * Custom syntax highlight style that uses the app's accent color for links
+ * instead of the browser-default blue/purple. Also ensures raw markdown
+ * tokens (visible on the active line) look consistent with the theme.
+ */
+const leafHighlightStyle = HighlightStyle.define([
+    { tag: tags.link, color: 'var(--accent-color, #3eb489)' },
+    { tag: tags.url, color: 'var(--accent-color, #3eb489)' },
+    { tag: tags.heading, fontWeight: '600' },
+    { tag: tags.emphasis, fontStyle: 'italic' },
+    { tag: tags.strong, fontWeight: '600' },
+    { tag: tags.strikethrough, textDecoration: 'line-through' },
+    { tag: tags.monospace, fontFamily: "'SF Mono', Monaco, Menlo, Consolas, monospace", fontSize: '0.9em' },
+    { tag: tags.meta, color: 'var(--text2)' },
+    { tag: tags.processingInstruction, color: 'var(--text2)' },
+]);
 
 /**
  * Core CodeMirror 6 composable. Creates and manages an EditorView,
@@ -36,7 +54,7 @@ export function useCodemirror(
         return [
             // Markdown language support
             markdown({ base: markdownLanguage }),
-            syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+            syntaxHighlighting(leafHighlightStyle),
             indentOnInput(),
 
             // Editing helpers

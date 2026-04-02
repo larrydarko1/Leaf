@@ -3,6 +3,60 @@ import { type EditorState, type Range } from '@codemirror/state';
 import { syntaxTree } from '@codemirror/language';
 import type { Ref } from 'vue';
 
+// ── Interactive extension (links + media controls) ───────────────────────────
+
+/**
+ * Handles mousedown on markdown links and media progress bars.
+ * Runs as domEventHandlers — fires BEFORE CM6's internal handlers,
+ * so returning true prevents CM6 from moving the cursor / rebuilding widgets.
+ */
+export const interactiveExtension = EditorView.domEventHandlers({
+    mousedown(event: MouseEvent, view: EditorView) {
+        const target = event.target as HTMLElement;
+
+        // ── Block CM6 from processing clicks inside embed media controls ────
+        if (target.closest('.cm-embed-controls')) {
+            return true;
+        }
+
+        // ── Block CM6 for clicks on the video element itself ────────────────
+        if (target.closest('.cm-embed-video')) {
+            return true;
+        }
+
+        // ── Link click via syntax tree ──────────────────────────────────────
+        const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
+        if (pos != null) {
+            const tree = syntaxTree(view.state);
+            let node = tree.resolveInner(pos, 1);
+            for (let depth = 0; depth < 10 && node; depth++) {
+                if (node.name === 'Link') {
+                    const text = view.state.doc.sliceString(node.from, node.to);
+                    const m = text.match(/\]\(([^)]+)\)$/);
+                    if (m && (m[1].startsWith('http://') || m[1].startsWith('https://'))) {
+                        event.preventDefault();
+                        window.electronAPI.openExternal(m[1]);
+                        return true;
+                    }
+                    break;
+                }
+                if (node.name === 'URL') {
+                    const url = view.state.doc.sliceString(node.from, node.to);
+                    if (url.startsWith('http://') || url.startsWith('https://')) {
+                        event.preventDefault();
+                        window.electronAPI.openExternal(url);
+                        return true;
+                    }
+                    break;
+                }
+                if (!node.parent) break;
+                node = node.parent;
+            }
+        }
+        return false;
+    },
+});
+
 // ── Widget classes ────────────────────────────────────────────────────────────
 
 class HorizontalRuleWidget extends WidgetType {
@@ -60,26 +114,172 @@ class EmbedWidget extends WidgetType {
                 wrapper.appendChild(img);
                 return wrapper;
             }
-            case 'video': {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'cm-embed-video-wrapper';
-                const video = document.createElement('video');
-                video.src = fileUrl;
-                video.controls = true;
-                video.preload = 'metadata';
-                video.className = 'cm-embed-video';
-                wrapper.appendChild(video);
-                return wrapper;
-            }
+            case 'video':
             case 'audio': {
+                const isVideo = this.mediaType === 'video';
                 const wrapper = document.createElement('div');
-                wrapper.className = 'cm-embed-audio-wrapper';
-                const audio = document.createElement('audio');
-                audio.src = fileUrl;
-                audio.controls = true;
-                audio.preload = 'metadata';
-                audio.className = 'cm-embed-audio';
-                wrapper.appendChild(audio);
+                wrapper.className = isVideo ? 'cm-embed-video-wrapper' : 'cm-embed-audio-wrapper';
+
+                const media = isVideo
+                    ? Object.assign(document.createElement('video'), {
+                          src: fileUrl,
+                          preload: 'auto',
+                          className: 'cm-embed-video',
+                      })
+                    : Object.assign(document.createElement('audio'), { src: fileUrl, preload: 'auto' });
+
+                const ctrlBar = document.createElement('div');
+                ctrlBar.className = 'cm-embed-controls' + (isVideo ? '' : ' cm-embed-audio-controls');
+
+                const playBtn = document.createElement('button');
+                playBtn.className = 'cm-embed-play-btn';
+                const playSvg =
+                    '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+                const pauseSvg =
+                    '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
+                playBtn.innerHTML = playSvg;
+
+                const timeEl = document.createElement('span');
+                timeEl.className = 'cm-embed-time';
+                timeEl.textContent = '0:00';
+
+                const progressWrap = document.createElement('div');
+                progressWrap.className = 'cm-embed-progress-wrapper';
+                const progressTrack = document.createElement('div');
+                progressTrack.className = 'cm-embed-progress-track';
+                const progressFill = document.createElement('div');
+                progressFill.className = 'cm-embed-progress-fill';
+                progressTrack.appendChild(progressFill);
+                progressWrap.appendChild(progressTrack);
+
+                const durEl = document.createElement('span');
+                durEl.className = 'cm-embed-time';
+                durEl.textContent = '0:00';
+
+                // Volume controls
+                const volSvg =
+                    '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0014 8.5v7a4.49 4.49 0 002.5-3.5zM14 3.23v2.06a6.5 6.5 0 010 13.42v2.06A8.5 8.5 0 0014 3.23z"/></svg>';
+                const muteSvg =
+                    '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12A4.5 4.5 0 0014 8.5v2.09l2.44 2.44c.03-.31.06-.63.06-.97zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.8 8.8 0 0021 12a8.5 8.5 0 00-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.4 8.4 0 003.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>';
+
+                const volBtn = document.createElement('button');
+                volBtn.className = 'cm-embed-vol-btn';
+                volBtn.innerHTML = volSvg;
+
+                const volWrap = document.createElement('div');
+                volWrap.className = 'cm-embed-vol-wrapper';
+                const volTrack = document.createElement('div');
+                volTrack.className = 'cm-embed-vol-track';
+                const volFill = document.createElement('div');
+                volFill.className = 'cm-embed-vol-fill';
+                volFill.style.width = '100%';
+                volTrack.appendChild(volFill);
+                volWrap.appendChild(volTrack);
+
+                const fmt = (s: number) => {
+                    if (!isFinite(s) || isNaN(s) || s <= 0) return '0:00';
+                    const m = Math.floor(s / 60);
+                    return `${m}:${Math.floor(s % 60)
+                        .toString()
+                        .padStart(2, '0')}`;
+                };
+
+                // Duration resolution: some formats report Infinity via custom protocol.
+                // Probe by seeking to a huge value — Chromium clamps to actual end and
+                // fires durationchange with the real value.
+                let realDuration = 0;
+                let probing = false;
+
+                const captureDuration = () => {
+                    if (isFinite(media.duration) && media.duration > 0) {
+                        realDuration = media.duration;
+                        durEl.textContent = fmt(realDuration);
+                        wrapper.dataset.realDuration = String(realDuration);
+                    }
+                };
+
+                media.addEventListener('loadedmetadata', () => {
+                    captureDuration();
+                    if (!realDuration) {
+                        probing = true;
+                        media.currentTime = 1e10;
+                    }
+                });
+
+                media.addEventListener('durationchange', captureDuration);
+
+                media.addEventListener('seeked', () => {
+                    if (probing) {
+                        probing = false;
+                        captureDuration();
+                        media.currentTime = 0;
+                    }
+                });
+
+                media.addEventListener('timeupdate', () => {
+                    if (probing) return;
+                    timeEl.textContent = fmt(media.currentTime);
+                    if (realDuration > 0) {
+                        progressFill.style.width = `${(media.currentTime / realDuration) * 100}%`;
+                    }
+                });
+
+                media.addEventListener('play', () => {
+                    playBtn.innerHTML = pauseSvg;
+                });
+                media.addEventListener('pause', () => {
+                    playBtn.innerHTML = playSvg;
+                });
+                media.addEventListener('ended', () => {
+                    playBtn.innerHTML = playSvg;
+                });
+
+                playBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if (media.paused) media.play();
+                    else media.pause();
+                };
+                if (isVideo)
+                    (media as HTMLVideoElement).onclick = () => {
+                        if (media.paused) media.play();
+                        else media.pause();
+                    };
+
+                // Seek handler — uses realDuration from closure (set by probe)
+                progressWrap.onclick = (e) => {
+                    e.stopPropagation();
+                    const dur = realDuration || (isFinite(media.duration) ? media.duration : 0);
+                    if (!dur) return;
+                    const rect = progressTrack.getBoundingClientRect();
+                    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                    media.currentTime = ratio * dur;
+                };
+
+                let savedVol = 1;
+                volBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if (media.volume > 0) {
+                        savedVol = media.volume;
+                        media.volume = 0;
+                        volFill.style.width = '0%';
+                        volBtn.innerHTML = muteSvg;
+                    } else {
+                        media.volume = savedVol;
+                        volFill.style.width = `${savedVol * 100}%`;
+                        volBtn.innerHTML = volSvg;
+                    }
+                };
+                volWrap.onclick = (e) => {
+                    e.stopPropagation();
+                    const rect = volTrack.getBoundingClientRect();
+                    const v = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                    media.volume = v;
+                    volFill.style.width = `${v * 100}%`;
+                    volBtn.innerHTML = v === 0 ? muteSvg : volSvg;
+                };
+
+                ctrlBar.append(playBtn, timeEl, progressWrap, durEl, volBtn, volWrap);
+                wrapper.append(media, ctrlBar);
                 return wrapper;
             }
             case 'pdf': {
@@ -588,6 +788,8 @@ export function createMarkdownWidgetsPlugin(
             eventHandlers: {
                 mousedown(event: MouseEvent, view: EditorView) {
                     const target = event.target as HTMLElement;
+
+                    // ── Task checkbox toggle ──
                     const label = target.closest('.cm-task-label') as HTMLElement | null;
                     if (!label) return;
 
@@ -597,10 +799,10 @@ export function createMarkdownWidgetsPlugin(
                     event.preventDefault();
                     event.stopPropagation();
 
-                    const pos = parseInt(posStr, 10);
-                    if (isNaN(pos) || pos < 0 || pos >= view.state.doc.length) return;
+                    const taskPos = parseInt(posStr, 10);
+                    if (isNaN(taskPos) || taskPos < 0 || taskPos >= view.state.doc.length) return;
 
-                    const line = view.state.doc.lineAt(pos);
+                    const line = view.state.doc.lineAt(taskPos);
                     const lineText = line.text;
 
                     let newLine: string;
