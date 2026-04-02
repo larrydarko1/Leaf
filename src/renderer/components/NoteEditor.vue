@@ -175,11 +175,6 @@ watch(embedCacheVersion, () => {
 // Toolbar commands backed by CodeMirror
 const { mdFormatText, mdInsertHeading } = useCodemirrorToolbar(cmViewRef);
 
-function getFileNameWithoutExtension(fileName: string): string {
-    const lastDotIndex = fileName.lastIndexOf('.');
-    return lastDotIndex > 0 ? fileName.substring(0, lastDotIndex) : fileName;
-}
-
 // Watch for file changes
 watch(
     () => props.file,
@@ -285,21 +280,6 @@ onUnmounted(() => {
 
 <template>
     <div class="note-editor">
-        <div v-if="file" class="editor-header">
-            <div class="file-info">
-                <div class="file-title-container">
-                    <div class="badge-with-toggle">
-                        <span class="file-extension-badge">{{ file.extension }}</span>
-                    </div>
-                    <h2 class="file-title">{{ getFileNameWithoutExtension(file.name) }}</h2>
-                </div>
-            </div>
-            <div class="editor-actions">
-                <span v-if="isSaving" class="saving-indicator">Saving...</span>
-                <span v-else-if="hasUnsavedChanges" class="unsaved-indicator">Unsaved</span>
-            </div>
-        </div>
-
         <!-- Media viewers -->
         <ImageViewer v-if="file && isImageFile" :file-path="file.path" :file-name="file.name" />
         <VideoViewer v-else-if="file && isVideoFile" :file-path="file.path" />
@@ -611,85 +591,6 @@ onUnmounted(() => {
     background: transparent;
     position: relative;
     overflow: hidden;
-}
-
-.editor-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 1.5rem;
-    border-bottom: 1px solid color-mix(in srgb, var(--text3) 60%, transparent);
-    background: transparent;
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-.file-info {
-    flex: 1;
-    min-width: 0;
-}
-
-.file-title-container {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    user-select: none;
-}
-
-.file-title {
-    margin: 0;
-    max-width: 50%;
-    font-size: 1rem;
-    font-weight: 600;
-    color: $text1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.badge-with-toggle {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    flex-shrink: 0;
-
-    .file-extension-badge {
-        border-radius: 3px;
-    }
-}
-
-.file-extension-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.15rem 0.4rem;
-    font-size: 0.625rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    color: $base2;
-    background: transparent;
-    border: 1px solid $base2;
-    border-radius: 3px;
-    opacity: 0.7;
-    flex-shrink: 0;
-}
-
-.editor-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.75rem;
-}
-
-.unsaved-indicator {
-    color: $base2;
-}
-
-.saving-indicator {
-    color: $text2;
-    font-style: italic;
 }
 
 .md-toolbar {
