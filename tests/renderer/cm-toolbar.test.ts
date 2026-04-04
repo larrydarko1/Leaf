@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { shallowRef } from 'vue';
+import { type Ref, shallowRef } from 'vue';
 import { EditorState, EditorSelection } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { useCodemirrorToolbar } from '../../src/renderer/composables/editor/cm-toolbar';
@@ -31,7 +31,7 @@ function sel(view: EditorView): { from: number; to: number } {
 }
 
 describe('useCodemirrorToolbar', () => {
-    let viewRef: ReturnType<typeof shallowRef<EditorView | null>>;
+    let viewRef: Ref<EditorView | null>;
     let toolbar: ReturnType<typeof useCodemirrorToolbar>;
 
     function setup(docText: string, from?: number, to?: number) {

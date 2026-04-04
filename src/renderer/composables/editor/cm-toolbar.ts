@@ -1,9 +1,9 @@
 import { EditorView } from '@codemirror/view';
-import { type EditorState, EditorSelection } from '@codemirror/state';
-import type { ShallowRef } from 'vue';
+import { EditorSelection } from '@codemirror/state';
+import type { Ref } from 'vue';
 
 /** CodeMirror-based markdown toolbar commands. */
-export function useCodemirrorToolbar(view: ShallowRef<EditorView | null>) {
+export function useCodemirrorToolbar(view: Ref<EditorView | null>) {
     /** Wrap selection with markers, or insert placeholder text with markers. */
     function wrapSelection(openMarker: string, closeMarker: string, placeholder: string) {
         const v = view.value;
@@ -161,7 +161,7 @@ export function useCodemirrorToolbar(view: ShallowRef<EditorView | null>) {
 /**
  * CodeMirror keybindings for markdown formatting shortcuts.
  */
-export function markdownKeymap(viewRef: ShallowRef<EditorView | null>) {
+export function markdownKeymap(viewRef: Ref<EditorView | null>) {
     const { mdFormatText } = useCodemirrorToolbar(viewRef);
 
     return [

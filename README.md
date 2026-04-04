@@ -267,14 +267,16 @@ After building:
 
 ## Tech Stack
 
-- **Desktop:** Electron (Native macOS, Windows, Linux app)
-- **Frontend:** Vue 3, TypeScript, SCSS
+- **Desktop:** [Electron](https://www.electronjs.org) (Native macOS, Windows, Linux app)
+- **Frontend:** [Vue 3](https://vuejs.org), TypeScript, SCSS
+- **Editor:** [CodeMirror 6](https://codemirror.net) with [Lezer](https://lezer.codemirror.net) markdown grammar (live preview, inline widgets, keyboard shortcuts)
 - **AI:** [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) + [llama.cpp](https://github.com/ggml-org/llama.cpp) (local LLM inference)
 - **Speech-to-Text:** [Whisper](https://github.com/openai/whisper) via [@huggingface/transformers](https://github.com/huggingface/transformers.js) + ONNX Runtime (local dictation)
 - **Storage:** Plain text files (txt, md), images, videos, audio, and embedded media in your local vault
-- **Build Tools:** [electron-vite](https://electron-vite.org) + Electron Builder
+- **Build Tools:** [electron-vite](https://electron-vite.org) + [Electron Builder](https://www.electron.build)
 - **Testing:** [Vitest](https://vitest.dev) + [Vue Test Utils](https://test-utils.vuejs.org)
 - **Linting:** [ESLint](https://eslint.org) (flat config) + [typescript-eslint](https://typescript-eslint.io) + [Prettier](https://prettier.io)
+- **Git Hooks:** [Husky](https://typicode.github.io/husky) + [lint-staged](https://github.com/lint-staged/lint-staged) + [commitlint](https://commitlint.js.org) (Conventional Commits)
 
 ## Project Structure
 
@@ -303,6 +305,7 @@ leaf/
 │       ├── main.ts                 # Vue bootstrap
 │       ├── App.vue
 │       ├── style.scss
+│       ├── vite-env.d.ts
 │       ├── assets/                 # App icons and images
 │       ├── components/
 │       │   ├── AiPanel.vue         # AI chat panel (orchestrator)
@@ -312,8 +315,9 @@ leaf/
 │       │   ├── DrawingCanvas.vue   # Freehand drawing canvas
 │       │   ├── FileExplorer.vue    # Vault file browser with drag & drop
 │       │   ├── FolderNode.vue      # Tree node for folder/file rendering
-│       │   ├── NoteEditor.vue      # Editor with Markdown preview & media embeds
+│       │   ├── NoteEditor.vue      # CodeMirror 6 markdown editor with live preview
 │       │   ├── SearchPanel.vue     # Full-text search across vault
+│       │   ├── TabBar.vue          # Editor tab bar
 │       │   ├── ai/                 # AI sub-components
 │       │   │   ├── AiHfPanel.vue       # Hugging Face model browser & download
 │       │   │   ├── AiHistoryPanel.vue  # Conversation history sidebar
@@ -328,31 +332,75 @@ leaf/
 │       ├── composables/            # Vue composables (grouped by domain)
 │       │   ├── useAudioRecorder.ts # Audio recording composable
 │       │   ├── ai/                 # AI chat, model, agent, history, downloads
+│       │   │   ├── useAIChat.ts        # Chat message handling & streaming
+│       │   │   ├── useAIModel.ts       # Model loading & management
+│       │   │   ├── useAgentMode.ts     # Agent mode file editing workflow
+│       │   │   ├── useConversationHistory.ts  # Conversation persistence
+│       │   │   └── useHfDownload.ts    # Hugging Face model downloads
 │       │   ├── drawing/            # Canvas rendering, elements, interaction
-│       │   ├── editor/             # Markdown editor, media players, dictation
-│       │   ├── ui/                 # Context menu, keyboard navigation
-│       │   └── vault/              # File selection, folder tree, bookmarks
+│       │   │   ├── useCanvasRenderer.ts    # Canvas draw loop
+│       │   │   ├── useDrawingElements.ts   # Shape & path management
+│       │   │   ├── useDrawingHistory.ts    # Undo/redo for drawings
+│       │   │   ├── useDrawingInteraction.ts # Pointer & gesture handling
+│       │   │   ├── useDrawingPersistence.ts # Save/load drawings
+│       │   │   └── useTextEditing.ts       # Text tool for canvas
+│       │   ├── editor/             # CodeMirror 6 editor & media players
+│       │   │   ├── cm-list-continuation.ts # List continuation keymap
+│       │   │   ├── cm-markdown-widgets.ts  # Inline markdown widgets (images, embeds, tasks)
+│       │   │   ├── cm-theme.ts             # Editor theme & styling
+│       │   │   ├── cm-toolbar.ts           # Toolbar formatting commands & keybindings
+│       │   │   ├── useAudioPlayer.ts       # Audio playback controls
+│       │   │   ├── useCodemirror.ts        # CM6 instance lifecycle
+│       │   │   ├── useDictation.ts         # Speech-to-text integration
+│       │   │   ├── useEditorDrop.ts        # Drag & drop onto editor
+│       │   │   ├── useEditorTabs.ts        # Tab state management
+│       │   │   ├── useEmbedResolver.ts     # Obsidian-style embed resolution
+│       │   │   ├── useNotePersistence.ts   # File save/load
+│       │   │   └── useVideoPlayer.ts       # Video playback controls
+│       │   ├── ui/                 # General UI composables
+│       │   │   ├── useContextMenu.ts           # Context menu state
+│       │   │   └── useListKeyboardNavigation.ts # Arrow-key list navigation
+│       │   └── vault/              # Vault & file management
+│       │       ├── useBookmarks.ts     # Bookmarked notes
+│       │       ├── useFileSelection.ts # Active file selection
+│       │       ├── useFolderTree.ts    # Folder tree structure
+│       │       ├── useTreeNodeDrag.ts  # Drag & drop for tree nodes
+│       │       └── useVault.ts         # Vault open/close lifecycle
 │       ├── types/                  # TypeScript type definitions
-│       └── utils/                  # Shared utilities (file types, audio encoding)
+│       │   ├── ai.ts               # AI model & inference types
+│       │   ├── chat.ts             # Chat message types
+│       │   ├── drawing.ts          # Drawing element types
+│       │   ├── electron.d.ts       # Electron IPC & preload API types
+│       │   ├── hf.ts               # Hugging Face API types
+│       │   └── speech.ts           # Speech-to-text types
+│       └── utils/                  # Shared utilities
+│           ├── audio.ts            # Audio encoding helpers
+│           └── fileTypes.ts        # File extension classification
 ├── tests/                          # Unit tests (mirrors src/ structure)
-│   ├── main/                       # Main process tests
+│   ├── main/
 │   │   ├── extensions.test.ts
 │   │   ├── mime.test.ts
-│   │   └── paths.test.ts
-│   └── renderer/                   # Renderer process tests
+│   │   ├── paths.test.ts
+│   │   └── validation.test.ts
+│   └── renderer/
 │       ├── audio.test.ts
+│       ├── cm-toolbar.test.ts
 │       ├── fileTypes.test.ts
-│       └── useMarkdownToolbar.test.ts
+│       └── useEditorTabs.test.ts
 ├── models/
 │   └── whisper/                    # Whisper ONNX model (download manually — see above)
 ├── public/                         # Static assets (demo screenshot)
-├── build/                          # App icons & packaging hooks for Electron Builder
-├── .github/workflows/              # CI/CD pipelines
-│   ├── ci.yml                      # Type-check, build, test on every push/PR
-│   └── release.yml                 # Multi-platform build & GitHub Release
+├── build/                          # App icons, DMG backgrounds & packaging hooks
+├── design/                         # Source design files (PSD)
+├── .github/
+│   ├── FUNDING.yml                 # GitHub Sponsors config
+│   └── workflows/
+│       ├── ci.yml                  # Type-check, build, test on every push/PR
+│       └── release.yml             # Multi-platform build & GitHub Release
 ├── electron.vite.config.ts         # electron-vite config (main, preload, renderer)
 ├── vitest.config.ts                # Test runner config (jsdom environment)
 ├── eslint.config.js                # ESLint flat config (TypeScript + Vue + Prettier)
+├── commitlint.config.js            # Conventional Commits linting
 ├── .prettierrc                     # Prettier formatting rules
 ├── package.json
 ├── tsconfig.json                   # Root TS config (project references)

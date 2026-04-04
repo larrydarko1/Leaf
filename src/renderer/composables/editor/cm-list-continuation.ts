@@ -59,7 +59,6 @@ function listContinuation(view: EditorView): boolean {
 
         // Continue the list
         const prefix = checkbox ? `${indent}- [ ] ` : `${indent}- `;
-        const afterCursor = lineText.substring(posInLine);
         view.dispatch({
             changes: { from: cursorPos, to: cursorPos, insert: '\n' + prefix },
             selection: EditorSelection.cursor(cursorPos + 1 + prefix.length),
@@ -85,9 +84,31 @@ function listContinuation(view: EditorView): boolean {
 
         // Continue with next number
         const prefix = `${indent}${num + 1}. `;
+        const insertLength = 1 + prefix.length;
+
+        // Pre-compute renumbering changes in original document coordinates so
+        // they can be batched with the insertion into a single transaction.
+        const renumberChanges: { from: number; to: number; insert: string }[] = [];
+        if (line.number < state.doc.lines) {
+            const nextLineFrom = state.doc.line(line.number + 1).from;
+            const origText = state.doc.toString();
+            const updated = renumberOrderedList(origText, nextLineFrom, indent, num + 2);
+            if (updated !== origText) {
+                let pos = nextLineFrom;
+                const origLines = origText.substring(nextLineFrom).split('\n');
+                const updLines = updated.substring(nextLineFrom).split('\n');
+                for (let i = 0; i < origLines.length; i++) {
+                    if (origLines[i] !== updLines[i]) {
+                        renumberChanges.push({ from: pos, to: pos + origLines[i].length, insert: updLines[i] });
+                    }
+                    pos += origLines[i].length + 1;
+                }
+            }
+        }
+
         view.dispatch({
-            changes: { from: cursorPos, to: cursorPos, insert: '\n' + prefix },
-            selection: EditorSelection.cursor(cursorPos + 1 + prefix.length),
+            changes: [{ from: cursorPos, to: cursorPos, insert: '\n' + prefix }, ...renumberChanges],
+            selection: EditorSelection.cursor(cursorPos + insertLength),
         });
         return true;
     }

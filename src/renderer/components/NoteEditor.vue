@@ -58,7 +58,6 @@ const {
     content,
     originalContent,
     hasUnsavedChanges,
-    isSaving,
     lastLoadedPath,
     justSaved,
     onContentChange,
@@ -136,9 +135,6 @@ const cmExtensions = [
         },
     }),
 ];
-
-// Only mount CodeMirror when we have a markdown file
-const shouldUseCM = computed(() => isMarkdownFile.value);
 
 // A reactive file identifier — changes whenever a different file is loaded,
 // telling CodeMirror to fully reset its state (undo history, scroll, cursor).
