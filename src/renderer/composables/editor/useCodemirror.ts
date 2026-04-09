@@ -7,6 +7,7 @@ import { syntaxHighlighting, HighlightStyle, indentOnInput } from '@codemirror/l
 import { tags } from '@lezer/highlight';
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
+import { languages } from '@codemirror/language-data';
 
 /**
  * Custom syntax highlight style that uses the app's accent color for links
@@ -52,8 +53,8 @@ export function useCodemirror(
     /** Build the full extension set */
     function buildExtensions(): Extension[] {
         return [
-            // Markdown language support
-            markdown({ base: markdownLanguage }),
+            // Markdown language support (with code block language highlighting)
+            markdown({ base: markdownLanguage, codeLanguages: languages }),
             syntaxHighlighting(leafHighlightStyle),
             indentOnInput(),
 

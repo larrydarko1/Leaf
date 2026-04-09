@@ -114,6 +114,13 @@ export const leafEditorTheme = EditorView.theme({
         backgroundColor: 'color-mix(in srgb, var(--text2) 10%, transparent)',
         padding: '0 1em',
     },
+    '.cm-code-fence': {
+        fontSize: '0',
+        lineHeight: '0',
+        height: '0',
+        padding: '0 !important',
+        overflow: 'hidden',
+    },
     '.cm-hr': {
         border: 'none',
         borderTop: '2px solid var(--text3)',

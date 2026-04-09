@@ -606,17 +606,28 @@ function buildSyntaxDecos(
 
                 // ── Code blocks ───────────────────────────────────────
                 if (name === 'FencedCode') {
-                    for (let ln = lineFrom; ln <= lineTo; ln++) {
+                    const firstLine = state.doc.line(lineFrom);
+                    const lastLine = state.doc.line(lineTo);
+                    const lastText = lastLine.text.trim();
+                    const hasClosingFence = lineTo > lineFrom && (lastText === '```' || lastText === '~~~');
+
+                    // Opening fence line: collapse via CSS, hide content
+                    decos.push(Decoration.line({ class: 'cm-code-block cm-code-fence' }).range(firstLine.from));
+                    if (firstLine.from < firstLine.to) {
+                        decos.push(Decoration.replace({}).range(firstLine.from, firstLine.to));
+                    }
+
+                    // Content lines
+                    for (let ln = lineFrom + 1; ln <= (hasClosingFence ? lineTo - 1 : lineTo); ln++) {
                         const line = state.doc.line(ln);
                         decos.push(Decoration.line({ class: 'cm-code-block' }).range(line.from));
                     }
-                    const firstLine = state.doc.line(lineFrom);
-                    decos.push(Decoration.replace({}).range(firstLine.from, firstLine.to + 1));
-                    if (lineTo > lineFrom) {
-                        const lastLine = state.doc.line(lineTo);
-                        const lastText = lastLine.text.trim();
-                        if (lastText === '```' || lastText === '~~~') {
-                            decos.push(Decoration.replace({}).range(lastLine.from - 1, lastLine.to));
+
+                    // Closing fence line: collapse via CSS, hide content
+                    if (hasClosingFence) {
+                        decos.push(Decoration.line({ class: 'cm-code-block cm-code-fence' }).range(lastLine.from));
+                        if (lastLine.from < lastLine.to) {
+                            decos.push(Decoration.replace({}).range(lastLine.from, lastLine.to));
                         }
                     }
                 }
