@@ -24,6 +24,7 @@ import { useCodemirrorToolbar, markdownKeymap } from '../composables/editor/cm-t
 import { createMarkdownWidgetsPlugin, interactiveExtension } from '../composables/editor/cm-markdown-widgets';
 import { leafEditorTheme } from '../composables/editor/cm-theme';
 import { listContinuationKeymap } from '../composables/editor/cm-list-continuation';
+import { taskFoldExtension } from '../composables/editor/cm-task-fold';
 import { keymap, EditorView } from '@codemirror/view';
 
 const props = defineProps<{
@@ -110,6 +111,7 @@ const cmExtensions = [
     markdownWidgetsPlugin,
     interactiveExtension,
     listContinuationKeymap,
+    taskFoldExtension(),
     leafEditorTheme,
     keymap.of(markdownKeymap(cmViewRef)),
     keymap.of([

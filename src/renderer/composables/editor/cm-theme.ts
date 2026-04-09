@@ -41,6 +41,9 @@ export const leafEditorTheme = EditorView.theme({
     '.cm-activeLine': {
         backgroundColor: 'color-mix(in srgb, var(--text2) 5%, transparent)',
     },
+    '.cm-line': {
+        position: 'relative',
+    },
     '.cm-gutters': {
         display: 'none',
     },
@@ -336,5 +339,65 @@ export const leafEditorTheme = EditorView.theme({
         display: 'flex',
         alignItems: 'center',
         gap: '0.4em',
+    },
+
+    // ── Task fold toggles ─────────────────────────────────────────────────
+    '.cm-task-fold-toggle': {
+        position: 'absolute',
+        left: '-20px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '16px',
+        height: '16px',
+        cursor: 'pointer',
+        opacity: '0.4',
+        transition: 'opacity 0.15s ease',
+        userSelect: 'none',
+        borderRadius: '3px',
+        flexShrink: '0',
+    },
+    '.cm-line:hover .cm-task-fold-toggle': {
+        opacity: '0.4',
+    },
+    '.cm-task-fold-collapsed': {
+        opacity: '0.6',
+    },
+    '.cm-task-fold-toggle:hover': {
+        opacity: '1 !important',
+        background: 'color-mix(in srgb, var(--text2) 15%, transparent)',
+    },
+    // CSS triangle: points down when expanded (default)
+    '.cm-task-fold-toggle::after': {
+        content: '""',
+        display: 'block',
+        width: '0',
+        height: '0',
+        borderLeft: '4px solid transparent',
+        borderRight: '4px solid transparent',
+        borderTop: '5px solid var(--text2)',
+        transition: 'transform 0.15s ease',
+    },
+    // Points right when collapsed
+    '.cm-task-fold-collapsed::after': {
+        borderLeft: '5px solid var(--text2)',
+        borderRight: '0',
+        borderTop: '4px solid transparent',
+        borderBottom: '4px solid transparent',
+    },
+    '.cm-task-fold-placeholder': {
+        display: 'inline',
+        color: 'var(--accent-color, #3eb489)',
+        cursor: 'pointer',
+        fontSize: '0.85em',
+        padding: '0 0.3em',
+        borderRadius: '3px',
+        background: 'color-mix(in srgb, var(--accent-color, #3eb489) 10%, transparent)',
+        marginLeft: '0.25em',
+    },
+    '.cm-task-fold-placeholder:hover': {
+        background: 'color-mix(in srgb, var(--accent-color, #3eb489) 20%, transparent)',
     },
 });
