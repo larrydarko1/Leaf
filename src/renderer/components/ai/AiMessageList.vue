@@ -519,7 +519,7 @@ function formatTokenCount(n: number): string {
         }
         .ai-message-content {
             background: $accent-color;
-            color: $text1;
+            color: $text3;
             border-radius: 12px 12px 2px 12px;
         }
         .ai-message-actions {

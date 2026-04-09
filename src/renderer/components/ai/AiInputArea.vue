@@ -74,7 +74,7 @@ defineEmits<{
                 @keydown.enter.exact.prevent="$emit('send')"
             />
             <button v-if="isStreaming" class="ai-btn-send ai-btn-stop" title="Stop generating" @click="$emit('stop')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="$base1" xmlns="http://www.w3.org/2000/svg">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--text3)" xmlns="http://www.w3.org/2000/svg">
                     <rect x="6" y="6" width="12" height="12" rx="2" ry="2" />
                 </svg>
             </button>
@@ -91,7 +91,7 @@ defineEmits<{
                     <g id="SVGRepo_iconCarrier">
                         <path
                             d="M10 14L13 21L20 4L3 11L6.5 12.5"
-                            stroke="$base1"
+                            stroke="var(--text3)"
                             stroke-width="1.5"
                             stroke-linecap="round"
                             stroke-linejoin="round"

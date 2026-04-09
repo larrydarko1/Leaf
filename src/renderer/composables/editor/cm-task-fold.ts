@@ -22,7 +22,6 @@ function taskFoldRange(state: EditorState, lineStart: number): { from: number; t
     if (!match) return null;
 
     const parentIndent = match[1].length;
-    let lastChildLine = line.number;
     let lastNonEmptyChildLine = line.number;
 
     for (let n = line.number + 1; n <= state.doc.lines; n++) {
@@ -31,13 +30,11 @@ function taskFoldRange(state: EditorState, lineStart: number): { from: number; t
 
         if (trimmed === '') {
             // Empty line — tentatively include it (might be between children)
-            lastChildLine = n;
             continue;
         }
 
         const nextIndent = nextLine.text.match(/^(\s*)/)?.[1].length ?? 0;
         if (nextIndent > parentIndent) {
-            lastChildLine = n;
             lastNonEmptyChildLine = n;
         } else {
             break;
