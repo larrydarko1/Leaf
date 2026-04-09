@@ -70,18 +70,32 @@ async function selectFolder() {
     const folderPath = await vault.openFolderDialog();
     if (folderPath) {
         editorTabs.clearTabs();
-        selection.restoreFromStorage(vault.files.value);
-        const restored = selection.activeFile.value;
-        if (restored) editorTabs.openTab(restored);
+        const restored = editorTabs.restoreTabs(folderPath, vault.files.value);
+        if (!restored) {
+            selection.restoreFromStorage(vault.files.value);
+            const restoredFile = selection.activeFile.value;
+            if (restoredFile) editorTabs.openTab(restoredFile);
+        } else {
+            // Sync file selection with the restored active tab
+            const activeTabFile = editorTabs.activeFile.value;
+            if (activeTabFile) selection.openFile(activeTabFile);
+        }
         bookmarks.loadBookmarks();
     }
 }
 
 async function loadFolderPath(folderPath: string) {
     await vault.loadFolder(folderPath);
-    selection.restoreFromStorage(vault.files.value);
-    const restored = selection.activeFile.value;
-    if (restored) editorTabs.openTab(restored);
+    const restored = editorTabs.restoreTabs(folderPath, vault.files.value);
+    if (!restored) {
+        selection.restoreFromStorage(vault.files.value);
+        const restoredFile = selection.activeFile.value;
+        if (restoredFile) editorTabs.openTab(restoredFile);
+    } else {
+        // Sync file selection with the restored active tab
+        const activeTabFile = editorTabs.activeFile.value;
+        if (activeTabFile) selection.openFile(activeTabFile);
+    }
     bookmarks.loadBookmarks();
 }
 
@@ -89,6 +103,7 @@ function changeFolder() {
     vault.closeVault();
     selection.clearSelection();
     editorTabs.clearTabs();
+    editorTabs.setFolderPath(null);
 }
 
 // --- Lifecycle ---

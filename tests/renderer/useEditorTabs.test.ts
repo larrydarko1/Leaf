@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useEditorTabs } from '../../src/renderer/composables/editor/useEditorTabs';
 import type { FileInfo } from '../../src/renderer/types/electron';
 
@@ -14,11 +14,36 @@ function makeFile(name: string, path = `/${name}`): FileInfo {
     };
 }
 
+// Mock localStorage for persistence tests
+const localStorageMock = (() => {
+    let store: Record<string, string> = {};
+    return {
+        getItem: vi.fn((key: string) => store[key] ?? null),
+        setItem: vi.fn((key: string, value: string) => {
+            store[key] = value;
+        }),
+        removeItem: vi.fn((key: string) => {
+            delete store[key];
+        }),
+        clear: vi.fn(() => {
+            store = {};
+        }),
+        get length() {
+            return Object.keys(store).length;
+        },
+        key: vi.fn((index: number) => Object.keys(store)[index] ?? null),
+    };
+})();
+
+Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock });
+
 describe('useEditorTabs', () => {
     let tabs: ReturnType<typeof useEditorTabs>;
 
     beforeEach(() => {
         tabs = useEditorTabs();
+        localStorageMock.clear();
+        vi.clearAllMocks();
     });
 
     // ── initial state ────────────────────────────────────────────────────────
@@ -286,6 +311,157 @@ describe('useEditorTabs', () => {
             expect(tabs.tabs.value).toHaveLength(0);
             expect(tabs.activeIndex.value).toBe(-1);
             expect(tabs.activeFile.value).toBeNull();
+        });
+    });
+
+    // ── Tab persistence ──────────────────────────────────────────────────────
+    describe('persistence', () => {
+        const FOLDER = '/my/vault';
+
+        it('persists tabs to localStorage when a tab is opened', () => {
+            tabs.setFolderPath(FOLDER);
+            tabs.openTab(makeFile('a.md'));
+            const stored = localStorage.getItem(`leaf-tabs-${FOLDER}`);
+            expect(stored).toBeTruthy();
+            const data = JSON.parse(stored!);
+            expect(data.tabs).toHaveLength(1);
+            expect(data.tabs[0].path).toBe('/a.md');
+            expect(data.activeIndex).toBe(0);
+        });
+
+        it('persists when a tab is closed', () => {
+            tabs.setFolderPath(FOLDER);
+            tabs.openTab(makeFile('a.md'));
+            tabs.openTab(makeFile('b.md'));
+            tabs.closeTab(0);
+            const data = JSON.parse(localStorage.getItem(`leaf-tabs-${FOLDER}`)!);
+            expect(data.tabs).toHaveLength(1);
+            expect(data.tabs[0].path).toBe('/b.md');
+        });
+
+        it('persists when switching tabs', () => {
+            tabs.setFolderPath(FOLDER);
+            tabs.openTab(makeFile('a.md'));
+            tabs.openTab(makeFile('b.md'));
+            tabs.switchTab(0);
+            const data = JSON.parse(localStorage.getItem(`leaf-tabs-${FOLDER}`)!);
+            expect(data.activeIndex).toBe(0);
+        });
+
+        it('persists scroll position', () => {
+            tabs.setFolderPath(FOLDER);
+            tabs.openTab(makeFile('a.md'));
+            tabs.saveScrollPosition('/a.md', 250);
+            const data = JSON.parse(localStorage.getItem(`leaf-tabs-${FOLDER}`)!);
+            expect(data.tabs[0].scrollTop).toBe(250);
+        });
+
+        it('restores tabs from localStorage', () => {
+            const files = [makeFile('a.md'), makeFile('b.md'), makeFile('c.md')];
+
+            // Simulate saved state
+            localStorage.setItem(
+                `leaf-tabs-${FOLDER}`,
+                JSON.stringify({
+                    tabs: [
+                        { path: '/a.md', scrollTop: 100 },
+                        { path: '/c.md', scrollTop: 200 },
+                    ],
+                    activeIndex: 1,
+                }),
+            );
+
+            const restored = tabs.restoreTabs(FOLDER, files);
+            expect(restored).toBe(true);
+            expect(tabs.tabs.value).toHaveLength(2);
+            expect(tabs.tabs.value[0].file.name).toBe('a.md');
+            expect(tabs.tabs.value[0].scrollTop).toBe(100);
+            expect(tabs.tabs.value[1].file.name).toBe('c.md');
+            expect(tabs.tabs.value[1].scrollTop).toBe(200);
+            expect(tabs.activeIndex.value).toBe(1);
+        });
+
+        it('skips persisted tabs whose files no longer exist', () => {
+            const files = [makeFile('a.md')]; // b.md is gone
+
+            localStorage.setItem(
+                `leaf-tabs-${FOLDER}`,
+                JSON.stringify({
+                    tabs: [
+                        { path: '/a.md', scrollTop: 0 },
+                        { path: '/b.md', scrollTop: 0 },
+                    ],
+                    activeIndex: 1,
+                }),
+            );
+
+            const restored = tabs.restoreTabs(FOLDER, files);
+            expect(restored).toBe(true);
+            expect(tabs.tabs.value).toHaveLength(1);
+            expect(tabs.tabs.value[0].file.name).toBe('a.md');
+            // activeIndex was 1, but only 1 tab now — should clamp to 0
+            expect(tabs.activeIndex.value).toBe(0);
+        });
+
+        it('returns false when no persisted state exists', () => {
+            const files = [makeFile('a.md')];
+            const restored = tabs.restoreTabs(FOLDER, files);
+            expect(restored).toBe(false);
+            expect(tabs.tabs.value).toHaveLength(0);
+        });
+
+        it('returns false when all persisted files are gone', () => {
+            localStorage.setItem(
+                `leaf-tabs-${FOLDER}`,
+                JSON.stringify({
+                    tabs: [{ path: '/gone.md', scrollTop: 0 }],
+                    activeIndex: 0,
+                }),
+            );
+
+            const restored = tabs.restoreTabs(FOLDER, [makeFile('a.md')]);
+            expect(restored).toBe(false);
+            expect(tabs.tabs.value).toHaveLength(0);
+        });
+
+        it('does not persist when folderPath is not set', () => {
+            // No setFolderPath call
+            tabs.openTab(makeFile('a.md'));
+            expect(localStorageMock.setItem).not.toHaveBeenCalled();
+        });
+
+        it('handles corrupted localStorage data gracefully', () => {
+            localStorage.setItem(`leaf-tabs-${FOLDER}`, 'not-json');
+            const restored = tabs.restoreTabs(FOLDER, [makeFile('a.md')]);
+            expect(restored).toBe(false);
+        });
+
+        it('persists on rename', () => {
+            tabs.setFolderPath(FOLDER);
+            tabs.openTab(makeFile('old.md', '/old.md'));
+            tabs.renameTabFile('/old.md', makeFile('new.md', '/new.md'));
+            const data = JSON.parse(localStorage.getItem(`leaf-tabs-${FOLDER}`)!);
+            expect(data.tabs[0].path).toBe('/new.md');
+        });
+
+        it('persists on syncTabFiles when tabs are removed', () => {
+            tabs.setFolderPath(FOLDER);
+            tabs.openTab(makeFile('a.md'));
+            tabs.openTab(makeFile('b.md'));
+            vi.clearAllMocks();
+            tabs.syncTabFiles([makeFile('a.md')]); // b.md removed
+            expect(localStorageMock.setItem).toHaveBeenCalled();
+            const data = JSON.parse(localStorage.getItem(`leaf-tabs-${FOLDER}`)!);
+            expect(data.tabs).toHaveLength(1);
+        });
+
+        it('clearTabs persists empty state', () => {
+            tabs.setFolderPath(FOLDER);
+            tabs.openTab(makeFile('a.md'));
+            tabs.clearTabs();
+            const data = JSON.parse(localStorage.getItem(`leaf-tabs-${FOLDER}`)!);
+            expect(data.tabs).toHaveLength(0);
+            expect(data.activeIndex).toBe(-1);
         });
     });
 });
