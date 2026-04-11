@@ -14,7 +14,8 @@ import { languages } from '@codemirror/language-data';
  * instead of the browser-default blue/purple. Also ensures raw markdown
  * tokens (visible on the active line) look consistent with the theme.
  */
-const leafHighlightStyle = HighlightStyle.define([
+export const leafHighlightStyle = HighlightStyle.define([
+    // Markdown
     { tag: tags.link, color: 'var(--accent-color, #3eb489)' },
     { tag: tags.url, color: 'var(--accent-color, #3eb489)' },
     { tag: tags.heading, fontWeight: '600' },
@@ -24,6 +25,49 @@ const leafHighlightStyle = HighlightStyle.define([
     { tag: tags.monospace, fontFamily: "'SF Mono', Monaco, Menlo, Consolas, monospace", fontSize: '0.9em' },
     { tag: tags.meta, color: 'var(--text2)' },
     { tag: tags.processingInstruction, color: 'var(--text2)' },
+
+    // Code syntax highlighting
+    { tag: tags.keyword, color: 'var(--code-keyword, #c678dd)' },
+    { tag: tags.controlKeyword, color: 'var(--code-keyword, #c678dd)' },
+    { tag: tags.operatorKeyword, color: 'var(--code-keyword, #c678dd)' },
+    { tag: tags.definitionKeyword, color: 'var(--code-keyword, #c678dd)' },
+    { tag: tags.moduleKeyword, color: 'var(--code-keyword, #c678dd)' },
+    { tag: tags.operator, color: 'var(--code-operator, #56b6c2)' },
+    { tag: tags.string, color: 'var(--code-string, #98c379)' },
+    { tag: tags.special(tags.string), color: 'var(--code-string, #98c379)' },
+    { tag: tags.number, color: 'var(--code-number, #d19a66)' },
+    { tag: tags.integer, color: 'var(--code-number, #d19a66)' },
+    { tag: tags.float, color: 'var(--code-number, #d19a66)' },
+    { tag: tags.bool, color: 'var(--code-number, #d19a66)' },
+    { tag: tags.null, color: 'var(--code-number, #d19a66)' },
+    { tag: tags.comment, color: 'var(--code-comment, #5c6370)', fontStyle: 'italic' },
+    { tag: tags.lineComment, color: 'var(--code-comment, #5c6370)', fontStyle: 'italic' },
+    { tag: tags.blockComment, color: 'var(--code-comment, #5c6370)', fontStyle: 'italic' },
+    { tag: tags.docComment, color: 'var(--code-comment, #5c6370)', fontStyle: 'italic' },
+    { tag: tags.function(tags.variableName), color: 'var(--code-function, #61afef)' },
+    { tag: tags.function(tags.definition(tags.variableName)), color: 'var(--code-function, #61afef)' },
+    { tag: tags.definition(tags.variableName), color: 'var(--code-variable, #e06c75)' },
+    { tag: tags.variableName, color: 'var(--code-variable, #e06c75)' },
+    { tag: tags.definition(tags.propertyName), color: 'var(--code-property, #e06c75)' },
+    { tag: tags.propertyName, color: 'var(--code-property, #e06c75)' },
+    { tag: tags.typeName, color: 'var(--code-type, #e5c07b)' },
+    { tag: tags.className, color: 'var(--code-type, #e5c07b)' },
+    { tag: tags.namespace, color: 'var(--code-type, #e5c07b)' },
+    { tag: tags.labelName, color: 'var(--code-variable, #e06c75)' },
+    { tag: tags.attributeName, color: 'var(--code-attribute, #d19a66)' },
+    { tag: tags.attributeValue, color: 'var(--code-string, #98c379)' },
+    { tag: tags.tagName, color: 'var(--code-tag, #e06c75)' },
+    { tag: tags.angleBracket, color: 'var(--code-bracket, #abb2bf)' },
+    { tag: tags.bracket, color: 'var(--code-bracket, #abb2bf)' },
+    { tag: tags.paren, color: 'var(--code-bracket, #abb2bf)' },
+    { tag: tags.squareBracket, color: 'var(--code-bracket, #abb2bf)' },
+    { tag: tags.brace, color: 'var(--code-bracket, #abb2bf)' },
+    { tag: tags.regexp, color: 'var(--code-string, #98c379)' },
+    { tag: tags.escape, color: 'var(--code-operator, #56b6c2)' },
+    { tag: tags.self, color: 'var(--code-keyword, #c678dd)' },
+    { tag: tags.atom, color: 'var(--code-number, #d19a66)' },
+    { tag: tags.punctuation, color: 'var(--code-punctuation, #abb2bf)' },
+    { tag: tags.separator, color: 'var(--code-punctuation, #abb2bf)' },
 ]);
 
 /**

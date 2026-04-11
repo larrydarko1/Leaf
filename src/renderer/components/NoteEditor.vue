@@ -25,6 +25,7 @@ import { createMarkdownWidgetsPlugin, interactiveExtension } from '../composable
 import { leafEditorTheme } from '../composables/editor/cm-theme';
 import { listContinuationKeymap } from '../composables/editor/cm-list-continuation';
 import { taskFoldExtension } from '../composables/editor/cm-task-fold';
+import { useCodeEditor } from '../composables/editor/useCodeEditor';
 import { keymap, EditorView } from '@codemirror/view';
 
 const props = defineProps<{
@@ -39,6 +40,8 @@ const emit = defineEmits<{
 
 // CodeMirror container ref (replaces textarea + preview)
 const cmContainerRef = ref<HTMLElement | null>(null);
+// CodeMirror container ref for code files
+const codeContainerRef = ref<HTMLElement | null>(null);
 // Textarea ref for plain-text (non-markdown) files
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
 
@@ -160,6 +163,10 @@ watch(
     },
     { immediate: true },
 );
+
+// ── Code file editor (syntax-highlighted, non-markdown) ──────────────
+const codeFileExtension = computed(() => props.file?.extension ?? '');
+useCodeEditor(codeContainerRef, content, onContentChange, codeFileExtension, cmFileId);
 
 // When embed cache updates (async resolution), poke CodeMirror so the
 // widget plugin re-evaluates and renders the newly resolved embeds.
@@ -505,14 +512,16 @@ onUnmounted(() => {
             <!-- CodeMirror live-preview editor for markdown files -->
             <div v-if="isMarkdownFile" ref="cmContainerRef" class="cm-editor-container"></div>
 
-            <!-- Plain textarea for non-markdown text files -->
+            <!-- CodeMirror code editor for code files (syntax highlighted) -->
+            <div v-else-if="isCodeFile" ref="codeContainerRef" class="cm-editor-container code-editor-container"></div>
+
+            <!-- Plain textarea for other text files (e.g. .txt) -->
             <textarea
-                v-if="!isMarkdownFile"
+                v-else
                 ref="textareaRef"
                 v-model="content"
                 class="editor-textarea"
-                :class="{ 'code-editor': isCodeFile }"
-                :placeholder="isCodeFile ? 'Start coding...' : 'Start writing...'"
+                placeholder="Start writing..."
                 @input="onContentChange"
             ></textarea>
 

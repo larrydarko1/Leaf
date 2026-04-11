@@ -408,3 +408,66 @@ export const leafEditorTheme = EditorView.theme({
         background: 'color-mix(in srgb, var(--accent-color, #3eb489) 20%, transparent)',
     },
 });
+
+/**
+ * CodeMirror theme for standalone code files (non-markdown).
+ * Shows line numbers and a monospace font throughout.
+ */
+export const leafCodeEditorTheme = EditorView.theme({
+    '&': {
+        flex: '1',
+        height: '100%',
+        fontSize: '0.875rem',
+        fontFamily: "'SF Mono', Monaco, Inconsolata, 'Fira Code', Menlo, Consolas, monospace",
+        lineHeight: '1.6',
+        color: 'var(--text1)',
+        backgroundColor: 'transparent',
+    },
+    '&.cm-focused': {
+        outline: 'none',
+    },
+    '.cm-scroller': {
+        overflow: 'auto',
+        padding: '1rem 0',
+        fontFamily: 'inherit',
+    },
+    '.cm-content': {
+        caretColor: 'var(--accent-color, #3eb489)',
+        padding: '0 1rem',
+    },
+    '.cm-cursor': {
+        borderLeftColor: 'var(--accent-color, #3eb489)',
+        borderLeftWidth: '2px',
+    },
+    '.cm-selectionBackground': {
+        background: 'color-mix(in srgb, var(--accent-color, #3eb489) 25%, transparent) !important',
+    },
+    '&.cm-focused .cm-selectionBackground': {
+        background: 'color-mix(in srgb, var(--accent-color, #3eb489) 30%, transparent) !important',
+    },
+    '.cm-activeLine': {
+        backgroundColor: 'color-mix(in srgb, var(--text2) 5%, transparent)',
+    },
+    '.cm-placeholder': {
+        color: 'var(--text2)',
+    },
+    '.cm-gutters': {
+        backgroundColor: 'transparent',
+        borderRight: '1px solid color-mix(in srgb, var(--text3) 40%, transparent)',
+        color: 'var(--text3)',
+        minWidth: '3em',
+    },
+    '.cm-lineNumbers .cm-gutterElement': {
+        padding: '0 0.5em 0 0.75em',
+        minWidth: '2em',
+        textAlign: 'right',
+        fontSize: '0.85em',
+    },
+    '.cm-activeLineGutter': {
+        backgroundColor: 'color-mix(in srgb, var(--text2) 5%, transparent)',
+        color: 'var(--text1)',
+    },
+    '.cm-foldGutter': {
+        width: '1em',
+    },
+});
