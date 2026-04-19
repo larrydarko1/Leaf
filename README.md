@@ -315,10 +315,11 @@ leaf/
 │       │   ├── DrawingCanvas.vue   # Freehand drawing canvas (orchestrator)
 │       │   ├── FileExplorer.vue    # Vault file browser with drag & drop
 │       │   ├── FolderNode.vue      # Tree node for folder/file rendering
-│       │   ├── NoteEditor.vue      # CodeMirror 6 markdown editor with live preview
+│       │   ├── NoteEditor.vue      # CodeMirror 6 markdown editor (orchestrator)
 │       │   ├── SearchPanel.vue     # Full-text search across vault
 │       │   ├── TabBar.vue          # Editor tab bar
 │       │   ├── ai/                 # AI sub-components
+│       │   │   ├── AiAgentEditCard.vue  # Agent edit diff card with approve/reject
 │       │   │   ├── AiHfPanel.vue       # Hugging Face model browser & download
 │       │   │   ├── AiHistoryPanel.vue  # Conversation history sidebar
 │       │   │   ├── AiInputArea.vue     # Chat input with agent mode toggle
@@ -329,9 +330,10 @@ leaf/
 │       │   │   ├── DrawingFooter.vue        # Zoom, undo/redo, save status
 │       │   │   ├── DrawingPropertiesPanel.vue # Color, stroke & style controls
 │       │   │   └── DrawingToolbar.vue       # Tool buttons & architecture shapes
-│       │   └── editor/             # Media viewer sub-components
+│       │   └── editor/             # Editor & media viewer sub-components
 │       │       ├── AudioViewer.vue     # Audio player with waveform controls
 │       │       ├── ImageViewer.vue     # Image viewer with zoom
+│       │       ├── MarkdownToolbar.vue # Markdown formatting toolbar
 │       │       ├── PdfViewer.vue       # PDF embed viewer
 │       │       └── VideoViewer.vue     # Video player with custom controls
 │       ├── composables/            # Vue composables (grouped by domain)
