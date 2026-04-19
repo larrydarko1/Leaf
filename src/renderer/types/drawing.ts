@@ -39,7 +39,7 @@ export type ElementType =
 
 export type StrokeStyle = 'solid' | 'dashed' | 'dotted';
 
-export type DragAction = 'none' | 'create' | 'move' | 'resize' | 'pan' | 'freedraw' | 'erase';
+export type DragAction = 'none' | 'create' | 'move' | 'resize' | 'pan' | 'freedraw' | 'erase' | 'marquee';
 
 export interface CanvasElement {
     id: string;

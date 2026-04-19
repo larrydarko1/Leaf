@@ -14,7 +14,9 @@ export function useCanvasRenderer(
     isDark: Ref<boolean>,
     elements: Ref<CanvasElement[]>,
     creatingElement: Ref<CanvasElement | null>,
+    selectedIds: Ref<Set<string>>,
     selectedElement: ComputedRef<CanvasElement | null>,
+    marqueeRect: Ref<{ x: number; y: number; width: number; height: number } | null>,
     getElementBounds: (el: CanvasElement) => { x: number; y: number; width: number; height: number },
     getHandlePositions: (el: CanvasElement) => Record<string, { x: number; y: number }>,
 ) {
@@ -97,8 +99,17 @@ export function useCanvasRenderer(
             drawElement(creatingElement.value);
         }
 
-        if (selectedElement.value) {
-            drawSelectionOutline(selectedElement.value);
+        // Draw selection outlines for all selected elements
+        for (const el of elements.value) {
+            if (selectedIds.value.has(el.id)) {
+                // Only show resize handles when single selection
+                drawSelectionOutline(el, selectedIds.value.size === 1);
+            }
+        }
+
+        // Draw marquee selection rectangle
+        if (marqueeRect.value) {
+            drawMarquee(marqueeRect.value);
         }
 
         ctx.restore();
@@ -509,7 +520,7 @@ export function useCanvasRenderer(
         ctx.restore();
     }
 
-    function drawSelectionOutline(el: CanvasElement) {
+    function drawSelectionOutline(el: CanvasElement, showHandles: boolean) {
         if (!ctx) return;
         ctx.save();
         const bounds = getElementBounds(el);
@@ -520,15 +531,34 @@ export function useCanvasRenderer(
         ctx.setLineDash([6 / zoom.value, 4 / zoom.value]);
         ctx.strokeRect(bounds.x - pad, bounds.y - pad, bounds.width + pad * 2, bounds.height + pad * 2);
         ctx.setLineDash([]);
-        const handles = getHandlePositions(el);
-        const hs = HANDLE_SIZE / zoom.value;
-        for (const pos of Object.values(handles)) {
-            ctx.fillStyle = '#ffffff';
-            ctx.strokeStyle = SELECTION_COLOR;
-            ctx.lineWidth = 1.5 / zoom.value;
-            ctx.fillRect(pos.x - hs / 2, pos.y - hs / 2, hs, hs);
-            ctx.strokeRect(pos.x - hs / 2, pos.y - hs / 2, hs, hs);
+        if (showHandles) {
+            const handles = getHandlePositions(el);
+            const hs = HANDLE_SIZE / zoom.value;
+            for (const pos of Object.values(handles)) {
+                ctx.fillStyle = '#ffffff';
+                ctx.strokeStyle = SELECTION_COLOR;
+                ctx.lineWidth = 1.5 / zoom.value;
+                ctx.fillRect(pos.x - hs / 2, pos.y - hs / 2, hs, hs);
+                ctx.strokeRect(pos.x - hs / 2, pos.y - hs / 2, hs, hs);
+            }
         }
+        ctx.restore();
+    }
+
+    function drawMarquee(rect: { x: number; y: number; width: number; height: number }) {
+        if (!ctx) return;
+        ctx.save();
+        ctx.fillStyle = 'rgba(74, 144, 217, 0.08)';
+        ctx.strokeStyle = SELECTION_COLOR;
+        ctx.lineWidth = 1 / zoom.value;
+        ctx.setLineDash([4 / zoom.value, 4 / zoom.value]);
+        const x = Math.min(rect.x, rect.x + rect.width);
+        const y = Math.min(rect.y, rect.y + rect.height);
+        const w = Math.abs(rect.width);
+        const h = Math.abs(rect.height);
+        ctx.fillRect(x, y, w, h);
+        ctx.strokeRect(x, y, w, h);
+        ctx.setLineDash([]);
         ctx.restore();
     }
 

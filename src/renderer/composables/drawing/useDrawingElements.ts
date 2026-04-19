@@ -10,13 +10,30 @@ export function genId(): string {
 
 export function useDrawingElements() {
     const elements = ref<CanvasElement[]>([]);
-    const selectedId = ref<string | null>(null);
+    const selectedIds = ref<Set<string>>(new Set());
     const creatingElement = ref<CanvasElement | null>(null);
-    const clipboard = ref<CanvasElement | null>(null);
+    const clipboard = ref<CanvasElement[]>([]);
+
+    // Backward-compat: single selected ID (first in set, or null)
+    const selectedId = computed({
+        get: () => {
+            const first = selectedIds.value.values().next();
+            return first.done ? null : first.value;
+        },
+        set: (id: string | null) => {
+            if (id) {
+                selectedIds.value = new Set([id]);
+            } else {
+                selectedIds.value = new Set();
+            }
+        },
+    });
 
     const selectedElement = computed(() =>
         selectedId.value ? (elements.value.find((el) => el.id === selectedId.value) ?? null) : null,
     );
+
+    const selectedElements = computed(() => elements.value.filter((el) => selectedIds.value.has(el.id)));
 
     // ================= Helpers =================
 
@@ -123,7 +140,7 @@ export function useDrawingElements() {
     }
 
     function hitTestHandle(wx: number, wy: number, zoom: number): { elementId: string; handle: string } | null {
-        if (!selectedElement.value) return null;
+        if (selectedIds.value.size !== 1 || !selectedElement.value) return null;
         const handles = getHandlePositions(selectedElement.value);
         const hs = (HANDLE_SIZE + 4) / zoom;
         for (const [name, pos] of Object.entries(handles)) {
@@ -160,9 +177,11 @@ export function useDrawingElements() {
     return {
         elements,
         selectedId,
+        selectedIds,
         creatingElement,
         clipboard,
         selectedElement,
+        selectedElements,
         isShapeElement,
         getElementBounds,
         getHandlePositions,

@@ -4,8 +4,10 @@ import type { CanvasElement } from '../../types/drawing';
 export function useDrawingHistory(
     elements: Ref<CanvasElement[]>,
     selectedId: Ref<string | null>,
+    selectedIds: Ref<Set<string>>,
     selectedElement: ComputedRef<CanvasElement | null>,
-    clipboard: Ref<CanvasElement | null>,
+    selectedElements: ComputedRef<CanvasElement[]>,
+    clipboard: Ref<CanvasElement[]>,
     history: Ref<string[]>,
     historyIndex: Ref<number>,
     scheduleAutoSave: () => void,
@@ -30,7 +32,7 @@ export function useDrawingHistory(
         if (historyIndex.value <= 0) return;
         historyIndex.value--;
         elements.value = JSON.parse(history.value[historyIndex.value]);
-        selectedId.value = null;
+        selectedIds.value = new Set();
         scheduleAutoSave();
         renderScene();
     }
@@ -39,14 +41,14 @@ export function useDrawingHistory(
         if (historyIndex.value >= history.value.length - 1) return;
         historyIndex.value++;
         elements.value = JSON.parse(history.value[historyIndex.value]);
-        selectedId.value = null;
+        selectedIds.value = new Set();
         scheduleAutoSave();
         renderScene();
     }
 
     function clearAll() {
         elements.value = [];
-        selectedId.value = null;
+        selectedIds.value = new Set();
         saveToHistory();
         scheduleAutoSave();
         renderScene();
@@ -55,40 +57,46 @@ export function useDrawingHistory(
     // ================= Clipboard =================
 
     function copySelected() {
-        if (!selectedElement.value) return;
-        clipboard.value = JSON.parse(JSON.stringify(selectedElement.value));
+        if (selectedElements.value.length === 0) return;
+        clipboard.value = JSON.parse(JSON.stringify(selectedElements.value));
     }
 
     function pasteClipboard() {
-        if (!clipboard.value) return;
-        const newEl: CanvasElement = {
-            ...JSON.parse(JSON.stringify(clipboard.value)),
-            id: crypto.randomUUID(),
-            x: clipboard.value.x + 20,
-            y: clipboard.value.y + 20,
-        };
-        elements.value.push(newEl);
-        selectedId.value = newEl.id;
-        clipboard.value = {
-            ...JSON.parse(JSON.stringify(clipboard.value)),
-            x: clipboard.value.x + 20,
-            y: clipboard.value.y + 20,
-        };
+        if (clipboard.value.length === 0) return;
+        const newIds = new Set<string>();
+        for (const src of clipboard.value) {
+            const newEl: CanvasElement = {
+                ...JSON.parse(JSON.stringify(src)),
+                id: crypto.randomUUID(),
+                x: src.x + 20,
+                y: src.y + 20,
+            };
+            elements.value.push(newEl);
+            newIds.add(newEl.id);
+        }
+        selectedIds.value = newIds;
+        // Offset clipboard for subsequent pastes
+        clipboard.value = clipboard.value.map((el) => ({
+            ...el,
+            x: el.x + 20,
+            y: el.y + 20,
+        }));
         saveToHistory();
         scheduleAutoSave();
         renderScene();
     }
 
     function duplicateSelected() {
-        if (!selectedElement.value) return;
+        if (selectedElements.value.length === 0) return;
         copySelected();
         pasteClipboard();
     }
 
     function deleteSelected() {
-        if (!selectedId.value) return;
-        elements.value = elements.value.filter((el) => el.id !== selectedId.value);
-        selectedId.value = null;
+        if (selectedIds.value.size === 0) return;
+        const idsToDelete = selectedIds.value;
+        elements.value = elements.value.filter((el) => !idsToDelete.has(el.id));
+        selectedIds.value = new Set();
         saveToHistory();
         scheduleAutoSave();
         renderScene();

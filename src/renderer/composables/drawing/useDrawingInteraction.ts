@@ -24,17 +24,22 @@ export function useDrawingInteraction(
     // Element state
     elements: Ref<CanvasElement[]>,
     selectedId: Ref<string | null>,
+    selectedIds: Ref<Set<string>>,
     creatingElement: Ref<CanvasElement | null>,
     selectedElement: ComputedRef<CanvasElement | null>,
+    selectedElements: ComputedRef<CanvasElement[]>,
     // Element helpers
     isShapeElement: (el: CanvasElement) => boolean,
     isShapeTool: (tool: string) => boolean,
     hitTestElement: (wx: number, wy: number, zoom: number) => CanvasElement | null,
     hitTestHandle: (wx: number, wy: number, zoom: number) => { elementId: string; handle: string } | null,
+    getElementBounds: (el: CanvasElement) => { x: number; y: number; width: number; height: number },
     genId: () => string,
     // Tool & style state
     currentTool: Ref<ToolType>,
     defaultStyle: Ref<DefaultStyle>,
+    // Shared marquee state
+    marqueeRect: Ref<{ x: number; y: number; width: number; height: number } | null>,
     // Renderer helpers
     screenToWorld: (sx: number, sy: number) => { x: number; y: number },
     getScreenPoint: (e: PointerEvent | Touch) => { x: number; y: number },
@@ -67,6 +72,9 @@ export function useDrawingInteraction(
     const dragHandle = ref<string | null>(null);
     const dragOriginal = ref<{ x: number; y: number; width: number; height: number; fontSize?: number } | null>(null);
     const erasedIds = ref<string[]>([]);
+
+    // Multi-move: stores original positions for all selected elements
+    const dragOriginals = ref<Map<string, { x: number; y: number }>>(new Map());
 
     // Keyboard modifier state
     const spaceHeld = ref(false);
@@ -112,6 +120,7 @@ export function useDrawingInteraction(
         }
 
         if (tool === 'select') {
+            // Resize handle only when single selection
             const handleHit = hitTestHandle(worldPt.x, worldPt.y, zoom.value);
             if (handleHit) {
                 const el = elements.value.find((e) => e.id === handleHit.elementId)!;
@@ -123,15 +132,35 @@ export function useDrawingInteraction(
 
             const hit = hitTestElement(worldPt.x, worldPt.y, zoom.value);
             if (hit) {
-                selectedId.value = hit.id;
+                if (shiftHeld.value) {
+                    // Shift-click: toggle element in selection
+                    const newSet = new Set(selectedIds.value);
+                    if (newSet.has(hit.id)) {
+                        newSet.delete(hit.id);
+                    } else {
+                        newSet.add(hit.id);
+                    }
+                    selectedIds.value = newSet;
+                } else if (!selectedIds.value.has(hit.id)) {
+                    // Click on unselected element: select only it
+                    selectedIds.value = new Set([hit.id]);
+                }
+                // Start multi-move for all selected elements
                 dragAction.value = 'move';
-                dragOriginal.value = { x: hit.x, y: hit.y, width: hit.width, height: hit.height };
+                dragOriginals.value = new Map();
+                for (const sel of selectedElements.value) {
+                    dragOriginals.value.set(sel.id, { x: sel.x, y: sel.y });
+                }
                 renderScene();
                 return;
             }
 
-            selectedId.value = null;
-            dragAction.value = 'none';
+            // Click on empty space: start marquee or clear selection
+            if (!shiftHeld.value) {
+                selectedIds.value = new Set();
+            }
+            dragAction.value = 'marquee';
+            marqueeRect.value = { x: worldPt.x, y: worldPt.y, width: 0, height: 0 };
             renderScene();
             return;
         }
@@ -224,12 +253,16 @@ export function useDrawingInteraction(
             }
 
             case 'move': {
-                const el = selectedElement.value;
-                if (!el || !dragOriginal.value) break;
+                if (dragOriginals.value.size === 0) break;
                 const dx = worldPt.x - dragStartWorld.value.x;
                 const dy = worldPt.y - dragStartWorld.value.y;
-                el.x = dragOriginal.value.x + dx;
-                el.y = dragOriginal.value.y + dy;
+                for (const el of selectedElements.value) {
+                    const orig = dragOriginals.value.get(el.id);
+                    if (orig) {
+                        el.x = orig.x + dx;
+                        el.y = orig.y + dy;
+                    }
+                }
                 renderScene();
                 break;
             }
@@ -256,9 +289,34 @@ export function useDrawingInteraction(
                 if (hit && !erasedIds.value.includes(hit.id)) {
                     erasedIds.value.push(hit.id);
                     elements.value = elements.value.filter((el) => el.id !== hit.id);
-                    if (selectedId.value === hit.id) selectedId.value = null;
+                    if (selectedIds.value.has(hit.id)) {
+                        const newSet = new Set(selectedIds.value);
+                        newSet.delete(hit.id);
+                        selectedIds.value = newSet;
+                    }
                     renderScene();
                 }
+                break;
+            }
+
+            case 'marquee': {
+                if (!marqueeRect.value) break;
+                marqueeRect.value.width = worldPt.x - marqueeRect.value.x;
+                marqueeRect.value.height = worldPt.y - marqueeRect.value.y;
+                // Find elements inside marquee
+                const mx = Math.min(marqueeRect.value.x, marqueeRect.value.x + marqueeRect.value.width);
+                const my = Math.min(marqueeRect.value.y, marqueeRect.value.y + marqueeRect.value.height);
+                const mw = Math.abs(marqueeRect.value.width);
+                const mh = Math.abs(marqueeRect.value.height);
+                const newSet = shiftHeld.value ? new Set(selectedIds.value) : new Set<string>();
+                for (const el of elements.value) {
+                    const b = getElementBounds(el);
+                    if (b.x >= mx && b.y >= my && b.x + b.width <= mx + mw && b.y + b.height <= my + mh) {
+                        newSet.add(el.id);
+                    }
+                }
+                selectedIds.value = newSet;
+                renderScene();
                 break;
             }
         }
@@ -340,10 +398,17 @@ export function useDrawingInteraction(
                 erasedIds.value = [];
                 break;
             }
+
+            case 'marquee': {
+                marqueeRect.value = null;
+                renderScene();
+                break;
+            }
         }
 
         dragOriginal.value = null;
         dragHandle.value = null;
+        dragOriginals.value = new Map();
     }
 
     // ================= Resize Helpers =================
@@ -511,10 +576,12 @@ export function useDrawingInteraction(
 
         if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
             e.preventDefault();
+            selectedIds.value = new Set(elements.value.map((el) => el.id));
+            renderScene();
             return;
         }
 
-        if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId.value) {
+        if ((e.key === 'Delete' || e.key === 'Backspace') && selectedIds.value.size > 0) {
             e.preventDefault();
             deleteSelected();
             return;
@@ -563,8 +630,8 @@ export function useDrawingInteraction(
         }
 
         if (e.key === 'Escape') {
-            if (selectedId.value) {
-                selectedId.value = null;
+            if (selectedIds.value.size > 0) {
+                selectedIds.value = new Set();
                 renderScene();
             }
             if (isDragging.value && dragAction.value === 'create') {

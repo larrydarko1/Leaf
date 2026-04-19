@@ -131,7 +131,7 @@ function toggleArchDropdown() {
 function selectArchTool(tool: ToolType) {
     currentTool.value = tool;
     archDropdownOpen.value = false;
-    selectedId.value = null;
+    selectedIds.value = new Set();
     renderScene();
 }
 
@@ -149,13 +149,18 @@ const zoom = ref(1);
 // Tool State
 const currentTool = ref<ToolType>('select');
 
+// Marquee selection (shared between renderer and interaction)
+const marqueeRect = ref<{ x: number; y: number; width: number; height: number } | null>(null);
+
 // Element State
 const {
     elements,
     selectedId,
+    selectedIds,
     creatingElement,
     clipboard,
     selectedElement,
+    selectedElements,
     isShapeElement,
     getElementBounds,
     getHandlePositions,
@@ -216,7 +221,9 @@ const {
     isDark,
     elements,
     creatingElement,
+    selectedIds,
     selectedElement,
+    marqueeRect,
     getElementBounds,
     getHandlePositions,
 );
@@ -251,7 +258,9 @@ const { saveToHistory, undo, redo, clearAll, copySelected, pasteClipboard, dupli
     useDrawingHistory(
         elements,
         selectedId,
+        selectedIds,
         selectedElement,
+        selectedElements,
         clipboard,
         history,
         historyIndex,
@@ -311,15 +320,19 @@ const {
     zoom,
     elements,
     selectedId,
+    selectedIds,
     creatingElement,
     selectedElement,
+    selectedElements,
     isShapeElement,
     isShapeTool,
     hitTestElement,
     hitTestHandle,
+    getElementBounds,
     genId,
     currentTool,
     defaultStyle,
+    marqueeRect,
     screenToWorld,
     getScreenPoint,
     cssWidth,
@@ -347,7 +360,7 @@ const zoomPercent = computed(() => Math.round(zoom.value * 100));
 
 const shouldShowProperties = computed(() => {
     const tool = effectiveTool.value;
-    return (tool !== 'hand' && tool !== 'select') || selectedElement.value != null;
+    return (tool !== 'hand' && tool !== 'select') || selectedIds.value.size > 0;
 });
 
 const showFillOption = computed(() => {
@@ -366,9 +379,8 @@ const activeBorderRadius = computed(() => selectedElement.value?.borderRadius ??
 const activeFontSize = computed(() => selectedElement.value?.fontSize ?? defaultStyle.value.fontSize);
 
 const showFontSizeOption = computed(() => {
-    const textTypes = ['text'];
-    if (selectedElement.value) {
-        return textTypes.includes(selectedElement.value.type) || !!selectedElement.value.text;
+    if (selectedElements.value.length > 0) {
+        return selectedElements.value.some((el) => el.type === 'text' || !!el.text);
     }
     return currentTool.value === 'text';
 });
@@ -434,7 +446,7 @@ function checkTheme() {
 
 function selectTool(tool: ToolType) {
     currentTool.value = tool;
-    if (tool !== 'select') selectedId.value = null;
+    if (tool !== 'select') selectedIds.value = new Set();
     renderScene();
 }
 
@@ -444,14 +456,13 @@ function selectTool(tool: ToolType) {
 type StyleKey = 'strokeColor' | 'fillColor' | 'strokeWidth' | 'strokeStyle' | 'borderRadius' | 'fontSize';
 
 function setProperty(prop: StyleKey, value: string | number) {
-    // Update selected element if any
-    if (selectedElement.value) {
-        selectedElement.value[prop] = value as never;
+    // Update all selected elements
+    if (selectedElements.value.length > 0) {
+        for (const el of selectedElements.value) {
+            el[prop] = value as never;
 
-        // When fontSize changes on a text element, recalculate bounds to fit
-        if (prop === 'fontSize' && typeof value === 'number') {
-            const el = selectedElement.value;
-            if (el.type === 'text' && el.text) {
+            // When fontSize changes on a text element, recalculate bounds to fit
+            if (prop === 'fontSize' && typeof value === 'number' && el.type === 'text' && el.text) {
                 const ctx = getCtx();
                 if (ctx) {
                     ctx.save();
@@ -918,7 +929,7 @@ function setProperty(prop: StyleKey, value: string | number) {
                 </div>
 
                 <!-- Actions (only when element selected) -->
-                <div v-if="selectedElement" class="prop-section">
+                <div v-if="selectedIds.size > 0" class="prop-section">
                     <div class="prop-actions">
                         <button class="action-btn" title="Copy (⌘C)" @click="copySelected">
                             <svg
