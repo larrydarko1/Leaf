@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 
 export default defineConfig({
     main: {
+        esbuild: { tsconfigRaw: { compilerOptions: { target: 'ESNext' } } },
         build: {
             rollupOptions: {
                 input: {
@@ -14,6 +15,7 @@ export default defineConfig({
         },
     },
     preload: {
+        esbuild: { tsconfigRaw: { compilerOptions: { target: 'ESNext' } } },
         build: {
             rollupOptions: {
                 input: {

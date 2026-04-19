@@ -186,7 +186,7 @@ Each conversation is stored as a separate `.json` file containing the model used
 
 ### Prerequisites
 
-- Node.js (v22+ recommended)
+- Node.js (v24+ recommended)
 - npm
 
 ### Setup
@@ -384,7 +384,9 @@ leaf/
 │   │   └── validation.test.ts
 │   └── renderer/
 │       ├── audio.test.ts
+│       ├── cm-task-fold.test.ts
 │       ├── cm-toolbar.test.ts
+│       ├── exportDrawing.test.ts
 │       ├── fileTypes.test.ts
 │       └── useEditorTabs.test.ts
 ├── models/
