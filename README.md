@@ -312,7 +312,7 @@ leaf/
 │       │   ├── AudioRecorder.vue   # Voice recording and audio capture
 │       │   ├── BookmarksPanel.vue  # Bookmarked notes panel
 │       │   ├── ContextMenu.vue     # Right-click context menu
-│       │   ├── DrawingCanvas.vue   # Freehand drawing canvas
+│       │   ├── DrawingCanvas.vue   # Freehand drawing canvas (orchestrator)
 │       │   ├── FileExplorer.vue    # Vault file browser with drag & drop
 │       │   ├── FolderNode.vue      # Tree node for folder/file rendering
 │       │   ├── NoteEditor.vue      # CodeMirror 6 markdown editor with live preview
@@ -324,6 +324,11 @@ leaf/
 │       │   │   ├── AiInputArea.vue     # Chat input with agent mode toggle
 │       │   │   ├── AiMessageList.vue   # Message rendering with streaming
 │       │   │   └── AiModelBar.vue      # Model selector and status bar
+│       │   ├── drawing/            # Drawing canvas sub-components
+│       │   │   ├── DrawingExportDialog.vue  # Export modal with preview & save/copy
+│       │   │   ├── DrawingFooter.vue        # Zoom, undo/redo, save status
+│       │   │   ├── DrawingPropertiesPanel.vue # Color, stroke & style controls
+│       │   │   └── DrawingToolbar.vue       # Tool buttons & architecture shapes
 │       │   └── editor/             # Media viewer sub-components
 │       │       ├── AudioViewer.vue     # Audio player with waveform controls
 │       │       ├── ImageViewer.vue     # Image viewer with zoom
