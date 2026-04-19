@@ -1,3 +1,7 @@
+/**
+ * useDrawingHistory — undo/redo stack and clipboard operations for the drawing canvas.
+ */
+
 import type { Ref, ComputedRef } from 'vue';
 import type { CanvasElement } from '../../types/drawing';
 
@@ -13,7 +17,7 @@ export function useDrawingHistory(
     scheduleAutoSave: () => void,
     renderScene: () => void,
 ) {
-    // ================= History =================
+    // History
 
     function saveToHistory() {
         const snapshot = JSON.stringify(elements.value);
@@ -54,7 +58,7 @@ export function useDrawingHistory(
         renderScene();
     }
 
-    // ================= Clipboard =================
+    // Clipboard
 
     function copySelected() {
         if (selectedElements.value.length === 0) return;

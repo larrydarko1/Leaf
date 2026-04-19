@@ -1,4 +1,3 @@
-// Hugging Face model download types
 export type HfSortOption = 'downloads' | 'likes' | 'lastModified' | 'trending';
 
 export interface HfSearchResult {

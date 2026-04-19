@@ -1,10 +1,11 @@
-import { EditorView } from '@codemirror/view';
-
 /**
- * CodeMirror theme for Leaf's live-preview markdown editor.
+ * cm-theme — CodeMirror theme for Leaf's live-preview markdown editor.
  * Uses the same CSS custom properties as the rest of the app,
  * so it automatically applies dark/light themes.
  */
+
+import { EditorView } from '@codemirror/view';
+
 export const leafEditorTheme = EditorView.theme({
     // ── Root editor ───────────────────────────────────────────────────────
     '&': {

@@ -1,3 +1,8 @@
+/**
+ * useTreeNodeDrag — handles drag-and-drop reordering of files and folders
+ * within the vault tree.
+ */
+
 import { ref } from 'vue';
 import type { TreeNode } from '../../components/FolderNode.vue';
 import type { FileInfo } from '../../types/electron';

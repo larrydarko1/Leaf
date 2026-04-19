@@ -1,5 +1,7 @@
-// Input validation helpers for IPC handlers — keeps security checks
-// consistent across all service modules.
+/**
+ * Input validation helpers for IPC handlers — keeps security checks
+ * consistent across all service modules.
+ */
 
 import path from 'path';
 

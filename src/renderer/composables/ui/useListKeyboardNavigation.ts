@@ -1,3 +1,8 @@
+/**
+ * useListKeyboardNavigation — adds arrow-key and Enter navigation
+ * to a filterable list panel.
+ */
+
 import { ref, onMounted, onUnmounted } from 'vue';
 
 export function useListKeyboardNavigation<T>(

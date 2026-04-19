@@ -1,8 +1,11 @@
+/**
+ * cm-toolbar — CodeMirror-based markdown toolbar commands and keyboard shortcuts.
+ */
+
 import { EditorView } from '@codemirror/view';
 import { EditorSelection } from '@codemirror/state';
 import type { Ref } from 'vue';
 
-/** CodeMirror-based markdown toolbar commands. */
 export function useCodemirrorToolbar(view: Ref<EditorView | null>) {
     /** Wrap selection with markers, or insert placeholder text with markers. */
     function wrapSelection(openMarker: string, closeMarker: string, placeholder: string) {

@@ -1,3 +1,8 @@
+/**
+ * cm-markdown-widgets — CodeMirror 6 ViewPlugin that renders inline decorations
+ * for checkboxes, images, and embeds in markdown.
+ */
+
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 import { type EditorState, type Range } from '@codemirror/state';
 import { syntaxTree } from '@codemirror/language';

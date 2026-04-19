@@ -1,3 +1,8 @@
+/**
+ * useFolderTree — builds a recursive tree structure from flat file/folder lists
+ * and manages expand/collapse state.
+ */
+
 import { ref, computed, watch } from 'vue';
 import type { FileInfo, FolderInfo } from '../../types/electron';
 import type { TreeNode } from '../../components/FolderNode.vue';

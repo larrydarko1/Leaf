@@ -1,3 +1,8 @@
+/**
+ * useAIChat — coordinates streaming inference, message management, and editing.
+ * Owns: send/stop, token streaming, markdown rendering, message CRUD.
+ */
+
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import type { Ref } from 'vue';
 import { marked } from 'marked';
@@ -61,9 +66,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
     const isReady = computed(() => status.value.isModelLoaded);
     const isAnyGenerating = computed(() => status.value.isGenerating);
 
-    // ============================
     // Scroll helpers
-    // ============================
 
     function scrollToBottom(force = false) {
         if (!force && userScrolledUp.value) return;
@@ -80,9 +83,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         userScrolledUp.value = el.scrollHeight - el.scrollTop - el.clientHeight >= 40;
     }
 
-    // ============================
-    // Markdown + clipboard
-    // ============================
+    // Markdown and clipboard
 
     function renderMarkdown(content: string): string {
         if (!content) return '';
@@ -101,9 +102,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         }
     }
 
-    // ============================
     // Message editing
-    // ============================
 
     function startEditMessage(index: number) {
         if (messages.value[index]?.role !== 'user') return;
@@ -137,9 +136,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         scrollToBottom();
     }
 
-    // ============================
-    // Resend / delete / regenerate
-    // ============================
+    // Resend, delete, and regenerate
 
     async function resendMessage(index: number) {
         const msg = messages.value[index];
@@ -209,9 +206,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         }
     }
 
-    // ============================
-    // Send / stop
-    // ============================
+    // Send and stop
 
     async function sendMessage() {
         const text = inputMessage.value.trim();
@@ -308,9 +303,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         }
     }
 
-    // ============================
-    // Token streaming + utilities
-    // ============================
+    // Token streaming and utilities
 
     function handleToken(token: string) {
         const lastMsg = messages.value[messages.value.length - 1];

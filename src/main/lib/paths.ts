@@ -1,8 +1,7 @@
-// App path constants and resolution helpers — pure Node, no Electron imports.
-// Used by:
-//   ai-service.ts           → DEFAULT_MODELS_DIR
-//   hf-download-service.ts  → DEFAULT_MODELS_DIR
-//   speech-service.ts       → getWhisperModelDir()
+/**
+ * App path constants and resolution helpers — pure Node, no Electron imports.
+ * Used by ai-service, hf-download-service, and speech-service.
+ */
 
 import path from 'path';
 import os from 'os';

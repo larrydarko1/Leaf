@@ -1,9 +1,9 @@
-// Agent Service - Manages AI file editing with version control (backup/restore)
-// This runs in the Electron main process and handles:
-//   - Reading files for AI context
-//   - Proposing edits (backup original → write new content)
-//   - Approving edits (delete backup)
-//   - Rejecting edits (restore from backup)
+/**
+ * Agent Service — manages AI file editing with version control (backup/restore).
+ * Runs in the Electron main process; handles reading files for AI context,
+ * proposing edits (backup original → write new content), approving edits
+ * (delete backup), and rejecting edits (restore from backup).
+ */
 
 import type { IpcMain } from 'electron';
 import path from 'path';

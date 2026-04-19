@@ -8,7 +8,7 @@ import { useTextEditing } from '../composables/drawing/useTextEditing';
 import { useDrawingHistory } from '../composables/drawing/useDrawingHistory';
 import { useDrawingPersistence } from '../composables/drawing/useDrawingPersistence';
 
-// ================= Props & Emits =================
+// Props and emits
 
 const props = defineProps<{
     filePath: string;
@@ -20,7 +20,7 @@ const emit = defineEmits<{
     contentChanged: [hasChanges: boolean];
 }>();
 
-// ================= Constants =================
+// Constants
 
 const strokeColorPalette = [
     '#1e1e1e',
@@ -59,7 +59,7 @@ const strokeStyleOptions = [
     { value: 'dotted' as StrokeStyle, label: 'Dotted', dash: '2,4' },
 ];
 
-// ================= State =================
+// State
 
 const containerEl = ref<HTMLDivElement | null>(null);
 const canvas = ref<HTMLCanvasElement | null>(null);
@@ -200,7 +200,7 @@ const historyIndex = ref(-1);
 const isDark = ref(false);
 let themeObserver: MutationObserver | null = null;
 
-// ================= Renderer =================
+// Renderer
 
 const {
     setupCanvas,
@@ -229,7 +229,7 @@ const {
     getHandlePositions,
 );
 
-// ================= Persistence =================
+// Persistence
 
 const {
     hasUnsavedChanges,
@@ -253,7 +253,7 @@ const {
     (hasChanges) => emit('contentChanged', hasChanges),
 );
 
-// ================= History =================
+// History
 
 const { saveToHistory, undo, redo, clearAll, copySelected, pasteClipboard, duplicateSelected, deleteSelected } =
     useDrawingHistory(
@@ -269,7 +269,7 @@ const { saveToHistory, undo, redo, clearAll, copySelected, pasteClipboard, dupli
         renderScene,
     );
 
-// ================= Text Editing =================
+// Text editing
 
 const {
     textEditing,
@@ -301,7 +301,7 @@ const {
     scheduleAutoSave,
 );
 
-// ================= Interaction =================
+// Interaction
 
 const {
     isDragging,
@@ -355,7 +355,7 @@ const {
     deleteSelected,
 );
 
-// ================= Computed =================
+// Computed
 
 const zoomPercent = computed(() => Math.round(zoom.value * 100));
 
@@ -404,7 +404,7 @@ const canvasCursor = computed(() => {
     return 'crosshair';
 });
 
-// ================= Lifecycle =================
+// Lifecycle
 
 onMounted(() => {
     checkTheme();
@@ -437,13 +437,13 @@ watch(isDark, () => {
     renderScene();
 });
 
-// ================= Theme =================
+// Theme
 
 function checkTheme() {
     isDark.value = document.documentElement.getAttribute('data-theme') === 'dark';
 }
 
-// ================= Tool Selection =================
+// Tool selection
 
 function selectTool(tool: ToolType) {
     currentTool.value = tool;
@@ -451,7 +451,7 @@ function selectTool(tool: ToolType) {
     renderScene();
 }
 
-// ================= Properties =================
+// Properties
 
 // Style properties that can be set on both elements and the default style
 type StyleKey = 'strokeColor' | 'fillColor' | 'strokeWidth' | 'strokeStyle' | 'borderRadius' | 'fontSize';
@@ -490,7 +490,8 @@ function setProperty(prop: StyleKey, value: string | number) {
         defaultStyle.value[prop] = value as never;
     }
 }
-// ================= Export Dialog =================
+
+// Export dialog
 
 const showExportDialog = ref(false);
 const exportWithBackground = ref(true);
@@ -1351,7 +1352,7 @@ canvas {
     height: 100%;
 }
 
-// ================= Floating Toolbar =================
+// ─── Floating Toolbar ────────────────────────────────────────────────────────
 
 .floating-toolbar {
     position: absolute;
@@ -1409,7 +1410,7 @@ canvas {
     flex-shrink: 0;
 }
 
-// ================= Architecture Dropdown =================
+// ─── Architecture Dropdown ───────────────────────────────────────────────────
 
 .arch-dropdown {
     position: relative;
@@ -1479,7 +1480,7 @@ canvas {
     font-weight: 500;
 }
 
-// ================= Properties Panel =================
+// ─── Properties Panel ────────────────────────────────────────────────────────
 
 .properties-panel {
     position: absolute;
@@ -1740,7 +1741,7 @@ canvas {
     margin-left: 4px;
 }
 
-// ================= Text Overlay =================
+// ─── Text Overlay ────────────────────────────────────────────────────────────
 
 .text-edit-overlay {
     position: absolute;
@@ -1760,7 +1761,7 @@ canvas {
     box-sizing: border-box;
 }
 
-// ================= Footer =================
+// ─── Footer ──────────────────────────────────────────────────────────────────
 
 .canvas-footer {
     position: absolute;
@@ -1879,7 +1880,7 @@ canvas {
     margin-left: 8px;
 }
 
-// ================= Export Dialog =================
+// ─── Export Dialog ───────────────────────────────────────────────────────────
 
 .export-overlay {
     position: fixed;

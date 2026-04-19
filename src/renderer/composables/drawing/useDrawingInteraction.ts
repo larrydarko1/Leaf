@@ -1,3 +1,8 @@
+/**
+ * useDrawingInteraction — handles pointer, wheel, and keyboard events
+ * for drawing, selection, dragging, and resizing canvas elements.
+ */
+
 import { ref, computed } from 'vue';
 import type { Ref, ComputedRef } from 'vue';
 import type { ToolType, ElementType, DragAction, CanvasElement, StrokeStyle } from '../../types/drawing';
@@ -81,7 +86,7 @@ export function useDrawingInteraction(
     const shiftHeld = ref(false);
     const effectiveTool = computed<ToolType>(() => (spaceHeld.value ? 'hand' : currentTool.value));
 
-    // ================= Pointer Events =================
+    // Pointer events
 
     function onPointerDown(e: PointerEvent) {
         if (textEditing.value) {
@@ -411,7 +416,7 @@ export function useDrawingInteraction(
         dragOriginals.value = new Map();
     }
 
-    // ================= Resize Helpers =================
+    // Resize helpers
 
     function applyResize(
         el: CanvasElement,
@@ -505,7 +510,7 @@ export function useDrawingInteraction(
         return { w, h };
     }
 
-    // ================= Wheel / Zoom =================
+    // Wheel and zoom
 
     function onWheel(e: WheelEvent) {
         const screenPt = getScreenPoint(e as unknown as PointerEvent);
@@ -532,7 +537,7 @@ export function useDrawingInteraction(
         renderScene();
     }
 
-    // ================= Keyboard Events =================
+    // Keyboard events
 
     function handleKeydown(e: KeyboardEvent) {
         if (textEditing.value) return;

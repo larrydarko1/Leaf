@@ -1,3 +1,8 @@
+/**
+ * cm-list-continuation — CodeMirror 6 keymap extension that continues
+ * ordered/unordered lists and task items on Enter.
+ */
+
 import { EditorView, keymap } from '@codemirror/view';
 import { EditorSelection } from '@codemirror/state';
 

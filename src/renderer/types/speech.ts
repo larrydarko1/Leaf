@@ -1,4 +1,3 @@
-// Speech-to-Text (Whisper) types
 export interface SpeechInitResult {
     success: boolean;
     message?: string;

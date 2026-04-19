@@ -1,3 +1,8 @@
+/**
+ * useVault — core vault state management, including folder tree, file watcher
+ * registration, and workspace path tracking via IPC.
+ */
+
 import { ref } from 'vue';
 import type { FileInfo, FolderInfo } from '../../types/electron';
 

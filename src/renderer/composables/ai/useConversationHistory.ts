@@ -1,3 +1,7 @@
+/**
+ * useConversationHistory — persists and navigates LLM conversation sessions via IPC.
+ */
+
 import { ref, nextTick } from 'vue';
 import type { Ref } from 'vue';
 import type { AiStatus, ConversationMeta } from '../../types/ai';

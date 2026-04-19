@@ -1,6 +1,8 @@
-// useAudioRecorder — reactive recording state and lifecycle.
-// Owns: MediaRecorder setup, stream cleanup, duration timer, saving to vault.
-// Does NOT own: audio encoding (src/utils/audio.ts), UI rendering (AudioRecorder.vue).
+/**
+ * useAudioRecorder — reactive recording state and lifecycle.
+ * Owns: MediaRecorder setup, stream cleanup, duration timer, saving to vault.
+ * Does NOT own: audio encoding (utils/audio.ts), UI rendering (AudioRecorder.vue).
+ */
 
 import { ref, computed, onUnmounted } from 'vue';
 import { convertWebMToWav, arrayBufferToBase64 } from '../utils/audio';

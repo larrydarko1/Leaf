@@ -1,19 +1,22 @@
-// Electron Main Process — Leaf note-taking app
-// Responsibilities:
-//   1. Create and manage the BrowserWindow
-//   2. Register a custom local-file protocol (leaf://) so the renderer can
-//      load images/audio/video without disabling webSecurity
-//   3. Grant microphone permission for audio recording
-//   4. Register IPC handlers by delegating to each service module
-//
-// IPC handler ownership:
-//   fs-service           → file:*, folder:*, files:scan, fs:*, dialog:openFolder, dialog:showSaveDialog, file:resolveEmbedPath, file:copyToVault
-//   media-service        → audio:saveRecording, spellcheck:getSuggestions
-//   ai-service           → ai:*
-//   conversation-service → conversations:*
-//   agent-service        → agent:*
-//   hf-download-service  → hf:*
-//   speech-service       → speech:*
+/**
+ * Electron Main Process — Leaf note-taking app.
+ *
+ * Responsibilities:
+ *   1. Create and manage the BrowserWindow
+ *   2. Register a custom local-file protocol (leaf://) so the renderer can
+ *      load images/audio/video without disabling webSecurity
+ *   3. Grant microphone permission for audio recording
+ *   4. Register IPC handlers by delegating to each service module
+ *
+ * IPC handler ownership:
+ *   fs-service           → file:*, folder:*, files:scan, fs:*, dialog:openFolder, dialog:showSaveDialog, file:resolveEmbedPath, file:copyToVault
+ *   media-service        → audio:saveRecording, spellcheck:getSuggestions
+ *   ai-service           → ai:*
+ *   conversation-service → conversations:*
+ *   agent-service        → agent:*
+ *   hf-download-service  → hf:*
+ *   speech-service       → speech:*
+ */
 
 import { app, BrowserWindow, ipcMain, shell, Menu, screen, protocol, net, session, clipboard } from 'electron';
 import path from 'path';

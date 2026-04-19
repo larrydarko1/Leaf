@@ -1,3 +1,7 @@
+/**
+ * useAudioPlayer — reactive audio playback state, seeking, and volume control.
+ */
+
 import { ref, computed } from 'vue';
 
 export function useAudioPlayer() {

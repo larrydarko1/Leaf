@@ -1,8 +1,7 @@
-// Conversation Service - Persists LLM chat conversations as JSON files
-// Conversations are stored in the app's userData directory:
-//   macOS: ~/Library/Application Support/Leaf/conversations/
-//   Windows: %APPDATA%/Leaf/conversations/
-//   Linux: ~/.config/Leaf/conversations/
+/**
+ * Conversation Service — persists LLM chat conversations as JSON files.
+ * Stored in the app's userData directory (e.g. ~/Library/Application Support/Leaf/conversations/).
+ */
 
 import type { IpcMain } from 'electron';
 import path from 'path';

@@ -1,4 +1,3 @@
-// Type definitions for Electron API
 import type {
     AiListModelsResult,
     AiLoadResult,

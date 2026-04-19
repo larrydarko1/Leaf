@@ -1,3 +1,8 @@
+/**
+ * useContextMenu — positions a context menu within viewport bounds
+ * and manages click-outside dismissal.
+ */
+
 import { ref, watch, nextTick, onUnmounted } from 'vue';
 
 export function useContextMenu(

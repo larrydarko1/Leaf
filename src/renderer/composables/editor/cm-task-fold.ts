@@ -1,3 +1,8 @@
+/**
+ * cm-task-fold — CodeMirror 6 extension that folds completed task items
+ * in markdown documents.
+ */
+
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 import { type EditorState, type Range } from '@codemirror/state';
 import { codeFolding, foldEffect, unfoldEffect, foldedRanges, foldService } from '@codemirror/language';

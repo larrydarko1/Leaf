@@ -1,15 +1,11 @@
+/**
+ * useNotePersistence — manages note content state, file loading/saving,
+ * and auto-save scheduling.
+ */
+
 import { ref } from 'vue';
 import type { FileInfo } from '../../types/electron';
 
-/**
- * Manages note content state, file loading/saving, and auto-save scheduling.
- *
- * @param getFile        - getter for the current FileInfo prop
- * @param isMarkdownFile - getter returning true when the file is markdown
- * @param resolveEmbeds  - call to re-resolve ![[embed]] links after content changes
- * @param onSave         - called after a successful write (emit wrapper)
- * @param onContentChanged - called when unsaved-changes state changes (emit wrapper)
- */
 export function useNotePersistence(
     getFile: () => FileInfo | null,
     isMarkdownFile: () => boolean,

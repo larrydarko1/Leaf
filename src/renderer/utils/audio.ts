@@ -1,5 +1,7 @@
-// Pure audio encoding utilities — no Vue, no Electron, no side effects.
-// Can be unit-tested with plain Node/jsdom.
+/**
+ * Pure audio encoding utilities — no Vue, no Electron, no side effects.
+ * Can be unit-tested with plain Node/jsdom.
+ */
 
 /**
  * Decode a WebM/Opus Blob and re-encode it as a 16-bit PCM WAV ArrayBuffer.

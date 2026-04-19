@@ -1,3 +1,8 @@
+/**
+ * useTextEditing — manages inline text creation and editing on the drawing canvas,
+ * including overlay positioning and commit logic.
+ */
+
 import { ref, computed, nextTick } from 'vue';
 import type { Ref } from 'vue';
 import type { CanvasElement, StrokeStyle } from '../../types/drawing';
@@ -36,7 +41,7 @@ export function useTextEditing(
     saveToHistory: () => void,
     scheduleAutoSave: () => void,
 ) {
-    // ================= State =================
+    // State
 
     const textEditing = ref(false);
     const textValue = ref('');
@@ -47,7 +52,7 @@ export function useTextEditing(
     const textEditFontSize = ref(20);
     const textEditColor = ref('');
 
-    // ================= Computed =================
+    // Computed
 
     const textOverlayStyle = computed(() => {
         const screen = worldToScreen(textWorldPos.value.x, textWorldPos.value.y);
@@ -76,7 +81,7 @@ export function useTextEditing(
         return style;
     });
 
-    // ================= Entry Points =================
+    // Entry points
 
     function startNewText(wx: number, wy: number) {
         selectedId.value = null;
@@ -215,7 +220,7 @@ export function useTextEditing(
         renderScene();
     }
 
-    // ================= Double-click handler =================
+    // Double-click handler
 
     function onDoubleClick(e: MouseEvent) {
         const rect = canvas.value!.getBoundingClientRect();

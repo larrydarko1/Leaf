@@ -1,3 +1,7 @@
+/**
+ * useFileSelection — tracks the active file and multi-select state in the vault.
+ */
+
 import { ref } from 'vue';
 import type { FileInfo } from '../../types/electron';
 

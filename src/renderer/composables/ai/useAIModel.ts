@@ -1,3 +1,7 @@
+/**
+ * useAIModel — manages model discovery, loading/unloading, and status polling via IPC.
+ */
+
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import type { AiModelInfo, AiStatus } from '../../types/ai';
 

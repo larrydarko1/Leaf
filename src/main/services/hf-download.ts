@@ -1,6 +1,7 @@
-// Hugging Face Model Download Service
-// Allows searching and downloading GGUF models directly from Hugging Face
-// into the local ~/leaf-models/ directory.
+/**
+ * Hugging Face Model Download Service — searches and downloads GGUF models
+ * from Hugging Face into the local ~/leaf-models/ directory.
+ */
 
 import type { IpcMain, BrowserWindow } from 'electron';
 import https from 'https';

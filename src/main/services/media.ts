@@ -1,5 +1,6 @@
-// Media Service
-// Owns IPC handlers for audio recording saves and spellcheck suggestions.
+/**
+ * Media Service — owns IPC handlers for audio recording saves and spellcheck suggestions.
+ */
 
 import type { IpcMain } from 'electron';
 import path from 'path';

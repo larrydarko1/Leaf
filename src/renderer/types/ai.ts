@@ -1,4 +1,3 @@
-// AI / LLM Types
 export interface AiModelInfo {
     name: string;
     path: string;

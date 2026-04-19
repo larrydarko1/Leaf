@@ -1,3 +1,8 @@
+/**
+ * useDictation — streams microphone audio to the main-process Whisper service
+ * and inserts transcribed text into the editor.
+ */
+
 import { ref } from 'vue';
 import type { Ref } from 'vue';
 

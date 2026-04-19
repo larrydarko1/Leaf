@@ -1,3 +1,7 @@
+/**
+ * useHfDownload — searches Hugging Face for GGUF models and manages downloads via IPC.
+ */
+
 import { ref, onMounted, onUnmounted } from 'vue';
 import type { HfSearchResult, HfRepoFile, HfModelInfo, HfDownloadProgress, HfSortOption } from '../../types/hf';
 

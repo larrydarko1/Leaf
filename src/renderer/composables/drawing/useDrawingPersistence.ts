@@ -1,3 +1,8 @@
+/**
+ * useDrawingPersistence — auto-saves drawing state to disk, loads from file,
+ * and migrates legacy v1 stroke format to v2 elements.
+ */
+
 import { ref, nextTick } from 'vue';
 import type { Ref } from 'vue';
 import type { CanvasElement, DrawingDataV2, ElementType } from '../../types/drawing';
@@ -21,7 +26,7 @@ export function useDrawingPersistence(
     const isSaving = ref(false);
     let autoSaveTimeout: number | null = null;
 
-    // ================= Auto-save =================
+    // Auto-save
 
     function scheduleAutoSave() {
         hasUnsavedChanges.value = true;
@@ -45,7 +50,7 @@ export function useDrawingPersistence(
         }, 300);
     }
 
-    // ================= Load =================
+    // Load
 
     function loadDrawing() {
         const content = initialContent();
@@ -83,7 +88,7 @@ export function useDrawingPersistence(
         }
     }
 
-    // ================= Migration =================
+    // Migration
 
     interface V1Stroke {
         tool: string;

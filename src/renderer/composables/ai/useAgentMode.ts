@@ -1,3 +1,8 @@
+/**
+ * useAgentMode — builds the agent system prompt and parses file-edit blocks
+ * from assistant responses.
+ */
+
 import { ref } from 'vue';
 import type { Ref } from 'vue';
 import type { ChatMessage, AgentFileEdit } from '../../types/chat';

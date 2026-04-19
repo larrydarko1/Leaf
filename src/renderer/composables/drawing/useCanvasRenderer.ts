@@ -1,3 +1,8 @@
+/**
+ * useCanvasRenderer — owns the HTML Canvas 2D context, coordinate transforms,
+ * grid/element rendering, and bitmap export.
+ */
+
 import { computed, type Ref, type ComputedRef } from 'vue';
 import type { CanvasElement } from '../../types/drawing';
 
@@ -26,7 +31,7 @@ export function useCanvasRenderer(
     const canvasBg = computed(() => (isDark.value ? '#1e1e1e' : '#ffffff'));
     const gridColor = computed(() => (isDark.value ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'));
 
-    // ================= Canvas Setup =================
+    // Canvas setup
 
     function setupCanvas() {
         if (!canvas.value || !containerEl.value) return;
@@ -51,7 +56,7 @@ export function useCanvasRenderer(
         return canvas.value ? canvas.value.height / dpr : 0;
     }
 
-    // ================= Coordinate Transforms =================
+    // Coordinate transforms
 
     function screenToWorld(sx: number, sy: number) {
         return {
@@ -72,7 +77,7 @@ export function useCanvasRenderer(
         return { x: e.clientX - rect.left, y: e.clientY - rect.top };
     }
 
-    // ================= Rendering =================
+    // Rendering
 
     function renderScene() {
         if (!ctx || !canvas.value) return;
@@ -562,7 +567,7 @@ export function useCanvasRenderer(
         ctx.restore();
     }
 
-    // ================= Export =================
+    // Export
 
     function exportToBlob(opts: {
         elements: CanvasElement[];

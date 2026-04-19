@@ -1,5 +1,7 @@
-// Allowed file extension sets for vault scanning — pure data, no dependencies.
-// Used by fs-service.ts to decide which files to index.
+/**
+ * Allowed file extension sets for vault scanning — pure data, no dependencies.
+ * Used by fs-service to decide which files to index.
+ */
 
 const TEXT_EXTENSIONS = ['.txt', '.md'];
 

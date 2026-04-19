@@ -1,3 +1,8 @@
+/**
+ * useEditorDrop — handles file drag-and-drop onto the editor, inserting
+ * markdown embed syntax for images, audio, video, and PDFs.
+ */
+
 import { ref } from 'vue';
 import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS, AUDIO_EXTENSIONS, PDF_EXTENSIONS } from '../../utils/fileTypes';
 import type { Ref, ShallowRef } from 'vue';

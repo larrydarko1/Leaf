@@ -1,3 +1,7 @@
+/**
+ * useEditorTabs — manages open file tabs with localStorage persistence.
+ */
+
 import { ref, computed } from 'vue';
 import type { FileInfo } from '../../types/electron';
 

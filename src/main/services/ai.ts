@@ -1,6 +1,8 @@
-// AI Service - Manages local LLM inference via node-llama-cpp
-// This runs in the Electron main process and handles model loading,
-// unloading, and chat inference with streaming token support.
+/**
+ * AI Service — manages local LLM inference via node-llama-cpp.
+ * Runs in the Electron main process; handles model loading, unloading,
+ * and chat inference with streaming token support.
+ */
 
 import type { IpcMain, BrowserWindow } from 'electron';
 import { shell } from 'electron';

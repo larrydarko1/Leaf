@@ -1,7 +1,7 @@
-// MIME type maps — pure data, no dependencies.
-// Used by:
-//   main.ts         → MIME_MAP  (leaf:// protocol handler)
-//   fs-service.ts   → IMAGE_MIMETYPES, AUDIO_MIMETYPES  (file:readImage, file:readAudio)
+/**
+ * MIME type maps — pure data, no dependencies.
+ * Used by main.ts (leaf:// protocol) and fs-service (file:readImage, file:readAudio).
+ */
 
 const IMAGE_MIMETYPES: Record<string, string> = {
     '.png': 'image/png',

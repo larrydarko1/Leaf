@@ -1,7 +1,8 @@
-// Speech-to-Text Service - Local Whisper inference via @huggingface/transformers
-// Runs in the Electron main process using onnxruntime-node for native ONNX inference.
-// Model is pre-downloaded and bundled inside the project at models/whisper/.
-// 100% offline — no network calls at runtime.
+/**
+ * Speech-to-Text Service — local Whisper inference via @huggingface/transformers.
+ * Runs in the Electron main process using onnxruntime-node for native ONNX inference.
+ * Model is pre-downloaded and bundled; 100% offline at runtime.
+ */
 
 import type { IpcMain, BrowserWindow } from 'electron';
 import path from 'path';

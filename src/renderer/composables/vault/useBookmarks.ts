@@ -1,3 +1,7 @@
+/**
+ * useBookmarks — persists per-folder file bookmarks in localStorage.
+ */
+
 import { ref, computed } from 'vue';
 
 export function useBookmarks(getCurrentFolder: () => string | null) {

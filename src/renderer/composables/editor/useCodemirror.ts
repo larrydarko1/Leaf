@@ -1,3 +1,8 @@
+/**
+ * useCodemirror — creates and manages a CodeMirror 6 markdown editor instance
+ * with extensions, themes, and lifecycle cleanup.
+ */
+
 import { onUnmounted, watch, type Ref, shallowRef, nextTick } from 'vue';
 import { EditorState, type Extension } from '@codemirror/state';
 import { EditorView, keymap, placeholder as cmPlaceholder, drawSelection } from '@codemirror/view';

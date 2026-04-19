@@ -1,3 +1,7 @@
+/**
+ * useCodeEditor — creates a read-only CodeMirror 6 instance for code file viewing.
+ */
+
 import { onUnmounted, watch, type Ref, shallowRef, nextTick } from 'vue';
 import { EditorState, type Extension } from '@codemirror/state';
 import {

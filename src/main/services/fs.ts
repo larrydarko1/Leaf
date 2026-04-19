@@ -1,7 +1,8 @@
-// File System Service
-// Owns all vault-level file/folder IPC handlers.
-// Pattern: export a register(ipcMain, getMainWindow) function that wires up
-// its own handlers, keeping main.ts focused on app bootstrap only.
+/**
+ * File System Service — owns all vault-level file/folder IPC handlers.
+ * Exports a register function that wires up handlers, keeping main.ts
+ * focused on app bootstrap only.
+ */
 
 import type { IpcMain, BrowserWindow } from 'electron';
 import { dialog, shell } from 'electron';

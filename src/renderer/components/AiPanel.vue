@@ -156,9 +156,7 @@ const tokenUsagePercent = computed(() => {
     return Math.min(100, Math.round((conversationTokenCount.value / status.value.contextSize) * 100));
 });
 
-// ============================
 // Orchestration wrappers
-// ============================
 
 async function loadSelectedModel() {
     const result = await model.loadModel();

@@ -1,3 +1,8 @@
+/**
+ * useDrawingElements — manages the canvas element array, bounds calculation,
+ * hit testing, and element type classification.
+ */
+
 import { ref, computed } from 'vue';
 import type { CanvasElement, ElementType } from '../../types/drawing';
 
@@ -35,7 +40,7 @@ export function useDrawingElements() {
 
     const selectedElements = computed(() => elements.value.filter((el) => selectedIds.value.has(el.id)));
 
-    // ================= Helpers =================
+    // Helpers
 
     function isShapeElement(el: CanvasElement): boolean {
         return [
@@ -54,7 +59,7 @@ export function useDrawingElements() {
         ].includes(el.type);
     }
 
-    // ================= Bounds =================
+    // Bounds
 
     function getElementBounds(el: CanvasElement) {
         if (el.type === 'freedraw' && el.points && el.points.length > 0) {
@@ -94,7 +99,7 @@ export function useDrawingElements() {
         };
     }
 
-    // ================= Hit Testing =================
+    // Hit testing
 
     function distanceToSegment(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {
         const dx = x2 - x1,
@@ -151,7 +156,7 @@ export function useDrawingElements() {
         return null;
     }
 
-    // ================= Element Type Checks =================
+    // Element type checks
 
     const shapeTools: Array<CanvasElement['type'] | 'select' | 'hand' | 'eraser' | 'freedraw' | 'text'> = [
         'rectangle',

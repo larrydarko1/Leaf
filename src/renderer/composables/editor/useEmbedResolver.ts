@@ -1,3 +1,8 @@
+/**
+ * useEmbedResolver — resolves vault-relative media paths to data URIs via IPC,
+ * with in-memory caching.
+ */
+
 import { ref } from 'vue';
 import { isImageFile as checkImage, isVideoFile as checkVideo, isAudioFile as checkAudio } from '../../utils/fileTypes';
 

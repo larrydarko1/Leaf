@@ -1,5 +1,7 @@
-// Preload script - Bridge between frontend (Vue) and backend (Node.js)
-// This exposes safe APIs to the renderer process via contextBridge.
+/**
+ * Preload script — bridge between frontend (Vue) and backend (Node.js).
+ * Exposes safe APIs to the renderer process via contextBridge.
+ */
 
 import { contextBridge, ipcRenderer } from 'electron';
 
