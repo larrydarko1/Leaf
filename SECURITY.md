@@ -6,7 +6,7 @@ Leaf is a **desktop-only application** with local-first architecture, which prov
 
 - ✅ **No server-side code** - No backend vulnerabilities
 - ✅ **Local-only storage** - Notes stored as plain text files on user's computer
-- ✅ **No network requests** - No data transmission risks
+- ⚠️ **Limited network requests** - Network is only used to download AI models from Hugging Face on demand; no note data is ever transmitted
 - ✅ **No encryption needed** - Files are standard text files accessible to user
 - ✅ **No telemetry** - No tracking or analytics
 - ✅ **Open source** - Fully auditable code
@@ -14,6 +14,7 @@ Leaf is a **desktop-only application** with local-first architecture, which prov
 ## Data Privacy
 
 Your notes are stored in the vault folder you choose. App settings are stored locally at:
+
 - **macOS:** `~/Library/Application Support/leaf/`
 - **Windows:** `%APPDATA%/leaf/`
 - **Linux:** `~/.config/leaf/`
@@ -28,6 +29,7 @@ If you discover a security vulnerability in the Electron app or client-side code
 2. Or emailing the maintainer directly (for sensitive issues)
 
 Please include:
+
 - Description of the vulnerability
 - Steps to reproduce
 - Potential impact

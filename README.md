@@ -49,7 +49,7 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 
 ### Privacy & Storage
 
-- **100% Offline** - Works completely without internet connection (AI, dictation, and notes all run locally)
+- **Offline-first** - AI inference, dictation, and notes all run locally; internet is only used to download models on demand
 - **Local-only** - Notes never leave your device
 - **User-accessible files** - Direct access to your vault folder
 - **No database** - Plain text files you can open anywhere
@@ -68,7 +68,7 @@ Leaf is built with privacy and security as core principles:
 ### Privacy Guarantees
 
 - **No telemetry** - We don't collect any usage data, analytics, or crash reports
-- **No network requests** - The app works 100% offline and makes zero external connections
+- **Minimal network requests** - The only external connection is optional model downloads from Hugging Face; no note data or usage data is ever transmitted
 - **No cloud sync** - Your notes never leave your device unless you explicitly copy them
 - **No accounts** - No sign-ups, logins, or user tracking of any kind
 - **Local AI** - AI inference runs entirely on your hardware; no data is sent to any server
