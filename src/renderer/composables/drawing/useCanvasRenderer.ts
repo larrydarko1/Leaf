@@ -562,6 +562,68 @@ export function useCanvasRenderer(
         ctx.restore();
     }
 
+    // ================= Export =================
+
+    function exportToBlob(opts: {
+        elements: CanvasElement[];
+        withBackground: boolean;
+        scale: number;
+        darkMode: boolean;
+        padding?: number;
+    }): Promise<Blob | null> {
+        const exportElements = opts.elements;
+        if (exportElements.length === 0) return Promise.resolve(null);
+
+        const pad = opts.padding ?? 20;
+        const scale = opts.scale;
+
+        // Calculate tight bounding box of all export elements
+        let minX = Infinity,
+            minY = Infinity,
+            maxX = -Infinity,
+            maxY = -Infinity;
+        for (const el of exportElements) {
+            const bounds = getElementBounds(el);
+            minX = Math.min(minX, bounds.x);
+            minY = Math.min(minY, bounds.y);
+            maxX = Math.max(maxX, bounds.x + bounds.width);
+            maxY = Math.max(maxY, bounds.y + bounds.height);
+        }
+
+        const width = Math.ceil((maxX - minX + pad * 2) * scale);
+        const height = Math.ceil((maxY - minY + pad * 2) * scale);
+
+        const offscreen = document.createElement('canvas');
+        offscreen.width = width;
+        offscreen.height = height;
+        const offCtx = offscreen.getContext('2d')!;
+
+        // Background
+        if (opts.withBackground) {
+            offCtx.fillStyle = opts.darkMode ? '#1e1e1e' : '#ffffff';
+            offCtx.fillRect(0, 0, width, height);
+        }
+
+        // Set up world-space transform: scale then translate so bounding box starts at padding
+        offCtx.scale(scale, scale);
+        offCtx.translate(pad - minX, pad - minY);
+
+        // Temporarily swap the renderer's ctx so drawElement uses the offscreen context
+        const savedCtx = ctx;
+        ctx = offCtx;
+
+        for (const el of exportElements) {
+            drawElement(el);
+        }
+
+        // Restore original context
+        ctx = savedCtx;
+
+        return new Promise((resolve) => {
+            offscreen.toBlob((blob) => resolve(blob), 'image/png');
+        });
+    }
+
     return {
         setupCanvas,
         handleResize,
@@ -572,5 +634,6 @@ export function useCanvasRenderer(
         cssWidth,
         cssHeight,
         getCtx: () => ctx,
+        exportToBlob,
     };
 }

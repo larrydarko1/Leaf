@@ -137,6 +137,31 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
         return result.canceled ? null : result.filePaths[0];
     });
 
+    // Save-file dialog (for exporting images, etc.)
+    ipc.handle(
+        'dialog:showSaveDialog',
+        async (_event, options: { defaultPath?: string; filters?: { name: string; extensions: string[] }[] }) => {
+            const win = getMainWindow();
+            const result = await dialog.showSaveDialog(win!, {
+                defaultPath: options.defaultPath,
+                filters: options.filters,
+            });
+            return result.canceled ? null : result.filePath;
+        },
+    );
+
+    // Write binary file from base64 data
+    ipc.handle('file:writeBuffer', async (_event, filePath: string, base64Data: string) => {
+        if (typeof filePath !== 'string' || typeof base64Data !== 'string')
+            return { success: false, error: 'Invalid arguments' };
+        try {
+            await fs.writeFile(filePath, Buffer.from(base64Data, 'base64'));
+            return { success: true };
+        } catch (error) {
+            return { success: false, error: (error as Error).message };
+        }
+    });
+
     // Scan vault — this also sets the active vault root for boundary checks
     ipc.handle('files:scan', async (_event, folderPath: string) => {
         if (typeof folderPath !== 'string') return { success: false, error: 'Invalid path' };

@@ -135,6 +135,11 @@ export interface ElectronAPI {
     isElectron: () => boolean;
     openExternal: (url: string) => Promise<boolean>;
     openFolderDialog: () => Promise<string | null>;
+    showSaveDialog: (options: {
+        defaultPath?: string;
+        filters?: { name: string; extensions: string[] }[];
+    }) => Promise<string | null>;
+    writeBuffer: (filePath: string, base64Data: string) => Promise<FileWriteResult>;
     scanFolder: (folderPath: string) => Promise<ScanResult>;
     readFile: (filePath: string) => Promise<FileReadResult>;
     readImage: (filePath: string) => Promise<ImageReadResult>;

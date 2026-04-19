@@ -7,7 +7,7 @@
 //   4. Register IPC handlers by delegating to each service module
 //
 // IPC handler ownership:
-//   fs-service           → file:*, folder:*, files:scan, fs:*, dialog:openFolder, file:resolveEmbedPath, file:copyToVault
+//   fs-service           → file:*, folder:*, files:scan, fs:*, dialog:openFolder, dialog:showSaveDialog, file:resolveEmbedPath, file:copyToVault
 //   media-service        → audio:saveRecording, spellcheck:getSuggestions
 //   ai-service           → ai:*
 //   conversation-service → conversations:*

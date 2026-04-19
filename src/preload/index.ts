@@ -11,6 +11,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     // Dialog operations
     openFolderDialog: () => ipcRenderer.invoke('dialog:openFolder'),
+    showSaveDialog: (options: { defaultPath?: string; filters?: { name: string; extensions: string[] }[] }) =>
+        ipcRenderer.invoke('dialog:showSaveDialog', options),
+
+    // Binary file write
+    writeBuffer: (filePath: string, base64Data: string) => ipcRenderer.invoke('file:writeBuffer', filePath, base64Data),
 
     // File system operations
     scanFolder: (folderPath: string) => ipcRenderer.invoke('files:scan', folderPath),
