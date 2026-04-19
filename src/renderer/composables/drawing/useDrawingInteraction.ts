@@ -10,6 +10,7 @@ interface DefaultStyle {
     strokeWidth: number;
     strokeStyle: StrokeStyle;
     borderRadius: number;
+    fontSize: number;
 }
 
 export function useDrawingInteraction(
@@ -64,7 +65,7 @@ export function useDrawingInteraction(
     const dragStartWorld = ref({ x: 0, y: 0 });
     const dragStartScreen = ref({ x: 0, y: 0 });
     const dragHandle = ref<string | null>(null);
-    const dragOriginal = ref<{ x: number; y: number; width: number; height: number } | null>(null);
+    const dragOriginal = ref<{ x: number; y: number; width: number; height: number; fontSize?: number } | null>(null);
     const erasedIds = ref<string[]>([]);
 
     // Keyboard modifier state
@@ -116,7 +117,7 @@ export function useDrawingInteraction(
                 const el = elements.value.find((e) => e.id === handleHit.elementId)!;
                 dragAction.value = 'resize';
                 dragHandle.value = handleHit.handle;
-                dragOriginal.value = { x: el.x, y: el.y, width: el.width, height: el.height };
+                dragOriginal.value = { x: el.x, y: el.y, width: el.width, height: el.height, fontSize: el.fontSize };
                 return;
             }
 
@@ -352,7 +353,7 @@ export function useDrawingInteraction(
         handle: string,
         wx: number,
         wy: number,
-        orig: { x: number; y: number; width: number; height: number },
+        orig: { x: number; y: number; width: number; height: number; fontSize?: number },
     ) {
         if (el.type === 'line' || el.type === 'arrow') {
             if (handle === 'start') {
@@ -394,6 +395,33 @@ export function useDrawingInteraction(
                 el.width = wx - ox;
                 el.height = wy - oy;
                 break;
+        }
+
+        // Scale font size proportionally for text elements
+        if ((el.type === 'text' || el.text) && orig.fontSize) {
+            const scaleW = ow !== 0 ? Math.abs(el.width) / Math.abs(ow) : 1;
+            const scaleH = oh !== 0 ? Math.abs(el.height) / Math.abs(oh) : 1;
+            const scale = Math.max(scaleW, scaleH);
+            const newFs = Math.max(8, Math.round(orig.fontSize * scale));
+            el.fontSize = newFs;
+
+            // Recalculate text bounds to match the new font size
+            if (el.type === 'text' && el.text) {
+                const ctx = canvas.value?.getContext('2d');
+                if (ctx) {
+                    ctx.save();
+                    ctx.font = `${newFs}px "Helvetica", "Segoe UI", sans-serif`;
+                    const lines = el.text.split('\n');
+                    const lh = newFs * 1.3;
+                    let maxW = 0;
+                    for (const line of lines) {
+                        maxW = Math.max(maxW, ctx.measureText(line).width);
+                    }
+                    ctx.restore();
+                    el.width = maxW;
+                    el.height = lines.length * lh;
+                }
+            }
         }
     }
 

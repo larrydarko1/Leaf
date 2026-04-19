@@ -171,7 +171,15 @@ const defaultStyle = ref({
     strokeWidth: 2,
     strokeStyle: 'solid' as StrokeStyle,
     borderRadius: 0,
+    fontSize: 20,
 });
+
+const fontSizeOptions = [
+    { label: 'S', value: 16 },
+    { label: 'M', value: 20 },
+    { label: 'L', value: 28 },
+    { label: 'XL', value: 36 },
+];
 
 const borderRadiusOptions = [
     { label: 'Sharp', value: 0, icon: 'sharp' },
@@ -355,6 +363,15 @@ const activeFillColor = computed(() => selectedElement.value?.fillColor ?? defau
 const activeStrokeWidth = computed(() => selectedElement.value?.strokeWidth ?? defaultStyle.value.strokeWidth);
 const activeStrokeStyle = computed(() => selectedElement.value?.strokeStyle ?? defaultStyle.value.strokeStyle);
 const activeBorderRadius = computed(() => selectedElement.value?.borderRadius ?? defaultStyle.value.borderRadius);
+const activeFontSize = computed(() => selectedElement.value?.fontSize ?? defaultStyle.value.fontSize);
+
+const showFontSizeOption = computed(() => {
+    const textTypes = ['text'];
+    if (selectedElement.value) {
+        return textTypes.includes(selectedElement.value.type) || !!selectedElement.value.text;
+    }
+    return currentTool.value === 'text';
+});
 
 const showRoundnessOption = computed(() => {
     const roundableTypes = ['rectangle', 'diamond', 'triangle', 'hexagon', 'parallelogram'];
@@ -424,12 +441,34 @@ function selectTool(tool: ToolType) {
 // ================= Properties =================
 
 // Style properties that can be set on both elements and the default style
-type StyleKey = 'strokeColor' | 'fillColor' | 'strokeWidth' | 'strokeStyle' | 'borderRadius';
+type StyleKey = 'strokeColor' | 'fillColor' | 'strokeWidth' | 'strokeStyle' | 'borderRadius' | 'fontSize';
 
 function setProperty(prop: StyleKey, value: string | number) {
     // Update selected element if any
     if (selectedElement.value) {
         selectedElement.value[prop] = value as never;
+
+        // When fontSize changes on a text element, recalculate bounds to fit
+        if (prop === 'fontSize' && typeof value === 'number') {
+            const el = selectedElement.value;
+            if (el.type === 'text' && el.text) {
+                const ctx = getCtx();
+                if (ctx) {
+                    ctx.save();
+                    ctx.font = `${value}px "Helvetica", "Segoe UI", sans-serif`;
+                    const lines = el.text.split('\n');
+                    const lh = value * 1.3;
+                    let maxW = 0;
+                    for (const line of lines) {
+                        maxW = Math.max(maxW, ctx.measureText(line).width);
+                    }
+                    ctx.restore();
+                    el.width = maxW;
+                    el.height = lines.length * lh;
+                }
+            }
+        }
+
         saveToHistory();
         scheduleAutoSave();
         renderScene();
@@ -856,6 +895,24 @@ function setProperty(prop: StyleKey, value: string | number) {
                             >
                                 <rect x="2" y="2" width="16" height="16" rx="8" />
                             </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Font Size (text elements) -->
+                <div v-if="showFontSizeOption" class="prop-section">
+                    <div class="prop-label">
+                        Font size <span class="font-size-value">{{ activeFontSize }}px</span>
+                    </div>
+                    <div class="font-size-row">
+                        <button
+                            v-for="fs in fontSizeOptions"
+                            :key="fs.value"
+                            class="font-size-btn"
+                            :class="{ active: activeFontSize === fs.value }"
+                            @click="setProperty('fontSize', fs.value)"
+                        >
+                            {{ fs.label }}
                         </button>
                     </div>
                 </div>
@@ -1400,6 +1457,44 @@ canvas {
         background: var(--accent-color-alpha, rgba(62, 180, 137, 0.12));
         border-color: var(--accent-color, #3eb489);
     }
+}
+
+.font-size-row {
+    display: flex;
+    gap: 4px;
+}
+
+.font-size-btn {
+    flex: 1;
+    height: 32px;
+    border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text1, #1d1d1f);
+    font-size: 12px;
+    font-weight: 500;
+    transition:
+        background 0.12s,
+        border-color 0.12s;
+
+    &:hover {
+        background: var(--bg-hover, #f0f0f0);
+    }
+
+    &.active {
+        background: var(--accent-color-alpha, rgba(62, 180, 137, 0.12));
+        border-color: var(--accent-color, #3eb489);
+    }
+}
+
+.font-size-value {
+    font-weight: 400;
+    opacity: 0.6;
+    margin-left: 4px;
 }
 
 // ================= Text Overlay =================

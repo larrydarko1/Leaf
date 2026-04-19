@@ -8,6 +8,7 @@ interface DefaultStyle {
     strokeWidth: number;
     strokeStyle: StrokeStyle;
     borderRadius: number;
+    fontSize: number;
 }
 
 export function useTextEditing(
@@ -50,7 +51,7 @@ export function useTextEditing(
 
     const textOverlayStyle = computed(() => {
         const screen = worldToScreen(textWorldPos.value.x, textWorldPos.value.y);
-        const fontSize = (textEditFontSize.value || 20) * zoom.value;
+        const fontSize = (textEditFontSize.value || defaultStyle.value.fontSize) * zoom.value;
         const style: Record<string, string> = {
             fontSize: fontSize + 'px',
             lineHeight: fontSize * 1.3 + 'px',
@@ -85,7 +86,7 @@ export function useTextEditing(
         editingElementId.value = null;
         textEditCentered.value = false;
         textEditBounds.value = null;
-        textEditFontSize.value = 20;
+        textEditFontSize.value = defaultStyle.value.fontSize;
         textEditColor.value = defaultStyle.value.strokeColor;
         nextTick(() => textInputEl.value?.focus());
     }
@@ -98,7 +99,7 @@ export function useTextEditing(
         editingElementId.value = el.id;
         textEditCentered.value = false;
         textEditBounds.value = null;
-        textEditFontSize.value = el.fontSize || 20;
+        textEditFontSize.value = el.fontSize || defaultStyle.value.fontSize;
         textEditColor.value = el.strokeColor;
         nextTick(() => textInputEl.value?.focus());
     }
@@ -165,7 +166,7 @@ export function useTextEditing(
         // Measure text dimensions using the canvas context
         const ctx = getCtx();
         if (!ctx) return;
-        const fs = textEditFontSize.value || 20;
+        const fs = textEditFontSize.value || defaultStyle.value.fontSize;
         ctx.save();
         ctx.font = `${fs}px "Helvetica", "Segoe UI", sans-serif`;
         const lines = txt.split('\n');
