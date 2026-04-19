@@ -778,7 +778,7 @@ function setProperty(prop: StyleKey, value: string | number) {
 
         <!-- Properties Panel (left) -->
         <transition name="panel-fade">
-            <div v-if="shouldShowProperties" class="properties-panel">
+            <div v-if="shouldShowProperties" class="properties-panel" @mousedown.prevent>
                 <!-- Stroke Color -->
                 <div class="prop-section">
                     <div class="prop-label">Stroke</div>
