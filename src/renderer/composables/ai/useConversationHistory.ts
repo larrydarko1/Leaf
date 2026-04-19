@@ -37,7 +37,7 @@ export function useConversationHistory(
             const result = await window.electronAPI.conversationList();
             if (result.success) conversationList.value = result.conversations;
         } catch (error) {
-            console.error('Failed to list conversations:', error);
+            window.electronAPI.log.error('Failed to list conversations:', error);
         }
     }
 
@@ -50,7 +50,7 @@ export function useConversationHistory(
                 currentConversationId.value = result.conversation.id;
             }
         } catch (error) {
-            console.error('Failed to create conversation:', error);
+            window.electronAPI.log.error('Failed to create conversation:', error);
         }
     }
 
@@ -63,7 +63,7 @@ export function useConversationHistory(
         try {
             await window.electronAPI.aiResetChat();
         } catch (error) {
-            console.error('Failed to reset chat:', error);
+            window.electronAPI.log.error('Failed to reset chat:', error);
         }
         messages.value = [];
         currentConversationId.value = null;
@@ -87,7 +87,7 @@ export function useConversationHistory(
                 await window.electronAPI.conversationSave(result.conversation);
             }
         } catch (error) {
-            console.error('Failed to save conversation:', error);
+            window.electronAPI.log.error('Failed to save conversation:', error);
         }
     }
 
@@ -100,7 +100,7 @@ export function useConversationHistory(
                 await window.electronAPI.conversationSave(result.conversation);
             }
         } catch (error) {
-            console.error('Failed to save token count:', error);
+            window.electronAPI.log.error('Failed to save token count:', error);
         }
     }
 
@@ -135,7 +135,7 @@ export function useConversationHistory(
                 showHistory.value = false;
             }
         } catch (error) {
-            console.error('Failed to load conversation:', error);
+            window.electronAPI.log.error('Failed to load conversation:', error);
         }
     }
 
@@ -150,7 +150,7 @@ export function useConversationHistory(
             }
             await refreshConversationList();
         } catch (error) {
-            console.error('Failed to delete conversation:', error);
+            window.electronAPI.log.error('Failed to delete conversation:', error);
         }
     }
 
@@ -174,7 +174,7 @@ export function useConversationHistory(
             await window.electronAPI.conversationRename(id, renameValue.value.trim());
             await refreshConversationList();
         } catch (error) {
-            console.error('Failed to rename conversation:', error);
+            window.electronAPI.log.error('Failed to rename conversation:', error);
         }
         renamingConversationId.value = null;
         renameValue.value = '';

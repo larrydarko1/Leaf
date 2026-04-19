@@ -80,7 +80,7 @@ export function useDrawingPersistence(
             hasUnsavedChanges.value = false;
             renderScene();
         } catch (e) {
-            console.error('Failed to load drawing:', e);
+            window.electronAPI.log.error('Failed to load drawing:', e);
             elements.value = [];
             history.value = [JSON.stringify([])];
             historyIndex.value = 0;

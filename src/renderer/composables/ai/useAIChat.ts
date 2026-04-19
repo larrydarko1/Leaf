@@ -98,7 +98,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
                 if (copiedIndex.value === index) copiedIndex.value = null;
             }, 2000);
         } catch (err) {
-            console.error('Failed to copy:', err);
+            window.electronAPI.log.error('Failed to copy:', err);
         }
     }
 
@@ -153,7 +153,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
                 const result = await window.electronAPI.readFile(activeFile.value.path);
                 if (result.success && result.content) noteContext = result.content;
             } catch (error) {
-                console.error('Failed to read note for context:', error);
+                window.electronAPI.log.error('Failed to read note for context:', error);
             }
         }
         try {
@@ -243,7 +243,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
                 const result = await window.electronAPI.readFile(activeFile.value.path);
                 if (result.success && result.content) noteContext = result.content;
             } catch (error) {
-                console.error('Failed to read note for context:', error);
+                window.electronAPI.log.error('Failed to read note for context:', error);
             }
         }
 
@@ -293,7 +293,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         try {
             await window.electronAPI.aiStopChat();
         } catch (error) {
-            console.error('Failed to stop generation:', error);
+            window.electronAPI.log.error('Failed to stop generation:', error);
         } finally {
             isStreaming.value = false;
             userScrolledUp.value = false;

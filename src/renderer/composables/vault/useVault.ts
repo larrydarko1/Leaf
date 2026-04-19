@@ -31,7 +31,7 @@ export function useVault() {
             });
             await window.electronAPI.watchFolder(folderPath);
         } catch (err) {
-            console.error('Failed to start folder watcher:', err);
+            window.electronAPI.log.error('Failed to start folder watcher:', err);
         }
     }
 
@@ -50,7 +50,7 @@ export function useVault() {
         if (result.success && result.files) {
             return { files: result.files, folders: result.folders ?? [] };
         }
-        console.error('Failed to scan folder:', result.error);
+        window.electronAPI.log.error('Failed to scan folder:', result.error);
         return null;
     }
 
@@ -86,7 +86,7 @@ export function useVault() {
             }
             return null;
         } catch (error) {
-            console.error('Error selecting folder:', error);
+            window.electronAPI.log.error('Error selecting folder:', error);
             return null;
         }
     }
@@ -114,7 +114,7 @@ export function useVault() {
             alert('Failed to create file: ' + result.error);
             return null;
         } catch (error) {
-            console.error('Error creating file:', error);
+            window.electronAPI.log.error('Error creating file:', error);
             alert('Error creating file');
             return null;
         }
@@ -135,7 +135,7 @@ export function useVault() {
             alert('Failed to create drawing: ' + result.error);
             return null;
         } catch (error) {
-            console.error('Error creating drawing:', error);
+            window.electronAPI.log.error('Error creating drawing:', error);
             alert('Error creating drawing');
             return null;
         }
@@ -150,10 +150,10 @@ export function useVault() {
             if (result.success) {
                 await refreshFiles();
             } else {
-                console.error('Failed to create folder:', result.error);
+                window.electronAPI.log.error('Failed to create folder:', result.error);
             }
         } catch (error) {
-            console.error('Error creating folder:', error);
+            window.electronAPI.log.error('Error creating folder:', error);
         }
     }
 
@@ -168,7 +168,7 @@ export function useVault() {
                 if (oldFileName !== newFileName) {
                     window.electronAPI
                         .updateEmbedRefs(oldFileName, newFileName)
-                        .catch((err) => console.error('Failed to update embed references:', err));
+                        .catch((err) => window.electronAPI.log.error('Failed to update embed references:', err));
                 }
                 await refreshFiles();
                 return files.value.find((f) => f.path === result.newPath) ?? null;
@@ -176,7 +176,7 @@ export function useVault() {
             alert('Failed to rename file: ' + result.error);
             return null;
         } catch (error) {
-            console.error('Error renaming file:', error);
+            window.electronAPI.log.error('Error renaming file:', error);
             alert('Error renaming file');
             return null;
         }
@@ -197,7 +197,7 @@ export function useVault() {
             alert('Failed to rename folder: ' + result.error);
             return null;
         } catch (error) {
-            console.error('Error renaming folder:', error);
+            window.electronAPI.log.error('Error renaming folder:', error);
             alert('Error renaming folder');
             return null;
         }
@@ -211,7 +211,7 @@ export function useVault() {
                     alert(`Failed to delete ${f.name}: ${result.error}`);
                 }
             } catch (error) {
-                console.error('Error deleting file:', error);
+                window.electronAPI.log.error('Error deleting file:', error);
                 alert('Error deleting file');
             }
         }
@@ -230,7 +230,7 @@ export function useVault() {
             alert('Failed to delete folder: ' + result.error);
             return false;
         } catch (error) {
-            console.error('Error deleting folder:', error);
+            window.electronAPI.log.error('Error deleting folder:', error);
             return false;
         }
     }
@@ -252,7 +252,7 @@ export function useVault() {
                     alert(`Failed to move ${name}: ${result.error}`);
                 }
             } catch (error) {
-                console.error('Error moving file:', error);
+                window.electronAPI.log.error('Error moving file:', error);
             }
         }
         if (movedPaths.length > 0) await refreshFiles();
@@ -275,7 +275,7 @@ export function useVault() {
             alert('Failed to move folder: ' + result.error);
             return false;
         } catch (error) {
-            console.error('Error moving folder:', error);
+            window.electronAPI.log.error('Error moving folder:', error);
             return false;
         }
     }

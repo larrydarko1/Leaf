@@ -8,6 +8,7 @@ import type { IpcMain, BrowserWindow } from 'electron';
 import path from 'path';
 import { existsSync } from 'fs';
 import { getWhisperModelDir } from '../lib/paths';
+import { log } from '../lib/logger';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let pipelineFn: any = null;
@@ -43,11 +44,11 @@ async function getTransformers(): Promise<any> {
     ];
     for (const f of requiredFiles) {
         if (!existsSync(f)) {
-            console.error('[Speech] Missing required model file:', f);
+            log.error('[Speech] Missing required model file:', f);
             throw new Error(`Missing model file: ${path.basename(f)}`);
         }
     }
-    console.log('[Speech] All model files verified at:', modelDir);
+    log.info('[Speech] All model files verified at:', modelDir);
 
     pipelineFn = transformers.pipeline;
     return pipelineFn;
@@ -87,12 +88,12 @@ async function initModel(
             });
         }
 
-        console.log('[Speech] Whisper model loaded successfully');
+        log.info('[Speech] Whisper model loaded successfully');
         return { success: true, message: 'Whisper model loaded' };
     } catch (error) {
         isModelLoading = false;
         isModelReady = false;
-        console.error('[Speech] Failed to load Whisper model:', error);
+        log.error('[Speech] Failed to load Whisper model:', error);
 
         if (mainWindow && !mainWindow.isDestroyed()) {
             mainWindow.webContents.send('speech:status', {
@@ -117,7 +118,7 @@ async function transcribe(audioData: number[]): Promise<{ success: boolean; text
         const text = typeof result === 'string' ? result : result.text || '';
         return { success: true, text: text.trim() };
     } catch (error) {
-        console.error('[Speech] Transcription error:', error);
+        log.error('[Speech] Transcription error:', error);
         return { success: false, error: (error as Error).message };
     }
 }

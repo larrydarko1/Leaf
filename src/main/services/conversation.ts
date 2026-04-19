@@ -9,6 +9,7 @@ import fs from 'fs/promises';
 import { existsSync, mkdirSync } from 'fs';
 import { randomUUID } from 'crypto';
 import { assertSafeFileName, assertInsideBoundary } from '../lib/validation';
+import { log } from '../lib/logger';
 
 let conversationsDir: string | null = null;
 
@@ -85,7 +86,7 @@ export async function createConversation(
 
         return { success: true, conversation };
     } catch (error) {
-        console.error('Failed to create conversation:', error);
+        log.error('Failed to create conversation:', error);
         return { success: false, error: (error as Error).message };
     }
 }
@@ -101,7 +102,7 @@ export async function saveConversation(conversation: Conversation): Promise<{ su
 
         return { success: true };
     } catch (error) {
-        console.error('Failed to save conversation:', error);
+        log.error('Failed to save conversation:', error);
         return { success: false, error: (error as Error).message };
     }
 }
@@ -121,7 +122,7 @@ export async function addMessage(
 
         return await saveConversation(conversation);
     } catch (error) {
-        console.error('Failed to add message:', error);
+        log.error('Failed to add message:', error);
         return { success: false, error: (error as Error).message };
     }
 }
@@ -144,7 +145,7 @@ export async function updateLastMessage(
 
         return await saveConversation(conversation);
     } catch (error) {
-        console.error('Failed to update last message:', error);
+        log.error('Failed to update last message:', error);
         return { success: false, error: (error as Error).message };
     }
 }
@@ -180,7 +181,7 @@ export async function listConversations(): Promise<{ success: boolean; conversat
                         tokenCount: conv.tokenCount || 0,
                     });
                 } catch (err) {
-                    console.error(`Failed to read conversation file ${entry.name}:`, err);
+                    log.error(`Failed to read conversation file ${entry.name}:`, err);
                 }
             }
         }
@@ -191,7 +192,7 @@ export async function listConversations(): Promise<{ success: boolean; conversat
 
         return { success: true, conversations };
     } catch (error) {
-        console.error('Failed to list conversations:', error);
+        log.error('Failed to list conversations:', error);
         return { success: false, conversations: [], error: (error as Error).message };
     }
 }
@@ -216,7 +217,7 @@ export async function deleteConversation(id: string): Promise<{ success: boolean
         await fs.unlink(filePath);
         return { success: true };
     } catch (error) {
-        console.error('Failed to delete conversation:', error);
+        log.error('Failed to delete conversation:', error);
         return { success: false, error: (error as Error).message };
     }
 }

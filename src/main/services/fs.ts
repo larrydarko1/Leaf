@@ -13,6 +13,7 @@ import type { FSWatcher } from 'fs';
 import { ALLOWED_EXTENSIONS } from '../lib/extensions';
 import { IMAGE_MIMETYPES, AUDIO_MIMETYPES } from '../lib/mime';
 import { assertInsideBoundary } from '../lib/validation';
+import { log } from '../lib/logger';
 
 let folderWatcher: FSWatcher | null = null;
 
@@ -102,7 +103,7 @@ async function scanFolder(folderPath: string, basePath = folderPath): Promise<Sc
             }
         }
     } catch (error) {
-        console.error('[fs-service] Error scanning folder:', error);
+        log.error('[fs-service] Error scanning folder:', error);
     }
     return { files, folders };
 }
@@ -187,7 +188,7 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
                 const win = getMainWindow();
                 if (win && !win.isDestroyed()) win.webContents.send('fs:changed', { eventType, filename });
             });
-            folderWatcher.on('error', (err) => console.error('[fs-service] Watcher error:', err));
+            folderWatcher.on('error', (err) => log.error('[fs-service] Watcher error:', err));
             return { success: true };
         } catch (error) {
             return { success: false, error: (error as Error).message };

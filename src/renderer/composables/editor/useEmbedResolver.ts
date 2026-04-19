@@ -39,7 +39,7 @@ export function useEmbedResolver(getFile: () => { path: string } | null, getWork
                     const result = await window.electronAPI.resolveEmbedPath(fileName, noteDir, workspacePath);
                     return { fileName, result };
                 } catch (err) {
-                    console.error('Failed to resolve embed:', fileName, err);
+                    window.electronAPI.log.error('Failed to resolve embed:', fileName, err);
                     return null;
                 }
             }),

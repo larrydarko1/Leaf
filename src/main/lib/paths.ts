@@ -6,6 +6,7 @@
 import path from 'path';
 import os from 'os';
 import fs from 'fs';
+import { log } from './logger';
 
 // Directory where the user stores their GGUF models: ~/leaf-models/
 const DEFAULT_MODELS_DIR = path.join(os.homedir(), 'leaf-models');
@@ -24,13 +25,13 @@ function getWhisperModelDir(): string {
     if (process.resourcesPath) {
         const prodPath = path.join(process.resourcesPath, 'models/whisper');
         if (fs.existsSync(prodPath)) {
-            console.log('[paths] Whisper model → production:', prodPath);
+            log.info('[paths] Whisper model → production:', prodPath);
             return prodPath;
         }
-        console.warn('[paths] Production model path not found, falling back to dev:', devPath);
+        log.warn('[paths] Production model path not found, falling back to dev:', devPath);
     }
 
-    console.log('[paths] Whisper model → dev:', devPath);
+    log.info('[paths] Whisper model → dev:', devPath);
     return devPath;
 }
 

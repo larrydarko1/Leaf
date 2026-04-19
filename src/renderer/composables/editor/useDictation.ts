@@ -48,14 +48,14 @@ export function useDictation(content: Ref<string>, onContentChange: () => void) 
                 if (!status.isModelLoaded) {
                     const result = await window.electronAPI.speechInit();
                     if (!result.success) {
-                        console.error('Failed to init Whisper:', result.error);
+                        window.electronAPI.log.error('Failed to init Whisper:', result.error);
                         isDictationLoading.value = false;
                         return;
                     }
                 }
                 whisperModelReady = true;
             } catch (err) {
-                console.error('Failed to init Whisper:', err);
+                window.electronAPI.log.error('Failed to init Whisper:', err);
                 isDictationLoading.value = false;
                 return;
             }
@@ -67,7 +67,7 @@ export function useDictation(content: Ref<string>, onContentChange: () => void) 
                 audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
             });
         } catch (err) {
-            console.error('Microphone access denied:', err);
+            window.electronAPI.log.error('Microphone access denied:', err);
             return;
         }
 
@@ -114,7 +114,7 @@ export function useDictation(content: Ref<string>, onContentChange: () => void) 
                     }
                 }
             } catch (err) {
-                console.error('Transcription error:', err);
+                window.electronAPI.log.error('Transcription error:', err);
             }
         }, 5000);
     }

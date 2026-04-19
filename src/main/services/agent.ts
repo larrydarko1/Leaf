@@ -12,6 +12,7 @@ import { existsSync } from 'fs';
 import { randomUUID } from 'crypto';
 import os from 'os';
 import { assertInsideBoundary } from '../lib/validation';
+import { log } from '../lib/logger';
 
 interface EditRecord {
     editId: string;
@@ -34,7 +35,7 @@ async function ensureBackupDir(): Promise<void> {
     try {
         await fs.mkdir(BACKUP_DIR, { recursive: true });
     } catch (err) {
-        console.error('Failed to create agent backup directory:', err);
+        log.error('Failed to create agent backup directory:', err);
     }
 }
 
@@ -56,7 +57,7 @@ async function readFileForAgent(
         const content = await fs.readFile(resolvedFile, 'utf-8');
         return { success: true, content, filePath: resolvedFile };
     } catch (error) {
-        console.error('Agent readFile error:', error);
+        log.error('Agent readFile error:', error);
         return { success: false, error: (error as Error).message };
     }
 }
@@ -110,7 +111,7 @@ async function proposeEdit(
         };
         pendingEdits.set(editId, editRecord);
 
-        console.log(`Agent: proposed edit ${editId} for ${editRecord.relativePath}`);
+        log.info(`Agent: proposed edit ${editId} for ${editRecord.relativePath}`);
         return {
             success: true,
             editId,
@@ -121,7 +122,7 @@ async function proposeEdit(
             isNewFile,
         };
     } catch (error) {
-        console.error('Agent proposeEdit error:', error);
+        log.error('Agent proposeEdit error:', error);
         return { success: false, error: (error as Error).message };
     }
 }
@@ -140,10 +141,10 @@ async function approveEdit(editId: string): Promise<{ success: boolean; error?: 
         }
 
         pendingEdits.delete(editId);
-        console.log(`Agent: approved edit ${editId} for ${edit.relativePath}`);
+        log.info(`Agent: approved edit ${editId} for ${edit.relativePath}`);
         return { success: true };
     } catch (error) {
-        console.error('Agent approveEdit error:', error);
+        log.error('Agent approveEdit error:', error);
         return { success: false, error: (error as Error).message };
     }
 }
@@ -174,10 +175,10 @@ async function rejectEdit(editId: string): Promise<{ success: boolean; error?: s
         }
 
         pendingEdits.delete(editId);
-        console.log(`Agent: rejected edit ${editId} for ${edit.relativePath} — reverted`);
+        log.info(`Agent: rejected edit ${editId} for ${edit.relativePath} — reverted`);
         return { success: true };
     } catch (error) {
-        console.error('Agent rejectEdit error:', error);
+        log.error('Agent rejectEdit error:', error);
         return { success: false, error: (error as Error).message };
     }
 }
@@ -201,7 +202,7 @@ export async function cleanupAllPendingEdits(): Promise<void> {
         try {
             await rejectEdit(editId);
         } catch (err) {
-            console.error(`Failed to cleanup edit ${editId}:`, err);
+            log.error(`Failed to cleanup edit ${editId}:`, err);
         }
     }
 }

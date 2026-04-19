@@ -6,6 +6,14 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 contextBridge.exposeInMainWorld('electronAPI', {
+    // Logging (routed to electron-log in the main process)
+    log: {
+        error: (...args: unknown[]) => ipcRenderer.send('log:error', ...args),
+        warn: (...args: unknown[]) => ipcRenderer.send('log:warn', ...args),
+        info: (...args: unknown[]) => ipcRenderer.send('log:info', ...args),
+        debug: (...args: unknown[]) => ipcRenderer.send('log:debug', ...args),
+    },
+
     isElectron: () => true,
 
     // Open external URLs in the OS default browser

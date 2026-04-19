@@ -44,10 +44,10 @@ export function useNotePersistence(
                     resolveEmbeds(result.content);
                 }
             } else {
-                console.error('Failed to read file:', result.error);
+                window.electronAPI.log.error('Failed to read file:', result.error);
             }
         } catch (error) {
-            console.error('Error loading file:', error);
+            window.electronAPI.log.error('Error loading file:', error);
         }
     }
 
@@ -86,11 +86,11 @@ export function useNotePersistence(
                 onContentChanged(false);
                 onSave(content.value);
             } else {
-                console.error('Failed to save file:', result.error);
+                window.electronAPI.log.error('Failed to save file:', result.error);
                 alert('Failed to save file: ' + result.error);
             }
         } catch (error) {
-            console.error('Error saving file:', error);
+            window.electronAPI.log.error('Error saving file:', error);
             alert('Error saving file');
         } finally {
             isSaving.value = false;
@@ -109,10 +109,10 @@ export function useNotePersistence(
                 onContentChanged(false);
                 onSave(drawingContent);
             } else {
-                console.error('Failed to save drawing:', result.error);
+                window.electronAPI.log.error('Failed to save drawing:', result.error);
             }
         } catch (error) {
-            console.error('Error saving drawing:', error);
+            window.electronAPI.log.error('Error saving drawing:', error);
         }
     }
 

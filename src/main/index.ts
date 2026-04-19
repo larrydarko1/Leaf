@@ -30,6 +30,7 @@ import * as conversationService from './services/conversation';
 import * as agentService from './services/agent';
 import * as hfDownloadService from './services/hf-download';
 import * as speechService from './services/speech';
+import { log } from './lib/logger';
 
 // ─── Scheme privileges ───────────────────────────────────────────────────────
 // Must be called before app.whenReady(). Tells Chromium the leaf:// scheme
@@ -192,6 +193,12 @@ app.whenReady().then(() => {
     hfDownloadService.register(ipcMain, getMainWindow);
     speechService.register(ipcMain, getMainWindow);
 
+    // Logging — route renderer log calls to electron-log
+    ipcMain.on('log:error', (_event, ...args: unknown[]) => log.error(...args));
+    ipcMain.on('log:warn', (_event, ...args: unknown[]) => log.warn(...args));
+    ipcMain.on('log:info', (_event, ...args: unknown[]) => log.info(...args));
+    ipcMain.on('log:debug', (_event, ...args: unknown[]) => log.debug(...args));
+
     // Clipboard
     ipcMain.handle('clipboard:write', (_event, text: string) => {
         if (typeof text === 'string') clipboard.writeText(text);
@@ -225,5 +232,5 @@ app.on('before-quit', async () => {
 });
 
 process.on('uncaughtException', (error) => {
-    console.error('[main] Uncaught exception:', error);
+    log.error('[main] Uncaught exception:', error);
 });

@@ -131,6 +131,12 @@ export interface AudioSaveResult {
 }
 
 export interface ElectronAPI {
+    log: {
+        error: (...args: unknown[]) => void;
+        warn: (...args: unknown[]) => void;
+        info: (...args: unknown[]) => void;
+        debug: (...args: unknown[]) => void;
+    };
     isElectron: () => boolean;
     openExternal: (url: string) => Promise<boolean>;
     openFolderDialog: () => Promise<string | null>;

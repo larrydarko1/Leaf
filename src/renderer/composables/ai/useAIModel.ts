@@ -85,7 +85,7 @@ export function useAIModel() {
             const result = await window.electronAPI.aiListModels();
             if (result.success) availableModels.value = result.models;
         } catch (error) {
-            console.error('Failed to list models:', error);
+            window.electronAPI.log.error('Failed to list models:', error);
         }
     }
 
@@ -93,7 +93,7 @@ export function useAIModel() {
         try {
             status.value = await window.electronAPI.aiGetStatus();
         } catch (error) {
-            console.error('Failed to get AI status:', error);
+            window.electronAPI.log.error('Failed to get AI status:', error);
         }
     }
 
@@ -127,7 +127,7 @@ export function useAIModel() {
                 selectedModelPath.value = previousModelMatch.value.path;
             }
         } catch (error) {
-            console.error('Failed to unload model:', error);
+            window.electronAPI.log.error('Failed to unload model:', error);
         }
     }
 
@@ -148,7 +148,7 @@ export function useAIModel() {
                         .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
                 );
             } catch (err) {
-                console.error('Failed to restore chat history:', err);
+                window.electronAPI.log.error('Failed to restore chat history:', err);
             }
         }
         return result;
@@ -158,7 +158,7 @@ export function useAIModel() {
         try {
             await window.electronAPI.aiOpenModelsDir();
         } catch (error) {
-            console.error('Failed to open models dir:', error);
+            window.electronAPI.log.error('Failed to open models dir:', error);
         }
     }
 

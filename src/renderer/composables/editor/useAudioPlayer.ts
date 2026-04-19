@@ -101,11 +101,11 @@ export function useAudioPlayer() {
             if (result.success && result.dataUrl) {
                 audioUrl.value = result.dataUrl;
             } else {
-                console.error('Failed to load audio:', result.error);
+                window.electronAPI.log.error('Failed to load audio:', result.error);
                 audioError.value = true;
             }
         } catch (error) {
-            console.error('Error loading audio:', error);
+            window.electronAPI.log.error('Error loading audio:', error);
             audioError.value = true;
         } finally {
             isLoadingAudio.value = false;

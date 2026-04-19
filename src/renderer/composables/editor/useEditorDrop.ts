@@ -101,10 +101,10 @@ export function useEditorDrop(
                         if (result.success && result.fileName) {
                             embedTexts.push(`![[${result.fileName}]]`);
                         } else {
-                            console.error('Failed to copy file to vault:', result.error);
+                            window.electronAPI.log.error('Failed to copy file to vault:', result.error);
                         }
                     } catch (err) {
-                        console.error('Error copying file to vault:', err);
+                        window.electronAPI.log.error('Error copying file to vault:', err);
                     }
                 }
             }

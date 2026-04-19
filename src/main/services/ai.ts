@@ -10,6 +10,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import { existsSync } from 'fs';
 import { DEFAULT_MODELS_DIR } from '../lib/paths';
+import { log } from '../lib/logger';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let llama: any = null;
@@ -33,7 +34,7 @@ async function ensureModelsDir(): Promise<void> {
     try {
         await fs.mkdir(DEFAULT_MODELS_DIR, { recursive: true });
     } catch (err) {
-        console.error('Failed to create models directory:', err);
+        log.error('Failed to create models directory:', err);
     }
 }
 
@@ -130,11 +131,11 @@ async function getModelLoadOptions(modelPath: string): Promise<{ gpuLayers?: num
         const info = await readGgufFileInfo(modelPath);
         const arch = info.metadata?.['general']?.['architecture'] as string | undefined;
         if (arch && CPU_ONLY_ARCHITECTURES.has(arch.toLowerCase())) {
-            console.log(`[ai] Architecture '${arch}' requires CPU-only inference — disabling GPU layers.`);
+            log.info(`[ai] Architecture '${arch}' requires CPU-only inference — disabling GPU layers.`);
             return { gpuLayers: 0 };
         }
     } catch (err) {
-        console.warn('[ai] Could not read GGUF metadata, using default load options:', err);
+        log.warn('[ai] Could not read GGUF metadata, using default load options:', err);
     }
     return {};
 }
@@ -158,7 +159,7 @@ async function loadModel(modelPath: string): Promise<{ success: boolean; modelNa
 
         const llamaInstance = await getLlamaInstance();
 
-        console.log(`Loading model: ${modelPath}`);
+        log.info(`Loading model: ${modelPath}`);
         const loadOptions = await getModelLoadOptions(modelPath);
         model = await llamaInstance.loadModel({ modelPath, ...loadOptions });
         context = await model.createContext();
@@ -169,10 +170,10 @@ async function loadModel(modelPath: string): Promise<{ success: boolean; modelNa
         isModelLoaded = true;
         currentModelPath = modelPath;
 
-        console.log('Model loaded successfully');
+        log.info('Model loaded successfully');
         return { success: true, modelName: path.basename(modelPath) };
     } catch (error) {
-        console.error('Failed to load model:', error);
+        log.error('Failed to load model:', error);
         isModelLoaded = false;
         currentModelPath = null;
         model = null;
@@ -206,7 +207,7 @@ async function unloadModel(): Promise<{ success: boolean; error?: string }> {
 
         return { success: true };
     } catch (error) {
-        console.error('Failed to unload model:', error);
+        log.error('Failed to unload model:', error);
         return { success: false, error: (error as Error).message };
     }
 }
@@ -260,7 +261,7 @@ async function chat(
             if (seq) {
                 const usage = seq.nextTokenIndex / seq.contextSize;
                 if (usage >= COMPACTION_THRESHOLD) {
-                    console.log(`Context usage at ${Math.round(usage * 100)}% — auto-compacting...`);
+                    log.info(`Context usage at ${Math.round(usage * 100)}% — auto-compacting...`);
                     pendingConversationHistory = [...trackedMessages];
                     const { LlamaChatSession } = await import('node-llama-cpp');
                     // Reuse existing sequence to avoid exhausting sequence slots
@@ -271,11 +272,11 @@ async function chat(
                         session = new LlamaChatSession({ contextSequence: context.getSequence() });
                     }
                     compacted = true;
-                    console.log('Auto-compaction complete. Summary will be injected on next prompt.');
+                    log.info('Auto-compaction complete. Summary will be injected on next prompt.');
                 }
             }
         } catch (compactErr) {
-            console.error('Auto-compaction check failed:', compactErr);
+            log.error('Auto-compaction check failed:', compactErr);
         }
 
         isGenerating = false;
@@ -284,7 +285,7 @@ async function chat(
     } catch (error) {
         isGenerating = false;
         currentAbortController = null;
-        console.error('Chat error:', error);
+        log.error('Chat error:', error);
         return { success: false, error: (error as Error).message };
     }
 }
@@ -294,7 +295,7 @@ function stopChat(): { success: boolean; error?: string } {
         currentAbortController.abort();
         isGenerating = false;
         currentAbortController = null;
-        console.log('Generation stopped by user');
+        log.info('Generation stopped by user');
         return { success: true };
     }
     return { success: false, error: 'No generation in progress.' };
@@ -336,10 +337,10 @@ async function restoreChatHistory(
     try {
         pendingConversationHistory = messages;
         trackedMessages = [...messages];
-        console.log(`Stored ${messages.length} messages for context restoration`);
+        log.info(`Stored ${messages.length} messages for context restoration`);
         return { success: true };
     } catch (error) {
-        console.error('Failed to store chat history:', error);
+        log.error('Failed to store chat history:', error);
         return { success: false, error: (error as Error).message };
     }
 }

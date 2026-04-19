@@ -42,7 +42,7 @@ export function useHfDownload(onModelsRefresh: () => Promise<void>) {
             hfSearchResults.value = result.success && result.results ? result.results : [];
             hfHasMore.value = result.hasMore ?? false;
         } catch (error) {
-            console.error('Failed to search HF:', error);
+            window.electronAPI.log.error('Failed to search HF:', error);
             hfSearchResults.value = [];
         } finally {
             hfIsSearching.value = false;
@@ -60,7 +60,7 @@ export function useHfDownload(onModelsRefresh: () => Promise<void>) {
                 hfHasMore.value = result.hasMore ?? false;
             }
         } catch (error) {
-            console.error('Failed to load more HF results:', error);
+            window.electronAPI.log.error('Failed to load more HF results:', error);
         } finally {
             hfIsLoadingMore.value = false;
         }
@@ -84,7 +84,7 @@ export function useHfDownload(onModelsRefresh: () => Promise<void>) {
                 hfModelInfo.value = result.modelInfo || null;
             }
         } catch (error) {
-            console.error('Failed to list HF repo files:', error);
+            window.electronAPI.log.error('Failed to list HF repo files:', error);
         } finally {
             hfIsLoadingFiles.value = false;
         }
@@ -100,11 +100,11 @@ export function useHfDownload(onModelsRefresh: () => Promise<void>) {
                 await onModelsRefresh();
             } else {
                 hfDownloadError.value = result.error || 'Download failed.';
-                console.error('Download failed:', result.error);
+                window.electronAPI.log.error('Download failed:', result.error);
             }
         } catch (error) {
             hfDownloadError.value = 'Failed to download model. Check your connection.';
-            console.error('Failed to download model:', error);
+            window.electronAPI.log.error('Failed to download model:', error);
         } finally {
             hfActiveDownloads.value.delete(file.name);
             hfDownloadProgress.value = null;
@@ -117,7 +117,7 @@ export function useHfDownload(onModelsRefresh: () => Promise<void>) {
             hfActiveDownloads.value.delete(fileName);
             hfDownloadProgress.value = null;
         } catch (error) {
-            console.error('Failed to cancel download:', error);
+            window.electronAPI.log.error('Failed to cancel download:', error);
         }
     }
 

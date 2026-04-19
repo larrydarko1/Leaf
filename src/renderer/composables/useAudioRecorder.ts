@@ -82,7 +82,7 @@ export function useAudioRecorder(getCurrentFolder: () => string | null, onSaved:
             const result = await window.electronAPI.saveAudioRecording(folder, fileName, base64);
             if (result.success && result.path) onSaved(result.path);
         } catch (error) {
-            console.error('[useAudioRecorder] Failed to save recording:', error);
+            window.electronAPI.log.error('[useAudioRecorder] Failed to save recording:', error);
         }
     }
 
