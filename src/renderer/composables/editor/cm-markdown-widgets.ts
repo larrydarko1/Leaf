@@ -380,7 +380,7 @@ function activeLinesSet(state: EditorState): Set<number> {
 
 const highlightRegex = /==((?!=).+?)==/g;
 const embedRegex = /!\[\[([^\]]+)\]\]/g;
-const taskRegex = /^(\s*)- \[([ x/])\] /gim;
+const taskRegex = /^([ \t]*)- \[([ x/])\] /gim;
 
 /**
  * Expand a visible range to full-line boundaries so regex patterns
