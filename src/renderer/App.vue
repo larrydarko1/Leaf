@@ -603,6 +603,7 @@ function toggleAiPanel() {
                         :active-index="editorTabs.activeIndex.value"
                         @switch="handleTabSwitch"
                         @close="editorTabs.closeTab"
+                        @reorder="editorTabs.reorderTab"
                     />
                     <NoteEditor
                         ref="noteEditorRef"

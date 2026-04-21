@@ -235,6 +235,25 @@ export function useEditorTabs() {
         }
     }
 
+    /** Move a tab from one position to another (drag-and-drop reorder). */
+    function reorderTab(from: number, to: number) {
+        if (from === to || from < 0 || to < 0 || from >= tabs.value.length || to >= tabs.value.length) return;
+        const newTabs = [...tabs.value];
+        const [moved] = newTabs.splice(from, 1);
+        newTabs.splice(to, 0, moved);
+        tabs.value = newTabs;
+
+        // Keep the active tab pointing to the same tab after reorder
+        if (activeIndex.value === from) {
+            activeIndex.value = to;
+        } else if (from < to) {
+            if (activeIndex.value > from && activeIndex.value <= to) activeIndex.value--;
+        } else {
+            if (activeIndex.value >= to && activeIndex.value < from) activeIndex.value++;
+        }
+        persistTabs();
+    }
+
     /** Remove all tabs (e.g. on vault close). */
     function clearTabs() {
         tabs.value = [];
@@ -255,6 +274,7 @@ export function useEditorTabs() {
         saveScrollPosition,
         syncTabFiles,
         renameTabFile,
+        reorderTab,
         clearTabs,
         restoreTabs,
         setFolderPath,

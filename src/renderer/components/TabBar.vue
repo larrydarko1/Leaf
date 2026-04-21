@@ -1,5 +1,11 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import type { TabState } from '../composables/editor/useEditorTabs';
+
+// Pre-load a transparent 1x1 GIF so it's decoded before the first drag event
+const TRANSPARENT_GIF = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+const dragGhost = new Image();
+dragGhost.src = TRANSPARENT_GIF;
 
 defineProps<{
     tabs: TabState[];
@@ -9,6 +15,7 @@ defineProps<{
 const emit = defineEmits<{
     switch: [index: number];
     close: [index: number];
+    reorder: [from: number, to: number];
 }>();
 
 function getFileNameWithoutExtension(name: string): string {
@@ -22,6 +29,39 @@ function handleMiddleClick(e: MouseEvent, index: number) {
         emit('close', index);
     }
 }
+
+// --- Drag and drop ---
+const dragStartIndex = ref(-1);
+const dragOverIndex = ref(-1);
+
+function onDragStart(e: DragEvent, index: number) {
+    dragStartIndex.value = index;
+    if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = 'move';
+        // Suppress the default favicon ghost with a pre-loaded transparent image
+        e.dataTransfer.setDragImage(dragGhost, 0, 0);
+    }
+}
+
+function onDragOver(e: DragEvent, index: number) {
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+    dragOverIndex.value = index;
+}
+
+function onDrop(e: DragEvent, index: number) {
+    e.preventDefault();
+    if (dragStartIndex.value !== -1 && dragStartIndex.value !== index) {
+        emit('reorder', dragStartIndex.value, index);
+    }
+    dragStartIndex.value = -1;
+    dragOverIndex.value = -1;
+}
+
+function onDragEnd() {
+    dragStartIndex.value = -1;
+    dragOverIndex.value = -1;
+}
 </script>
 
 <template>
@@ -30,13 +70,24 @@ function handleMiddleClick(e: MouseEvent, index: number) {
             v-for="(tab, i) in tabs"
             :key="tab.file.path"
             class="tab"
-            :class="{ active: i === activeIndex, unsaved: tab.hasUnsavedChanges }"
+            :class="{
+                active: i === activeIndex,
+                unsaved: tab.hasUnsavedChanges,
+                dragging: i === dragStartIndex,
+                'drop-left': i === dragOverIndex && dragStartIndex > i,
+                'drop-right': i === dragOverIndex && dragStartIndex < i,
+            }"
             role="tab"
             :aria-selected="i === activeIndex"
             :title="tab.file.relativePath"
+            draggable="true"
             @click="emit('switch', i)"
             @mousedown="handleMiddleClick($event, i)"
             @auxclick.prevent
+            @dragstart="onDragStart($event, i)"
+            @dragover="onDragOver($event, i)"
+            @drop="onDrop($event, i)"
+            @dragend="onDragEnd"
         >
             <span class="tab-name">{{ getFileNameWithoutExtension(tab.file.name) }}</span>
             <span v-if="tab.hasUnsavedChanges" class="tab-dot" title="Unsaved changes" />
@@ -99,6 +150,18 @@ function handleMiddleClick(e: MouseEvent, index: number) {
         .tab-close {
             opacity: 1;
         }
+    }
+
+    &.dragging {
+        opacity: 0.4;
+    }
+
+    &.drop-left {
+        box-shadow: inset 2px 0 0 $accent-color;
+    }
+
+    &.drop-right {
+        box-shadow: inset -2px 0 0 $accent-color;
     }
 
     &.active {
