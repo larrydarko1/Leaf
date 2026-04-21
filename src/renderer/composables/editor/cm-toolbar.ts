@@ -130,6 +130,20 @@ export function useCodemirrorToolbar(view: Ref<EditorView | null>) {
                 v.focus();
                 break;
             }
+            case 'table': {
+                const { from } = v.state.selection.main;
+                const line = v.state.doc.lineAt(from);
+                // Insert after the current line
+                const insertAt = line.to;
+                const template =
+                    '\n\n| Column 1 | Column 2 | Column 3 |\n| -------- | -------- | -------- |\n| Cell     | Cell     | Cell     |\n';
+                v.dispatch({
+                    changes: { from: insertAt, to: insertAt, insert: template },
+                    selection: EditorSelection.cursor(insertAt + template.length),
+                });
+                v.focus();
+                break;
+            }
         }
     }
 

@@ -408,6 +408,59 @@ export const leafEditorTheme = EditorView.theme({
     '.cm-task-fold-placeholder:hover': {
         background: 'color-mix(in srgb, var(--accent-color, #3eb489) 20%, transparent)',
     },
+
+    // ── GFM Tables ────────────────────────────────────────────────────────
+    // Hidden rows: the raw delimiter + body lines collapsed to zero height
+    // so only the rendered <table> widget (on line 1) is visible.
+    '.cm-table-hidden-row': {
+        fontSize: '0',
+        lineHeight: '0',
+        height: '0',
+        padding: '0 !important',
+        overflow: 'hidden',
+    },
+    '.cm-table-wrapper': {
+        overflowX: 'auto',
+        margin: '0.5em 0',
+        borderRadius: '4px',
+    },
+    '.cm-table': {
+        borderCollapse: 'collapse',
+        width: 'max-content',
+        minWidth: '100%',
+        fontSize: '1em',
+        lineHeight: '1.5',
+    },
+    '.cm-table th, .cm-table td': {
+        border: '1px solid var(--text3, #444)',
+        padding: '6px 13px',
+        textAlign: 'left',
+    },
+    '.cm-table thead tr': {
+        backgroundColor: 'color-mix(in srgb, var(--text2) 8%, transparent)',
+    },
+    '.cm-table thead th': {
+        fontWeight: '600',
+    },
+    '.cm-table tbody tr:nth-child(even)': {
+        backgroundColor: 'color-mix(in srgb, var(--text2) 4%, transparent)',
+    },
+    '.cm-table tbody tr:hover': {
+        backgroundColor: 'color-mix(in srgb, var(--accent-color, #3eb489) 8%, transparent)',
+    },
+    '.cm-table code': {
+        fontFamily: "'SF Mono', Monaco, Inconsolata, 'Fira Code', Menlo, Consolas, monospace",
+        fontSize: '0.875em',
+        background: 'color-mix(in srgb, var(--text2) 15%, transparent)',
+        padding: '0.1em 0.3em',
+        borderRadius: '3px',
+    },
+    '.cm-table mark': {
+        backgroundColor: 'color-mix(in srgb, var(--accent-color) 20%, transparent)',
+        padding: '0.1em 0.2em',
+        borderRadius: '3px',
+        color: 'inherit',
+    },
 });
 
 /**

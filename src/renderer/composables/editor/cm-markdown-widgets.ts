@@ -72,6 +72,129 @@ class HorizontalRuleWidget extends WidgetType {
     }
 }
 
+// ── Table widget ──────────────────────────────────────────────────────────────
+
+/**
+ * Renders a GFM markdown table as an HTML <table> element.
+ * Shown when the cursor is not on any line of the table (Obsidian-style live preview).
+ */
+class TableWidget extends WidgetType {
+    rawText: string;
+
+    constructor(rawText: string) {
+        super();
+        this.rawText = rawText;
+    }
+
+    eq(other: TableWidget): boolean {
+        return this.rawText === other.rawText;
+    }
+
+    /** Safe HTML escape using the DOM (prevents XSS). */
+    private escapeHtml(text: string): string {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    /**
+     * Render inline markdown within a cell (bold, italic, code, strikethrough, highlight).
+     * Content is HTML-escaped first, so regex replacements are safe.
+     */
+    private renderInline(text: string): string {
+        const escaped = this.escapeHtml(text);
+        return escaped
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.+?)\*/g, '<em>$1</em>')
+            .replace(/`(.+?)`/g, '<code>$1</code>')
+            .replace(/~~(.+?)~~/g, '<del>$1</del>')
+            .replace(/==(.+?)==/g, '<mark>$1</mark>');
+    }
+
+    /**
+     * Split a raw table row into trimmed cell strings.
+     * Handles both `| a | b |` and `a | b` forms.
+     */
+    private parseCells(line: string): string[] {
+        const trimmed = line.trim();
+        const inner = trimmed.startsWith('|') ? trimmed.slice(1) : trimmed;
+        const stripped = inner.endsWith('|') ? inner.slice(0, -1) : inner;
+        return stripped.split('|').map((c) => c.trim());
+    }
+
+    /** Derive CSS text-align from a GFM delimiter cell (e.g. `:---:`, `---:`). */
+    private parseAlignment(cell: string): string {
+        const t = cell.trim();
+        const left = t.startsWith(':');
+        const right = t.endsWith(':');
+        if (left && right) return 'center';
+        if (right) return 'right';
+        if (left) return 'left';
+        return '';
+    }
+
+    toDOM(): HTMLElement {
+        const lines = this.rawText
+            .split('\n')
+            .map((l) => l.trim())
+            .filter(Boolean);
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'cm-table-wrapper';
+
+        const table = document.createElement('table');
+        table.className = 'cm-table';
+
+        if (lines.length < 2) {
+            // Malformed — render as plain text fallback
+            table.textContent = this.rawText;
+            wrapper.appendChild(table);
+            return wrapper;
+        }
+
+        const headerCells = this.parseCells(lines[0]);
+        const delimCells = this.parseCells(lines[1]);
+        const aligns = delimCells.map((c) => this.parseAlignment(c));
+
+        // <thead>
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        headerCells.forEach((cell, i) => {
+            const th = document.createElement('th');
+            if (aligns[i]) th.style.textAlign = aligns[i];
+            th.innerHTML = this.renderInline(cell);
+            headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        // <tbody>
+        if (lines.length > 2) {
+            const tbody = document.createElement('tbody');
+            for (let r = 2; r < lines.length; r++) {
+                const cells = this.parseCells(lines[r]);
+                const tr = document.createElement('tr');
+                cells.forEach((cell, i) => {
+                    const td = document.createElement('td');
+                    if (aligns[i]) td.style.textAlign = aligns[i];
+                    td.innerHTML = this.renderInline(cell);
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            }
+            table.appendChild(tbody);
+        }
+
+        wrapper.appendChild(table);
+        return wrapper;
+    }
+
+    /** Let CM handle events so clicks place the cursor (triggering raw-edit mode). */
+    ignoreEvent(): boolean {
+        return false;
+    }
+}
+
 class EmbedWidget extends WidgetType {
     fileName: string;
     resolvedPath: string | undefined;
@@ -566,6 +689,39 @@ function buildSyntaxDecos(
                         break;
                     }
                 }
+
+                // ── GFM Table ─────────────────────────────────────────
+                // Must be handled before the isActive guard so we can always
+                // return false and prevent child nodes (cells, delimiters)
+                // from producing conflicting inline decorations.
+                if (name === 'Table') {
+                    if (!isActive && from < to) {
+                        const rawText = state.doc.sliceString(from, to);
+                        const firstLine = state.doc.line(lineFrom);
+
+                        // Replace first line's content with the rendered table widget.
+                        // No `block: true` — keeps this an inline replace so it can be
+                        // safely mixed with other inline decorations in the sorted set.
+                        decos.push(
+                            Decoration.replace({ widget: new TableWidget(rawText) }).range(
+                                firstLine.from,
+                                firstLine.to,
+                            ),
+                        );
+
+                        // Collapse subsequent table rows to zero height (same pattern as
+                        // cm-code-fence) so only the rendered widget is visible.
+                        for (let ln = lineFrom + 1; ln <= lineTo; ln++) {
+                            const line = state.doc.line(ln);
+                            decos.push(Decoration.line({ class: 'cm-table-hidden-row' }).range(line.from));
+                            if (line.from < line.to) {
+                                decos.push(Decoration.replace({}).range(line.from, line.to));
+                            }
+                        }
+                    }
+                    return false; // Never descend into table children
+                }
+
                 if (isActive) return;
 
                 // ── Headings ──────────────────────────────────────────
