@@ -169,7 +169,6 @@ export const leafEditorTheme = EditorView.theme({
     },
     '.cm-task-checked': {
         backgroundColor: '#4caf50',
-        boxShadow: '0 0 8px #4caf5088',
     },
     // Checkmark pseudo-element via CSS
     '.cm-task-checked::after': {
@@ -179,14 +178,13 @@ export const leafEditorTheme = EditorView.theme({
         top: '45%',
         width: '5px',
         height: '9px',
-        border: 'solid var(--text1)',
+        border: 'solid var(--text3)',
         borderWidth: '0 2px 2px 0',
         transform: 'translate(-50%, -55%) rotate(45deg)',
         display: 'block',
     },
     '.cm-task-half': {
         background: 'linear-gradient(to top, #4caf50 50%, var(--text3, #ddd) 50%)',
-        boxShadow: '0 0 6px #4caf5055',
     },
 
     // ── Embed widgets ─────────────────────────────────────────────────────
