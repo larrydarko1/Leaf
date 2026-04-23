@@ -346,8 +346,8 @@ async function restoreChatHistory(
 }
 
 function buildConversationSummary(messages: Array<{ role: string; content: string }>): string {
-    const MAX_MSG_LENGTH = 300;
-    const MAX_MESSAGES = 20;
+    const MAX_MSG_LENGTH = 2000;
+    const MAX_MESSAGES = 50;
 
     const recentMessages = messages.length > MAX_MESSAGES ? messages.slice(-MAX_MESSAGES) : messages;
 

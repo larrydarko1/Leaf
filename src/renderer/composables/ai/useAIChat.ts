@@ -128,6 +128,14 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         messages.value.splice(index + 1);
         await window.electronAPI.aiResetChat();
         conversationTokenCount.value = 0;
+        // Restore context of messages before the edited one so subsequent
+        // sends have conversation history available.
+        const priorMessages = messages.value.slice(0, index).filter((m) => m.role !== 'system');
+        if (priorMessages.length > 0) {
+            await window.electronAPI.aiRestoreChatHistory(
+                priorMessages.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+            );
+        }
         await saveCurrentConversation();
         await saveTokenCountToConversation();
         await refreshConversationList();
@@ -143,6 +151,14 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         if (msg.role !== 'user' || !status.value.isModelLoaded || status.value.isGenerating) return;
         await window.electronAPI.aiResetChat();
         conversationTokenCount.value = 0;
+        // Restore context of messages that preceded this one so the AI
+        // doesn't lose conversation history on regenerate/resend.
+        const priorMessages = messages.value.slice(0, index).filter((m) => m.role !== 'system');
+        if (priorMessages.length > 0) {
+            await window.electronAPI.aiRestoreChatHistory(
+                priorMessages.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+            );
+        }
         messages.value.push({ role: 'assistant', content: '' });
         isStreaming.value = true;
         userScrolledUp.value = false;
@@ -188,6 +204,14 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         messages.value.pop();
         await window.electronAPI.aiResetChat();
         conversationTokenCount.value = 0;
+        // Restore context of remaining messages so the AI retains
+        // conversation history after the deletion.
+        const remainingMessages = messages.value.filter((m) => m.role !== 'system');
+        if (remainingMessages.length > 0) {
+            await window.electronAPI.aiRestoreChatHistory(
+                remainingMessages.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+            );
+        }
         await saveCurrentConversation();
         await saveTokenCountToConversation();
         await refreshConversationList();
