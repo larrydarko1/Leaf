@@ -113,8 +113,8 @@ function setupRenderer(elementList: CanvasElement[] = []) {
         value: () => ({ width: 800, height: 600, top: 0, left: 0, right: 800, bottom: 600, x: 0, y: 0 }),
     });
 
-    const canvasRef = ref(canvasEl) as ReturnType<typeof ref<HTMLCanvasElement | null>>;
-    const containerRef = ref(container) as ReturnType<typeof ref<HTMLDivElement | null>>;
+    const canvasRef = ref<HTMLCanvasElement | null>(canvasEl);
+    const containerRef = ref<HTMLDivElement | null>(container);
     const scrollX = ref(0);
     const scrollY = ref(0);
     const zoom = ref(1);
@@ -389,7 +389,7 @@ describe('exportToBlob', () => {
             vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
                 const elem = origCreate(tag);
                 if (tag === 'canvas') {
-                    elem.toBlob = vi.fn((cb: BlobCallback) => {
+                    (elem as HTMLCanvasElement).toBlob = vi.fn((cb: BlobCallback) => {
                         cb(new Blob(['data'], { type: 'image/png' }));
                     });
                     const proxyCtx: Record<string, unknown> = {};
@@ -434,7 +434,9 @@ describe('exportToBlob', () => {
                     proxyCtx.font = '';
                     proxyCtx.textBaseline = 'top';
                     proxyCtx.textAlign = 'start';
-                    (elem as HTMLCanvasElement).getContext = vi.fn(() => proxyCtx) as unknown as typeof elem.getContext;
+                    (elem as HTMLCanvasElement).getContext = vi.fn(
+                        () => proxyCtx,
+                    ) as unknown as HTMLCanvasElement['getContext'];
                 }
                 return elem;
             });
@@ -463,7 +465,7 @@ describe('exportToBlob', () => {
             vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
                 const elem = origCreate(tag);
                 if (tag === 'canvas') {
-                    elem.toBlob = vi.fn((cb: BlobCallback) => {
+                    (elem as HTMLCanvasElement).toBlob = vi.fn((cb: BlobCallback) => {
                         cb(new Blob(['data'], { type: 'image/png' }));
                     });
                     const proxyCtx: Record<string, unknown> = {};
@@ -508,7 +510,9 @@ describe('exportToBlob', () => {
                     proxyCtx.font = '';
                     proxyCtx.textBaseline = 'top';
                     proxyCtx.textAlign = 'start';
-                    (elem as HTMLCanvasElement).getContext = vi.fn(() => proxyCtx) as unknown as typeof elem.getContext;
+                    (elem as HTMLCanvasElement).getContext = vi.fn(
+                        () => proxyCtx,
+                    ) as unknown as HTMLCanvasElement['getContext'];
                 }
                 return elem;
             });
@@ -534,7 +538,7 @@ describe('exportToBlob', () => {
             vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
                 const elem = origCreate(tag);
                 if (tag === 'canvas') {
-                    elem.toBlob = vi.fn((cb: BlobCallback) => {
+                    (elem as HTMLCanvasElement).toBlob = vi.fn((cb: BlobCallback) => {
                         cb(new Blob(['data'], { type: 'image/png' }));
                     });
                     const proxyCtx: Record<string, unknown> = {};
@@ -578,7 +582,9 @@ describe('exportToBlob', () => {
                     proxyCtx.font = '';
                     proxyCtx.textBaseline = 'top';
                     proxyCtx.textAlign = 'start';
-                    (elem as HTMLCanvasElement).getContext = vi.fn(() => proxyCtx) as unknown as typeof elem.getContext;
+                    (elem as HTMLCanvasElement).getContext = vi.fn(
+                        () => proxyCtx,
+                    ) as unknown as HTMLCanvasElement['getContext'];
                 }
                 return elem;
             });
@@ -820,10 +826,10 @@ describe('exportToBlob', () => {
             vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
                 const elem = origCreate(tag);
                 if (tag === 'canvas') {
-                    elem.toBlob = vi.fn((cb: BlobCallback, type?: string) => {
+                    (elem as HTMLCanvasElement).toBlob = vi.fn((cb: BlobCallback, type?: string) => {
                         cb(new Blob(['png-content'], { type: type ?? 'image/png' }));
                     });
-                    elem.getContext = vi.fn(() => {
+                    (elem as HTMLCanvasElement).getContext = vi.fn(() => {
                         const ctx: Record<string, unknown> = {};
                         for (const m of [
                             'save',
@@ -860,7 +866,7 @@ describe('exportToBlob', () => {
                         ctx.textBaseline = 'top';
                         ctx.textAlign = 'start';
                         return ctx;
-                    }) as unknown as typeof elem.getContext;
+                    }) as unknown as HTMLCanvasElement['getContext'];
                 }
                 return elem;
             });
