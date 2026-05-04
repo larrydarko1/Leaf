@@ -103,12 +103,15 @@ function handleKeyDown(e: KeyboardEvent) {
     const items = flattenedItems.value;
     if (items.length === 0) return;
 
-    // Find current index
+    // Find current index — check selectedFolder first because editorTabs.activeFile
+    // remains set even after folder selection, so activeFile alone can't be trusted.
     let currentIndex = -1;
-    if (props.activeFile) {
+    if (props.selectedFolder) {
+        const idx = items.findIndex((item) => item.type === 'folder' && item.folderPath === props.selectedFolder);
+        if (idx !== -1) currentIndex = idx;
+    }
+    if (currentIndex === -1 && props.activeFile) {
         currentIndex = items.findIndex((item) => item.type === 'file' && item.file?.path === props.activeFile?.path);
-    } else if (props.selectedFolder) {
-        currentIndex = items.findIndex((item) => item.type === 'folder' && item.folderPath === props.selectedFolder);
     }
 
     // Calculate new index
