@@ -17,6 +17,21 @@ let transcriber: any = null;
 let isModelLoading = false;
 let isModelReady = false;
 
+export async function cleanup(): Promise<void> {
+    transcriber = null;
+    isModelReady = false;
+    isModelLoading = false;
+}
+
+export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null): void {
+    ipc.handle('speech:init', async () => initModel(getMainWindow()));
+    ipc.handle('speech:transcribe', async (_event, audioData: number[]) => {
+        if (!audioData) return { success: false, error: 'No audio data' };
+        return transcribe(audioData);
+    });
+    ipc.handle('speech:getStatus', async () => getStatus());
+}
+
 /**
  * Dynamically import @huggingface/transformers (ESM module from CJS)
  * Same pattern used by ai-service.ts for node-llama-cpp.
@@ -125,19 +140,4 @@ async function transcribe(audioData: number[]): Promise<{ success: boolean; text
 
 function getStatus(): { isModelLoaded: boolean; isModelLoading: boolean } {
     return { isModelLoaded: isModelReady, isModelLoading };
-}
-
-export async function cleanup(): Promise<void> {
-    transcriber = null;
-    isModelReady = false;
-    isModelLoading = false;
-}
-
-export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null): void {
-    ipc.handle('speech:init', async () => initModel(getMainWindow()));
-    ipc.handle('speech:transcribe', async (_event, audioData: number[]) => {
-        if (!audioData) return { success: false, error: 'No audio data' };
-        return transcribe(audioData);
-    });
-    ipc.handle('speech:getStatus', async () => getStatus());
 }

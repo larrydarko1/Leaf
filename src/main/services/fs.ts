@@ -15,35 +15,6 @@ import { IMAGE_MIMETYPES, AUDIO_MIMETYPES } from '../lib/mime';
 import { assertInsideBoundary } from '../lib/validation';
 import { log } from '../lib/logger';
 
-let folderWatcher: FSWatcher | null = null;
-
-// The vault root is set when the user opens a folder (via files:scan).
-// All subsequent file operations are validated against this root.
-let vaultRoot: string | null = null;
-
-/** Returns the active vault root, or null if no vault is open. */
-export function getVaultRoot(): string | null {
-    return vaultRoot;
-}
-
-/** Close the folder watcher if active. Called during app shutdown. */
-export function cleanup(): void {
-    if (folderWatcher) {
-        folderWatcher.close();
-        folderWatcher = null;
-    }
-}
-
-function requireVaultRoot(): string {
-    if (!vaultRoot) throw new Error('No vault is open.');
-    return vaultRoot;
-}
-
-/** Resolve `p` and assert it lives inside the active vault. */
-function assertInsideVault(p: string): string {
-    return assertInsideBoundary(p, requireVaultRoot());
-}
-
 interface FileEntry {
     name: string;
     path: string;
@@ -67,64 +38,23 @@ interface ScanResult {
     folders: FolderEntry[];
 }
 
-async function scanFolder(folderPath: string, basePath = folderPath): Promise<ScanResult> {
-    const files: FileEntry[] = [];
-    const folders: FolderEntry[] = [];
-    try {
-        const entries = await fs.readdir(folderPath, { withFileTypes: true });
-        for (const entry of entries) {
-            const fullPath = path.join(folderPath, entry.name);
-            const relativePath = path.relative(basePath, fullPath);
-            if (entry.isDirectory()) {
-                folders.push({
-                    name: entry.name,
-                    path: fullPath,
-                    relativePath,
-                    type: 'folder',
-                    folder: path.dirname(relativePath),
-                });
-                const sub = await scanFolder(fullPath, basePath);
-                files.push(...sub.files);
-                folders.push(...sub.folders);
-            } else if (entry.isFile()) {
-                const ext = path.extname(entry.name).toLowerCase();
-                if (ALLOWED_EXTENSIONS.has(ext)) {
-                    const stats = await fs.stat(fullPath);
-                    files.push({
-                        name: entry.name,
-                        path: fullPath,
-                        relativePath,
-                        extension: ext,
-                        size: stats.size,
-                        modified: stats.mtime.toISOString(),
-                        folder: path.dirname(relativePath),
-                    });
-                }
-            }
-        }
-    } catch (error) {
-        log.error('[fs-service] Error scanning folder:', error);
-    }
-    return { files, folders };
+let folderWatcher: FSWatcher | null = null;
+
+// The vault root is set when the user opens a folder (via files:scan).
+// All subsequent file operations are validated against this root.
+let vaultRoot: string | null = null;
+
+/** Returns the active vault root, or null if no vault is open. */
+export function getVaultRoot(): string | null {
+    return vaultRoot;
 }
 
-async function findFileRecursive(dir: string, targetName: string): Promise<string | null> {
-    let entries;
-    try {
-        entries = await fs.readdir(dir, { withFileTypes: true });
-    } catch {
-        return null;
+/** Close the folder watcher if active. Called during app shutdown. */
+export function cleanup(): void {
+    if (folderWatcher) {
+        folderWatcher.close();
+        folderWatcher = null;
     }
-    for (const entry of entries) {
-        if (entry.name.startsWith('.')) continue;
-        const fullPath = path.join(dir, entry.name);
-        if (entry.isFile() && entry.name === targetName) return fullPath;
-        if (entry.isDirectory()) {
-            const found = await findFileRecursive(fullPath, targetName);
-            if (found) return found;
-        }
-    }
-    return null;
 }
 
 export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null): void {
@@ -513,4 +443,74 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
             return { success: false, error: (error as Error).message };
         }
     });
+}
+
+function requireVaultRoot(): string {
+    if (!vaultRoot) throw new Error('No vault is open.');
+    return vaultRoot;
+}
+
+/** Resolve `p` and assert it lives inside the active vault. */
+function assertInsideVault(p: string): string {
+    return assertInsideBoundary(p, requireVaultRoot());
+}
+
+async function scanFolder(folderPath: string, basePath = folderPath): Promise<ScanResult> {
+    const files: FileEntry[] = [];
+    const folders: FolderEntry[] = [];
+    try {
+        const entries = await fs.readdir(folderPath, { withFileTypes: true });
+        for (const entry of entries) {
+            const fullPath = path.join(folderPath, entry.name);
+            const relativePath = path.relative(basePath, fullPath);
+            if (entry.isDirectory()) {
+                folders.push({
+                    name: entry.name,
+                    path: fullPath,
+                    relativePath,
+                    type: 'folder',
+                    folder: path.dirname(relativePath),
+                });
+                const sub = await scanFolder(fullPath, basePath);
+                files.push(...sub.files);
+                folders.push(...sub.folders);
+            } else if (entry.isFile()) {
+                const ext = path.extname(entry.name).toLowerCase();
+                if (ALLOWED_EXTENSIONS.has(ext)) {
+                    const stats = await fs.stat(fullPath);
+                    files.push({
+                        name: entry.name,
+                        path: fullPath,
+                        relativePath,
+                        extension: ext,
+                        size: stats.size,
+                        modified: stats.mtime.toISOString(),
+                        folder: path.dirname(relativePath),
+                    });
+                }
+            }
+        }
+    } catch (error) {
+        log.error('[fs-service] Error scanning folder:', error);
+    }
+    return { files, folders };
+}
+
+async function findFileRecursive(dir: string, targetName: string): Promise<string | null> {
+    let entries;
+    try {
+        entries = await fs.readdir(dir, { withFileTypes: true });
+    } catch {
+        return null;
+    }
+    for (const entry of entries) {
+        if (entry.name.startsWith('.')) continue;
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isFile() && entry.name === targetName) return fullPath;
+        if (entry.isDirectory()) {
+            const found = await findFileRecursive(fullPath, targetName);
+            if (found) return found;
+        }
+    }
+    return null;
 }

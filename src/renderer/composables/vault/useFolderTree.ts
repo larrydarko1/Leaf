@@ -163,10 +163,10 @@ export function useFolderTree(
                     try {
                         expandedFolders.value = new Set(JSON.parse(saved));
                     } catch {
-                        expandedFolders.value = new Set(allFolderPaths.value);
+                        expandedFolders.value = new Set();
                     }
                 } else {
-                    expandedFolders.value = new Set(allFolderPaths.value);
+                    expandedFolders.value = new Set();
                 }
             }
         },

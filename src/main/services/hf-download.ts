@@ -11,9 +11,71 @@ import path from 'path';
 import { DEFAULT_MODELS_DIR } from '../lib/paths';
 import { assertSafeFileName } from '../lib/validation';
 
+interface DownloadEntry {
+    abortController: { aborted: boolean };
+    filePath: string;
+    tempPath: string;
+}
+
+interface TreeFile {
+    path: string;
+    size: number;
+}
+
+interface ProgressInfo {
+    downloaded: number;
+    total: number;
+    percent: number;
+    fileName: string;
+}
+
+type SortOption = 'downloads' | 'likes' | 'lastModified' | 'trending';
+
 // Only allow downloads from Hugging Face domains (including XetHub CDN)
 const ALLOWED_DOWNLOAD_SUFFIXES = ['.hf.co', '.huggingface.co'];
 const ALLOWED_DOWNLOAD_EXACT = ['huggingface.co', 'hf.co'];
+const RESULTS_PER_PAGE = 20;
+
+// Track active downloads
+const activeDownloads = new Map<string, DownloadEntry>();
+
+export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null): void {
+    ipc.handle('hf:search', async (_event, query: string, sort?: string, offset?: number) => {
+        if (typeof query !== 'string') return { success: false, error: 'Invalid query' };
+        const validSorts: SortOption[] = ['downloads', 'likes', 'lastModified', 'trending'];
+        const resolvedSort = validSorts.includes(sort as SortOption) ? (sort as SortOption) : 'downloads';
+        const resolvedOffset = typeof offset === 'number' && offset >= 0 ? offset : 0;
+        return searchModels(query, resolvedSort, resolvedOffset);
+    });
+
+    ipc.handle('hf:listFiles', async (_event, repoId: string) => {
+        if (typeof repoId !== 'string') return { success: false, error: 'Invalid repoId' };
+        return listRepoFiles(repoId);
+    });
+
+    ipc.handle('hf:download', async (_event, url: string, fileName: string) => {
+        if (typeof url !== 'string' || typeof fileName !== 'string')
+            return { success: false, error: 'Invalid arguments' };
+        try {
+            return await downloadModel(url, fileName, (progress) => {
+                const win = getMainWindow();
+                if (win && !win.isDestroyed()) win.webContents.send('hf:downloadProgress', progress);
+            });
+        } catch (err) {
+            return { success: false, error: (err as Error).message };
+        }
+    });
+
+    ipc.handle('hf:cancelDownload', async (_event, fileName: string) => {
+        if (typeof fileName !== 'string') return { success: false, error: 'Invalid fileName' };
+        return cancelDownload(fileName);
+    });
+
+    ipc.handle('hf:getActiveDownloads', async () => ({
+        success: true,
+        downloads: getActiveDownloads(),
+    }));
+}
 
 function isAllowedDownloadHost(hostname: string): boolean {
     if (ALLOWED_DOWNLOAD_EXACT.includes(hostname)) return true;
@@ -32,15 +94,6 @@ function assertAllowedDownloadUrl(url: string): void {
         throw new Error(`Downloads are only allowed from Hugging Face (got ${parsed.hostname}).`);
     }
 }
-
-interface DownloadEntry {
-    abortController: { aborted: boolean };
-    filePath: string;
-    tempPath: string;
-}
-
-// Track active downloads
-const activeDownloads = new Map<string, DownloadEntry>();
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function hfApiGet(apiPath: string): Promise<any> {
@@ -76,10 +129,6 @@ function hfApiGet(apiPath: string): Promise<any> {
         req.end();
     });
 }
-
-const RESULTS_PER_PAGE = 20;
-
-type SortOption = 'downloads' | 'likes' | 'lastModified' | 'trending';
 
 function formatParamCount(n: number): string {
     if (n >= 1e12) return (n / 1e12).toFixed(1) + 'T';
@@ -185,11 +234,6 @@ function formatFileSize(bytes: number): string {
     const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
-interface TreeFile {
-    path: string;
-    size: number;
 }
 
 async function fetchTree(repoId: string, treePath: string): Promise<TreeFile[]> {
@@ -327,13 +371,6 @@ async function listRepoFiles(repoId: string): Promise<object> {
     } catch (err) {
         return { success: false, error: `Failed to list files: ${(err as Error).message}` };
     }
-}
-
-interface ProgressInfo {
-    downloaded: number;
-    total: number;
-    percent: number;
-    fileName: string;
 }
 
 async function downloadModel(
@@ -495,42 +532,4 @@ async function cancelDownload(fileName: string): Promise<{ success: boolean; err
 
 function getActiveDownloads(): string[] {
     return Array.from(activeDownloads.keys());
-}
-
-export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null): void {
-    ipc.handle('hf:search', async (_event, query: string, sort?: string, offset?: number) => {
-        if (typeof query !== 'string') return { success: false, error: 'Invalid query' };
-        const validSorts: SortOption[] = ['downloads', 'likes', 'lastModified', 'trending'];
-        const resolvedSort = validSorts.includes(sort as SortOption) ? (sort as SortOption) : 'downloads';
-        const resolvedOffset = typeof offset === 'number' && offset >= 0 ? offset : 0;
-        return searchModels(query, resolvedSort, resolvedOffset);
-    });
-
-    ipc.handle('hf:listFiles', async (_event, repoId: string) => {
-        if (typeof repoId !== 'string') return { success: false, error: 'Invalid repoId' };
-        return listRepoFiles(repoId);
-    });
-
-    ipc.handle('hf:download', async (_event, url: string, fileName: string) => {
-        if (typeof url !== 'string' || typeof fileName !== 'string')
-            return { success: false, error: 'Invalid arguments' };
-        try {
-            return await downloadModel(url, fileName, (progress) => {
-                const win = getMainWindow();
-                if (win && !win.isDestroyed()) win.webContents.send('hf:downloadProgress', progress);
-            });
-        } catch (err) {
-            return { success: false, error: (err as Error).message };
-        }
-    });
-
-    ipc.handle('hf:cancelDownload', async (_event, fileName: string) => {
-        if (typeof fileName !== 'string') return { success: false, error: 'Invalid fileName' };
-        return cancelDownload(fileName);
-    });
-
-    ipc.handle('hf:getActiveDownloads', async () => ({
-        success: true,
-        downloads: getActiveDownloads(),
-    }));
 }

@@ -11,15 +11,6 @@ import { randomUUID } from 'crypto';
 import { assertSafeFileName, assertInsideBoundary } from '../lib/validation';
 import { log } from '../lib/logger';
 
-let conversationsDir: string | null = null;
-
-/** Write content to a file atomically: write to .tmp, then rename into place. */
-async function writeFileAtomic(filePath: string, data: string): Promise<void> {
-    const tmp = filePath + '.tmp';
-    await fs.writeFile(tmp, data, 'utf-8');
-    await fs.rename(tmp, filePath);
-}
-
 interface Message {
     role: 'user' | 'assistant';
     content: string;
@@ -36,6 +27,8 @@ interface Conversation {
     tokenCount: number;
 }
 
+let conversationsDir: string | null = null;
+
 /**
  * Initialize the conversations directory.
  * Must be called after app.whenReady() since it uses app.getPath().
@@ -45,26 +38,6 @@ export function init(userDataPath: string): void {
     if (!existsSync(conversationsDir)) {
         mkdirSync(conversationsDir, { recursive: true });
     }
-}
-
-function generateId(): string {
-    return randomUUID();
-}
-
-function deriveTitle(messages: Message[]): string {
-    const firstUserMsg = messages.find((m) => m.role === 'user');
-    if (!firstUserMsg) return 'New Conversation';
-    const text = firstUserMsg.content.trim();
-    if (text.length <= 60) return text;
-    return text.slice(0, 57) + '...';
-}
-
-function getConversationPath(id: string): string {
-    // Prevent path traversal via crafted IDs like "../../etc/passwd"
-    assertSafeFileName(id);
-    const filePath = path.join(conversationsDir!, `${id}.json`);
-    assertInsideBoundary(filePath, conversationsDir!);
-    return filePath;
 }
 
 export async function createConversation(
@@ -276,4 +249,31 @@ export function register(ipc: IpcMain): void {
             return { success: false, error: 'Invalid arguments' };
         return renameConversation(id, newTitle);
     });
+}
+
+/** Write content to a file atomically: write to .tmp, then rename into place. */
+async function writeFileAtomic(filePath: string, data: string): Promise<void> {
+    const tmp = filePath + '.tmp';
+    await fs.writeFile(tmp, data, 'utf-8');
+    await fs.rename(tmp, filePath);
+}
+
+function generateId(): string {
+    return randomUUID();
+}
+
+function deriveTitle(messages: Message[]): string {
+    const firstUserMsg = messages.find((m) => m.role === 'user');
+    if (!firstUserMsg) return 'New Conversation';
+    const text = firstUserMsg.content.trim();
+    if (text.length <= 60) return text;
+    return text.slice(0, 57) + '...';
+}
+
+function getConversationPath(id: string): string {
+    // Prevent path traversal via crafted IDs like "../../etc/passwd"
+    assertSafeFileName(id);
+    const filePath = path.join(conversationsDir!, `${id}.json`);
+    assertInsideBoundary(filePath, conversationsDir!);
+    return filePath;
 }

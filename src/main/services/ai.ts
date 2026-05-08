@@ -12,6 +12,23 @@ import { existsSync } from 'fs';
 import { DEFAULT_MODELS_DIR } from '../lib/paths';
 import { log } from '../lib/logger';
 
+interface ModelEntry {
+    name: string;
+    path: string;
+    size: number;
+    sizeFormatted: string;
+    modified: string;
+}
+
+const COMPACTION_THRESHOLD = 0.9;
+const NON_MODEL_PREFIXES = ['mmproj-', 'projector-', 'tokenizer', 'adapter'];
+
+// Architectures whose Metal (GPU) backend has known execution failures.
+// For these we force CPU-only inference (gpuLayers: 0).
+// - mistral3: 262K-context YaRN model; Metal command buffers fail on decode
+//   with status 5 (MTLCommandBufferStatusError) on Apple Silicon.
+const CPU_ONLY_ARCHITECTURES = new Set(['mistral3']);
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let llama: any = null;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -28,7 +45,46 @@ let currentAbortController: AbortController | null = null;
 let pendingConversationHistory: Array<{ role: string; content: string }> | null = null;
 let trackedMessages: Array<{ role: string; content: string }> = [];
 
-const COMPACTION_THRESHOLD = 0.9;
+export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null): void {
+    ipc.handle('ai:listModels', async () => listModels());
+
+    ipc.handle('ai:loadModel', async (_event, modelPath: string) => {
+        if (typeof modelPath !== 'string') return { success: false, error: 'Invalid model path' };
+        return loadModel(modelPath);
+    });
+
+    ipc.handle('ai:unloadModel', async () => unloadModel());
+
+    ipc.handle('ai:chat', async (_event, userMessage: string, noteContext: string) => {
+        if (typeof userMessage !== 'string') return { success: false, error: 'Invalid message' };
+        return chat(
+            userMessage,
+            (token) => {
+                const win = getMainWindow();
+                if (win && !win.isDestroyed()) win.webContents.send('ai:token', token);
+            },
+            noteContext,
+        );
+    });
+
+    ipc.handle('ai:stopChat', async () => stopChat());
+    ipc.handle('ai:resetChat', async () => resetChat());
+
+    ipc.handle('ai:restoreChatHistory', async (_event, messages: Array<{ role: string; content: string }>) => {
+        if (!Array.isArray(messages)) return { success: false, error: 'Invalid messages' };
+        return restoreChatHistory(messages);
+    });
+
+    ipc.handle('ai:getStatus', async () => getStatus());
+    ipc.handle('ai:openModelsDir', async () => openModelsDir());
+}
+
+/** Graceful shutdown: unload the model and free resources. */
+export async function cleanup(): Promise<void> {
+    if (isModelLoaded) {
+        await unloadModel();
+    }
+}
 
 async function ensureModelsDir(): Promise<void> {
     try {
@@ -46,8 +102,6 @@ async function getLlamaInstance(): Promise<any> {
     return llama;
 }
 
-const NON_MODEL_PREFIXES = ['mmproj-', 'projector-', 'tokenizer', 'adapter'];
-
 function isModelFile(filename: string): boolean {
     const lower = filename.toLowerCase();
     if (!lower.endsWith('.gguf')) return false;
@@ -60,14 +114,6 @@ function formatFileSize(bytes: number): string {
     const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
-interface ModelEntry {
-    name: string;
-    path: string;
-    size: number;
-    sizeFormatted: string;
-    modified: string;
 }
 
 async function scanForModels(dir: string, baseDir: string): Promise<ModelEntry[]> {
@@ -118,12 +164,6 @@ async function listModels(): Promise<{ success: boolean; models: ModelEntry[]; m
         return { success: false, error: (error as Error).message, models: [], modelsDir: DEFAULT_MODELS_DIR };
     }
 }
-
-// Architectures whose Metal (GPU) backend has known execution failures.
-// For these we force CPU-only inference (gpuLayers: 0).
-// - mistral3: 262K-context YaRN model; Metal command buffers fail on decode
-//   with status 5 (MTLCommandBufferStatusError) on Apple Silicon.
-const CPU_ONLY_ARCHITECTURES = new Set(['mistral3']);
 
 async function getModelLoadOptions(modelPath: string): Promise<{ gpuLayers?: number }> {
     try {
@@ -391,45 +431,4 @@ async function openModelsDir(): Promise<{ success: boolean }> {
     await ensureModelsDir();
     await shell.openPath(DEFAULT_MODELS_DIR);
     return { success: true };
-}
-
-export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null): void {
-    ipc.handle('ai:listModels', async () => listModels());
-
-    ipc.handle('ai:loadModel', async (_event, modelPath: string) => {
-        if (typeof modelPath !== 'string') return { success: false, error: 'Invalid model path' };
-        return loadModel(modelPath);
-    });
-
-    ipc.handle('ai:unloadModel', async () => unloadModel());
-
-    ipc.handle('ai:chat', async (_event, userMessage: string, noteContext: string) => {
-        if (typeof userMessage !== 'string') return { success: false, error: 'Invalid message' };
-        return chat(
-            userMessage,
-            (token) => {
-                const win = getMainWindow();
-                if (win && !win.isDestroyed()) win.webContents.send('ai:token', token);
-            },
-            noteContext,
-        );
-    });
-
-    ipc.handle('ai:stopChat', async () => stopChat());
-    ipc.handle('ai:resetChat', async () => resetChat());
-
-    ipc.handle('ai:restoreChatHistory', async (_event, messages: Array<{ role: string; content: string }>) => {
-        if (!Array.isArray(messages)) return { success: false, error: 'Invalid messages' };
-        return restoreChatHistory(messages);
-    });
-
-    ipc.handle('ai:getStatus', async () => getStatus());
-    ipc.handle('ai:openModelsDir', async () => openModelsDir());
-}
-
-/** Graceful shutdown: unload the model and free resources. */
-export async function cleanup(): Promise<void> {
-    if (isModelLoaded) {
-        await unloadModel();
-    }
 }

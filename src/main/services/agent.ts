@@ -25,11 +25,47 @@ interface EditRecord {
     timestamp: string;
 }
 
+// Backup directory inside system temp
+const BACKUP_DIR = path.join(os.tmpdir(), 'leaf-agent-backups');
+
 // In-memory registry of pending edits
 const pendingEdits = new Map<string, EditRecord>();
 
-// Backup directory inside system temp
-const BACKUP_DIR = path.join(os.tmpdir(), 'leaf-agent-backups');
+export async function cleanupAllPendingEdits(): Promise<void> {
+    for (const [editId] of pendingEdits) {
+        try {
+            await rejectEdit(editId);
+        } catch (err) {
+            log.error(`Failed to cleanup edit ${editId}:`, err);
+        }
+    }
+}
+
+export function register(ipc: IpcMain): void {
+    ipc.handle('agent:readFile', async (_event, filePath: string, workspacePath: string) => {
+        if (typeof filePath !== 'string' || typeof workspacePath !== 'string')
+            return { success: false, error: 'Invalid arguments' };
+        return readFileForAgent(filePath, workspacePath);
+    });
+
+    ipc.handle('agent:proposeEdit', async (_event, filePath: string, newContent: string, workspacePath: string) => {
+        if (typeof filePath !== 'string' || typeof newContent !== 'string' || typeof workspacePath !== 'string')
+            return { success: false, error: 'Invalid arguments' };
+        return proposeEdit(filePath, newContent, workspacePath);
+    });
+
+    ipc.handle('agent:approveEdit', async (_event, editId: string) => {
+        if (typeof editId !== 'string') return { success: false, error: 'Invalid editId' };
+        return approveEdit(editId);
+    });
+
+    ipc.handle('agent:rejectEdit', async (_event, editId: string) => {
+        if (typeof editId !== 'string') return { success: false, error: 'Invalid editId' };
+        return rejectEdit(editId);
+    });
+
+    ipc.handle('agent:getPendingEdits', async () => getPendingEdits());
+}
 
 async function ensureBackupDir(): Promise<void> {
     try {
@@ -195,40 +231,4 @@ function getPendingEdits(): { success: boolean; edits: object[] } {
         });
     }
     return { success: true, edits };
-}
-
-export async function cleanupAllPendingEdits(): Promise<void> {
-    for (const [editId] of pendingEdits) {
-        try {
-            await rejectEdit(editId);
-        } catch (err) {
-            log.error(`Failed to cleanup edit ${editId}:`, err);
-        }
-    }
-}
-
-export function register(ipc: IpcMain): void {
-    ipc.handle('agent:readFile', async (_event, filePath: string, workspacePath: string) => {
-        if (typeof filePath !== 'string' || typeof workspacePath !== 'string')
-            return { success: false, error: 'Invalid arguments' };
-        return readFileForAgent(filePath, workspacePath);
-    });
-
-    ipc.handle('agent:proposeEdit', async (_event, filePath: string, newContent: string, workspacePath: string) => {
-        if (typeof filePath !== 'string' || typeof newContent !== 'string' || typeof workspacePath !== 'string')
-            return { success: false, error: 'Invalid arguments' };
-        return proposeEdit(filePath, newContent, workspacePath);
-    });
-
-    ipc.handle('agent:approveEdit', async (_event, editId: string) => {
-        if (typeof editId !== 'string') return { success: false, error: 'Invalid editId' };
-        return approveEdit(editId);
-    });
-
-    ipc.handle('agent:rejectEdit', async (_event, editId: string) => {
-        if (typeof editId !== 'string') return { success: false, error: 'Invalid editId' };
-        return rejectEdit(editId);
-    });
-
-    ipc.handle('agent:getPendingEdits', async () => getPendingEdits());
 }

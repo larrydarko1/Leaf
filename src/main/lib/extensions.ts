@@ -3,9 +3,9 @@
  * Used by fs-service to decide which files to index.
  */
 
-const TEXT_EXTENSIONS = ['.txt', '.md'];
+export const TEXT_EXTENSIONS = ['.txt', '.md'];
 
-const CODE_EXTENSIONS = [
+export const CODE_EXTENSIONS = [
     '.py',
     '.js',
     '.jsx',
@@ -70,13 +70,13 @@ const CODE_EXTENSIONS = [
     '.cjs',
 ];
 
-const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico'];
-const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
-const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.flac', '.aac', '.m4a', '.ogg', '.wma', '.aiff'];
-const PDF_EXTENSIONS = ['.pdf'];
-const DRAWING_EXTENSIONS = ['.drawing'];
+export const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico'];
+export const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
+export const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.flac', '.aac', '.m4a', '.ogg', '.wma', '.aiff'];
+export const PDF_EXTENSIONS = ['.pdf'];
+export const DRAWING_EXTENSIONS = ['.drawing'];
 
-const ALLOWED_EXTENSIONS = new Set([
+export const ALLOWED_EXTENSIONS = new Set([
     ...TEXT_EXTENSIONS,
     ...CODE_EXTENSIONS,
     ...IMAGE_EXTENSIONS,
@@ -85,14 +85,3 @@ const ALLOWED_EXTENSIONS = new Set([
     ...PDF_EXTENSIONS,
     ...DRAWING_EXTENSIONS,
 ]);
-
-export {
-    TEXT_EXTENSIONS,
-    CODE_EXTENSIONS,
-    IMAGE_EXTENSIONS,
-    VIDEO_EXTENSIONS,
-    AUDIO_EXTENSIONS,
-    PDF_EXTENSIONS,
-    DRAWING_EXTENSIONS,
-    ALLOWED_EXTENSIONS,
-};

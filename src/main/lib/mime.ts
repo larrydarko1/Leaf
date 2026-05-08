@@ -3,7 +3,7 @@
  * Used by main.ts (leaf:// protocol) and fs-service (file:readImage, file:readAudio).
  */
 
-const IMAGE_MIMETYPES: Record<string, string> = {
+export const IMAGE_MIMETYPES: Record<string, string> = {
     '.png': 'image/png',
     '.jpg': 'image/jpeg',
     '.jpeg': 'image/jpeg',
@@ -14,7 +14,7 @@ const IMAGE_MIMETYPES: Record<string, string> = {
     '.ico': 'image/x-icon',
 };
 
-const AUDIO_MIMETYPES: Record<string, string> = {
+export const AUDIO_MIMETYPES: Record<string, string> = {
     '.mp3': 'audio/mpeg',
     '.wav': 'audio/wav',
     '.flac': 'audio/flac',
@@ -25,7 +25,7 @@ const AUDIO_MIMETYPES: Record<string, string> = {
     '.aiff': 'audio/aiff',
 };
 
-const VIDEO_MIMETYPES: Record<string, string> = {
+export const VIDEO_MIMETYPES: Record<string, string> = {
     '.mp4': 'video/mp4',
     '.webm': 'video/webm',
     '.mov': 'video/quicktime',
@@ -35,11 +35,9 @@ const VIDEO_MIMETYPES: Record<string, string> = {
 
 // Full map used by the leaf:// protocol to serve any local file with the
 // correct Content-Type. Falls back to application/octet-stream if unknown.
-const MIME_MAP: Record<string, string> = {
+export const MIME_MAP: Record<string, string> = {
     ...IMAGE_MIMETYPES,
     ...AUDIO_MIMETYPES,
     ...VIDEO_MIMETYPES,
     '.pdf': 'application/pdf',
 };
-
-export { IMAGE_MIMETYPES, AUDIO_MIMETYPES, VIDEO_MIMETYPES, MIME_MAP };
