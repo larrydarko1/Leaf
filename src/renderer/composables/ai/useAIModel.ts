@@ -156,7 +156,7 @@ export function useAIModel() {
 
     async function openModelsFolder() {
         try {
-            await window.electronAPI.aiOpenModelsDir();
+            await window.electronAPI.aiOpenLeafDir();
         } catch (error) {
             window.electronAPI.log.error('Failed to open models dir:', error);
         }

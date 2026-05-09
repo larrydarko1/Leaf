@@ -9,7 +9,7 @@ const mockAiLoadModel = vi.fn();
 const mockAiUnloadModel = vi.fn();
 const mockAiGetStatus = vi.fn();
 const mockAiRestoreChatHistory = vi.fn().mockResolvedValue({ success: true });
-const mockAiOpenModelsDir = vi.fn().mockResolvedValue(undefined);
+const mockAiOpenLeafDir = vi.fn().mockResolvedValue(undefined);
 
 Object.defineProperty(globalThis, 'window', {
     value: {
@@ -19,7 +19,7 @@ Object.defineProperty(globalThis, 'window', {
             aiUnloadModel: mockAiUnloadModel,
             aiGetStatus: mockAiGetStatus,
             aiRestoreChatHistory: mockAiRestoreChatHistory,
-            aiOpenModelsDir: mockAiOpenModelsDir,
+            aiOpenLeafDir: mockAiOpenLeafDir,
             log: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
         },
     },

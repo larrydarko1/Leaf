@@ -42,8 +42,9 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 - **Conversation restore** - Reloading a model or switching conversations automatically restores context so the AI remembers what you discussed
 - **Auto context compaction** - When token memory reaches 90%, the AI automatically summarizes the conversation and frees context space — no data is lost, all messages stay visible
 - **Note-aware context** - Toggle to include the current note as context for AI queries
+- **Editable system prompts** - Pick from bundled templates or hand-edit Markdown files in `~/.leaf/prompts/` to customise the AI’s personality and behaviour
 - **Agent mode** - Let the AI read and edit your currently open file directly, with built-in version control (approve or revert every change)
-- **Model management** - Load and unload GGUF models from a dedicated models folder (`~/leaf-models/`)
+- **Model management** - Load and unload GGUF models from a dedicated models folder (`~/.leaf/models/`)
 - **GPU accelerated** - Automatically uses Metal (macOS), CUDA (NVIDIA), or Vulkan for fast inference
 - **Powered by llama.cpp** - Uses [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) bindings to [llama.cpp](https://github.com/ggml-org/llama.cpp) (both MIT licensed)
 
@@ -98,16 +99,18 @@ Your notes are stored exactly where you choose - simply select any folder on you
 
 ### AI Models
 
-Leaf stores AI models in `~/leaf-models/`. To get started with the AI assistant:
+Leaf stores AI models in `~/.leaf/models/`. To get started with the AI assistant:
 
 1. Open the AI panel by clicking the lightbulb icon in the sidebar
 2. Click the **download** icon in the toolbar to open the Hugging Face download panel
 3. Search for a model (e.g. "llama 3.2", "phi", "qwen") and browse available GGUF files
 4. Check the **size tier badge** and **estimated RAM** to make sure it fits your machine
-5. Click the download button — the model is saved directly to `~/leaf-models/`
+5. Click the download button — the model is saved directly to `~/.leaf/models/`
 6. Select and load the model from the dropdown in the AI panel
 
-> **Tip:** You can also manually place `.gguf` files in `~/leaf-models/` or click the folder icon to open the directory.
+> **Tip:** You can also manually place `.gguf` files in `~/.leaf/models/` or click the folder icon to open the directory.
+
+> **Migrating from older versions:** If you previously stored models in `~/leaf-models/`, Leaf automatically moves them to `~/.leaf/models/` on first launch. No action required.
 
 ### Using Agent Mode
 
@@ -121,6 +124,30 @@ Agent mode lets the AI edit your files directly with a safety net:
 6. **Approve** keeps the change permanently; **Reject** reverts the file to its original content
 
 > Agent mode only operates on the currently open file and is scoped to your vault folder for security.
+
+### Customising the System Prompt
+
+Leaf ships a small library of system-prompt templates as Markdown files. The active prompt is sent to the model on every load / chat reset, shaping its tone and behaviour.
+
+1. Open the AI panel and click the **chat-bubble icon** in the toolbar — the dropdown lists every template in `~/.leaf/prompts/` with its name and description, and a checkmark on the active one.
+2. Click any template to make it active.
+3. Click the folder icon to edit templates in your preferred editor.
+
+The templates folder lives at `~/.leaf/prompts/`. Each `*.md` file is one template:
+
+```markdown
+---
+name: Coding Assistant
+description: Focused on programming questions, code review, and refactoring
+---
+
+You are a senior software engineer assisting inside a note-taking app.
+...
+```
+
+- The `---` frontmatter block (`name`, `description`) is optional and used only by the picker UI; it's stripped before being sent to the model.
+- Drop new `.md` files into the folder to add your own templates — they appear automatically.
+- Bundled defaults (`default.md`, `coding.md`, `writing.md`) are seeded on first launch and never overwritten if you've edited them.
 
 ### Using Dictation (Speech-to-Text)
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import type { AiModelInfo, AiStatus } from '../../types/ai';
+import { useSystemPrompt } from '../../composables/ai/useSystemPrompt';
 
 defineProps<{
     status: AiStatus;
@@ -32,7 +33,20 @@ const dropdownRef = ref<HTMLElement | null>(null);
 const showDropdown = ref(false);
 const dropdownPosition = ref<Record<string, string>>({});
 
-onMounted(() => document.addEventListener('click', handleClickOutside));
+// System prompt picker state
+const { prompts, activeId, refresh: refreshPrompts, setActive } = useSystemPrompt();
+const promptDropdownRef = ref<HTMLElement | null>(null);
+const showPromptDropdown = ref(false);
+const promptDropdownPosition = ref<Record<string, string>>({});
+const activePromptName = computed(() => {
+    const found = prompts.value.find((p) => p.id === activeId.value);
+    return found?.name || activeId.value || 'default';
+});
+
+onMounted(() => {
+    document.addEventListener('click', handleClickOutside);
+    refreshPrompts();
+});
 onUnmounted(() => document.removeEventListener('click', handleClickOutside));
 
 function toggleDropdown() {
@@ -58,9 +72,40 @@ function handleSelectModel(model: AiModelInfo) {
 }
 
 function handleClickOutside(event: MouseEvent) {
-    if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
+    const target = event.target as Node;
+    if (dropdownRef.value && !dropdownRef.value.contains(target)) {
         showDropdown.value = false;
     }
+    if (promptDropdownRef.value && !promptDropdownRef.value.contains(target)) {
+        showPromptDropdown.value = false;
+    }
+}
+
+function togglePromptDropdown() {
+    if (showPromptDropdown.value) {
+        showPromptDropdown.value = false;
+        return;
+    }
+    if (promptDropdownRef.value) {
+        const rect = promptDropdownRef.value.getBoundingClientRect();
+        promptDropdownPosition.value = {
+            top: `${rect.bottom + 4}px`,
+            right: `${Math.max(12, window.innerWidth - rect.right)}px`,
+            minWidth: '220px',
+            maxWidth: '300px',
+        };
+    }
+    showPromptDropdown.value = true;
+}
+
+async function handleSelectPrompt(id: string) {
+    showPromptDropdown.value = false;
+    await setActive(id);
+}
+
+function handleRefresh() {
+    emit('refresh-models');
+    refreshPrompts();
 }
 
 function truncate(str: string, len: number): string {
@@ -135,13 +180,58 @@ function truncate(str: string, len: number): string {
             </div>
         </div>
         <div class="ai-bar-actions">
-            <button class="ai-btn-icon" title="Open models folder" @click="$emit('open-models-folder')">
+            <button class="ai-btn-icon" title="Open Leaf folder" @click="$emit('open-models-folder')">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
                     <path
                         d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.12.28.256.554.53L11 4c.816.816 1.224 1.224 1.712 1.495.274.15.56.263.86.348.536.153 1.113.153 2.268.153h.374c2.632 0 3.949 0 4.804.77.079.07.154.145.224.224C22 7.85 22 9.166 22 11.798V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14V6.95z"
                     />
                 </svg>
             </button>
+
+            <!-- System prompt picker -->
+            <div ref="promptDropdownRef" class="ai-prompt-picker">
+                <button
+                    class="ai-btn-icon"
+                    :class="{ 'ai-btn-active': showPromptDropdown }"
+                    :title="`System prompt: ${activePromptName}`"
+                    @click="togglePromptDropdown()"
+                >
+                    <svg
+                        width="11"
+                        height="11"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                </button>
+                <Teleport to="body">
+                    <div
+                        v-if="showPromptDropdown"
+                        class="ai-dropdown-menu ai-prompt-menu"
+                        :style="promptDropdownPosition"
+                    >
+                        <div class="ai-prompt-menu-header">System prompt</div>
+                        <div v-if="prompts.length === 0" class="ai-dropdown-empty">No prompts found</div>
+                        <div
+                            v-for="p in prompts"
+                            :key="p.id"
+                            class="ai-dropdown-item ai-prompt-item"
+                            :class="{ selected: p.id === activeId }"
+                            @click="handleSelectPrompt(p.id)"
+                        >
+                            <div class="ai-prompt-item-main">
+                                <span class="ai-prompt-item-name">{{ p.name }}</span>
+                                <span v-if="p.description" class="ai-prompt-item-desc">{{ p.description }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </Teleport>
+            </div>
             <button
                 class="ai-btn-icon"
                 :class="{ 'ai-btn-active': showHfPanel }"
@@ -163,7 +253,7 @@ function truncate(str: string, len: number): string {
                     <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
             </button>
-            <button class="ai-btn-icon" title="Refresh model list" @click="$emit('refresh-models')">
+            <button class="ai-btn-icon" title="Refresh .leaf folder" @click="handleRefresh()">
                 <svg
                     width="11"
                     height="11"
@@ -482,5 +572,49 @@ function truncate(str: string, len: number): string {
         opacity: 0.4;
         cursor: not-allowed;
     }
+}
+
+.ai-prompt-picker {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.ai-prompt-menu {
+    padding: 0.4rem;
+    min-height: 250px;
+}
+
+.ai-prompt-menu-header {
+    padding: 0.25rem 0.5rem 0.4rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: $text2;
+}
+
+.ai-prompt-item {
+    align-items: flex-start;
+    margin-bottom: 0.25em;
+}
+
+.ai-prompt-item-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.ai-prompt-item-name {
+    font-size: 0.78rem;
+    line-height: 1.2;
+}
+
+.ai-prompt-item-desc {
+    font-size: 0.68rem;
+    color: $text2;
+    line-height: 1.3;
 }
 </style>

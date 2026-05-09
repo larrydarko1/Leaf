@@ -68,7 +68,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     aiResetChat: () => ipcRenderer.invoke('ai:resetChat'),
     aiRestoreChatHistory: (messages: object[]) => ipcRenderer.invoke('ai:restoreChatHistory', messages),
     aiGetStatus: () => ipcRenderer.invoke('ai:getStatus'),
-    aiOpenModelsDir: () => ipcRenderer.invoke('ai:openModelsDir'),
+    aiOpenLeafDir: () => ipcRenderer.invoke('ai:openLeafDir'),
+
+    // System prompt templates (~/.leaf/prompts/*.md)
+    systemPromptList: () => ipcRenderer.invoke('systemPrompt:list'),
+    systemPromptSetActive: (id: string) => ipcRenderer.invoke('systemPrompt:setActive', id),
+    systemPromptOpenLeafDir: () => ipcRenderer.invoke('systemPrompt:openLeafDir'),
 
     // AI streaming token listener
     onAiToken: (callback: (token: string) => void) => {

@@ -1,6 +1,6 @@
 /**
  * App path constants and resolution helpers — pure Node, no Electron imports.
- * Used by ai-service, hf-download-service, and speech-service.
+ * Used by ai-service, hf-download-service, speech-service, and systemPrompt-service.
  */
 
 import path from 'path';
@@ -8,8 +8,61 @@ import os from 'os';
 import fs from 'fs';
 import { log } from './logger';
 
-// Directory where the user stores their GGUF models: ~/leaf-models/
-export const DEFAULT_MODELS_DIR = path.join(os.homedir(), 'leaf-models');
+// ─── Leaf user directory: ~/.leaf/ ───────────────────────────────────────────
+// All user-owned, user-editable Leaf data lives under here.
+//   ~/.leaf/models/      → GGUF model files
+//   ~/.leaf/prompts/     → markdown system prompts (one per template)
+//   ~/.leaf/state.json   → small key/value file (active prompt id, etc.)
+export const LEAF_HOME = path.join(os.homedir(), '.leaf');
+
+// Directory where the user stores their GGUF models: ~/.leaf/models/
+export const DEFAULT_MODELS_DIR = path.join(LEAF_HOME, 'models');
+
+// Directory where system-prompt templates live: ~/.leaf/prompts/
+export const PROMPTS_DIR = path.join(LEAF_HOME, 'prompts');
+
+// Persistent app state (active prompt id, etc.): ~/.leaf/state.json
+export const STATE_FILE = path.join(LEAF_HOME, 'state.json');
+
+// Legacy location used before the ~/.leaf/ consolidation.
+const LEGACY_MODELS_DIR = path.join(os.homedir(), 'leaf-models');
+
+/**
+ * Migrate legacy `~/leaf-models/` → `~/.leaf/models/` on first launch.
+ * Idempotent: no-op if the legacy dir doesn't exist or the new path is
+ * already populated. Runs synchronously at startup before any service
+ * touches the models dir.
+ */
+export function migrateLegacyPaths(): void {
+    try {
+        if (!fs.existsSync(LEGACY_MODELS_DIR)) return;
+        if (fs.existsSync(DEFAULT_MODELS_DIR)) {
+            log.info('[paths] Both legacy and new model dirs exist — leaving legacy alone.');
+            return;
+        }
+        fs.mkdirSync(LEAF_HOME, { recursive: true });
+        fs.renameSync(LEGACY_MODELS_DIR, DEFAULT_MODELS_DIR);
+        log.info(`[paths] Migrated ${LEGACY_MODELS_DIR} → ${DEFAULT_MODELS_DIR}`);
+    } catch (err) {
+        log.error('[paths] Legacy path migration failed:', err);
+    }
+}
+
+/**
+ * Resolve the bundled prompt-templates directory shipped with the app.
+ * In development  →  <repo>/assets/prompts/
+ * In production   →  <app>/Contents/Resources/assets/prompts/
+ */
+export function getBundledPromptsDir(): string {
+    const devPath = path.join(__dirname, '../../assets/prompts');
+
+    if (process.resourcesPath) {
+        const prodPath = path.join(process.resourcesPath, 'assets/prompts');
+        if (fs.existsSync(prodPath)) return prodPath;
+    }
+
+    return devPath;
+}
 
 /**
  * Resolve the bundled Whisper model directory.

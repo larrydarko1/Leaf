@@ -9,7 +9,8 @@ import { shell } from 'electron';
 import path from 'path';
 import fs from 'fs/promises';
 import { existsSync } from 'fs';
-import { DEFAULT_MODELS_DIR } from '../lib/paths';
+import { DEFAULT_MODELS_DIR, LEAF_HOME } from '../lib/paths';
+import { getActiveSystemPrompt } from './systemPrompt';
 import { log } from '../lib/logger';
 
 interface ModelEntry {
@@ -76,7 +77,7 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
     });
 
     ipc.handle('ai:getStatus', async () => getStatus());
-    ipc.handle('ai:openModelsDir', async () => openModelsDir());
+    ipc.handle('ai:openLeafDir', async () => openLeafDir());
 }
 
 /** Graceful shutdown: unload the model and free resources. */
@@ -205,7 +206,11 @@ async function loadModel(modelPath: string): Promise<{ success: boolean; modelNa
         context = await model.createContext();
 
         const { LlamaChatSession } = await import('node-llama-cpp');
-        session = new LlamaChatSession({ contextSequence: context.getSequence() });
+        const systemPrompt = await getActiveSystemPrompt();
+        session = new LlamaChatSession({
+            contextSequence: context.getSequence(),
+            systemPrompt: systemPrompt || undefined,
+        });
 
         isModelLoaded = true;
         currentModelPath = modelPath;
@@ -304,12 +309,19 @@ async function chat(
                     log.info(`Context usage at ${Math.round(usage * 100)}% — auto-compacting...`);
                     pendingConversationHistory = [...trackedMessages];
                     const { LlamaChatSession } = await import('node-llama-cpp');
+                    const systemPrompt = await getActiveSystemPrompt();
                     // Reuse existing sequence to avoid exhausting sequence slots
                     if (seq && !seq.disposed) {
                         await seq.clearHistory();
-                        session = new LlamaChatSession({ contextSequence: seq });
+                        session = new LlamaChatSession({
+                            contextSequence: seq,
+                            systemPrompt: systemPrompt || undefined,
+                        });
                     } else {
-                        session = new LlamaChatSession({ contextSequence: context.getSequence() });
+                        session = new LlamaChatSession({
+                            contextSequence: context.getSequence(),
+                            systemPrompt: systemPrompt || undefined,
+                        });
                     }
                     compacted = true;
                     log.info('Auto-compaction complete. Summary will be injected on next prompt.');
@@ -350,15 +362,22 @@ async function resetChat(): Promise<{ success: boolean; error?: string }> {
         pendingConversationHistory = null;
         trackedMessages = [];
         const { LlamaChatSession } = await import('node-llama-cpp');
+        const systemPrompt = await getActiveSystemPrompt();
         // Reuse the existing sequence (clear its KV cache) instead of
         // calling context.getSequence() which allocates a new slot and
         // can exhaust the context's sequence limit, crashing Metal.
         const existingSeq = session?.sequence;
         if (existingSeq && !existingSeq.disposed) {
             await existingSeq.clearHistory();
-            session = new LlamaChatSession({ contextSequence: existingSeq });
+            session = new LlamaChatSession({
+                contextSequence: existingSeq,
+                systemPrompt: systemPrompt || undefined,
+            });
         } else {
-            session = new LlamaChatSession({ contextSequence: context.getSequence() });
+            session = new LlamaChatSession({
+                contextSequence: context.getSequence(),
+                systemPrompt: systemPrompt || undefined,
+            });
         }
         return { success: true };
     } catch (error) {
@@ -427,8 +446,8 @@ function getStatus(): object {
     };
 }
 
-async function openModelsDir(): Promise<{ success: boolean }> {
-    await ensureModelsDir();
-    await shell.openPath(DEFAULT_MODELS_DIR);
+async function openLeafDir(): Promise<{ success: boolean }> {
+    await fs.mkdir(LEAF_HOME, { recursive: true });
+    await shell.openPath(LEAF_HOME);
     return { success: true };
 }

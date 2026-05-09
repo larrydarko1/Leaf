@@ -175,7 +175,16 @@ export interface ElectronAPI {
     aiResetChat: () => Promise<AiSimpleResult>;
     aiRestoreChatHistory: (messages: Array<{ role: string; content: string }>) => Promise<AiSimpleResult>;
     aiGetStatus: () => Promise<AiStatus>;
-    aiOpenModelsDir: () => Promise<AiSimpleResult>;
+    aiOpenLeafDir: () => Promise<AiSimpleResult>;
+    systemPromptList: () => Promise<{
+        success: boolean;
+        prompts: Array<{ id: string; name: string; description: string; path: string }>;
+        activeId: string;
+        promptsDir: string;
+        error?: string;
+    }>;
+    systemPromptSetActive: (id: string) => Promise<AiSimpleResult>;
+    systemPromptOpenLeafDir: () => Promise<AiSimpleResult>;
     onAiToken: (callback: (token: string) => void) => void;
     removeAiTokenListener: () => void;
 

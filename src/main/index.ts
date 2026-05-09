@@ -16,6 +16,7 @@
  *   agent-service        → agent:*
  *   hf-download-service  → hf:*
  *   speech-service       → speech:*
+ *   systemPrompt-service → systemPrompt:*
  */
 
 import { app, BrowserWindow, ipcMain, shell, Menu, screen, protocol, net, session, clipboard } from 'electron';
@@ -30,6 +31,8 @@ import * as conversationService from './services/conversation';
 import * as agentService from './services/agent';
 import * as hfDownloadService from './services/hf-download';
 import * as speechService from './services/speech';
+import * as systemPromptService from './services/systemPrompt';
+import { migrateLegacyPaths } from './lib/paths';
 import { log } from './lib/logger';
 
 // ─── Scheme privileges ───────────────────────────────────────────────────────
@@ -182,6 +185,9 @@ app.whenReady().then(() => {
         return permission === 'media';
     });
 
+    // ── One-time path migration (legacy ~/leaf-models → ~/.leaf/models) ────
+    migrateLegacyPaths();
+
     // ── Register IPC handlers ────────────────────────────────────────────────
     conversationService.init(app.getPath('userData'));
 
@@ -192,6 +198,7 @@ app.whenReady().then(() => {
     agentService.register(ipcMain);
     hfDownloadService.register(ipcMain, getMainWindow);
     speechService.register(ipcMain, getMainWindow);
+    systemPromptService.register(ipcMain);
 
     // Logging — route renderer log calls to electron-log
     ipcMain.on('log:error', (_event, ...args: unknown[]) => log.error(...args));

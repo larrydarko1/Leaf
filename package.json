@@ -98,7 +98,8 @@
         ],
         "afterPack": "./build/afterPack.cjs",
         "extraResources": [
-            "models/**"
+            "models/**",
+            "assets/**"
         ],
         "asarUnpack": [
             "models/**",
