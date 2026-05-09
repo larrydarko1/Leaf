@@ -36,6 +36,22 @@ const exportScaleOptions = [
     { label: '3x', value: 3 },
 ];
 
+// Update preview when dialog opens
+watch(
+    () => props.visible,
+    (v) => {
+        if (v) {
+            exportOnlySelected.value = props.hasSelection;
+            updateExportPreview();
+        }
+    },
+);
+
+// Update preview when settings change
+watch([exportWithBackground, exportScale, exportOnlySelected], () => {
+    if (props.visible) updateExportPreview();
+});
+
 function getExportElements(): CanvasElement[] {
     return exportOnlySelected.value && props.hasSelection
         ? props.elements.filter((el) => props.selectedIds.has(el.id))
@@ -124,22 +140,6 @@ async function copyClipboard() {
         isExporting.value = false;
     }
 }
-
-// Update preview when dialog opens
-watch(
-    () => props.visible,
-    (v) => {
-        if (v) {
-            exportOnlySelected.value = props.hasSelection;
-            updateExportPreview();
-        }
-    },
-);
-
-// Update preview when settings change
-watch([exportWithBackground, exportScale, exportOnlySelected], () => {
-    if (props.visible) updateExportPreview();
-});
 </script>
 
 <template>

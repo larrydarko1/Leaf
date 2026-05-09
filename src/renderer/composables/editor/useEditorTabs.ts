@@ -5,19 +5,6 @@
 import { ref, computed } from 'vue';
 import type { FileInfo } from '../../types/electron';
 
-const MAX_TABS = 10;
-const STORAGE_KEY_PREFIX = 'leaf-tabs-';
-
-interface PersistedTab {
-    path: string;
-    scrollTop: number;
-}
-
-interface PersistedTabState {
-    tabs: PersistedTab[];
-    activeIndex: number;
-}
-
 export interface TabState {
     file: FileInfo;
     /** Cached text content — only populated for text/markdown/code files */
@@ -29,6 +16,19 @@ export interface TabState {
     /** Scroll position to restore on tab switch */
     scrollTop: number;
 }
+
+interface PersistedTab {
+    path: string;
+    scrollTop: number;
+}
+
+interface PersistedTabState {
+    tabs: PersistedTab[];
+    activeIndex: number;
+}
+
+const MAX_TABS = 10;
+const STORAGE_KEY_PREFIX = 'leaf-tabs-';
 
 export function useEditorTabs() {
     const tabs = ref<TabState[]>([]);

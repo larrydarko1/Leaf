@@ -9,6 +9,15 @@ const props = defineProps<{
     renameValue: string;
 }>();
 
+defineEmits<{
+    (e: 'load', id: string): void;
+    (e: 'start-rename', conv: ConversationMeta): void;
+    (e: 'confirm-rename', id: string): void;
+    (e: 'cancel-rename'): void;
+    (e: 'delete', id: string): void;
+    (e: 'update:renameValue', value: string): void;
+}>();
+
 const renameInputRef = ref<HTMLInputElement[]>();
 
 watch(
@@ -21,15 +30,6 @@ watch(
         }
     },
 );
-
-defineEmits<{
-    (e: 'load', id: string): void;
-    (e: 'start-rename', conv: ConversationMeta): void;
-    (e: 'confirm-rename', id: string): void;
-    (e: 'cancel-rename'): void;
-    (e: 'delete', id: string): void;
-    (e: 'update:renameValue', value: string): void;
-}>();
 
 function formatRelativeDate(dateStr: string): string {
     const date = new Date(dateStr);

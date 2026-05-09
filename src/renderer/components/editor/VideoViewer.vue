@@ -35,6 +35,9 @@ watch(
     { immediate: true },
 );
 
+onMounted(() => window.addEventListener('keydown', onKeydown));
+onUnmounted(() => window.removeEventListener('keydown', onKeydown));
+
 function onKeydown(e: KeyboardEvent) {
     if (e.key !== ' ' || !videoRef.value) return;
     const target = e.target as HTMLElement;
@@ -42,9 +45,6 @@ function onKeydown(e: KeyboardEvent) {
     e.preventDefault();
     toggleVideoPlayback();
 }
-
-onMounted(() => window.addEventListener('keydown', onKeydown));
-onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 </script>
 
 <template>

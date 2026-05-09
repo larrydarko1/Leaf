@@ -156,6 +156,15 @@ const tokenUsagePercent = computed(() => {
     return Math.min(100, Math.round((conversationTokenCount.value / status.value.contextSize) * 100));
 });
 
+onMounted(async () => {
+    await refreshStatus();
+    await refreshModels();
+    await refreshConversationList();
+    if (status.value.isModelLoaded && inputField.value) {
+        inputField.value.focus();
+    }
+});
+
 // Orchestration wrappers
 
 async function loadSelectedModel() {
@@ -195,15 +204,6 @@ async function loadPreviousModel() {
         messages.value.push({ role: 'assistant', content: `Failed to load model: ${result.error}` });
     }
 }
-
-onMounted(async () => {
-    await refreshStatus();
-    await refreshModels();
-    await refreshConversationList();
-    if (status.value.isModelLoaded && inputField.value) {
-        inputField.value.focus();
-    }
-});
 </script>
 
 <template>

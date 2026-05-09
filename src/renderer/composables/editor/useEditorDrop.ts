@@ -10,18 +10,6 @@ import type { EditorView } from '@codemirror/view';
 
 const embeddableExtensions = [...IMAGE_EXTENSIONS, ...VIDEO_EXTENSIONS, ...AUDIO_EXTENSIONS, ...PDF_EXTENSIONS];
 
-function isEmbeddableFile(fileName: string): boolean {
-    const ext = '.' + fileName.split('.').pop()?.toLowerCase();
-    return embeddableExtensions.includes(ext);
-}
-
-function hasEmbeddableData(dt: DataTransfer | null): boolean {
-    if (!dt) return false;
-    if (dt.types.includes('Files')) return true;
-    if (dt.types.includes('text/plain')) return true;
-    return false;
-}
-
 export function useEditorDrop(
     isMarkdownFile: Ref<boolean>,
     getFile: () => { path: string } | null,
@@ -164,4 +152,16 @@ export function useEditorDrop(
     }
 
     return { isDragOverEditor, onEditorDragEnter, onEditorDragOver, onEditorDragLeave, onFileDrop };
+}
+
+function isEmbeddableFile(fileName: string): boolean {
+    const ext = '.' + fileName.split('.').pop()?.toLowerCase();
+    return embeddableExtensions.includes(ext);
+}
+
+function hasEmbeddableData(dt: DataTransfer | null): boolean {
+    if (!dt) return false;
+    if (dt.types.includes('Files')) return true;
+    if (dt.types.includes('text/plain')) return true;
+    return false;
 }

@@ -73,23 +73,6 @@ const EXT_TO_LANG: Record<string, string> = {
 };
 
 /**
- * Resolve a file extension to a CodeMirror language Extension (async loaded).
- */
-async function languageForExtension(ext: string): Promise<Extension | null> {
-    const langName = EXT_TO_LANG[ext.toLowerCase()];
-    if (!langName) return null;
-
-    const desc =
-        languages.find((l) => l.name.toLowerCase() === langName.toLowerCase()) ??
-        languages.find((l) => l.alias.some((a) => a.toLowerCase() === langName.toLowerCase()));
-
-    if (!desc) return null;
-
-    const support = await desc.load();
-    return support;
-}
-
-/**
  * CodeMirror 6 composable for editing code files (non-markdown).
  * Provides syntax highlighting, line numbers, bracket matching, and folding.
  */
@@ -211,4 +194,21 @@ export function useCodeEditor(
     });
 
     return { view };
+}
+
+/**
+ * Resolve a file extension to a CodeMirror language Extension (async loaded).
+ */
+async function languageForExtension(ext: string): Promise<Extension | null> {
+    const langName = EXT_TO_LANG[ext.toLowerCase()];
+    if (!langName) return null;
+
+    const desc =
+        languages.find((l) => l.name.toLowerCase() === langName.toLowerCase()) ??
+        languages.find((l) => l.alias.some((a) => a.toLowerCase() === langName.toLowerCase()));
+
+    if (!desc) return null;
+
+    const support = await desc.load();
+    return support;
 }

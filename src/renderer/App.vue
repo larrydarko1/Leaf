@@ -35,6 +35,26 @@ const showSearchPanel = ref(false);
 const showBookmarksPanel = ref(false);
 const showAiPanel = ref(false);
 
+// --- Lifecycle ---
+onMounted(() => {
+    const savedTheme = localStorage.getItem('leaf-theme');
+    if (savedTheme) currentTheme.value = savedTheme;
+    applyTheme(currentTheme.value);
+
+    const savedFolder = localStorage.getItem('leaf-folder-path');
+    if (savedFolder) loadFolderPath(savedFolder);
+
+    vault.setExternalChangeCallback(() => refreshFiles());
+    window.addEventListener('keydown', handleKeydown);
+    document.addEventListener('click', handleExternalLinkClick, true);
+});
+
+onBeforeUnmount(() => {
+    vault.closeVault();
+    window.removeEventListener('keydown', handleKeydown);
+    document.removeEventListener('click', handleExternalLinkClick, true);
+});
+
 // --- Theme ---
 function applyTheme(theme: string) {
     document.documentElement.setAttribute('data-theme', theme);
@@ -105,26 +125,6 @@ function changeFolder() {
     editorTabs.clearTabs();
     editorTabs.setFolderPath(null);
 }
-
-// --- Lifecycle ---
-onMounted(() => {
-    const savedTheme = localStorage.getItem('leaf-theme');
-    if (savedTheme) currentTheme.value = savedTheme;
-    applyTheme(currentTheme.value);
-
-    const savedFolder = localStorage.getItem('leaf-folder-path');
-    if (savedFolder) loadFolderPath(savedFolder);
-
-    vault.setExternalChangeCallback(() => refreshFiles());
-    window.addEventListener('keydown', handleKeydown);
-    document.addEventListener('click', handleExternalLinkClick, true);
-});
-
-onBeforeUnmount(() => {
-    vault.closeVault();
-    window.removeEventListener('keydown', handleKeydown);
-    document.removeEventListener('click', handleExternalLinkClick, true);
-});
 
 function handleKeydown(e: KeyboardEvent) {
     if (e.key === 'F2') {

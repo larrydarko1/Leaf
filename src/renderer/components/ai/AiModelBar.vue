@@ -32,6 +32,9 @@ const dropdownRef = ref<HTMLElement | null>(null);
 const showDropdown = ref(false);
 const dropdownPosition = ref<Record<string, string>>({});
 
+onMounted(() => document.addEventListener('click', handleClickOutside));
+onUnmounted(() => document.removeEventListener('click', handleClickOutside));
+
 function toggleDropdown() {
     if (showDropdown.value) {
         showDropdown.value = false;
@@ -59,9 +62,6 @@ function handleClickOutside(event: MouseEvent) {
         showDropdown.value = false;
     }
 }
-
-onMounted(() => document.addEventListener('click', handleClickOutside));
-onUnmounted(() => document.removeEventListener('click', handleClickOutside));
 
 function truncate(str: string, len: number): string {
     return str.length > len ? str.slice(0, len) + '…' : str;

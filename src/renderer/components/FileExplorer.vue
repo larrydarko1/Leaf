@@ -67,6 +67,35 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
     }
 });
 
+// Watch for renaming file changes
+watch(
+    () => props.renamingFile,
+    (newRenamingFile) => {
+        if (newRenamingFile) {
+            renameValue.value = getFileNameWithoutExtension(newRenamingFile.name);
+        }
+    },
+);
+
+// Watch for renaming folder changes
+watch(
+    () => props.renamingFolder,
+    (newRenamingFolder) => {
+        if (newRenamingFolder) {
+            renameValue.value = newRenamingFolder.split('/').pop() || newRenamingFolder;
+        }
+    },
+);
+
+// Set up keyboard listeners
+onMounted(() => {
+    window.addEventListener('keydown', handleKeyDown);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('keydown', handleKeyDown);
+});
+
 // Keyboard navigation handler
 function handleKeyDown(e: KeyboardEvent) {
     // Don't navigate if we're renaming
@@ -130,15 +159,6 @@ function handleKeyDown(e: KeyboardEvent) {
         emit('selectFolder', newItem.folderPath);
     }
 }
-
-// Set up keyboard listeners
-onMounted(() => {
-    window.addEventListener('keydown', handleKeyDown);
-});
-
-onUnmounted(() => {
-    window.removeEventListener('keydown', handleKeyDown);
-});
 
 function selectFile(file: FileInfo, event?: MouseEvent) {
     if (!props.renamingFile && !props.renamingFolder) {
@@ -259,26 +279,6 @@ function handleRootDrop(event: DragEvent) {
         }
     }
 }
-
-// Watch for renaming file changes
-watch(
-    () => props.renamingFile,
-    (newRenamingFile) => {
-        if (newRenamingFile) {
-            renameValue.value = getFileNameWithoutExtension(newRenamingFile.name);
-        }
-    },
-);
-
-// Watch for renaming folder changes
-watch(
-    () => props.renamingFolder,
-    (newRenamingFolder) => {
-        if (newRenamingFolder) {
-            renameValue.value = newRenamingFolder.split('/').pop() || newRenamingFolder;
-        }
-    },
-);
 </script>
 
 <template>

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { StrokeStyle } from '../../types/drawing';
 
+type StyleKey = 'strokeColor' | 'fillColor' | 'strokeWidth' | 'strokeStyle' | 'borderRadius' | 'fontSize';
+
 defineProps<{
     visible: boolean;
     activeStrokeColor: string;
@@ -14,8 +16,6 @@ defineProps<{
     showRoundnessOption: boolean;
     hasSelection: boolean;
 }>();
-
-type StyleKey = 'strokeColor' | 'fillColor' | 'strokeWidth' | 'strokeStyle' | 'borderRadius' | 'fontSize';
 
 const emit = defineEmits<{
     setProperty: [prop: StyleKey, value: string | number];

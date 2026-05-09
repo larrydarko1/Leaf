@@ -2,11 +2,6 @@
 import { ref } from 'vue';
 import type { TabState } from '../composables/editor/useEditorTabs';
 
-// Pre-load a transparent 1x1 GIF so it's decoded before the first drag event
-const TRANSPARENT_GIF = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-const dragGhost = new Image();
-dragGhost.src = TRANSPARENT_GIF;
-
 defineProps<{
     tabs: TabState[];
     activeIndex: number;
@@ -17,6 +12,15 @@ const emit = defineEmits<{
     close: [index: number];
     reorder: [from: number, to: number];
 }>();
+
+// Pre-load a transparent 1x1 GIF so it's decoded before the first drag event
+const TRANSPARENT_GIF = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+const dragGhost = new Image();
+dragGhost.src = TRANSPARENT_GIF;
+
+// --- Drag and drop ---
+const dragStartIndex = ref(-1);
+const dragOverIndex = ref(-1);
 
 function getFileNameWithoutExtension(name: string): string {
     const last = name.lastIndexOf('.');
@@ -29,10 +33,6 @@ function handleMiddleClick(e: MouseEvent, index: number) {
         emit('close', index);
     }
 }
-
-// --- Drag and drop ---
-const dragStartIndex = ref(-1);
-const dragOverIndex = ref(-1);
 
 function onDragStart(e: DragEvent, index: number) {
     dragStartIndex.value = index;

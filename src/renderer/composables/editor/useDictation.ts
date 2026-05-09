@@ -6,24 +6,6 @@
 import { ref } from 'vue';
 import type { Ref } from 'vue';
 
-function resampleTo16kHz(input: Float32Array, inputSampleRate: number): Float32Array {
-    if (inputSampleRate === 16000) return input;
-    const ratio = inputSampleRate / 16000;
-    const newLength = Math.round(input.length / ratio);
-    const output = new Float32Array(newLength);
-    for (let i = 0; i < newLength; i++) {
-        const srcIdx = i * ratio;
-        const floor = Math.floor(srcIdx);
-        const frac = srcIdx - floor;
-        if (floor + 1 < input.length) {
-            output[i] = input[floor] * (1 - frac) + input[floor + 1] * frac;
-        } else {
-            output[i] = input[floor] || 0;
-        }
-    }
-    return output;
-}
-
 export function useDictation(content: Ref<string>, onContentChange: () => void) {
     const isDictating = ref(false);
     const isDictationLoading = ref(false);
@@ -169,4 +151,22 @@ export function useDictation(content: Ref<string>, onContentChange: () => void) 
     }
 
     return { isDictating, isDictationLoading, toggleDictation, stopDictation };
+}
+
+function resampleTo16kHz(input: Float32Array, inputSampleRate: number): Float32Array {
+    if (inputSampleRate === 16000) return input;
+    const ratio = inputSampleRate / 16000;
+    const newLength = Math.round(input.length / ratio);
+    const output = new Float32Array(newLength);
+    for (let i = 0; i < newLength; i++) {
+        const srcIdx = i * ratio;
+        const floor = Math.floor(srcIdx);
+        const frac = srcIdx - floor;
+        if (floor + 1 < input.length) {
+            output[i] = input[floor] * (1 - frac) + input[floor + 1] * frac;
+        } else {
+            output[i] = input[floor] || 0;
+        }
+    }
+    return output;
 }

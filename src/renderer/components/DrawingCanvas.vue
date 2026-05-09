@@ -24,6 +24,8 @@ const emit = defineEmits<{
     contentChanged: [hasChanges: boolean];
 }>();
 
+type StyleKey = 'strokeColor' | 'fillColor' | 'strokeWidth' | 'strokeStyle' | 'borderRadius' | 'fontSize';
+
 // State
 
 const containerEl = ref<HTMLDivElement | null>(null);
@@ -281,6 +283,9 @@ const canvasCursor = computed(() => {
     return 'crosshair';
 });
 
+const showExportDialog = ref(false);
+const hasSelection = computed(() => selectedIds.value.size > 0);
+
 // Lifecycle
 
 onMounted(() => {
@@ -334,9 +339,6 @@ function handleClickOutside(e: MouseEvent) {
 
 // Properties
 
-// Style properties that can be set on both elements and the default style
-type StyleKey = 'strokeColor' | 'fillColor' | 'strokeWidth' | 'strokeStyle' | 'borderRadius' | 'fontSize';
-
 function setProperty(prop: StyleKey, value: string | number) {
     // Update all selected elements
     if (selectedElements.value.length > 0) {
@@ -373,9 +375,6 @@ function setProperty(prop: StyleKey, value: string | number) {
 }
 
 // Export dialog
-
-const showExportDialog = ref(false);
-const hasSelection = computed(() => selectedIds.value.size > 0);
 
 function openExportDialog() {
     showExportDialog.value = true;

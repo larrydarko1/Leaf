@@ -39,6 +39,8 @@ const emit = defineEmits<{
     contentChanged: [hasChanges: boolean];
 }>();
 
+defineExpose({ reloadContent });
+
 // CodeMirror container ref (replaces textarea + preview)
 const cmContainerRef = ref<HTMLElement | null>(null);
 // CodeMirror container ref for code files
@@ -77,15 +79,6 @@ const {
     (c) => emit('save', c),
     (v) => emit('contentChanged', v),
 );
-
-/** Reload the current file's content from disk */
-async function reloadContent() {
-    if (props.file) {
-        await loadFile(props.file);
-    }
-}
-
-defineExpose({ reloadContent });
 
 // Dictation
 const { isDictating, isDictationLoading, toggleDictation, stopDictation } = useDictation(content, onContentChange);
@@ -245,6 +238,30 @@ const { isDragOverEditor, onEditorDragEnter, onEditorDragOver, onEditorDragLeave
     cmViewRef,
 );
 
+onMounted(() => {
+    document.addEventListener('drop', preventGlobalDrop, true);
+    document.addEventListener('dragover', preventGlobalDragOver, true);
+});
+
+// Cleanup
+onUnmounted(() => {
+    clearAutoSaveTimeout();
+    if (isDictating.value) {
+        stopDictation();
+    }
+    window.electronAPI.removeSpeechStatusListener();
+    document.removeEventListener('drop', preventGlobalDrop, true);
+    document.removeEventListener('dragover', preventGlobalDragOver, true);
+    window.removeEventListener('keydown', handleKeyboard);
+});
+
+/** Reload the current file's content from disk */
+async function reloadContent() {
+    if (props.file) {
+        await loadFile(props.file);
+    }
+}
+
 // Keyboard shortcuts
 function handleKeyboard(e: KeyboardEvent) {
     if ((e.metaKey || e.ctrlKey) && e.key === 's') {
@@ -265,23 +282,6 @@ function preventGlobalDragOver(event: DragEvent) {
 if (typeof window !== 'undefined') {
     window.addEventListener('keydown', handleKeyboard);
 }
-
-onMounted(() => {
-    document.addEventListener('drop', preventGlobalDrop, true);
-    document.addEventListener('dragover', preventGlobalDragOver, true);
-});
-
-// Cleanup
-onUnmounted(() => {
-    clearAutoSaveTimeout();
-    if (isDictating.value) {
-        stopDictation();
-    }
-    window.electronAPI.removeSpeechStatusListener();
-    document.removeEventListener('drop', preventGlobalDrop, true);
-    document.removeEventListener('dragover', preventGlobalDragOver, true);
-    window.removeEventListener('keydown', handleKeyboard);
-});
 </script>
 
 <template>

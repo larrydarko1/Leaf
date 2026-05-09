@@ -23,6 +23,18 @@ const bookmarkedFiles = computed(() => {
         .filter((f): f is FileInfo => f !== undefined);
 });
 
+useListKeyboardNavigation(
+    () => bookmarkedFiles.value,
+    {
+        onSelect: (file) => selectFile(file),
+        onOpen: (file) => openFile(file),
+    },
+    {
+        wrap: true,
+        getExternalIndex: () => bookmarkedFiles.value.findIndex((f) => isFileSelected(f)),
+    },
+);
+
 function isFileSelected(file: FileInfo): boolean {
     return props.selectedFiles.some((f) => f.path === file.path);
 }
@@ -38,18 +50,6 @@ function openFile(file: FileInfo) {
 function removeBookmark(file: FileInfo) {
     emit('removeBookmark', file.path);
 }
-
-useListKeyboardNavigation(
-    () => bookmarkedFiles.value,
-    {
-        onSelect: (file) => selectFile(file),
-        onOpen: (file) => openFile(file),
-    },
-    {
-        wrap: true,
-        getExternalIndex: () => bookmarkedFiles.value.findIndex((f) => isFileSelected(f)),
-    },
-);
 </script>
 
 <template>

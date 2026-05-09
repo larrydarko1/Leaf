@@ -6,6 +6,13 @@
 import { EditorView, keymap } from '@codemirror/view';
 import { EditorSelection } from '@codemirror/state';
 
+export const listContinuationKeymap = keymap.of([
+    {
+        key: 'Enter',
+        run: listContinuation,
+    },
+]);
+
 /**
  * Renumber consecutive ordered list items starting from a given position.
  */
@@ -120,10 +127,3 @@ function listContinuation(view: EditorView): boolean {
 
     return false; // Let default Enter handling proceed
 }
-
-export const listContinuationKeymap = keymap.of([
-    {
-        key: 'Enter',
-        run: listContinuation,
-    },
-]);

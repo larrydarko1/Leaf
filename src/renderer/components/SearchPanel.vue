@@ -18,11 +18,6 @@ const emit = defineEmits<{
 const searchInput = ref<HTMLInputElement | null>(null);
 const searchQuery = ref('');
 
-// Focus the search input when mounted
-onMounted(() => {
-    searchInput.value?.focus();
-});
-
 // Fuzzy search implementation
 const searchResults = computed(() => {
     if (!searchQuery.value.trim()) {
@@ -89,6 +84,11 @@ const { selectedIndex, resetIndex } = useListKeyboardNavigation<FileInfo>(
 
 // Reset keyboard selection when search results change
 watch(searchResults, resetIndex);
+
+// Focus the search input when mounted
+onMounted(() => {
+    searchInput.value?.focus();
+});
 
 function isFileSelected(file: FileInfo): boolean {
     return props.selectedFiles.some((f) => f.path === file.path);

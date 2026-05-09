@@ -27,13 +27,6 @@ const {
     reset,
 } = useAudioPlayer();
 
-function formatTime(seconds: number): string {
-    if (!seconds || !isFinite(seconds)) return '0:00';
-    const m = Math.floor(seconds / 60);
-    const s = Math.floor(seconds % 60);
-    return `${m}:${s.toString().padStart(2, '0')}`;
-}
-
 watch(
     () => props.filePath,
     async (path) => {
@@ -43,6 +36,16 @@ watch(
     { immediate: true },
 );
 
+onMounted(() => window.addEventListener('keydown', onKeydown));
+onUnmounted(() => window.removeEventListener('keydown', onKeydown));
+
+function formatTime(seconds: number): string {
+    if (!seconds || !isFinite(seconds)) return '0:00';
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
 function onKeydown(e: KeyboardEvent) {
     if (e.key !== ' ') return;
     const target = e.target as HTMLElement;
@@ -50,9 +53,6 @@ function onKeydown(e: KeyboardEvent) {
     e.preventDefault();
     toggleAudioPlayback();
 }
-
-onMounted(() => window.addEventListener('keydown', onKeydown));
-onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 </script>
 
 <template>

@@ -19,28 +19,6 @@ export function useFolderTree(
         return lastDotIndex > 0 ? fileName.substring(0, lastDotIndex) : fileName;
     }
 
-    const allFolderPaths = computed(() => {
-        const paths = new Set<string>();
-        const folders = getFolders();
-        const files = getFiles();
-
-        if (folders) {
-            folders.forEach((folder) => paths.add(folder.relativePath));
-        }
-
-        files.forEach((file) => {
-            if (file.folder === '.') return;
-            const parts = file.folder.split(/[/\\]/);
-            let currentPath = '';
-            parts.forEach((part) => {
-                currentPath = currentPath ? `${currentPath}/${part}` : part;
-                paths.add(currentPath);
-            });
-        });
-
-        return paths;
-    });
-
     const folderTree = computed(() => {
         const files = getFiles();
         const folders = getFolders();

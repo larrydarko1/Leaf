@@ -11,48 +11,6 @@ import { codeFolding, foldEffect, unfoldEffect, foldedRanges, foldService } from
 
 const taskLineRegex = /^(\s*)- \[[ x/]\] /i;
 
-/**
- * Determine the fold range for a task item at `lineStart`.
- * A parent task can be folded when the lines immediately following it
- * are indented more deeply (nested children — tasks or plain text).
- * Empty lines between children are included in the fold.
- *
- * Returns `{ from, to }` where `from` is the end of the parent line
- * and `to` is the end of the last nested child line, or `null` if
- * there are no nested children.
- */
-function taskFoldRange(state: EditorState, lineStart: number): { from: number; to: number } | null {
-    const line = state.doc.lineAt(lineStart);
-    const match = line.text.match(taskLineRegex);
-    if (!match) return null;
-
-    const parentIndent = match[1].length;
-    let lastNonEmptyChildLine = line.number;
-
-    for (let n = line.number + 1; n <= state.doc.lines; n++) {
-        const nextLine = state.doc.line(n);
-        const trimmed = nextLine.text.trim();
-
-        if (trimmed === '') {
-            // Empty line — tentatively include it (might be between children)
-            continue;
-        }
-
-        const nextIndent = nextLine.text.match(/^(\s*)/)?.[1].length ?? 0;
-        if (nextIndent > parentIndent) {
-            lastNonEmptyChildLine = n;
-        } else {
-            break;
-        }
-    }
-
-    // No actual nested content found
-    if (lastNonEmptyChildLine === line.number) return null;
-
-    // Don't include trailing empty lines — fold up to the last real child
-    return { from: line.to, to: state.doc.line(lastNonEmptyChildLine).to };
-}
-
 // ── Fold service ──────────────────────────────────────────────────────────────
 
 const taskFold = foldService.of((state, lineStart, _lineEnd) => {
@@ -200,4 +158,46 @@ export function taskFoldExtension() {
         }),
         taskFoldTogglePlugin,
     ];
+}
+
+/**
+ * Determine the fold range for a task item at `lineStart`.
+ * A parent task can be folded when the lines immediately following it
+ * are indented more deeply (nested children — tasks or plain text).
+ * Empty lines between children are included in the fold.
+ *
+ * Returns `{ from, to }` where `from` is the end of the parent line
+ * and `to` is the end of the last nested child line, or `null` if
+ * there are no nested children.
+ */
+function taskFoldRange(state: EditorState, lineStart: number): { from: number; to: number } | null {
+    const line = state.doc.lineAt(lineStart);
+    const match = line.text.match(taskLineRegex);
+    if (!match) return null;
+
+    const parentIndent = match[1].length;
+    let lastNonEmptyChildLine = line.number;
+
+    for (let n = line.number + 1; n <= state.doc.lines; n++) {
+        const nextLine = state.doc.line(n);
+        const trimmed = nextLine.text.trim();
+
+        if (trimmed === '') {
+            // Empty line — tentatively include it (might be between children)
+            continue;
+        }
+
+        const nextIndent = nextLine.text.match(/^(\s*)/)?.[1].length ?? 0;
+        if (nextIndent > parentIndent) {
+            lastNonEmptyChildLine = n;
+        } else {
+            break;
+        }
+    }
+
+    // No actual nested content found
+    if (lastNonEmptyChildLine === line.number) return null;
+
+    // Don't include trailing empty lines — fold up to the last real child
+    return { from: line.to, to: state.doc.line(lastNonEmptyChildLine).to };
 }
