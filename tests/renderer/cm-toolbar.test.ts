@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { type Ref, shallowRef } from 'vue';
 import { EditorState, EditorSelection } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { useCodemirrorToolbar } from '../../src/renderer/composables/editor/cm-toolbar';
+import { useCodemirrorToolbar } from '../../src/renderer/composables/editor/codemirror/cm-toolbar';
 
 /**
  * Create a minimal EditorView with the given doc text and cursor/selection.

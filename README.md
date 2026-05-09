@@ -352,12 +352,17 @@ leaf/
 │       │   │   ├── useDrawingPersistence.ts # Save/load drawings
 │       │   │   └── useTextEditing.ts       # Text tool for canvas
 │       │   ├── editor/             # CodeMirror 6 editor & media players
-│       │   │   ├── cm-list-continuation.ts # List continuation keymap
-│       │   │   ├── cm-markdown-widgets.ts  # Inline markdown widgets (images, embeds, tasks)
-│       │   │   ├── cm-theme.ts             # Editor theme & styling
-│       │   │   ├── cm-toolbar.ts           # Toolbar formatting commands & keybindings
+│       │   │   ├── codemirror/         # CodeMirror 6 extension files
+│       │   │   │   ├── cm-deco-builders.ts     # Decoration builder functions
+│       │   │   │   ├── cm-list-continuation.ts # List continuation keymap
+│       │   │   │   ├── cm-markdown-widgets.ts  # Inline markdown widget plugin (entry point)
+│       │   │   │   ├── cm-task-fold.ts         # Fold completed tasks extension
+│       │   │   │   ├── cm-theme.ts             # Editor theme & styling
+│       │   │   │   ├── cm-toolbar.ts           # Toolbar formatting commands & keybindings
+│       │   │   │   ├── cm-widgets.ts           # WidgetType classes for live-preview
+│       │   │   │   ├── useCodeEditor.ts        # CM6 instance for code files
+│       │   │   │   └── useCodemirror.ts        # CM6 instance lifecycle
 │       │   │   ├── useAudioPlayer.ts       # Audio playback controls
-│       │   │   ├── useCodemirror.ts        # CM6 instance lifecycle
 │       │   │   ├── useDictation.ts         # Speech-to-text integration
 │       │   │   ├── useEditorDrop.ts        # Drag & drop onto editor
 │       │   │   ├── useEditorTabs.ts        # Tab state management

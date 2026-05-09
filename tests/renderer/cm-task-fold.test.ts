@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { EditorState } from '@codemirror/state';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { foldable } from '@codemirror/language';
-import { taskFoldExtension } from '../../src/renderer/composables/editor/cm-task-fold';
+import { taskFoldExtension } from '../../src/renderer/composables/editor/codemirror/cm-task-fold';
 
 /** Create a minimal EditorState with the task fold extension active. */
 function makeState(doc: string): EditorState {

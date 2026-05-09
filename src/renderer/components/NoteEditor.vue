@@ -20,13 +20,16 @@ import { useEmbedResolver } from '../composables/editor/useEmbedResolver';
 import { useEditorDrop } from '../composables/editor/useEditorDrop';
 import { useDictation } from '../composables/editor/useDictation';
 import { useNotePersistence } from '../composables/editor/useNotePersistence';
-import { useCodemirror } from '../composables/editor/useCodemirror';
-import { useCodemirrorToolbar, markdownKeymap } from '../composables/editor/cm-toolbar';
-import { createMarkdownWidgetsPlugin, interactiveExtension } from '../composables/editor/cm-markdown-widgets';
-import { leafEditorTheme } from '../composables/editor/cm-theme';
-import { listContinuationKeymap } from '../composables/editor/cm-list-continuation';
-import { taskFoldExtension } from '../composables/editor/cm-task-fold';
-import { useCodeEditor } from '../composables/editor/useCodeEditor';
+import { useCodemirror } from '../composables/editor/codemirror/useCodemirror';
+import { useCodemirrorToolbar, markdownKeymap } from '../composables/editor/codemirror/cm-toolbar';
+import {
+    createMarkdownWidgetsPlugin,
+    interactiveExtension,
+} from '../composables/editor/codemirror/cm-markdown-widgets';
+import { leafEditorTheme } from '../composables/editor/codemirror/cm-theme';
+import { listContinuationKeymap } from '../composables/editor/codemirror/cm-list-continuation';
+import { taskFoldExtension } from '../composables/editor/codemirror/cm-task-fold';
+import { useCodeEditor } from '../composables/editor/codemirror/useCodeEditor';
 import { keymap, EditorView } from '@codemirror/view';
 
 const props = defineProps<{
