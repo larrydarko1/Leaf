@@ -1,9 +1,27 @@
 {
     "name": "leaf",
-    "private": true,
     "version": "1.5.7",
+    "description": "A local-first, privacy-focused note-taking app for desktop with built-in AI assistance. Simple interface for reading and editing txt and md files, plus support for loading local LLMs (GGUF format) for private, on-device chat and assistance. All notes and AI interactions stay on your device.",
+    "keywords": [
+        "notes",
+        "markdown",
+        "electron",
+        "local-ai",
+        "llm",
+        "privacy"
+    ],
+    "homepage": "https://github.com/larrydarko1/leaf#readme",
+    "bugs": {
+        "url": "https://github.com/larrydarko1/leaf/issues"
+    },
+    "license": "MIT",
+    "author": "Lorenzo Mazzola",
     "type": "module",
     "main": "out/main/index.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/larrydarko1/leaf.git"
+    },
     "scripts": {
         "dev": "electron-vite dev",
         "build": "vue-tsc -b && electron-vite build",
@@ -19,15 +37,6 @@
         "test:watch": "vitest",
         "prepare": "husky",
         "ci:check": "npm audit --audit-level=high --omit=dev && npm run lint && npm run format:check && npm test && npm run build"
-    },
-    "lint-staged": {
-        "*.{ts,vue}": [
-            "eslint --fix",
-            "prettier --write"
-        ],
-        "*.{scss,json,md}": [
-            "prettier --write"
-        ]
     },
     "dependencies": {
         "@codemirror/autocomplete": "^6.20.1",
@@ -73,13 +82,12 @@
         "vitest": "^4.1.4",
         "vue-tsc": "^3.2.0"
     },
-    "description": "A local-first, privacy-focused note-taking app for desktop with built-in AI assistance. Simple interface for reading and editing txt and md files, plus support for loading local LLMs (GGUF format) for private, on-device chat and assistance. All notes and AI interactions stay on your device.",
-    "author": "Lorenzo Mazzola",
-    "license": "MIT",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/larrydarko1/leaf.git"
+    "engines": {
+        "node": ">=20",
+        "npm": ">=10"
     },
+    "private": true,
+    "packageManager": "npm@11.11.0",
     "build": {
         "appId": "com.leaf.app",
         "productName": "Leaf",
@@ -154,5 +162,14 @@
             ],
             "category": "Utility"
         }
+    },
+    "lint-staged": {
+        "*.{ts,vue}": [
+            "eslint --fix",
+            "prettier --write"
+        ],
+        "*.{scss,json,md}": [
+            "prettier --write"
+        ]
     }
 }
