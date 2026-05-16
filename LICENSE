@@ -1,6 +1,4 @@
-NOTE: Versions prior to v2.0.0 of this project were released under the MIT License.
-From v2.0.0 onward, this project is licensed under the GNU Affero General Public License v3.0.
-Copyright (C) 2026 Lorenzo Mazzola
+
 
                     GNU AFFERO GENERAL PUBLIC LICENSE
                        Version 3, 19 November 2007
@@ -663,3 +661,7 @@ specific requirements.
 if any, to sign a "copyright disclaimer" for the program, if necessary.
 For more information on this, and how to apply and follow the GNU AGPL, see
 <https://www.gnu.org/licenses/>.
+
+NOTE: Versions prior to v2.0.0 of this project were released under the MIT License.
+From v2.0.0 onward, this project is licensed under the GNU Affero General Public License v3.0.
+Copyright (C) 2026 Lorenzo Mazzola
