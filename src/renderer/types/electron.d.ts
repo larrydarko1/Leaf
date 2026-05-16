@@ -185,6 +185,23 @@ export interface ElectronAPI {
     }>;
     systemPromptSetActive: (id: string) => Promise<AiSimpleResult>;
     systemPromptOpenLeafDir: () => Promise<AiSimpleResult>;
+
+    // Theme presets (~/.leaf/themes/*.json)
+    themeList: () => Promise<{
+        success: boolean;
+        themes: Array<{
+            id: string;
+            name: string;
+            description: string;
+            colors: Record<string, string>;
+            path: string;
+        }>;
+        activeId: string;
+        themesDir: string;
+        error?: string;
+    }>;
+    themeSetActive: (id: string) => Promise<AiSimpleResult>;
+    themeOpenLeafDir: () => Promise<AiSimpleResult>;
     onAiToken: (callback: (token: string) => void) => void;
     removeAiTokenListener: () => void;
 

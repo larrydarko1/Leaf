@@ -1,0 +1,26 @@
+{
+    "name": "Solarized Light",
+    "description": "Ethan Schoonover's iconic warm light palette.",
+    "colors": {
+        "text1": "#073642",
+        "text2": "#586e75",
+        "text3": "#eee8d5",
+        "text-primary": "#073642",
+        "text-muted": "#93a1a1",
+        "base1": "#fdf6e3",
+        "base2": "#073642",
+        "base3": "#eee8d5",
+        "bg-primary": "#fdf6e3",
+        "bg-secondary": "#f5efdc",
+        "bg-tertiary": "#eee8d5",
+        "bg-hover": "#e8e1c8",
+        "bg-selected": "#dcd5bb",
+        "border-color": "#d8d2bd",
+        "accent-color": "#268bd2",
+        "accent-color-alpha": "rgba(38, 139, 210, 0.12)",
+        "danger-color": "#dc322f",
+        "danger-color-alpha": "rgba(220, 50, 47, 0.12)",
+        "scrollbar-thumb": "#cdc7b3",
+        "scrollbar-thumb-hover": "#b8b29e"
+    }
+}

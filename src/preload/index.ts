@@ -75,6 +75,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     systemPromptSetActive: (id: string) => ipcRenderer.invoke('systemPrompt:setActive', id),
     systemPromptOpenLeafDir: () => ipcRenderer.invoke('systemPrompt:openLeafDir'),
 
+    // Theme presets (~/.leaf/themes/*.json)
+    themeList: () => ipcRenderer.invoke('theme:list'),
+    themeSetActive: (id: string) => ipcRenderer.invoke('theme:setActive', id),
+    themeOpenLeafDir: () => ipcRenderer.invoke('theme:openLeafDir'),
+
     // AI streaming token listener
     onAiToken: (callback: (token: string) => void) => {
         ipcRenderer.on('ai:token', (_event, token: string) => callback(token));

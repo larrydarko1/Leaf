@@ -1,0 +1,26 @@
+{
+    "name": "Light",
+    "description": "Clean light theme with proper contrast.",
+    "colors": {
+        "text1": "#1d1d1f",
+        "text2": "#52525b",
+        "text3": "#d4d4d8",
+        "text-primary": "#1d1d1f",
+        "text-muted": "#71717a",
+        "base1": "#ffffff",
+        "base2": "#1d1d1f",
+        "base3": "#f4f4f5",
+        "bg-primary": "#ffffff",
+        "bg-secondary": "#fafafa",
+        "bg-tertiary": "#f4f4f5",
+        "bg-hover": "#ececef",
+        "bg-selected": "#e4e4e7",
+        "border-color": "#d4d4d8",
+        "accent-color": "#3eb489",
+        "accent-color-alpha": "rgba(62, 180, 137, 0.12)",
+        "danger-color": "#dc3545",
+        "danger-color-alpha": "rgba(220, 53, 69, 0.12)",
+        "scrollbar-thumb": "#c7c7cc",
+        "scrollbar-thumb-hover": "#a1a1a6"
+    }
+}

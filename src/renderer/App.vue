@@ -7,11 +7,13 @@ import SearchPanel from './components/SearchPanel.vue';
 import BookmarksPanel from './components/BookmarksPanel.vue';
 import AudioRecorder from './components/AudioRecorder.vue';
 import AiPanel from './components/AiPanel.vue';
+import ThemePicker from './components/ThemePicker.vue';
 import type { FileInfo } from './types/electron';
 import { useVault } from './composables/vault/useVault';
 import { useFileSelection } from './composables/vault/useFileSelection';
 import { useBookmarks } from './composables/vault/useBookmarks';
 import { useEditorTabs } from './composables/editor/useEditorTabs';
+import { useTheme } from './composables/ui/useTheme';
 
 const noteEditorRef = ref<InstanceType<typeof NoteEditor> | null>(null);
 
@@ -20,6 +22,7 @@ const vault = useVault();
 const selection = useFileSelection();
 const bookmarks = useBookmarks(() => vault.currentFolder.value);
 const editorTabs = useEditorTabs();
+const theme = useTheme();
 
 // Destructure reactive state for template bindings
 const { currentFolder, files, folders } = vault;
@@ -28,18 +31,18 @@ const activeFile = editorTabs.activeFile;
 const { bookmarkedFiles, toggleBookmark, removeBookmark } = bookmarks;
 
 // --- UI state ---
-const currentTheme = ref('dark');
 const renamingFile = ref<FileInfo | null>(null);
 const renamingFolder = ref<string | null>(null);
 const showSearchPanel = ref(false);
 const showBookmarksPanel = ref(false);
 const showAiPanel = ref(false);
+const showThemePanel = ref(false);
 
 // --- Lifecycle ---
 onMounted(() => {
-    const savedTheme = localStorage.getItem('leaf-theme');
-    if (savedTheme) currentTheme.value = savedTheme;
-    applyTheme(currentTheme.value);
+    // Load + apply the active theme preset (CSS vars on <html>) before user
+    // interaction. The scheme hint was already applied synchronously in main.ts.
+    theme.refresh();
 
     const savedFolder = localStorage.getItem('leaf-folder-path');
     if (savedFolder) loadFolderPath(savedFolder);
@@ -54,17 +57,6 @@ onBeforeUnmount(() => {
     window.removeEventListener('keydown', handleKeydown);
     document.removeEventListener('click', handleExternalLinkClick, true);
 });
-
-// --- Theme ---
-function applyTheme(theme: string) {
-    document.documentElement.setAttribute('data-theme', theme);
-}
-
-function toggleTheme() {
-    currentTheme.value = currentTheme.value === 'dark' ? 'light' : 'dark';
-    localStorage.setItem('leaf-theme', currentTheme.value);
-    applyTheme(currentTheme.value);
-}
 
 // --- External link interception ---
 function handleExternalLinkClick(e: MouseEvent) {
@@ -313,6 +305,12 @@ function toggleBookmarks() {
 
 function toggleAiPanel() {
     showAiPanel.value = !showAiPanel.value;
+    if (showAiPanel.value) showThemePanel.value = false;
+}
+
+function toggleThemePanel() {
+    showThemePanel.value = !showThemePanel.value;
+    if (showThemePanel.value) showAiPanel.value = false;
 }
 </script>
 
@@ -511,42 +509,31 @@ function toggleAiPanel() {
                                     <line x1="9" y1="21" x2="15" y2="21" />
                                 </svg>
                             </button>
-                            <button class="btn-menu-icon" title="Toggle theme" @click="toggleTheme">
+                            <button
+                                class="btn-menu-icon"
+                                :class="{ active: showThemePanel }"
+                                title="Theme"
+                                @click="toggleThemePanel"
+                            >
                                 <svg
-                                    v-if="currentTheme === 'dark'"
                                     width="14"
                                     height="14"
                                     viewBox="0 0 24 24"
                                     fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
+                                    stroke="currentColor"
+                                    stroke-width="1.8"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
                                 >
-                                    <g id="SVGRepo_iconCarrier">
-                                        <path
-                                            d="M17 12C17 14.7614 14.7614 17 12 17C9.23858 17 7 14.7614 7 12C7 9.23858 9.23858 7 12 7C14.7614 7 17 9.23858 17 12Z"
-                                            fill="currentColor"
-                                        ></path>
-                                        <path
-                                            fill-rule="evenodd"
-                                            clip-rule="evenodd"
-                                            d="M12 1.25C12.4142 1.25 12.75 1.58579 12.75 2V4C12.75 4.41421 12.4142 4.75 12 4.75C11.5858 4.75 11.25 4.41421 11.25 4V2C11.25 1.58579 11.5858 1.25 12 1.25ZM3.66865 3.71609C3.94815 3.41039 4.42255 3.38915 4.72825 3.66865L6.95026 5.70024C7.25596 5.97974 7.2772 6.45413 6.9977 6.75983C6.7182 7.06553 6.2438 7.08677 5.9381 6.80727L3.71609 4.77569C3.41039 4.49619 3.38915 4.02179 3.66865 3.71609ZM20.3314 3.71609C20.6109 4.02179 20.5896 4.49619 20.2839 4.77569L18.0619 6.80727C17.7562 7.08677 17.2818 7.06553 17.0023 6.75983C16.7228 6.45413 16.744 5.97974 17.0497 5.70024L19.2718 3.66865C19.5775 3.38915 20.0518 3.41039 20.3314 3.71609ZM1.25 12C1.25 11.5858 1.58579 11.25 2 11.25H4C4.41421 11.25 4.75 11.5858 4.75 12C4.75 12.4142 4.41421 12.75 4 12.75H2C1.58579 12.75 1.25 12.4142 1.25 12ZM19.25 12C19.25 11.5858 19.5858 11.25 20 11.25H22C22.4142 11.25 22.75 11.5858 22.75 12C22.75 12.4142 22.4142 12.75 22 12.75H20C19.5858 12.75 19.25 12.4142 19.25 12ZM17.0255 17.0252C17.3184 16.7323 17.7933 16.7323 18.0862 17.0252L20.3082 19.2475C20.6011 19.5404 20.601 20.0153 20.3081 20.3082C20.0152 20.6011 19.5403 20.601 19.2475 20.3081L17.0255 18.0858C16.7326 17.7929 16.7326 17.3181 17.0255 17.0252ZM6.97467 17.0253C7.26756 17.3182 7.26756 17.7931 6.97467 18.086L4.75244 20.3082C4.45955 20.6011 3.98468 20.6011 3.69178 20.3082C3.39889 20.0153 3.39889 19.5404 3.69178 19.2476L5.91401 17.0253C6.2069 16.7324 6.68177 16.7324 6.97467 17.0253ZM12 19.25C12.4142 19.25 12.75 19.5858 12.75 20V22C12.75 22.4142 12.4142 22.75 12 22.75C11.5858 22.75 11.25 22.4142 11.25 22V20C11.25 19.5858 11.5858 19.25 12 19.25Z"
-                                            fill="currentColor"
-                                        ></path>
-                                    </g>
-                                </svg>
-                                <svg
-                                    v-else
-                                    width="14"
-                                    height="14"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                >
-                                    <g id="SVGRepo_iconCarrier">
-                                        <path
-                                            d="M12 22C17.5228 22 22 17.5228 22 12C22 11.5373 21.3065 11.4608 21.0672 11.8568C19.9289 13.7406 17.8615 15 15.5 15C11.9101 15 9 12.0899 9 8.5C9 6.13845 10.2594 4.07105 12.1432 2.93276C12.5392 2.69347 12.4627 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
-                                            fill="currentColor"
-                                        ></path>
-                                    </g>
+                                    <circle cx="12" cy="12" r="9" />
+                                    <path
+                                        d="M12 3a9 9 0 0 0 0 18c1 0 1.7-.8 1.7-1.7 0-.9-.7-1.6-.7-2.4 0-.9.7-1.6 1.6-1.6h2A4.4 4.4 0 0 0 21 11"
+                                        fill="currentColor"
+                                        stroke="none"
+                                    />
+                                    <circle cx="8" cy="9.5" r="1.1" fill="var(--bg-primary)" stroke="none" />
+                                    <circle cx="12" cy="7.5" r="1.1" fill="var(--bg-primary)" stroke="none" />
+                                    <circle cx="16" cy="9.5" r="1.1" fill="var(--bg-primary)" stroke="none" />
                                 </svg>
                             </button>
                         </div>
@@ -620,6 +607,7 @@ function toggleAiPanel() {
                     @close="showAiPanel = false"
                     @file-changed="handleAiFileChanged"
                 />
+                <ThemePicker v-if="showThemePanel" @close="showThemePanel = false" />
             </div>
         </div>
     </div>

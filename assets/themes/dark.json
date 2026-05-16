@@ -1,0 +1,26 @@
+{
+    "name": "Dark",
+    "description": "Default dark theme \u2014 soft on the eyes.",
+    "colors": {
+        "text1": "#ffffff",
+        "text2": "#b0b0b0",
+        "text3": "#282828",
+        "text-primary": "#ffffff",
+        "text-muted": "#888888",
+        "base1": "#121212",
+        "base2": "#ffffff",
+        "base3": "#282828",
+        "bg-primary": "#1e1e1e",
+        "bg-secondary": "#181818",
+        "bg-tertiary": "#252525",
+        "bg-hover": "#2a2a2a",
+        "bg-selected": "#333333",
+        "border-color": "#333333",
+        "accent-color": "#3eb489",
+        "accent-color-alpha": "rgba(62, 180, 137, 0.15)",
+        "danger-color": "#dc3545",
+        "danger-color-alpha": "rgba(220, 53, 69, 0.15)",
+        "scrollbar-thumb": "#444444",
+        "scrollbar-thumb-hover": "#555555"
+    }
+}

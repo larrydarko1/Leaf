@@ -21,7 +21,10 @@ export const DEFAULT_MODELS_DIR = path.join(LEAF_HOME, 'models');
 // Directory where system-prompt templates live: ~/.leaf/prompts/
 export const PROMPTS_DIR = path.join(LEAF_HOME, 'prompts');
 
-// Persistent app state (active prompt id, etc.): ~/.leaf/state.json
+// Directory where user-editable theme presets live: ~/.leaf/themes/
+export const THEMES_DIR = path.join(LEAF_HOME, 'themes');
+
+// Persistent app state (active prompt id, active theme id, etc.): ~/.leaf/state.json
 export const STATE_FILE = path.join(LEAF_HOME, 'state.json');
 
 // Legacy location used before the ~/.leaf/ consolidation.
@@ -58,6 +61,22 @@ export function getBundledPromptsDir(): string {
 
     if (process.resourcesPath) {
         const prodPath = path.join(process.resourcesPath, 'assets/prompts');
+        if (fs.existsSync(prodPath)) return prodPath;
+    }
+
+    return devPath;
+}
+
+/**
+ * Resolve the bundled theme presets directory shipped with the app.
+ * In development  →  <repo>/assets/themes/
+ * In production   →  <app>/Contents/Resources/assets/themes/
+ */
+export function getBundledThemesDir(): string {
+    const devPath = path.join(__dirname, '../../assets/themes');
+
+    if (process.resourcesPath) {
+        const prodPath = path.join(process.resourcesPath, 'assets/themes');
         if (fs.existsSync(prodPath)) return prodPath;
     }
 

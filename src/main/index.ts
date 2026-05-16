@@ -17,6 +17,7 @@
  *   hf-download-service  → hf:*
  *   speech-service       → speech:*
  *   systemPrompt-service → systemPrompt:*
+ *   theme-service        → theme:*
  */
 
 import { app, BrowserWindow, ipcMain, shell, Menu, screen, protocol, net, session, clipboard } from 'electron';
@@ -32,6 +33,7 @@ import * as agentService from './services/agent';
 import * as hfDownloadService from './services/hf-download';
 import * as speechService from './services/speech';
 import * as systemPromptService from './services/systemPrompt';
+import * as themeService from './services/theme';
 import { migrateLegacyPaths } from './lib/paths';
 import { log } from './lib/logger';
 
@@ -199,6 +201,7 @@ app.whenReady().then(() => {
     hfDownloadService.register(ipcMain, getMainWindow);
     speechService.register(ipcMain, getMainWindow);
     systemPromptService.register(ipcMain);
+    themeService.register(ipcMain);
 
     // Logging — route renderer log calls to electron-log
     ipcMain.on('log:error', (_event, ...args: unknown[]) => log.error(...args));

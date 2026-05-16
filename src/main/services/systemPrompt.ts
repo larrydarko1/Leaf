@@ -30,6 +30,9 @@ interface PromptInfo {
 
 interface PromptState {
     activePrompt?: string;
+    // Other services (theme.ts) may write additional keys to state.json.
+    // We preserve them on every write.
+    [key: string]: unknown;
 }
 
 const DEFAULT_PROMPT_ID = 'default';
@@ -67,7 +70,8 @@ export function register(ipc: IpcMain): void {
         const file = path.join(PROMPTS_DIR, `${id}.md`);
         if (!existsSync(file)) return { success: false, error: 'Prompt not found' };
         try {
-            await writeState({ activePrompt: id });
+            const state = await readState();
+            await writeState({ ...state, activePrompt: id });
             return { success: true };
         } catch (err) {
             return { success: false, error: (err as Error).message };
@@ -127,6 +131,13 @@ export async function ensureSeeded(): Promise<void> {
 
         if (!existsSync(STATE_FILE)) {
             await writeState({ activePrompt: DEFAULT_PROMPT_ID });
+        } else {
+            // Backfill activePrompt if state exists but lacks it (e.g. theme
+            // service wrote first on a fresh install).
+            const state = await readState();
+            if (!state.activePrompt) {
+                await writeState({ ...state, activePrompt: DEFAULT_PROMPT_ID });
+            }
         }
 
         seeded = true;
