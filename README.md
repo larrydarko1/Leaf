@@ -1,6 +1,5 @@
 # leaf.
 
-![License](https://img.shields.io/github/license/larrydarko1/leaf)
 ![Issues](https://img.shields.io/github/issues/larrydarko1/leaf)
 ![Pull Requests](https://img.shields.io/github/issues-pr/larrydarko1/leaf)
 
