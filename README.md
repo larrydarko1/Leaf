@@ -311,40 +311,44 @@ After building:
 leaf/
 ├── src/
 │   ├── main/                       # Electron main process
-│   │   ├── index.ts                # App entry point, window creation, protocol
+│   │   ├── index.ts                # App entry, BrowserWindow, leaf:// protocol, IPC wiring
 │   │   ├── lib/
-│   │   │   ├── extensions.ts       # Allowed file extensions list
-│   │   │   ├── mime.ts             # MIME type mappings
-│   │   │   ├── paths.ts            # Default paths (models dir, whisper dir)
-│   │   │   └── validation.ts       # Path traversal & filename validation
+│   │   │   ├── extensions.ts       # Allowed file extension sets for vault scanning
+│   │   │   ├── logger.ts           # electron-log wrapper; rotating file logger
+│   │   │   ├── mime.ts             # MIME type maps for images, audio, video, PDF
+│   │   │   ├── paths.ts            # App path constants: LEAF_HOME, models, prompts, themes
+│   │   │   └── validation.ts       # Path-traversal & filename safety checks for IPC
 │   │   └── services/
-│   │       ├── agent.ts            # Agent mode file editing with backup/restore
-│   │       ├── ai.ts               # Local LLM inference (node-llama-cpp)
-│   │       ├── conversation.ts     # Conversation persistence (JSON storage)
-│   │       ├── fs.ts               # File system operations & watcher
-│   │       ├── hf-download.ts      # Hugging Face model search & download
-│   │       ├── media.ts            # Audio recording & spellcheck
-│   │       └── speech.ts           # Local Whisper speech-to-text
+│   │       ├── agent.ts            # AI file editing with backup/restore version control
+│   │       ├── ai.ts               # Local LLM inference via node-llama-cpp with streaming
+│   │       ├── conversation.ts     # Chat conversation persistence as JSON in userData
+│   │       ├── fs.ts               # Vault file/folder IPC handlers and FS watcher
+│   │       ├── hf-download.ts      # Hugging Face model search and GGUF download
+│   │       ├── media.ts            # Audio recording saves and spellcheck suggestions
+│   │       ├── speech.ts           # Local Whisper speech-to-text via ONNX/transformers
+│   │       ├── systemPrompt.ts     # System prompt template management and active-prompt state
+│   │       └── theme.ts            # Theme preset management and active-theme state
 │   ├── preload/
-│   │   └── index.ts                # Secure bridge between main & renderer
+│   │   └── index.ts                # contextBridge: exposes safe IPC APIs to renderer
 │   └── renderer/                   # Vue 3 frontend
 │       ├── index.html              # Entry HTML
-│       ├── main.ts                 # Vue bootstrap
-│       ├── App.vue
-│       ├── style.scss
+│       ├── main.ts                 # Mounts the Vue app onto #app
+│       ├── App.vue                 # Root component: layout, sidebar, tab bar
+│       ├── style.scss              # Global SCSS styles and CSS custom properties
 │       ├── vite-env.d.ts
 │       ├── assets/                 # App icons and images
 │       ├── components/
-│       │   ├── AiPanel.vue         # AI chat panel (orchestrator)
-│       │   ├── AudioRecorder.vue   # Voice recording and audio capture
+│       │   ├── AiPanel.vue         # AI chat panel orchestrator
+│       │   ├── AudioRecorder.vue   # Voice recording and WAV capture UI
 │       │   ├── BookmarksPanel.vue  # Bookmarked notes panel
 │       │   ├── ContextMenu.vue     # Right-click context menu
-│       │   ├── DrawingCanvas.vue   # Freehand drawing canvas (orchestrator)
+│       │   ├── DrawingCanvas.vue   # Freehand drawing canvas orchestrator
 │       │   ├── FileExplorer.vue    # Vault file browser with drag & drop
-│       │   ├── FolderNode.vue      # Tree node for folder/file rendering
-│       │   ├── NoteEditor.vue      # CodeMirror 6 markdown editor (orchestrator)
+│       │   ├── FolderNode.vue      # Recursive tree node for folder/file rendering
+│       │   ├── NoteEditor.vue      # CodeMirror 6 markdown editor orchestrator
 │       │   ├── SearchPanel.vue     # Full-text search across vault
 │       │   ├── TabBar.vue          # Editor tab bar
+│       │   ├── ThemePicker.vue     # Theme preset picker modal
 │       │   ├── ai/                 # AI sub-components
 │       │   │   ├── AiAgentEditCard.vue  # Agent edit diff card with approve/reject
 │       │   │   ├── AiHfPanel.vue       # Hugging Face model browser & download
@@ -358,76 +362,108 @@ leaf/
 │       │   │   ├── DrawingPropertiesPanel.vue # Color, stroke & style controls
 │       │   │   └── DrawingToolbar.vue       # Tool buttons & architecture shapes
 │       │   └── editor/             # Editor & media viewer sub-components
-│       │       ├── AudioViewer.vue     # Audio player with waveform controls
+│       │       ├── AudioViewer.vue     # Audio player with playback controls
 │       │       ├── ImageViewer.vue     # Image viewer with zoom
 │       │       ├── MarkdownToolbar.vue # Markdown formatting toolbar
 │       │       ├── PdfViewer.vue       # PDF embed viewer
 │       │       └── VideoViewer.vue     # Video player with custom controls
 │       ├── composables/            # Vue composables (grouped by domain)
-│       │   ├── useAudioRecorder.ts # Audio recording composable
-│       │   ├── ai/                 # AI chat, model, agent, history, downloads
-│       │   │   ├── useAIChat.ts        # Chat message handling & streaming
-│       │   │   ├── useAIModel.ts       # Model loading & management
+│       │   ├── useAudioRecorder.ts # Microphone capture and WAV encoding
+│       │   ├── ai/                 # AI chat, model, agent, history, system prompts, downloads
+│       │   │   ├── useAIChat.ts        # Streaming inference, message management
+│       │   │   ├── useAIModel.ts       # Model loading, unloading, and listing
 │       │   │   ├── useAgentMode.ts     # Agent mode file editing workflow
-│       │   │   ├── useConversationHistory.ts  # Conversation persistence
-│       │   │   └── useHfDownload.ts    # Hugging Face model downloads
+│       │   │   ├── useConversationHistory.ts  # Conversation persistence and navigation
+│       │   │   ├── useHfDownload.ts    # Hugging Face model search and download
+│       │   │   └── useSystemPrompt.ts  # System prompt template listing and switching
 │       │   ├── drawing/            # Canvas rendering, elements, interaction
-│       │   │   ├── useCanvasRenderer.ts    # Canvas draw loop
-│       │   │   ├── useDrawingElements.ts   # Shape & path management
-│       │   │   ├── useDrawingHistory.ts    # Undo/redo for drawings
-│       │   │   ├── useDrawingInteraction.ts # Pointer & gesture handling
-│       │   │   ├── useDrawingPersistence.ts # Save/load drawings
-│       │   │   └── useTextEditing.ts       # Text tool for canvas
+│       │   │   ├── useCanvasRenderer.ts    # Canvas 2D rendering loop and bitmap export
+│       │   │   ├── useDrawingElements.ts   # Shape and path element state management
+│       │   │   ├── useDrawingHistory.ts    # Undo/redo stack for drawing operations
+│       │   │   ├── useDrawingInteraction.ts # Pointer, wheel, and keyboard event handling
+│       │   │   ├── useDrawingPersistence.ts # Save/load drawings; v1→v2 migration
+│       │   │   └── useTextEditing.ts       # Inline text tool overlay for canvas
 │       │   ├── editor/             # CodeMirror 6 editor & media players
 │       │   │   ├── codemirror/         # CodeMirror 6 extension files
-│       │   │   │   ├── cm-deco-builders.ts     # Decoration builder functions
-│       │   │   │   ├── cm-list-continuation.ts # List continuation keymap
-│       │   │   │   ├── cm-markdown-widgets.ts  # Inline markdown widget plugin (entry point)
+│       │   │   │   ├── cm-deco-builders.ts     # Decoration builder functions for live-preview
+│       │   │   │   ├── cm-list-continuation.ts # List continuation keymap extension
+│       │   │   │   ├── cm-markdown-widgets.ts  # ViewPlugin entry point for markdown live-preview
 │       │   │   │   ├── cm-task-fold.ts         # Fold completed tasks extension
-│       │   │   │   ├── cm-theme.ts             # Editor theme & styling
+│       │   │   │   ├── cm-theme.ts             # Editor theme and syntax highlight styling
 │       │   │   │   ├── cm-toolbar.ts           # Toolbar formatting commands & keybindings
 │       │   │   │   ├── cm-widgets.ts           # WidgetType classes for live-preview
-│       │   │   │   ├── useCodeEditor.ts        # CM6 instance for code files
-│       │   │   │   └── useCodemirror.ts        # CM6 instance lifecycle
-│       │   │   ├── useAudioPlayer.ts       # Audio playback controls
-│       │   │   ├── useDictation.ts         # Speech-to-text integration
-│       │   │   ├── useEditorDrop.ts        # Drag & drop onto editor
-│       │   │   ├── useEditorTabs.ts        # Tab state management
-│       │   │   ├── useEmbedResolver.ts     # Obsidian-style embed resolution
-│       │   │   ├── useNotePersistence.ts   # File save/load
-│       │   │   └── useVideoPlayer.ts       # Video playback controls
+│       │   │   │   ├── useCodeEditor.ts        # CM6 instance for read-only code file viewing
+│       │   │   │   └── useCodemirror.ts        # CM6 markdown editor lifecycle and extensions
+│       │   │   ├── useAudioPlayer.ts       # Reactive audio playback state and controls
+│       │   │   ├── useDictation.ts         # Streams mic audio to Whisper, inserts transcription
+│       │   │   ├── useEditorDrop.ts        # Drag & drop onto editor inserts embed syntax
+│       │   │   ├── useEditorTabs.ts        # Open file tabs with localStorage persistence
+│       │   │   ├── useEmbedResolver.ts     # Resolves ![[...]] paths to data URIs with caching
+│       │   │   ├── useNotePersistence.ts   # Note content load/save and auto-save scheduling
+│       │   │   └── useVideoPlayer.ts       # Reactive video playback state and controls
 │       │   ├── ui/                 # General UI composables
-│       │   │   ├── useContextMenu.ts           # Context menu state
-│       │   │   └── useListKeyboardNavigation.ts # Arrow-key list navigation
+│       │   │   ├── useContextMenu.ts           # Context menu position and open/close state
+│       │   │   ├── useListKeyboardNavigation.ts # Arrow-key navigation for list elements
+│       │   │   └── useTheme.ts                 # Theme listing, CSS property application
 │       │   └── vault/              # Vault & file management
-│       │       ├── useBookmarks.ts     # Bookmarked notes
-│       │       ├── useFileSelection.ts # Active file selection
-│       │       ├── useFolderTree.ts    # Folder tree structure
-│       │       ├── useTreeNodeDrag.ts  # Drag & drop for tree nodes
-│       │       └── useVault.ts         # Vault open/close lifecycle
+│       │       ├── useBookmarks.ts     # Bookmarked notes state
+│       │       ├── useFileSelection.ts # Active file and multi-select state
+│       │       ├── useFolderTree.ts    # Recursive tree structure from flat file/folder lists
+│       │       ├── useTreeNodeDrag.ts  # Drag-and-drop file/folder moves in tree
+│       │       └── useVault.ts         # Core vault: folder open, FS watcher, CRUD
 │       ├── types/                  # TypeScript type definitions
-│       │   ├── ai.ts               # AI model & inference types
-│       │   ├── chat.ts             # Chat message types
-│       │   ├── drawing.ts          # Drawing element types
-│       │   ├── electron.d.ts       # Electron IPC & preload API types
-│       │   ├── hf.ts               # Hugging Face API types
-│       │   └── speech.ts           # Speech-to-text types
+│       │   ├── ai.ts               # AI model info, load result, and status types
+│       │   ├── chat.ts             # Chat message and agent file edit types
+│       │   ├── drawing.ts          # Drawing element, tool, and canvas types
+│       │   ├── electron.d.ts       # Electron IPC & preload API type declarations
+│       │   ├── hf.ts               # Hugging Face search, repo file, and download types
+│       │   └── speech.ts           # Speech-to-text result types
 │       └── utils/                  # Shared utilities
-│           ├── audio.ts            # Audio encoding helpers
-│           └── fileTypes.ts        # File extension classification
+│           ├── audio.ts            # WebM→WAV conversion and PCM encoding helpers
+│           └── fileTypes.ts        # File extension classification constants and predicates
 ├── tests/                          # Unit tests (mirrors src/ structure)
 │   ├── main/
+│   │   ├── bookmarks.test.ts
 │   │   ├── extensions.test.ts
 │   │   ├── mime.test.ts
 │   │   ├── paths.test.ts
+│   │   ├── systemPrompt.test.ts
 │   │   └── validation.test.ts
 │   └── renderer/
 │       ├── audio.test.ts
+│       ├── cm-list-continuation.test.ts
 │       ├── cm-task-fold.test.ts
 │       ├── cm-toolbar.test.ts
 │       ├── exportDrawing.test.ts
 │       ├── fileTypes.test.ts
-│       └── useEditorTabs.test.ts
+│       ├── useAIChat.test.ts
+│       ├── useAIModel.test.ts
+│       ├── useAgentMode.test.ts
+│       ├── useBookmarks.test.ts
+│       ├── useContextMenu.test.ts
+│       ├── useConversationHistory.test.ts
+│       ├── useDrawingElements.test.ts
+│       ├── useDrawingHistory.test.ts
+│       ├── useEditorTabs.test.ts
+│       ├── useEmbedResolver.test.ts
+│       ├── useFileSelection.test.ts
+│       ├── useFolderTree.test.ts
+│       ├── useHfDownload.test.ts
+│       ├── useListKeyboardNavigation.test.ts
+│       ├── useNotePersistence.test.ts
+│       ├── useSystemPrompt.test.ts
+│       ├── useTheme.test.ts
+│       ├── useTreeNodeDrag.test.ts
+│       └── useVault.test.ts
+├── assets/                         # Bundled app assets seeded to LEAF_HOME on first launch
+│   ├── prompts/                    # Default system prompt templates (Markdown)
+│   │   ├── coding.md
+│   │   ├── default.md
+│   │   └── writing.md
+│   └── themes/                     # Built-in colour themes (JSON)
+│       ├── dark.json
+│       ├── light.json
+│       └── ...                     # 18 themes total (catppuccin, dracula, nord, etc.)
 ├── models/
 │   └── whisper/                    # Whisper ONNX model (download manually — see above)
 ├── public/                         # Static assets (demo screenshot)
