@@ -100,7 +100,7 @@ async function selectFolder() {
             const activeTabFile = editorTabs.activeFile.value;
             if (activeTabFile) selection.openFile(activeTabFile);
         }
-        bookmarks.loadBookmarks();
+        await bookmarks.loadBookmarks();
     }
 }
 
@@ -116,7 +116,7 @@ async function loadFolderPath(folderPath: string) {
         const activeTabFile = editorTabs.activeFile.value;
         if (activeTabFile) selection.openFile(activeTabFile);
     }
-    bookmarks.loadBookmarks();
+    await bookmarks.loadBookmarks();
 }
 
 function changeFolder() {

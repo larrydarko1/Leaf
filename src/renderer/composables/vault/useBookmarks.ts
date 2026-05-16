@@ -1,33 +1,26 @@
 /**
- * useBookmarks — persists per-folder file bookmarks in localStorage.
+ * useBookmarks — persists per-vault file bookmarks in <vault>/.leaf/bookmarks.json.
  */
 
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 
-export function useBookmarks(getCurrentFolder: () => string | null) {
+export function useBookmarks(_getCurrentFolder: () => string | null) {
     const bookmarkedFiles = ref<string[]>([]);
 
-    const storageKey = computed(() => {
-        const folder = getCurrentFolder();
-        return folder ? `leaf-bookmarks-${folder}` : null;
-    });
-
-    function load() {
-        if (!storageKey.value) {
-            bookmarkedFiles.value = [];
-            return;
-        }
+    async function load() {
         try {
-            const saved = localStorage.getItem(storageKey.value);
-            bookmarkedFiles.value = saved ? JSON.parse(saved) : [];
+            const result = await window.electronAPI.bookmarksLoad();
+            bookmarkedFiles.value = result.success && result.bookmarks ? result.bookmarks : [];
         } catch {
             bookmarkedFiles.value = [];
         }
     }
 
-    function save() {
-        if (storageKey.value) {
-            localStorage.setItem(storageKey.value, JSON.stringify(bookmarkedFiles.value));
+    async function save() {
+        try {
+            await window.electronAPI.bookmarksSave([...bookmarkedFiles.value]);
+        } catch {
+            // Best-effort — don't surface save errors to the user
         }
     }
 

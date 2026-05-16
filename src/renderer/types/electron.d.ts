@@ -223,6 +223,10 @@ export interface ElectronAPI {
     // Clipboard
     writeClipboard: (text: string) => Promise<void>;
 
+    // Bookmarks persistence
+    bookmarksLoad: () => Promise<{ success: boolean; bookmarks?: string[]; error?: string }>;
+    bookmarksSave: (bookmarks: string[]) => Promise<{ success: boolean; error?: string }>;
+
     // Speech-to-Text (Whisper) operations
     speechInit: () => Promise<SpeechInitResult>;
     speechTranscribe: (audioData: number[]) => Promise<SpeechTranscribeResult>;

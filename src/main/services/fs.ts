@@ -443,6 +443,46 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
             return { success: false, error: (error as Error).message };
         }
     });
+
+    // Bookmarks — persisted in <vault>/.leaf/bookmarks.json
+    ipc.handle('bookmarks:load', async () => {
+        try {
+            const root = requireVaultRoot();
+            const bookmarksPath = path.join(root, '.leaf', 'bookmarks.json');
+            try {
+                const raw = await fs.readFile(bookmarksPath, 'utf-8');
+                const parsed: unknown = JSON.parse(raw);
+                if (!Array.isArray(parsed)) return { success: true, bookmarks: [] };
+                // Only return paths that are still inside the vault
+                const valid = parsed.filter((p): p is string => typeof p === 'string' && p.startsWith(root + path.sep));
+                return { success: true, bookmarks: valid };
+            } catch {
+                return { success: true, bookmarks: [] };
+            }
+        } catch (error) {
+            return { success: false, error: (error as Error).message };
+        }
+    });
+
+    ipc.handle('bookmarks:save', async (_event, bookmarks: unknown) => {
+        if (!Array.isArray(bookmarks) || bookmarks.some((p) => typeof p !== 'string')) {
+            return { success: false, error: 'Invalid bookmarks payload' };
+        }
+        try {
+            const root = requireVaultRoot();
+            const leafDir = path.join(root, '.leaf');
+            await fs.mkdir(leafDir, { recursive: true });
+            const bookmarksPath = path.join(leafDir, 'bookmarks.json');
+            // Validate every path is inside the vault before persisting
+            for (const p of bookmarks as string[]) {
+                assertInsideBoundary(p, root);
+            }
+            await fs.writeFile(bookmarksPath, JSON.stringify(bookmarks, null, 2), 'utf-8');
+            return { success: true };
+        } catch (error) {
+            return { success: false, error: (error as Error).message };
+        }
+    });
 }
 
 function requireVaultRoot(): string {

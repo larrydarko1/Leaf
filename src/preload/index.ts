@@ -130,6 +130,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // Clipboard
     writeClipboard: (text: string) => ipcRenderer.invoke('clipboard:write', text),
 
+    // Bookmarks persistence (<vault>/.leaf/bookmarks.json)
+    bookmarksLoad: () => ipcRenderer.invoke('bookmarks:load'),
+    bookmarksSave: (bookmarks: string[]) => ipcRenderer.invoke('bookmarks:save', bookmarks),
+
     // Speech-to-Text (Whisper) operations
     speechInit: () => ipcRenderer.invoke('speech:init'),
     speechTranscribe: (audioData: number[]) => ipcRenderer.invoke('speech:transcribe', audioData),
