@@ -456,7 +456,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+Versions prior to v2.0.0 are licensed under the [MIT License](https://opensource.org/licenses/MIT).
+
+From v2.0.0 onward, this project is licensed under the [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE). You are free to use, modify, and distribute this software under the terms of the AGPL-3.0. If you wish to use Leaf in a proprietary or commercial product without complying with the AGPL, please contact the author for a commercial license.
 
 ## Acknowledgments
 

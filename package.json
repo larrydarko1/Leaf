@@ -1,6 +1,6 @@
 {
     "name": "leaf",
-    "version": "1.5.8",
+    "version": "2.0.0",
     "description": "A local-first, privacy-focused note-taking app for desktop with built-in AI assistance. Simple interface for reading and editing txt and md files, plus support for loading local LLMs (GGUF format) for private, on-device chat and assistance. All notes and AI interactions stay on your device.",
     "keywords": [
         "notes",
@@ -14,7 +14,7 @@
     "bugs": {
         "url": "https://github.com/larrydarko1/leaf/issues"
     },
-    "license": "MIT",
+    "license": "AGPL-3.0-only",
     "author": "Lorenzo Mazzola",
     "type": "module",
     "main": "out/main/index.js",
