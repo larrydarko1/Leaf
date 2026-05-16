@@ -1,0 +1,26 @@
+{
+    "name": "Dracula",
+    "description": "A dark theme for those who code at night.",
+    "colors": {
+        "text1": "#f8f8f2",
+        "text2": "#6272a4",
+        "text3": "#44475a",
+        "text-primary": "#f8f8f2",
+        "text-muted": "#6272a4",
+        "base1": "#21222c",
+        "base2": "#f8f8f2",
+        "base3": "#44475a",
+        "bg-primary": "#282a36",
+        "bg-secondary": "#21222c",
+        "bg-tertiary": "#44475a",
+        "bg-hover": "#3c3f4e",
+        "bg-selected": "#44475a",
+        "border-color": "#44475a",
+        "accent-color": "#bd93f9",
+        "accent-color-alpha": "rgba(189, 147, 249, 0.15)",
+        "danger-color": "#ff5555",
+        "danger-color-alpha": "rgba(255, 85, 85, 0.15)",
+        "scrollbar-thumb": "#44475a",
+        "scrollbar-thumb-hover": "#6272a4"
+    }
+}

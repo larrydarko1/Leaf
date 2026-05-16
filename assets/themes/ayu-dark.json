@@ -1,0 +1,26 @@
+{
+    "name": "Ayu Dark",
+    "description": "Simple and elegant dark theme.",
+    "colors": {
+        "text1": "#bfbdb6",
+        "text2": "#5c6773",
+        "text3": "#0d1017",
+        "text-primary": "#bfbdb6",
+        "text-muted": "#3d4752",
+        "base1": "#0a0e14",
+        "base2": "#bfbdb6",
+        "base3": "#0d1017",
+        "bg-primary": "#0a0e14",
+        "bg-secondary": "#080c12",
+        "bg-tertiary": "#0d1017",
+        "bg-hover": "#131721",
+        "bg-selected": "#1a1f29",
+        "border-color": "#0d1017",
+        "accent-color": "#e6b450",
+        "accent-color-alpha": "rgba(230, 180, 80, 0.15)",
+        "danger-color": "#f07178",
+        "danger-color-alpha": "rgba(240, 113, 120, 0.15)",
+        "scrollbar-thumb": "#1a1f29",
+        "scrollbar-thumb-hover": "#272d38"
+    }
+}

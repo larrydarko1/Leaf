@@ -1,0 +1,26 @@
+{
+    "name": "Material Ocean",
+    "description": "Deep ocean-inspired Material theme.",
+    "colors": {
+        "text1": "#cdd3de",
+        "text2": "#546e7a",
+        "text3": "#1a2030",
+        "text-primary": "#cdd3de",
+        "text-muted": "#464b5d",
+        "base1": "#090c18",
+        "base2": "#cdd3de",
+        "base3": "#1a2030",
+        "bg-primary": "#0f111a",
+        "bg-secondary": "#090c18",
+        "bg-tertiary": "#1a2030",
+        "bg-hover": "#1e2234",
+        "bg-selected": "#212541",
+        "border-color": "#1a2030",
+        "accent-color": "#82aaff",
+        "accent-color-alpha": "rgba(130, 170, 255, 0.15)",
+        "danger-color": "#ff5370",
+        "danger-color-alpha": "rgba(255, 83, 112, 0.15)",
+        "scrollbar-thumb": "#212541",
+        "scrollbar-thumb-hover": "#2c3057"
+    }
+}

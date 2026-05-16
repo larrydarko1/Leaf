@@ -1,0 +1,26 @@
+{
+    "name": "Gruvbox Light",
+    "description": "Retro groove light theme with warm tones.",
+    "colors": {
+        "text1": "#3c3836",
+        "text2": "#7c6f64",
+        "text3": "#d5c4a1",
+        "text-primary": "#3c3836",
+        "text-muted": "#a89984",
+        "base1": "#fbf1c7",
+        "base2": "#3c3836",
+        "base3": "#f2e5bc",
+        "bg-primary": "#fbf1c7",
+        "bg-secondary": "#f2e5bc",
+        "bg-tertiary": "#ebdbb2",
+        "bg-hover": "#d5c4a1",
+        "bg-selected": "#bdae93",
+        "border-color": "#d5c4a1",
+        "accent-color": "#79740e",
+        "accent-color-alpha": "rgba(121, 116, 14, 0.12)",
+        "danger-color": "#9d0006",
+        "danger-color-alpha": "rgba(157, 0, 6, 0.12)",
+        "scrollbar-thumb": "#bdae93",
+        "scrollbar-thumb-hover": "#a89984"
+    }
+}

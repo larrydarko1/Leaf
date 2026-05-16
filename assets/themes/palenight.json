@@ -1,0 +1,26 @@
+{
+    "name": "Palenight",
+    "description": "Material Palenight — elegant purple-tinted dark.",
+    "colors": {
+        "text1": "#a6accd",
+        "text2": "#676e95",
+        "text3": "#343b51",
+        "text-primary": "#a6accd",
+        "text-muted": "#4e5579",
+        "base1": "#1e2030",
+        "base2": "#a6accd",
+        "base3": "#343b51",
+        "bg-primary": "#292d3e",
+        "bg-secondary": "#1e2030",
+        "bg-tertiary": "#343b51",
+        "bg-hover": "#3c435e",
+        "bg-selected": "#444b6a",
+        "border-color": "#343b51",
+        "accent-color": "#82aaff",
+        "accent-color-alpha": "rgba(130, 170, 255, 0.15)",
+        "danger-color": "#f07178",
+        "danger-color-alpha": "rgba(240, 113, 120, 0.15)",
+        "scrollbar-thumb": "#444b6a",
+        "scrollbar-thumb-hover": "#545d7e"
+    }
+}

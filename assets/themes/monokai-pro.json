@@ -1,0 +1,26 @@
+{
+    "name": "Monokai Pro",
+    "description": "A refined version of the classic Monokai palette.",
+    "colors": {
+        "text1": "#fcfcfa",
+        "text2": "#727072",
+        "text3": "#403e41",
+        "text-primary": "#fcfcfa",
+        "text-muted": "#5b595c",
+        "base1": "#221f22",
+        "base2": "#fcfcfa",
+        "base3": "#403e41",
+        "bg-primary": "#2d2a2e",
+        "bg-secondary": "#221f22",
+        "bg-tertiary": "#403e41",
+        "bg-hover": "#4a4750",
+        "bg-selected": "#4a4750",
+        "border-color": "#403e41",
+        "accent-color": "#ffd866",
+        "accent-color-alpha": "rgba(255, 216, 102, 0.15)",
+        "danger-color": "#ff6188",
+        "danger-color-alpha": "rgba(255, 97, 136, 0.15)",
+        "scrollbar-thumb": "#4a4750",
+        "scrollbar-thumb-hover": "#5b595c"
+    }
+}

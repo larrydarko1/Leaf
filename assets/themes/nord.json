@@ -1,0 +1,26 @@
+{
+    "name": "Nord",
+    "description": "Arctic, north-bluish color palette.",
+    "colors": {
+        "text1": "#eceff4",
+        "text2": "#d8dee9",
+        "text3": "#3b4252",
+        "text-primary": "#eceff4",
+        "text-muted": "#4c566a",
+        "base1": "#2e3440",
+        "base2": "#eceff4",
+        "base3": "#3b4252",
+        "bg-primary": "#2e3440",
+        "bg-secondary": "#272c36",
+        "bg-tertiary": "#3b4252",
+        "bg-hover": "#434c5e",
+        "bg-selected": "#4c566a",
+        "border-color": "#3b4252",
+        "accent-color": "#88c0d0",
+        "accent-color-alpha": "rgba(136, 192, 208, 0.15)",
+        "danger-color": "#bf616a",
+        "danger-color-alpha": "rgba(191, 97, 106, 0.15)",
+        "scrollbar-thumb": "#4c566a",
+        "scrollbar-thumb-hover": "#5e6779"
+    }
+}

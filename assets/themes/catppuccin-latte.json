@@ -1,0 +1,26 @@
+{
+    "name": "Catppuccin Latte",
+    "description": "Soothing pastel light theme.",
+    "colors": {
+        "text1": "#4c4f69",
+        "text2": "#5c5f77",
+        "text3": "#ccd0da",
+        "text-primary": "#4c4f69",
+        "text-muted": "#9ca0b0",
+        "base1": "#eff1f5",
+        "base2": "#4c4f69",
+        "base3": "#e6e9ef",
+        "bg-primary": "#eff1f5",
+        "bg-secondary": "#e6e9ef",
+        "bg-tertiary": "#dce0e8",
+        "bg-hover": "#ccd0da",
+        "bg-selected": "#bcc0cc",
+        "border-color": "#ccd0da",
+        "accent-color": "#8839ef",
+        "accent-color-alpha": "rgba(136, 57, 239, 0.12)",
+        "danger-color": "#d20f39",
+        "danger-color-alpha": "rgba(210, 15, 57, 0.12)",
+        "scrollbar-thumb": "#bcc0cc",
+        "scrollbar-thumb-hover": "#acb0be"
+    }
+}

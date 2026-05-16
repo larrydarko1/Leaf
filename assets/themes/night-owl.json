@@ -1,0 +1,26 @@
+{
+    "name": "Night Owl",
+    "description": "Designed for night owls by Sarah Drasner.",
+    "colors": {
+        "text1": "#d6deeb",
+        "text2": "#637777",
+        "text3": "#01121f",
+        "text-primary": "#d6deeb",
+        "text-muted": "#4b6479",
+        "base1": "#010e1a",
+        "base2": "#d6deeb",
+        "base3": "#01121f",
+        "bg-primary": "#011627",
+        "bg-secondary": "#010e1a",
+        "bg-tertiary": "#01121f",
+        "bg-hover": "#021d30",
+        "bg-selected": "#0b253a",
+        "border-color": "#01121f",
+        "accent-color": "#82aaff",
+        "accent-color-alpha": "rgba(130, 170, 255, 0.15)",
+        "danger-color": "#ef5350",
+        "danger-color-alpha": "rgba(239, 83, 80, 0.15)",
+        "scrollbar-thumb": "#0b253a",
+        "scrollbar-thumb-hover": "#122d42"
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "name": "One Dark Pro",
+    "description": "Atom's iconic dark theme.",
+    "colors": {
+        "text1": "#abb2bf",
+        "text2": "#5c6370",
+        "text3": "#3e4451",
+        "text-primary": "#abb2bf",
+        "text-muted": "#4b5263",
+        "base1": "#21252b",
+        "base2": "#abb2bf",
+        "base3": "#3e4451",
+        "bg-primary": "#282c34",
+        "bg-secondary": "#21252b",
+        "bg-tertiary": "#2c313a",
+        "bg-hover": "#3e4451",
+        "bg-selected": "#3e4451",
+        "border-color": "#3e4451",
+        "accent-color": "#61afef",
+        "accent-color-alpha": "rgba(97, 175, 239, 0.15)",
+        "danger-color": "#e06c75",
+        "danger-color-alpha": "rgba(224, 108, 117, 0.15)",
+        "scrollbar-thumb": "#4b5263",
+        "scrollbar-thumb-hover": "#5c6370"
+    }
+}

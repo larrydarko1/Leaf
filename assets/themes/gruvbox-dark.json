@@ -1,0 +1,26 @@
+{
+    "name": "Gruvbox Dark",
+    "description": "Retro groove dark theme with warm tones.",
+    "colors": {
+        "text1": "#ebdbb2",
+        "text2": "#a89984",
+        "text3": "#3c3836",
+        "text-primary": "#ebdbb2",
+        "text-muted": "#7c6f64",
+        "base1": "#1d2021",
+        "base2": "#ebdbb2",
+        "base3": "#3c3836",
+        "bg-primary": "#282828",
+        "bg-secondary": "#1d2021",
+        "bg-tertiary": "#32302f",
+        "bg-hover": "#3c3836",
+        "bg-selected": "#504945",
+        "border-color": "#3c3836",
+        "accent-color": "#b8bb26",
+        "accent-color-alpha": "rgba(184, 187, 38, 0.15)",
+        "danger-color": "#cc241d",
+        "danger-color-alpha": "rgba(204, 36, 29, 0.15)",
+        "scrollbar-thumb": "#504945",
+        "scrollbar-thumb-hover": "#665c54"
+    }
+}

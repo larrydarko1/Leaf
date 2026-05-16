@@ -1,0 +1,26 @@
+{
+    "name": "Tokyo Night",
+    "description": "A clean dark theme inspired by Tokyo at night.",
+    "colors": {
+        "text1": "#c0caf5",
+        "text2": "#565f89",
+        "text3": "#292e42",
+        "text-primary": "#c0caf5",
+        "text-muted": "#414868",
+        "base1": "#16161e",
+        "base2": "#c0caf5",
+        "base3": "#292e42",
+        "bg-primary": "#1a1b26",
+        "bg-secondary": "#16161e",
+        "bg-tertiary": "#1f2335",
+        "bg-hover": "#24283b",
+        "bg-selected": "#2e3347",
+        "border-color": "#292e42",
+        "accent-color": "#7aa2f7",
+        "accent-color-alpha": "rgba(122, 162, 247, 0.15)",
+        "danger-color": "#f7768e",
+        "danger-color-alpha": "rgba(247, 118, 142, 0.15)",
+        "scrollbar-thumb": "#3b4261",
+        "scrollbar-thumb-hover": "#545c7e"
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "name": "GitHub Dark",
+    "description": "GitHub's official dark theme.",
+    "colors": {
+        "text1": "#e6edf3",
+        "text2": "#8b949e",
+        "text3": "#21262d",
+        "text-primary": "#e6edf3",
+        "text-muted": "#6e7681",
+        "base1": "#010409",
+        "base2": "#e6edf3",
+        "base3": "#161b22",
+        "bg-primary": "#0d1117",
+        "bg-secondary": "#010409",
+        "bg-tertiary": "#161b22",
+        "bg-hover": "#1c2128",
+        "bg-selected": "#21262d",
+        "border-color": "#30363d",
+        "accent-color": "#58a6ff",
+        "accent-color-alpha": "rgba(88, 166, 255, 0.15)",
+        "danger-color": "#f85149",
+        "danger-color-alpha": "rgba(248, 81, 73, 0.15)",
+        "scrollbar-thumb": "#30363d",
+        "scrollbar-thumb-hover": "#484f58"
+    }
+}

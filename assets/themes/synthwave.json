@@ -1,0 +1,26 @@
+{
+    "name": "Synthwave '84",
+    "description": "Neon-drenched retro-futuristic vibes.",
+    "colors": {
+        "text1": "#ffffff",
+        "text2": "#b894f6",
+        "text3": "#2a2139",
+        "text-primary": "#ffffff",
+        "text-muted": "#6d5b95",
+        "base1": "#1a1333",
+        "base2": "#ffffff",
+        "base3": "#2a2139",
+        "bg-primary": "#262335",
+        "bg-secondary": "#1a1333",
+        "bg-tertiary": "#2a2139",
+        "bg-hover": "#332a4a",
+        "bg-selected": "#3d3558",
+        "border-color": "#2a2139",
+        "accent-color": "#f92aad",
+        "accent-color-alpha": "rgba(249, 42, 173, 0.15)",
+        "danger-color": "#fe4450",
+        "danger-color-alpha": "rgba(254, 68, 80, 0.15)",
+        "scrollbar-thumb": "#3d3558",
+        "scrollbar-thumb-hover": "#4f456e"
+    }
+}
