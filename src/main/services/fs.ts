@@ -504,6 +504,7 @@ async function scanFolder(folderPath: string, basePath = folderPath): Promise<Sc
             const fullPath = path.join(folderPath, entry.name);
             const relativePath = path.relative(basePath, fullPath);
             if (entry.isDirectory()) {
+                if (entry.name === '.leaf') continue; // hide Leaf's internal metadata folder
                 folders.push({
                     name: entry.name,
                     path: fullPath,
