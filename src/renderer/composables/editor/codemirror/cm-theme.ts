@@ -168,7 +168,7 @@ export const leafEditorTheme = EditorView.theme({
         display: 'inline-block',
     },
     '.cm-task-checked': {
-        backgroundColor: '#4caf50',
+        backgroundColor: 'var(--accent-color, #3eb489)',
     },
     // Checkmark pseudo-element via CSS
     '.cm-task-checked::after': {
@@ -184,7 +184,7 @@ export const leafEditorTheme = EditorView.theme({
         display: 'block',
     },
     '.cm-task-half': {
-        background: 'linear-gradient(to top, #4caf50 50%, var(--text3, #ddd) 50%)',
+        background: 'linear-gradient(to top, var(--accent-color, #3eb489) 50%, var(--text3, #ddd) 50%)',
     },
 
     // ── Embed widgets ─────────────────────────────────────────────────────
