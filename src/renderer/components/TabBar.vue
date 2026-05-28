@@ -65,7 +65,7 @@ function onDragEnd() {
 </script>
 
 <template>
-    <div class="tab-bar" role="tablist">
+    <div v-if="tabs.length > 0" class="tab-bar" role="tablist">
         <div
             v-for="(tab, i) in tabs"
             :key="tab.file.path"
