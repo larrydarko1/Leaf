@@ -2,9 +2,20 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import path from 'path';
 import os from 'os';
 
-// Mock fs before importing the module. We delegate to the real fs by default
-// so unrelated imports (e.g. the logger) keep working; tests override the
-// returned mock fns as needed.
+// Prevent electron-log → electron binary from being loaded in CI.
+vi.mock('electron', () => ({
+    app: { getPath: vi.fn(), getVersion: vi.fn() },
+}));
+
+vi.mock('../../src/main/lib/logger', () => ({
+    log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+}));
+
+/**
+ * Mock fs before importing the module. We delegate to the real fs by default
+ * so unrelated imports (e.g. the logger) keep working; tests override the
+ * returned mock fns as needed.
+ */
 vi.mock('fs', async () => {
     const actual = await vi.importActual<typeof import('fs')>('fs');
     const existsSync = vi.fn(actual.existsSync);
