@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue';
 import type { FileInfo } from '../../types/electron';
 
 defineProps<{
@@ -18,10 +19,64 @@ defineEmits<{
     (e: 'send'): void;
     (e: 'stop'): void;
 }>();
+
+const inputAreaRef = ref<HTMLDivElement>(null!);
+const isResizing = ref(false);
+const maxHeightPx = ref(120);
+const minHeight = 31;
+const maxHeight = 150;
+
+function startResize(e: MouseEvent) {
+    e.preventDefault();
+    isResizing.value = true;
+    const startY = e.clientY;
+    const startHeight = maxHeightPx.value;
+
+    // Prevent text selection during drag
+    const originalUserSelect = document.body.style.userSelect;
+    document.body.style.userSelect = 'none';
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+        const delta = startY - moveEvent.clientY;
+        const newHeight = Math.max(minHeight, Math.min(maxHeight, startHeight + delta));
+        maxHeightPx.value = newHeight;
+    };
+
+    const handleMouseUp = () => {
+        isResizing.value = false;
+        document.body.style.userSelect = originalUserSelect;
+        // Save the new height preference
+        localStorage.setItem('ai-input-max-height', maxHeightPx.value.toString());
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+}
+
+onMounted(() => {
+    // Restore saved height preference if available
+    const saved = localStorage.getItem('ai-input-max-height');
+    if (saved) {
+        const value = parseInt(saved, 10);
+        if (!isNaN(value) && value >= minHeight && value <= maxHeight) {
+            maxHeightPx.value = value;
+        }
+    }
+});
 </script>
 
 <template>
-    <div class="ai-input-area">
+    <div ref="inputAreaRef" class="ai-input-area">
+        <div
+            class="ai-resize-handle"
+            :class="{ 'ai-resize-active': isResizing }"
+            title="Drag to resize input area"
+            @mousedown="startResize"
+        >
+            <div class="ai-resize-grip" />
+        </div>
         <div v-if="agentMode" class="ai-agent-indicator">
             <svg
                 width="10"
@@ -68,6 +123,7 @@ defineEmits<{
                 :value="inputMessage"
                 placeholder="Ask something..."
                 class="ai-input"
+                :style="{ height: maxHeightPx + 'px' }"
                 :disabled="!isReady || isAnyGenerating"
                 rows="1"
                 @input="$emit('update:inputMessage', ($event.target as HTMLTextAreaElement).value)"
@@ -105,8 +161,11 @@ defineEmits<{
 
 <style lang="scss" scoped>
 .ai-input-area {
+    display: flex;
+    flex-direction: column;
     padding: 0.5rem 0.75rem 0.75rem;
     flex-shrink: 0;
+    user-select: none;
 }
 
 .ai-agent-indicator {
@@ -140,7 +199,7 @@ defineEmits<{
 
 .ai-input-row {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 0;
     background: $bg-primary;
     border: 1px solid $text3;
@@ -157,10 +216,10 @@ defineEmits<{
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    padding: 0.3rem;
+    padding: 0.5em 0.3em;
     color: $text2;
     flex-shrink: 0;
-    border-radius: 6px;
+    border-radius: 0.375em;
     transition:
         color 0.15s,
         background 0.15s;
@@ -189,7 +248,6 @@ defineEmits<{
     line-height: 1.4;
     resize: none;
     overflow-y: auto;
-    max-height: 120px;
     &::placeholder {
         color: $text2;
     }
@@ -234,5 +292,42 @@ defineEmits<{
             transform: scale(1.05);
         }
     }
+}
+
+.ai-resize-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 12px;
+    margin-top: 0.35em;
+    cursor: ns-resize;
+    transition: background-color 0.2s;
+    user-select: none;
+    pointer-events: auto;
+
+    &:hover,
+    &.ai-resize-active {
+        background-color: rgba(0, 0, 0, 0.05);
+        .ai-resize-grip {
+            background-color: $accent-color;
+            opacity: 1;
+        }
+    }
+
+    &.ai-resize-active {
+        user-select: none;
+        background-color: rgba(0, 0, 0, 0.08);
+    }
+}
+
+.ai-resize-grip {
+    width: 40px;
+    height: 3px;
+    background-color: $text3;
+    border-radius: 0.125em;
+    opacity: 0.4;
+    transition:
+        opacity 0.2s,
+        background-color 0.2s;
 }
 </style>
