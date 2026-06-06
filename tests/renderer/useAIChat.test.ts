@@ -295,6 +295,91 @@ describe('useAIChat', () => {
         });
     });
 
+    // ── copyMessage ──────────────────────────────────────────────────────────
+    describe('copyMessage', () => {
+        it('writes the message content to the clipboard', async () => {
+            const { chat } = makeChat([makeMessage('assistant', 'Hello world')]);
+
+            await chat.copyMessage('Hello world', 0);
+
+            expect(window.electronAPI.writeClipboard).toHaveBeenCalledWith('Hello world');
+        });
+
+        it('sets copiedIndex to the message index', async () => {
+            const { chat } = makeChat([makeMessage('assistant', 'Hi')]);
+
+            await chat.copyMessage('Hi', 1);
+
+            expect(chat.copiedIndex.value).toBe(1);
+        });
+
+        it('resets copiedIndex after 2 seconds', async () => {
+            vi.useFakeTimers();
+            const { chat } = makeChat([makeMessage('assistant', 'Hi')]);
+
+            await chat.copyMessage('Hi', 0);
+            expect(chat.copiedIndex.value).toBe(0);
+
+            vi.advanceTimersByTime(2000);
+            expect(chat.copiedIndex.value).toBeNull();
+
+            vi.useRealTimers();
+        });
+
+        it('does not reset copiedIndex if a newer copy occurred during the timeout', async () => {
+            vi.useFakeTimers();
+            const { chat } = makeChat([makeMessage('assistant', 'Hi'), makeMessage('assistant', 'There')]);
+
+            // Copy message 0 at T=0 — timeout fires at T=2000
+            await chat.copyMessage('Hi', 0);
+
+            // Advance 1 second, then copy message 1 — its timeout fires at T=3000
+            vi.advanceTimersByTime(1000);
+            await chat.copyMessage('There', 1);
+
+            // T=2000: first timeout fires; guard sees copiedIndex===1 (not 0) → no-op
+            vi.advanceTimersByTime(1000);
+            expect(chat.copiedIndex.value).toBe(1);
+
+            // T=3000: second timeout fires → resets to null
+            vi.advanceTimersByTime(1000);
+            expect(chat.copiedIndex.value).toBeNull();
+
+            vi.useRealTimers();
+        });
+    });
+
+    // ── renderMarkdown ───────────────────────────────────────────────────────
+    describe('renderMarkdown', () => {
+        it('returns empty string for empty input', () => {
+            const { chat } = makeChat();
+            expect(chat.renderMarkdown('')).toBe('');
+        });
+
+        it('renders plain text wrapped in a paragraph', () => {
+            const { chat } = makeChat();
+            const result = chat.renderMarkdown('hello');
+            expect(result).toContain('hello');
+            expect(result).toContain('<p>');
+        });
+
+        it('renders a fenced code block as <pre><code>', () => {
+            const { chat } = makeChat();
+            const md = '```js\nconsole.log("hi");\n```';
+            const result = chat.renderMarkdown(md);
+            expect(result).toContain('<pre>');
+            expect(result).toContain('<code');
+            expect(result).toContain('console.log');
+        });
+
+        it('renders multiple fenced code blocks', () => {
+            const { chat } = makeChat();
+            const md = '```js\nfoo();\n```\n\n```py\nbar()\n```';
+            const result = chat.renderMarkdown(md);
+            expect((result.match(/<pre>/g) ?? []).length).toBe(2);
+        });
+    });
+
     // ── sendMessage ──────────────────────────────────────────────────────────
     describe('sendMessage', () => {
         it('does nothing when input is empty', async () => {
