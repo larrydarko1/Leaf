@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import type { FileInfo } from '../types/electron';
 import type { ChatMessage } from '../types/chat';
 import { useAIModel } from '../composables/ai/useAIModel';
@@ -150,6 +150,12 @@ const {
     scrollToBottom,
 } = chat;
 
+// Resizable panel
+const panelWidth = ref(340);
+const minWidth = 340;
+const maxWidth = 600;
+const isResizing = ref(false);
+
 // Token bar display
 const tokenUsagePercent = computed(() => {
     if (!status.value.contextSize) return 0;
@@ -163,6 +169,10 @@ onMounted(async () => {
     if (status.value.isModelLoaded && inputField.value) {
         inputField.value.focus();
     }
+});
+
+onBeforeUnmount(() => {
+    isResizing.value = false;
 });
 
 // Orchestration wrappers
@@ -204,10 +214,42 @@ async function loadPreviousModel() {
         messages.value.push({ role: 'assistant', content: `Failed to load model: ${result.error}` });
     }
 }
+
+function startResize(e: MouseEvent) {
+    isResizing.value = true;
+    const startX = e.clientX;
+    const startWidth = panelWidth.value;
+
+    function onMouseMove(e: MouseEvent) {
+        const delta = startX - e.clientX;
+        panelWidth.value = Math.min(maxWidth, Math.max(minWidth, startWidth + delta));
+    }
+
+    function onMouseUp() {
+        isResizing.value = false;
+        window.removeEventListener('mousemove', onMouseMove);
+        window.removeEventListener('mouseup', onMouseUp);
+    }
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+}
 </script>
 
 <template>
-    <div class="ai-panel">
+    <main class="ai-panel" :style="{ width: panelWidth + 'px' }" aria-label="AI assistant panel">
+        <div
+            class="ai-panel-resize-handle"
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize AI panel"
+            aria-valuenow="panelWidth"
+            aria-valuemin="340"
+            aria-valuemax="600"
+            tabindex="0"
+            @mousedown.prevent="startResize"
+        />
+
         <AiModelBar
             :status="status"
             :available-models="availableModels"
@@ -218,6 +260,7 @@ async function loadPreviousModel() {
             :show-history="showHistory"
             :agent-mode="agentMode"
             :is-any-generating="isAnyGenerating"
+            aria-label="Model selection and controls"
             @select-model="selectModel"
             @load-model="loadSelectedModel"
             @unload-model="unloadModel"
@@ -245,6 +288,8 @@ async function loadPreviousModel() {
             :hf-sort-by="hfSortBy"
             :hf-has-more="hfHasMore"
             :hf-is-loading-more="hfIsLoadingMore"
+            aria-label="Hugging Face model browser"
+            :aria-hidden="!showHfPanel"
             @update:hf-search-query="hfSearchQuery = $event"
             @search="searchHfModels"
             @select-repo="selectHfRepo"
@@ -266,6 +311,8 @@ async function loadPreviousModel() {
             :current-conversation-id="currentConversationId"
             :renaming-conversation-id="renamingConversationId"
             :rename-value="renameValue"
+            aria-label="Conversation history"
+            :aria-hidden="!showHistory"
             @load="loadConversation"
             @start-rename="startRename"
             @confirm-rename="confirmRename"
@@ -290,6 +337,10 @@ async function loadPreviousModel() {
             :token-usage-percent="tokenUsagePercent"
             :conversation-token-count="conversationTokenCount"
             :render-markdown="renderMarkdown"
+            role="log"
+            aria-label="Conversation messages"
+            aria-live="polite"
+            aria-atomic="false"
             @scroll="onMessagesScroll"
             @copy="copyMessage"
             @start-edit="startEditMessage"
@@ -315,12 +366,13 @@ async function loadPreviousModel() {
             :is-any-generating="isAnyGenerating"
             :is-streaming="isStreaming"
             :input-field="inputField"
+            aria-label="Message input area"
             @update:input-message="inputMessage = $event"
             @update:include-note-context="includeNoteContext = $event"
             @send="sendMessage"
             @stop="stopGeneration"
         />
-    </div>
+    </main>
 </template>
 
 <style lang="scss" scoped>
@@ -330,7 +382,24 @@ async function loadPreviousModel() {
     height: 100%;
     background: $base1;
     border-left: 1px solid $text3;
-    width: 340px;
-    min-width: 280px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.ai-panel-resize-handle {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    cursor: col-resize;
+    z-index: 10;
+    transition: background 0.15s;
+
+    &:hover,
+    &:active {
+        background: $accent-color;
+        opacity: 0.5;
+    }
 }
 </style>
