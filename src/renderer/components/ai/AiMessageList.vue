@@ -24,6 +24,7 @@ const props = defineProps<{
 defineEmits<{
     (e: 'scroll'): void;
     (e: 'copy', content: string, index: number): void;
+    (e: 'copy-code', code: string): void;
     (e: 'start-edit', index: number): void;
     (e: 'cancel-edit'): void;
     (e: 'confirm-edit', index: number): void;
@@ -39,6 +40,9 @@ defineEmits<{
 }>();
 
 const editInputRef = ref<HTMLTextAreaElement[]>();
+
+const copyIconSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+const checkIconSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
 
 watch(
     () => props.editingIndex,
@@ -57,6 +61,61 @@ function truncate(str: string, len: number): string {
 function formatTokenCount(n: number): string {
     if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
     return String(n);
+}
+
+/**
+ * Extract all fenced code blocks from a markdown string.
+ * Returns an array of { code, lang } objects.
+ */
+function extractCodeBlocks(content: string): { code: string; lang: string }[] {
+    const blocks: { code: string; lang: string }[] = [];
+    const regex = /```([^\n]*)\n([\s\S]*?)```/g;
+    let match: RegExpExecArray | null;
+    while ((match = regex.exec(content)) !== null) {
+        blocks.push({ lang: match[1].trim(), code: match[2] });
+    }
+    return blocks;
+}
+
+/**
+ * Wraps each <pre> block in the rendered HTML with a relative-positioned
+ * container that holds a copy button overlay.
+ */
+function renderWithCopyBtns(content: string): string {
+    const html = props.renderMarkdown(content);
+    let blockIdx = 0;
+    return html
+        .replace(/<pre>/g, () => {
+            const btn = `<button class="ai-code-copy-btn" data-block-idx="${blockIdx++}" title="Copy code" aria-label="Copy code">${copyIconSvg}</button>`;
+            return `<div class="ai-pre-wrapper">${btn}<pre>`;
+        })
+        .replace(/<\/pre>/g, '</pre></div>');
+}
+
+async function onMarkdownClick(content: string, event: MouseEvent) {
+    const target = event.target as Element;
+    const btn = target.closest('.ai-code-copy-btn') as HTMLButtonElement | null;
+    if (!btn) return;
+
+    const idx = parseInt(btn.dataset.blockIdx ?? '-1', 10);
+    if (idx < 0) return;
+
+    const code = extractCodeBlocks(content)[idx]?.code;
+    if (!code) return;
+
+    try {
+        await window.electronAPI.writeClipboard(code);
+        btn.innerHTML = checkIconSvg;
+        btn.title = 'Copied!';
+        btn.setAttribute('aria-label', 'Copied!');
+        setTimeout(() => {
+            btn.innerHTML = copyIconSvg;
+            btn.title = 'Copy code';
+            btn.setAttribute('aria-label', 'Copy code');
+        }, 2000);
+    } catch (err) {
+        window.electronAPI.log.error('Failed to copy code:', err);
+    }
 }
 </script>
 
@@ -179,7 +238,9 @@ function formatTokenCount(n: number): string {
                     <span>{{ msg.content }}</span>
                 </div>
                 <!-- Assistant message -->
-                <div v-else class="ai-message-content ai-markdown" v-html="renderMarkdown(msg.content)"></div>
+                <div v-else class="ai-message-content ai-markdown" @click="onMarkdownClick(msg.content, $event)">
+                    <div v-html="renderWithCopyBtns(msg.content)"></div>
+                </div>
                 <!-- Agent edit cards -->
                 <div v-if="msg.agentEdits && msg.agentEdits.length > 0" class="ai-agent-edits">
                     <AiAgentEditCard
@@ -504,6 +565,7 @@ function formatTokenCount(n: number): string {
 
 .ai-markdown {
     white-space: normal;
+    position: relative;
 
     :deep(p) {
         margin: 0 0 0.5em 0;
@@ -551,6 +613,7 @@ function formatTokenCount(n: number): string {
         border-radius: 6px;
         overflow-x: auto;
         margin: 0.4em 0;
+        position: relative;
         code {
             background: none;
             padding: 0;
@@ -589,6 +652,42 @@ function formatTokenCount(n: number): string {
     }
     :deep(strong) {
         font-weight: 600;
+    }
+}
+
+.ai-markdown :deep(.ai-pre-wrapper) {
+    position: relative;
+
+    &:hover .ai-code-copy-btn,
+    &:focus-within .ai-code-copy-btn {
+        opacity: 1;
+    }
+}
+
+.ai-markdown :deep(.ai-code-copy-btn) {
+    position: absolute;
+    top: 0.35rem;
+    right: 0.35rem;
+    background: rgba(0, 0, 0, 0.35);
+    border: none;
+    border-radius: 4px;
+    color: $text2;
+    cursor: pointer;
+    padding: 0.1875em 0.3125em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition:
+        opacity 0.15s,
+        color 0.15s,
+        background 0.15s;
+    z-index: 1;
+
+    &:hover {
+        color: $text1;
+        background: rgba(0, 0, 0, 0.55);
+        opacity: 1 !important;
     }
 }
 
