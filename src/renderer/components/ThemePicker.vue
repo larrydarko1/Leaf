@@ -25,33 +25,52 @@ async function handleRefresh() {
 </script>
 
 <template>
-    <aside class="theme-panel">
+    <aside class="theme-panel" aria-label="Theme selection panel">
         <header class="theme-header">
             <span class="theme-title">Theme</span>
-            <div class="header-actions">
-                <button class="icon-btn" title="Refresh list" @click="handleRefresh">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <div class="header-actions" role="toolbar" aria-label="Theme panel controls">
+                <button class="icon-btn" title="Refresh list" aria-label="Refresh theme list" @click="handleRefresh">
+                    <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        aria-hidden="true"
+                    >
                         <path d="M21 12a9 9 0 1 1-3-6.7" />
                         <path d="M21 4v5h-5" />
                     </svg>
                 </button>
-                <button class="icon-btn" title="Close" @click="emit('close')">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <button class="icon-btn" title="Close" aria-label="Close theme panel" @click="emit('close')">
+                    <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        aria-hidden="true"
+                    >
                         <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" />
                     </svg>
                 </button>
             </div>
         </header>
 
-        <div class="theme-list">
+        <div class="theme-list" role="listbox" aria-label="Available themes">
             <button
                 v-for="theme in themes"
                 :key="theme.id"
                 class="theme-item"
                 :class="{ active: theme.id === activeId }"
+                role="option"
+                :aria-selected="theme.id === activeId"
+                :aria-label="`${theme.name} theme${theme.description ? ': ' + theme.description : ''}`"
                 @click="handleSelect(theme.id)"
             >
-                <span class="theme-swatches">
+                <span class="theme-swatches" aria-hidden="true">
                     <span class="swatch" :style="{ background: theme.colors['bg-primary'] || '#000' }"></span>
                     <span class="swatch" :style="{ background: theme.colors['bg-secondary'] || '#000' }"></span>
                     <span class="swatch" :style="{ background: theme.colors['accent-color'] || '#3eb489' }"></span>
@@ -72,16 +91,19 @@ async function handleRefresh() {
                     stroke-width="2.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"
+                    aria-hidden="true"
                 >
                     <path d="M5 12l5 5 9-11" />
                 </svg>
             </button>
 
-            <div v-if="!themes.length" class="theme-empty">No themes found.</div>
+            <div v-if="!themes.length" class="theme-empty" role="status">No themes found.</div>
         </div>
 
         <footer class="theme-footer">
-            <button class="footer-btn" @click="handleOpenFolder">Open themes folder…</button>
+            <button class="footer-btn" aria-label="Open themes folder" @click="handleOpenFolder">
+                Open themes folder…
+            </button>
             <p class="footer-hint">
                 Drop <code>.json</code> files in <code>~/.leaf/themes/</code> to add presets. Edit one to customise.
             </p>
@@ -104,7 +126,7 @@ async function handleRefresh() {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.6rem 0.85rem;
+    padding: 0.6em 0.85em;
     border-bottom: 1px solid $text3;
     flex-shrink: 0;
 }
@@ -117,14 +139,14 @@ async function handleRefresh() {
 
 .header-actions {
     display: inline-flex;
-    gap: 2px;
+    gap: 0.125em;
 }
 
 .icon-btn {
     background: none;
     border: none;
-    padding: 5px;
-    border-radius: 5px;
+    padding: 0.3125em;
+    border-radius: 0.3125em;
     color: $text-muted;
     display: inline-flex;
     align-items: center;
@@ -140,22 +162,22 @@ async function handleRefresh() {
 .theme-list {
     flex: 1;
     overflow-y: auto;
-    padding: 6px;
+    padding: 0.375em;
 }
 
 .theme-item {
     width: 100%;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 0.55rem 0.65rem;
+    gap: 0.625em;
+    padding: 0.55em 0.65em;
     background: none;
     border: 1px solid transparent;
-    border-radius: 8px;
+    border-radius: 0.5em;
     color: $text1;
     text-align: left;
     cursor: pointer;
-    margin-bottom: 3px;
+    margin-bottom: 0.1875em;
     transition: background 0.12s;
 
     &:hover {
@@ -171,7 +193,7 @@ async function handleRefresh() {
 .theme-swatches {
     display: inline-flex;
     flex-shrink: 0;
-    border-radius: 5px;
+    border-radius: 0.3125em;
     overflow: hidden;
     border: 1px solid $border-color;
 }
@@ -187,7 +209,7 @@ async function handleRefresh() {
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 0.125em;
 }
 
 .theme-name {
@@ -213,7 +235,7 @@ async function handleRefresh() {
 }
 
 .theme-empty {
-    padding: 1.5rem 0.5rem;
+    padding: 1.5em 0.5em;
     text-align: center;
     color: $text-muted;
     font-size: 0.8rem;
@@ -221,7 +243,7 @@ async function handleRefresh() {
 
 .theme-footer {
     border-top: 1px solid $text3;
-    padding: 0.55rem 0.75rem 0.7rem;
+    padding: 0.55em 0.75em 0.7em;
     flex-shrink: 0;
 }
 
@@ -229,8 +251,8 @@ async function handleRefresh() {
     width: 100%;
     background: none;
     border: 1px solid $border-color;
-    border-radius: 6px;
-    padding: 0.4rem 0.55rem;
+    border-radius: 0.375em;
+    padding: 0.4em 0.55em;
     font-size: 0.75rem;
     color: $text1;
     cursor: pointer;
@@ -242,7 +264,7 @@ async function handleRefresh() {
 }
 
 .footer-hint {
-    margin: 0.5rem 0 0 0;
+    margin: 0.5em 0 0 0;
     font-size: 0.68rem;
     color: $text-muted;
     line-height: 1.4;
@@ -251,8 +273,8 @@ async function handleRefresh() {
         font-family: 'SF Mono', Monaco, Menlo, Consolas, monospace;
         font-size: 0.95em;
         background: color-mix(in srgb, var(--text2) 10%, transparent);
-        padding: 1px 4px;
-        border-radius: 3px;
+        padding: 0.0625em 0.25em;
+        border-radius: 0.1875em;
     }
 }
 
@@ -266,7 +288,7 @@ async function handleRefresh() {
 
 .theme-list::-webkit-scrollbar-thumb {
     background: $scrollbar-thumb;
-    border-radius: 3px;
+    border-radius: 0.1875em;
 
     &:hover {
         background: $scrollbar-thumb-hover;

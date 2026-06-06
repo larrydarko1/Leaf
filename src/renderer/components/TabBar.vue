@@ -130,8 +130,8 @@ function onDragEnd() {
     display: flex;
     align-items: center;
     background: $base1;
-    gap: 6px;
-    padding: 0 10px 0 14px;
+    gap: 0.375em;
+    padding: 0 0.625em 0 0.875em;
     min-width: 80px;
     max-width: 180px;
     border-right: 1px solid color-mix(in srgb, var(--text3) 60%, transparent);
@@ -209,7 +209,7 @@ function onDragEnd() {
     width: 16px;
     height: 16px;
     min-width: 16px;
-    border-radius: 3px;
+    border-radius: 0.1875em;
     border: none;
     background: transparent;
     color: inherit;

@@ -128,8 +128,8 @@ function highlightMatch(text: string): string {
 </script>
 
 <template>
-    <div class="search-panel">
-        <div class="search-header">
+    <section class="search-panel" aria-label="File search panel">
+        <header class="search-header">
             <div class="search-input-wrapper">
                 <svg
                     class="search-icon"
@@ -138,6 +138,7 @@ function highlightMatch(text: string): string {
                     viewBox="0 0 24 24"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
                 >
                     <path
                         d="M21 21L16.65 16.65M19 11C19 15.4183 15.4183 19 11 19C6.58172 19 3 15.4183 3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11Z"
@@ -153,11 +154,26 @@ function highlightMatch(text: string): string {
                     type="text"
                     placeholder="Search files..."
                     class="search-input"
+                    aria-label="Search files by name or path"
+                    aria-describedby="search-results-count"
                     @keydown.escape="clearSearch"
                     @keydown.enter="openSelectedResult"
                 />
-                <button v-if="searchQuery" class="clear-button" title="Clear search" @click="clearSearch">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <button
+                    v-if="searchQuery"
+                    class="clear-button"
+                    title="Clear search"
+                    aria-label="Clear search query"
+                    @click="clearSearch"
+                >
+                    <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true"
+                    >
                         <path
                             d="M18 6L6 18M6 6L18 18"
                             stroke="currentColor"
@@ -168,20 +184,25 @@ function highlightMatch(text: string): string {
                     </svg>
                 </button>
             </div>
-            <div v-if="searchQuery" class="search-info">
+            <div v-if="searchQuery" id="search-results-count" class="search-info" aria-live="polite" aria-atomic="true">
                 {{ searchResults.length }} {{ searchResults.length === 1 ? 'result' : 'results' }}
             </div>
-        </div>
+        </header>
 
-        <div class="search-results">
-            <div v-if="!searchQuery" class="search-empty-state">
+        <main class="search-results">
+            <div v-if="!searchQuery" class="search-empty-state" role="status" aria-label="Search instructions">
                 <p>Type to search files by name</p>
             </div>
-            <div v-else-if="searchResults.length === 0" class="search-empty-state">
+            <div
+                v-else-if="searchResults.length === 0"
+                class="search-empty-state"
+                role="status"
+                aria-label="No results"
+            >
                 <p>No files found</p>
             </div>
-            <div v-else class="search-results-list">
-                <div
+            <ul v-else class="search-results-list" role="listbox" aria-label="Search results">
+                <li
                     v-for="(file, index) in searchResults"
                     :key="file.path"
                     class="search-result-item"
@@ -190,6 +211,9 @@ function highlightMatch(text: string): string {
                         selected: isFileSelected(file),
                         'keyboard-selected': selectedIndex === index,
                     }"
+                    role="option"
+                    :aria-selected="selectedIndex === index"
+                    :aria-current="activeFile?.path === file.path ? 'true' : undefined"
                     @click="selectFile(file, $event)"
                     @dblclick="openFile(file)"
                 >
@@ -201,6 +225,7 @@ function highlightMatch(text: string): string {
                             viewBox="0 0 24 24"
                             fill="none"
                             xmlns="http://www.w3.org/2000/svg"
+                            aria-hidden="true"
                         >
                             <path
                                 d="M13 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V9L13 2Z"
@@ -222,10 +247,10 @@ function highlightMatch(text: string): string {
                             <div class="file-path">{{ file.folder === '.' ? '' : file.folder }}</div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                </li>
+            </ul>
+        </main>
+    </section>
 </template>
 
 <style scoped lang="scss">
@@ -237,7 +262,7 @@ function highlightMatch(text: string): string {
 }
 
 .search-header {
-    padding: 0.65rem 0.75rem;
+    padding: 0.65em 0.75em;
     border-bottom: 1px solid $text3;
 }
 
@@ -247,8 +272,8 @@ function highlightMatch(text: string): string {
     align-items: center;
     background: $bg-primary;
     border: 1px solid $text3;
-    border-radius: 10px;
-    padding: 0.35rem 0.6rem;
+    border-radius: 0.625em;
+    padding: 0.35em 0.6em;
     transition: border-color 0.2s;
 
     &:focus-within {
@@ -259,7 +284,7 @@ function highlightMatch(text: string): string {
 .search-icon {
     color: $text-muted;
     flex-shrink: 0;
-    margin-right: 8px;
+    margin-right: 0.5em;
 }
 
 .search-input {
@@ -279,15 +304,15 @@ function highlightMatch(text: string): string {
 .clear-button {
     background: none;
     border: none;
-    padding: 4px;
+    padding: 0.25em;
     display: flex;
     align-items: center;
     justify-content: center;
     color: $text-muted;
-    border-radius: 4px;
+    border-radius: 0.25em;
     cursor: pointer;
     transition: all 0.2s;
-    margin-left: 4px;
+    margin-left: 0.25em;
 
     &:hover {
         background: $bg-tertiary;
@@ -296,8 +321,8 @@ function highlightMatch(text: string): string {
 }
 
 .search-info {
-    margin-top: 8px;
-    font-size: 12px;
+    margin-top: 0.5em;
+    font-size: 0.75rem;
     color: $text-muted;
 }
 
@@ -311,22 +336,22 @@ function highlightMatch(text: string): string {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 48px 24px;
+    padding: 3em 1.5em;
     text-align: center;
     color: $text-muted;
-    font-size: 14px;
+    font-size: 0.875rem;
 }
 
 .search-results-list {
-    padding: 4px;
+    padding: 0.25em;
 }
 
 .search-result-item {
-    padding: 0.45rem 0.65rem;
-    border-radius: 8px;
+    padding: 0.45em 0.65em;
+    border-radius: 0.5em;
     cursor: pointer;
     transition: background 0.12s;
-    margin-bottom: 2px;
+    margin-bottom: 0.125em;
     user-select: none;
 
     &:hover {
@@ -351,7 +376,7 @@ function highlightMatch(text: string): string {
 .file-info {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 0.625em;
 }
 
 .file-icon {
@@ -364,11 +389,11 @@ function highlightMatch(text: string): string {
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 0.125em;
 }
 
 .file-name {
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
@@ -377,14 +402,14 @@ function highlightMatch(text: string): string {
     :deep(mark) {
         background: $accent-color-alpha;
         color: $accent-color;
-        padding: 1px 2px;
-        border-radius: 3px;
+        padding: 0.0625 0.125em;
+        border-radius: 0.1875em;
         font-weight: 600;
     }
 }
 
 .file-path {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: $text-muted;
     white-space: nowrap;
     overflow: hidden;
@@ -402,7 +427,7 @@ function highlightMatch(text: string): string {
 
 .search-results::-webkit-scrollbar-thumb {
     background: $scrollbar-thumb;
-    border-radius: 3px;
+    border-radius: 0.1875em;
 
     &:hover {
         background: $scrollbar-thumb-hover;
