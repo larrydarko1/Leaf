@@ -573,6 +573,7 @@ export function useCanvasRenderer(
         withBackground: boolean;
         scale: number;
         padding?: number;
+        darkMode?: boolean;
     }): Promise<Blob | null> {
         const exportElements = opts.elements;
         if (exportElements.length === 0) return Promise.resolve(null);
@@ -603,7 +604,7 @@ export function useCanvasRenderer(
 
         // Background
         if (opts.withBackground) {
-            offCtx.fillStyle = '#1e1e1e';
+            offCtx.fillStyle = opts.darkMode ? '#1e1e1e' : '#ffffff';
             offCtx.fillRect(0, 0, width, height);
         }
 
