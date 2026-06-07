@@ -18,27 +18,46 @@ const emit = defineEmits<{
 </script>
 
 <template>
-    <div class="canvas-footer">
+    <footer class="canvas-footer" aria-label="Canvas controls">
         <div class="footer-left">
-            <div class="zoom-controls">
-                <button class="zoom-btn" title="Zoom out" @click="emit('zoomToCenter', zoom - 0.1)">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <div class="zoom-controls" role="group" aria-label="Zoom controls">
+                <button class="zoom-btn" aria-label="Zoom out" @click="emit('zoomToCenter', zoom - 0.1)">
+                    <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        aria-hidden="true"
+                        focusable="false"
+                    >
                         <line x1="5" y1="12" x2="19" y2="12" />
                     </svg>
                 </button>
-                <button class="zoom-value" title="Reset zoom" @click="emit('zoomToCenter', 1)">
-                    {{ zoomPercent }}%
+                <button class="zoom-value" aria-label="Reset zoom to 100%" @click="emit('zoomToCenter', 1)">
+                    <span aria-hidden="true">{{ zoomPercent }}%</span>
                 </button>
-                <button class="zoom-btn" title="Zoom in" @click="emit('zoomToCenter', zoom + 0.1)">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <button class="zoom-btn" aria-label="Zoom in" @click="emit('zoomToCenter', zoom + 0.1)">
+                    <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        aria-hidden="true"
+                        focusable="false"
+                    >
                         <line x1="12" y1="5" x2="12" y2="19" />
                         <line x1="5" y1="12" x2="19" y2="12" />
                     </svg>
                 </button>
             </div>
         </div>
+
         <div class="footer-center">
-            <button class="footer-btn" :disabled="historyIndex <= 0" title="Undo (⌘Z)" @click="emit('undo')">
+            <button class="footer-btn" :disabled="historyIndex <= 0" aria-label="Undo (Cmd+Z)" @click="emit('undo')">
                 <svg
                     width="16"
                     height="16"
@@ -48,6 +67,8 @@ const emit = defineEmits<{
                     stroke-width="2"
                     stroke-linecap="round"
                     stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
                 >
                     <path d="M3 7v6h6" />
                     <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
@@ -56,7 +77,7 @@ const emit = defineEmits<{
             <button
                 class="footer-btn"
                 :disabled="historyIndex >= historyLength - 1"
-                title="Redo (⌘⇧Z)"
+                aria-label="Redo (Cmd+Shift+Z)"
                 @click="emit('redo')"
             >
                 <svg
@@ -68,12 +89,14 @@ const emit = defineEmits<{
                     stroke-width="2"
                     stroke-linecap="round"
                     stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
                 >
                     <path d="M21 7v6h-6" />
                     <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13" />
                 </svg>
             </button>
-            <button class="footer-btn" title="Clear canvas" @click="emit('clearAll')">
+            <button class="footer-btn" aria-label="Clear canvas" @click="emit('clearAll')">
                 <svg
                     width="16"
                     height="16"
@@ -83,6 +106,8 @@ const emit = defineEmits<{
                     stroke-width="2"
                     stroke-linecap="round"
                     stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
                 >
                     <path d="M3 6h18" />
                     <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
@@ -90,10 +115,19 @@ const emit = defineEmits<{
                 </svg>
             </button>
         </div>
+
         <div class="footer-right">
-            <span v-if="isSaving" class="save-status saving">Saving...</span>
-            <span v-else-if="hasUnsavedChanges" class="save-status unsaved">Unsaved</span>
-            <button class="footer-btn export-btn" title="Export image" @click="emit('openExportDialog')">
+            <output
+                v-if="isSaving || hasUnsavedChanges"
+                class="save-status"
+                :class="{ saving: isSaving, unsaved: hasUnsavedChanges }"
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+            >
+                {{ isSaving ? 'Saving...' : 'Unsaved' }}
+            </output>
+            <button class="footer-btn export-btn" aria-label="Export image" @click="emit('openExportDialog')">
                 <svg
                     width="16"
                     height="16"
@@ -103,6 +137,8 @@ const emit = defineEmits<{
                     stroke-width="2"
                     stroke-linecap="round"
                     stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
                 >
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                     <polyline points="7 10 12 15 17 10" />
@@ -110,12 +146,10 @@ const emit = defineEmits<{
                 </svg>
             </button>
         </div>
-    </div>
+    </footer>
 </template>
 
 <style scoped lang="scss">
-// ─── Footer ──────────────────────────────────────────────────────────────────
-
 .canvas-footer {
     position: absolute;
     bottom: 0;
@@ -125,11 +159,11 @@ const emit = defineEmits<{
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 12px;
-    background: color-mix(in srgb, var(--bg-primary, #fff) 90%, transparent);
+    padding: 0 $space-3;
+    background: $bg-primary;
     backdrop-filter: blur(8px);
-    border-top: 1px solid var(--border-color, #e0e0e0);
-    z-index: 15;
+    border-top: 1px solid $border-color;
+    z-index: $z-mid;
 }
 
 .footer-left,
@@ -137,7 +171,7 @@ const emit = defineEmits<{
 .footer-right {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: $space-1;
 }
 
 .footer-left {
@@ -152,8 +186,8 @@ const emit = defineEmits<{
     display: flex;
     align-items: center;
     gap: 0;
-    border: 1px solid var(--border-color, #e0e0e0);
-    border-radius: 6px;
+    border: 1px solid $border-color;
+    border-radius: $border-radius;
     overflow: hidden;
 }
 
@@ -165,13 +199,13 @@ const emit = defineEmits<{
     height: 28px;
     border: none;
     background: transparent;
-    color: var(--text2, #6e6e73);
+    color: $text2;
     cursor: pointer;
-    transition: background 0.12s;
+    transition: background $transition-base;
 
     &:hover {
-        background: var(--bg-hover, #f0f0f0);
-        color: var(--text1, #1d1d1f);
+        background: $bg-hover;
+        color: $text1;
     }
 }
 
@@ -181,12 +215,12 @@ const emit = defineEmits<{
 }
 
 .zoom-value {
-    padding: 0 6px;
-    font-size: 12px;
-    font-weight: 500;
+    padding: 0 $space-2;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
     min-width: 46px;
-    border-left: 1px solid var(--border-color, #e0e0e0);
-    border-right: 1px solid var(--border-color, #e0e0e0);
+    border-left: 1px solid $border-color;
+    border-right: 1px solid $border-color;
 }
 
 .footer-btn {
@@ -196,17 +230,17 @@ const emit = defineEmits<{
     width: 30px;
     height: 30px;
     border: none;
-    border-radius: 6px;
+    border-radius: $border-radius;
     background: transparent;
-    color: var(--text2, #6e6e73);
+    color: $text2;
     cursor: pointer;
     transition:
-        background 0.12s,
-        color 0.12s;
+        background $transition-fast,
+        color $transition-fast;
 
     &:hover:not(:disabled) {
-        background: var(--bg-hover, #f0f0f0);
-        color: var(--text1, #1d1d1f);
+        background: $bg-hover;
+        color: $text1;
     }
 
     &:disabled {
@@ -216,20 +250,20 @@ const emit = defineEmits<{
 }
 
 .save-status {
-    font-size: 12px;
-    font-weight: 500;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
 
     &.saving {
-        color: var(--text-muted, #8e8e93);
+        color: $text-muted;
         font-style: italic;
     }
 
     &.unsaved {
-        color: var(--accent-color, #3eb489);
+        color: $accent-color;
     }
 }
 
 .export-btn {
-    margin-left: 8px;
+    margin-left: $space-2;
 }
 </style>

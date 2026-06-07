@@ -66,6 +66,7 @@ $font-size-2xl: 1.5rem;
 
 // ── Spacing scale (4px grid) ──────────────────────────────────────────────────
 
+$space-0: 0.125em;
 $space-1: 0.25em;
 $space-2: 0.5em;
 $space-3: 0.75em;
@@ -73,6 +74,8 @@ $space-4: 1em;
 $space-5: 1.25em;
 $space-6: 1.5em;
 $space-8: 2em;
+$space-9: 2.25em;
+$space-10: 2.5em;
 
 // ── Layout ────────────────────────────────────────────────────────────────────
 
@@ -91,8 +94,11 @@ $transition-slow: 0.35s ease;
 
 $z-base: 0;
 $z-raised: 10;
+$z-mid: 20;
+$z-dropdown: 50;
 $z-overlay: 100;
 $z-modal: 200;
+$z-max: 1000;
 
 // ── SCSS ALIASES ───────────────────────────────────────────────────────────────
 // Maps CSS custom properties to SCSS variables for use in components.
@@ -204,4 +210,17 @@ a,
 ::selection {
     background: $accent-color-alpha;
     color: $text1;
+}
+
+// ── Accessibility related ─────────────────────────────────────────────────────────
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
 }

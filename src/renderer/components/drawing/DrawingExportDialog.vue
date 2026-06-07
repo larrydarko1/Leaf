@@ -5,16 +5,10 @@ import type { CanvasElement } from '../../types/drawing';
 const props = defineProps<{
     visible: boolean;
     hasSelection: boolean;
-    isDark: boolean;
     filePath: string;
     elements: CanvasElement[];
     selectedIds: Set<string>;
-    exportToBlob: (opts: {
-        elements: CanvasElement[];
-        withBackground: boolean;
-        scale: number;
-        darkMode: boolean;
-    }) => Promise<Blob | null>;
+    exportToBlob: (opts: { elements: CanvasElement[]; withBackground: boolean; scale: number }) => Promise<Blob | null>;
 }>();
 
 const emit = defineEmits<{
@@ -71,7 +65,6 @@ async function updateExportPreview() {
         elements: exportElements,
         withBackground: exportWithBackground.value,
         scale: exportScale.value,
-        darkMode: props.isDark,
     });
 
     if (blob) {
@@ -100,7 +93,6 @@ async function savePng() {
             elements: getExportElements(),
             withBackground: exportWithBackground.value,
             scale: exportScale.value,
-            darkMode: props.isDark,
         });
         if (!blob) return;
 
@@ -132,7 +124,6 @@ async function copyClipboard() {
             elements: getExportElements(),
             withBackground: exportWithBackground.value,
             scale: exportScale.value,
-            darkMode: props.isDark,
         });
         if (!blob) return;
         await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
@@ -145,55 +136,75 @@ async function copyClipboard() {
 <template>
     <teleport to="body">
         <transition name="export-fade">
-            <div v-if="visible" class="export-overlay" @click.self="close">
-                <div class="export-dialog">
+            <div v-if="visible" class="export-overlay" role="presentation" @click.self="close">
+                <dialog class="export-dialog" aria-labelledby="export-dialog-title" aria-modal="true">
                     <div class="export-preview">
-                        <div>
+                        <figure v-if="exportPreviewUrl" class="export-preview-figure">
                             <img
-                                v-if="exportPreviewUrl"
                                 :src="exportPreviewUrl"
-                                alt="Export preview"
+                                alt="Preview of the image to be exported"
                                 class="export-preview-img"
                             />
-                            <div v-else class="export-empty">No elements to export</div>
-                        </div>
+                        </figure>
+                        <div v-else class="export-empty" role="status" aria-live="polite">No elements to export</div>
                     </div>
+
                     <div class="export-settings">
-                        <h3 class="export-title">Export image</h3>
+                        <h2 id="export-dialog-title" class="export-title">Export image</h2>
 
-                        <label class="export-toggle">
-                            <span>Background</span>
-                            <input v-model="exportWithBackground" type="checkbox" class="export-checkbox" />
-                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
-                        </label>
+                        <fieldset>
+                            <legend class="sr-only">Export options</legend>
 
-                        <label v-if="hasSelection" class="export-toggle">
-                            <span>Selected only</span>
-                            <input v-model="exportOnlySelected" type="checkbox" class="export-checkbox" />
-                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
-                        </label>
+                            <label class="export-toggle">
+                                <input
+                                    v-model="exportWithBackground"
+                                    type="checkbox"
+                                    class="export-checkbox"
+                                    aria-label="Include background in export"
+                                />
+                                <span class="toggle-track"><span class="toggle-thumb" aria-hidden="true"></span></span>
+                                <span>Background</span>
+                            </label>
 
-                        <div class="export-field">
-                            <span class="export-label">Scale</span>
-                            <div class="export-scale-btns">
+                            <label v-if="hasSelection" class="export-toggle">
+                                <input
+                                    v-model="exportOnlySelected"
+                                    type="checkbox"
+                                    class="export-checkbox"
+                                    aria-label="Export selected elements only"
+                                />
+                                <span class="toggle-track"><span class="toggle-thumb" aria-hidden="true"></span></span>
+                                <span>Selected only</span>
+                            </label>
+                        </fieldset>
+
+                        <fieldset class="export-field">
+                            <legend class="export-label">Scale</legend>
+                            <div class="export-scale-btns" role="group" aria-label="Export scale options">
                                 <button
                                     v-for="opt in exportScaleOptions"
                                     :key="opt.value"
                                     class="export-scale-btn"
                                     :class="{ active: exportScale === opt.value }"
+                                    :aria-pressed="exportScale === opt.value"
                                     @click="exportScale = opt.value"
                                 >
                                     {{ opt.label }}
                                 </button>
                             </div>
-                        </div>
+                        </fieldset>
 
-                        <div v-if="exportPreviewWidth" class="export-dimensions">
+                        <output v-if="exportPreviewWidth" class="export-dimensions" aria-label="Export dimensions">
                             {{ exportPreviewWidth }} &times; {{ exportPreviewHeight }}
-                        </div>
+                        </output>
 
                         <div class="export-actions">
-                            <button class="export-action-btn primary" :disabled="isExporting" @click="savePng">
+                            <button
+                                class="export-action-btn primary"
+                                :disabled="isExporting"
+                                :aria-busy="isExporting"
+                                @click="savePng"
+                            >
                                 <svg
                                     width="16"
                                     height="16"
@@ -201,6 +212,8 @@ async function copyClipboard() {
                                     fill="none"
                                     stroke="currentColor"
                                     stroke-width="2"
+                                    aria-hidden="true"
+                                    focusable="false"
                                 >
                                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                                     <polyline points="7 10 12 15 17 10" />
@@ -208,7 +221,12 @@ async function copyClipboard() {
                                 </svg>
                                 Save PNG
                             </button>
-                            <button class="export-action-btn" :disabled="isExporting" @click="copyClipboard">
+                            <button
+                                class="export-action-btn"
+                                :disabled="isExporting"
+                                :aria-busy="isExporting"
+                                @click="copyClipboard"
+                            >
                                 <svg
                                     width="16"
                                     height="16"
@@ -216,6 +234,8 @@ async function copyClipboard() {
                                     fill="none"
                                     stroke="currentColor"
                                     stroke-width="2"
+                                    aria-hidden="true"
+                                    focusable="false"
                                 >
                                     <rect x="9" y="9" width="13" height="13" rx="2" />
                                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
@@ -224,17 +244,17 @@ async function copyClipboard() {
                             </button>
                         </div>
 
-                        <button class="export-close-btn" @click="close">&times;</button>
+                        <button class="export-close-btn" aria-label="Close export dialog" @click="close">
+                            &times;
+                        </button>
                     </div>
-                </div>
+                </dialog>
             </div>
         </transition>
     </teleport>
 </template>
 
 <style scoped lang="scss">
-// ─── Export Dialog ───────────────────────────────────────────────────────────
-
 .export-overlay {
     position: fixed;
     inset: 0;
@@ -242,13 +262,13 @@ async function copyClipboard() {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: $z-max;
 }
 
 .export-dialog {
     display: flex;
-    background: var(--bg-primary, #fff);
-    border-radius: 12px;
+    background: $bg-primary;
+    border-radius: $border-radius-xl;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     overflow: hidden;
     max-width: 720px;
@@ -262,8 +282,8 @@ async function copyClipboard() {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 24px;
-    background: var(--bg-secondary, #f5f5f7);
+    padding: $space-6;
+    background: $bg-secondary;
 
     &-inner {
         display: flex;
@@ -271,7 +291,7 @@ async function copyClipboard() {
         justify-content: center;
         max-width: 100%;
         max-height: 60vh;
-        border-radius: 8px;
+        border-radius: $border-radius-lg;
         overflow: hidden;
     }
 }
@@ -283,34 +303,34 @@ async function copyClipboard() {
 }
 
 .export-empty {
-    padding: 40px;
-    color: var(--text-muted, #8e8e93);
-    font-size: 14px;
+    padding: $space-10;
+    color: $text-muted;
+    font-size: $font-size-sm;
 }
 
 .export-settings {
     width: 220px;
-    padding: 24px 20px;
+    padding: $space-6 $space-5;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: $space-4;
     position: relative;
-    border-left: 1px solid var(--border-color, #e0e0e0);
+    border-left: 1px solid $border-color;
 }
 
 .export-title {
-    font-size: 16px;
-    font-weight: 600;
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
     margin: 0;
-    color: var(--text1, #1d1d1f);
+    color: $text1;
 }
 
 .export-toggle {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: 13px;
-    color: var(--text1, #1d1d1f);
+    font-size: $font-size-sm;
+    color: $text1;
     cursor: pointer;
     user-select: none;
 
@@ -321,10 +341,10 @@ async function copyClipboard() {
     .toggle-track {
         width: 36px;
         height: 20px;
-        border-radius: 10px;
-        background: var(--border-color, #d1d1d6);
+        border-radius: $border-radius-xl;
+        background: $border-color;
         position: relative;
-        transition: background 0.2s;
+        transition: background $transition-base;
     }
 
     .toggle-thumb {
@@ -333,14 +353,14 @@ async function copyClipboard() {
         left: 2px;
         width: 16px;
         height: 16px;
-        border-radius: 50%;
-        background: #fff;
-        transition: transform 0.2s;
+        border-radius: $border-radius-lg;
+        background: $base2;
+        transition: transform $transition-base;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     }
 
     .export-checkbox:checked + .toggle-track {
-        background: var(--accent-color, #3eb489);
+        background: $accent-color;
 
         .toggle-thumb {
             transform: translateX(16px);
@@ -351,59 +371,59 @@ async function copyClipboard() {
 .export-field {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: $space-2;
 }
 
 .export-label {
-    font-size: 13px;
-    color: var(--text2, #6e6e73);
+    font-size: $font-size-sm;
+    color: $text2;
 }
 
 .export-scale-btns {
     display: flex;
     gap: 0;
-    border: 1px solid var(--border-color, #e0e0e0);
-    border-radius: 6px;
+    border: 1px solid $border-color;
+    border-radius: $border-radius;
     overflow: hidden;
 }
 
 .export-scale-btn {
     flex: 1;
-    padding: 5px 0;
+    padding: $space-2 0;
     border: none;
     background: transparent;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text2, #6e6e73);
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $text1;
     cursor: pointer;
     transition:
-        background 0.12s,
-        color 0.12s;
+        background $transition-base,
+        color $transition-base;
 
     &:not(:last-child) {
-        border-right: 1px solid var(--border-color, #e0e0e0);
+        border-right: 1px solid $border-color;
     }
 
     &:hover {
-        background: var(--bg-hover, #f0f0f0);
+        background: $bg-hover;
     }
 
     &.active {
-        background: var(--accent-color, #3eb489);
-        color: #fff;
+        background: $accent-color;
+        color: $text3;
     }
 }
 
 .export-dimensions {
-    font-size: 12px;
-    color: var(--text-muted, #8e8e93);
+    font-size: $font-size-xs;
+    color: $text2;
     text-align: center;
 }
 
 .export-actions {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: $space-2;
     margin-top: auto;
 }
 
@@ -411,21 +431,21 @@ async function copyClipboard() {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 8px 12px;
-    border: 1px solid var(--border-color, #e0e0e0);
-    border-radius: 8px;
-    background: transparent;
-    color: var(--text1, #1d1d1f);
-    font-size: 13px;
-    font-weight: 500;
+    gap: $space-2;
+    padding: $space-2 $space-3;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-lg;
+    background: $base3;
+    color: $text1;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
     cursor: pointer;
     transition:
-        background 0.12s,
-        border-color 0.12s;
+        background $transition-base,
+        border-color $transition-base;
 
     &:hover:not(:disabled) {
-        background: var(--bg-hover, #f0f0f0);
+        background: $bg-hover;
     }
 
     &:disabled {
@@ -434,13 +454,13 @@ async function copyClipboard() {
     }
 
     &.primary {
-        background: var(--accent-color, #3eb489);
-        color: #fff;
-        border-color: var(--accent-color, #3eb489);
+        background: $accent-color;
+        color: $text3;
+        border-color: $accent-color;
 
         &:hover:not(:disabled) {
             filter: brightness(1.1);
-            background: var(--accent-color, #3eb489);
+            background: $accent-color;
         }
     }
 }
@@ -455,24 +475,30 @@ async function copyClipboard() {
     align-items: center;
     justify-content: center;
     border: none;
-    border-radius: 50%;
+    border-radius: $border-radius-xl;
     background: transparent;
-    color: var(--text2, #6e6e73);
-    font-size: 18px;
+    color: $text2;
+    font-size: $font-size-lg;
     cursor: pointer;
-    transition: background 0.12s;
+    transition: background $transition-base;
 
     &:hover {
-        background: var(--bg-hover, #f0f0f0);
+        background: $bg-hover;
     }
 }
 
 .export-fade-enter-active,
 .export-fade-leave-active {
-    transition: opacity 0.2s ease;
+    transition: opacity $transition-base;
 }
 .export-fade-enter-from,
 .export-fade-leave-to {
     opacity: 0;
+}
+
+fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
 }
 </style>

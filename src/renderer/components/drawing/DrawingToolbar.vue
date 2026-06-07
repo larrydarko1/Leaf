@@ -88,16 +88,17 @@ defineExpose({ handleClickOutside });
 </script>
 
 <template>
-    <div class="floating-toolbar">
-        <div class="toolbar-inner">
+    <nav class="floating-toolbar" aria-label="Drawing tools">
+        <div class="toolbar-inner" role="toolbar" aria-label="Tool selection">
             <!-- Selection -->
             <button
                 class="toolbar-btn"
                 :class="{ active: currentTool === 'select' }"
-                title="Selection — V"
+                aria-label="Selection tool (V)"
+                :aria-pressed="currentTool === 'select'"
                 @click="emit('selectTool', 'select')"
             >
-                <svg width="20" height="20" viewBox="0 0 24 24">
+                <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <path
                         d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87a.5.5 0 0 0 .35-.85L6.35 2.85a.5.5 0 0 0-.85.36z"
                         fill="currentColor"
@@ -109,7 +110,8 @@ defineExpose({ handleClickOutside });
             <button
                 class="toolbar-btn"
                 :class="{ active: currentTool === 'hand' }"
-                title="Hand (Pan) — H"
+                aria-label="Hand (Pan) tool (H)"
+                :aria-pressed="currentTool === 'hand'"
                 @click="emit('selectTool', 'hand')"
             >
                 <svg
@@ -121,6 +123,8 @@ defineExpose({ handleClickOutside });
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
                 >
                     <path d="M18 11V6a2 2 0 0 0-4 0v5" />
                     <path d="M14 10V4a2 2 0 0 0-4 0v6" />
@@ -130,16 +134,26 @@ defineExpose({ handleClickOutside });
                 </svg>
             </button>
 
-            <span class="toolbar-sep"></span>
+            <span class="toolbar-sep" aria-hidden="true"></span>
 
             <!-- Rectangle -->
             <button
                 class="toolbar-btn"
                 :class="{ active: currentTool === 'rectangle' }"
-                title="Rectangle — R"
+                aria-label="Rectangle tool (R)"
+                :aria-pressed="currentTool === 'rectangle'"
                 @click="emit('selectTool', 'rectangle')"
             >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    aria-hidden="true"
+                    focusable="false"
+                >
                     <rect x="3" y="3" width="18" height="18" rx="2" />
                 </svg>
             </button>
@@ -148,10 +162,20 @@ defineExpose({ handleClickOutside });
             <button
                 class="toolbar-btn"
                 :class="{ active: currentTool === 'diamond' }"
-                title="Diamond — D"
+                aria-label="Diamond tool (D)"
+                :aria-pressed="currentTool === 'diamond'"
                 @click="emit('selectTool', 'diamond')"
             >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    aria-hidden="true"
+                    focusable="false"
+                >
                     <polygon points="12,2 22,12 12,22 2,12" />
                 </svg>
             </button>
@@ -160,10 +184,20 @@ defineExpose({ handleClickOutside });
             <button
                 class="toolbar-btn"
                 :class="{ active: currentTool === 'ellipse' }"
-                title="Ellipse — O"
+                aria-label="Ellipse tool (O)"
+                :aria-pressed="currentTool === 'ellipse'"
                 @click="emit('selectTool', 'ellipse')"
             >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    aria-hidden="true"
+                    focusable="false"
+                >
                     <circle cx="12" cy="12" r="10" />
                 </svg>
             </button>
@@ -172,10 +206,20 @@ defineExpose({ handleClickOutside });
             <button
                 class="toolbar-btn"
                 :class="{ active: currentTool === 'triangle' }"
-                title="Triangle — T"
+                aria-label="Triangle tool (T)"
+                :aria-pressed="currentTool === 'triangle'"
                 @click="emit('selectTool', 'triangle')"
             >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    aria-hidden="true"
+                    focusable="false"
+                >
                     <polygon points="12,3 22,21 2,21" />
                 </svg>
             </button>
@@ -184,7 +228,8 @@ defineExpose({ handleClickOutside });
             <button
                 class="toolbar-btn"
                 :class="{ active: currentTool === 'arrow' }"
-                title="Arrow — A"
+                aria-label="Arrow tool (A)"
+                :aria-pressed="currentTool === 'arrow'"
                 @click="emit('selectTool', 'arrow')"
             >
                 <svg
@@ -196,6 +241,8 @@ defineExpose({ handleClickOutside });
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
                 >
                     <line x1="5" y1="19" x2="19" y2="5" />
                     <polyline points="10,5 19,5 19,14" />
@@ -206,7 +253,8 @@ defineExpose({ handleClickOutside });
             <button
                 class="toolbar-btn"
                 :class="{ active: currentTool === 'line' }"
-                title="Line — L"
+                aria-label="Line tool (L)"
+                :aria-pressed="currentTool === 'line'"
                 @click="emit('selectTool', 'line')"
             >
                 <svg
@@ -217,18 +265,21 @@ defineExpose({ handleClickOutside });
                     stroke="currentColor"
                     stroke-width="1.5"
                     stroke-linecap="round"
+                    aria-hidden="true"
+                    focusable="false"
                 >
                     <line x1="5" y1="19" x2="19" y2="5" />
                 </svg>
             </button>
 
-            <span class="toolbar-sep"></span>
+            <span class="toolbar-sep" aria-hidden="true"></span>
 
             <!-- Freedraw -->
             <button
                 class="toolbar-btn"
                 :class="{ active: currentTool === 'freedraw' }"
-                title="Pen — P"
+                aria-label="Pen tool (P)"
+                :aria-pressed="currentTool === 'freedraw'"
                 @click="emit('selectTool', 'freedraw')"
             >
                 <svg
@@ -240,6 +291,8 @@ defineExpose({ handleClickOutside });
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
                 >
                     <path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
                 </svg>
@@ -249,7 +302,8 @@ defineExpose({ handleClickOutside });
             <button
                 class="toolbar-btn"
                 :class="{ active: currentTool === 'text' }"
-                title="Text — X"
+                aria-label="Text tool (X)"
+                :aria-pressed="currentTool === 'text'"
                 @click="emit('selectTool', 'text')"
             >
                 <svg
@@ -261,6 +315,8 @@ defineExpose({ handleClickOutside });
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
                 >
                     <polyline points="4 7 4 4 20 4 20 7" />
                     <line x1="9.5" y1="20" x2="14.5" y2="20" />
@@ -272,7 +328,8 @@ defineExpose({ handleClickOutside });
             <button
                 class="toolbar-btn"
                 :class="{ active: currentTool === 'eraser' }"
-                title="Eraser — E"
+                aria-label="Eraser tool (E)"
+                :aria-pressed="currentTool === 'eraser'"
                 @click="emit('selectTool', 'eraser')"
             >
                 <svg
@@ -284,19 +341,24 @@ defineExpose({ handleClickOutside });
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
                 >
                     <path d="M20 20H7L3 16c-.8-.8-.8-2 0-2.8L13.8 2.4c.8-.8 2-.8 2.8 0L21 6.8c.8.8.8 2 0 2.8L12 18" />
                 </svg>
             </button>
 
-            <span class="toolbar-sep"></span>
+            <span class="toolbar-sep" aria-hidden="true"></span>
 
             <!-- Architecture shapes dropdown -->
             <div ref="archDropdownEl" class="arch-dropdown">
                 <button
                     class="toolbar-btn"
                     :class="{ active: isArchTool }"
-                    title="Architecture Shapes"
+                    aria-label="Architecture shapes"
+                    :aria-pressed="isArchTool"
+                    :aria-expanded="archDropdownOpen"
+                    aria-haspopup="menu"
                     @click="toggleArchDropdown"
                 >
                     <svg
@@ -308,6 +370,8 @@ defineExpose({ handleClickOutside });
                         stroke-width="1.5"
                         stroke-linecap="round"
                         stroke-linejoin="round"
+                        aria-hidden="true"
+                        focusable="false"
                     >
                         <ellipse cx="12" cy="5" rx="9" ry="3" />
                         <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
@@ -315,44 +379,49 @@ defineExpose({ handleClickOutside });
                     </svg>
                 </button>
                 <transition name="panel-fade">
-                    <div v-if="archDropdownOpen" class="arch-dropdown-menu">
+                    <div
+                        v-if="archDropdownOpen"
+                        class="arch-dropdown-menu"
+                        role="menu"
+                        aria-label="Architecture shape options"
+                    >
                         <button
                             v-for="shape in archShapes"
                             :key="shape.tool"
                             class="arch-shape-btn"
                             :class="{ active: currentTool === shape.tool }"
-                            :title="shape.label"
+                            :aria-label="shape.label"
+                            :aria-pressed="currentTool === shape.tool"
+                            role="menuitem"
                             @click="selectArchTool(shape.tool)"
                         >
-                            <span class="arch-shape-icon" v-html="shape.icon"></span>
+                            <span class="arch-shape-icon" aria-hidden="true" v-html="shape.icon"></span>
                             <span class="arch-shape-label">{{ shape.label }}</span>
                         </button>
                     </div>
                 </transition>
             </div>
         </div>
-    </div>
+    </nav>
 </template>
 
 <style scoped lang="scss">
-// ─── Floating Toolbar ────────────────────────────────────────────────────────
-
 .floating-toolbar {
     position: absolute;
     top: 12px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 20;
+    z-index: $z-mid;
 }
 
 .toolbar-inner {
     display: flex;
     align-items: center;
-    gap: 2px;
-    padding: 4px;
-    background: var(--bg-primary, #fff);
-    border: 1px solid var(--border-color, #e0e0e0);
-    border-radius: 10px;
+    gap: $space-0;
+    padding: $space-1;
+    background: $bg-primary;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-xl;
     box-shadow:
         0 1px 5px rgba(0, 0, 0, 0.08),
         0 4px 16px rgba(0, 0, 0, 0.04);
@@ -365,31 +434,31 @@ defineExpose({ handleClickOutside });
     width: 36px;
     height: 36px;
     border: none;
-    border-radius: 8px;
+    border-radius: $border-radius-lg;
     background: transparent;
-    color: var(--text2, #6e6e73);
+    color: $text2;
     cursor: pointer;
     transition:
-        background 0.12s,
-        color 0.12s;
+        background $transition-fast,
+        color $transition-fast;
     flex-shrink: 0;
 
     &:hover {
-        background: var(--bg-hover, #f0f0f0);
-        color: var(--text1, #1d1d1f);
+        background: $bg-hover;
+        color: $text1;
     }
 
     &.active {
-        background: var(--accent-color-alpha, rgba(62, 180, 137, 0.12));
-        color: var(--accent-color, #3eb489);
+        background: $accent-color-alpha;
+        color: $accent-color;
     }
 }
 
 .toolbar-sep {
     width: 1px;
     height: 24px;
-    background: var(--border-color, #e0e0e0);
-    margin: 0 2px;
+    background: $border-color;
+    margin: 0 $space-0;
     flex-shrink: 0;
 }
 
@@ -406,42 +475,42 @@ defineExpose({ handleClickOutside });
     transform: translateX(-50%);
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 2px;
-    padding: 6px;
-    background: var(--bg-primary, #fff);
-    border: 1px solid var(--border-color, #e0e0e0);
-    border-radius: 10px;
+    gap: $space-0;
+    padding: $space-2;
+    background: $bg-primary;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-xl;
     box-shadow:
         0 4px 20px rgba(0, 0, 0, 0.12),
         0 1px 6px rgba(0, 0, 0, 0.06);
-    z-index: 25;
+    z-index: $z-mid;
     min-width: 200px;
 }
 
 .arch-shape-btn {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 10px;
+    gap: $space-2;
+    padding: $space-2 $space-3;
     border: none;
-    border-radius: 6px;
+    border-radius: $border-radius;
     background: transparent;
-    color: var(--text2, #6e6e73);
+    color: $text2;
     cursor: pointer;
     transition:
-        background 0.12s,
-        color 0.12s;
-    font-size: 12px;
+        background $transition-fast,
+        color $transition-fast;
+    font-size: $font-size-xs;
     white-space: nowrap;
 
     &:hover {
-        background: var(--bg-hover, #f0f0f0);
-        color: var(--text1, #1d1d1f);
+        background: $bg-hover;
+        color: $text1;
     }
 
     &.active {
-        background: var(--accent-color-alpha, rgba(62, 180, 137, 0.12));
-        color: var(--accent-color, #3eb489);
+        background: $accent-color-alpha;
+        color: $accent-color;
     }
 }
 
@@ -460,14 +529,14 @@ defineExpose({ handleClickOutside });
 }
 
 .arch-shape-label {
-    font-weight: 500;
+    font-weight: $font-weight-medium;
 }
 
 .panel-fade-enter-active,
 .panel-fade-leave-active {
     transition:
-        opacity 0.15s ease,
-        transform 0.15s ease;
+        opacity $transition-base,
+        transform $transition-base;
 }
 .panel-fade-enter-from,
 .panel-fade-leave-to {
