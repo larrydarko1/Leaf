@@ -424,11 +424,14 @@ leaf/
 │   ├── main/
 │   │   ├── bookmarks.test.ts
 │   │   ├── extensions.test.ts
+│   │   ├── fs.scan.test.ts
 │   │   ├── mime.test.ts
 │   │   ├── paths.test.ts
 │   │   ├── systemPrompt.test.ts
 │   │   └── validation.test.ts
 │   └── renderer/
+│       ├── AiInputArea.test.ts
+│       ├── AiPanel.test.ts
 │       ├── audio.test.ts
 │       ├── cm-list-continuation.test.ts
 │       ├── cm-task-fold.test.ts

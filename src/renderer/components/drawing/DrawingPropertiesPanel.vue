@@ -372,7 +372,7 @@ const borderRadiusOptions = [
     text-align: left;
 
     &:hover {
-        background: $hover-bg;
+        background: $bg-hover;
     }
 
     &.action-btn--delete {
@@ -460,7 +460,7 @@ const borderRadiusOptions = [
         border-color $transition-fast;
 
     &:hover {
-        background: $hover-bg;
+        background: $bg-hover;
     }
 
     &.active {
@@ -497,7 +497,7 @@ const borderRadiusOptions = [
         border-color $transition-fast;
 
     &:hover {
-        background: $hover-bg;
+        background: $bg-hover;
     }
 
     &.active {
@@ -527,7 +527,7 @@ const borderRadiusOptions = [
         border-color $transition-fast;
 
     &:hover {
-        background: $hover-bg;
+        background: $bg-hover;
     }
 
     &.active {
@@ -559,7 +559,7 @@ const borderRadiusOptions = [
         border-color $transition-fast;
 
     &:hover {
-        background: $hover-bg;
+        background: $bg-hover;
     }
 
     &.active {
