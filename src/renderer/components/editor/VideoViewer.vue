@@ -134,6 +134,7 @@ function onKeydown(e: KeyboardEvent) {
                         max="1"
                         step="0.01"
                         :value="videoVolume"
+                        :style="{ '--volume': videoVolume }"
                         @input="onVideoVolumeChange"
                     />
                 </div>
@@ -277,6 +278,20 @@ function onKeydown(e: KeyboardEvent) {
     border-radius: 2px;
     outline: none;
     cursor: pointer;
+    position: relative;
+
+    &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        background: $accent-color;
+        width: calc(var(--volume) * 100%);
+        max-width: 55px;
+        height: 4px;
+        border-radius: 2px;
+        pointer-events: none;
+    }
 
     &::-webkit-slider-thumb {
         -webkit-appearance: none;
@@ -287,6 +302,8 @@ function onKeydown(e: KeyboardEvent) {
         background: $accent-color;
         cursor: pointer;
         transition: transform 0.1s;
+        position: relative;
+        z-index: 1;
     }
 
     &::-webkit-slider-thumb:hover {

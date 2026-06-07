@@ -159,6 +159,7 @@ function onKeydown(e: KeyboardEvent) {
                         max="1"
                         step="0.01"
                         :value="audioVolume"
+                        :style="{ '--volume': audioVolume }"
                         @input="onVolumeChange"
                     />
                 </div>
@@ -327,6 +328,20 @@ function onKeydown(e: KeyboardEvent) {
     border-radius: 2px;
     outline: none;
     cursor: pointer;
+    position: relative;
+
+    &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        background: $accent-color;
+        width: calc(var(--volume) * 100%);
+        max-width: 60px;
+        height: 4px;
+        border-radius: 2px;
+        pointer-events: none;
+    }
 
     &::-webkit-slider-thumb {
         -webkit-appearance: none;

@@ -309,7 +309,7 @@ export const leafEditorTheme = EditorView.theme({
     },
     '.cm-embed-vol-fill': {
         height: '100%',
-        background: 'var(--text2)',
+        background: 'var(--accent-color, #3eb489)',
         borderRadius: '2px',
         transition: 'width 0.05s linear',
     },
