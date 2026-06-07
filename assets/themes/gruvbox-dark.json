@@ -21,6 +21,7 @@
         "danger-color": "#cc241d",
         "danger-color-alpha": "rgba(204, 36, 29, 0.15)",
         "scrollbar-thumb": "#504945",
-        "scrollbar-thumb-hover": "#665c54"
+        "scrollbar-thumb-hover": "#665c54",
+        "grid-color": "rgba(255,255,255,0.06)"
     }
 }
