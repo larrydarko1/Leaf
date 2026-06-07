@@ -16,7 +16,6 @@ export function useCanvasRenderer(
     scrollX: Ref<number>,
     scrollY: Ref<number>,
     zoom: Ref<number>,
-    isDark: Ref<boolean>,
     elements: Ref<CanvasElement[]>,
     creatingElement: Ref<CanvasElement | null>,
     selectedIds: Ref<Set<string>>,
@@ -28,8 +27,8 @@ export function useCanvasRenderer(
     let ctx: CanvasRenderingContext2D | null = null;
     let dpr = 1;
 
-    const canvasBg = computed(() => (isDark.value ? '#1e1e1e' : '#ffffff'));
-    const gridColor = computed(() => (isDark.value ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'));
+    const canvasBg = computed(() => getCSSVariable('--base1'));
+    const gridColor = computed(() => getCSSVariable('--grid-color') || 'rgba(255,255,255,0.06)');
 
     // Canvas setup
 
@@ -573,7 +572,6 @@ export function useCanvasRenderer(
         elements: CanvasElement[];
         withBackground: boolean;
         scale: number;
-        darkMode: boolean;
         padding?: number;
     }): Promise<Blob | null> {
         const exportElements = opts.elements;
@@ -605,7 +603,7 @@ export function useCanvasRenderer(
 
         // Background
         if (opts.withBackground) {
-            offCtx.fillStyle = opts.darkMode ? '#1e1e1e' : '#ffffff';
+            offCtx.fillStyle = '#1e1e1e';
             offCtx.fillRect(0, 0, width, height);
         }
 
@@ -641,4 +639,9 @@ export function useCanvasRenderer(
         getCtx: () => ctx,
         exportToBlob,
     };
+}
+
+/** Get a CSS custom property value from the document root. */
+function getCSSVariable(varName: string): string {
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
 }

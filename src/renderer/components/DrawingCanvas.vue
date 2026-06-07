@@ -75,10 +75,6 @@ const defaultStyle = ref({
 const history = ref<string[]>([]);
 const historyIndex = ref(-1);
 
-// Theme
-const isDark = ref(false);
-let themeObserver: MutationObserver | null = null;
-
 // Renderer
 
 const {
@@ -98,7 +94,6 @@ const {
     scrollX,
     scrollY,
     zoom,
-    isDark,
     elements,
     creatingElement,
     selectedIds,
@@ -289,10 +284,6 @@ const hasSelection = computed(() => selectedIds.value.size > 0);
 // Lifecycle
 
 onMounted(() => {
-    checkTheme();
-    themeObserver = new MutationObserver(checkTheme);
-    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-
     setupCanvas();
     loadDrawing();
     window.addEventListener('resize', handleResize);
@@ -303,27 +294,11 @@ onMounted(() => {
 onUnmounted(() => {
     window.removeEventListener('resize', handleResize);
     document.removeEventListener('mousedown', handleClickOutside);
-    themeObserver?.disconnect();
     cleanupAutoSave();
 });
 
 watch(() => props.filePath, loadDrawing);
 watch(() => props.initialContent, loadDrawing);
-watch(isDark, () => {
-    // Update default stroke for theme
-    if (isDark.value && defaultStyle.value.strokeColor === '#1e1e1e') {
-        defaultStyle.value.strokeColor = '#ffffff';
-    } else if (!isDark.value && defaultStyle.value.strokeColor === '#ffffff') {
-        defaultStyle.value.strokeColor = '#1e1e1e';
-    }
-    renderScene();
-});
-
-// Theme
-
-function checkTheme() {
-    isDark.value = document.documentElement.getAttribute('data-theme') === 'dark';
-}
 
 // Tool selection
 
@@ -456,7 +431,6 @@ function closeExportDialog() {
         <DrawingExportDialog
             :visible="showExportDialog"
             :has-selection="hasSelection"
-            :is-dark="isDark"
             :file-path="filePath"
             :elements="elements"
             :selected-ids="selectedIds"
@@ -465,6 +439,7 @@ function closeExportDialog() {
         />
     </div>
 </template>
+
 <style scoped lang="scss">
 .excalidraw-container {
     position: relative;
@@ -472,7 +447,7 @@ function closeExportDialog() {
     height: 100%;
     overflow: hidden;
     outline: none;
-    background: var(--bg-primary, #ffffff);
+    background: $bg-primary;
 }
 
 canvas {
@@ -486,15 +461,15 @@ canvas {
 .text-edit-overlay {
     position: absolute;
     z-index: 30;
-    border: 2px solid var(--accent-color, #3eb489);
-    border-radius: 4px;
-    background: color-mix(in srgb, var(--bg-primary, #fff) 85%, transparent);
+    border: 2px solid $accent-color;
+    border-radius: $border-radius-sm;
+    background: color-mix(in srgb, $bg-primary 85%, transparent);
     outline: none;
     resize: none;
     min-width: 60px;
     min-height: 1.4em;
-    font-family: 'Helvetica', 'Segoe UI', sans-serif;
-    padding: 4px 6px;
+    font-family: $font-family;
+    padding: $space-1 $space-2;
     overflow: hidden;
     white-space: pre-wrap;
     word-break: break-word;

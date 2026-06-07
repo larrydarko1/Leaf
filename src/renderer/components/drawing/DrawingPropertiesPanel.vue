@@ -78,32 +78,36 @@ const borderRadiusOptions = [
 
 <template>
     <transition name="panel-fade">
-        <div v-if="visible" class="properties-panel" @mousedown.prevent>
+        <aside v-if="visible" class="properties-panel" aria-label="Properties panel" @mousedown.prevent>
             <!-- Stroke Color -->
-            <div class="prop-section">
-                <div class="prop-label">Stroke</div>
-                <div class="color-grid">
+            <section class="prop-section">
+                <h3 class="prop-label">Stroke</h3>
+                <div class="color-grid" role="group" aria-label="Stroke color options">
                     <button
                         v-for="c in strokeColorPalette"
                         :key="'s-' + c"
                         class="color-swatch"
                         :class="{ active: activeStrokeColor === c }"
                         :style="{ background: c }"
+                        :aria-label="`Stroke color ${c}`"
+                        :aria-pressed="activeStrokeColor === c"
                         @click="emit('setProperty', 'strokeColor', c)"
                     />
                 </div>
-            </div>
+            </section>
 
             <!-- Fill Color -->
-            <div v-if="showFillOption" class="prop-section">
-                <div class="prop-label">Background</div>
-                <div class="color-grid">
+            <section v-if="showFillOption" class="prop-section">
+                <h3 class="prop-label">Background</h3>
+                <div class="color-grid" role="group" aria-label="Background color options">
                     <button
                         class="color-swatch transparent-swatch"
                         :class="{ active: activeFillColor === 'transparent' }"
+                        aria-label="Transparent background"
+                        :aria-pressed="activeFillColor === 'transparent'"
                         @click="emit('setProperty', 'fillColor', 'transparent')"
                     >
-                        <svg width="16" height="16" viewBox="0 0 16 16">
+                        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
                             <line x1="0" y1="16" x2="16" y2="0" stroke="currentColor" stroke-width="1.5" />
                         </svg>
                     </button>
@@ -113,40 +117,45 @@ const borderRadiusOptions = [
                         class="color-swatch"
                         :class="{ active: activeFillColor === c }"
                         :style="{ background: c }"
+                        :aria-label="`Background color ${c}`"
+                        :aria-pressed="activeFillColor === c"
                         @click="emit('setProperty', 'fillColor', c)"
                     />
                 </div>
-            </div>
+            </section>
 
             <!-- Stroke Width -->
-            <div class="prop-section">
-                <div class="prop-label">Stroke width</div>
-                <div class="stroke-width-row">
+            <section class="prop-section">
+                <h3 class="prop-label">Stroke width</h3>
+                <div class="stroke-width-row" role="group" aria-label="Stroke width options">
                     <button
                         v-for="w in strokeWidthOptions"
                         :key="w"
                         class="stroke-width-btn"
                         :class="{ active: activeStrokeWidth === w }"
+                        :aria-label="`Stroke width ${w}px`"
+                        :aria-pressed="activeStrokeWidth === w"
                         @click="emit('setProperty', 'strokeWidth', w)"
                     >
-                        <span class="stroke-preview" :style="{ height: w + 'px' }"></span>
+                        <span class="stroke-preview" :style="{ height: w + 'px' }" aria-hidden="true"></span>
                     </button>
                 </div>
-            </div>
+            </section>
 
             <!-- Stroke Style -->
-            <div class="prop-section">
-                <div class="prop-label">Stroke style</div>
-                <div class="stroke-style-row">
+            <section class="prop-section">
+                <h3 class="prop-label">Stroke style</h3>
+                <div class="stroke-style-row" role="group" aria-label="Stroke style options">
                     <button
                         v-for="s in strokeStyleOptions"
                         :key="s.value"
                         class="stroke-style-btn"
                         :class="{ active: activeStrokeStyle === s.value }"
-                        :title="s.label"
+                        :aria-label="s.label"
+                        :aria-pressed="activeStrokeStyle === s.value"
                         @click="emit('setProperty', 'strokeStyle', s.value)"
                     >
-                        <svg width="40" height="6" viewBox="0 0 40 6">
+                        <svg width="40" height="6" viewBox="0 0 40 6" aria-hidden="true" focusable="false">
                             <line
                                 x1="0"
                                 y1="3"
@@ -159,18 +168,19 @@ const borderRadiusOptions = [
                         </svg>
                     </button>
                 </div>
-            </div>
+            </section>
 
             <!-- Roundness -->
-            <div v-if="showRoundnessOption" class="prop-section">
-                <div class="prop-label">Roundness</div>
-                <div class="roundness-row">
+            <section v-if="showRoundnessOption" class="prop-section">
+                <h3 class="prop-label">Roundness</h3>
+                <div class="roundness-row" role="group" aria-label="Roundness options">
                     <button
                         v-for="r in borderRadiusOptions"
                         :key="r.value"
                         class="roundness-btn"
                         :class="{ active: activeBorderRadius === r.value }"
-                        :title="r.label"
+                        :aria-label="r.label"
+                        :aria-pressed="activeBorderRadius === r.value"
                         @click="emit('setProperty', 'borderRadius', r.value)"
                     >
                         <svg
@@ -181,6 +191,8 @@ const borderRadiusOptions = [
                             fill="none"
                             stroke="currentColor"
                             stroke-width="1.5"
+                            aria-hidden="true"
+                            focusable="false"
                         >
                             <rect x="2" y="2" width="16" height="16" />
                         </svg>
@@ -192,6 +204,8 @@ const borderRadiusOptions = [
                             fill="none"
                             stroke="currentColor"
                             stroke-width="1.5"
+                            aria-hidden="true"
+                            focusable="false"
                         >
                             <rect x="2" y="2" width="16" height="16" rx="4" />
                         </svg>
@@ -203,35 +217,39 @@ const borderRadiusOptions = [
                             fill="none"
                             stroke="currentColor"
                             stroke-width="1.5"
+                            aria-hidden="true"
+                            focusable="false"
                         >
                             <rect x="2" y="2" width="16" height="16" rx="8" />
                         </svg>
                     </button>
                 </div>
-            </div>
+            </section>
 
             <!-- Font Size -->
-            <div v-if="showFontSizeOption" class="prop-section">
-                <div class="prop-label">
-                    Font size <span class="font-size-value">{{ activeFontSize }}px</span>
-                </div>
-                <div class="font-size-row">
+            <section v-if="showFontSizeOption" class="prop-section">
+                <h3 class="prop-label">
+                    Font size <span class="font-size-value" aria-live="polite">{{ activeFontSize }}px</span>
+                </h3>
+                <div class="font-size-row" role="group" aria-label="Font size options">
                     <button
                         v-for="fs in fontSizeOptions"
                         :key="fs.value"
                         class="font-size-btn"
                         :class="{ active: activeFontSize === fs.value }"
+                        :aria-label="`Font size ${fs.label}`"
+                        :aria-pressed="activeFontSize === fs.value"
                         @click="emit('setProperty', 'fontSize', fs.value)"
                     >
                         {{ fs.label }}
                     </button>
                 </div>
-            </div>
+            </section>
 
             <!-- Actions -->
-            <div v-if="hasSelection" class="prop-section">
-                <div class="prop-actions">
-                    <button class="action-btn" title="Copy (⌘C)" @click="emit('copy')">
+            <section v-if="hasSelection" class="prop-section">
+                <div class="prop-actions" role="group" aria-label="Element actions">
+                    <button class="action-btn" aria-label="Copy (Cmd+C)" @click="emit('copy')">
                         <svg
                             width="15"
                             height="15"
@@ -241,13 +259,15 @@ const borderRadiusOptions = [
                             stroke-width="2"
                             stroke-linecap="round"
                             stroke-linejoin="round"
+                            aria-hidden="true"
+                            focusable="false"
                         >
                             <rect x="9" y="9" width="13" height="13" rx="2" />
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                         </svg>
                         Copy
                     </button>
-                    <button class="action-btn" title="Duplicate (⌘D)" @click="emit('duplicate')">
+                    <button class="action-btn" aria-label="Duplicate (Cmd+D)" @click="emit('duplicate')">
                         <svg
                             width="15"
                             height="15"
@@ -257,13 +277,19 @@ const borderRadiusOptions = [
                             stroke-width="2"
                             stroke-linecap="round"
                             stroke-linejoin="round"
+                            aria-hidden="true"
+                            focusable="false"
                         >
                             <rect x="3" y="3" width="13" height="13" rx="2" />
                             <rect x="8" y="8" width="13" height="13" rx="2" />
                         </svg>
                         Duplicate
                     </button>
-                    <button class="action-btn action-btn--delete" title="Delete (⌫)" @click="emit('delete')">
+                    <button
+                        class="action-btn action-btn--delete"
+                        aria-label="Delete (Backspace)"
+                        @click="emit('delete')"
+                    >
                         <svg
                             width="15"
                             height="15"
@@ -273,6 +299,8 @@ const borderRadiusOptions = [
                             stroke-width="2"
                             stroke-linecap="round"
                             stroke-linejoin="round"
+                            aria-hidden="true"
+                            focusable="false"
                         >
                             <path d="M3 6h18" />
                             <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
@@ -281,34 +309,32 @@ const borderRadiusOptions = [
                         Delete
                     </button>
                 </div>
-            </div>
-        </div>
+            </section>
+        </aside>
     </transition>
 </template>
 
 <style scoped lang="scss">
-// ─── Properties Panel ────────────────────────────────────────────────────────
-
 .properties-panel {
     position: absolute;
     top: 64px;
     left: 12px;
     width: 192px;
-    background: var(--bg-primary, #fff);
-    border: 1px solid var(--border-color, #e0e0e0);
-    border-radius: 10px;
+    background: $bg-primary;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-xl;
     box-shadow:
         0 1px 5px rgba(0, 0, 0, 0.08),
         0 4px 16px rgba(0, 0, 0, 0.04);
-    padding: 12px;
-    z-index: 15;
+    padding: $space-3;
+    z-index: $z-mid;
 }
 
 .panel-fade-enter-active,
 .panel-fade-leave-active {
     transition:
-        opacity 0.15s ease,
-        transform 0.15s ease;
+        opacity $transition-base,
+        transform $transition-base;
 }
 .panel-fade-enter-from,
 .panel-fade-leave-to {
@@ -317,7 +343,7 @@ const borderRadiusOptions = [
 }
 
 .prop-section {
-    margin-bottom: 12px;
+    margin-bottom: $space-3;
 
     &:last-child {
         margin-bottom: 0;
@@ -327,61 +353,61 @@ const borderRadiusOptions = [
 .prop-actions {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: $space-1;
 }
 
 .action-btn {
     display: flex;
     align-items: center;
-    gap: 7px;
+    gap: $space-2;
     width: 100%;
-    padding: 6px 8px;
-    border-radius: 6px;
+    padding: $space-2 $space-3;
+    border-radius: $border-radius;
     border: none;
     background: transparent;
-    color: var(--text1, #1d1d1f);
-    font-size: 12px;
+    color: $text1;
+    font-size: $font-size-xs;
     cursor: pointer;
-    transition: background 0.12s;
+    transition: background $transition-fast;
     text-align: left;
 
     &:hover {
-        background: var(--hover-bg, rgba(128, 128, 128, 0.12));
+        background: $hover-bg;
     }
 
     &.action-btn--delete {
-        color: #e05555;
+        color: $danger-color;
 
         &:hover {
-            background: rgba(224, 85, 85, 0.1);
+            background: $danger-color-alpha;
         }
     }
 }
 
 .prop-label {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-muted, #8e8e93);
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    color: $text-muted;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    margin-bottom: 6px;
+    margin-bottom: $space-2;
 }
 
 .color-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
+    gap: $space-1;
 }
 
 .color-swatch {
     width: 22px;
     height: 22px;
     border: 2px solid transparent;
-    border-radius: 4px;
+    border-radius: $border-radius-sm;
     cursor: pointer;
     transition:
-        border-color 0.12s,
-        transform 0.12s;
+        border-color $transition-fast,
+        transform $transition-fast;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -392,7 +418,7 @@ const borderRadiusOptions = [
     }
 
     &.active {
-        border-color: var(--accent-color, #3eb489);
+        border-color: $accent-color;
         transform: scale(1.15);
     }
 
@@ -406,7 +432,7 @@ const borderRadiusOptions = [
             0 4px,
             4px -4px,
             -4px 0;
-        color: var(--text2, #888);
+        color: $text2;
 
         svg {
             filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.3));
@@ -416,135 +442,135 @@ const borderRadiusOptions = [
 
 .stroke-width-row {
     display: flex;
-    gap: 4px;
+    gap: $space-1;
 }
 
 .stroke-width-btn {
     flex: 1;
     height: 32px;
-    border: 1px solid var(--border-color, #e0e0e0);
-    border-radius: 6px;
+    border: 1px solid $border-color;
+    border-radius: $border-radius;
     background: transparent;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition:
-        background 0.12s,
-        border-color 0.12s;
+        background $transition-fast,
+        border-color $transition-fast;
 
     &:hover {
-        background: var(--bg-hover, #f0f0f0);
+        background: $hover-bg;
     }
 
     &.active {
-        background: var(--accent-color-alpha, rgba(62, 180, 137, 0.12));
-        border-color: var(--accent-color, #3eb489);
+        background: $accent-color-alpha;
+        border-color: $accent-color;
     }
 
     .stroke-preview {
         width: 60%;
-        background: var(--text1, #1d1d1f);
-        border-radius: 4px;
+        background: $text1;
+        border-radius: $border-radius-sm;
         min-height: 1px;
     }
 }
 
 .stroke-style-row {
     display: flex;
-    gap: 4px;
+    gap: $space-1;
 }
 
 .stroke-style-btn {
     flex: 1;
     height: 32px;
-    border: 1px solid var(--border-color, #e0e0e0);
-    border-radius: 6px;
+    border: 1px solid $border-color;
+    border-radius: $border-radius;
     background: transparent;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--text1, #1d1d1f);
+    color: $text1;
     transition:
-        background 0.12s,
-        border-color 0.12s;
+        background $transition-fast,
+        border-color $transition-fast;
 
     &:hover {
-        background: var(--bg-hover, #f0f0f0);
+        background: $hover-bg;
     }
 
     &.active {
-        background: var(--accent-color-alpha, rgba(62, 180, 137, 0.12));
-        border-color: var(--accent-color, #3eb489);
+        background: $accent-color-alpha;
+        border-color: $accent-color;
     }
 }
 
 .roundness-row {
     display: flex;
-    gap: 4px;
+    gap: $space-1;
 }
 
 .roundness-btn {
     flex: 1;
     height: 32px;
-    border: 1px solid var(--border-color, #e0e0e0);
-    border-radius: 6px;
+    border: 1px solid $border-color;
+    border-radius: $border-radius;
     background: transparent;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--text1, #1d1d1f);
+    color: $text1;
     transition:
-        background 0.12s,
-        border-color 0.12s;
+        background $transition-fast,
+        border-color $transition-fast;
 
     &:hover {
-        background: var(--bg-hover, #f0f0f0);
+        background: $hover-bg;
     }
 
     &.active {
-        background: var(--accent-color-alpha, rgba(62, 180, 137, 0.12));
-        border-color: var(--accent-color, #3eb489);
+        background: $accent-color-alpha;
+        border-color: $accent-color;
     }
 }
 
 .font-size-row {
     display: flex;
-    gap: 4px;
+    gap: $space-1;
 }
 
 .font-size-btn {
     flex: 1;
     height: 32px;
-    border: 1px solid var(--border-color, #e0e0e0);
-    border-radius: 6px;
+    border: 1px solid $border-color;
+    border-radius: $border-radius;
     background: transparent;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--text1, #1d1d1f);
+    color: $text1;
     font-size: 12px;
     font-weight: 500;
     transition:
-        background 0.12s,
-        border-color 0.12s;
+        background $transition-fast,
+        border-color $transition-fast;
 
     &:hover {
-        background: var(--bg-hover, #f0f0f0);
+        background: $hover-bg;
     }
 
     &.active {
-        background: var(--accent-color-alpha, rgba(62, 180, 137, 0.12));
-        border-color: var(--accent-color, #3eb489);
+        background: $accent-color-alpha;
+        border-color: $accent-color;
     }
 }
 
 .font-size-value {
-    font-weight: 400;
+    font-weight: $font-weight-normal;
     opacity: 0.6;
-    margin-left: 4px;
+    margin-left: $space-1;
 }
 </style>
