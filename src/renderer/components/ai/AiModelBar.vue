@@ -434,6 +434,9 @@ function truncate(str: string, len: number): string {
     max-width: calc(100vw - 24px);
     overflow-y: auto;
     overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15em;
 }
 
 .ai-dropdown-empty {
