@@ -126,27 +126,27 @@ async function handleRefresh() {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.6em 0.85em;
+    padding: $space-3 $space-4;
     border-bottom: 1px solid $text3;
     flex-shrink: 0;
 }
 
 .theme-title {
-    font-size: 0.85rem;
-    font-weight: 600;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
     color: $text1;
 }
 
 .header-actions {
     display: inline-flex;
-    gap: 0.125em;
+    gap: $space-0;
 }
 
 .icon-btn {
     background: none;
     border: none;
-    padding: 0.3125em;
-    border-radius: 0.3125em;
+    padding: $space-1;
+    border-radius: $border-radius;
     color: $text-muted;
     display: inline-flex;
     align-items: center;
@@ -162,23 +162,23 @@ async function handleRefresh() {
 .theme-list {
     flex: 1;
     overflow-y: auto;
-    padding: 0.375em;
+    padding: $border-radius;
 }
 
 .theme-item {
     width: 100%;
     display: flex;
     align-items: center;
-    gap: 0.625em;
-    padding: 0.55em 0.65em;
+    gap: $space-3;
+    padding: $space-2 $space-3;
     background: none;
     border: 1px solid transparent;
-    border-radius: 0.5em;
+    border-radius: $border-radius-lg;
     color: $text1;
     text-align: left;
     cursor: pointer;
-    margin-bottom: 0.1875em;
-    transition: background 0.12s;
+    margin-bottom: $space-1;
+    transition: background $transition-fast;
 
     &:hover {
         background: $bg-hover;
@@ -193,7 +193,7 @@ async function handleRefresh() {
 .theme-swatches {
     display: inline-flex;
     flex-shrink: 0;
-    border-radius: 0.3125em;
+    border-radius: $border-radius;
     overflow: hidden;
     border: 1px solid $border-color;
 }
@@ -209,12 +209,12 @@ async function handleRefresh() {
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.125em;
+    gap: $space-0;
 }
 
 .theme-name {
-    font-size: 0.82rem;
-    font-weight: 500;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
     color: $text1;
     white-space: nowrap;
     overflow: hidden;
@@ -222,7 +222,7 @@ async function handleRefresh() {
 }
 
 .theme-desc {
-    font-size: 0.7rem;
+    font-size: $font-size-xs;
     color: $text-muted;
     white-space: nowrap;
     overflow: hidden;
@@ -235,15 +235,15 @@ async function handleRefresh() {
 }
 
 .theme-empty {
-    padding: 1.5em 0.5em;
+    padding: $space-6 $space-2;
     text-align: center;
     color: $text-muted;
-    font-size: 0.8rem;
+    font-size: $font-size-sm;
 }
 
 .theme-footer {
     border-top: 1px solid $text3;
-    padding: 0.55em 0.75em 0.7em;
+    padding: $space-2 $space-4 $space-3;
     flex-shrink: 0;
 }
 
@@ -251,9 +251,9 @@ async function handleRefresh() {
     width: 100%;
     background: none;
     border: 1px solid $border-color;
-    border-radius: 0.375em;
-    padding: 0.4em 0.55em;
-    font-size: 0.75rem;
+    border-radius: $border-radius;
+    padding: $border-radius $border-radius-lg;
+    font-size: $space-3;
     color: $text1;
     cursor: pointer;
 
@@ -264,17 +264,17 @@ async function handleRefresh() {
 }
 
 .footer-hint {
-    margin: 0.5em 0 0 0;
-    font-size: 0.68rem;
+    margin: $space-2 0 0 0;
+    font-size: $font-size-xs;
     color: $text-muted;
-    line-height: 1.4;
+    line-height: $line-height;
 
     code {
         font-family: 'SF Mono', Monaco, Menlo, Consolas, monospace;
-        font-size: 0.95em;
-        background: color-mix(in srgb, var(--text2) 10%, transparent);
-        padding: 0.0625em 0.25em;
-        border-radius: 0.1875em;
+        font-size: $font-size-xs;
+        background: color-mix(in srgb, $text2 10%, transparent);
+        padding: $space-1 $space-2;
+        border-radius: $border-radius-xs;
     }
 }
 
@@ -288,7 +288,7 @@ async function handleRefresh() {
 
 .theme-list::-webkit-scrollbar-thumb {
     background: $scrollbar-thumb;
-    border-radius: 0.1875em;
+    border-radius: $border-radius-xs;
 
     &:hover {
         background: $scrollbar-thumb-hover;

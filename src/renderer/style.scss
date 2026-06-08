@@ -52,6 +52,7 @@
 // ── Typography ────────────────────────────────────────────────────────────────
 
 $font-family: 'Helvetica', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+$font-family-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Menlo', 'Consolas', 'DejaVu Sans Mono', monospace;
 $line-height: 1.6;
 $font-weight-normal: 400;
 $font-weight-medium: 500;
@@ -64,6 +65,9 @@ $font-size-base: 1rem;
 $font-size-lg: 1.125rem;
 $font-size-xl: 1.25rem;
 $font-size-2xl: 1.5rem;
+$font-size-3xl: 2rem;
+$font-size-4xl: 3rem;
+$font-size-5xl: 5rem;
 
 // ── Spacing ──────────────────────────────────────────────────
 
@@ -77,9 +81,11 @@ $space-6: 1.5em;
 $space-8: 2em;
 $space-9: 2.25em;
 $space-10: 2.5em;
+$space-11: 3em;
 
 // ── Layout ────────────────────────────────────────────────────────────────────
 
+$border-radius-xs: 0.1875em;
 $border-radius-sm: 0.25em;
 $border-radius: 0.375em;
 $border-radius-lg: 0.5em;

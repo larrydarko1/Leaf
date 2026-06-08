@@ -262,7 +262,7 @@ function highlightMatch(text: string): string {
 }
 
 .search-header {
-    padding: 0.65em 0.75em;
+    padding: $space-3 $space-4;
     border-bottom: 1px solid $text3;
 }
 
@@ -272,9 +272,9 @@ function highlightMatch(text: string): string {
     align-items: center;
     background: $bg-primary;
     border: 1px solid $text3;
-    border-radius: 0.625em;
-    padding: 0.35em 0.6em;
-    transition: border-color 0.2s;
+    border-radius: $border-radius-lg;
+    padding: $space-2 $space-3;
+    transition: border-color $transition-base;
 
     &:focus-within {
         border-color: $accent-color;
@@ -284,7 +284,7 @@ function highlightMatch(text: string): string {
 .search-icon {
     color: $text-muted;
     flex-shrink: 0;
-    margin-right: 0.5em;
+    margin-right: $space-2;
 }
 
 .search-input {
@@ -292,7 +292,7 @@ function highlightMatch(text: string): string {
     border: none;
     background: none;
     color: $text-primary;
-    font-size: 0.8rem;
+    font-size: $font-size-sm;
     outline: none;
     font-family: inherit;
 
@@ -304,15 +304,15 @@ function highlightMatch(text: string): string {
 .clear-button {
     background: none;
     border: none;
-    padding: 0.25em;
+    padding: $space-1;
     display: flex;
     align-items: center;
     justify-content: center;
     color: $text-muted;
-    border-radius: 0.25em;
+    border-radius: $border-radius-sm;
     cursor: pointer;
-    transition: all 0.2s;
-    margin-left: 0.25em;
+    transition: all $transition-base;
+    margin-left: $space-1;
 
     &:hover {
         background: $bg-tertiary;
@@ -321,8 +321,8 @@ function highlightMatch(text: string): string {
 }
 
 .search-info {
-    margin-top: 0.5em;
-    font-size: 0.75rem;
+    margin-top: $space-2;
+    font-size: $font-size-xs;
     color: $text-muted;
 }
 
@@ -336,22 +336,22 @@ function highlightMatch(text: string): string {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 3em 1.5em;
+    padding: $space-11 $space-6;
     text-align: center;
     color: $text-muted;
-    font-size: 0.875rem;
+    font-size: $font-size-sm;
 }
 
 .search-results-list {
-    padding: 0.25em;
+    padding: $space-1;
 }
 
 .search-result-item {
-    padding: 0.45em 0.65em;
-    border-radius: 0.5em;
+    padding: $space-2 $space-3;
+    border-radius: $border-radius-lg;
     cursor: pointer;
-    transition: background 0.12s;
-    margin-bottom: 0.125em;
+    transition: background $transition-fast;
+    margin-bottom: $space-0;
     user-select: none;
 
     &:hover {
@@ -376,7 +376,7 @@ function highlightMatch(text: string): string {
 .file-info {
     display: flex;
     align-items: center;
-    gap: 0.625em;
+    gap: $space-3;
 }
 
 .file-icon {
@@ -389,12 +389,12 @@ function highlightMatch(text: string): string {
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.125em;
+    gap: $space-0;
 }
 
 .file-name {
-    font-size: 0.8125rem;
-    font-weight: 500;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -402,14 +402,14 @@ function highlightMatch(text: string): string {
     :deep(mark) {
         background: $accent-color-alpha;
         color: $accent-color;
-        padding: 0.0625 0.125em;
-        border-radius: 0.1875em;
-        font-weight: 600;
+        padding: $space-0 $space-1;
+        border-radius: $border-radius-xs;
+        font-weight: $font-weight-semibold;
     }
 }
 
 .file-path {
-    font-size: 0.6875rem;
+    font-size: $font-size-xs;
     color: $text-muted;
     white-space: nowrap;
     overflow: hidden;
@@ -427,7 +427,7 @@ function highlightMatch(text: string): string {
 
 .search-results::-webkit-scrollbar-thumb {
     background: $scrollbar-thumb;
-    border-radius: 0.1875em;
+    border-radius: $border-radius-xs;
 
     &:hover {
         background: $scrollbar-thumb-hover;

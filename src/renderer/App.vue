@@ -325,23 +325,26 @@ function toggleThemePanel() {
                         <span class="welcome-logo-text">leaf.</span>
                     </div>
 
-                    <button class="btn-primary" @click="selectFolder">Select Folder</button>
+                    <button class="btn-primary" aria-label="Select a folder to begin" @click="selectFolder">
+                        Select Folder
+                    </button>
                 </div>
             </div>
 
             <!-- Main app interface -->
             <div v-else class="app-layout">
                 <div class="left-column">
-                    <div class="sidebar-menu">
+                    <nav class="sidebar-menu" aria-label="Main navigation">
                         <!-- Workspace pill -->
                         <div class="menu-pill">
-                            <button class="btn-menu-icon" title="Change folder" @click="changeFolder">
+                            <button class="btn-menu-icon" aria-label="Change folder" @click="changeFolder">
                                 <svg
                                     width="14"
                                     height="14"
                                     viewBox="0 0 24 24"
                                     fill="currentColor"
                                     xmlns="http://www.w3.org/2000/svg"
+                                    aria-hidden="true"
                                 >
                                     <path
                                         fill-rule="evenodd"
@@ -357,13 +360,14 @@ function toggleThemePanel() {
 
                         <!-- Create actions pill -->
                         <div class="menu-pill">
-                            <button class="btn-menu-icon" title="Create new note" @click="createNewFile">
+                            <button class="btn-menu-icon" aria-label="Create new note" @click="createNewFile">
                                 <svg
                                     width="14"
                                     height="14"
                                     viewBox="0 0 24 24"
                                     fill="none"
                                     xmlns="http://www.w3.org/2000/svg"
+                                    aria-hidden="true"
                                 >
                                     <g id="SVGRepo_iconCarrier">
                                         <path
@@ -387,13 +391,14 @@ function toggleThemePanel() {
                                     </g>
                                 </svg>
                             </button>
-                            <button class="btn-menu-icon" title="Create new folder" @click="createNewFolder">
+                            <button class="btn-menu-icon" aria-label="Create new folder" @click="createNewFolder">
                                 <svg
                                     width="14"
                                     height="14"
                                     viewBox="0 0 24 24"
                                     fill="none"
                                     xmlns="http://www.w3.org/2000/svg"
+                                    aria-hidden="true"
                                 >
                                     <defs>
                                         <mask id="folderMask">
@@ -424,7 +429,8 @@ function toggleThemePanel() {
                             <button
                                 class="btn-menu-icon"
                                 :class="{ active: showSearchPanel }"
-                                title="Search files"
+                                aria-label="Search files"
+                                :aria-pressed="showSearchPanel"
                                 @click="toggleSearch"
                             >
                                 <svg
@@ -433,6 +439,7 @@ function toggleThemePanel() {
                                     viewBox="0 0 24 24"
                                     fill="none"
                                     xmlns="http://www.w3.org/2000/svg"
+                                    aria-hidden="true"
                                 >
                                     <g id="SVGRepo_iconCarrier">
                                         <rect width="24" height="24" fill="transparent"></rect>
@@ -448,7 +455,8 @@ function toggleThemePanel() {
                             <button
                                 class="btn-menu-icon"
                                 :class="{ active: showBookmarksPanel }"
-                                title="Bookmarks"
+                                aria-label="View bookmarks"
+                                :aria-pressed="showBookmarksPanel"
                                 @click="toggleBookmarks"
                             >
                                 <svg
@@ -457,6 +465,7 @@ function toggleThemePanel() {
                                     viewBox="0 0 24 24"
                                     fill="none"
                                     xmlns="http://www.w3.org/2000/svg"
+                                    aria-hidden="true"
                                 >
                                     <path
                                         d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
@@ -468,20 +477,25 @@ function toggleThemePanel() {
                                     />
                                 </svg>
                             </button>
-                            <button class="btn-menu-icon" title="Create new drawing" @click="createNewDrawing">
+                            <button class="btn-menu-icon" aria-label="Create new drawing" @click="createNewDrawing">
                                 <svg
                                     width="14"
                                     height="14"
                                     viewBox="0 0 24 24"
                                     fill="none"
                                     xmlns="http://www.w3.org/2000/svg"
+                                    aria-hidden="true"
                                 >
                                     <path d="M12 19l7-7 3 3-7 7-3-3z" fill="currentColor" />
                                     <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" fill="currentColor" />
                                     <circle cx="11" cy="11" r="2" fill="var(--base1)" />
                                 </svg>
                             </button>
-                            <AudioRecorder :current-folder="currentFolder" @recording-saved="handleRecordingSaved" />
+                            <AudioRecorder
+                                :current-folder="currentFolder"
+                                aria-label="Audio recorder"
+                                @recording-saved="handleRecordingSaved"
+                            />
                         </div>
 
                         <!-- Bottom pill: AI + Theme -->
@@ -490,7 +504,8 @@ function toggleThemePanel() {
                             <button
                                 class="btn-menu-icon"
                                 :class="{ active: showAiPanel }"
-                                title="AI Assistant"
+                                aria-label="AI Assistant"
+                                :aria-pressed="showAiPanel"
                                 @click="toggleAiPanel"
                             >
                                 <svg
@@ -502,6 +517,7 @@ function toggleThemePanel() {
                                     stroke-width="2"
                                     stroke-linecap="round"
                                     stroke-linejoin="round"
+                                    aria-hidden="true"
                                 >
                                     <path
                                         d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"
@@ -512,7 +528,8 @@ function toggleThemePanel() {
                             <button
                                 class="btn-menu-icon"
                                 :class="{ active: showThemePanel }"
-                                title="Theme"
+                                aria-label="Theme selector"
+                                :aria-pressed="showThemePanel"
                                 @click="toggleThemePanel"
                             >
                                 <svg
@@ -521,6 +538,7 @@ function toggleThemePanel() {
                                     viewBox="0 0 24 24"
                                     fill="none"
                                     xmlns="http://www.w3.org/2000/svg"
+                                    aria-hidden="true"
                                 >
                                     <path
                                         d="M3.83904058,5.85749561 C6.78004581,1.94188971 12.8686707,0.802505202 17.2029394,3.497377 C21.4827525,6.15839057 23.0567972,11.2744655 21.303866,16.0747407 C19.648689,20.6073231 15.2875295,22.403209 12.1442101,20.1231428 C10.9667425,19.2690444 10.5102901,18.1984035 10.2896576,16.4593132 L10.1842745,15.4713913 L10.1388589,15.073954 C10.0162342,14.1399065 9.82780748,13.7214296 9.43453605,13.5022264 C8.89894535,13.2036966 8.54231757,13.1967226 7.83905282,13.4692784 L7.48794193,13.6148779 L7.30920754,13.6928218 C6.29543196,14.1331038 5.62104161,14.2877923 4.76804588,14.1090543 L4.56779442,14.0618665 L4.40426138,14.0152691 C1.61529547,13.1510586 1.20220653,9.36813303 3.83904058,5.85749561 Z M16.7670717,10.5795744 C16.9457489,11.2464071 17.6311701,11.6421352 18.2980028,11.4634579 C18.9648354,11.2847806 19.3605635,10.5993594 19.1818862,9.93252681 C19.003209,9.26569418 18.3177878,8.86996607 17.6509552,9.04864333 C16.9841225,9.2273206 16.5883944,9.91274179 16.7670717,10.5795744 Z M17.2616616,14.0682389 C17.4403389,14.7350716 18.1257601,15.1307997 18.7925927,14.9521224 C19.4594253,14.7734451 19.8551535,14.0880239 19.6764762,13.4211913 C19.4977989,12.7543587 18.8123777,12.3586306 18.1455451,12.5373078 C17.4787125,12.7159851 17.0829844,13.4014063 17.2616616,14.0682389 Z M14.7885641,7.57689062 C14.9672413,8.24372325 15.6526625,8.63945136 16.3194952,8.4607741 C16.9863278,8.28209683 17.3820559,7.59667564 17.2033786,6.92984301 C17.0247014,6.26301038 16.3392802,5.86728227 15.6724475,6.04595953 C15.0056149,6.2246368 14.6098868,6.91005799 14.7885641,7.57689062 Z M14.7600823,16.5752747 C14.9387596,17.2421074 15.6241808,17.6378355 16.2910134,17.4591582 C16.9578461,17.280481 17.3535742,16.5950598 17.1748969,15.9282271 C16.9962196,15.2613945 16.3107985,14.8656664 15.6439658,15.0443437 C14.9771332,15.2230209 14.5814051,15.9084421 14.7600823,16.5752747 Z M11.2631594,6.60529725 C11.4418366,7.27212988 12.1272578,7.66785799 12.7940904,7.48918073 C13.4609231,7.31050346 13.8566512,6.62508227 13.6779739,5.95824964 C13.4992967,5.29141701 12.8138755,4.8956889 12.1470428,5.07436616 C11.4802102,5.25304343 11.0844821,5.93846462 11.2631594,6.60529725 Z"
@@ -530,9 +548,9 @@ function toggleThemePanel() {
                                 </svg>
                             </button>
                         </div>
-                    </div>
+                    </nav>
                 </div>
-                <aside class="sidebar">
+                <aside class="sidebar" aria-label="File explorer and panels">
                     <FileExplorer
                         v-if="!showSearchPanel && !showBookmarksPanel"
                         :files="files"
@@ -546,6 +564,7 @@ function toggleThemePanel() {
                         :bookmarked-files="bookmarkedFiles"
                         @select-file="handleFileSelect"
                         @select-folder="handleFolderSelect"
+                        aria-label="File explorer"
                         @start-rename-file="startRenameFile"
                         @start-rename-folder="startRenameFolder"
                         @rename-file="handleFileRename"
@@ -562,6 +581,7 @@ function toggleThemePanel() {
                         :files="files"
                         :selected-files="selectedFiles"
                         :active-file="activeFile"
+                        aria-label="Search results"
                         @select-file="handleSearchFileSelect"
                         @open-file="handleSearchFileOpen"
                         @close="closeSearch"
@@ -572,15 +592,17 @@ function toggleThemePanel() {
                         :bookmarked-paths="bookmarkedFiles"
                         :selected-files="selectedFiles"
                         :active-file="activeFile"
+                        aria-label="Bookmarked files"
                         @select-file="handleSearchFileSelect"
                         @open-file="handleSearchFileOpen"
                         @remove-bookmark="removeBookmark"
                     />
                 </aside>
-                <main class="main-content">
+                <main class="main-content" aria-label="Editor">
                     <TabBar
                         :tabs="editorTabs.tabs.value"
                         :active-index="editorTabs.activeIndex.value"
+                        aria-label="Open files"
                         @switch="handleTabSwitch"
                         @close="editorTabs.closeTab"
                         @reorder="editorTabs.reorderTab"
@@ -589,6 +611,7 @@ function toggleThemePanel() {
                         ref="noteEditorRef"
                         :file="activeFile"
                         :workspace-path="currentFolder"
+                        aria-label="Note editor"
                         @save="handleFileSave"
                         @content-changed="handleContentChanged"
                     />
@@ -597,10 +620,11 @@ function toggleThemePanel() {
                     v-if="showAiPanel"
                     :active-file="activeFile"
                     :workspace-path="currentFolder"
+                    aria-label="AI Assistant panel"
                     @close="showAiPanel = false"
                     @file-changed="handleAiFileChanged"
                 />
-                <ThemePicker v-if="showThemePanel" @close="showThemePanel = false" />
+                <ThemePicker v-if="showThemePanel" aria-label="Theme picker" @close="showThemePanel = false" />
             </div>
         </div>
     </div>
@@ -634,14 +658,14 @@ function toggleThemePanel() {
 .welcome-content {
     text-align: center;
     max-width: 500px;
-    padding: 2rem;
+    padding: $font-size-3xl;
 }
 
 .welcome-logo {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: $space-6;
 }
 
 .welcome-logo-icon {
@@ -652,36 +676,36 @@ function toggleThemePanel() {
 
 .welcome-logo-text {
     font-family: $font-family;
-    font-size: 5rem;
-    font-weight: 600;
+    font-size: $font-size-5xl;
+    font-weight: $font-weight-semibold;
     color: $text1;
     letter-spacing: -0.02em;
     cursor: default;
 }
 
 .app-title {
-    font-size: 3rem;
-    font-weight: 600;
-    margin: 0 0 0.5rem 0;
+    font-size: $font-size-4xl;
+    font-weight: $font-weight-semibold;
+    margin: 0 0 $space-2 0;
     color: $text1;
 }
 
 .app-subtitle {
-    font-size: 1.2rem;
+    font-size: $font-size-xl;
     color: $text2;
-    margin: 0 0 2rem 0;
+    margin: 0 0 $space-8 0;
 }
 
 .btn-primary {
-    padding: 0.65rem 1.5rem;
+    padding: $space-3 $space-6;
     background: $bg-primary;
     color: $text1;
     border: 1px solid $text3;
-    border-radius: 10px;
-    font-size: 0.85rem;
-    font-weight: 500;
+    border-radius: $border-radius-lg;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all $transition-base;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
 
@@ -697,8 +721,8 @@ function toggleThemePanel() {
 }
 
 .hint {
-    margin-top: 1rem;
-    font-size: 0.82rem;
+    margin-top: $space-4;
+    font-size: $font-size-sm;
     color: $text2;
 }
 
@@ -720,8 +744,8 @@ function toggleThemePanel() {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.4rem;
-    padding: 0.5rem 0.35rem;
+    gap: $space-2;
+    padding: $space-2 $space-1;
     background: $bg-secondary;
     flex: 1;
     overflow-y: auto;
@@ -740,11 +764,11 @@ function toggleThemePanel() {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.1rem;
+    gap: $space-0;
     background: $bg-selected;
     border: 1px solid $text3;
-    border-radius: 10px;
-    padding: 0.15rem;
+    border-radius: $border-radius-xl;
+    padding: $space-0;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
 }
@@ -757,9 +781,9 @@ function toggleThemePanel() {
     height: 1px;
     width: 14px;
     background: $text2;
-    margin: 0.3rem 0;
+    margin: $space-1 0;
     opacity: 0.25;
-    border-radius: 1px;
+    border-radius: $border-radius-xs;
 }
 
 .btn-menu-icon {
@@ -767,9 +791,9 @@ function toggleThemePanel() {
     border: none;
     color: $text2;
     cursor: pointer;
-    padding: 0.375rem;
-    border-radius: 7px;
-    transition: all 0.15s;
+    padding: $space-2;
+    border-radius: $border-radius-lg;
+    transition: all $transition-base;
     display: flex;
     align-items: center;
     justify-content: center;

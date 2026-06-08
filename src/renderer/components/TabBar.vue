@@ -65,7 +65,7 @@ function onDragEnd() {
 </script>
 
 <template>
-    <div v-if="tabs.length > 0" class="tab-bar" role="tablist">
+    <div v-if="tabs.length > 0" class="tab-bar" role="tablist" aria-label="Open files">
         <div
             v-for="(tab, i) in tabs"
             :key="tab.file.path"
@@ -79,9 +79,13 @@ function onDragEnd() {
             }"
             role="tab"
             :aria-selected="i === activeIndex"
+            :aria-label="`${getFileNameWithoutExtension(tab.file.name)}${tab.hasUnsavedChanges ? ' (unsaved)' : ''}`"
             :title="tab.file.relativePath"
             draggable="true"
+            tabindex="0"
             @click="emit('switch', i)"
+            @keydown.enter="emit('switch', i)"
+            @keydown.space.prevent="emit('switch', i)"
             @mousedown="handleMiddleClick($event, i)"
             @auxclick.prevent
             @dragstart="onDragStart($event, i)"
@@ -89,9 +93,14 @@ function onDragEnd() {
             @drop="onDrop($event, i)"
             @dragend="onDragEnd"
         >
-            <span class="tab-name">{{ getFileNameWithoutExtension(tab.file.name) }}</span>
-            <span v-if="tab.hasUnsavedChanges" class="tab-dot" title="Unsaved changes" />
-            <button class="tab-close" :title="`Close ${tab.file.name}`" @click.stop="emit('close', i)">
+            <span class="tab-name" aria-hidden="false">{{ getFileNameWithoutExtension(tab.file.name) }}</span>
+            <span v-if="tab.hasUnsavedChanges" class="tab-dot" aria-label="Unsaved changes" role="status" />
+            <button
+                class="tab-close"
+                :aria-label="`Close ${tab.file.name}`"
+                :title="`Close ${tab.file.name}`"
+                @click.stop="emit('close', i)"
+            >
                 <svg
                     width="10"
                     height="10"
@@ -100,6 +109,8 @@ function onDragEnd() {
                     stroke="currentColor"
                     stroke-width="1.8"
                     stroke-linecap="round"
+                    aria-hidden="true"
+                    focusable="false"
                 >
                     <line x1="2" y1="2" x2="8" y2="8" />
                     <line x1="8" y1="2" x2="2" y2="8" />
@@ -115,7 +126,7 @@ function onDragEnd() {
     align-items: stretch;
     height: 36px;
     background: $base1;
-    border-bottom: 1px solid color-mix(in srgb, var(--text3) 80%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, $text3 80%, transparent);
     overflow-x: auto;
     overflow-y: hidden;
     flex-shrink: 0;
@@ -130,18 +141,18 @@ function onDragEnd() {
     display: flex;
     align-items: center;
     background: $base1;
-    gap: 0.375em;
-    padding: 0 0.625em 0 0.875em;
+    gap: $space-2;
+    padding: 0 $space-3 0 $space-4;
     min-width: 80px;
     max-width: 180px;
-    border-right: 1px solid color-mix(in srgb, var(--text3) 60%, transparent);
+    border-right: 1px solid color-mix(in srgb, $text3 60%, transparent);
     cursor: pointer;
     user-select: none;
     flex-shrink: 0;
     position: relative;
-    transition: background 0.12s ease;
+    transition: background $transition-fast;
     color: $text2;
-    font-size: 0.8rem;
+    font-size: $font-size-sm;
 
     &:hover {
         background: $bg-hover;
@@ -167,7 +178,7 @@ function onDragEnd() {
     &.active {
         background: $bg-secondary;
         color: $text1;
-        font-weight: 500;
+        font-weight: $font-weight-medium;
 
         .tab-close {
             opacity: 1;
@@ -197,7 +208,7 @@ function onDragEnd() {
 .tab-dot {
     width: 6px;
     height: 6px;
-    border-radius: 50%;
+    border-radius: $border-radius-xl;
     background: $accent-color;
     flex-shrink: 0;
 }
@@ -209,14 +220,14 @@ function onDragEnd() {
     width: 16px;
     height: 16px;
     min-width: 16px;
-    border-radius: 0.1875em;
+    border-radius: $border-radius-xs;
     border: none;
     background: transparent;
     color: inherit;
     cursor: pointer;
     padding: 0;
     opacity: 0;
-    transition: all 0.12s ease;
+    transition: all $transition-fast;
     flex-shrink: 0;
 
     &:hover {
