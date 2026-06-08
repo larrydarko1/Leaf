@@ -24,8 +24,8 @@ export default {
       'max-width': ['px'],
       'min-height': ['px'],
       'max-height': ['px'],
-      'width': ['rem', '%', 'auto', 'vh', 'vw'],
-      'height': ['rem', '%', 'auto', 'vh', 'vw']
+      'width': ['rem', '%', 'vh', 'vw'],
+      'height': ['rem', '%', 'vh', 'vw']
     },
     'unit-disallowed-list': [
       'px',
@@ -59,8 +59,11 @@ export default {
       }
     ],
 
-    // === LINE HEIGHT ===
+    // === SCSS NESTED PROPERTIES ===
     'scss/declaration-nested-properties': 'never',
+
+    // === DESIGN TOKENS ===
+    'no-unknown-custom-properties': true,
 
     // === SCOPED STYLES ===
     'selector-max-specificity': ['0,2,0'],
