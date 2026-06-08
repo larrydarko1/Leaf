@@ -33,10 +33,12 @@
         "lint:fix": "eslint src/ --fix",
         "format": "prettier --write \"src/**/*.{ts,vue,scss,json}\"",
         "format:check": "prettier --check \"src/**/*.{ts,vue,scss,json}\"",
+        "stylelint": "stylelint \"src/**/*.{scss,vue}\"",
+        "stylelint:fix": "stylelint \"src/**/*.{scss,vue}\" --fix",
         "test": "vitest run",
         "test:watch": "vitest",
         "prepare": "husky",
-        "ci:check": "npm audit --audit-level=high --omit=dev && npm run lint && npm run format:check && npm test && npm run build"
+        "ci:check": "npm audit --audit-level=high --omit=dev && npm run lint && npm run format:check && npm run stylelint && npm test && npm run build"
     },
     "dependencies": {
         "@codemirror/autocomplete": "^6.20.1",
@@ -75,7 +77,11 @@
         "jsdom": "^26.1.0",
         "lint-staged": "^16.4.0",
         "prettier": "^3.8.1",
+        "postcss-html": "^1.8.1",
         "sass": "^1.98.0",
+        "stylelint": "^17.13.0",
+        "stylelint-config-standard-scss": "^17.0.0",
+        "stylelint-scss": "^7.2.0",
         "typescript": "~6.0.2",
         "typescript-eslint": "^8.58.1",
         "vite": "^7.0.0",
@@ -167,6 +173,9 @@
         "*.{ts,vue}": [
             "eslint --fix",
             "prettier --write"
+        ],
+        "*.{scss,vue}": [
+            "stylelint --fix"
         ],
         "*.{scss,json,md}": [
             "prettier --write"
