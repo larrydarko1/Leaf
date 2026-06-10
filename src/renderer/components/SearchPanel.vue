@@ -18,7 +18,6 @@ const emit = defineEmits<{
 const searchInput = ref<HTMLInputElement | null>(null);
 const searchQuery = ref('');
 
-// Fuzzy search implementation
 const searchResults = computed(() => {
     if (!searchQuery.value.trim()) {
         return [];
@@ -82,10 +81,7 @@ const { selectedIndex, resetIndex } = useListKeyboardNavigation<FileInfo>(
     },
 );
 
-// Reset keyboard selection when search results change
 watch(searchResults, resetIndex);
-
-// Focus the search input when mounted
 onMounted(() => {
     searchInput.value?.focus();
 });
@@ -117,7 +113,6 @@ function openSelectedResult() {
     }
 }
 
-// Highlight matching text
 function highlightMatch(text: string): string {
     if (!searchQuery.value.trim()) return text;
 
@@ -128,7 +123,9 @@ function highlightMatch(text: string): string {
 </script>
 
 <template>
-    <section class="search-panel" aria-label="File search panel">
+    <section
+        class="search-panel"
+        aria-label="File search panel">
         <header class="search-header">
             <div class="search-input-wrapper">
                 <svg
@@ -138,15 +135,13 @@ function highlightMatch(text: string): string {
                     viewBox="0 0 24 24"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true"
-                >
+                    aria-hidden="true">
                     <path
                         d="M21 21L16.65 16.65M19 11C19 15.4183 15.4183 19 11 19C6.58172 19 3 15.4183 3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11Z"
                         stroke="currentColor"
                         stroke-width="2"
                         stroke-linecap="round"
-                        stroke-linejoin="round"
-                    />
+                        stroke-linejoin="round" />
                 </svg>
                 <input
                     ref="searchInput"
@@ -157,66 +152,73 @@ function highlightMatch(text: string): string {
                     aria-label="Search files by name or path"
                     aria-describedby="search-results-count"
                     @keydown.escape="clearSearch"
-                    @keydown.enter="openSelectedResult"
-                />
+                    @keydown.enter="openSelectedResult" />
                 <button
                     v-if="searchQuery"
                     class="clear-button"
                     title="Clear search"
                     aria-label="Clear search query"
-                    @click="clearSearch"
-                >
+                    @click="clearSearch">
                     <svg
                         width="14"
                         height="14"
                         viewBox="0 0 24 24"
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
-                        aria-hidden="true"
-                    >
+                        aria-hidden="true">
                         <path
                             d="M18 6L6 18M6 6L18 18"
                             stroke="currentColor"
                             stroke-width="2"
                             stroke-linecap="round"
-                            stroke-linejoin="round"
-                        />
+                            stroke-linejoin="round" />
                     </svg>
                 </button>
             </div>
-            <div v-if="searchQuery" id="search-results-count" class="search-info" aria-live="polite" aria-atomic="true">
+            <div
+                v-if="searchQuery"
+                id="search-results-count"
+                class="search-info"
+                aria-live="polite"
+                aria-atomic="true">
                 {{ searchResults.length }} {{ searchResults.length === 1 ? 'result' : 'results' }}
             </div>
         </header>
 
         <main class="search-results">
-            <div v-if="!searchQuery" class="search-empty-state" role="status" aria-label="Search instructions">
+            <div
+                v-if="!searchQuery"
+                class="search-empty-state"
+                role="status"
+                aria-label="Search instructions">
                 <p>Type to search files by name</p>
             </div>
             <div
                 v-else-if="searchResults.length === 0"
                 class="search-empty-state"
                 role="status"
-                aria-label="No results"
-            >
+                aria-label="No results">
                 <p>No files found</p>
             </div>
-            <ul v-else class="search-results-list" role="listbox" aria-label="Search results">
+            <ul
+                v-else
+                class="search-results-list"
+                role="listbox"
+                aria-label="Search results">
                 <li
                     v-for="(file, index) in searchResults"
                     :key="file.path"
                     class="search-result-item"
                     :class="{
-                        active: activeFile?.path === file.path,
-                        selected: isFileSelected(file),
+                        'active': activeFile?.path === file.path,
+                        'selected': isFileSelected(file),
                         'keyboard-selected': selectedIndex === index,
                     }"
                     role="option"
                     :aria-selected="selectedIndex === index"
                     :aria-current="activeFile?.path === file.path ? 'true' : undefined"
                     @click="selectFile(file, $event)"
-                    @dblclick="openFile(file)"
-                >
+                    @dblclick="openFile(file)">
                     <div class="file-info">
                         <svg
                             class="file-icon"
@@ -225,25 +227,24 @@ function highlightMatch(text: string): string {
                             viewBox="0 0 24 24"
                             fill="none"
                             xmlns="http://www.w3.org/2000/svg"
-                            aria-hidden="true"
-                        >
+                            aria-hidden="true">
                             <path
                                 d="M13 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V9L13 2Z"
                                 stroke="currentColor"
                                 stroke-width="2"
                                 stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
+                                stroke-linejoin="round" />
                             <path
                                 d="M13 2V9H20"
                                 stroke="currentColor"
                                 stroke-width="2"
                                 stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
+                                stroke-linejoin="round" />
                         </svg>
                         <div class="file-details">
-                            <div class="file-name" v-html="highlightMatch(file.name)"></div>
+                            <div
+                                class="file-name"
+                                v-html="highlightMatch(file.name)"></div>
                             <div class="file-path">{{ file.folder === '.' ? '' : file.folder }}</div>
                         </div>
                     </div>
@@ -254,6 +255,8 @@ function highlightMatch(text: string): string {
 </template>
 
 <style scoped lang="scss">
+/* ––– Search Panel Container ––– */
+
 .search-panel {
     display: flex;
     flex-direction: column;
@@ -261,10 +264,14 @@ function highlightMatch(text: string): string {
     background: $bg-secondary;
 }
 
+/* ––– Search Header ––– */
+
 .search-header {
     padding: $space-3 $space-4;
     border-bottom: 1px solid $text3;
 }
+
+/* ––– Search Input Wrapper ––– */
 
 .search-input-wrapper {
     position: relative;
@@ -326,10 +333,11 @@ function highlightMatch(text: string): string {
     color: $text-muted;
 }
 
+/* ––– Search Results ––– */
+
 .search-results {
     flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden auto;
 }
 
 .search-empty-state {
@@ -345,6 +353,8 @@ function highlightMatch(text: string): string {
 .search-results-list {
     padding: $space-1;
 }
+
+/* ––– Result Items ––– */
 
 .search-result-item {
     padding: $space-2 $space-3;
@@ -416,7 +426,8 @@ function highlightMatch(text: string): string {
     text-overflow: ellipsis;
 }
 
-/* Scrollbar styling */
+/* ––– Scrollbar Styling ––– */
+
 .search-results::-webkit-scrollbar {
     width: 6px;
 }

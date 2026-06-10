@@ -14,10 +14,10 @@ const { isRecording, hasPermission, formattedDuration, toggle } = useAudioRecord
     <button
         class="btn-menu-icon"
         :class="{ recording: isRecording }"
-        :title="isRecording ? `Stop recording (${formattedDuration})` : 'Record audio'"
+        :aria-label="isRecording ? `Stop recording (${formattedDuration})` : 'Record audio'"
+        :aria-pressed="isRecording"
         :disabled="!hasPermission && !isRecording"
-        @click="toggle"
-    >
+        @click="toggle">
         <svg
             v-if="!isRecording"
             width="16"
@@ -25,20 +25,31 @@ const { isRecording, hasPermission, formattedDuration, toggle } = useAudioRecord
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-        >
+            aria-hidden="true">
             <!-- Microphone icon -->
             <path
                 d="M12 1C10.34 1 9 2.34 9 4V12C9 13.66 10.34 15 12 15C13.66 15 15 13.66 15 12V4C15 2.34 13.66 1 12 1Z"
-                fill="currentColor"
-            />
+                fill="currentColor" />
             <path
                 d="M17 12C17 14.76 14.76 17 12 17C9.24 17 7 14.76 7 12H5C5 15.53 7.61 18.43 11 18.93V22H13V18.93C16.39 18.43 19 15.53 19 12H17Z"
-                fill="currentColor"
-            />
+                fill="currentColor" />
         </svg>
-        <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg
+            v-else
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true">
             <!-- Stop icon (square) -->
-            <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" />
+            <rect
+                x="6"
+                y="6"
+                width="12"
+                height="12"
+                rx="2"
+                fill="currentColor" />
         </svg>
     </button>
 </template>
@@ -62,6 +73,7 @@ const { isRecording, hasPermission, formattedDuration, toggle } = useAudioRecord
     100% {
         opacity: 1;
     }
+
     50% {
         opacity: 0.6;
     }

@@ -12,8 +12,6 @@ import DrawingPropertiesPanel from './drawing/DrawingPropertiesPanel.vue';
 import DrawingFooter from './drawing/DrawingFooter.vue';
 import DrawingExportDialog from './drawing/DrawingExportDialog.vue';
 
-// Props and emits
-
 const props = defineProps<{
     filePath: string;
     initialContent?: string;
@@ -26,25 +24,16 @@ const emit = defineEmits<{
 
 type StyleKey = 'strokeColor' | 'fillColor' | 'strokeWidth' | 'strokeStyle' | 'borderRadius' | 'fontSize';
 
-// State
-
 const containerEl = ref<HTMLDivElement | null>(null);
 const canvas = ref<HTMLCanvasElement | null>(null);
 const textInputEl = ref<HTMLTextAreaElement | null>(null);
 const toolbarRef = ref<InstanceType<typeof DrawingToolbar> | null>(null);
-
-// View State
 const scrollX = ref(0);
 const scrollY = ref(0);
 const zoom = ref(1);
-
-// Tool State
 const currentTool = ref<ToolType>('select');
-
-// Marquee selection (shared between renderer and interaction)
 const marqueeRect = ref<{ x: number; y: number; width: number; height: number } | null>(null);
 
-// Element State
 const {
     elements,
     selectedId,
@@ -61,9 +50,8 @@ const {
     isShapeTool,
 } = useDrawingElements();
 
-// Style Defaults
 const defaultStyle = ref({
-    strokeColor: '#1e1e1e',
+    strokeColor: '#ffffff',
     fillColor: 'transparent',
     strokeWidth: 2,
     strokeStyle: 'solid' as StrokeStyle,
@@ -71,11 +59,8 @@ const defaultStyle = ref({
     fontSize: 20,
 });
 
-// History
 const history = ref<string[]>([]);
 const historyIndex = ref(-1);
-
-// Renderer
 
 const {
     setupCanvas,
@@ -103,8 +88,6 @@ const {
     getHandlePositions,
 );
 
-// Persistence
-
 const {
     hasUnsavedChanges,
     isSaving,
@@ -127,8 +110,6 @@ const {
     (hasChanges) => emit('contentChanged', hasChanges),
 );
 
-// History
-
 const { saveToHistory, undo, redo, clearAll, copySelected, pasteClipboard, duplicateSelected, deleteSelected } =
     useDrawingHistory(
         elements,
@@ -142,8 +123,6 @@ const { saveToHistory, undo, redo, clearAll, copySelected, pasteClipboard, dupli
         scheduleAutoSave,
         renderScene,
     );
-
-// Text editing
 
 const {
     textEditing,
@@ -174,8 +153,6 @@ const {
     saveToHistory,
     scheduleAutoSave,
 );
-
-// Interaction
 
 const {
     isDragging,
@@ -229,8 +206,6 @@ const {
     deleteSelected,
 );
 
-// Computed
-
 const zoomPercent = computed(() => Math.round(zoom.value * 100));
 
 const shouldShowProperties = computed(() => {
@@ -281,8 +256,6 @@ const canvasCursor = computed(() => {
 const showExportDialog = ref(false);
 const hasSelection = computed(() => selectedIds.value.size > 0);
 
-// Lifecycle
-
 onMounted(() => {
     setupCanvas();
     loadDrawing();
@@ -300,8 +273,6 @@ onUnmounted(() => {
 watch(() => props.filePath, loadDrawing);
 watch(() => props.initialContent, loadDrawing);
 
-// Tool selection
-
 function selectTool(tool: ToolType) {
     currentTool.value = tool;
     if (tool !== 'select') selectedIds.value = new Set();
@@ -311,8 +282,6 @@ function selectTool(tool: ToolType) {
 function handleClickOutside(e: MouseEvent) {
     toolbarRef.value?.handleClickOutside(e);
 }
-
-// Properties
 
 function setProperty(prop: StyleKey, value: string | number) {
     // Update all selected elements
@@ -349,8 +318,6 @@ function setProperty(prop: StyleKey, value: string | number) {
     }
 }
 
-// Export dialog
-
 function openExportDialog() {
     showExportDialog.value = true;
 }
@@ -363,14 +330,23 @@ function closeExportDialog() {
 <template>
     <div
         ref="containerEl"
-        class="excalidraw-container"
+        class="canvas-container"
+        role="application"
+        aria-label="Drawing canvas application"
+        aria-describedby="canvas-instructions"
         tabindex="0"
         @keydown="handleKeydown"
         @keyup="handleKeyup"
-        @contextmenu.prevent
-    >
-        <DrawingToolbar ref="toolbarRef" :current-tool="currentTool" @select-tool="selectTool" />
+        @contextmenu.prevent>
+        <!-- Toolbar -->
+        <DrawingToolbar
+            ref="toolbarRef"
+            :current-tool="currentTool"
+            role="toolbar"
+            aria-label="Drawing tools"
+            @select-tool="selectTool" />
 
+        <!-- Properties Panel -->
         <DrawingPropertiesPanel
             :visible="shouldShowProperties"
             :active-stroke-color="activeStrokeColor"
@@ -383,23 +359,27 @@ function closeExportDialog() {
             :show-font-size-option="showFontSizeOption"
             :show-roundness-option="showRoundnessOption"
             :has-selection="hasSelection"
+            role="complementary"
+            aria-label="Drawing properties and settings"
+            aria-hidden="false"
             @set-property="setProperty"
             @copy="copySelected"
             @duplicate="duplicateSelected"
-            @delete="deleteSelected"
-        />
+            @delete="deleteSelected" />
 
         <!-- Canvas -->
         <canvas
             ref="canvas"
             :style="{ cursor: canvasCursor }"
+            aria-label="Drawing canvas"
+            role="img"
+            :aria-describedby="hasSelection ? 'selection-status' : undefined"
             @pointerdown="onPointerDown"
             @pointermove="onPointerMove"
             @pointerup="onPointerUp"
             @pointerleave="onPointerUp"
             @dblclick="onDoubleClick"
-            @wheel.prevent="onWheel"
-        />
+            @wheel.prevent="onWheel" />
 
         <!-- Text Editing Overlay -->
         <textarea
@@ -408,12 +388,13 @@ function closeExportDialog() {
             v-model="textValue"
             class="text-edit-overlay"
             :style="textOverlayStyle"
+            aria-label="Text editing area. Press Enter to confirm, Escape to cancel."
             @blur="finalizeText"
             @keydown.escape.prevent="cancelText"
             @keydown.enter.exact="onTextEnter"
-            @pointerdown.stop
-        />
+            @pointerdown.stop />
 
+        <!-- Footer -->
         <DrawingFooter
             :zoom="zoom"
             :zoom-percent="zoomPercent"
@@ -421,13 +402,15 @@ function closeExportDialog() {
             :history-length="history.length"
             :is-saving="isSaving"
             :has-unsaved-changes="hasUnsavedChanges"
+            role="contentinfo"
+            aria-label="Drawing canvas information and controls"
             @zoom-to-center="zoomToCenter"
             @undo="undo"
             @redo="redo"
             @clear-all="clearAll"
-            @open-export-dialog="openExportDialog"
-        />
+            @open-export-dialog="openExportDialog" />
 
+        <!-- Export Dialog -->
         <DrawingExportDialog
             :visible="showExportDialog"
             :has-selection="hasSelection"
@@ -435,13 +418,16 @@ function closeExportDialog() {
             :elements="elements"
             :selected-ids="selectedIds"
             :export-to-blob="exportToBlob"
-            @close="closeExportDialog"
-        />
+            role="dialog"
+            :aria-label="`Export drawing${hasSelection ? ' (selection)' : ''}`"
+            aria-modal="true"
+            @close="closeExportDialog" />
     </div>
 </template>
 
 <style scoped lang="scss">
-.excalidraw-container {
+/* ––– Main Container ––– */
+.canvas-container {
     position: relative;
     width: 100%;
     height: 100%;
@@ -450,29 +436,28 @@ function closeExportDialog() {
     background: $bg-primary;
 }
 
+/* ––– Canvas ––– */
 canvas {
     display: block;
     width: 100%;
     height: 100%;
 }
 
-// ─── Text Overlay ────────────────────────────────────────────────────────────
-
+/* ––– Text Editing Overlay ––– */
 .text-edit-overlay {
     position: absolute;
-    z-index: 30;
-    border: 2px solid $accent-color;
-    border-radius: $border-radius-sm;
+    z-index: $z-dropdown;
+    border: none;
     background: color-mix(in srgb, $bg-primary 85%, transparent);
     outline: none;
     resize: none;
     min-width: 60px;
-    min-height: 1.4em;
+    min-height: 22.5px;
     font-family: $font-family;
     padding: $space-1 $space-2;
     overflow: hidden;
     white-space: pre-wrap;
-    word-break: break-word;
+    overflow-wrap: break-word;
     box-sizing: border-box;
 }
 </style>

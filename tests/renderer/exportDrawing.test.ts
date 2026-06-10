@@ -3,6 +3,28 @@ import { ref, computed } from 'vue';
 import type { CanvasElement } from '../../src/renderer/types/drawing';
 import { useCanvasRenderer } from '../../src/renderer/composables/drawing/useCanvasRenderer';
 
+// ─── Setup CSS Variables ───────────────────────────────────────────────────
+
+beforeEach(() => {
+    // Set up CSS custom properties for tests
+    const style = document.createElement('style');
+    style.textContent = `
+        :root {
+            --base1: #ffffff;
+            --base2: #f5f5f5;
+            --base3: #efefef;
+            --grid-color: #e0e0e0;
+        }
+    `;
+    document.head.appendChild(style);
+});
+
+afterEach(() => {
+    // Clean up style tag
+    const styles = document.head.querySelectorAll('style');
+    styles.forEach((s) => s.remove());
+});
+
 // ─── Helpers ───────────────────────────────────────────────────────────
 
 // Capture original createElement before any mocking happens
@@ -14,7 +36,7 @@ function makeElement(overrides: Partial<CanvasElement> & { id: string; type: Can
         y: 0,
         width: 100,
         height: 100,
-        strokeColor: '#000000',
+        strokeColor: '#ffffff',
         fillColor: 'transparent',
         strokeWidth: 2,
         strokeStyle: 'solid',
@@ -158,7 +180,6 @@ describe('exportToBlob', () => {
                 elements: [],
                 withBackground: true,
                 scale: 1,
-                darkMode: false,
             });
             expect(blob).toBeNull();
         });
@@ -225,7 +246,6 @@ describe('exportToBlob', () => {
                 elements: [el],
                 withBackground: true,
                 scale: 1,
-                darkMode: false,
                 padding: 20,
             });
 
@@ -295,7 +315,6 @@ describe('exportToBlob', () => {
                 elements: [el],
                 withBackground: true,
                 scale: 2,
-                darkMode: false,
                 padding: 20,
             });
 
@@ -364,7 +383,6 @@ describe('exportToBlob', () => {
                 elements: [el],
                 withBackground: false,
                 scale: 3,
-                darkMode: false,
                 padding: 20,
             });
 
@@ -442,7 +460,6 @@ describe('exportToBlob', () => {
                 elements: [el],
                 withBackground: true,
                 scale: 1,
-                darkMode: false,
             });
 
             // First fillStyle set should be the background color
@@ -517,10 +534,9 @@ describe('exportToBlob', () => {
                 elements: [el],
                 withBackground: true,
                 scale: 1,
-                darkMode: true,
             });
 
-            expect(fillStyleLog[0]).toBe('#1e1e1e');
+            expect(fillStyleLog[0]).toBe('#ffffff');
 
             vi.restoreAllMocks();
         });
@@ -588,7 +604,6 @@ describe('exportToBlob', () => {
                 elements: [el],
                 withBackground: false,
                 scale: 1,
-                darkMode: false,
             });
 
             expect(bgFillRectCalled).toBe(false);
@@ -657,7 +672,6 @@ describe('exportToBlob', () => {
                 elements: [el1, el2],
                 withBackground: true,
                 scale: 1,
-                darkMode: false,
                 padding: 20,
             });
 
@@ -728,7 +742,6 @@ describe('exportToBlob', () => {
                 elements: [el],
                 withBackground: true,
                 scale: 1,
-                darkMode: false,
                 padding: 50,
             });
 
@@ -797,7 +810,6 @@ describe('exportToBlob', () => {
                 elements: [el],
                 withBackground: true,
                 scale: 1,
-                darkMode: false,
                 // no padding → defaults to 20
             });
 
@@ -866,7 +878,6 @@ describe('exportToBlob', () => {
                 elements: [el],
                 withBackground: true,
                 scale: 1,
-                darkMode: false,
             });
 
             expect(blob).toBeInstanceOf(Blob);
@@ -948,7 +959,6 @@ describe('exportToBlob', () => {
                 elements: [el],
                 withBackground: true,
                 scale: 1,
-                darkMode: false,
                 padding: 20,
             });
 
@@ -1020,7 +1030,6 @@ describe('exportToBlob', () => {
                 elements: [el],
                 withBackground: true,
                 scale: 1,
-                darkMode: false,
                 padding: 20,
             });
 

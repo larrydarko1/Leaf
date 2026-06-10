@@ -28,12 +28,9 @@ const emit = defineEmits<{
     (e: 'close'): void;
 }>();
 
-// Dropdown state managed locally — the DOM element lives here
 const dropdownRef = ref<HTMLElement | null>(null);
 const showDropdown = ref(false);
 const dropdownPosition = ref<Record<string, string>>({});
-
-// System prompt picker state
 const { prompts, activeId, refresh: refreshPrompts, setActive } = useSystemPrompt();
 const promptDropdownRef = ref<HTMLElement | null>(null);
 const showPromptDropdown = ref(false);
@@ -114,11 +111,25 @@ function truncate(str: string, len: number): string {
 </script>
 
 <template>
-    <div class="ai-model-bar">
+    <div
+        class="ai-model-bar"
+        role="toolbar"
+        aria-label="AI model controls">
+        <!-- Model selection and status pill -->
         <div class="ai-model-pill">
-            <div v-if="!status.isModelLoaded" class="ai-model-selector">
-                <div ref="dropdownRef" class="ai-dropdown">
-                    <button class="ai-dropdown-trigger" :disabled="isLoading" @click="toggleDropdown()">
+            <!-- Model selector (when not loaded) -->
+            <div
+                v-if="!status.isModelLoaded"
+                class="ai-model-selector">
+                <div
+                    ref="dropdownRef"
+                    class="ai-dropdown">
+                    <button
+                        class="ai-dropdown-trigger"
+                        :disabled="isLoading"
+                        aria-haspopup="listbox"
+                        :aria-expanded="showDropdown"
+                        @click="toggleDropdown()">
                         <span class="ai-dropdown-label">{{ selectedModelLabel }}</span>
                         <svg
                             class="ai-dropdown-chevron"
@@ -131,39 +142,57 @@ function truncate(str: string, len: number): string {
                             stroke-width="2.5"
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                        >
+                            aria-hidden="true">
                             <polyline points="6 9 12 15 18 9" />
                         </svg>
                     </button>
                     <Teleport to="body">
-                        <div v-if="showDropdown" class="ai-dropdown-menu" :style="dropdownPosition">
-                            <div v-if="availableModels.length === 0" class="ai-dropdown-empty">No models found</div>
+                        <div
+                            v-if="showDropdown"
+                            class="ai-dropdown-menu"
+                            role="listbox"
+                            :style="dropdownPosition">
+                            <div
+                                v-if="availableModels.length === 0"
+                                class="ai-dropdown-empty">
+                                No models found
+                            </div>
                             <div
                                 v-for="m in availableModels"
                                 :key="m.path"
                                 class="ai-dropdown-item"
                                 :class="{ selected: selectedModelPath === m.path }"
-                                @click="handleSelectModel(m)"
-                            >
+                                role="option"
+                                :aria-selected="selectedModelPath === m.path"
+                                @click="handleSelectModel(m)">
                                 <span class="ai-dropdown-item-name">{{ truncate(m.name, 30) }}</span>
                                 <span class="ai-dropdown-item-size">{{ m.sizeFormatted }}</span>
                             </div>
                         </div>
                     </Teleport>
                 </div>
-                <button class="ai-btn-small" :disabled="!selectedModelPath || isLoading" @click="$emit('load-model')">
+                <button
+                    class="ai-btn-small"
+                    :disabled="!selectedModelPath || isLoading"
+                    @click="$emit('load-model')">
                     {{ isLoading ? '...' : 'Load' }}
                 </button>
             </div>
-            <div v-else class="ai-model-status">
-                <span class="ai-model-indicator"></span>
+
+            <!-- Model status (when loaded) -->
+            <div
+                v-else
+                class="ai-model-status">
+                <span
+                    class="ai-model-indicator"
+                    aria-hidden="true"></span>
                 <span class="ai-model-name">{{ status.currentModelName }}</span>
                 <button
                     class="ai-btn-icon ai-btn-danger"
                     title="Unload model"
+                    aria-label="Unload current model"
                     :disabled="status.isGenerating"
-                    @click="$emit('unload-model')"
-                >
+                    @click="$emit('unload-model')">
                     <svg
                         width="10"
                         height="10"
@@ -173,29 +202,50 @@ function truncate(str: string, len: number): string {
                         stroke-width="2.5"
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                    >
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                        aria-hidden="true">
+                        <rect
+                            x="3"
+                            y="3"
+                            width="18"
+                            height="18"
+                            rx="2"
+                            ry="2" />
                     </svg>
                 </button>
             </div>
         </div>
+
+        <!-- Action buttons -->
         <div class="ai-bar-actions">
-            <button class="ai-btn-icon" title="Open Leaf folder" @click="$emit('open-models-folder')">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+            <!-- Open models folder -->
+            <button
+                class="ai-btn-icon"
+                title="Open Leaf folder"
+                aria-label="Open Leaf models folder"
+                @click="$emit('open-models-folder')">
+                <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true">
                     <path
-                        d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.12.28.256.554.53L11 4c.816.816 1.224 1.224 1.712 1.495.274.15.56.263.86.348.536.153 1.113.153 2.268.153h.374c2.632 0 3.949 0 4.804.77.079.07.154.145.224.224C22 7.85 22 9.166 22 11.798V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14V6.95z"
-                    />
+                        d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.12.28.256.554.53L11 4c.816.816 1.224 1.224 1.712 1.495.274.15.56.263.86.348.536.153 1.113.153 2.268.153h.374c2.632 0 3.949 0 4.804.77.079.07.154.145.224.224C22 7.85 22 9.166 22 11.798V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14V6.95z" />
                 </svg>
             </button>
 
             <!-- System prompt picker -->
-            <div ref="promptDropdownRef" class="ai-prompt-picker">
+            <div
+                ref="promptDropdownRef"
+                class="ai-prompt-picker">
                 <button
                     class="ai-btn-icon"
                     :class="{ 'ai-btn-active': showPromptDropdown }"
                     :title="`System prompt: ${activePromptName}`"
-                    @click="togglePromptDropdown()"
-                >
+                    :aria-label="`System prompt: ${activePromptName}`"
+                    aria-haspopup="listbox"
+                    :aria-expanded="showPromptDropdown"
+                    @click="togglePromptDropdown()">
                     <svg
                         width="11"
                         height="11"
@@ -205,7 +255,7 @@ function truncate(str: string, len: number): string {
                         stroke-width="2.5"
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                    >
+                        aria-hidden="true">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                     </svg>
                 </button>
@@ -213,31 +263,43 @@ function truncate(str: string, len: number): string {
                     <div
                         v-if="showPromptDropdown"
                         class="ai-dropdown-menu ai-prompt-menu"
-                        :style="promptDropdownPosition"
-                    >
+                        role="listbox"
+                        :style="promptDropdownPosition">
                         <div class="ai-prompt-menu-header">System prompt</div>
-                        <div v-if="prompts.length === 0" class="ai-dropdown-empty">No prompts found</div>
+                        <div
+                            v-if="prompts.length === 0"
+                            class="ai-dropdown-empty">
+                            No prompts found
+                        </div>
                         <div
                             v-for="p in prompts"
                             :key="p.id"
                             class="ai-dropdown-item ai-prompt-item"
                             :class="{ selected: p.id === activeId }"
-                            @click="handleSelectPrompt(p.id)"
-                        >
+                            role="option"
+                            :aria-selected="p.id === activeId"
+                            @click="handleSelectPrompt(p.id)">
                             <div class="ai-prompt-item-main">
                                 <span class="ai-prompt-item-name">{{ p.name }}</span>
-                                <span v-if="p.description" class="ai-prompt-item-desc">{{ p.description }}</span>
+                                <span
+                                    v-if="p.description"
+                                    class="ai-prompt-item-desc">
+                                    {{ p.description }}
+                                </span>
                             </div>
                         </div>
                     </div>
                 </Teleport>
             </div>
+
+            <!-- Download from Hugging Face -->
             <button
                 class="ai-btn-icon"
                 :class="{ 'ai-btn-active': showHfPanel }"
                 title="Download models from Hugging Face"
-                @click="$emit('toggle-hf-panel')"
-            >
+                aria-label="Download models from Hugging Face"
+                :aria-pressed="showHfPanel"
+                @click="$emit('toggle-hf-panel')">
                 <svg
                     width="11"
                     height="11"
@@ -247,13 +309,23 @@ function truncate(str: string, len: number): string {
                     stroke-width="2.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                >
+                    aria-hidden="true">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                     <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
+                    <line
+                        x1="12"
+                        y1="15"
+                        x2="12"
+                        y2="3" />
                 </svg>
             </button>
-            <button class="ai-btn-icon" title="Refresh .leaf folder" @click="handleRefresh()">
+
+            <!-- Refresh models folder -->
+            <button
+                class="ai-btn-icon"
+                title="Refresh .leaf folder"
+                aria-label="Refresh models folder"
+                @click="handleRefresh()">
                 <svg
                     width="11"
                     height="11"
@@ -263,17 +335,20 @@ function truncate(str: string, len: number): string {
                     stroke-width="2.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                >
+                    aria-hidden="true">
                     <polyline points="23 4 23 10 17 10" />
                     <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
                 </svg>
             </button>
+
+            <!-- Conversation history -->
             <button
                 class="ai-btn-icon"
                 :class="{ 'ai-btn-active': showHistory }"
                 title="Conversation history"
-                @click="$emit('toggle-history')"
-            >
+                aria-label="Toggle conversation history"
+                :aria-pressed="showHistory"
+                @click="$emit('toggle-history')">
                 <svg
                     width="11"
                     height="11"
@@ -283,18 +358,24 @@ function truncate(str: string, len: number): string {
                     stroke-width="2.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                >
-                    <circle cx="12" cy="12" r="10" />
+                    aria-hidden="true">
+                    <circle
+                        cx="12"
+                        cy="12"
+                        r="10" />
                     <polyline points="12 6 12 12 16 14" />
                 </svg>
             </button>
+
+            <!-- Agent mode toggle -->
             <button
                 v-if="status.isModelLoaded"
                 class="ai-btn-icon"
                 :class="{ 'ai-btn-active': agentMode }"
                 title="Agent mode — AI can read and edit files"
-                @click="$emit('toggle-agent-mode')"
-            >
+                aria-label="Toggle agent mode (AI can read and edit files)"
+                :aria-pressed="agentMode"
+                @click="$emit('toggle-agent-mode')">
                 <svg
                     width="11"
                     height="11"
@@ -304,13 +385,19 @@ function truncate(str: string, len: number): string {
                     stroke-width="2.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                >
+                    aria-hidden="true">
                     <path d="M12 2L2 7l10 5 10-5-10-5z" />
                     <path d="M2 17l10 5 10-5" />
                     <path d="M2 12l10 5 10-5" />
                 </svg>
             </button>
-            <button class="ai-btn-icon" title="New conversation" @click="$emit('new-conversation')">
+
+            <!-- New conversation -->
+            <button
+                class="ai-btn-icon"
+                title="New conversation"
+                aria-label="Start new conversation"
+                @click="$emit('new-conversation')">
                 <svg
                     width="11"
                     height="11"
@@ -320,12 +407,26 @@ function truncate(str: string, len: number): string {
                     stroke-width="2.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                >
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <line x1="5" y1="12" x2="19" y2="12" />
+                    aria-hidden="true">
+                    <line
+                        x1="12"
+                        y1="5"
+                        x2="12"
+                        y2="19" />
+                    <line
+                        x1="5"
+                        y1="12"
+                        x2="19"
+                        y2="12" />
                 </svg>
             </button>
-            <button class="ai-btn-icon" title="Close" @click="$emit('close')">
+
+            <!-- Close -->
+            <button
+                class="ai-btn-icon"
+                title="Close"
+                aria-label="Close AI model bar"
+                @click="$emit('close')">
                 <svg
                     width="11"
                     height="11"
@@ -335,9 +436,17 @@ function truncate(str: string, len: number): string {
                     stroke-width="2.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                >
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
+                    aria-hidden="true">
+                    <line
+                        x1="18"
+                        y1="6"
+                        x2="6"
+                        y2="18" />
+                    <line
+                        x1="6"
+                        y1="6"
+                        x2="18"
+                        y2="18" />
                 </svg>
             </button>
         </div>
@@ -345,21 +454,25 @@ function truncate(str: string, len: number): string {
 </template>
 
 <style lang="scss" scoped>
+/* ––– Root Container ––– */
+
 .ai-model-bar {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
+    gap: $space-2;
+    padding: $space-2 $space-3;
     flex-shrink: 0;
 }
+
+/* ––– Model Pill (Selector + Status) ––– */
 
 .ai-model-pill {
     flex: 1;
     min-width: 0;
     background: $bg-primary;
     border: 1px solid $text3;
-    border-radius: 10px;
-    padding: 0.2rem 0.35rem;
+    border-radius: $border-radius-lg;
+    padding: $space-1 $space-2;
     display: flex;
     align-items: center;
 }
@@ -367,7 +480,7 @@ function truncate(str: string, len: number): string {
 .ai-model-selector {
     display: flex;
     align-items: center;
-    gap: 0.375rem;
+    gap: $space-2;
     flex: 1;
     min-width: 0;
 }
@@ -381,21 +494,22 @@ function truncate(str: string, len: number): string {
 .ai-dropdown-trigger {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: $space-2;
     width: 100%;
-    padding: 0.25rem 0.4rem;
+    padding: $space-1 $space-2;
     background: transparent;
     color: $text1;
     border: none;
-    font-size: 0.75rem;
+    font-size: $font-size-xs;
     cursor: pointer;
     text-align: left;
-    border-radius: 6px;
-    transition: background 0.15s;
+    border-radius: $border-radius;
+    transition: background $transition-fast;
 
     &:hover:not(:disabled) {
         background: $bg-hover;
     }
+
     &:disabled {
         opacity: 0.5;
         cursor: not-allowed;
@@ -414,7 +528,8 @@ function truncate(str: string, len: number): string {
 .ai-dropdown-chevron {
     flex-shrink: 0;
     color: $text2;
-    transition: transform 0.2s;
+    transition: transform $transition-base;
+
     &.open {
         transform: rotate(180deg);
     }
@@ -424,24 +539,22 @@ function truncate(str: string, len: number): string {
     position: fixed;
     background: var(--bg-secondary, $bg-primary);
     border: 1px solid $text3;
-    border-radius: 8px;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-    padding: 0.3rem;
-    z-index: 10000;
+    border-radius: $border-radius-lg;
+    box-shadow: 0 6px 20px rgb(0 0 0 / 20%);
+    padding: $space-2;
+    z-index: $z-extreme;
     backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     max-height: 200px;
     max-width: calc(100vw - 24px);
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden auto;
     display: flex;
     flex-direction: column;
-    gap: 0.15em;
+    gap: $space-0;
 }
 
 .ai-dropdown-empty {
-    padding: 0.5rem 0.65rem;
-    font-size: 0.75rem;
+    padding: $space-2 $space-3;
+    font-size: $font-size-xs;
     color: $text2;
     text-align: center;
 }
@@ -450,17 +563,18 @@ function truncate(str: string, len: number): string {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: 0.5rem;
-    padding: 0.45rem 0.6rem;
-    border-radius: 5px;
+    gap: $space-2;
+    padding: $space-2 $space-3;
+    border-radius: $border-radius;
     cursor: pointer;
-    font-size: 0.75rem;
+    font-size: $font-size-xs;
     color: $text1;
-    transition: background 0.12s;
+    transition: background $transition-fast;
 
     &:hover {
         background: $bg-hover;
     }
+
     &.selected {
         background: $bg-hover;
         color: $accent-color;
@@ -470,13 +584,13 @@ function truncate(str: string, len: number): string {
 .ai-dropdown-item-name {
     flex: 1;
     min-width: 0;
-    word-break: break-word;
-    line-height: 1.35;
+    overflow-wrap: break-word;
+    line-height: $line-height;
 }
 
 .ai-dropdown-item-size {
     flex-shrink: 0;
-    font-size: 0.68rem;
+    font-size: $font-size-xs;
     color: $text2;
     opacity: 0.7;
 }
@@ -484,38 +598,40 @@ function truncate(str: string, len: number): string {
 .ai-model-status {
     display: flex;
     align-items: center;
-    gap: 0.375rem;
+    gap: $space-2;
     flex: 1;
     min-width: 0;
-    padding: 0 0.2rem;
+    padding: 0 $space-1;
 }
 
 .ai-model-indicator {
     width: 7px;
     height: 7px;
     background: $accent-color;
-    border-radius: 50%;
+    border-radius: $border-radius-round;
     flex-shrink: 0;
     box-shadow: 0 0 4px $accent-color;
 }
 
 .ai-model-name {
-    font-size: 0.75rem;
+    font-size: $font-size-xs;
     color: $text2;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
+/* ––– Action Buttons Container ––– */
+
 .ai-bar-actions {
     display: flex;
     align-items: center;
-    gap: 0.125rem;
+    gap: $space-0;
     flex-shrink: 0;
     background: $bg-primary;
     border: 1px solid $text3;
-    border-radius: 10px;
-    padding: 0.15rem 0.2rem;
+    border-radius: $border-radius-xl;
+    padding: $space-0 $space-1;
 }
 
 .ai-btn-icon {
@@ -523,18 +639,19 @@ function truncate(str: string, len: number): string {
     border: none;
     color: $text2;
     cursor: pointer;
-    padding: 0.3rem;
-    border-radius: 4px;
+    padding: $space-2;
+    border-radius: $border-radius;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
+    transition: all $transition-base;
     flex-shrink: 0;
 
     &:hover:not(:disabled) {
         background: $bg-hover;
         color: $text1;
     }
+
     &:disabled {
         opacity: 0.3;
         cursor: not-allowed;
@@ -548,34 +665,37 @@ function truncate(str: string, len: number): string {
 }
 
 .ai-btn-active {
-    color: $accent-color !important;
+    color: $accent-color;
     background: $bg-hover;
 }
 
 .ai-btn-small {
-    padding: 0.25rem 0.55rem;
+    padding: $space-1 $space-2;
     background: $accent-color;
     color: $base1;
     border: none;
-    border-radius: 7px;
-    font-size: 0.72rem;
-    font-weight: 500;
+    border-radius: $border-radius-lg;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
     cursor: pointer;
     white-space: nowrap;
     flex-shrink: 0;
     transition:
-        opacity 0.2s,
-        transform 0.15s;
+        opacity $transition-base,
+        transform $transition-fast;
 
     &:hover:not(:disabled) {
         opacity: 0.85;
         transform: scale(1.03);
     }
+
     &:disabled {
         opacity: 0.4;
         cursor: not-allowed;
     }
 }
+
+/* ––– System Prompt Picker ––– */
 
 .ai-prompt-picker {
     position: relative;
@@ -584,14 +704,14 @@ function truncate(str: string, len: number): string {
 }
 
 .ai-prompt-menu {
-    padding: 0.4rem;
+    padding: $space-2;
     min-height: 250px;
 }
 
 .ai-prompt-menu-header {
-    padding: 0.25rem 0.5rem 0.4rem;
-    font-size: 0.68rem;
-    font-weight: 600;
+    padding: $space-1 $space-2 $space-1;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: $text2;
@@ -599,25 +719,25 @@ function truncate(str: string, len: number): string {
 
 .ai-prompt-item {
     align-items: flex-start;
-    margin-bottom: 0.25em;
+    margin-bottom: $space-1;
 }
 
 .ai-prompt-item-main {
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
+    gap: $space-0;
     min-width: 0;
     flex: 1;
 }
 
 .ai-prompt-item-name {
-    font-size: 0.78rem;
-    line-height: 1.2;
+    font-size: $font-size-xs;
+    line-height: $line-height;
 }
 
 .ai-prompt-item-desc {
-    font-size: 0.68rem;
+    font-size: $font-size-xs;
     color: $text2;
-    line-height: 1.3;
+    line-height: $line-height;
 }
 </style>

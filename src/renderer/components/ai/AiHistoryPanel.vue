@@ -47,79 +47,127 @@ function formatRelativeDate(dateStr: string): string {
 </script>
 
 <template>
-    <div class="ai-history-panel">
-        <div class="ai-history-header">
-            <span class="ai-history-title">History</span>
-        </div>
-        <div class="ai-history-list">
-            <div v-if="conversationList.length === 0" class="ai-history-empty">No conversations yet</div>
+    <nav
+        class="ai-history-panel"
+        aria-label="Conversation history">
+        <!-- Header -->
+        <header class="ai-history-header">
+            <h2 class="ai-history-title">History</h2>
+        </header>
+
+        <!-- Conversation list -->
+        <section
+            class="ai-history-list"
+            aria-live="polite"
+            aria-label="Saved conversations">
             <div
-                v-for="conv in conversationList"
-                :key="conv.id"
-                class="ai-history-item"
-                :class="{ active: currentConversationId === conv.id }"
-                @click="$emit('load', conv.id)"
-            >
-                <div class="ai-history-item-content">
-                    <span v-if="renamingConversationId === conv.id" class="ai-history-item-title">
-                        <input
-                            ref="renameInputRef"
-                            :value="renameValue"
-                            class="ai-history-rename-input"
-                            @input="$emit('update:renameValue', ($event.target as HTMLInputElement).value)"
-                            @keydown.enter.prevent="$emit('confirm-rename', conv.id)"
-                            @keydown.escape.prevent="$emit('cancel-rename')"
-                            @blur="$emit('confirm-rename', conv.id)"
-                            @click.stop
-                        />
-                    </span>
-                    <span v-else class="ai-history-item-title">{{ conv.title }}</span>
-                    <span class="ai-history-item-meta">
-                        {{ conv.messageCount }} msgs · {{ formatRelativeDate(conv.updatedAt) }}
-                    </span>
-                </div>
-                <div class="ai-history-item-actions" @click.stop>
-                    <button class="ai-btn-icon ai-btn-tiny" title="Rename" @click="$emit('start-rename', conv)">
-                        <svg
-                            width="9"
-                            height="9"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2.5"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                        </svg>
-                    </button>
-                    <button
-                        class="ai-btn-icon ai-btn-tiny ai-btn-danger"
-                        title="Delete"
-                        @click="$emit('delete', conv.id)"
-                    >
-                        <svg
-                            width="9"
-                            height="9"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2.5"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <polyline points="3 6 5 6 21 6" />
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                        </svg>
-                    </button>
-                </div>
+                v-if="conversationList.length === 0"
+                class="ai-history-empty"
+                role="status">
+                No conversations yet
             </div>
-        </div>
-    </div>
+
+            <ul
+                v-else
+                class="ai-history-items"
+                role="list">
+                <li
+                    v-for="conv in conversationList"
+                    :key="conv.id"
+                    class="ai-history-item"
+                    :class="{ active: currentConversationId === conv.id }"
+                    role="listitem">
+                    <button
+                        class="ai-history-item-button"
+                        :aria-current="currentConversationId === conv.id ? 'page' : false"
+                        :aria-label="`Open conversation: ${conv.title}`"
+                        @click="$emit('load', conv.id)">
+                        <!-- Item content area -->
+                        <div class="ai-history-item-content">
+                            <span
+                                v-if="renamingConversationId === conv.id"
+                                class="ai-history-item-title">
+                                <input
+                                    ref="renameInputRef"
+                                    :value="renameValue"
+                                    type="text"
+                                    class="ai-history-rename-input"
+                                    aria-label="Rename conversation"
+                                    @input="$emit('update:renameValue', ($event.target as HTMLInputElement).value)"
+                                    @keydown.enter.prevent="$emit('confirm-rename', conv.id)"
+                                    @keydown.escape.prevent="$emit('cancel-rename')"
+                                    @blur="$emit('confirm-rename', conv.id)"
+                                    @click.stop />
+                            </span>
+                            <span
+                                v-else
+                                class="ai-history-item-title"
+                                >{{ conv.title }}</span
+                            >
+                            <span
+                                class="ai-history-item-meta"
+                                aria-label="Conversation metadata">
+                                {{ conv.messageCount }} msgs · {{ formatRelativeDate(conv.updatedAt) }}
+                            </span>
+                        </div>
+                    </button>
+
+                    <!-- Item actions -->
+                    <div
+                        class="ai-history-item-actions"
+                        role="group"
+                        aria-label="Conversation actions">
+                        <button
+                            class="ai-btn-icon ai-btn-tiny"
+                            type="button"
+                            title="Rename conversation"
+                            aria-label="Rename this conversation"
+                            @click.stop="$emit('start-rename', conv)">
+                            <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                aria-hidden="true">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                        </button>
+                        <button
+                            class="ai-btn-icon ai-btn-tiny ai-btn-danger"
+                            type="button"
+                            title="Delete conversation"
+                            aria-label="Delete this conversation"
+                            @click.stop="$emit('delete', conv.id)">
+                            <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                aria-hidden="true">
+                                <polyline points="3 6 5 6 21 6" />
+                                <path
+                                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                            </svg>
+                        </button>
+                    </div>
+                </li>
+            </ul>
+        </section>
+    </nav>
 </template>
 
 <style lang="scss" scoped>
+/* ––– Root Container ––– */
+
 .ai-history-panel {
     flex-shrink: 0;
     max-height: 45%;
@@ -128,45 +176,59 @@ function formatRelativeDate(dateStr: string): string {
     border-bottom: 1px solid $text3;
 }
 
+/* ––– Header Section ––– */
+
 .ai-history-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.5rem 0.75rem 0.35rem;
+    padding: $space-2 $space-3 $space-1;
 }
 
 .ai-history-title {
-    font-size: 0.72rem;
-    font-weight: 600;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
     color: $text2;
     text-transform: uppercase;
     letter-spacing: 0.04em;
+    margin: 0;
 }
+
+/* ––– List Container ––– */
 
 .ai-history-list {
     flex: 1;
     overflow-y: auto;
-    padding: 0 0.5rem 0.5rem;
+    padding: 0 $space-2 $space-2;
+}
+
+.ai-history-items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
 }
 
 .ai-history-empty {
-    font-size: 0.75rem;
+    font-size: $font-size-xs;
     color: $text2;
     text-align: center;
-    padding: 1rem 0;
+    padding: $space-4 0;
 }
+
+/* ––– List Item Container ––– */
 
 .ai-history-item {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
-    padding: 0.45rem 0.55rem;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.12s;
+    gap: $space-1;
+    margin: $space-1 0;
+    padding: $space-2;
+    border-radius: $border-radius-lg;
+    transition: background $transition-fast;
 
     &:hover {
         background: $bg-hover;
+
         .ai-history-item-actions {
             opacity: 1;
         }
@@ -174,41 +236,57 @@ function formatRelativeDate(dateStr: string): string {
 
     &.active {
         background: $bg-hover;
+
         .ai-history-item-title {
             color: $accent-color;
         }
     }
 }
 
+.ai-history-item-button {
+    flex: 1;
+    min-width: 0;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    color: inherit;
+    display: flex;
+    align-items: center;
+    gap: $space-1;
+
+    &:focus-visible {
+        outline: 2px solid $accent-color;
+        outline-offset: 2px;
+        border-radius: $border-radius-sm;
+    }
+}
+
+/* ––– Item Content Area ––– */
+
 .ai-history-item-content {
     flex: 1;
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.1rem;
+    gap: $space-0;
 }
 
 .ai-history-item-title {
-    font-size: 0.78rem;
+    font-size: $font-size-xs;
     color: $text1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    line-height: 1.3;
+    line-height: $line-height;
 }
 
 .ai-history-item-meta {
-    font-size: 0.66rem;
+    font-size: $font-size-xxs;
     color: $text2;
     opacity: 0.7;
-}
-
-.ai-history-item-actions {
-    display: flex;
-    gap: 0.1rem;
-    opacity: 0;
-    transition: opacity 0.15s;
-    flex-shrink: 0;
 }
 
 .ai-history-rename-input {
@@ -216,11 +294,25 @@ function formatRelativeDate(dateStr: string): string {
     background: $bg-primary;
     color: $text1;
     border: 1px solid $accent-color;
-    border-radius: 4px;
-    padding: 0.15rem 0.35rem;
-    font-size: 0.78rem;
+    border-radius: $border-radius-sm;
+    padding: $space-0 $space-1;
+    font-size: $font-size-xs;
     font-family: inherit;
     outline: none;
+
+    &:focus {
+        box-shadow: 0 0 0 2px rgb($accent-color / 10%);
+    }
+}
+
+/* ––– Item Actions ––– */
+
+.ai-history-item-actions {
+    display: flex;
+    gap: $space-2;
+    opacity: 0;
+    transition: opacity $transition-fast;
+    flex-shrink: 0;
 }
 
 .ai-btn-icon {
@@ -228,17 +320,25 @@ function formatRelativeDate(dateStr: string): string {
     border: none;
     color: $text2;
     cursor: pointer;
-    padding: 0.3rem;
-    border-radius: 4px;
+    padding: $space-1;
+    border-radius: $border-radius-sm;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
+    transition: all $transition-base;
     flex-shrink: 0;
+    font-size: 0;
+
     &:hover:not(:disabled) {
         background: $bg-hover;
         color: $text1;
     }
+
+    &:focus-visible {
+        outline: 2px solid $accent-color;
+        outline-offset: 2px;
+    }
+
     &:disabled {
         opacity: 0.3;
         cursor: not-allowed;
@@ -246,8 +346,9 @@ function formatRelativeDate(dateStr: string): string {
 }
 
 .ai-btn-tiny {
-    padding: 0.2rem !important;
+    padding: $space-1;
 }
+
 .ai-btn-danger {
     &:hover:not(:disabled) {
         color: $danger-color;

@@ -193,7 +193,7 @@ describe('AiInputArea', () => {
             expect(textarea.attributes('style')).toContain('height: 70px'); // 120 - 50
         });
 
-        it('clamps height to minimum (31px)', async () => {
+        it('clamps height to minimum (40px)', async () => {
             const wrapper = mount(AiInputArea, {
                 props: {
                     agentMode: false,
@@ -218,7 +218,7 @@ describe('AiInputArea', () => {
             await wrapper.vm.$nextTick();
 
             const textarea = wrapper.find('textarea');
-            expect(textarea.attributes('style')).toContain('height: 31px');
+            expect(textarea.attributes('style')).toContain('height: 40px');
         });
 
         it('clamps height to maximum (150px)', async () => {

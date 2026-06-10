@@ -102,7 +102,6 @@ watch(isRenaming, (renaming) => {
 });
 
 function handleFolderClick() {
-    // Single click selects the folder
     emit('selectFolder', props.node.path);
 }
 
@@ -129,7 +128,12 @@ const getFileTypeLabel = (): string => {
         <div
             v-if="node.type === 'folder'"
             class="folder-item"
-            :class="{ active: isSelected, renaming: isRenaming, 'drag-over': isDragOver, 'is-dragging': isDragging }"
+            :class="{
+                'active': isSelected,
+                'renaming': isRenaming,
+                'drag-over': isDragOver,
+                'is-dragging': isDragging,
+            }"
             :style="{ paddingLeft: depth * 16 + 10 + 'px' }"
             role="treeitem"
             :aria-expanded="isExpanded"
@@ -143,15 +147,13 @@ const getFileTypeLabel = (): string => {
             @dragend="handleDragEnd"
             @dragover.prevent="handleDragOver"
             @dragleave="handleDragLeave"
-            @drop.prevent="handleDrop"
-        >
+            @drop.prevent="handleDrop">
             <!-- Expand/collapse button -->
             <button
                 class="chevron-button"
                 :aria-label="`${isExpanded ? 'Collapse' : 'Expand'} folder: ${node.name}`"
                 :aria-pressed="isExpanded"
-                @click.stop="$emit('toggleFolder', node.path)"
-            >
+                @click.stop="$emit('toggleFolder', node.path)">
                 <svg
                     class="chevron"
                     :class="{ expanded: isExpanded }"
@@ -164,8 +166,7 @@ const getFileTypeLabel = (): string => {
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     aria-hidden="true"
-                    focusable="false"
-                >
+                    focusable="false">
                     <polyline points="9 18 15 12 9 6"></polyline>
                 </svg>
             </button>
@@ -183,8 +184,7 @@ const getFileTypeLabel = (): string => {
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 aria-hidden="true"
-                focusable="false"
-            >
+                focusable="false">
                 <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
             </svg>
 
@@ -201,8 +201,7 @@ const getFileTypeLabel = (): string => {
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 aria-hidden="true"
-                focusable="false"
-            >
+                focusable="false">
                 <path d="M5 19a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4l2 3h9a2 2 0 0 1 2 2v1"></path>
                 <path d="M5 11h15a2 2 0 0 1 2 2l-1.5 6a2 2 0 0 1-2 2H6.5a2 2 0 0 1-2-2L3 13a2 2 0 0 1 2-2z"></path>
             </svg>
@@ -219,11 +218,14 @@ const getFileTypeLabel = (): string => {
                 @keydown.enter="($event.target as HTMLInputElement).blur()"
                 @keydown.esc="$emit('cancelRename')"
                 @blur="$emit('rename')"
-                @click.stop
-            />
+                @click.stop />
 
             <!-- Folder name display -->
-            <span v-else class="folder-name">{{ node.name }}</span>
+            <span
+                v-else
+                class="folder-name"
+                >{{ node.name }}</span
+            >
         </div>
 
         <!-- File item -->
@@ -231,9 +233,9 @@ const getFileTypeLabel = (): string => {
             v-else
             class="file-item"
             :class="{
-                selected: isSelected,
-                active: isActive,
-                renaming: isRenaming,
+                'selected': isSelected,
+                'active': isActive,
+                'renaming': isRenaming,
                 'is-dragging': isDragging,
                 'media-image': isImageFile,
                 'media-video': isVideoFile,
@@ -251,8 +253,7 @@ const getFileTypeLabel = (): string => {
             @click="handleFileClick"
             @contextmenu.prevent="node.file && $emit('contextMenu', 'file', node.file.path, $event)"
             @dragstart="handleDragStart"
-            @dragend="handleDragEnd"
-        >
+            @dragend="handleDragEnd">
             <!-- Image icon for image files -->
             <svg
                 v-if="isImageFile"
@@ -266,10 +267,18 @@ const getFileTypeLabel = (): string => {
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 aria-hidden="true"
-                focusable="false"
-            >
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                focusable="false">
+                <rect
+                    x="3"
+                    y="3"
+                    width="18"
+                    height="18"
+                    rx="2"
+                    ry="2"></rect>
+                <circle
+                    cx="8.5"
+                    cy="8.5"
+                    r="1.5"></circle>
                 <polyline points="21 15 16 10 5 21"></polyline>
             </svg>
 
@@ -286,10 +295,15 @@ const getFileTypeLabel = (): string => {
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 aria-hidden="true"
-                focusable="false"
-            >
+                focusable="false">
                 <polygon points="23 7 16 12 23 17 23 7"></polygon>
-                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                <rect
+                    x="1"
+                    y="5"
+                    width="15"
+                    height="14"
+                    rx="2"
+                    ry="2"></rect>
             </svg>
 
             <!-- Audio icon for audio files -->
@@ -305,11 +319,16 @@ const getFileTypeLabel = (): string => {
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 aria-hidden="true"
-                focusable="false"
-            >
+                focusable="false">
                 <path d="M9 18V5l12-2v13"></path>
-                <circle cx="6" cy="18" r="3"></circle>
-                <circle cx="18" cy="16" r="3"></circle>
+                <circle
+                    cx="6"
+                    cy="18"
+                    r="3"></circle>
+                <circle
+                    cx="18"
+                    cy="16"
+                    r="3"></circle>
             </svg>
 
             <!-- PDF icon for PDF files -->
@@ -325,8 +344,7 @@ const getFileTypeLabel = (): string => {
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 aria-hidden="true"
-                focusable="false"
-            >
+                focusable="false">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                 <polyline points="14 2 14 8 20 8"></polyline>
                 <path d="M10 12h4"></path>
@@ -346,11 +364,13 @@ const getFileTypeLabel = (): string => {
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 aria-hidden="true"
-                focusable="false"
-            >
+                focusable="false">
                 <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
                 <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
-                <circle cx="11" cy="11" r="2"></circle>
+                <circle
+                    cx="11"
+                    cy="11"
+                    r="2"></circle>
             </svg>
 
             <!-- Code icon for code files -->
@@ -366,8 +386,7 @@ const getFileTypeLabel = (): string => {
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 aria-hidden="true"
-                focusable="false"
-            >
+                focusable="false">
                 <polyline points="16 18 22 12 16 6"></polyline>
                 <polyline points="8 6 2 12 8 18"></polyline>
             </svg>
@@ -385,8 +404,7 @@ const getFileTypeLabel = (): string => {
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 aria-hidden="true"
-                focusable="false"
-            >
+                focusable="false">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                 <polyline points="14 2 14 8 20 8"></polyline>
             </svg>
@@ -403,11 +421,14 @@ const getFileTypeLabel = (): string => {
                 @keydown.enter="($event.target as HTMLInputElement).blur()"
                 @keydown.esc="$emit('cancelRename')"
                 @blur="$emit('rename')"
-                @click.stop
-            />
+                @click.stop />
 
             <!-- File name display -->
-            <span v-else class="file-name">{{ node.name }}</span>
+            <span
+                v-else
+                class="file-name"
+                >{{ node.name }}</span
+            >
 
             <!-- Bookmark indicator -->
             <svg
@@ -419,17 +440,17 @@ const getFileTypeLabel = (): string => {
                 fill="currentColor"
                 xmlns="http://www.w3.org/2000/svg"
                 aria-label="Bookmarked"
-                role="img"
-            >
+                role="img">
                 <path
-                    d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
-                />
+                    d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
             </svg>
         </div>
 
         <!-- Recursively render children -->
         <template v-if="node.type === 'folder' && isExpanded && node.children">
-            <div role="group" :aria-label="`Contents of ${node.name}`">
+            <div
+                role="group"
+                :aria-label="`Contents of ${node.name}`">
                 <FolderNode
                     v-for="child in node.children"
                     :key="child.path"
@@ -462,17 +483,20 @@ const getFileTypeLabel = (): string => {
                     @move-folder="
                         (folderPath: string, targetFolderPath: string) =>
                             $emit('moveFolder', folderPath, targetFolderPath)
-                    "
-                />
+                    " />
             </div>
         </template>
     </div>
 </template>
 
 <style scoped lang="scss">
+/* ––– Tree Node Base ––– */
+
 .tree-node {
     user-select: none;
 }
+
+/* ––– Folder Item ––– */
 
 .folder-item,
 .file-item {
@@ -516,7 +540,7 @@ const getFileTypeLabel = (): string => {
     }
 
     &.drag-over {
-        background: $accent-color-alpha !important;
+        background: $accent-color-alpha;
         border: 2px dashed $accent-color;
         margin: $space-0 $space-2 $space-0 $space-2;
     }
@@ -575,8 +599,9 @@ const getFileTypeLabel = (): string => {
     }
 }
 
+/* ––– File Item ––– */
+
 .file-item {
-    // Selected but not active (multi-select)
     &.selected {
         background: $bg-selected;
         margin: $space-0 $space-2 $space-0 $space-2;
@@ -586,7 +611,6 @@ const getFileTypeLabel = (): string => {
         }
     }
 
-    // Active file (being edited)
     &.active {
         background: $bg-selected;
         margin: $space-0 $space-2 $space-0 $space-2;
@@ -623,6 +647,8 @@ const getFileTypeLabel = (): string => {
     }
 }
 
+/* ––– File Name & Metadata ––– */
+
 .file-name {
     flex: 1;
     font-size: $font-size-sm;
@@ -644,6 +670,8 @@ const getFileTypeLabel = (): string => {
     color: $text1;
     opacity: 1;
 }
+
+/* ––– Input Fields ––– */
 
 .file-name-input {
     flex: 1;

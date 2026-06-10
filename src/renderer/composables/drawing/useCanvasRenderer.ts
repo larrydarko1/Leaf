@@ -28,7 +28,7 @@ export function useCanvasRenderer(
     let dpr = 1;
 
     const canvasBg = computed(() => getCSSVariable('--base1'));
-    const gridColor = computed(() => getCSSVariable('--grid-color') || 'rgba(255,255,255,0.06)');
+    const gridColor = computed(() => getCSSVariable('--grid-color'));
 
     // Canvas setup
 
@@ -573,7 +573,6 @@ export function useCanvasRenderer(
         withBackground: boolean;
         scale: number;
         padding?: number;
-        darkMode?: boolean;
     }): Promise<Blob | null> {
         const exportElements = opts.elements;
         if (exportElements.length === 0) return Promise.resolve(null);
@@ -604,7 +603,7 @@ export function useCanvasRenderer(
 
         // Background
         if (opts.withBackground) {
-            offCtx.fillStyle = opts.darkMode ? '#1e1e1e' : '#ffffff';
+            offCtx.fillStyle = getCSSVariable('--base1');
             offCtx.fillRect(0, 0, width, height);
         }
 

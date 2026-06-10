@@ -120,11 +120,22 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
 </script>
 
 <template>
-    <!-- Chat messages -->
-    <div ref="messagesContainer" class="ai-messages" @scroll="$emit('scroll')">
+    <!-- Chat messages container -->
+    <section
+        ref="messagesContainer"
+        class="ai-messages"
+        role="region"
+        aria-label="Chat messages"
+        aria-live="polite"
+        @scroll="$emit('scroll')">
         <!-- Empty state -->
-        <div v-if="messages.length === 0" class="ai-empty-state">
-            <div class="ai-empty-icon">
+        <div
+            v-if="messages.length === 0"
+            class="ai-empty-state"
+            role="status">
+            <div
+                class="ai-empty-icon"
+                aria-hidden="true">
                 <svg
                     width="32"
                     height="32"
@@ -133,13 +144,19 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                     stroke="currentColor"
                     stroke-width="1.5"
                     stroke-linecap="round"
-                    stroke-linejoin="round"
-                >
+                    stroke-linejoin="round">
                     <path
-                        d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"
-                    />
-                    <line x1="9" y1="21" x2="15" y2="21" />
-                    <line x1="10" y1="24" x2="14" y2="24" />
+                        d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" />
+                    <line
+                        x1="9"
+                        y1="21"
+                        x2="15"
+                        y2="21" />
+                    <line
+                        x1="10"
+                        y1="24"
+                        x2="14"
+                        y2="24" />
                 </svg>
             </div>
             <p class="ai-empty-text">
@@ -152,35 +169,47 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
             <button
                 v-if="!status.isModelLoaded && availableModels.length === 0"
                 class="ai-btn-secondary"
-                @click="$emit('open-models-folder')"
-            >
+                aria-label="Open the models folder"
+                @click="$emit('open-models-folder')">
                 Open Models Folder
             </button>
             <button
                 v-if="!status.isModelLoaded && availableModels.length > 0"
                 class="ai-btn-secondary"
-                @click="$emit('open-history')"
-            >
+                aria-label="Browse conversation history"
+                @click="$emit('open-history')">
                 Browse History
             </button>
         </div>
 
-        <!-- Messages -->
-        <div v-for="(msg, index) in messages" :key="index" class="ai-message" :class="msg.role">
+        <!-- Messages list -->
+        <div
+            v-for="(msg, index) in messages"
+            :key="index"
+            class="ai-message"
+            :class="msg.role"
+            role="article"
+            :aria-label="`${msg.role} message ${index + 1}`">
             <div class="ai-message-wrapper">
                 <!-- User message: edit mode -->
-                <div v-if="msg.role === 'user' && editingIndex === index" class="ai-message-edit">
+                <div
+                    v-if="msg.role === 'user' && editingIndex === index"
+                    class="ai-message-edit">
                     <textarea
+                        id="edit-input-user-msg"
                         ref="editInputRef"
                         :value="editContent"
                         class="ai-edit-input"
                         rows="2"
+                        aria-label="Edit user message"
                         @input="$emit('update:editContent', ($event.target as HTMLTextAreaElement).value)"
                         @keydown.enter.exact.prevent="$emit('confirm-edit', index)"
-                        @keydown.escape.prevent="$emit('cancel-edit')"
-                    />
+                        @keydown.escape.prevent="$emit('cancel-edit')" />
                     <div class="ai-edit-actions">
-                        <button class="ai-btn-icon ai-btn-tiny" title="Cancel" @click="$emit('cancel-edit')">
+                        <button
+                            class="ai-btn-icon ai-btn-tiny"
+                            aria-label="Cancel editing"
+                            @click="$emit('cancel-edit')">
                             <svg
                                 width="10"
                                 height="10"
@@ -189,17 +218,23 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                                 stroke="currentColor"
                                 stroke-width="2.5"
                                 stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <line x1="18" y1="6" x2="6" y2="18" />
-                                <line x1="6" y1="6" x2="18" y2="18" />
+                                stroke-linejoin="round">
+                                <line
+                                    x1="18"
+                                    y1="6"
+                                    x2="6"
+                                    y2="18" />
+                                <line
+                                    x1="6"
+                                    y1="6"
+                                    x2="18"
+                                    y2="18" />
                             </svg>
                         </button>
                         <button
                             class="ai-btn-icon ai-btn-tiny"
-                            title="Save & resend"
-                            @click="$emit('confirm-edit', index)"
-                        >
+                            aria-label="Save changes and resend message"
+                            @click="$emit('confirm-edit', index)">
                             <svg
                                 width="10"
                                 height="10"
@@ -208,19 +243,25 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                                 stroke="currentColor"
                                 stroke-width="2.5"
                                 stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
+                                stroke-linejoin="round">
                                 <polyline points="20 6 9 17 4 12" />
                             </svg>
                         </button>
                     </div>
                 </div>
+
                 <!-- User message: normal mode -->
-                <div v-else-if="msg.role === 'user'" class="ai-message-content">
+                <div
+                    v-else-if="msg.role === 'user'"
+                    class="ai-message-content">
                     {{ msg.content }}
                 </div>
+
                 <!-- System message -->
-                <div v-else-if="msg.role === 'system'" class="ai-message-content ai-system-notice">
+                <div
+                    v-else-if="msg.role === 'system'"
+                    class="ai-message-content ai-system-notice"
+                    role="status">
                     <svg
                         width="12"
                         height="12"
@@ -230,30 +271,54 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                         stroke-width="2"
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                    >
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="12" y1="8" x2="12" y2="12" />
-                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                        aria-hidden="true">
+                        <circle
+                            cx="12"
+                            cy="12"
+                            r="10" />
+                        <line
+                            x1="12"
+                            y1="8"
+                            x2="12"
+                            y2="12" />
+                        <line
+                            x1="12"
+                            y1="16"
+                            x2="12.01"
+                            y2="16" />
                     </svg>
                     <span>{{ msg.content }}</span>
                 </div>
+
                 <!-- Assistant message -->
-                <div v-else class="ai-message-content ai-markdown" @click="onMarkdownClick(msg.content, $event)">
+                <div
+                    v-else
+                    class="ai-message-content ai-markdown"
+                    role="article"
+                    @click="onMarkdownClick(msg.content, $event)">
                     <div v-html="renderWithCopyBtns(msg.content)"></div>
                 </div>
+
                 <!-- Agent edit cards -->
-                <div v-if="msg.agentEdits && msg.agentEdits.length > 0" class="ai-agent-edits">
+                <div
+                    v-if="msg.agentEdits && msg.agentEdits.length > 0"
+                    class="ai-agent-edits">
                     <AiAgentEditCard
                         v-for="(edit, editIdx) in msg.agentEdits"
                         :key="editIdx"
                         :edit="edit"
                         @approve="$emit('approve-agent-edit', index, editIdx)"
-                        @reject="$emit('reject-agent-edit', index, editIdx)"
-                    />
+                        @reject="$emit('reject-agent-edit', index, editIdx)" />
                 </div>
-                <span v-if="msg.role === 'assistant' && index === messages.length - 1 && isStreaming" class="ai-cursor"
+
+                <!-- Streaming cursor -->
+                <span
+                    v-if="msg.role === 'assistant' && index === messages.length - 1 && isStreaming"
+                    class="ai-cursor"
+                    aria-hidden="true"
                     >▊</span
                 >
+
                 <!-- Message action buttons -->
                 <div
                     v-if="
@@ -263,12 +328,12 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                         editingIndex !== index
                     "
                     class="ai-message-actions"
-                >
+                    role="toolbar"
+                    :aria-label="`Actions for ${msg.role} message ${index + 1}`">
                     <button
                         class="ai-btn-action"
-                        :title="copiedIndex === index ? 'Copied!' : 'Copy'"
-                        @click="$emit('copy', msg.content, index)"
-                    >
+                        :aria-label="copiedIndex === index ? 'Copied to clipboard!' : 'Copy message to clipboard'"
+                        @click="$emit('copy', msg.content, index)">
                         <svg
                             v-if="copiedIndex !== index"
                             width="11"
@@ -279,8 +344,14 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                             stroke-width="2"
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                        >
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                            aria-hidden="true">
+                            <rect
+                                x="9"
+                                y="9"
+                                width="13"
+                                height="13"
+                                rx="2"
+                                ry="2" />
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                         </svg>
                         <svg
@@ -293,16 +364,15 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                             stroke-width="2.5"
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                        >
+                            aria-hidden="true">
                             <polyline points="20 6 9 17 4 12" />
                         </svg>
                     </button>
                     <button
                         v-if="msg.role === 'user'"
                         class="ai-btn-action"
-                        title="Edit"
-                        @click="$emit('start-edit', index)"
-                    >
+                        aria-label="Edit this message"
+                        @click="$emit('start-edit', index)">
                         <svg
                             width="11"
                             height="11"
@@ -312,7 +382,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                             stroke-width="2"
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                        >
+                            aria-hidden="true">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                         </svg>
@@ -320,9 +390,8 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                     <button
                         v-if="msg.role === 'user' && index === messages.length - 1 && isReady"
                         class="ai-btn-action"
-                        title="Resend"
-                        @click="$emit('resend', index)"
-                    >
+                        aria-label="Resend this message"
+                        @click="$emit('resend', index)">
                         <svg
                             width="11"
                             height="11"
@@ -332,7 +401,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                             stroke-width="2"
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                        >
+                            aria-hidden="true">
                             <polyline points="1 4 1 10 7 10" />
                             <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
                         </svg>
@@ -340,9 +409,8 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                     <button
                         v-if="msg.role === 'assistant' && index === messages.length - 1 && isReady"
                         class="ai-btn-action"
-                        title="Regenerate"
-                        @click="$emit('regenerate')"
-                    >
+                        aria-label="Regenerate assistant response"
+                        @click="$emit('regenerate')">
                         <svg
                             width="11"
                             height="11"
@@ -352,7 +420,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                             stroke-width="2"
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                        >
+                            aria-hidden="true">
                             <polyline points="23 4 23 10 17 10" />
                             <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
                         </svg>
@@ -360,9 +428,8 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                     <button
                         v-if="index === messages.length - 1"
                         class="ai-btn-action ai-btn-action-danger"
-                        title="Delete"
-                        @click="$emit('delete-last-pair')"
-                    >
+                        aria-label="Delete last message pair"
+                        @click="$emit('delete-last-pair')">
                         <svg
                             width="11"
                             height="11"
@@ -372,7 +439,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                             stroke-width="2"
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                        >
+                            aria-hidden="true">
                             <polyline points="3 6 5 6 21 6" />
                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                         </svg>
@@ -380,10 +447,14 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
     <!-- Load model banner -->
-    <div v-if="!status.isModelLoaded && messages.length > 0" class="ai-load-model-banner">
+    <aside
+        v-if="!status.isModelLoaded && messages.length > 0"
+        class="ai-load-model-banner"
+        role="status"
+        aria-label="Model status">
         <div class="ai-load-model-banner-content">
             <svg
                 width="14"
@@ -394,10 +465,21 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                 stroke-width="2"
                 stroke-linecap="round"
                 stroke-linejoin="round"
-            >
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
+                aria-hidden="true">
+                <circle
+                    cx="12"
+                    cy="12"
+                    r="10" />
+                <line
+                    x1="12"
+                    y1="8"
+                    x2="12"
+                    y2="12" />
+                <line
+                    x1="12"
+                    y1="16"
+                    x2="12.01"
+                    y2="16" />
             </svg>
             <span>Load a model to continue chatting</span>
         </div>
@@ -405,8 +487,8 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
             v-if="previousModelMatch"
             class="ai-load-model-btn"
             :disabled="isLoading"
-            @click="$emit('load-previous-model')"
-        >
+            :aria-label="`Load model: ${previousModelMatch.name}`"
+            @click="$emit('load-previous-model')">
             <svg
                 width="12"
                 height="12"
@@ -416,22 +498,28 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                 stroke-width="2.5"
                 stroke-linecap="round"
                 stroke-linejoin="round"
-            >
+                aria-hidden="true">
                 <polyline points="23 4 23 10 17 10" />
                 <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
             </svg>
             {{ isLoading ? 'Loading...' : 'Load ' + truncate(previousModelMatch.name, 20) }}
         </button>
-    </div>
+    </aside>
 
-    <!-- Token counter -->
-    <div v-if="status.isModelLoaded && status.contextSize > 0" class="ai-token-bar">
+    <!-- Token counter progress bar -->
+    <div
+        v-if="status.isModelLoaded && status.contextSize > 0"
+        class="ai-token-bar"
+        role="progressbar"
+        :aria-valuenow="tokenUsagePercent"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        :aria-label="`Context tokens: ${formatTokenCount(conversationTokenCount)} of ${formatTokenCount(status.contextSize)}`">
         <div class="ai-token-bar-track">
             <div
                 class="ai-token-bar-fill"
                 :class="{ warning: tokenUsagePercent > 75, danger: tokenUsagePercent > 90 }"
-                :style="{ width: tokenUsagePercent + '%' }"
-            ></div>
+                :style="{ width: tokenUsagePercent + '%' }"></div>
         </div>
         <span class="ai-token-label"
             >{{ formatTokenCount(conversationTokenCount) }} / {{ formatTokenCount(status.contextSize) }} ·
@@ -441,14 +529,18 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
 </template>
 
 <style lang="scss" scoped>
+/* ––– Messages Container ––– */
+
 .ai-messages {
     flex: 1;
     overflow-y: auto;
-    padding: 0.75rem;
+    padding: $space-3;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: $space-3;
 }
+
+/* ––– Empty State ––– */
 
 .ai-empty-state {
     display: flex;
@@ -457,36 +549,44 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
     justify-content: center;
     flex: 1;
     text-align: center;
-    padding: 1rem;
+    padding: $space-4;
 }
 
 .ai-empty-icon {
     color: $text3;
-    margin-bottom: 0.75rem;
+    margin-bottom: $space-3;
 }
 
 .ai-empty-text {
-    font-size: 0.8rem;
+    font-size: $font-size-sm;
     color: $text2;
-    line-height: 1.5;
+    line-height: $line-height;
     margin: 0;
 }
 
 .ai-btn-secondary {
-    padding: 0.5rem 1rem;
+    padding: $space-2 $space-4;
     background: transparent;
     color: $text2;
     border: 1px solid $text3;
-    border-radius: 6px;
-    font-size: 0.8rem;
+    border-radius: $border-radius;
+    font-size: $font-size-sm;
     cursor: pointer;
-    transition: all 0.2s;
-    margin-top: 0.5rem;
+    transition: all $transition-base;
+    margin-top: $space-5;
+
     &:hover {
         color: $text1;
         border-color: $text2;
     }
+
+    &:focus-visible {
+        outline: 2px solid $accent-color;
+        outline-offset: 2px;
+    }
 }
+
+/* ––– Message Items ––– */
 
 .ai-message {
     display: flex;
@@ -497,14 +597,17 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
 
     &.user {
         justify-content: flex-end;
+
         .ai-message-wrapper {
             max-width: 85%;
         }
+
         .ai-message-content {
             background: $accent-color;
             color: $text3;
-            border-radius: 12px 12px 2px 12px;
+            border-radius: $border-radius-xl $border-radius-xl $border-radius-xs $border-radius-xl;
         }
+
         .ai-message-actions {
             justify-content: flex-end;
         }
@@ -512,14 +615,17 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
 
     &.assistant {
         justify-content: flex-start;
+
         .ai-message-wrapper {
             max-width: 90%;
         }
+
         .ai-message-content {
             background: $bg-primary;
             color: $text1;
-            border-radius: 12px 12px 12px 2px;
+            border-radius: $border-radius-xl $border-radius-xl $border-radius-xl $border-radius-xs;
         }
+
         .ai-message-actions {
             justify-content: flex-start;
         }
@@ -527,6 +633,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
 
     &.system {
         justify-content: center;
+
         .ai-message-wrapper {
             max-width: 95%;
         }
@@ -538,120 +645,148 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
 }
 
 .ai-message-content {
-    padding: 0.6rem 0.85rem;
-    font-size: 0.82rem;
-    line-height: 1.55;
-    word-break: break-word;
+    padding: $space-3 $space-4;
+    font-size: $font-size-sm;
+    line-height: $line-height;
+    overflow-wrap: break-word;
     white-space: pre-wrap;
 }
+
+/* ––– System Message ––– */
 
 .ai-system-notice {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
-    background: var(--bg-secondary, #2a2a2a);
-    border: 1px solid var(--border-color, #3a3a3a);
-    border-radius: 8px;
-    padding: 0.4rem 0.7rem;
-    font-size: 0.72rem;
-    color: var(--text2, #999);
+    gap: $space-2;
+    background: $bg-secondary;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-lg;
+    padding: $space-2 $space-3;
+    font-size: $font-size-xs;
+    color: $text2;
     font-style: italic;
     white-space: normal;
+
     svg {
         flex-shrink: 0;
         opacity: 0.6;
     }
 }
 
+/* ––– Markdown Content ––– */
+
 .ai-markdown {
     white-space: normal;
     position: relative;
 
     :deep(p) {
-        margin: 0 0 0.5em 0;
+        margin: 0 0 $space-2;
+
         &:last-child {
             margin-bottom: 0;
         }
     }
+
     :deep(h1),
     :deep(h2),
     :deep(h3),
     :deep(h4) {
-        margin: 0.6em 0 0.3em 0;
-        line-height: 1.3;
+        margin: $space-3 0 $space-1 0;
+        line-height: $line-height;
+
         &:first-child {
             margin-top: 0;
         }
     }
+
     :deep(h1) {
-        font-size: 1.1em;
+        font-size: $font-size-lg;
     }
+
     :deep(h2) {
-        font-size: 1em;
+        font-size: $font-size-base;
     }
+
     :deep(h3) {
-        font-size: 0.95em;
+        font-size: $font-size-sm;
     }
+
     :deep(ul),
     :deep(ol) {
-        margin: 0.3em 0;
-        padding-left: 1.4em;
+        margin: $space-1 0;
+        padding-left: $space-6;
     }
+
     :deep(li) {
-        margin: 0.15em 0;
+        margin: $space-1 0;
     }
+
     :deep(code) {
-        background: rgba(0, 0, 0, 0.15);
-        padding: 0.15em 0.35em;
-        border-radius: 3px;
-        font-size: 0.9em;
-        font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+        background: rgb(0 0 0 / 15%);
+        padding: $space-0 $space-1;
+        border-radius: $border-radius-xs;
+        font-size: $font-size-sm;
+        font-family: $font-family-mono;
     }
+
     :deep(pre) {
-        background: rgba(0, 0, 0, 0.2);
-        padding: 0.6em 0.75em;
-        border-radius: 6px;
+        background: rgb(0 0 0 / 20%);
+        padding: $space-2 $space-3;
+        border-radius: $border-radius;
         overflow-x: auto;
-        margin: 0.4em 0;
+        margin: $space-2 0;
         position: relative;
+
         code {
             background: none;
             padding: 0;
-            font-size: 0.85em;
+            font-size: $font-size-sm;
         }
     }
+
     :deep(blockquote) {
         border-left: 3px solid $accent-color;
-        margin: 0.4em 0;
-        padding: 0.2em 0.6em;
+        margin: $space-2 0;
+        padding: $space-1 $space-2;
         color: $text2;
     }
+
     :deep(table) {
         border-collapse: collapse;
-        margin: 0.4em 0;
+        margin: $space-2 0;
         width: 100%;
-        font-size: 0.9em;
+        font-size: $font-size-sm;
+
         th,
         td {
             border: 1px solid $text3;
-            padding: 0.3em 0.5em;
+            padding: $space-1 $space-2;
             text-align: left;
         }
+
         th {
-            background: rgba(0, 0, 0, 0.1);
+            background: rgb(0 0 0 / 10%);
         }
     }
+
     :deep(hr) {
         border: none;
         border-top: 1px solid $text3;
-        margin: 0.5em 0;
+        margin: $space-2 0;
     }
+
     :deep(a) {
         color: $accent-color;
         text-decoration: underline;
+
+        &:focus-visible {
+            outline: 2px solid $accent-color;
+            outline-offset: 2px;
+        }
     }
+
     :deep(strong) {
-        font-weight: 600;
+        font-weight: $font-weight-semibold;
     }
 }
 
@@ -666,84 +801,61 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
 
 .ai-markdown :deep(.ai-code-copy-btn) {
     position: absolute;
-    top: 0.35rem;
-    right: 0.35rem;
-    background: rgba(0, 0, 0, 0.35);
+    top: 5.6px;
+    right: 5.6px;
+    background: rgb(0 0 0 / 35%);
     border: none;
-    border-radius: 4px;
+    border-radius: $border-radius-sm;
     color: $text2;
     cursor: pointer;
-    padding: 0.1875em 0.3125em;
+    padding: $space-0 $space-1;
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0;
     transition:
-        opacity 0.15s,
-        color 0.15s,
-        background 0.15s;
+        opacity $transition-fast,
+        color $transition-fast,
+        background $transition-fast;
     z-index: 1;
 
     &:hover {
         color: $text1;
-        background: rgba(0, 0, 0, 0.55);
-        opacity: 1 !important;
+        background: rgb(0 0 0 / 55%);
+        opacity: 1;
+    }
+
+    &:focus-visible {
+        opacity: 1;
+        outline: 2px solid $accent-color;
+        outline-offset: 2px;
     }
 }
 
-.ai-message-actions {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    opacity: 0;
-    transition: opacity 0.15s;
-    margin-top: 3px;
-    padding: 0 2px;
-}
-
-.ai-btn-action {
-    background: none;
-    border: none;
-    color: $text2;
-    cursor: pointer;
-    padding: 3px 4px;
-    border-radius: 4px;
-    transition:
-        color 0.15s,
-        background 0.15s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    &:hover {
-        color: $text1;
-        background: $bg-hover;
-    }
-    &.ai-btn-action-danger:hover {
-        color: #e55;
-    }
-}
+/* ––– Message Editing ––– */
 
 .ai-message-edit {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: $space-1;
     width: 100%;
 }
 
 .ai-edit-input {
     width: 100%;
-    min-height: 2.5rem;
-    max-height: 8rem;
-    padding: 0.5rem 0.65rem;
+    min-height: 40px;
+    max-height: 128px;
+    padding: $space-2 $space-3;
     background: $bg-primary;
     color: $text1;
     border: 1px solid $accent-color;
-    border-radius: 8px;
-    font-size: 0.82rem;
+    border-radius: $border-radius-lg;
+    font-size: $font-size-sm;
     font-family: inherit;
-    line-height: 1.5;
+    line-height: $line-height;
     resize: vertical;
     outline: none;
+
     &:focus {
         border-color: $accent-color;
         box-shadow: 0 0 0 1px $accent-color;
@@ -753,17 +865,61 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
 .ai-edit-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 4px;
+    gap: $space-1;
 }
+
+/* ––– Streaming Cursor ––– */
 
 .ai-cursor {
     animation: blink 0.8s step-end infinite;
     color: $accent-color;
-    font-size: 0.9em;
+    font-size: $font-size-sm;
 }
+
 @keyframes blink {
     50% {
         opacity: 0;
+    }
+}
+
+/* ––– Message Actions ––– */
+
+.ai-message-actions {
+    display: flex;
+    align-items: center;
+    gap: $space-0;
+    opacity: 0;
+    transition: opacity $transition-fast;
+    margin-top: $space-0;
+    padding: 0 $space-0;
+}
+
+.ai-btn-action {
+    background: none;
+    border: none;
+    color: $text2;
+    cursor: pointer;
+    padding: $space-0 $space-1;
+    border-radius: $border-radius-sm;
+    transition:
+        color $transition-fast,
+        background $transition-fast;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+        color: $text1;
+        background: $bg-hover;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $accent-color;
+        outline-offset: 2px;
+    }
+
+    &.ai-btn-action-danger:hover {
+        color: $danger-color;
     }
 }
 
@@ -772,39 +928,47 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
     border: none;
     color: $text2;
     cursor: pointer;
-    padding: 0.3rem;
-    border-radius: 4px;
+    padding: $space-1;
+    border-radius: $border-radius-sm;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
+    transition: all $transition-base;
     flex-shrink: 0;
+
     &:hover:not(:disabled) {
         background: $bg-hover;
         color: $text1;
     }
+
+    &:focus-visible {
+        outline: 2px solid $accent-color;
+        outline-offset: 2px;
+    }
 }
 
 .ai-btn-tiny {
-    padding: 0.2rem !important;
+    padding: $space-1;
 }
 
-// Agent edit cards
+/* ––– Agent Edit Cards ––– */
+
 .ai-agent-edits {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
+    gap: $space-2;
+    margin-top: $space-2;
     width: 100%;
 }
 
-// Load model banner
+/* ––– Load Model Banner ––– */
+
 .ai-load-model-banner {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
+    gap: $space-2;
+    padding: $space-2 $space-3;
     background: $bg-primary;
     border-top: 1px solid $text3;
     flex-shrink: 0;
@@ -813,9 +977,10 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
 .ai-load-model-banner-content {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
-    font-size: 0.72rem;
+    gap: $space-2;
+    font-size: $font-size-xs;
     color: $text2;
+
     svg {
         flex-shrink: 0;
         opacity: 0.7;
@@ -825,39 +990,48 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
 .ai-load-model-btn {
     display: flex;
     align-items: center;
-    gap: 0.3rem;
-    padding: 0.3rem 0.6rem;
+    gap: $space-1;
+    padding: $space-1 $space-2;
     background: $accent-color;
     color: $base1;
     border: none;
-    border-radius: 7px;
-    font-size: 0.7rem;
-    font-weight: 600;
+    border-radius: $border-radius;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
     cursor: pointer;
     white-space: nowrap;
     transition:
         opacity 0.15s,
         transform 0.1s;
     flex-shrink: 0;
+
     &:hover:not(:disabled) {
         opacity: 0.85;
         transform: scale(1.02);
     }
+
+    &:focus-visible {
+        outline: 2px solid $base1;
+        outline-offset: 2px;
+    }
+
     &:disabled {
         opacity: 0.5;
         cursor: not-allowed;
     }
+
     svg {
         flex-shrink: 0;
     }
 }
 
-// Token counter bar
+/* ––– Token Counter ––– */
+
 .ai-token-bar {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0 0.75rem;
+    gap: $space-2;
+    padding: 0 $space-3;
     flex-shrink: 0;
 }
 
@@ -865,25 +1039,27 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
     flex: 1;
     height: 3px;
     background: $text3;
-    border-radius: 2px;
+    border-radius: $border-radius-xs;
     overflow: hidden;
 }
 
 .ai-token-bar-fill {
     height: 100%;
     background: $accent-color;
-    border-radius: 2px;
-    transition: width 0.3s ease;
+    border-radius: $border-radius-xs;
+    transition: width $transition-slow;
+
     &.warning {
-        background: #e6a700;
+        background: $warning-color;
     }
+
     &.danger {
-        background: var(--danger-color, #e74c3c);
+        background: $danger-color;
     }
 }
 
 .ai-token-label {
-    font-size: 0.62rem;
+    font-size: $font-size-xs;
     color: $text2;
     white-space: nowrap;
     flex-shrink: 0;

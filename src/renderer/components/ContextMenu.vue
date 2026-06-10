@@ -40,19 +40,26 @@ function handleItemClick(item: ContextMenuItem) {
             v-if="visible"
             ref="menuRef"
             class="context-menu"
+            role="menu"
+            aria-label="Context menu"
             :style="{ top: adjustedPosition.y + 'px', left: adjustedPosition.x + 'px' }"
-            @click.stop
-        >
-            <div
+            @click.stop>
+            <button
                 v-for="item in items"
                 :key="item.label"
                 class="context-menu-item"
-                :class="{ disabled: item.disabled }"
-                @click="handleItemClick(item)"
-            >
+                role="menuitem"
+                :aria-disabled="item.disabled"
+                :disabled="item.disabled"
+                @click="handleItemClick(item)">
                 <span class="menu-label">{{ item.label }}</span>
-                <span v-if="item.shortcut" class="menu-shortcut">{{ item.shortcut }}</span>
-            </div>
+                <span
+                    v-if="item.shortcut"
+                    class="menu-shortcut"
+                    aria-label="`Keyboard shortcut: ${item.shortcut}`"
+                    >{{ item.shortcut }}</span
+                >
+            </button>
         </div>
     </Teleport>
 </template>
@@ -63,25 +70,28 @@ function handleItemClick(item: ContextMenuItem) {
     background: $bg-secondary;
     border: 1px solid $border-color;
     color: $text-primary;
-    border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    padding: 0.25rem 0;
+    border-radius: $border-radius;
+    box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
+    padding: $space-1 0;
     min-width: 160px;
-    z-index: 10000;
+    z-index: $z-extreme;
     backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
 }
 
 .context-menu-item {
     display: flex;
     align-items: center;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
     justify-content: space-between;
-    padding: 0.5rem 0.75rem;
+    padding: $space-2 $space-3;
     cursor: pointer;
-    transition: background 0.15s ease;
+    transition: background $transition-fast;
     color: $text-primary;
-    font-size: 0.875rem;
-    gap: 1rem;
+    font-size: $font-size-sm;
+    gap: $space-4;
 
     &:hover:not(.disabled) {
         background: $bg-hover;
@@ -99,7 +109,7 @@ function handleItemClick(item: ContextMenuItem) {
 
 .menu-shortcut {
     color: $text2;
-    font-size: 0.75rem;
+    font-size: $font-size-xs;
     opacity: 0.7;
 }
 </style>

@@ -288,32 +288,46 @@ if (typeof window !== 'undefined') {
 </script>
 
 <template>
-    <div class="note-editor" role="main" aria-label="Note editor">
+    <div
+        class="note-editor"
+        role="main"
+        aria-label="Note editor">
         <!-- Media viewers -->
-        <section v-if="file && isImageFile" aria-label="Image viewer">
-            <ImageViewer :file-path="file.path" :file-name="file.name" />
+        <section
+            v-if="file && isImageFile"
+            aria-label="Image viewer">
+            <ImageViewer
+                :file-path="file.path"
+                :file-name="file.name" />
         </section>
 
-        <section v-else-if="file && isVideoFile" aria-label="Video viewer">
+        <section
+            v-else-if="file && isVideoFile"
+            aria-label="Video viewer">
             <VideoViewer :file-path="file.path" />
         </section>
 
-        <section v-else-if="file && isPdfFile" aria-label="PDF viewer">
+        <section
+            v-else-if="file && isPdfFile"
+            aria-label="PDF viewer">
             <PdfViewer :file-path="file.path" />
         </section>
 
-        <section v-else-if="file && isAudioFile" aria-label="Audio player">
+        <section
+            v-else-if="file && isAudioFile"
+            aria-label="Audio player">
             <AudioViewer :file-path="file.path" />
         </section>
 
         <!-- Drawing canvas for drawing files -->
-        <section v-else-if="file && isDrawingFile" aria-label="Drawing canvas editor">
+        <section
+            v-else-if="file && isDrawingFile"
+            aria-label="Drawing canvas editor">
             <DrawingCanvas
                 :file-path="file.path"
                 :initial-content="content"
                 @save="handleDrawingSave"
-                @content-changed="(hasChanges) => (hasUnsavedChanges = hasChanges)"
-            />
+                @content-changed="(hasChanges) => (hasUnsavedChanges = hasChanges)" />
         </section>
 
         <!-- Text editor for text files -->
@@ -324,16 +338,14 @@ if (typeof window !== 'undefined') {
             @dragenter.prevent="onEditorDragEnter"
             @dragover.prevent="onEditorDragOver"
             @dragleave.prevent="onEditorDragLeave"
-            @drop.prevent="onFileDrop"
-        >
+            @drop.prevent="onFileDrop">
             <!-- Drop overlay for drag-and-drop media embed -->
             <div
                 v-show="isDragOverEditor"
                 class="drop-overlay"
                 role="status"
                 aria-live="polite"
-                aria-label="Drag and drop zone active"
-            >
+                aria-label="Drag and drop zone active">
                 <div class="drop-overlay-content">
                     <svg
                         width="40"
@@ -345,19 +357,26 @@ if (typeof window !== 'undefined') {
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         aria-hidden="true"
-                        focusable="false"
-                    >
+                        focusable="false">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                        <line
+                            x1="12"
+                            y1="15"
+                            x2="12"
+                            y2="3"></line>
                     </svg>
                     <p>Drop to embed</p>
                 </div>
             </div>
 
             <!-- Markdown formatting toolbar -->
-            <nav v-if="isMarkdownFile" aria-label="Markdown formatting toolbar">
-                <MarkdownToolbar @format="mdFormatText" @heading="mdInsertHeading" />
+            <nav
+                v-if="isMarkdownFile"
+                aria-label="Markdown formatting toolbar">
+                <MarkdownToolbar
+                    @format="mdFormatText"
+                    @heading="mdInsertHeading" />
             </nav>
 
             <!-- CodeMirror live-preview editor for markdown files -->
@@ -367,8 +386,7 @@ if (typeof window !== 'undefined') {
                 class="cm-editor-container"
                 role="textbox"
                 aria-label="Markdown editor"
-                aria-multiline="true"
-            ></div>
+                aria-multiline="true"></div>
 
             <!-- CodeMirror code editor for code files -->
             <div
@@ -377,8 +395,7 @@ if (typeof window !== 'undefined') {
                 class="cm-editor-container code-editor-container"
                 role="textbox"
                 aria-label="Code editor"
-                aria-multiline="true"
-            ></div>
+                aria-multiline="true"></div>
 
             <!-- Plain textarea for other text files -->
             <textarea
@@ -388,8 +405,7 @@ if (typeof window !== 'undefined') {
                 class="editor-textarea"
                 placeholder="Start writing..."
                 aria-label="Text editor"
-                @input="onContentChange"
-            ></textarea>
+                @input="onContentChange"></textarea>
 
             <!-- Dictation button for txt/md files -->
             <button
@@ -405,8 +421,7 @@ if (typeof window !== 'undefined') {
                           : 'Start dictation using speech-to-text'
                 "
                 :disabled="isDictationLoading"
-                @click="toggleDictation"
-            >
+                @click="toggleDictation">
                 <!-- Microphone icon -->
                 <svg
                     v-if="!isDictationLoading"
@@ -419,12 +434,19 @@ if (typeof window !== 'undefined') {
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     aria-hidden="true"
-                    focusable="false"
-                >
+                    focusable="false">
                     <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
                     <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                    <line x1="12" y1="19" x2="12" y2="23"></line>
-                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                    <line
+                        x1="12"
+                        y1="19"
+                        x2="12"
+                        y2="23"></line>
+                    <line
+                        x1="8"
+                        y1="23"
+                        x2="16"
+                        y2="23"></line>
                 </svg>
                 <!-- Loading spinner -->
                 <svg
@@ -437,27 +459,30 @@ if (typeof window !== 'undefined') {
                     stroke="currentColor"
                     stroke-width="2"
                     aria-hidden="true"
-                    focusable="false"
-                >
+                    focusable="false">
                     <path
-                        d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"
-                    ></path>
+                        d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
                 </svg>
                 <!-- Pulsing dot when active -->
-                <span v-if="isDictating" class="dictation-pulse" aria-hidden="true"></span>
+                <span
+                    v-if="isDictating"
+                    class="dictation-pulse"
+                    aria-hidden="true"></span>
             </button>
         </section>
 
         <!-- Empty state -->
-        <section v-else class="editor-empty" aria-label="No note selected">
+        <section
+            v-else
+            class="editor-empty"
+            aria-label="No note selected">
             <div class="empty-message">
                 <div class="empty-logo">
                     <img
                         draggable="false"
                         src="../assets/icons/icon.png"
                         alt="Leaf application logo"
-                        class="empty-logo-icon"
-                    />
+                        class="empty-logo-icon" />
                     <span class="empty-logo-text">leaf.</span>
                 </div>
                 <h2>Select a note to start editing</h2>
@@ -468,6 +493,8 @@ if (typeof window !== 'undefined') {
 </template>
 
 <style scoped lang="scss">
+/* ––– Note Editor Container ––– */
+
 .note-editor {
     display: flex;
     flex-direction: column;
@@ -476,6 +503,8 @@ if (typeof window !== 'undefined') {
     position: relative;
     overflow: hidden;
 }
+
+/* ––– Text Editor Area ––– */
 
 .text-editor-container {
     flex: 1;
@@ -497,6 +526,8 @@ if (typeof window !== 'undefined') {
         overflow: hidden;
     }
 }
+
+/* ––– Drop Overlay ––– */
 
 .drop-overlay {
     position: absolute;
@@ -531,6 +562,8 @@ if (typeof window !== 'undefined') {
     }
 }
 
+/* ––– Editor Textarea ––– */
+
 .editor-textarea {
     flex: 1;
     padding: $space-8;
@@ -555,15 +588,15 @@ if (typeof window !== 'undefined') {
         tab-size: 4;
         white-space: pre;
         overflow-wrap: normal;
-        word-wrap: normal;
     }
 }
 
-// Dictation button
+/* ––– Dictation Button ––– */
+
 .dictation-btn {
     position: absolute;
-    bottom: 1.25rem;
-    right: 1.25rem;
+    bottom: 20px;
+    right: 20px;
     width: 40px;
     height: 40px;
     border-radius: $border-radius-xl;
@@ -576,7 +609,7 @@ if (typeof window !== 'undefined') {
     cursor: pointer;
     transition: all $transition-base;
     z-index: $z-mid;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 15%);
 
     &:hover {
         background: $bg-hover;
@@ -588,7 +621,7 @@ if (typeof window !== 'undefined') {
         background: $danger-color;
         color: $text1;
         border-color: $danger-color;
-        box-shadow: 0 2px 12px rgba(229, 62, 62, 0.4);
+        box-shadow: 0 2px 12px rgb(229 62 62 / 40%);
     }
 
     &.loading {
@@ -620,10 +653,13 @@ if (typeof window !== 'undefined') {
     animation: pulse 1.5s ease-in-out infinite;
 }
 
+/* ––– Animations ––– */
+
 @keyframes spin {
     from {
         transform: rotate(0deg);
     }
+
     to {
         transform: rotate(360deg);
     }
@@ -635,11 +671,14 @@ if (typeof window !== 'undefined') {
         opacity: 1;
         transform: scale(1);
     }
+
     50% {
         opacity: 0.5;
         transform: scale(1.3);
     }
 }
+
+/* ––– Empty State ––– */
 
 .editor-empty {
     flex: 1;
@@ -666,7 +705,7 @@ if (typeof window !== 'undefined') {
     }
 
     .empty-logo-text {
-        font-family: 'Inter', sans-serif;
+        font-family: Inter, sans-serif;
         font-size: 4rem;
         font-weight: $font-weight-semibold;
         color: $text1;

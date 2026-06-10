@@ -23,9 +23,7 @@ const emit = defineEmits<{
     (e: 'file-changed', path: string): void;
 }>();
 
-// AI model composable
 const model = useAIModel();
-// Template refs - used in template but not in script
 /* eslint-disable @typescript-eslint/no-unused-vars */
 const {
     status,
@@ -47,11 +45,7 @@ const {
     openModelsFolder,
 } = model;
 /* eslint-enable @typescript-eslint/no-unused-vars */
-
-// Shared messages state (passed to multiple composables)
 const messages = ref<ChatMessage[]>([]);
-
-// Conversation history composable
 const conversation = useConversationHistory(status, lastUsedModelName, messages);
 const {
     showHistory,
@@ -72,7 +66,6 @@ const {
     cancelRename,
 } = conversation;
 
-// Agent mode composable
 const agent = useAgentMode(
     messages,
     computed(() => props.workspacePath),
@@ -80,7 +73,6 @@ const agent = useAgentMode(
 );
 const { agentMode, toggleAgentMode, parseAgentEdits, processAgentEdits, approveAgentEdit, rejectAgentEdit } = agent;
 
-// HF download composable
 const hf = useHfDownload(refreshModels);
 const {
     showHfPanel,
@@ -106,7 +98,6 @@ const {
     cancelHfDownload,
 } = hf;
 
-// Chat composable
 const chat = useAIChat(
     {
         messages,
@@ -150,13 +141,11 @@ const {
     scrollToBottom,
 } = chat;
 
-// Resizable panel
 const panelWidth = ref(340);
 const minWidth = 340;
 const maxWidth = 600;
 const isResizing = ref(false);
 
-// Token bar display
 const tokenUsagePercent = computed(() => {
     if (!status.value.contextSize) return 0;
     return Math.min(100, Math.round((conversationTokenCount.value / status.value.contextSize) * 100));
@@ -174,8 +163,6 @@ onMounted(async () => {
 onBeforeUnmount(() => {
     isResizing.value = false;
 });
-
-// Orchestration wrappers
 
 async function loadSelectedModel() {
     const result = await model.loadModel();
@@ -237,7 +224,10 @@ function startResize(e: MouseEvent) {
 </script>
 
 <template>
-    <main class="ai-panel" :style="{ width: panelWidth + 'px' }" aria-label="AI assistant panel">
+    <main
+        class="ai-panel"
+        :style="{ width: panelWidth + 'px' }"
+        aria-label="AI assistant panel">
         <div
             class="ai-panel-resize-handle"
             role="separator"
@@ -247,8 +237,7 @@ function startResize(e: MouseEvent) {
             aria-valuemin="340"
             aria-valuemax="600"
             tabindex="0"
-            @mousedown.prevent="startResize"
-        />
+            @mousedown.prevent="startResize" />
 
         <AiModelBar
             :status="status"
@@ -270,8 +259,7 @@ function startResize(e: MouseEvent) {
             @toggle-history="toggleHistory"
             @toggle-agent-mode="toggleAgentMode"
             @new-conversation="startNewConversation"
-            @close="$emit('close')"
-        />
+            @close="$emit('close')" />
 
         <AiHfPanel
             v-if="showHfPanel"
@@ -302,8 +290,7 @@ function startResize(e: MouseEvent) {
                 hfRepoFiles = [];
                 hfModelInfo = null;
             "
-            @close="showHfPanel = false"
-        />
+            @close="showHfPanel = false" />
 
         <AiHistoryPanel
             v-if="showHistory"
@@ -318,8 +305,7 @@ function startResize(e: MouseEvent) {
             @confirm-rename="confirmRename"
             @cancel-rename="cancelRename"
             @delete="deleteConversation"
-            @update:rename-value="renameValue = $event"
-        />
+            @update:rename-value="renameValue = $event" />
 
         <AiMessageList
             ref="messagesContainer"
@@ -354,8 +340,7 @@ function startResize(e: MouseEvent) {
             @reject-agent-edit="rejectAgentEdit"
             @open-models-folder="openModelsFolder"
             @open-history="openHistory"
-            @load-previous-model="loadPreviousModel"
-        />
+            @load-previous-model="loadPreviousModel" />
 
         <AiInputArea
             :agent-mode="agentMode"
@@ -370,8 +355,7 @@ function startResize(e: MouseEvent) {
             @update:input-message="inputMessage = $event"
             @update:include-note-context="includeNoteContext = $event"
             @send="sendMessage"
-            @stop="stopGeneration"
-        />
+            @stop="stopGeneration" />
     </main>
 </template>
 
@@ -394,7 +378,7 @@ function startResize(e: MouseEvent) {
     width: 4px;
     cursor: col-resize;
     z-index: 10;
-    transition: background 0.15s;
+    transition: background $transition-fast;
 
     &:hover,
     &:active {

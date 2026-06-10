@@ -15,7 +15,6 @@ const emit = defineEmits<{
     close: [];
 }>();
 
-// Export state
 const exportWithBackground = ref(true);
 const exportScale = ref(2);
 const exportOnlySelected = ref(false);
@@ -30,7 +29,6 @@ const exportScaleOptions = [
     { label: '3x', value: 3 },
 ];
 
-// Update preview when dialog opens
 watch(
     () => props.visible,
     (v) => {
@@ -41,7 +39,6 @@ watch(
     },
 );
 
-// Update preview when settings change
 watch([exportWithBackground, exportScale, exportOnlySelected], () => {
     if (props.visible) updateExportPreview();
 });
@@ -136,22 +133,43 @@ async function copyClipboard() {
 <template>
     <teleport to="body">
         <transition name="export-fade">
-            <div v-if="visible" class="export-overlay" role="presentation" @click.self="close">
-                <dialog class="export-dialog" aria-labelledby="export-dialog-title" aria-modal="true">
+            <div
+                v-if="visible"
+                class="export-overlay"
+                role="presentation"
+                @click.self="close">
+                <dialog
+                    class="export-dialog"
+                    aria-labelledby="export-dialog-title"
+                    aria-modal="true">
+                    <!-- Image preview area -->
                     <div class="export-preview">
-                        <figure v-if="exportPreviewUrl" class="export-preview-figure">
+                        <figure
+                            v-if="exportPreviewUrl"
+                            class="export-preview-figure">
                             <img
                                 :src="exportPreviewUrl"
                                 alt="Preview of the image to be exported"
-                                class="export-preview-img"
-                            />
+                                class="export-preview-img" />
                         </figure>
-                        <div v-else class="export-empty" role="status" aria-live="polite">No elements to export</div>
+                        <div
+                            v-else
+                            class="export-empty"
+                            role="status"
+                            aria-live="polite"
+                            >No elements to export</div
+                        >
                     </div>
 
+                    <!-- Export options and controls -->
                     <div class="export-settings">
-                        <h2 id="export-dialog-title" class="export-title">Export image</h2>
+                        <h2
+                            id="export-dialog-title"
+                            class="export-title"
+                            >Export image</h2
+                        >
 
+                        <!-- Toggles for background and selection -->
                         <fieldset>
                             <legend class="sr-only">Export options</legend>
 
@@ -160,51 +178,66 @@ async function copyClipboard() {
                                     v-model="exportWithBackground"
                                     type="checkbox"
                                     class="export-checkbox"
-                                    aria-label="Include background in export"
-                                />
-                                <span class="toggle-track"><span class="toggle-thumb" aria-hidden="true"></span></span>
+                                    aria-label="Include background in export" />
+                                <span class="toggle-track"
+                                    ><span
+                                        class="toggle-thumb"
+                                        aria-hidden="true"></span
+                                ></span>
                                 <span>Background</span>
                             </label>
 
-                            <label v-if="hasSelection" class="export-toggle">
+                            <label
+                                v-if="hasSelection"
+                                class="export-toggle">
                                 <input
                                     v-model="exportOnlySelected"
                                     type="checkbox"
                                     class="export-checkbox"
-                                    aria-label="Export selected elements only"
-                                />
-                                <span class="toggle-track"><span class="toggle-thumb" aria-hidden="true"></span></span>
+                                    aria-label="Export selected elements only" />
+                                <span class="toggle-track"
+                                    ><span
+                                        class="toggle-thumb"
+                                        aria-hidden="true"></span
+                                ></span>
                                 <span>Selected only</span>
                             </label>
                         </fieldset>
 
+                        <!-- Scale selection buttons -->
                         <fieldset class="export-field">
                             <legend class="export-label">Scale</legend>
-                            <div class="export-scale-btns" role="group" aria-label="Export scale options">
+                            <div
+                                class="export-scale-btns"
+                                role="group"
+                                aria-label="Export scale options">
                                 <button
                                     v-for="opt in exportScaleOptions"
                                     :key="opt.value"
                                     class="export-scale-btn"
                                     :class="{ active: exportScale === opt.value }"
                                     :aria-pressed="exportScale === opt.value"
-                                    @click="exportScale = opt.value"
-                                >
+                                    @click="exportScale = opt.value">
                                     {{ opt.label }}
                                 </button>
                             </div>
                         </fieldset>
 
-                        <output v-if="exportPreviewWidth" class="export-dimensions" aria-label="Export dimensions">
+                        <!-- Dimension display -->
+                        <output
+                            v-if="exportPreviewWidth"
+                            class="export-dimensions"
+                            aria-label="Export dimensions">
                             {{ exportPreviewWidth }} &times; {{ exportPreviewHeight }}
                         </output>
 
+                        <!-- Action buttons: save and copy -->
                         <div class="export-actions">
                             <button
                                 class="export-action-btn primary"
                                 :disabled="isExporting"
                                 :aria-busy="isExporting"
-                                @click="savePng"
-                            >
+                                @click="savePng">
                                 <svg
                                     width="16"
                                     height="16"
@@ -213,11 +246,14 @@ async function copyClipboard() {
                                     stroke="currentColor"
                                     stroke-width="2"
                                     aria-hidden="true"
-                                    focusable="false"
-                                >
+                                    focusable="false">
                                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                                     <polyline points="7 10 12 15 17 10" />
-                                    <line x1="12" y1="15" x2="12" y2="3" />
+                                    <line
+                                        x1="12"
+                                        y1="15"
+                                        x2="12"
+                                        y2="3" />
                                 </svg>
                                 Save PNG
                             </button>
@@ -225,8 +261,7 @@ async function copyClipboard() {
                                 class="export-action-btn"
                                 :disabled="isExporting"
                                 :aria-busy="isExporting"
-                                @click="copyClipboard"
-                            >
+                                @click="copyClipboard">
                                 <svg
                                     width="16"
                                     height="16"
@@ -235,16 +270,24 @@ async function copyClipboard() {
                                     stroke="currentColor"
                                     stroke-width="2"
                                     aria-hidden="true"
-                                    focusable="false"
-                                >
-                                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                                    focusable="false">
+                                    <rect
+                                        x="9"
+                                        y="9"
+                                        width="13"
+                                        height="13"
+                                        rx="2" />
                                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                                 </svg>
                                 Copy PNG
                             </button>
                         </div>
 
-                        <button class="export-close-btn" aria-label="Close export dialog" @click="close">
+                        <!-- Close button -->
+                        <button
+                            class="export-close-btn"
+                            aria-label="Close export dialog"
+                            @click="close">
                             &times;
                         </button>
                     </div>
@@ -255,10 +298,12 @@ async function copyClipboard() {
 </template>
 
 <style scoped lang="scss">
+/* ––– Overlay & Dialog Container ––– */
+
 .export-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgb(0 0 0 / 50%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -269,12 +314,14 @@ async function copyClipboard() {
     display: flex;
     background: $bg-primary;
     border-radius: $border-radius-xl;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 20px 60px rgb(0 0 0 / 30%);
     overflow: hidden;
     max-width: 720px;
     max-height: 80vh;
     width: 90vw;
 }
+
+/* ––– Preview Area ––– */
 
 .export-preview {
     flex: 1;
@@ -308,6 +355,8 @@ async function copyClipboard() {
     font-size: $font-size-sm;
 }
 
+/* ––– Settings Panel ––– */
+
 .export-settings {
     width: 220px;
     padding: $space-6 $space-5;
@@ -324,6 +373,8 @@ async function copyClipboard() {
     margin: 0;
     color: $text1;
 }
+
+/* ––– Toggle Switches ––– */
 
 .export-toggle {
     display: flex;
@@ -356,7 +407,7 @@ async function copyClipboard() {
         border-radius: $border-radius-lg;
         background: $base2;
         transition: transform $transition-base;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 1px 3px rgb(0 0 0 / 20%);
     }
 
     .export-checkbox:checked + .toggle-track {
@@ -367,6 +418,8 @@ async function copyClipboard() {
         }
     }
 }
+
+/* ––– Scale Selection ––– */
 
 .export-field {
     display: flex;
@@ -420,6 +473,8 @@ async function copyClipboard() {
     text-align: center;
 }
 
+/* ––– Action Buttons ––– */
+
 .export-actions {
     display: flex;
     flex-direction: column;
@@ -465,6 +520,8 @@ async function copyClipboard() {
     }
 }
 
+/* ––– Close Button ––– */
+
 .export-close-btn {
     position: absolute;
     top: 12px;
@@ -487,14 +544,19 @@ async function copyClipboard() {
     }
 }
 
+/* ––– Dialog Transition Animation ––– */
+
 .export-fade-enter-active,
 .export-fade-leave-active {
     transition: opacity $transition-base;
 }
+
 .export-fade-enter-from,
 .export-fade-leave-to {
     opacity: 0;
 }
+
+/* ––– Fieldset Reset ––– */
 
 fieldset {
     border: none;

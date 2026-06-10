@@ -25,11 +25,20 @@ async function handleRefresh() {
 </script>
 
 <template>
-    <aside class="theme-panel" aria-label="Theme selection panel">
+    <aside
+        class="theme-panel"
+        aria-label="Theme selection panel">
         <header class="theme-header">
             <span class="theme-title">Theme</span>
-            <div class="header-actions" role="toolbar" aria-label="Theme panel controls">
-                <button class="icon-btn" title="Refresh list" aria-label="Refresh theme list" @click="handleRefresh">
+            <div
+                class="header-actions"
+                role="toolbar"
+                aria-label="Theme panel controls">
+                <button
+                    class="icon-btn"
+                    title="Refresh list"
+                    aria-label="Refresh theme list"
+                    @click="handleRefresh">
                     <svg
                         width="14"
                         height="14"
@@ -37,13 +46,16 @@ async function handleRefresh() {
                         fill="none"
                         stroke="currentColor"
                         stroke-width="2"
-                        aria-hidden="true"
-                    >
+                        aria-hidden="true">
                         <path d="M21 12a9 9 0 1 1-3-6.7" />
                         <path d="M21 4v5h-5" />
                     </svg>
                 </button>
-                <button class="icon-btn" title="Close" aria-label="Close theme panel" @click="emit('close')">
+                <button
+                    class="icon-btn"
+                    title="Close"
+                    aria-label="Close theme panel"
+                    @click="emit('close')">
                     <svg
                         width="14"
                         height="14"
@@ -51,15 +63,19 @@ async function handleRefresh() {
                         fill="none"
                         stroke="currentColor"
                         stroke-width="2"
-                        aria-hidden="true"
-                    >
-                        <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" />
+                        aria-hidden="true">
+                        <path
+                            d="M18 6L6 18M6 6l12 12"
+                            stroke-linecap="round" />
                     </svg>
                 </button>
             </div>
         </header>
 
-        <div class="theme-list" role="listbox" aria-label="Available themes">
+        <div
+            class="theme-list"
+            role="listbox"
+            aria-label="Available themes">
             <button
                 v-for="theme in themes"
                 :key="theme.id"
@@ -68,17 +84,30 @@ async function handleRefresh() {
                 role="option"
                 :aria-selected="theme.id === activeId"
                 :aria-label="`${theme.name} theme${theme.description ? ': ' + theme.description : ''}`"
-                @click="handleSelect(theme.id)"
-            >
-                <span class="theme-swatches" aria-hidden="true">
-                    <span class="swatch" :style="{ background: theme.colors['bg-primary'] || '#000' }"></span>
-                    <span class="swatch" :style="{ background: theme.colors['bg-secondary'] || '#000' }"></span>
-                    <span class="swatch" :style="{ background: theme.colors['accent-color'] || '#3eb489' }"></span>
-                    <span class="swatch" :style="{ background: theme.colors['text1'] || '#fff' }"></span>
+                @click="handleSelect(theme.id)">
+                <span
+                    class="theme-swatches"
+                    aria-hidden="true">
+                    <span
+                        class="swatch"
+                        :style="{ background: theme.colors['bg-primary'] || '#000' }"></span>
+                    <span
+                        class="swatch"
+                        :style="{ background: theme.colors['bg-secondary'] || '#000' }"></span>
+                    <span
+                        class="swatch"
+                        :style="{ background: theme.colors['accent-color'] || '#3eb489' }"></span>
+                    <span
+                        class="swatch"
+                        :style="{ background: theme.colors['text1'] || '#fff' }"></span>
                 </span>
                 <span class="theme-meta">
                     <span class="theme-name">{{ theme.name }}</span>
-                    <span v-if="theme.description" class="theme-desc">{{ theme.description }}</span>
+                    <span
+                        v-if="theme.description"
+                        class="theme-desc"
+                        >{{ theme.description }}</span
+                    >
                 </span>
                 <svg
                     v-if="theme.id === activeId"
@@ -91,17 +120,24 @@ async function handleRefresh() {
                     stroke-width="2.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                    aria-hidden="true"
-                >
+                    aria-hidden="true">
                     <path d="M5 12l5 5 9-11" />
                 </svg>
             </button>
 
-            <div v-if="!themes.length" class="theme-empty" role="status">No themes found.</div>
+            <div
+                v-if="!themes.length"
+                class="theme-empty"
+                role="status"
+                >No themes found.</div
+            >
         </div>
 
         <footer class="theme-footer">
-            <button class="footer-btn" aria-label="Open themes folder" @click="handleOpenFolder">
+            <button
+                class="footer-btn"
+                aria-label="Open themes folder"
+                @click="handleOpenFolder">
                 Open themes folder…
             </button>
             <p class="footer-hint">
@@ -112,6 +148,8 @@ async function handleRefresh() {
 </template>
 
 <style scoped lang="scss">
+/* ––– Theme Panel Container ––– */
+
 .theme-panel {
     display: flex;
     flex-direction: column;
@@ -121,6 +159,8 @@ async function handleRefresh() {
     width: 340px;
     min-width: 280px;
 }
+
+/* ––– Header ––– */
 
 .theme-header {
     display: flex;
@@ -159,6 +199,8 @@ async function handleRefresh() {
     }
 }
 
+/* ––– Theme List ––– */
+
 .theme-list {
     flex: 1;
     overflow-y: auto;
@@ -186,9 +228,11 @@ async function handleRefresh() {
 
     &.active {
         background: $accent-color-alpha;
-        border-color: color-mix(in srgb, var(--accent-color) 35%, transparent);
+        border-color: color-mix(in srgb, $accent-color 35%, transparent);
     }
 }
+
+/* ––– Theme Swatches ––– */
 
 .theme-swatches {
     display: inline-flex;
@@ -203,6 +247,8 @@ async function handleRefresh() {
     height: 24px;
     display: block;
 }
+
+/* ––– Theme Metadata ––– */
 
 .theme-meta {
     flex: 1;
@@ -241,6 +287,8 @@ async function handleRefresh() {
     font-size: $font-size-sm;
 }
 
+/* ––– Footer ––– */
+
 .theme-footer {
     border-top: 1px solid $text3;
     padding: $space-2 $space-4 $space-3;
@@ -277,6 +325,8 @@ async function handleRefresh() {
         border-radius: $border-radius-xs;
     }
 }
+
+/* ––– Scrollbar Styling ––– */
 
 .theme-list::-webkit-scrollbar {
     width: 6px;

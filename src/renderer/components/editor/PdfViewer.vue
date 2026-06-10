@@ -19,16 +19,35 @@ watch(
 </script>
 
 <template>
-    <div class="pdf-viewer">
-        <iframe v-if="pdfUrl && !hasError" :src="pdfUrl" class="pdf-preview" @error="hasError = true" />
-        <div v-if="hasError" class="pdf-error">
+    <div
+        class="pdf-viewer"
+        role="region"
+        aria-label="PDF document viewer">
+        <!-- PDF preview area -->
+        <iframe
+            v-if="pdfUrl && !hasError"
+            :src="pdfUrl"
+            class="pdf-preview"
+            title="PDF document"
+            aria-label="Embedded PDF document"
+            @error="hasError = true" />
+
+        <!-- Error state fallback -->
+        <section
+            v-if="hasError"
+            class="pdf-error"
+            role="alert"
+            aria-live="polite">
+            <h2>PDF Load Error</h2>
             <p>Failed to load PDF</p>
             <p class="pdf-error-hint">This file may be corrupted or in an unsupported format</p>
-        </div>
+        </section>
     </div>
 </template>
 
 <style lang="scss" scoped>
+/* ––– PDF Viewer Container ––– */
+
 .pdf-viewer {
     flex: 1;
     display: flex;
@@ -40,13 +59,17 @@ watch(
     position: relative;
 }
 
+/* ––– PDF Preview ––– */
+
 .pdf-preview {
     width: 100%;
     height: 100%;
     border: none;
     position: relative;
-    z-index: 1;
+    z-index: $z-normal;
 }
+
+/* ––– Error State ––– */
 
 .pdf-error {
     display: flex;
@@ -55,15 +78,15 @@ watch(
     justify-content: center;
     color: $text2;
     position: relative;
-    z-index: 1;
+    z-index: $z-normal;
 
     p {
-        margin: 0.5rem 0;
-        font-size: 1rem;
+        margin: $space-2 0;
+        font-size: $font-size-base;
     }
 
     .pdf-error-hint {
-        font-size: 0.85rem;
+        font-size: $font-size-sm;
         opacity: 0.7;
     }
 }

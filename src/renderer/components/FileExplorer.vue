@@ -288,8 +288,7 @@ function handleRootDrop(event: DragEvent) {
             :class="{ 'drag-over-root': isDragOverRoot }"
             @dragover.prevent="handleRootDragOver"
             @dragleave="handleRootDragLeave"
-            @drop.prevent="handleRootDrop"
-        >
+            @drop.prevent="handleRootDrop">
             <!-- Recursive folder tree component -->
             <FolderNode
                 v-for="node in folderTree"
@@ -312,10 +311,11 @@ function handleRootDrop(event: DragEvent) {
                 @update-rename-value="renameValue = $event"
                 @context-menu="handleContextMenu"
                 @move-file="handleMoveFile"
-                @move-folder="handleMoveFolder"
-            />
+                @move-folder="handleMoveFolder" />
 
-            <div v-if="files.length === 0" class="empty-state">
+            <div
+                v-if="files.length === 0"
+                class="empty-state">
                 <p>No files found.</p>
                 <p class="hint">Add text, code, or media files to get started.</p>
             </div>
@@ -327,12 +327,13 @@ function handleRootDrop(event: DragEvent) {
             :position="contextMenu.position"
             :items="contextMenuItems"
             @close="closeContextMenu"
-            @action="handleContextMenuAction"
-        />
+            @action="handleContextMenuAction" />
     </div>
 </template>
 
 <style scoped lang="scss">
+/* ––– File Explorer ––– */
+
 .file-explorer {
     display: flex;
     flex-direction: column;
@@ -342,12 +343,13 @@ function handleRootDrop(event: DragEvent) {
     overflow: hidden;
 }
 
+/* ––– File List ––– */
+
 .file-list {
     flex: 1;
     overflow-y: auto;
-    padding: 0.25rem 0;
+    padding: $space-1 0;
 
-    // Hide scrollbar by default, show on hover
     &::-webkit-scrollbar {
         width: 6px;
     }
@@ -358,8 +360,8 @@ function handleRootDrop(event: DragEvent) {
 
     &::-webkit-scrollbar-thumb {
         background: transparent;
-        border-radius: 3px;
-        transition: background 0.2s ease;
+        border-radius: $border-radius-xs;
+        transition: background $transition-base;
     }
 
     &:hover::-webkit-scrollbar-thumb {
@@ -377,18 +379,20 @@ function handleRootDrop(event: DragEvent) {
     }
 }
 
+/* ––– Empty State ––– */
+
 .empty-state {
-    padding: 2rem 1rem;
+    padding: $space-8 $space-4;
     text-align: center;
     color: $text2;
 
     p {
-        margin: 0.5rem 0;
-        font-size: 0.9rem;
+        margin: $space-2 0;
+        font-size: $font-size-base;
     }
 
     .hint {
-        font-size: 0.8rem;
+        font-size: $font-size-sm;
         color: $text2;
     }
 }

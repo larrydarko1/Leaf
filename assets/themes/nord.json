@@ -17,11 +17,15 @@
         "bg-selected": "#4c566a",
         "border-color": "#3b4252",
         "accent-color": "#88c0d0",
-        "accent-color-alpha": "rgba(136, 192, 208, 0.15)",
+        "accent-color-alpha": "rgb(136 192 208 / 15%)",
+        "success-color": "#28a745",
+        "success-color-alpha": "rgb(40 167 69 / 15%)",
+        "warning-color": "#ffc107",
+        "warning-color-alpha": "rgb(255 193 7 / 15%)",
         "danger-color": "#bf616a",
-        "danger-color-alpha": "rgba(191, 97, 106, 0.15)",
+        "danger-color-alpha": "rgb(191 97 106 / 15%)",
         "scrollbar-thumb": "#4c566a",
         "scrollbar-thumb-hover": "#5e6779",
-        "grid-color": "rgba(255,255,255,0.06)"
+        "grid-color": "rgb(255 255 255 / 6%)"
     }
 }

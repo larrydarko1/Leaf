@@ -18,7 +18,6 @@ const TRANSPARENT_GIF = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAA
 const dragGhost = new Image();
 dragGhost.src = TRANSPARENT_GIF;
 
-// --- Drag and drop ---
 const dragStartIndex = ref(-1);
 const dragOverIndex = ref(-1);
 
@@ -65,15 +64,19 @@ function onDragEnd() {
 </script>
 
 <template>
-    <div v-if="tabs.length > 0" class="tab-bar" role="tablist" aria-label="Open files">
+    <div
+        v-if="tabs.length > 0"
+        class="tab-bar"
+        role="tablist"
+        aria-label="Open files">
         <div
             v-for="(tab, i) in tabs"
             :key="tab.file.path"
             class="tab"
             :class="{
-                active: i === activeIndex,
-                unsaved: tab.hasUnsavedChanges,
-                dragging: i === dragStartIndex,
+                'active': i === activeIndex,
+                'unsaved': tab.hasUnsavedChanges,
+                'dragging': i === dragStartIndex,
                 'drop-left': i === dragOverIndex && dragStartIndex > i,
                 'drop-right': i === dragOverIndex && dragStartIndex < i,
             }"
@@ -91,16 +94,22 @@ function onDragEnd() {
             @dragstart="onDragStart($event, i)"
             @dragover="onDragOver($event, i)"
             @drop="onDrop($event, i)"
-            @dragend="onDragEnd"
-        >
-            <span class="tab-name" aria-hidden="false">{{ getFileNameWithoutExtension(tab.file.name) }}</span>
-            <span v-if="tab.hasUnsavedChanges" class="tab-dot" aria-label="Unsaved changes" role="status" />
+            @dragend="onDragEnd">
+            <span
+                class="tab-name"
+                aria-hidden="false"
+                >{{ getFileNameWithoutExtension(tab.file.name) }}</span
+            >
+            <span
+                v-if="tab.hasUnsavedChanges"
+                class="tab-dot"
+                aria-label="Unsaved changes"
+                role="status" />
             <button
                 class="tab-close"
                 :aria-label="`Close ${tab.file.name}`"
                 :title="`Close ${tab.file.name}`"
-                @click.stop="emit('close', i)"
-            >
+                @click.stop="emit('close', i)">
                 <svg
                     width="10"
                     height="10"
@@ -110,10 +119,17 @@ function onDragEnd() {
                     stroke-width="1.8"
                     stroke-linecap="round"
                     aria-hidden="true"
-                    focusable="false"
-                >
-                    <line x1="2" y1="2" x2="8" y2="8" />
-                    <line x1="8" y1="2" x2="2" y2="8" />
+                    focusable="false">
+                    <line
+                        x1="2"
+                        y1="2"
+                        x2="8"
+                        y2="8" />
+                    <line
+                        x1="8"
+                        y1="2"
+                        x2="2"
+                        y2="8" />
                 </svg>
             </button>
         </div>
@@ -121,14 +137,15 @@ function onDragEnd() {
 </template>
 
 <style scoped lang="scss">
+/* ––– Tab Bar Container ––– */
+
 .tab-bar {
     display: flex;
     align-items: stretch;
     height: 36px;
     background: $base1;
     border-bottom: 1px solid color-mix(in srgb, $text3 80%, transparent);
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow: auto hidden;
     flex-shrink: 0;
     scrollbar-width: none;
 
@@ -136,6 +153,8 @@ function onDragEnd() {
         display: none;
     }
 }
+
+/* ––– Tab Item ––– */
 
 .tab {
     display: flex;
@@ -184,7 +203,6 @@ function onDragEnd() {
             opacity: 1;
         }
 
-        // bottom border highlight to indicate active tab
         &::after {
             content: '';
             position: absolute;
@@ -196,6 +214,8 @@ function onDragEnd() {
         }
     }
 }
+
+/* ––– Tab Content ––– */
 
 .tab-name {
     flex: 1;
@@ -212,6 +232,8 @@ function onDragEnd() {
     background: $accent-color;
     flex-shrink: 0;
 }
+
+/* ––– Tab Close Button ––– */
 
 .tab-close {
     display: flex;

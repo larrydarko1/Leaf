@@ -38,6 +38,9 @@ jobs:
       - name: Format check
         run: npm run format:check
 
+      - name: Style check
+        run: npm run stylelint
+
       - name: Type check
         run: npx vue-tsc -b
 

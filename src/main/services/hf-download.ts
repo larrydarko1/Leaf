@@ -103,7 +103,7 @@ function hfApiGet(apiPath: string): Promise<any> {
             path: apiPath,
             method: 'GET',
             headers: {
-                Accept: 'application/json',
+                'Accept': 'application/json',
                 'User-Agent': 'Leaf-App/1.0',
             },
         };

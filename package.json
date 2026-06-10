@@ -35,7 +35,6 @@
         "format:check": "prettier --check \"src/**/*.{ts,vue,scss,json}\"",
         "stylelint": "stylelint \"src/**/*.{scss,vue}\"",
         "stylelint:fix": "stylelint \"src/**/*.{scss,vue}\" --fix",
-        "convert:px-to-units": "node scripts/convert-px-to-units.mjs",
         "test": "vitest run",
         "test:watch": "vitest",
         "prepare": "husky",

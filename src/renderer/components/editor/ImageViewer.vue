@@ -36,31 +36,49 @@ watch(
 </script>
 
 <template>
-    <div class="image-viewer">
-        <div v-if="isLoading" class="image-loading">
+    <div
+        class="image-viewer"
+        role="region"
+        aria-label="Image viewer">
+        <!-- Loading state -->
+        <div
+            v-if="isLoading"
+            class="image-loading"
+            aria-live="polite"
+            aria-busy="true">
             <p>Loading image...</p>
         </div>
+
+        <!-- Image preview -->
         <img
             v-else-if="imageUrl && !hasError"
             :src="imageUrl"
             :alt="fileName"
             class="image-preview"
             @load="hasError = false"
-            @error="hasError = true"
-        />
-        <div v-if="hasError" class="image-error">
+            @error="hasError = true" />
+
+        <!-- Error state fallback -->
+        <section
+            v-if="hasError"
+            class="image-error"
+            role="alert"
+            aria-live="polite">
+            <h2>Image Load Error</h2>
             <p>Failed to load image</p>
-        </div>
+        </section>
     </div>
 </template>
 
 <style lang="scss" scoped>
+/* ––– Image Viewer Container ––– */
+
 .image-viewer {
     flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2rem;
+    padding: $space-8;
     overflow: auto;
     background: $base1;
     position: relative;
@@ -77,14 +95,18 @@ watch(
     }
 }
 
+/* ––– Image Preview ––– */
+
 .image-preview {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
-    border-radius: 8px;
+    border-radius: $border-radius-lg;
     position: relative;
-    z-index: 1;
+    z-index: $z-normal;
 }
+
+/* ––– Loading State ––– */
 
 .image-loading {
     display: flex;
@@ -93,13 +115,15 @@ watch(
     justify-content: center;
     color: $text2;
     position: relative;
-    z-index: 1;
+    z-index: $z-normal;
 
     p {
-        margin: 0.5rem 0;
-        font-size: 1rem;
+        margin: $space-2 0;
+        font-size: $font-size-base;
     }
 }
+
+/* ––– Error State ––– */
 
 .image-error {
     display: flex;
@@ -108,11 +132,11 @@ watch(
     justify-content: center;
     color: $text2;
     position: relative;
-    z-index: 1;
+    z-index: $z-normal;
 
     p {
-        margin: 0.5rem 0;
-        font-size: 1rem;
+        margin: $space-2 0;
+        font-size: $font-size-base;
     }
 }
 </style>

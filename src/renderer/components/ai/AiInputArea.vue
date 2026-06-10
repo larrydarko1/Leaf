@@ -23,7 +23,7 @@ defineEmits<{
 const inputAreaRef = ref<HTMLDivElement>(null!);
 const isResizing = ref(false);
 const maxHeightPx = ref(120);
-const minHeight = 31;
+const minHeight = 40;
 const maxHeight = 150;
 
 function startResize(e: MouseEvent) {
@@ -68,16 +68,21 @@ onMounted(() => {
 </script>
 
 <template>
-    <div ref="inputAreaRef" class="ai-input-area">
+    <div
+        ref="inputAreaRef"
+        class="ai-input-area">
         <div
             class="ai-resize-handle"
             :class="{ 'ai-resize-active': isResizing }"
             title="Drag to resize input area"
-            @mousedown="startResize"
-        >
+            @mousedown="startResize">
             <div class="ai-resize-grip" />
         </div>
-        <div v-if="agentMode" class="ai-agent-indicator">
+
+        <!-- Agent mode indicator -->
+        <div
+            v-if="agentMode"
+            class="ai-agent-indicator">
             <svg
                 width="10"
                 height="10"
@@ -87,34 +92,56 @@ onMounted(() => {
                 stroke-width="2"
                 stroke-linecap="round"
                 stroke-linejoin="round"
-            >
+                aria-hidden="true">
                 <polyline points="16 18 22 12 16 6" />
                 <polyline points="8 6 2 12 8 18" />
             </svg>
-            <span v-if="activeFile" class="ai-agent-file-name">Agent · {{ activeFile.name }}</span>
-            <span v-else class="ai-agent-no-file">Agent · No file open</span>
+            <span
+                v-if="activeFile"
+                class="ai-agent-file-name"
+                aria-label="Agent mode active with file"
+                >Agent · {{ activeFile.name }}</span
+            >
+            <span
+                v-else
+                class="ai-agent-no-file"
+                aria-label="Agent mode active"
+                >Agent · No file open</span
+            >
         </div>
-        <div v-if="includeNoteContext && activeFile" class="ai-context-hint">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+
+        <!-- Context inclusion indicator -->
+        <div
+            v-if="includeNoteContext && activeFile"
+            class="ai-context-hint">
+            <svg
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z" />
             </svg>
-            {{ activeFile.name }}
+            <span aria-label="Current note included as context">{{ activeFile.name }}</span>
         </div>
+
         <div class="ai-input-row">
-            <label class="ai-context-toggle" title="Include current note as context">
+            <label
+                class="ai-context-toggle"
+                title="Include current note as context">
                 <input
                     :checked="includeNoteContext"
                     type="checkbox"
                     :disabled="!activeFile"
-                    @change="$emit('update:includeNoteContext', ($event.target as HTMLInputElement).checked)"
-                />
+                    aria-label="Include current note as context"
+                    @change="$emit('update:includeNoteContext', ($event.target as HTMLInputElement).checked)" />
                 <svg
                     width="14"
                     height="14"
                     viewBox="0 0 24 24"
                     fill="currentColor"
                     :class="{ 'ai-context-active': includeNoteContext && activeFile }"
-                >
+                    aria-hidden="true">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z" />
                 </svg>
             </label>
@@ -126,12 +153,29 @@ onMounted(() => {
                 :style="{ height: maxHeightPx + 'px' }"
                 :disabled="!isReady || isAnyGenerating"
                 rows="1"
+                aria-label="AI message input"
                 @input="$emit('update:inputMessage', ($event.target as HTMLTextAreaElement).value)"
-                @keydown.enter.exact.prevent="$emit('send')"
-            />
-            <button v-if="isStreaming" class="ai-btn-send ai-btn-stop" title="Stop generating" @click="$emit('stop')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--text3)" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="6" y="6" width="12" height="12" rx="2" ry="2" />
+                @keydown.enter.exact.prevent="$emit('send')" />
+            <button
+                v-if="isStreaming"
+                class="ai-btn-send ai-btn-stop"
+                title="Stop generating"
+                aria-label="Stop AI response"
+                @click="$emit('stop')">
+                <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="var(--text3)"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true">
+                    <rect
+                        x="6"
+                        y="6"
+                        width="12"
+                        height="12"
+                        rx="2"
+                        ry="2" />
                 </svg>
             </button>
             <button
@@ -139,19 +183,29 @@ onMounted(() => {
                 class="ai-btn-send"
                 :disabled="!inputMessage.trim() || !isReady || isStreaming"
                 title="Send message"
-                @click="$emit('send')"
-            >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                aria-label="Send message"
+                @click="$emit('send')">
+                <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true">
+                    <g
+                        id="SVGRepo_bgCarrier"
+                        stroke-width="0"></g>
+                    <g
+                        id="SVGRepo_tracerCarrier"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"></g>
                     <g id="SVGRepo_iconCarrier">
                         <path
                             d="M10 14L13 21L20 4L3 11L6.5 12.5"
                             stroke="var(--text3)"
                             stroke-width="1.5"
                             stroke-linecap="round"
-                            stroke-linejoin="round"
-                        ></path>
+                            stroke-linejoin="round"></path>
                     </g>
                 </svg>
             </button>
@@ -160,154 +214,33 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
+/* ––– Root Container ––– */
+
 .ai-input-area {
     display: flex;
     flex-direction: column;
-    padding: 0.5rem 0.75rem 0.75rem;
+    padding: $space-2 $space-3 $space-3;
     flex-shrink: 0;
     user-select: none;
 }
 
-.ai-agent-indicator {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-size: 0.7rem;
-    color: $accent-color;
-    padding: 0 0.25rem 0.4rem;
-    flex-wrap: wrap;
-    svg {
-        flex-shrink: 0;
-    }
-    span {
-        font-weight: 600;
-        white-space: nowrap;
-    }
-}
-
-.ai-context-hint {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-size: 0.7rem;
-    color: $accent-color;
-    padding: 0 0.25rem 0.4rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.ai-input-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 0;
-    background: $bg-primary;
-    border: 1px solid $text3;
-    border-radius: 12px;
-    padding: 0.2rem 0.2rem 0.2rem 0.35rem;
-    transition: border-color 0.2s;
-    &:focus-within {
-        border-color: $accent-color;
-    }
-}
-
-.ai-context-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    padding: 0.5em 0.3em;
-    color: $text2;
-    flex-shrink: 0;
-    border-radius: 0.375em;
-    transition:
-        color 0.15s,
-        background 0.15s;
-    input {
-        display: none;
-    }
-    &:hover {
-        color: $text1;
-        background: $bg-hover;
-    }
-}
-
-.ai-context-active {
-    color: $accent-color !important;
-}
-
-.ai-input {
-    flex: 1;
-    min-width: 0;
-    padding: 0.4rem 0.5rem;
-    background: transparent;
-    color: $text1;
-    border: none;
-    font-size: 0.82rem;
-    font-family: inherit;
-    line-height: 1.4;
-    resize: none;
-    overflow-y: auto;
-    &::placeholder {
-        color: $text2;
-    }
-    &:focus {
-        outline: none;
-    }
-    &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-}
-
-.ai-btn-send {
-    background: $accent-color;
-    color: $text1;
-    border: none;
-    border-radius: 8px;
-    width: 30px;
-    height: 30px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition:
-        opacity 0.2s,
-        transform 0.15s,
-        color 0.15s;
-    &:hover:not(:disabled) {
-        opacity: 0.85;
-        transform: scale(1.05);
-    }
-    &:disabled {
-        opacity: 0.3;
-        cursor: not-allowed;
-    }
-
-    &.ai-btn-stop {
-        background: var(--danger-color, #e74c3c);
-        &:hover {
-            opacity: 0.85;
-            transform: scale(1.05);
-        }
-    }
-}
+/* ––– Resize Handle ––– */
 
 .ai-resize-handle {
     display: flex;
     align-items: center;
     justify-content: center;
     height: 12px;
-    margin-top: 0.35em;
+    margin-top: $space-1;
     cursor: ns-resize;
-    transition: background-color 0.2s;
+    transition: background-color $transition-base;
     user-select: none;
     pointer-events: auto;
 
     &:hover,
     &.ai-resize-active {
-        background-color: rgba(0, 0, 0, 0.05);
+        background: transparent;
+
         .ai-resize-grip {
             background-color: $accent-color;
             opacity: 1;
@@ -316,7 +249,7 @@ onMounted(() => {
 
     &.ai-resize-active {
         user-select: none;
-        background-color: rgba(0, 0, 0, 0.08);
+        background: transparent;
     }
 }
 
@@ -324,10 +257,159 @@ onMounted(() => {
     width: 40px;
     height: 3px;
     background-color: $text3;
-    border-radius: 0.125em;
+    border-radius: $border-radius-xs;
     opacity: 0.4;
     transition:
-        opacity 0.2s,
-        background-color 0.2s;
+        opacity $transition-base,
+        background-color $transition-base;
+}
+
+/* ––– Agent Mode Indicator ––– */
+
+.ai-agent-indicator {
+    display: flex;
+    align-items: center;
+    gap: $space-1;
+    font-size: $font-size-xs;
+    color: $accent-color;
+    padding: 0 $space-1 $space-2;
+    flex-wrap: wrap;
+
+    svg {
+        flex-shrink: 0;
+    }
+
+    span {
+        font-weight: $font-weight-semibold;
+        white-space: nowrap;
+    }
+}
+
+/* ––– Context Hint ––– */
+
+.ai-context-hint {
+    display: flex;
+    align-items: center;
+    gap: $space-1;
+    font-size: $font-size-xs;
+    color: $accent-color;
+    padding: 0 $space-1 $space-2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ––– Input Row ––– */
+
+.ai-input-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    background: $bg-primary;
+    border: 1px solid $text3;
+    border-radius: $border-radius-xl;
+    padding: $space-1 $space-1 $space-1 $space-2;
+    transition: border-color $transition-base;
+
+    &:focus-within {
+        border-color: $accent-color;
+    }
+}
+
+/* ––– Context Toggle ––– */
+
+.ai-context-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: $space-3 $space-1;
+    color: $text2;
+    flex-shrink: 0;
+    border-radius: $border-radius;
+    transition:
+        color $transition-fast,
+        background $transition-fast;
+
+    input {
+        display: none;
+    }
+
+    &:hover {
+        color: $text1;
+        background: $bg-hover;
+    }
+}
+
+.ai-context-active {
+    color: $accent-color;
+}
+
+/* ––– Message Input ––– */
+
+.ai-input {
+    flex: 1;
+    min-width: 0;
+    padding: $space-2;
+    background: transparent;
+    color: $text1;
+    border: none;
+    font-size: $font-size-sm;
+    font-family: inherit;
+    line-height: $line-height;
+    resize: none;
+    overflow-y: auto;
+
+    &::placeholder {
+        color: $text2;
+    }
+
+    &:focus {
+        outline: none;
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+/* ––– Send / Stop Button ––– */
+
+.ai-btn-send {
+    background: $accent-color;
+    color: $text1;
+    border: none;
+    border-radius: $border-radius-lg;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition:
+        opacity $transition-base,
+        transform $transition-fast,
+        color $transition-fast;
+
+    &:hover:not(:disabled) {
+        opacity: 0.85;
+        transform: scale(1.05);
+    }
+
+    &:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+
+    &.ai-btn-stop {
+        background: $danger-color;
+
+        &:hover {
+            opacity: 0.85;
+            transform: scale(1.05);
+        }
+    }
 }
 </style>
