@@ -1,6 +1,6 @@
 export type HfSortOption = 'downloads' | 'likes' | 'lastModified' | 'trending';
 
-export interface HfSearchResult {
+export type HfSearchResult = {
     id: string;
     author: string;
     name: string;
@@ -10,30 +10,30 @@ export interface HfSearchResult {
     lastModified: string;
     architecture: string | null;
     parameterCount: string | null;
-}
+};
 
-export interface HfSearchResponse {
+export type HfSearchResponse = {
     success: boolean;
     results?: HfSearchResult[];
     hasMore?: boolean;
     error?: string;
-}
+};
 
-export interface HfModelTier {
-    label: string; // 'Small' | 'Medium' | 'Large' | 'Very Large' | 'Extreme'
-    color: string; // 'green' | 'blue' | 'orange' | 'red'
+export type HfModelTier = {
+    label: 'Small' | 'Medium' | 'Large' | 'Very Large' | 'Extreme';
+    color: 'green' | 'blue' | 'orange' | 'red';
     description: string;
-}
+};
 
-export interface HfShardFile {
+export type HfShardFile = {
     name: string;
     path: string;
     size: number;
     sizeFormatted: string;
     downloadUrl: string;
-}
+};
 
-export interface HfRepoFile {
+export type HfRepoFile = {
     name: string;
     path: string;
     size: number;
@@ -48,33 +48,33 @@ export interface HfRepoFile {
     shardFiles: HfShardFile[] | null;
     architecture: string | null;
     contextLength: number | null;
-}
+};
 
-export interface HfModelInfo {
+export type HfModelInfo = {
     architecture: string | null;
     contextLength: number | null;
     totalParamSize: number | null;
     totalParamSizeFormatted: string;
-}
+};
 
-export interface HfListFilesResponse {
+export type HfListFilesResponse = {
     success: boolean;
     files?: HfRepoFile[];
     modelInfo?: HfModelInfo;
     repoId?: string;
     repoName?: string;
     error?: string;
-}
+};
 
-export interface HfDownloadProgress {
+export type HfDownloadProgress = {
     downloaded: number;
     total: number;
     percent: number;
     fileName: string;
-}
+};
 
-export interface HfDownloadResult {
+export type HfDownloadResult = {
     success: boolean;
     filePath?: string;
     error?: string;
-}
+};

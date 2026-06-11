@@ -9,14 +9,14 @@ import type { ToolType, ElementType, DragAction, CanvasElement, StrokeStyle } fr
 
 const MIN_ELEMENT_SIZE = 3;
 
-interface DefaultStyle {
+type DefaultStyle = {
     strokeColor: string;
     fillColor: string;
     strokeWidth: number;
     strokeStyle: StrokeStyle;
     borderRadius: number;
     fontSize: number;
-}
+};
 
 export function useDrawingInteraction(
     // DOM refs

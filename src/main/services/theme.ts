@@ -31,19 +31,19 @@ import { existsSync } from 'fs';
 import { LEAF_HOME, THEMES_DIR, STATE_FILE, getBundledThemesDir } from '../lib/paths';
 import { log } from '../lib/logger';
 
-interface ThemeInfo {
+type ThemeInfo = {
     id: string;
     name: string;
     description: string;
     colors: Record<string, string>;
     path: string;
-}
+};
 
-interface ThemeState {
+type ThemeState = {
     activeTheme?: string;
     // (other keys, e.g. activePrompt, are preserved untouched)
     [key: string]: unknown;
-}
+};
 
 const DEFAULT_THEME_ID = 'dark';
 const THEME_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;

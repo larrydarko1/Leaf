@@ -41,7 +41,7 @@ export type StrokeStyle = 'solid' | 'dashed' | 'dotted';
 
 export type DragAction = 'none' | 'create' | 'move' | 'resize' | 'pan' | 'freedraw' | 'erase' | 'marquee';
 
-export interface CanvasElement {
+export type CanvasElement = {
     id: string;
     type: ElementType;
     x: number;
@@ -57,10 +57,10 @@ export interface CanvasElement {
     text?: string;
     fontSize?: number;
     borderRadius?: number;
-}
+};
 
-export interface DrawingDataV2 {
+export type DrawingDataV2 = {
     version: number;
     elements: CanvasElement[];
     viewState: { scrollX: number; scrollY: number; zoom: number };
-}
+};

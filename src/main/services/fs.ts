@@ -15,7 +15,7 @@ import { IMAGE_MIMETYPES, AUDIO_MIMETYPES } from '../lib/mime';
 import { assertInsideBoundary } from '../lib/validation';
 import { log } from '../lib/logger';
 
-interface FileEntry {
+type FileEntry = {
     name: string;
     path: string;
     relativePath: string;
@@ -23,20 +23,20 @@ interface FileEntry {
     size: number;
     modified: string;
     folder: string;
-}
+};
 
-interface FolderEntry {
+type FolderEntry = {
     name: string;
     path: string;
     relativePath: string;
     type: 'folder';
     folder: string;
-}
+};
 
-interface ScanResult {
+type ScanResult = {
     files: FileEntry[];
     folders: FolderEntry[];
-}
+};
 
 let folderWatcher: FSWatcher | null = null;
 

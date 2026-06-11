@@ -13,13 +13,13 @@ import { DEFAULT_MODELS_DIR, LEAF_HOME } from '../lib/paths';
 import { getActiveSystemPrompt } from './systemPrompt';
 import { log } from '../lib/logger';
 
-interface ModelEntry {
+type ModelEntry = {
     name: string;
     path: string;
     size: number;
     sizeFormatted: string;
     modified: string;
-}
+};
 
 const COMPACTION_THRESHOLD = 0.9;
 const NON_MODEL_PREFIXES = ['mmproj-', 'projector-', 'tokenizer', 'adapter'];

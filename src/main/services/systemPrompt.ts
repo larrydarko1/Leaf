@@ -21,19 +21,19 @@ import { existsSync } from 'fs';
 import { LEAF_HOME, PROMPTS_DIR, STATE_FILE, getBundledPromptsDir } from '../lib/paths';
 import { log } from '../lib/logger';
 
-interface PromptInfo {
+type PromptInfo = {
     id: string;
     name: string;
     description: string;
     path: string;
-}
+};
 
-interface PromptState {
+type PromptState = {
     activePrompt?: string;
     // Other services (theme.ts) may write additional keys to state.json.
     // We preserve them on every write.
     [key: string]: unknown;
-}
+};
 
 const DEFAULT_PROMPT_ID = 'default';
 const PROMPT_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;

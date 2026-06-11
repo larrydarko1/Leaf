@@ -17,7 +17,7 @@ import type {
 import type { HfSearchResponse, HfListFilesResponse, HfDownloadProgress, HfDownloadResult } from './hf';
 import type { SpeechInitResult, SpeechTranscribeResult, SpeechStatus, SpeechStatusEvent } from './speech';
 
-export interface FileInfo {
+export type FileInfo = {
     name: string;
     path: string;
     relativePath: string;
@@ -25,112 +25,112 @@ export interface FileInfo {
     size: number;
     modified: string;
     folder: string;
-}
+};
 
-export interface FolderInfo {
+export type FolderInfo = {
     name: string;
     path: string;
     relativePath: string;
     type: 'folder';
     folder: string;
-}
+};
 
-export interface ScanResult {
+export type ScanResult = {
     success: boolean;
     files?: FileInfo[];
     folders?: FolderInfo[];
     error?: string;
-}
+};
 
-export interface FileReadResult {
+export type FileReadResult = {
     success: boolean;
     content?: string;
     error?: string;
-}
+};
 
-export interface ImageReadResult {
+export type ImageReadResult = {
     success: boolean;
     dataUrl?: string;
     error?: string;
-}
+};
 
-export interface AudioReadResult {
+export type AudioReadResult = {
     success: boolean;
     dataUrl?: string;
     error?: string;
-}
+};
 
-export interface EmbedResolveResult {
+export type EmbedResolveResult = {
     success: boolean;
     path?: string;
     error?: string;
-}
+};
 
-export interface CopyToVaultResult {
+export type CopyToVaultResult = {
     success: boolean;
     fileName?: string;
     path?: string;
     error?: string;
-}
+};
 
-export interface FileWriteResult {
+export type FileWriteResult = {
     success: boolean;
     error?: string;
-}
+};
 
-export interface FileCreateResult {
-    success: boolean;
-    path?: string;
-    error?: string;
-}
-
-export interface FolderCreateResult {
+export type FileCreateResult = {
     success: boolean;
     path?: string;
     error?: string;
-}
+};
 
-export interface FileDeleteResult {
-    success: boolean;
-    error?: string;
-}
-
-export interface FileRenameResult {
-    success: boolean;
-    newPath?: string;
-    error?: string;
-}
-
-export interface FolderRenameResult {
-    success: boolean;
-    newPath?: string;
-    error?: string;
-}
-
-export interface FolderDeleteResult {
-    success: boolean;
-    error?: string;
-}
-
-export interface FileMoveResult {
-    success: boolean;
-    newPath?: string;
-    error?: string;
-}
-
-export interface FolderMoveResult {
-    success: boolean;
-    newPath?: string;
-    error?: string;
-}
-
-export interface AudioSaveResult {
+export type FolderCreateResult = {
     success: boolean;
     path?: string;
     error?: string;
-}
+};
 
-export interface ElectronAPI {
+export type FileDeleteResult = {
+    success: boolean;
+    error?: string;
+};
+
+export type FileRenameResult = {
+    success: boolean;
+    newPath?: string;
+    error?: string;
+};
+
+export type FolderRenameResult = {
+    success: boolean;
+    newPath?: string;
+    error?: string;
+};
+
+export type FolderDeleteResult = {
+    success: boolean;
+    error?: string;
+};
+
+export type FileMoveResult = {
+    success: boolean;
+    newPath?: string;
+    error?: string;
+};
+
+export type FolderMoveResult = {
+    success: boolean;
+    newPath?: string;
+    error?: string;
+};
+
+export type AudioSaveResult = {
+    success: boolean;
+    path?: string;
+    error?: string;
+};
+
+export type ElectronAPI = {
     log: {
         error: (...args: unknown[]) => void;
         warn: (...args: unknown[]) => void;
@@ -250,9 +250,10 @@ export interface ElectronAPI {
     speechGetStatus: () => Promise<SpeechStatus>;
     onSpeechStatus: (callback: (status: SpeechStatusEvent) => void) => void;
     removeSpeechStatusListener: () => void;
-}
+};
 
 declare global {
+    /* eslint-disable @typescript-eslint/consistent-type-definitions */
     interface Window {
         electronAPI: ElectronAPI;
     }

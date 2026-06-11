@@ -11,23 +11,23 @@ import path from 'path';
 import { DEFAULT_MODELS_DIR } from '../lib/paths';
 import { assertSafeFileName } from '../lib/validation';
 
-interface DownloadEntry {
+type DownloadEntry = {
     abortController: { aborted: boolean };
     filePath: string;
     tempPath: string;
-}
+};
 
-interface TreeFile {
+type TreeFile = {
     path: string;
     size: number;
-}
+};
 
-interface ProgressInfo {
+type ProgressInfo = {
     downloaded: number;
     total: number;
     percent: number;
     fileName: string;
-}
+};
 
 type SortOption = 'downloads' | 'likes' | 'lastModified' | 'trending';
 

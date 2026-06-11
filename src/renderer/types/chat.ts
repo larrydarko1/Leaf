@@ -1,4 +1,4 @@
-export interface AgentFileEdit {
+export type AgentFileEdit = {
     filePath: string;
     newContent: string;
     editId?: string;
@@ -7,10 +7,10 @@ export interface AgentFileEdit {
     isNewFile?: boolean;
     status: 'pending' | 'approved' | 'rejected' | 'error';
     error?: string;
-}
+};
 
-export interface ChatMessage {
+export type ChatMessage = {
     role: 'user' | 'assistant' | 'system';
     content: string;
     agentEdits?: AgentFileEdit[];
-}
+};

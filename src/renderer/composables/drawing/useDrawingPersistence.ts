@@ -90,16 +90,16 @@ export function useDrawingPersistence(
 
     // Migration
 
-    interface V1Stroke {
+    type V1Stroke = {
         tool: string;
         color: string;
         size: number;
         shape?: { type: string; x1: number; y1: number; x2: number; y2: number; fill?: boolean };
         points?: { x: number; y: number }[];
-    }
-    interface V1Data {
+    };
+    type V1Data = {
         strokes?: V1Stroke[];
-    }
+    };
 
     function migrateV1(data: V1Data): CanvasElement[] {
         const result: CanvasElement[] = [];

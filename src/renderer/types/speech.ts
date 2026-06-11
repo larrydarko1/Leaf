@@ -1,21 +1,21 @@
-export interface SpeechInitResult {
+export type SpeechInitResult = {
     success: boolean;
     message?: string;
     error?: string;
-}
+};
 
-export interface SpeechTranscribeResult {
+export type SpeechTranscribeResult = {
     success: boolean;
     text?: string;
     error?: string;
-}
+};
 
-export interface SpeechStatus {
+export type SpeechStatus = {
     isModelLoaded: boolean;
     isModelLoading: boolean;
-}
+};
 
-export interface SpeechStatusEvent {
+export type SpeechStatusEvent = {
     status: 'loading' | 'ready' | 'error';
     message: string;
-}
+};

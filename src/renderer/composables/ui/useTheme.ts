@@ -10,13 +10,13 @@
 
 import { ref } from 'vue';
 
-export interface ThemeInfo {
+export type ThemeInfo = {
     id: string;
     name: string;
     description: string;
     colors: Record<string, string>;
     path: string;
-}
+};
 
 const ACTIVE_ID_LS_KEY = 'leaf-theme-id';
 

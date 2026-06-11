@@ -1,32 +1,32 @@
-export interface AiModelInfo {
+export type AiModelInfo = {
     name: string;
     path: string;
     size: number;
     sizeFormatted: string;
     modified: string;
-}
+};
 
-export interface AiListModelsResult {
+export type AiListModelsResult = {
     success: boolean;
     models: AiModelInfo[];
     modelsDir: string;
     error?: string;
-}
+};
 
-export interface AiLoadResult {
+export type AiLoadResult = {
     success: boolean;
     modelName?: string;
     error?: string;
-}
+};
 
-export interface AiChatResult {
+export type AiChatResult = {
     success: boolean;
     response?: string;
     compacted?: boolean;
     error?: string;
-}
+};
 
-export interface AiStatus {
+export type AiStatus = {
     isModelLoaded: boolean;
     currentModelPath: string | null;
     currentModelName: string | null;
@@ -34,21 +34,21 @@ export interface AiStatus {
     modelsDir: string;
     contextTokens: number;
     contextSize: number;
-}
+};
 
-export interface AiSimpleResult {
+export type AiSimpleResult = {
     success: boolean;
     error?: string;
-}
+};
 
 // Conversation persistence types
-export interface ConversationMessage {
+export type ConversationMessage = {
     role: 'user' | 'assistant';
     content: string;
     timestamp?: string;
-}
+};
 
-export interface Conversation {
+export type Conversation = {
     id: string;
     title: string;
     model: string;
@@ -56,9 +56,9 @@ export interface Conversation {
     updatedAt: string;
     messages: ConversationMessage[];
     tokenCount?: number;
-}
+};
 
-export interface ConversationMeta {
+export type ConversationMeta = {
     id: string;
     title: string;
     model: string;
@@ -66,35 +66,35 @@ export interface ConversationMeta {
     updatedAt: string;
     messageCount: number;
     tokenCount: number;
-}
+};
 
-export interface ConversationListResult {
+export type ConversationListResult = {
     success: boolean;
     conversations: ConversationMeta[];
     error?: string;
-}
+};
 
-export interface ConversationCreateResult {
+export type ConversationCreateResult = {
     success: boolean;
     conversation?: Conversation;
     error?: string;
-}
+};
 
-export interface ConversationLoadResult {
+export type ConversationLoadResult = {
     success: boolean;
     conversation?: Conversation;
     error?: string;
-}
+};
 
 // Agent mode types
-export interface AgentReadFileResult {
+export type AgentReadFileResult = {
     success: boolean;
     content?: string;
     filePath?: string;
     error?: string;
-}
+};
 
-export interface AgentProposeEditResult {
+export type AgentProposeEditResult = {
     success: boolean;
     editId?: string;
     filePath?: string;
@@ -103,22 +103,22 @@ export interface AgentProposeEditResult {
     newContent?: string;
     isNewFile?: boolean;
     error?: string;
-}
+};
 
-export interface AgentEditResult {
+export type AgentEditResult = {
     success: boolean;
     error?: string;
-}
+};
 
-export interface AgentPendingEdit {
+export type AgentPendingEdit = {
     editId: string;
     filePath: string;
     relativePath: string;
     isNewFile: boolean;
     timestamp: string;
-}
+};
 
-export interface AgentPendingEditsResult {
+export type AgentPendingEditsResult = {
     success: boolean;
     edits: AgentPendingEdit[];
-}
+};

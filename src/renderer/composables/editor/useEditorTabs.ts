@@ -5,7 +5,7 @@
 import { ref, computed } from 'vue';
 import type { FileInfo } from '../../types/electron';
 
-export interface TabState {
+export type TabState = {
     file: FileInfo;
     /** Cached text content — only populated for text/markdown/code files */
     content: string | null;
@@ -15,17 +15,17 @@ export interface TabState {
     hasUnsavedChanges: boolean;
     /** Scroll position to restore on tab switch */
     scrollTop: number;
-}
+};
 
-interface PersistedTab {
+type PersistedTab = {
     path: string;
     scrollTop: number;
-}
+};
 
-interface PersistedTabState {
+type PersistedTabState = {
     tabs: PersistedTab[];
     activeIndex: number;
-}
+};
 
 const MAX_TABS = 10;
 const STORAGE_KEY_PREFIX = 'leaf-tabs-';

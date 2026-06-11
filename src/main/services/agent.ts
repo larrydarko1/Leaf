@@ -14,7 +14,7 @@ import os from 'os';
 import { assertInsideBoundary } from '../lib/validation';
 import { log } from '../lib/logger';
 
-interface EditRecord {
+type EditRecord = {
     editId: string;
     filePath: string;
     relativePath: string;
@@ -23,7 +23,7 @@ interface EditRecord {
     newContent: string;
     isNewFile: boolean;
     timestamp: string;
-}
+};
 
 // Backup directory inside system temp
 const BACKUP_DIR = path.join(os.tmpdir(), 'leaf-agent-backups');

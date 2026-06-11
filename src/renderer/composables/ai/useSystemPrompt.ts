@@ -8,12 +8,12 @@
 
 import { ref } from 'vue';
 
-export interface SystemPromptInfo {
+export type SystemPromptInfo = {
     id: string;
     name: string;
     description: string;
     path: string;
-}
+};
 
 export function useSystemPrompt() {
     const prompts = ref<SystemPromptInfo[]>([]);

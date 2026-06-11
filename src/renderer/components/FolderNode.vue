@@ -11,13 +11,13 @@ import {
 } from '../utils/fileTypes';
 import { useTreeNodeDrag } from '../composables/vault/useTreeNodeDrag';
 
-export interface TreeNode {
+export type TreeNode = {
     path: string;
     name: string;
     type: 'folder' | 'file';
     children?: TreeNode[];
     file?: FileInfo;
-}
+};
 
 const props = defineProps<{
     node: TreeNode;

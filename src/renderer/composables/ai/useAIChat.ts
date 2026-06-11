@@ -14,7 +14,7 @@ import { AGENT_SYSTEM_PROMPT } from './useAgentMode';
 // Configure marked once at module level
 marked.setOptions({ breaks: true, gfm: true });
 
-interface AiChatDeps {
+type AiChatDeps = {
     messages: Ref<ChatMessage[]>;
     status: Ref<AiStatus>;
     conversationTokenCount: Ref<number>;
@@ -22,9 +22,9 @@ interface AiChatDeps {
     agentMode: Ref<boolean>;
     activeFile: { readonly value: FileInfo | null };
     workspacePath: { readonly value: string | null };
-}
+};
 
-interface AiChatActions {
+type AiChatActions = {
     createNewConversation: () => Promise<void>;
     saveCurrentConversation: () => Promise<void>;
     saveTokenCountToConversation: () => Promise<void>;
@@ -32,7 +32,7 @@ interface AiChatActions {
     refreshStatus: () => Promise<void>;
     parseAgentEdits: (response: string) => { cleanContent: string; edits: AgentFileEdit[] };
     processAgentEdits: (msgIndex: number, edits: AgentFileEdit[]) => Promise<void>;
-}
+};
 
 export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
     const { messages, status, conversationTokenCount, currentConversationId, agentMode, activeFile, workspacePath } =

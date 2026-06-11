@@ -11,13 +11,13 @@ import { randomUUID } from 'crypto';
 import { assertSafeFileName, assertInsideBoundary } from '../lib/validation';
 import { log } from '../lib/logger';
 
-interface Message {
+type Message = {
     role: 'user' | 'assistant';
     content: string;
     timestamp?: string;
-}
+};
 
-interface Conversation {
+type Conversation = {
     id: string;
     title: string;
     model: string;
@@ -25,7 +25,7 @@ interface Conversation {
     updatedAt: string;
     messages: Message[];
     tokenCount: number;
-}
+};
 
 let conversationsDir: string | null = null;
 
