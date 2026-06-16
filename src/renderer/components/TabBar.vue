@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { TabState } from '../composables/editor/useEditorTabs';
 
 defineProps<{
     tabs: TabState[];
     activeIndex: number;
 }>();
+
+const { t } = useI18n();
 
 const emit = defineEmits<{
     switch: [index: number];
@@ -68,7 +71,7 @@ function onDragEnd() {
         v-if="tabs.length > 0"
         class="tab-bar"
         role="tablist"
-        aria-label="Open files">
+        :aria-label="t('app.open_files')">
         <div
             v-for="(tab, i) in tabs"
             :key="tab.file.path"
@@ -103,12 +106,12 @@ function onDragEnd() {
             <span
                 v-if="tab.hasUnsavedChanges"
                 class="tab-dot"
-                aria-label="Unsaved changes"
+                :aria-label="t('editor.tab_unsaved_indicator')"
                 role="status" />
             <button
                 class="tab-close"
-                :aria-label="`Close ${tab.file.name}`"
-                :title="`Close ${tab.file.name}`"
+                :aria-label="t('editor.tab_close_button', { filename: tab.file.name })"
+                :title="t('editor.tab_close_button', { filename: tab.file.name })"
                 @click.stop="emit('close', i)">
                 <svg
                     width="10"

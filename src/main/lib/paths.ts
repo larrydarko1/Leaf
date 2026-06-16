@@ -12,6 +12,8 @@ import { log } from './logger';
 // All user-owned, user-editable Leaf data lives under here.
 //   ~/.leaf/models/      → GGUF model files
 //   ~/.leaf/prompts/     → markdown system prompts (one per template)
+//   ~/.leaf/themes/      → JSON theme presets
+//   ~/.leaf/locales/     → JSON language files
 //   ~/.leaf/state.json   → small key/value file (active prompt id, etc.)
 export const LEAF_HOME: string = path.join(os.homedir(), '.leaf');
 
@@ -23,6 +25,9 @@ export const PROMPTS_DIR: string = path.join(LEAF_HOME, 'prompts');
 
 // Directory where user-editable theme presets live: ~/.leaf/themes/
 export const THEMES_DIR: string = path.join(LEAF_HOME, 'themes');
+
+// Directory where user-editable language files live: ~/.leaf/locales/
+export const LOCALES_DIR: string = path.join(LEAF_HOME, 'locales');
 
 // Persistent app state (active prompt id, active theme id, etc.): ~/.leaf/state.json
 export const STATE_FILE: string = path.join(LEAF_HOME, 'state.json');
@@ -77,6 +82,22 @@ export function getBundledThemesDir(): string {
 
     if (process.resourcesPath != null) {
         const prodPath = path.join(process.resourcesPath, 'assets/themes');
+        if (fs.existsSync(prodPath)) return prodPath;
+    }
+
+    return devPath;
+}
+
+/**
+ * Resolve the bundled language files directory shipped with the app.
+ * In development  →  <repo>/assets/locales/
+ * In production   →  <app>/Contents/Resources/assets/locales/
+ */
+export function getBundledLocalesDir(): string {
+    const devPath = path.join(__dirname, '../../assets/locales');
+
+    if (process.resourcesPath != null) {
+        const prodPath = path.join(process.resourcesPath, 'assets/locales');
         if (fs.existsSync(prodPath)) return prodPath;
     }
 

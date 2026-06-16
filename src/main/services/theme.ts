@@ -23,8 +23,7 @@
  * custom properties.
  */
 
-import type { IpcMain } from 'electron';
-import { shell } from 'electron';
+import { type IpcMain, shell } from 'electron';
 import path from 'path';
 import fs from 'fs/promises';
 import { existsSync } from 'fs';

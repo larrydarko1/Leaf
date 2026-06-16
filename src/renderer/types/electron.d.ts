@@ -202,6 +202,22 @@ export type ElectronAPI = {
     }>;
     themeSetActive: (id: string) => Promise<AiSimpleResult>;
     themeOpenLeafDir: () => Promise<AiSimpleResult>;
+
+    // Language files (~/.leaf/locales/*.json)
+    languageList: () => Promise<{
+        success: boolean;
+        languages: {
+            id: string;
+            name: string;
+            path: string;
+        }[];
+        activeId: string;
+        localesDir: string;
+        error?: string;
+    }>;
+    languageSetActive: (id: string) => Promise<AiSimpleResult>;
+    languageOpenLeafDir: () => Promise<AiSimpleResult>;
+
     onAiToken: (callback: (token: string) => void) => void;
     removeAiTokenListener: () => void;
 

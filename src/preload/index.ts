@@ -80,6 +80,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     themeSetActive: (id: string) => ipcRenderer.invoke('theme:setActive', id),
     themeOpenLeafDir: () => ipcRenderer.invoke('theme:openLeafDir'),
 
+    // Language files (~/.leaf/locales/*.json)
+    languageList: () => ipcRenderer.invoke('language:list'),
+    languageSetActive: (id: string) => ipcRenderer.invoke('language:setActive', id),
+    languageOpenLeafDir: () => ipcRenderer.invoke('language:openLeafDir'),
+
     // AI streaming token listener
     onAiToken: (callback: (token: string) => void) => {
         ipcRenderer.on('ai:token', (_event, token: string) => callback(token));

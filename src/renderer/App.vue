@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { useI18n } from 'vue-i18n';
 import FileExplorer from './components/FileExplorer.vue';
 import NoteEditor from './components/NoteEditor.vue';
 import TabBar from './components/TabBar.vue';
@@ -8,19 +9,23 @@ import BookmarksPanel from './components/BookmarksPanel.vue';
 import AudioRecorder from './components/AudioRecorder.vue';
 import AiPanel from './components/AiPanel.vue';
 import ThemePicker from './components/ThemePicker.vue';
+import LanguagePicker from './components/LanguagePicker.vue';
 import type { FileInfo } from './types/electron';
 import { useVault } from './composables/vault/useVault';
 import { useFileSelection } from './composables/vault/useFileSelection';
 import { useBookmarks } from './composables/vault/useBookmarks';
 import { useEditorTabs } from './composables/editor/useEditorTabs';
 import { useTheme } from './composables/ui/useTheme';
+import { useLanguage } from './composables/ui/useLanguage';
 
+const { t } = useI18n();
 const noteEditorRef = ref<InstanceType<typeof NoteEditor> | null>(null);
 const vault = useVault();
 const selection = useFileSelection();
 const bookmarks = useBookmarks(() => vault.currentFolder.value);
 const editorTabs = useEditorTabs();
 const theme = useTheme();
+const language = useLanguage();
 const { currentFolder, files, folders } = vault;
 const { selectedFiles, selectedFolder } = selection;
 const activeFile = editorTabs.activeFile;
@@ -31,9 +36,11 @@ const showSearchPanel = ref(false);
 const showBookmarksPanel = ref(false);
 const showAiPanel = ref(false);
 const showThemePanel = ref(false);
+const showLanguagePanel = ref(false);
 
 onMounted(() => {
     void theme.refresh();
+    void language.refresh();
 
     const savedFolder = localStorage.getItem('leaf-folder-path');
     if (savedFolder !== null && savedFolder !== '') void loadFolderPath(savedFolder);
@@ -295,12 +302,26 @@ function toggleBookmarks() {
 
 function toggleAiPanel() {
     showAiPanel.value = !showAiPanel.value;
-    if (showAiPanel.value) showThemePanel.value = false;
+    if (showAiPanel.value) {
+        showThemePanel.value = false;
+        showLanguagePanel.value = false;
+    }
 }
 
 function toggleThemePanel() {
     showThemePanel.value = !showThemePanel.value;
-    if (showThemePanel.value) showAiPanel.value = false;
+    if (showThemePanel.value) {
+        showAiPanel.value = false;
+        showLanguagePanel.value = false;
+    }
+}
+
+function toggleLanguagePanel() {
+    showLanguagePanel.value = !showLanguagePanel.value;
+    if (showLanguagePanel.value) {
+        showAiPanel.value = false;
+        showThemePanel.value = false;
+    }
 }
 </script>
 
@@ -323,9 +344,9 @@ function toggleThemePanel() {
 
                     <button
                         class="btn-primary"
-                        aria-label="Select a folder to begin"
+                        :aria-label="t('app.select_folder_description')"
                         @click="selectFolder">
-                        Select Folder
+                        {{ t('app.select_folder') }}
                     </button>
                 </div>
             </div>
@@ -342,7 +363,7 @@ function toggleThemePanel() {
                         <div class="menu-pill">
                             <button
                                 class="btn-menu-icon"
-                                aria-label="Change folder"
+                                :aria-label="t('app.change_folder')"
                                 @click="changeFolder">
                                 <svg
                                     width="14"
@@ -365,7 +386,7 @@ function toggleThemePanel() {
                         <div class="menu-pill">
                             <button
                                 class="btn-menu-icon"
-                                aria-label="Create new note"
+                                :aria-label="t('app.create_new_note')"
                                 @click="createNewFile">
                                 <svg
                                     width="14"
@@ -395,7 +416,7 @@ function toggleThemePanel() {
                             </button>
                             <button
                                 class="btn-menu-icon"
-                                aria-label="Create new folder"
+                                :aria-label="t('app.create_new_folder')"
                                 @click="createNewFolder">
                                 <svg
                                     width="14"
@@ -434,7 +455,7 @@ function toggleThemePanel() {
                             <button
                                 class="btn-menu-icon"
                                 :class="{ active: showSearchPanel }"
-                                aria-label="Search files"
+                                :aria-label="t('app.search_files')"
                                 :aria-pressed="showSearchPanel"
                                 @click="toggleSearch">
                                 <svg
@@ -460,7 +481,7 @@ function toggleThemePanel() {
                             <button
                                 class="btn-menu-icon"
                                 :class="{ active: showBookmarksPanel }"
-                                aria-label="View bookmarks"
+                                :aria-label="t('app.view_bookmarks')"
                                 :aria-pressed="showBookmarksPanel"
                                 @click="toggleBookmarks">
                                 <svg
@@ -481,7 +502,7 @@ function toggleThemePanel() {
                             </button>
                             <button
                                 class="btn-menu-icon"
-                                aria-label="Create new drawing"
+                                :aria-label="t('app.create_new_drawing')"
                                 @click="createNewDrawing">
                                 <svg
                                     width="14"
@@ -505,7 +526,7 @@ function toggleThemePanel() {
                             </button>
                             <AudioRecorder
                                 :current-folder="currentFolder"
-                                aria-label="Audio recorder"
+                                :aria-label="t('app.audio_recorder')"
                                 @recording-saved="handleRecordingSaved" />
                         </div>
 
@@ -515,7 +536,7 @@ function toggleThemePanel() {
                             <button
                                 class="btn-menu-icon"
                                 :class="{ active: showAiPanel }"
-                                aria-label="AI Assistant"
+                                :aria-label="t('app.ai_assistant')"
                                 :aria-pressed="showAiPanel"
                                 @click="toggleAiPanel">
                                 <svg
@@ -540,7 +561,7 @@ function toggleThemePanel() {
                             <button
                                 class="btn-menu-icon"
                                 :class="{ active: showThemePanel }"
-                                aria-label="Theme selector"
+                                :aria-label="t('app.theme_selector')"
                                 :aria-pressed="showThemePanel"
                                 @click="toggleThemePanel">
                                 <svg
@@ -556,15 +577,43 @@ function toggleThemePanel() {
                                         fill-rule="nonzero" />
                                 </svg>
                             </button>
+                            <button
+                                class="btn-menu-icon"
+                                :class="{ active: showLanguagePanel }"
+                                :aria-label="t('app.language_selector')"
+                                :aria-pressed="showLanguagePanel"
+                                @click="toggleLanguagePanel">
+                                <svg
+                                    viewBox="0 0 16 16"
+                                    width="14"
+                                    height="14"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <g
+                                        id="SVGRepo_bgCarrier"
+                                        stroke-width="0"></g>
+                                    <g
+                                        id="SVGRepo_tracerCarrier"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"></g>
+                                    <g id="SVGRepo_iconCarrier">
+                                        <path
+                                            fill-rule="evenodd"
+                                            clip-rule="evenodd"
+                                            d="M4 0H6V2H10V4H8.86807C8.57073 5.66996 7.78574 7.17117 6.6656 8.35112C7.46567 8.73941 8.35737 8.96842 9.29948 8.99697L10.2735 6H12.7265L15.9765 16H13.8735L13.2235 14H9.77647L9.12647 16H7.0235L8.66176 10.9592C7.32639 10.8285 6.08165 10.3888 4.99999 9.71246C3.69496 10.5284 2.15255 11 0.5 11H0V9H0.5C1.5161 9 2.47775 8.76685 3.33437 8.35112C2.68381 7.66582 2.14629 6.87215 1.75171 6H4.02179C4.30023 6.43491 4.62904 6.83446 4.99999 7.19044C5.88743 6.33881 6.53369 5.23777 6.82607 4H0V2H4V0ZM12.5735 12L11.5 8.69688L10.4265 12H12.5735Z"
+                                            fill="currentColor"></path>
+                                    </g>
+                                </svg>
+                            </button>
                         </div>
                     </nav>
                 </div>
                 <aside
                     class="sidebar"
-                    aria-label="File explorer and panels">
+                    :aria-label="t('app.file_explorer_and_panels')">
                     <FileExplorer
                         v-if="!showSearchPanel && !showBookmarksPanel"
-                        aria-label="File explorer"
+                        :aria-label="t('app.file_explorer')"
                         :files="files"
                         :folders="folders"
                         :current-folder="currentFolder"
@@ -591,7 +640,7 @@ function toggleThemePanel() {
                         :files="files"
                         :selected-files="selectedFiles"
                         :active-file="activeFile"
-                        aria-label="Search results"
+                        :aria-label="t('app.search_results')"
                         @select-file="handleSearchFileSelect"
                         @open-file="handleSearchFileOpen"
                         @close="closeSearch" />
@@ -601,18 +650,18 @@ function toggleThemePanel() {
                         :bookmarked-paths="bookmarkedFiles"
                         :selected-files="selectedFiles"
                         :active-file="activeFile"
-                        aria-label="Bookmarked files"
+                        :aria-label="t('app.bookmarked_files')"
                         @select-file="handleSearchFileSelect"
                         @open-file="handleSearchFileOpen"
                         @remove-bookmark="removeBookmark" />
                 </aside>
                 <main
                     class="main-content"
-                    aria-label="Editor">
+                    :aria-label="t('app.editor')">
                     <TabBar
                         :tabs="editorTabs.tabs.value"
                         :active-index="editorTabs.activeIndex.value"
-                        aria-label="Open files"
+                        :aria-label="t('app.open_files')"
                         @switch="handleTabSwitch"
                         @close="editorTabs.closeTab"
                         @reorder="editorTabs.reorderTab" />
@@ -620,7 +669,7 @@ function toggleThemePanel() {
                         ref="noteEditorRef"
                         :file="activeFile"
                         :workspace-path="currentFolder"
-                        aria-label="Note editor"
+                        :aria-label="t('app.note_editor')"
                         @save="handleFileSave"
                         @content-changed="handleContentChanged" />
                 </main>
@@ -628,13 +677,17 @@ function toggleThemePanel() {
                     v-if="showAiPanel"
                     :active-file="activeFile"
                     :workspace-path="currentFolder"
-                    aria-label="AI Assistant panel"
+                    :aria-label="t('app.ai_assistant_panel')"
                     @close="showAiPanel = false"
                     @file-changed="handleAiFileChanged" />
                 <ThemePicker
                     v-if="showThemePanel"
-                    aria-label="Theme picker"
+                    :aria-label="t('app.theme_picker')"
                     @close="showThemePanel = false" />
+                <LanguagePicker
+                    v-if="showLanguagePanel"
+                    :aria-label="t('app.language_picker')"
+                    @close="showLanguagePanel = false" />
             </div>
         </div>
     </div>

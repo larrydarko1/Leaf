@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
-import { useTheme } from '../composables/ui/useTheme';
+import { useLanguage } from '../composables/ui/useLanguage';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const emit = defineEmits<{ close: [] }>();
 
-const { themes, activeId, refresh, setActive, openThemesFolder } = useTheme();
+const { languages, activeId, refresh, setActive, openLocalesFolder } = useLanguage();
 
 onMounted(() => {
     void refresh();
@@ -16,7 +18,7 @@ async function handleSelect(id: string) {
 }
 
 async function handleOpenFolder() {
-    await openThemesFolder();
+    await openLocalesFolder();
 }
 
 async function handleRefresh() {
@@ -26,18 +28,18 @@ async function handleRefresh() {
 
 <template>
     <aside
-        class="theme-panel"
-        aria-label="Theme selection panel">
-        <header class="theme-header">
-            <span class="theme-title">Theme</span>
+        class="language-panel"
+        aria-label="Language selection panel">
+        <header class="language-header">
+            <span class="language-title">{{ t('app.language_selector') }}</span>
             <div
                 class="header-actions"
                 role="toolbar"
-                aria-label="Theme panel controls">
+                aria-label="Language panel controls">
                 <button
                     class="icon-btn"
                     title="Refresh list"
-                    aria-label="Refresh theme list"
+                    aria-label="Refresh language list"
                     @click="handleRefresh">
                     <svg
                         width="14"
@@ -54,7 +56,7 @@ async function handleRefresh() {
                 <button
                     class="icon-btn"
                     title="Close"
-                    aria-label="Close theme panel"
+                    aria-label="Close language panel"
                     @click="emit('close')">
                     <svg
                         width="14"
@@ -73,44 +75,21 @@ async function handleRefresh() {
         </header>
 
         <div
-            class="theme-list"
+            class="language-list"
             role="listbox"
-            aria-label="Available themes">
+            aria-label="Available languages">
             <button
-                v-for="theme in themes"
-                :key="theme.id"
-                class="theme-item"
-                :class="{ active: theme.id === activeId }"
+                v-for="language in languages"
+                :key="language.id"
+                class="language-item"
+                :class="{ active: language.id === activeId }"
                 role="option"
-                :aria-selected="theme.id === activeId"
-                :aria-label="`${theme.name} theme${theme.description ? ': ' + theme.description : ''}`"
-                @click="handleSelect(theme.id)">
-                <span
-                    class="theme-swatches"
-                    aria-hidden="true">
-                    <span
-                        class="swatch"
-                        :style="{ background: theme.colors['bg-primary'] || '#000' }"></span>
-                    <span
-                        class="swatch"
-                        :style="{ background: theme.colors['bg-secondary'] || '#000' }"></span>
-                    <span
-                        class="swatch"
-                        :style="{ background: theme.colors['accent-color'] || '#3eb489' }"></span>
-                    <span
-                        class="swatch"
-                        :style="{ background: theme.colors['text1'] || '#fff' }"></span>
-                </span>
-                <span class="theme-meta">
-                    <span class="theme-name">{{ theme.name }}</span>
-                    <span
-                        v-if="theme.description"
-                        class="theme-desc"
-                        >{{ theme.description }}</span
-                    >
-                </span>
+                :aria-selected="language.id === activeId"
+                :aria-label="`${language.name} language`"
+                @click="handleSelect(language.id)">
+                <span class="language-name">{{ language.name }}</span>
                 <svg
-                    v-if="theme.id === activeId"
+                    v-if="language.id === activeId"
                     class="check"
                     width="14"
                     height="14"
@@ -126,88 +105,116 @@ async function handleRefresh() {
             </button>
 
             <div
-                v-if="!themes.length"
-                class="theme-empty"
+                v-if="!languages.length"
+                class="language-empty"
                 role="status"
-                >No themes found.</div
+                >No languages found.</div
             >
         </div>
 
-        <footer class="theme-footer">
+        <footer class="language-footer">
             <button
                 class="footer-btn"
-                aria-label="Open themes folder"
+                aria-label="Open locales folder"
                 @click="handleOpenFolder">
-                Open themes folder…
+                Open locales folder…
             </button>
             <p class="footer-hint">
-                Drop <code>.json</code> files in <code>~/.leaf/themes/</code> to add presets. Edit one to customise.
+                Drop <code>.json</code> files in <code>~/.leaf/locales/</code> to add languages. Edit one to customize.
             </p>
         </footer>
     </aside>
 </template>
 
 <style scoped lang="scss">
-/* ––– Theme Panel Container ––– */
+/* ––– Language Panel Container ––– */
 
-.theme-panel {
+.language-panel {
     display: flex;
     flex-direction: column;
-    height: 100%;
     background: $base1;
     border-left: 1px solid $text3;
+    overflow: hidden;
+    color: $text1;
     width: 340px;
     min-width: 280px;
 }
 
 /* ––– Header ––– */
 
-.theme-header {
+.language-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: $space-3 $space-4;
+    padding: $space-3;
     border-bottom: 1px solid $text3;
     flex-shrink: 0;
 }
 
-.theme-title {
+.language-title {
     font-size: $font-size-sm;
-    font-weight: $font-weight-semibold;
-    color: $text1;
+    font-weight: $font-weight-medium;
+    letter-spacing: 0.02em;
 }
 
 .header-actions {
-    display: inline-flex;
-    gap: $space-0;
+    display: flex;
+    gap: $space-1;
 }
 
 .icon-btn {
     background: none;
     border: none;
+    color: $text2;
+    cursor: pointer;
     padding: $space-1;
-    border-radius: $border-radius;
-    color: $text-muted;
-    display: inline-flex;
+    border-radius: $border-radius-lg;
+    transition: all $transition-base;
+    display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
 
     &:hover {
         background: $bg-hover;
         color: $text1;
     }
+
+    svg {
+        display: block;
+    }
 }
 
-/* ––– Theme List ––– */
+/* ––– Language List ––– */
 
-.theme-list {
+.language-list {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
     overflow-y: auto;
-    padding: $border-radius;
+    padding: 0;
+    scrollbar-width: thin;
+    scrollbar-color: $text3 transparent;
+
+    &::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: $text3;
+        border-radius: $border-radius-sm;
+
+        &:hover {
+            background: $text2;
+        }
+    }
 }
 
-.theme-item {
+.language-item {
     width: 100%;
     display: flex;
     align-items: center;
@@ -232,64 +239,28 @@ async function handleRefresh() {
     }
 }
 
-/* ––– Theme Swatches ––– */
+/* ––– Language Metadata ––– */
 
-.theme-swatches {
-    display: inline-flex;
-    flex-shrink: 0;
-    border-radius: $border-radius;
-    overflow: hidden;
-    border: 1px solid $border-color;
-}
-
-.swatch {
-    width: 10px;
-    height: 24px;
-    display: block;
-}
-
-/* ––– Theme Metadata ––– */
-
-.theme-meta {
+.language-name {
     flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: $space-0;
-}
-
-.theme-name {
     font-size: $font-size-sm;
-    font-weight: $font-weight-medium;
-    color: $text1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.theme-desc {
-    font-size: $font-size-xs;
-    color: $text-muted;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .check {
-    color: $accent-color;
     flex-shrink: 0;
+    color: $accent-color;
 }
 
-.theme-empty {
-    padding: $space-6 $space-2;
+.language-empty {
+    padding: $space-4 $space-3;
     text-align: center;
-    color: $text-muted;
-    font-size: $font-size-sm;
+    font-size: $font-size-xs;
+    color: $text3;
 }
 
 /* ––– Footer ––– */
 
-.theme-footer {
+.language-footer {
     border-top: 1px solid $text3;
     padding: $space-2 $space-4 $space-3;
     flex-shrink: 0;
@@ -312,7 +283,7 @@ async function handleRefresh() {
 }
 
 .footer-hint {
-    margin: $space-2 0 0 0;
+    margin: 0;
     font-size: $font-size-xs;
     color: $text-muted;
     line-height: $line-height;
@@ -323,25 +294,6 @@ async function handleRefresh() {
         padding: 0 $space-1;
         border-radius: $border-radius-xs;
         font-family: $font-family-mono;
-    }
-}
-
-/* ––– Scrollbar Styling ––– */
-
-.theme-list::-webkit-scrollbar {
-    width: 6px;
-}
-
-.theme-list::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.theme-list::-webkit-scrollbar-thumb {
-    background: $scrollbar-thumb;
-    border-radius: $border-radius-xs;
-
-    &:hover {
-        background: $scrollbar-thumb-hover;
     }
 }
 </style>
