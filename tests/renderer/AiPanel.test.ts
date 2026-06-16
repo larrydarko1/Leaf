@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { mount } from '@vue/test-utils';
 import AiPanel from '../../src/renderer/components/AiPanel.vue';
+import { mountWithI18n } from './test-utils';
 
 // ── electronAPI mock ─────────────────────────────────────────────────────────
 
@@ -85,37 +85,37 @@ describe('AiPanel – resize feature', () => {
 
     describe('initial state', () => {
         it('renders the resize handle', () => {
-            const wrapper = mount(AiPanel, { props: defaultProps });
+            const wrapper = mountWithI18n(AiPanel, { props: defaultProps });
             const handle = wrapper.find('.ai-panel-resize-handle');
             expect(handle.exists()).toBe(true);
         });
 
         it('renders the panel with default width of 340px', () => {
-            const wrapper = mount(AiPanel, { props: defaultProps });
+            const wrapper = mountWithI18n(AiPanel, { props: defaultProps });
             const panel = wrapper.find('.ai-panel');
             expect(panel.attributes('style')).toContain('width: 340px');
         });
 
         it('resize handle has role="separator"', () => {
-            const wrapper = mount(AiPanel, { props: defaultProps });
+            const wrapper = mountWithI18n(AiPanel, { props: defaultProps });
             const handle = wrapper.find('.ai-panel-resize-handle');
             expect(handle.attributes('role')).toBe('separator');
         });
 
         it('resize handle has aria-orientation="vertical"', () => {
-            const wrapper = mount(AiPanel, { props: defaultProps });
+            const wrapper = mountWithI18n(AiPanel, { props: defaultProps });
             const handle = wrapper.find('.ai-panel-resize-handle');
             expect(handle.attributes('aria-orientation')).toBe('vertical');
         });
 
         it('resize handle has correct aria-valuemin', () => {
-            const wrapper = mount(AiPanel, { props: defaultProps });
+            const wrapper = mountWithI18n(AiPanel, { props: defaultProps });
             const handle = wrapper.find('.ai-panel-resize-handle');
             expect(handle.attributes('aria-valuemin')).toBe('340');
         });
 
         it('resize handle has correct aria-valuemax', () => {
-            const wrapper = mount(AiPanel, { props: defaultProps });
+            const wrapper = mountWithI18n(AiPanel, { props: defaultProps });
             const handle = wrapper.find('.ai-panel-resize-handle');
             expect(handle.attributes('aria-valuemax')).toBe('600');
         });
@@ -135,7 +135,7 @@ describe('AiPanel – resize feature', () => {
         }
 
         it('increases panel width when dragging left (delta > 0)', async () => {
-            const wrapper = mount(AiPanel, { props: defaultProps, attachTo: document.body });
+            const wrapper = mountWithI18n(AiPanel, { props: defaultProps, attachTo: document.body });
 
             const handle = wrapper.find('.ai-panel-resize-handle').element;
             fireMousedown(handle, 500);
@@ -149,7 +149,7 @@ describe('AiPanel – resize feature', () => {
         });
 
         it('decreases panel width when dragging right (delta < 0)', async () => {
-            const wrapper = mount(AiPanel, { props: defaultProps, attachTo: document.body });
+            const wrapper = mountWithI18n(AiPanel, { props: defaultProps, attachTo: document.body });
 
             const handle = wrapper.find('.ai-panel-resize-handle').element;
             fireMousedown(handle, 500);
@@ -164,7 +164,7 @@ describe('AiPanel – resize feature', () => {
         });
 
         it('clamps width to minWidth (340px) when dragging too far right', async () => {
-            const wrapper = mount(AiPanel, { props: defaultProps, attachTo: document.body });
+            const wrapper = mountWithI18n(AiPanel, { props: defaultProps, attachTo: document.body });
 
             const handle = wrapper.find('.ai-panel-resize-handle').element;
             fireMousedown(handle, 500);
@@ -178,7 +178,7 @@ describe('AiPanel – resize feature', () => {
         });
 
         it('clamps width to maxWidth (600px) when dragging too far left', async () => {
-            const wrapper = mount(AiPanel, { props: defaultProps, attachTo: document.body });
+            const wrapper = mountWithI18n(AiPanel, { props: defaultProps, attachTo: document.body });
 
             const handle = wrapper.find('.ai-panel-resize-handle').element;
             fireMousedown(handle, 500);
@@ -192,7 +192,7 @@ describe('AiPanel – resize feature', () => {
         });
 
         it('stops resizing after mouseup', async () => {
-            const wrapper = mount(AiPanel, { props: defaultProps, attachTo: document.body });
+            const wrapper = mountWithI18n(AiPanel, { props: defaultProps, attachTo: document.body });
 
             const handle = wrapper.find('.ai-panel-resize-handle').element;
             fireMousedown(handle, 500);
@@ -217,7 +217,7 @@ describe('AiPanel – resize feature', () => {
         });
 
         it('width stays within bounds for a precise 50px leftward drag', async () => {
-            const wrapper = mount(AiPanel, { props: defaultProps, attachTo: document.body });
+            const wrapper = mountWithI18n(AiPanel, { props: defaultProps, attachTo: document.body });
 
             const handle = wrapper.find('.ai-panel-resize-handle').element;
             fireMousedown(handle, 600);
@@ -239,18 +239,18 @@ describe('AiPanel – resize feature', () => {
 
     describe('panel structure', () => {
         it('renders the main ai-panel element', () => {
-            const wrapper = mount(AiPanel, { props: defaultProps });
+            const wrapper = mountWithI18n(AiPanel, { props: defaultProps });
             expect(wrapper.find('.ai-panel').exists()).toBe(true);
         });
 
         it('panel has aria-label', () => {
-            const wrapper = mount(AiPanel, { props: defaultProps });
+            const wrapper = mountWithI18n(AiPanel, { props: defaultProps });
             const panel = wrapper.find('.ai-panel');
             expect(panel.attributes('aria-label')).toBeTruthy();
         });
 
         it('emits close event when close is triggered', async () => {
-            const wrapper = mount(AiPanel, { props: defaultProps });
+            const wrapper = mountWithI18n(AiPanel, { props: defaultProps });
             wrapper.vm.$emit('close');
             await wrapper.vm.$nextTick();
             expect(wrapper.emitted('close')).toBeTruthy();

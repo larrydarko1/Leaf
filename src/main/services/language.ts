@@ -39,41 +39,10 @@ const LANGUAGE_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
 let seeded = false;
 
 export function register(ipc: IpcMain): void {
-    ipc.handle('language:list', async () => {
-        try {
-            const languages = await listLanguages();
-            const state = await readState();
-            return {
-                success: true,
-                languages,
-                activeId: typeof state.activeLanguage === 'string' ? state.activeLanguage : DEFAULT_LANGUAGE_ID,
-                localesDir: LOCALES_DIR,
-            };
-        } catch (err) {
-            log.error('[language] list failed:', err);
-            return {
-                success: false,
-                error: (err as Error).message,
-                languages: [],
-                activeId: DEFAULT_LANGUAGE_ID,
-                localesDir: LOCALES_DIR,
-            };
-        }
-    });
+    ipc.handle('language:list', listLanguages);
 
     ipc.handle('language:setActive', async (_event, id: unknown) => {
-        if (typeof id !== 'string' || !isValidLanguageId(id)) {
-            return { success: false, error: 'Invalid language id' };
-        }
-        const file = path.join(LOCALES_DIR, `${id}.json`);
-        if (!existsSync(file)) return { success: false, error: 'Language not found' };
-        try {
-            const state = await readState();
-            await writeState({ ...state, activeLanguage: id });
-            return { success: true };
-        } catch (err) {
-            return { success: false, error: (err as Error).message };
-        }
+        return setActiveLanguage(id as string);
     });
 
     ipc.handle('language:openLeafDir', async () => {
@@ -125,11 +94,11 @@ async function writeState(state: LanguageState): Promise<void> {
     await fs.writeFile(STATE_FILE, JSON.stringify(state, null, 2));
 }
 
-function isValidLanguageId(id: string): boolean {
+export function isValidLanguageId(id: string): boolean {
     return typeof id === 'string' && LANGUAGE_ID_PATTERN.test(id);
 }
 
-async function listLanguages(): Promise<LanguageInfo[]> {
+async function listLanguagesArray(): Promise<LanguageInfo[]> {
     await ensureSeeded();
     const languages: LanguageInfo[] = [];
 
@@ -154,4 +123,50 @@ async function listLanguages(): Promise<LanguageInfo[]> {
     // Sort alphabetically
     languages.sort((a, b) => a.id.localeCompare(b.id));
     return languages;
+}
+
+export async function listLanguages(): Promise<{
+    success: boolean;
+    languages?: LanguageInfo[];
+    activeId: string;
+    localesDir: string;
+    error?: string;
+}> {
+    try {
+        const languages = await listLanguagesArray();
+        const state = await readState();
+        return {
+            success: true,
+            languages,
+            activeId: typeof state.activeLanguage === 'string' ? state.activeLanguage : DEFAULT_LANGUAGE_ID,
+            localesDir: LOCALES_DIR,
+        };
+    } catch (err) {
+        log.error('[language] list failed:', err);
+        return {
+            success: false,
+            error: (err as Error).message,
+            languages: [],
+            activeId: DEFAULT_LANGUAGE_ID,
+            localesDir: LOCALES_DIR,
+        };
+    }
+}
+
+export async function setActiveLanguage(id: string): Promise<{
+    success: boolean;
+    error?: string;
+}> {
+    if (typeof id !== 'string' || !isValidLanguageId(id)) {
+        return { success: false, error: 'Invalid language id' };
+    }
+    const file = path.join(LOCALES_DIR, `${id}.json`);
+    if (!existsSync(file)) return { success: false, error: 'Language not found' };
+    try {
+        const state = await readState();
+        await writeState({ ...state, activeLanguage: id });
+        return { success: true };
+    } catch (err) {
+        return { success: false, error: (err as Error).message };
+    }
 }

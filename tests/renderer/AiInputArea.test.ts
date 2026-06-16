@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { mount } from '@vue/test-utils';
 import AiInputArea from '../../src/renderer/components/ai/AiInputArea.vue';
+import { mountWithI18n } from './test-utils';
 
 // ── localStorage mock ────────────────────────────────────────────────────────
 
@@ -62,7 +62,7 @@ describe('AiInputArea', () => {
 
     describe('initial state', () => {
         it('renders with default height', () => {
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -79,7 +79,7 @@ describe('AiInputArea', () => {
         });
 
         it('renders resize handle', () => {
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -96,7 +96,7 @@ describe('AiInputArea', () => {
         });
 
         it('shows send button when not streaming', () => {
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -113,7 +113,7 @@ describe('AiInputArea', () => {
         });
 
         it('shows stop button when streaming', () => {
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -134,7 +134,7 @@ describe('AiInputArea', () => {
 
     describe('resize', () => {
         it('increases height on upward drag', async () => {
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -166,7 +166,7 @@ describe('AiInputArea', () => {
         });
 
         it('decreases height on downward drag', async () => {
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -194,7 +194,7 @@ describe('AiInputArea', () => {
         });
 
         it('clamps height to minimum (40px)', async () => {
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -222,7 +222,7 @@ describe('AiInputArea', () => {
         });
 
         it('clamps height to maximum (150px)', async () => {
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -250,7 +250,7 @@ describe('AiInputArea', () => {
         });
 
         it('sets resize-active class during drag', async () => {
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -281,7 +281,7 @@ describe('AiInputArea', () => {
 
     describe('localStorage persistence', () => {
         it('saves height on mouseup', async () => {
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -313,7 +313,7 @@ describe('AiInputArea', () => {
             localStorageMock.clear();
             localStorageMock.setItem('ai-input-max-height', '100');
 
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -334,7 +334,7 @@ describe('AiInputArea', () => {
         it('ignores invalid saved height', () => {
             localStorageMock.setItem('ai-input-max-height', 'invalid');
 
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -355,7 +355,7 @@ describe('AiInputArea', () => {
         it('ignores out-of-bounds saved height', () => {
             localStorageMock.setItem('ai-input-max-height', '999'); // > 150
 
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -377,7 +377,7 @@ describe('AiInputArea', () => {
 
     describe('event emissions', () => {
         it('emits send when Enter is pressed', async () => {
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -397,7 +397,7 @@ describe('AiInputArea', () => {
         });
 
         it('does not emit send on Shift+Enter', async () => {
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -419,7 +419,7 @@ describe('AiInputArea', () => {
         });
 
         it('emits send when send button is clicked', async () => {
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -439,7 +439,7 @@ describe('AiInputArea', () => {
         });
 
         it('emits stop when stop button is clicked', async () => {
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -459,7 +459,7 @@ describe('AiInputArea', () => {
         });
 
         it('emits update:inputMessage on textarea input', async () => {
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -482,7 +482,7 @@ describe('AiInputArea', () => {
 
         it('emits update:includeNoteContext on checkbox toggle', async () => {
             const activeFile = makeFile('test.md');
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -510,7 +510,7 @@ describe('AiInputArea', () => {
 
     describe('UI state', () => {
         it('disables context toggle when no activeFile', () => {
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -529,7 +529,7 @@ describe('AiInputArea', () => {
 
         it('enables context toggle when activeFile exists', () => {
             const activeFile = makeFile('test.md');
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -547,7 +547,7 @@ describe('AiInputArea', () => {
         });
 
         it('disables textarea when not ready', () => {
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -565,7 +565,7 @@ describe('AiInputArea', () => {
         });
 
         it('disables textarea when generating', () => {
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -583,7 +583,7 @@ describe('AiInputArea', () => {
         });
 
         it('disables send button when message is empty', () => {
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -601,7 +601,7 @@ describe('AiInputArea', () => {
         });
 
         it('disables send button when only whitespace', () => {
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -619,7 +619,7 @@ describe('AiInputArea', () => {
         });
 
         it('enables send button when message has content', () => {
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -641,7 +641,7 @@ describe('AiInputArea', () => {
 
     describe('agent mode', () => {
         it('shows agent indicator when agentMode is true', () => {
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: true,
                     includeNoteContext: false,
@@ -660,7 +660,7 @@ describe('AiInputArea', () => {
 
         it('displays agent indicator with file name', () => {
             const activeFile = makeFile('test.md');
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: true,
                     includeNoteContext: false,
@@ -678,7 +678,7 @@ describe('AiInputArea', () => {
         });
 
         it('displays agent indicator with "No file open" when no activeFile', () => {
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: true,
                     includeNoteContext: false,
@@ -692,11 +692,11 @@ describe('AiInputArea', () => {
             });
 
             const noFile = wrapper.find('.ai-agent-no-file');
-            expect(noFile.text()).toContain('No file open');
+            expect(noFile.text()).toContain('Agent mode active with no file');
         });
 
         it('hides agent indicator when agentMode is false', () => {
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -719,7 +719,7 @@ describe('AiInputArea', () => {
     describe('context hint', () => {
         it('shows context hint when includeNoteContext is true and activeFile exists', () => {
             const activeFile = makeFile('test.md');
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: true,
@@ -739,7 +739,7 @@ describe('AiInputArea', () => {
 
         it('hides context hint when includeNoteContext is false', () => {
             const activeFile = makeFile('test.md');
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: false,
@@ -757,7 +757,7 @@ describe('AiInputArea', () => {
         });
 
         it('hides context hint when activeFile is null', () => {
-            const wrapper = mount(AiInputArea, {
+            const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
                     includeNoteContext: true,

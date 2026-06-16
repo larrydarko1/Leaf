@@ -175,4 +175,34 @@ export default [
 
     // ── Prettier last — disables formatting rules that conflict ──────────────
     prettier,
+
+    // Test files — use a dedicated tsconfig.test.json so the project service
+    // can find them without allowDefaultProject hacks
+    // Strict type rules are relaxed here since test/mock code routinely uses `any`
+    {
+        files: ['tests/**/*.ts', 'vitest.setup.ts'],
+        languageOptions: {
+            parserOptions: {
+                projectService: false,
+                project: ['./tsconfig.test.json'],
+                tsconfigRootDir: import.meta.dirname,
+            },
+        },
+        rules: {
+            '@typescript-eslint/no-explicit-any': 'off',
+            '@typescript-eslint/no-unsafe-assignment': 'off',
+            '@typescript-eslint/no-unsafe-member-access': 'off',
+            '@typescript-eslint/no-unsafe-call': 'off',
+            '@typescript-eslint/no-unsafe-return': 'off',
+            '@typescript-eslint/no-unsafe-argument': 'off',
+            '@typescript-eslint/unbound-method': 'off',
+            '@typescript-eslint/consistent-type-imports': 'off',
+            '@typescript-eslint/strict-boolean-expressions': 'off',
+            '@typescript-eslint/no-empty-function': 'off',
+            '@typescript-eslint/no-dynamic-delete': 'off',
+            '@typescript-eslint/no-non-null-assertion': 'off',
+            '@typescript-eslint/require-await': 'off',
+            '@typescript-eslint/await-thenable': 'off',
+        },
+    },
 ];

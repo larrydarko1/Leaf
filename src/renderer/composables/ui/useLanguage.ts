@@ -43,6 +43,11 @@ export function useLanguage() {
     }
 
     async function setActive(id: string): Promise<boolean> {
+        // Early return if already active
+        if (id === activeId.value) {
+            return true;
+        }
+
         const language = languages.value.find((l) => l.id === id);
         if (language === undefined) return false;
         try {

@@ -117,7 +117,7 @@ describe('useAIChat', () => {
     // ── resendMessage context restore ────────────────────────────────────────
     describe('resendMessage', () => {
         it('calls aiResetChat before resending', async () => {
-            const { chat, messages } = makeChat([
+            const { chat } = makeChat([
                 makeMessage('user', 'First'),
                 makeMessage('assistant', 'Response'),
                 makeMessage('user', 'Second'),
@@ -129,7 +129,7 @@ describe('useAIChat', () => {
         });
 
         it('restores prior messages as context before resending', async () => {
-            const { chat, messages } = makeChat([
+            const { chat } = makeChat([
                 makeMessage('user', 'First'),
                 makeMessage('assistant', 'Response'),
                 makeMessage('user', 'Second'),
@@ -168,10 +168,7 @@ describe('useAIChat', () => {
     // ── confirmEditMessage context restore ───────────────────────────────────
     describe('confirmEditMessage', () => {
         it('calls aiResetChat after editing a message', async () => {
-            const { chat, messages } = makeChat([
-                makeMessage('user', 'Original'),
-                makeMessage('assistant', 'Response'),
-            ]);
+            const { chat } = makeChat([makeMessage('user', 'Original'), makeMessage('assistant', 'Response')]);
 
             chat.startEditMessage(0);
             chat.editContent.value = 'Edited';
@@ -191,7 +188,7 @@ describe('useAIChat', () => {
         });
 
         it('restores prior messages when editing a message mid-conversation', async () => {
-            const { chat, messages } = makeChat([
+            const { chat } = makeChat([
                 makeMessage('user', 'Turn 1'),
                 makeMessage('assistant', 'Answer 1'),
                 makeMessage('user', 'Turn 2'),

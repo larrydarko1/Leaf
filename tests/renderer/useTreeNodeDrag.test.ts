@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useTreeNodeDrag } from '../../src/renderer/composables/vault/useTreeNodeDrag';
-import type { TreeNode } from '../../src/renderer/components/FolderNode.vue';
+import type { TreeNode } from '../../src/renderer/types/vault';
 import type { FileInfo } from '../../src/renderer/types/electron';
 
 // ── helpers ──────────────────────────────────────────────────────────────────

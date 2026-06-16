@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { mount } from '@vue/test-utils';
 import TabBar from '../../src/renderer/components/TabBar.vue';
-import type { TabState } from '../../composables/editor/useEditorTabs';
+import { mountWithI18n } from './test-utils';
+import type { TabState } from '../../src/renderer/composables/editor/useEditorTabs';
 
 function makeTab(name: string, path = `/${name}`): TabState {
     return {
@@ -23,7 +23,7 @@ function makeTab(name: string, path = `/${name}`): TabState {
 
 describe('TabBar.vue', () => {
     it('does not render when tabs array is empty', () => {
-        const wrapper = mount(TabBar, {
+        const wrapper = mountWithI18n(TabBar, {
             props: {
                 tabs: [],
                 activeIndex: -1,
@@ -33,7 +33,7 @@ describe('TabBar.vue', () => {
     });
 
     it('renders tab bar when tabs exist', () => {
-        const wrapper = mount(TabBar, {
+        const wrapper = mountWithI18n(TabBar, {
             props: {
                 tabs: [makeTab('a.md')],
                 activeIndex: 0,
@@ -44,7 +44,7 @@ describe('TabBar.vue', () => {
 
     it('renders correct number of tabs', () => {
         const tabs = [makeTab('a.md'), makeTab('b.md'), makeTab('c.md')];
-        const wrapper = mount(TabBar, {
+        const wrapper = mountWithI18n(TabBar, {
             props: { tabs, activeIndex: 0 },
         });
         expect(wrapper.findAll('.tab')).toHaveLength(3);
