@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { watch, onMounted, onUnmounted } from 'vue';
 import { useVideoPlayer } from '../../composables/editor/useVideoPlayer';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     filePath: string;
@@ -63,7 +66,7 @@ function seekVideoBySeconds(seconds: number): void {
                 :key="videoUrl"
                 :src="videoUrl"
                 class="video-preview"
-                aria-label="Video player"
+                :aria-label="t('editor.video_player')"
                 @error="onVideoError"
                 @loadedmetadata="onVideoLoaded"
                 @ended="onVideoEnded"
@@ -73,13 +76,13 @@ function seekVideoBySeconds(seconds: number): void {
             <div
                 class="video-controls"
                 role="group"
-                aria-label="Video player controls">
+                :aria-label="t('editor.video_player_controls')">
                 <!-- Play/pause button -->
                 <button
                     class="video-ctrl-btn"
                     type="button"
-                    :aria-label="videoPlaying ? 'Pause video' : 'Play video'"
-                    :title="videoPlaying ? 'Pause' : 'Play'"
+                    :aria-label="videoPlaying ? t('editor.pause_video') : t('editor.play_video')"
+                    :title="videoPlaying ? t('editor.pause') : t('editor.play')"
                     @click="toggleVideoPlayback">
                     <svg
                         v-if="!videoPlaying"
@@ -124,7 +127,7 @@ function seekVideoBySeconds(seconds: number): void {
                 <div
                     class="video-progress-wrapper"
                     role="slider"
-                    :aria-label="`Video progress: ${videoProgressPercent}%`"
+                    :aria-label="t('editor.video_progress', { progress: videoProgressPercent })"
                     :aria-valuenow="videoProgressPercent"
                     aria-valuemin="0"
                     aria-valuemax="100"
@@ -143,7 +146,7 @@ function seekVideoBySeconds(seconds: number): void {
                 <!-- Total duration display -->
                 <time
                     class="video-time"
-                    aria-label="Total duration"
+                    :aria-label="t('editor.total_duration')"
                     >{{ formatTime(videoDuration) }}</time
                 >
 
@@ -152,8 +155,8 @@ function seekVideoBySeconds(seconds: number): void {
                     <button
                         class="video-ctrl-btn"
                         type="button"
-                        :aria-label="videoVolume === 0 ? 'Unmute video' : 'Mute video'"
-                        :title="videoVolume === 0 ? 'Unmute' : 'Mute'"
+                        :aria-label="videoVolume === 0 ? t('editor.unmute_video') : t('editor.mute_video')"
+                        :title="videoVolume === 0 ? t('editor.unmute') : t('editor.mute')"
                         @click="toggleVideoMute">
                         <svg
                             v-if="videoVolume === 0"
@@ -227,9 +230,9 @@ function seekVideoBySeconds(seconds: number): void {
             v-if="videoError"
             class="video-error"
             role="alert">
-            <h2>Video Load Error</h2>
-            <p>Failed to load video</p>
-            <p class="video-error-hint">This format may not be supported</p>
+            <h2>{{ t('editor.video_load_error') }}</h2>
+            <p>{{ t('editor.failed_to_load_video') }}</p>
+            <p class="video-error-hint">{{ t('editor.video_format_not_supported') }}</p>
         </section>
     </div>
 </template>

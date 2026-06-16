@@ -4,6 +4,9 @@ import type { FileInfo, FolderInfo } from '../types/electron';
 import FolderNode from './FolderNode.vue';
 import ContextMenu, { type ContextMenuItem } from './ContextMenu.vue';
 import { useFolderTree } from '../composables/vault/useFolderTree';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     files: FileInfo[];
@@ -53,16 +56,16 @@ const contextMenu = ref({
 const contextMenuItems = computed<ContextMenuItem[]>(() => {
     if (contextMenu.value.type === 'folder') {
         return [
-            { label: 'Rename', action: 'rename', shortcut: 'F2' },
-            { label: 'Delete', action: 'delete' },
+            { label: t('file.rename'), action: 'rename', shortcut: 'F2' },
+            { label: t('file.delete'), action: 'delete' },
         ];
     } else {
         // Check if file is bookmarked
         const isBookmarked = props.bookmarkedFiles?.includes(contextMenu.value.targetPath) ?? false;
         return [
-            { label: isBookmarked ? 'Remove from Bookmarks' : 'Add to Bookmarks', action: 'bookmark' },
-            { label: 'Rename', action: 'rename', shortcut: 'F2' },
-            { label: 'Delete', action: 'delete' },
+            { label: isBookmarked ? t('file.remove_from_bookmarks') : t('file.add_to_bookmarks'), action: 'bookmark' },
+            { label: t('file.rename'), action: 'rename', shortcut: 'F2' },
+            { label: t('file.delete'), action: 'delete' },
         ];
     }
 });
@@ -321,8 +324,8 @@ function handleRootDrop(event: DragEvent) {
             <div
                 v-if="files.length === 0"
                 class="empty-state">
-                <p>No files found.</p>
-                <p class="hint">Add text, code, or media files to get started.</p>
+                <p>{{ t('file.no_files_found') }}</p>
+                <p class="hint">{{ t('file.add_files_hint') }}</p>
             </div>
         </div>
 

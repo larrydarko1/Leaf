@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { StrokeStyle } from '../../types/drawing';
+import { useI18n } from 'vue-i18n';
 
 type StyleKey = 'strokeColor' | 'fillColor' | 'strokeWidth' | 'strokeStyle' | 'borderRadius' | 'fontSize';
 
@@ -16,6 +17,8 @@ defineProps<{
     showRoundnessOption: boolean;
     hasSelection: boolean;
 }>();
+
+const { t } = useI18n();
 
 const emit = defineEmits<{
     setProperty: [prop: StyleKey, value: string | number];
@@ -57,22 +60,22 @@ const fillColorPalette = [
 const strokeWidthOptions = [1, 2, 4];
 
 const strokeStyleOptions = [
-    { value: 'solid' as StrokeStyle, label: 'Solid', dash: '' },
-    { value: 'dashed' as StrokeStyle, label: 'Dashed', dash: '8,5' },
-    { value: 'dotted' as StrokeStyle, label: 'Dotted', dash: '2,4' },
+    { value: 'solid' as StrokeStyle, label: t('drawing.solid'), dash: '' },
+    { value: 'dashed' as StrokeStyle, label: t('drawing.dashed'), dash: '8,5' },
+    { value: 'dotted' as StrokeStyle, label: t('drawing.dotted'), dash: '2,4' },
 ];
 
 const fontSizeOptions = [
-    { label: 'S', value: 16 },
-    { label: 'M', value: 20 },
-    { label: 'L', value: 28 },
-    { label: 'XL', value: 36 },
+    { label: t('drawing.font_size_options.s'), value: 16 },
+    { label: t('drawing.font_size_options.m'), value: 20 },
+    { label: t('drawing.font_size_options.l'), value: 28 },
+    { label: t('drawing.font_size_options.xl'), value: 36 },
 ];
 
 const borderRadiusOptions = [
-    { label: 'Sharp', value: 0, icon: 'sharp' },
-    { label: 'Round', value: 8, icon: 'round' },
-    { label: 'Extra round', value: 16, icon: 'extra' },
+    { label: t('drawing.border_radius_options.sharp'), value: 0, icon: 'sharp' },
+    { label: t('drawing.border_radius_options.round'), value: 8, icon: 'round' },
+    { label: t('drawing.border_radius_options.extra_round'), value: 16, icon: 'extra' },
 ];
 </script>
 
@@ -81,22 +84,22 @@ const borderRadiusOptions = [
         <aside
             v-if="visible"
             class="properties-panel"
-            aria-label="Properties panel"
+            :aria-label="t('drawing.properties_panel')"
             @mousedown.prevent>
             <!-- Stroke Color -->
             <section class="prop-section">
-                <h3 class="prop-label">Stroke</h3>
+                <h3 class="prop-label">{{ t('drawing.stroke') }}</h3>
                 <div
                     class="color-grid"
                     role="group"
-                    aria-label="Stroke color options">
+                    :aria-label="t('drawing.stroke_color_options')">
                     <button
                         v-for="c in strokeColorPalette"
                         :key="'s-' + c"
                         class="color-swatch"
                         :class="{ active: activeStrokeColor === c }"
                         :style="{ background: c }"
-                        :aria-label="`Stroke color ${c}`"
+                        :aria-label="`p${t('drawing.stroke_color_options')} ${c}`"
                         :aria-pressed="activeStrokeColor === c"
                         @click="emit('setProperty', 'strokeColor', c)" />
                 </div>
@@ -106,15 +109,15 @@ const borderRadiusOptions = [
             <section
                 v-if="showFillOption"
                 class="prop-section">
-                <h3 class="prop-label">Background</h3>
+                <h3 class="prop-label">{{ t('drawing.fill') }}</h3>
                 <div
                     class="color-grid"
                     role="group"
-                    aria-label="Background color options">
+                    :aria-label="t('drawing.fill_color_options')">
                     <button
                         class="color-swatch transparent-swatch"
                         :class="{ active: activeFillColor === 'transparent' }"
-                        aria-label="Transparent background"
+                        :aria-label="t('drawing.transparent_background')"
                         :aria-pressed="activeFillColor === 'transparent'"
                         @click="emit('setProperty', 'fillColor', 'transparent')">
                         <svg
@@ -138,7 +141,7 @@ const borderRadiusOptions = [
                         class="color-swatch"
                         :class="{ active: activeFillColor === c }"
                         :style="{ background: c }"
-                        :aria-label="`Background color ${c}`"
+                        :aria-label="`${t('drawing.fill_color_options')} ${c}`"
                         :aria-pressed="activeFillColor === c"
                         @click="emit('setProperty', 'fillColor', c)" />
                 </div>
@@ -146,17 +149,17 @@ const borderRadiusOptions = [
 
             <!-- Stroke Width -->
             <section class="prop-section">
-                <h3 class="prop-label">Stroke width</h3>
+                <h3 class="prop-label">{{ t('drawing.stroke_width') }}</h3>
                 <div
                     class="stroke-width-row"
                     role="group"
-                    aria-label="Stroke width options">
+                    :aria-label="t('drawing.stroke_width_options')">
                     <button
                         v-for="w in strokeWidthOptions"
                         :key="w"
                         class="stroke-width-btn"
                         :class="{ active: activeStrokeWidth === w }"
-                        :aria-label="`Stroke width ${w}px`"
+                        :aria-label="`${t('drawing.stroke_width_options')} ${w}px`"
                         :aria-pressed="activeStrokeWidth === w"
                         @click="emit('setProperty', 'strokeWidth', w)">
                         <span
@@ -169,11 +172,11 @@ const borderRadiusOptions = [
 
             <!-- Stroke Style -->
             <section class="prop-section">
-                <h3 class="prop-label">Stroke style</h3>
+                <h3 class="prop-label">{{ t('drawing.stroke_style') }}</h3>
                 <div
                     class="stroke-style-row"
                     role="group"
-                    aria-label="Stroke style options">
+                    :aria-label="t('drawing.stroke_style_options')">
                     <button
                         v-for="s in strokeStyleOptions"
                         :key="s.value"
@@ -205,11 +208,11 @@ const borderRadiusOptions = [
             <section
                 v-if="showRoundnessOption"
                 class="prop-section">
-                <h3 class="prop-label">Roundness</h3>
+                <h3 class="prop-label">{{ t('drawing.roundness') }}</h3>
                 <div
                     class="roundness-row"
                     role="group"
-                    aria-label="Roundness options">
+                    :aria-label="t('drawing.roundness_options')">
                     <button
                         v-for="r in borderRadiusOptions"
                         :key="r.value"
@@ -277,7 +280,7 @@ const borderRadiusOptions = [
                 v-if="showFontSizeOption"
                 class="prop-section">
                 <h3 class="prop-label">
-                    Font size
+                    {{ t('drawing.font_size') }}
                     <span
                         class="font-size-value"
                         aria-live="polite"
@@ -287,13 +290,13 @@ const borderRadiusOptions = [
                 <div
                     class="font-size-row"
                     role="group"
-                    aria-label="Font size options">
+                    :aria-label="t('drawing.font_size_options')">
                     <button
                         v-for="fs in fontSizeOptions"
                         :key="fs.value"
                         class="font-size-btn"
                         :class="{ active: activeFontSize === fs.value }"
-                        :aria-label="`Font size ${fs.label}`"
+                        :aria-label="`${t('drawing.font_size_options')} ${fs.label}`"
                         :aria-pressed="activeFontSize === fs.value"
                         @click="emit('setProperty', 'fontSize', fs.value)">
                         {{ fs.label }}
@@ -308,10 +311,10 @@ const borderRadiusOptions = [
                 <div
                     class="prop-actions"
                     role="group"
-                    aria-label="Element actions">
+                    :aria-label="t('drawing.element_actions')">
                     <button
                         class="action-btn"
-                        aria-label="Copy (Cmd+C)"
+                        :aria-label="t('drawing.copy')"
                         @click="emit('copy')">
                         <svg
                             width="15"
@@ -332,11 +335,11 @@ const borderRadiusOptions = [
                                 rx="2" />
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                         </svg>
-                        Copy
+                        {{ t('drawing.copy') }}
                     </button>
                     <button
                         class="action-btn"
-                        aria-label="Duplicate (Cmd+D)"
+                        :aria-label="t('drawing.duplicate')"
                         @click="emit('duplicate')">
                         <svg
                             width="15"
@@ -362,11 +365,11 @@ const borderRadiusOptions = [
                                 height="13"
                                 rx="2" />
                         </svg>
-                        Duplicate
+                        {{ t('drawing.duplicate') }}
                     </button>
                     <button
                         class="action-btn action-btn-delete"
-                        aria-label="Delete (Backspace)"
+                        :aria-label="t('drawing.delete')"
                         @click="emit('delete')">
                         <svg
                             width="15"
@@ -383,7 +386,7 @@ const borderRadiusOptions = [
                             <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
                             <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
                         </svg>
-                        Delete
+                        {{ t('drawing.delete') }}
                     </button>
                 </div>
             </section>

@@ -31,6 +31,9 @@ import { listContinuationKeymap } from '../composables/editor/codemirror/cm-list
 import { taskFoldExtension } from '../composables/editor/codemirror/cm-task-fold';
 import { useCodeEditor } from '../composables/editor/codemirror/useCodeEditor';
 import { keymap, EditorView } from '@codemirror/view';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     file: FileInfo | null;
@@ -298,11 +301,11 @@ if (typeof window !== 'undefined') {
     <div
         class="note-editor"
         role="main"
-        aria-label="Note editor">
+        :aria-label="t('editor.note_editor')">
         <!-- Media viewers -->
         <section
             v-if="file && isImageFile"
-            aria-label="Image viewer">
+            :aria-label="t('editor.image_viewer')">
             <ImageViewer
                 :file-path="file.path"
                 :file-name="file.name" />
@@ -310,26 +313,26 @@ if (typeof window !== 'undefined') {
 
         <section
             v-else-if="file && isVideoFile"
-            aria-label="Video viewer">
+            :aria-label="t('editor.video_viewer')">
             <VideoViewer :file-path="file.path" />
         </section>
 
         <section
             v-else-if="file && isPdfFile"
-            aria-label="PDF viewer">
+            :aria-label="t('editor.pdf_viewer')">
             <PdfViewer :file-path="file.path" />
         </section>
 
         <section
             v-else-if="file && isAudioFile"
-            aria-label="Audio player">
+            :aria-label="t('editor.audio_player')">
             <AudioViewer :file-path="file.path" />
         </section>
 
         <!-- Drawing canvas for drawing files -->
         <section
             v-else-if="file && isDrawingFile"
-            aria-label="Drawing canvas editor">
+            :aria-label="t('editor.drawing_canvas')">
             <DrawingCanvas
                 :file-path="file.path"
                 :initial-content="content"
@@ -341,7 +344,7 @@ if (typeof window !== 'undefined') {
         <section
             v-else-if="file && !isImageFile && !isVideoFile && !isAudioFile && !isPdfFile && !isDrawingFile"
             class="text-editor-container"
-            aria-label="Text editor"
+            :aria-label="t('editor.text_editor')"
             @dragenter.prevent="onEditorDragEnter"
             @dragover.prevent="onEditorDragOver"
             @dragleave.prevent="onEditorDragLeave"
@@ -352,7 +355,7 @@ if (typeof window !== 'undefined') {
                 class="drop-overlay"
                 role="status"
                 aria-live="polite"
-                aria-label="Drag and drop zone active">
+                :aria-label="t('editor.drag_and_drop_zone_active')">
                 <div class="drop-overlay-content">
                     <svg
                         width="40"
@@ -373,14 +376,14 @@ if (typeof window !== 'undefined') {
                             x2="12"
                             y2="3"></line>
                     </svg>
-                    <p>Drop to embed</p>
+                    <p>{{ t('editor.drop_to_embed') }}</p>
                 </div>
             </div>
 
             <!-- Markdown formatting toolbar -->
             <nav
                 v-if="isMarkdownFile"
-                aria-label="Markdown formatting toolbar">
+                :aria-label="t('editor.markdown_formatting_toolbar')">
                 <MarkdownToolbar
                     @format="mdFormatText"
                     @heading="mdInsertHeading" />
@@ -392,7 +395,7 @@ if (typeof window !== 'undefined') {
                 ref="cmContainerRef"
                 class="cm-editor-container"
                 role="textbox"
-                aria-label="Markdown editor"
+                :aria-label="t('editor.markdown_editor')"
                 aria-multiline="true"></div>
 
             <!-- CodeMirror code editor for code files -->
@@ -401,7 +404,7 @@ if (typeof window !== 'undefined') {
                 ref="codeContainerRef"
                 class="cm-editor-container code-editor-container"
                 role="textbox"
-                aria-label="Code editor"
+                :aria-label="t('editor.code_editor')"
                 aria-multiline="true"></div>
 
             <!-- Plain textarea for other text files -->
@@ -411,7 +414,7 @@ if (typeof window !== 'undefined') {
                 v-model="content"
                 class="editor-textarea"
                 placeholder="Start writing..."
-                aria-label="Text editor"
+                :aria-label="t('editor.text_editor')"
                 @input="onContentChange"></textarea>
 
             <!-- Dictation button for txt/md files -->
@@ -422,10 +425,10 @@ if (typeof window !== 'undefined') {
                 :aria-pressed="isDictating"
                 :aria-label="
                     isDictating
-                        ? 'Stop dictation'
+                        ? t('editor.stop_dictation')
                         : isDictationLoading
-                          ? 'Loading Whisper model'
-                          : 'Start dictation using speech-to-text'
+                          ? t('editor.loading_whisper_model')
+                          : t('editor.start_dictation')
                 "
                 :disabled="isDictationLoading"
                 @click="toggleDictation">
@@ -487,13 +490,13 @@ if (typeof window !== 'undefined') {
                 <div class="empty-logo">
                     <img
                         draggable="false"
-                        src="../assets/icons/icon.png"
-                        alt="Leaf application logo"
+                        src="@/assets/icons/icon.png"
+                        :alt="t('editor.leaf_logo')"
                         class="empty-logo-icon" />
                     <span class="empty-logo-text">leaf.</span>
                 </div>
-                <h2>Select a note to start editing</h2>
-                <p class="hint">or create a new one from your notes folder</p>
+                <h2>{{ t('editor.select_note_to_start_editing') }}</h2>
+                <p class="hint">{{ t('editor.or_create_new_note') }}</p>
             </div>
         </section>
     </div>

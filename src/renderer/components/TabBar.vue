@@ -106,12 +106,12 @@ function onDragEnd() {
             <span
                 v-if="tab.hasUnsavedChanges"
                 class="tab-dot"
-                :aria-label="t('editor.tab_unsaved_indicator')"
+                :aria-label="t('app.tab_unsaved_indicator')"
                 role="status" />
             <button
                 class="tab-close"
-                :aria-label="t('editor.tab_close_button', { filename: tab.file.name })"
-                :title="t('editor.tab_close_button', { filename: tab.file.name })"
+                :aria-label="t('app.tab_close_button', { filename: tab.file.name })"
+                :title="t('app.tab_close_button', { filename: tab.file.name })"
                 @click.stop="emit('close', i)">
                 <svg
                     width="10"

@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     filePath: string;
@@ -22,14 +25,14 @@ watch(
     <div
         class="pdf-viewer"
         role="region"
-        aria-label="PDF document viewer">
+        :aria-label="t('editor.pdf_viewer')">
         <!-- PDF preview area -->
         <iframe
             v-if="pdfUrl && !hasError"
             :src="pdfUrl"
             class="pdf-preview"
             title="PDF document"
-            aria-label="Embedded PDF document"
+            :aria-label="t('editor.pdf_viewer')"
             @error="hasError = true" />
 
         <!-- Error state fallback -->
@@ -38,9 +41,9 @@ watch(
             class="pdf-error"
             role="alert"
             aria-live="polite">
-            <h2>PDF Load Error</h2>
-            <p>Failed to load PDF</p>
-            <p class="pdf-error-hint">This file may be corrupted or in an unsupported format</p>
+            <h2>{{ t('editor.pdf_load_error') }}</h2>
+            <p>{{ t('editor.failed_to_load_pdf') }}</p>
+            <p class="pdf-error-hint">{{ t('editor.pdf_format_not_supported') }}</p>
         </section>
     </div>
 </template>

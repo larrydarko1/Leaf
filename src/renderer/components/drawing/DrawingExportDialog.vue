@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import type { CanvasElement } from '../../types/drawing';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     visible: boolean;
@@ -149,7 +152,7 @@ async function copyClipboard() {
                             class="export-preview-figure">
                             <img
                                 :src="exportPreviewUrl"
-                                alt="Preview of the image to be exported"
+                                :alt="t('drawing.export_image')"
                                 class="export-preview-img" />
                         </figure>
                         <div
@@ -157,7 +160,7 @@ async function copyClipboard() {
                             class="export-empty"
                             role="status"
                             aria-live="polite"
-                            >No elements to export</div
+                            >{{ t('drawing.no_elements_to_export') }}</div
                         >
                     </div>
 
@@ -166,25 +169,25 @@ async function copyClipboard() {
                         <h2
                             id="export-dialog-title"
                             class="export-title"
-                            >Export image</h2
+                            >{{ t('drawing.export_image') }}</h2
                         >
 
                         <!-- Toggles for background and selection -->
                         <fieldset>
-                            <legend class="sr-only">Export options</legend>
+                            <legend class="sr-only">{{ t('drawing.export_options') }}</legend>
 
                             <label class="export-toggle">
                                 <input
                                     v-model="exportWithBackground"
                                     type="checkbox"
                                     class="export-checkbox"
-                                    aria-label="Include background in export" />
+                                    :aria-label="t('drawing.include_background')" />
                                 <span class="toggle-track"
                                     ><span
                                         class="toggle-thumb"
                                         aria-hidden="true"></span
                                 ></span>
-                                <span>Background</span>
+                                <span>{{ t('drawing.background') }}</span>
                             </label>
 
                             <label
@@ -194,23 +197,23 @@ async function copyClipboard() {
                                     v-model="exportOnlySelected"
                                     type="checkbox"
                                     class="export-checkbox"
-                                    aria-label="Export selected elements only" />
+                                    :aria-label="t('drawing.export_only_selected')" />
                                 <span class="toggle-track"
                                     ><span
                                         class="toggle-thumb"
                                         aria-hidden="true"></span
                                 ></span>
-                                <span>Selected only</span>
+                                <span>{{ t('drawing.export_only_selected') }}</span>
                             </label>
                         </fieldset>
 
                         <!-- Scale selection buttons -->
                         <fieldset class="export-field">
-                            <legend class="export-label">Scale</legend>
+                            <legend class="export-label">{{ t('drawing.scale') }}</legend>
                             <div
                                 class="export-scale-btns"
                                 role="group"
-                                aria-label="Export scale options">
+                                :aria-label="t('drawing.export_scale_options')">
                                 <button
                                     v-for="opt in exportScaleOptions"
                                     :key="opt.value"
@@ -227,7 +230,7 @@ async function copyClipboard() {
                         <output
                             v-if="exportPreviewWidth"
                             class="export-dimensions"
-                            aria-label="Export dimensions">
+                            :aria-label="t('drawing.export_dimensions')">
                             {{ exportPreviewWidth }} &times; {{ exportPreviewHeight }}
                         </output>
 
@@ -255,7 +258,7 @@ async function copyClipboard() {
                                         x2="12"
                                         y2="3" />
                                 </svg>
-                                Save PNG
+                                {{ t('drawing.save_png') }}
                             </button>
                             <button
                                 class="export-action-btn"
@@ -279,14 +282,14 @@ async function copyClipboard() {
                                         rx="2" />
                                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                                 </svg>
-                                Copy PNG
+                                {{ t('drawing.copy_png') }}
                             </button>
                         </div>
 
                         <!-- Close button -->
                         <button
                             class="export-close-btn"
-                            aria-label="Close export dialog"
+                            :aria-label="t('drawing.close_export_dialog')"
                             @click="close">
                             &times;
                         </button>

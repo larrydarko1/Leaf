@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import type { AgentFileEdit } from '../../types/chat';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 defineProps<{
     edit: AgentFileEdit;
@@ -35,25 +38,25 @@ defineEmits<{
                 <span
                     v-if="edit.isNewFile"
                     class="ai-agent-edit-badge new"
-                    aria-label="New file">
-                    NEW
+                    :aria-label="t('ai.new_file')">
+                    {{ t('ai.new') }}
                 </span>
             </div>
             <div class="ai-agent-edit-status">
                 <span
                     v-if="edit.status === 'approved'"
                     class="ai-agent-status-text approved">
-                    Approved
+                    {{ t('ai.approved') }}
                 </span>
                 <span
                     v-else-if="edit.status === 'rejected'"
                     class="ai-agent-status-text rejected">
-                    Reverted
+                    {{ t('ai.reverted') }}
                 </span>
                 <span
                     v-else-if="edit.status === 'error'"
                     class="ai-agent-status-text error">
-                    Error
+                    {{ t('ai.error') }}
                 </span>
             </div>
         </header>
@@ -62,20 +65,20 @@ defineEmits<{
         <details
             v-if="edit.originalContent !== undefined"
             class="ai-agent-diff-details">
-            <summary class="ai-agent-diff-summary">View changes</summary>
+            <summary class="ai-agent-diff-summary">{{ t('ai.view_changes') }}</summary>
             <div class="ai-agent-diff">
                 <!-- Original content -->
                 <div
                     v-if="!edit.isNewFile"
                     class="ai-agent-diff-section removed">
-                    <div class="ai-agent-diff-label">Original</div>
+                    <div class="ai-agent-diff-label">{{ t('ai.original') }}</div>
                     <pre class="ai-agent-diff-code">{{ edit.originalContent }}</pre>
                 </div>
 
                 <!-- New/modified content -->
                 <div class="ai-agent-diff-section added">
                     <div class="ai-agent-diff-label">
-                        {{ edit.isNewFile ? 'New file' : 'Modified' }}
+                        {{ edit.isNewFile ? t('ai.new_file') : t('ai.modified') }}
                     </div>
                     <pre class="ai-agent-diff-code">{{ edit.newContent }}</pre>
                 </div>
@@ -95,11 +98,11 @@ defineEmits<{
             v-if="edit.status === 'pending'"
             class="ai-agent-edit-actions"
             role="group"
-            aria-label="Edit actions">
+            :aria-label="t('ai.edit_actions')">
             <button
                 type="button"
                 class="ai-agent-btn approve"
-                aria-label="Approve this file edit"
+                :aria-label="t('ai.approve_this_file_edit')"
                 @click="$emit('approve')">
                 <svg
                     width="12"
@@ -113,12 +116,12 @@ defineEmits<{
                     aria-hidden="true">
                     <polyline points="20 6 9 17 4 12" />
                 </svg>
-                Approve
+                {{ t('ai.approve') }}
             </button>
             <button
                 type="button"
                 class="ai-agent-btn reject"
-                aria-label="Reject this file edit"
+                :aria-label="t('ai.reject_this_file_edit')"
                 @click="$emit('reject')">
                 <svg
                     width="12"
@@ -141,7 +144,7 @@ defineEmits<{
                         x2="18"
                         y2="18" />
                 </svg>
-                Reject
+                {{ t('ai.reject') }}
             </button>
         </div>
     </article>

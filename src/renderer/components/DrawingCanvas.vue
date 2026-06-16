@@ -11,6 +11,9 @@ import DrawingToolbar from './drawing/DrawingToolbar.vue';
 import DrawingPropertiesPanel from './drawing/DrawingPropertiesPanel.vue';
 import DrawingFooter from './drawing/DrawingFooter.vue';
 import DrawingExportDialog from './drawing/DrawingExportDialog.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     filePath: string;
@@ -341,7 +344,7 @@ function closeExportDialog() {
         ref="containerEl"
         class="canvas-container"
         role="application"
-        aria-label="Drawing canvas application"
+        :aria-label="t('drawing.canvas_application')"
         aria-describedby="canvas-instructions"
         tabindex="0"
         @keydown="handleKeydown"
@@ -352,7 +355,7 @@ function closeExportDialog() {
             ref="toolbarRef"
             :current-tool="currentTool"
             role="toolbar"
-            aria-label="Drawing tools"
+            :aria-label="t('drawing.toolbar')"
             @select-tool="selectTool" />
 
         <!-- Properties Panel -->
@@ -369,7 +372,7 @@ function closeExportDialog() {
             :show-roundness-option="showRoundnessOption"
             :has-selection="hasSelection"
             role="complementary"
-            aria-label="Drawing properties and settings"
+            :aria-label="t('drawing.properties_panel')"
             aria-hidden="false"
             @set-property="setProperty"
             @copy="copySelected"
@@ -380,7 +383,7 @@ function closeExportDialog() {
         <canvas
             ref="canvas"
             :style="{ cursor: canvasCursor }"
-            aria-label="Drawing canvas"
+            :aria-label="t('drawing.canvas')"
             role="img"
             :aria-describedby="hasSelection ? 'selection-status' : undefined"
             @pointerdown="onPointerDown"
@@ -397,7 +400,7 @@ function closeExportDialog() {
             v-model="textValue"
             class="text-edit-overlay"
             :style="textOverlayStyle"
-            aria-label="Text editing area. Press Enter to confirm, Escape to cancel."
+            :aria-label="t('drawing.text_editing_area')"
             @blur="finalizeText"
             @keydown.escape.prevent="cancelText"
             @keydown.enter.exact="onTextEnter"
@@ -412,7 +415,7 @@ function closeExportDialog() {
             :is-saving="isSaving"
             :has-unsaved-changes="hasUnsavedChanges"
             role="contentinfo"
-            aria-label="Drawing canvas information and controls"
+            :aria-label="t('drawing.footer')"
             @zoom-to-center="zoomToCenter"
             @undo="undo"
             @redo="redo"
@@ -428,7 +431,7 @@ function closeExportDialog() {
             :selected-ids="selectedIds"
             :export-to-blob="exportToBlob"
             role="dialog"
-            :aria-label="`Export drawing${hasSelection ? ' (selection)' : ''}`"
+            :aria-label="t('drawing.export_dialog', { selection: hasSelection ? t('drawing.selection') : '' })"
             aria-modal="true"
             @close="closeExportDialog" />
     </div>

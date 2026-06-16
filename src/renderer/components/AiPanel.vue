@@ -12,6 +12,9 @@ import AiHfPanel from './ai/AiHfPanel.vue';
 import AiHistoryPanel from './ai/AiHistoryPanel.vue';
 import AiMessageList from './ai/AiMessageList.vue';
 import AiInputArea from './ai/AiInputArea.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     activeFile: FileInfo | null;
@@ -169,7 +172,7 @@ async function loadSelectedModel() {
     if (result.success) {
         await startNewConversation();
     } else {
-        messages.value.push({ role: 'assistant', content: `Failed to load model: ${result.error}` });
+        messages.value.push({ role: 'assistant', content: t('ai.failed_to_load_model', { error: result.error }) });
     }
 }
 
@@ -198,7 +201,7 @@ async function loadPreviousModel() {
         if (!hasConversation) await startNewConversation();
         inputField.value?.focus();
     } else if (result.error !== null && result.error !== undefined && result.error !== '') {
-        messages.value.push({ role: 'assistant', content: `Failed to load model: ${result.error}` });
+        messages.value.push({ role: 'assistant', content: t('ai.failed_to_load_model', { error: result.error }) });
     }
 }
 
@@ -227,12 +230,12 @@ function startResize(e: MouseEvent) {
     <main
         class="ai-panel"
         :style="{ width: panelWidth + 'px' }"
-        aria-label="AI assistant panel">
+        :aria-label="t('ai.assistant_panel')">
         <div
             class="ai-panel-resize-handle"
             role="separator"
             aria-orientation="vertical"
-            aria-label="Resize AI panel"
+            :aria-label="t('ai.resize_panel')"
             aria-valuenow="panelWidth"
             aria-valuemin="340"
             aria-valuemax="600"
@@ -249,7 +252,7 @@ function startResize(e: MouseEvent) {
             :show-history="showHistory"
             :agent-mode="agentMode"
             :is-any-generating="isAnyGenerating"
-            aria-label="Model selection and controls"
+            :aria-label="t('ai.model_selection_and_controls')"
             @select-model="selectModel"
             @load-model="loadSelectedModel"
             @unload-model="unloadModel"
@@ -276,7 +279,7 @@ function startResize(e: MouseEvent) {
             :hf-sort-by="hfSortBy"
             :hf-has-more="hfHasMore"
             :hf-is-loading-more="hfIsLoadingMore"
-            aria-label="Hugging Face model browser"
+            :aria-label="t('ai.hf_model_browser')"
             :aria-hidden="!showHfPanel"
             @update:hf-search-query="hfSearchQuery = $event"
             @search="searchHfModels"
@@ -298,7 +301,7 @@ function startResize(e: MouseEvent) {
             :current-conversation-id="currentConversationId"
             :renaming-conversation-id="renamingConversationId"
             :rename-value="renameValue"
-            aria-label="Conversation history"
+            :aria-label="t('ai.conversation_history')"
             :aria-hidden="!showHistory"
             @load="loadConversation"
             @start-rename="startRename"
@@ -324,7 +327,7 @@ function startResize(e: MouseEvent) {
             :conversation-token-count="conversationTokenCount"
             :render-markdown="renderMarkdown"
             role="log"
-            aria-label="Conversation messages"
+            :aria-label="t('ai.conversation_messages')"
             aria-live="polite"
             aria-atomic="false"
             @scroll="onMessagesScroll"
@@ -351,7 +354,7 @@ function startResize(e: MouseEvent) {
             :is-any-generating="isAnyGenerating"
             :is-streaming="isStreaming"
             :input-field="inputField"
-            aria-label="Message input area"
+            :aria-label="t('ai.message_input_area')"
             @update:input-message="inputMessage = $event"
             @update:include-note-context="includeNoteContext = $event"
             @send="sendMessage"

@@ -29,17 +29,17 @@ async function handleRefresh() {
 <template>
     <aside
         class="language-panel"
-        aria-label="Language selection panel">
+        :aria-label="t('language.selection_panel')">
         <header class="language-header">
-            <span class="language-title">{{ t('app.language_selector') }}</span>
+            <span class="language-title">{{ t('language.title') }}</span>
             <div
                 class="header-actions"
                 role="toolbar"
-                aria-label="Language panel controls">
+                :aria-label="t('language.panel_controls')">
                 <button
                     class="icon-btn"
-                    title="Refresh list"
-                    aria-label="Refresh language list"
+                    :title="t('language.refresh_list')"
+                    :aria-label="t('language.refresh_list')"
                     @click="handleRefresh">
                     <svg
                         width="14"
@@ -55,8 +55,8 @@ async function handleRefresh() {
                 </button>
                 <button
                     class="icon-btn"
-                    title="Close"
-                    aria-label="Close language panel"
+                    :title="t('language.close_panel')"
+                    :aria-label="t('language.close_panel')"
                     @click="emit('close')">
                     <svg
                         width="14"
@@ -77,7 +77,7 @@ async function handleRefresh() {
         <div
             class="language-list"
             role="listbox"
-            aria-label="Available languages">
+            :aria-label="t('language.available_languages')">
             <button
                 v-for="language in languages"
                 :key="language.id"
@@ -85,7 +85,7 @@ async function handleRefresh() {
                 :class="{ active: language.id === activeId }"
                 role="option"
                 :aria-selected="language.id === activeId"
-                :aria-label="`${language.name} language`"
+                :aria-label="`${language.name} ${t('language.language')}`"
                 @click="handleSelect(language.id)">
                 <span class="language-name">{{ language.name }}</span>
                 <svg
@@ -108,19 +108,20 @@ async function handleRefresh() {
                 v-if="!languages.length"
                 class="language-empty"
                 role="status"
-                >No languages found.</div
+                >{{ t('language.no_languages_found') }}</div
             >
         </div>
 
         <footer class="language-footer">
             <button
                 class="footer-btn"
-                aria-label="Open locales folder"
+                :aria-label="t('language.open_folder')"
                 @click="handleOpenFolder">
-                Open locales folder…
+                {{ t('language.open_folder') }}…
             </button>
             <p class="footer-hint">
-                Drop <code>.json</code> files in <code>~/.leaf/locales/</code> to add languages. Edit one to customize.
+                {{ t('language.footer_hint_intro') }} <code>{{ t('language.footer_hint_file_type') }}</code>
+                {{ t('language.footer_hint_path') }} {{ t('language.footer_hint_action') }}
             </p>
         </footer>
     </aside>

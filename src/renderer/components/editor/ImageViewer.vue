@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     filePath: string;
@@ -39,14 +42,14 @@ watch(
     <div
         class="image-viewer"
         role="region"
-        aria-label="Image viewer">
+        :aria-label="t('editor.image_viewer')">
         <!-- Loading state -->
         <div
             v-if="isLoading"
             class="image-loading"
             aria-live="polite"
             aria-busy="true">
-            <p>Loading image...</p>
+            <p>{{ t('editor.loading_image') }}</p>
         </div>
 
         <!-- Image preview -->
@@ -64,8 +67,8 @@ watch(
             class="image-error"
             role="alert"
             aria-live="polite">
-            <h2>Image Load Error</h2>
-            <p>Failed to load image</p>
+            <h2>{{ t('editor.image_load_error') }}</h2>
+            <p>{{ t('editor.failed_to_load_image') }}</p>
         </section>
     </div>
 </template>

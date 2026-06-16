@@ -11,6 +11,9 @@ import {
     isCodeFile as checkCode,
 } from '../utils/fileTypes';
 import { useTreeNodeDrag } from '../composables/vault/useTreeNodeDrag';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     node: TreeNode;
@@ -105,13 +108,13 @@ function handleFileClick(event: MouseEvent) {
 }
 
 const getFileTypeLabel = (): string => {
-    if (isImageFile.value) return 'Image file';
-    if (isVideoFile.value) return 'Video file';
-    if (isAudioFile.value) return 'Audio file';
-    if (isPdfFile.value) return 'PDF file';
-    if (isDrawingFile.value) return 'Drawing file';
-    if (isCodeFile.value) return 'Code file';
-    return 'Text file';
+    if (isImageFile.value) return t('file.image');
+    if (isVideoFile.value) return t('file.video');
+    if (isAudioFile.value) return t('file.audio');
+    if (isPdfFile.value) return t('file.pdf');
+    if (isDrawingFile.value) return t('file.drawing');
+    if (isCodeFile.value) return t('file.code');
+    return t('file.text');
 };
 </script>
 
@@ -206,7 +209,7 @@ const getFileTypeLabel = (): string => {
                 :value="renameValue"
                 class="folder-name-input"
                 type="text"
-                :aria-label="`Rename folder: ${node.name}`"
+                :aria-label="`${t('folder.rename')}: ${node.name}`"
                 @input="$emit('updateRenameValue', ($event.target as HTMLInputElement).value)"
                 @keydown.enter="($event.target as HTMLInputElement).blur()"
                 @keydown.esc="$emit('cancelRename')"
@@ -241,7 +244,7 @@ const getFileTypeLabel = (): string => {
             :aria-selected="isSelected"
             :aria-current="isActive ? 'page' : false"
             :aria-level="depth + 1"
-            :aria-label="`${getFileTypeLabel()}: ${node.name}${node.file?.path && bookmarkedFiles?.includes(node.file.path) ? ', bookmarked' : ''}`"
+            :aria-label="`${getFileTypeLabel()}: ${node.name}${node.file?.path && bookmarkedFiles?.includes(node.file.path) ? `, ${t('file.bookmarked')}` : ''}`"
             draggable="true"
             @click="handleFileClick"
             @contextmenu.prevent="node.file && $emit('contextMenu', 'file', node.file.path, $event)"
@@ -409,7 +412,7 @@ const getFileTypeLabel = (): string => {
                 :value="renameValue"
                 class="file-name-input"
                 type="text"
-                :aria-label="`Rename file: ${node.name}`"
+                :aria-label="`${t('file.rename')}: ${node.name}`"
                 @input="$emit('updateRenameValue', ($event.target as HTMLInputElement).value)"
                 @keydown.enter="($event.target as HTMLInputElement).blur()"
                 @keydown.esc="$emit('cancelRename')"
@@ -432,7 +435,7 @@ const getFileTypeLabel = (): string => {
                 viewBox="0 0 24 24"
                 fill="currentColor"
                 xmlns="http://www.w3.org/2000/svg"
-                aria-label="Bookmarked"
+                :aria-label="t('file.bookmarked')"
                 role="img">
                 <path
                     d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
@@ -443,7 +446,7 @@ const getFileTypeLabel = (): string => {
         <template v-if="node.type === 'folder' && isExpanded && node.children">
             <div
                 role="group"
-                :aria-label="`Contents of ${node.name}`">
+                :aria-label="`${t('folder.contents_of')}: ${node.name}`">
                 <FolderNode
                     v-for="child in node.children"
                     :key="child.path"

@@ -3,6 +3,9 @@ import { ref, watch, nextTick } from 'vue';
 import type { ChatMessage } from '../../types/chat';
 import type { AiModelInfo, AiStatus } from '../../types/ai';
 import AiAgentEditCard from './AiAgentEditCard.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     messages: ChatMessage[];
@@ -106,12 +109,12 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
     try {
         await window.electronAPI.writeClipboard(code);
         btn.innerHTML = checkIconSvg;
-        btn.title = 'Copied!';
-        btn.setAttribute('aria-label', 'Copied!');
+        btn.title = t('ai.copied');
+        btn.setAttribute('aria-label', t('ai.copied'));
         setTimeout(() => {
             btn.innerHTML = copyIconSvg;
-            btn.title = 'Copy code';
-            btn.setAttribute('aria-label', 'Copy code');
+            btn.title = t('ai.copy_code');
+            btn.setAttribute('aria-label', t('ai.copy_code'));
         }, 2000);
     } catch (err) {
         window.electronAPI.log.error('Failed to copy code:', err);
@@ -125,7 +128,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
         ref="messagesContainer"
         class="ai-messages"
         role="region"
-        aria-label="Chat messages"
+        :aria-label="t('ai.chat_messages')"
         aria-live="polite"
         @scroll="$emit('scroll')">
         <!-- Empty state -->
@@ -160,25 +163,21 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                 </svg>
             </div>
             <p class="ai-empty-text">
-                {{
-                    status.isModelLoaded
-                        ? 'Ask anything about your notes or just chat.'
-                        : 'Load a model to get started. Place .gguf files in your models folder.'
-                }}
+                {{ status.isModelLoaded ? t('ai.ask_anything') : t('ai.load_model_hint') }}
             </p>
             <button
                 v-if="!status.isModelLoaded && availableModels.length === 0"
                 class="ai-btn-secondary"
-                aria-label="Open the models folder"
+                :aria-label="t('ai.open_models_folder')"
                 @click="$emit('open-models-folder')">
-                Open Models Folder
+                {{ t('ai.open_models_folder') }}
             </button>
             <button
                 v-if="!status.isModelLoaded && availableModels.length > 0"
                 class="ai-btn-secondary"
-                aria-label="Browse conversation history"
+                :aria-label="t('ai.browse_history')"
                 @click="$emit('open-history')">
-                Browse History
+                {{ t('ai.browse_history') }}
             </button>
         </div>
 
@@ -208,7 +207,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                     <div class="ai-edit-actions">
                         <button
                             class="ai-btn-icon ai-btn-tiny"
-                            aria-label="Cancel editing"
+                            :aria-label="t('ai.cancel_editing')"
                             @click="$emit('cancel-edit')">
                             <svg
                                 width="10"
@@ -233,7 +232,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                         </button>
                         <button
                             class="ai-btn-icon ai-btn-tiny"
-                            aria-label="Save changes and resend message"
+                            :aria-label="t('ai.save_changes_and_resend')"
                             @click="$emit('confirm-edit', index)">
                             <svg
                                 width="10"
@@ -329,10 +328,10 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                     "
                     class="ai-message-actions"
                     role="toolbar"
-                    :aria-label="`Actions for ${msg.role} message ${index + 1}`">
+                    :aria-label="t('ai.message_actions', { role: msg.role, index: index + 1 })">
                     <button
                         class="ai-btn-action"
-                        :aria-label="copiedIndex === index ? 'Copied to clipboard!' : 'Copy message to clipboard'"
+                        :aria-label="copiedIndex === index ? t('ai.copied') : t('ai.copy_message')"
                         @click="$emit('copy', msg.content, index)">
                         <svg
                             v-if="copiedIndex !== index"
@@ -371,7 +370,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                     <button
                         v-if="msg.role === 'user'"
                         class="ai-btn-action"
-                        aria-label="Edit this message"
+                        :aria-label="t('ai.edit_message')"
                         @click="$emit('start-edit', index)">
                         <svg
                             width="11"
@@ -390,7 +389,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                     <button
                         v-if="msg.role === 'user' && index === messages.length - 1 && isReady"
                         class="ai-btn-action"
-                        aria-label="Resend this message"
+                        :aria-label="t('ai.resend_message')"
                         @click="$emit('resend', index)">
                         <svg
                             width="11"
@@ -409,7 +408,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                     <button
                         v-if="msg.role === 'assistant' && index === messages.length - 1 && isReady"
                         class="ai-btn-action"
-                        aria-label="Regenerate assistant response"
+                        :aria-label="t('ai.regenerate_assistant_response')"
                         @click="$emit('regenerate')">
                         <svg
                             width="11"
@@ -428,7 +427,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                     <button
                         v-if="index === messages.length - 1"
                         class="ai-btn-action ai-btn-action-danger"
-                        aria-label="Delete last message pair"
+                        :aria-label="t('ai.delete_last_message_pair')"
                         @click="$emit('delete-last-pair')">
                         <svg
                             width="11"
@@ -454,7 +453,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
         v-if="!status.isModelLoaded && messages.length > 0"
         class="ai-load-model-banner"
         role="status"
-        aria-label="Model status">
+        :aria-label="t('ai.model_status')">
         <div class="ai-load-model-banner-content">
             <svg
                 width="14"
@@ -481,13 +480,13 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                     x2="12.01"
                     y2="16" />
             </svg>
-            <span>Load a model to continue chatting</span>
+            <span>{{ t('ai.load_model_to_continue') }}</span>
         </div>
         <button
             v-if="previousModelMatch"
             class="ai-load-model-btn"
             :disabled="isLoading"
-            :aria-label="`Load model: ${previousModelMatch.name}`"
+            :aria-label="t('ai.load_model', { model: previousModelMatch.name })"
             @click="$emit('load-previous-model')">
             <svg
                 width="12"
@@ -502,7 +501,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                 <polyline points="23 4 23 10 17 10" />
                 <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
             </svg>
-            {{ isLoading ? 'Loading...' : 'Load ' + truncate(previousModelMatch.name, 20) }}
+            {{ isLoading ? t('ai.loading') : t('ai.load_model', { model: truncate(previousModelMatch.name, 20) }) }}
         </button>
     </aside>
 

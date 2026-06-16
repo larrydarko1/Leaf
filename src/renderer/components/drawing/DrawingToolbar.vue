@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import type { ToolType } from '../../types/drawing';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     currentTool: ToolType;
@@ -27,42 +30,42 @@ const archShapeTypes: ToolType[] = [
 const archShapes = [
     {
         tool: 'database' as ToolType,
-        label: 'Database',
+        label: t('drawing.database'),
         icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>',
     },
     {
         tool: 'server' as ToolType,
-        label: 'Server',
+        label: t('drawing.server'),
         icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><circle cx="6" cy="6" r="1" fill="currentColor"/><circle cx="6" cy="18" r="1" fill="currentColor"/></svg>',
     },
     {
         tool: 'user' as ToolType,
-        label: 'User',
+        label: t('drawing.user'),
         icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="5"/><path d="M3 21c0-4.42 4-8 9-8s9 3.58 9 8"/></svg>',
     },
     {
         tool: 'cloud' as ToolType,
-        label: 'Cloud',
+        label: t('drawing.cloud'),
         icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>',
     },
     {
         tool: 'document' as ToolType,
-        label: 'Document',
+        label: t('drawing.document'),
         icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
     },
     {
         tool: 'hexagon' as ToolType,
-        label: 'Hexagon',
+        label: t('drawing.hexagon'),
         icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12,2 22,7 22,17 12,22 2,17 2,7"/></svg>',
     },
     {
         tool: 'parallelogram' as ToolType,
-        label: 'Parallelogram',
+        label: t('drawing.parallelogram'),
         icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="6,4 22,4 18,20 2,20"/></svg>',
     },
     {
         tool: 'star' as ToolType,
-        label: 'Star',
+        label: t('drawing.star'),
         icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>',
     },
 ];
@@ -90,16 +93,16 @@ defineExpose({ handleClickOutside });
 <template>
     <nav
         class="floating-toolbar"
-        aria-label="Drawing tools">
+        :aria-label="t('drawing.toolbar')">
         <div
             class="toolbar-inner"
             role="toolbar"
-            aria-label="Tool selection">
+            :aria-label="t('drawing.tool_selection')">
             <!-- Selection -->
             <button
                 class="toolbar-btn"
                 :class="{ active: currentTool === 'select' }"
-                aria-label="Selection tool (V)"
+                :aria-label="t('drawing.selection_tool', { shortcut: 'V' })"
                 :aria-pressed="currentTool === 'select'"
                 @click="emit('selectTool', 'select')">
                 <svg
@@ -118,7 +121,7 @@ defineExpose({ handleClickOutside });
             <button
                 class="toolbar-btn"
                 :class="{ active: currentTool === 'hand' }"
-                aria-label="Hand (Pan) tool (H)"
+                :aria-label="t('drawing.hand_tool', { shortcut: 'H' })"
                 :aria-pressed="currentTool === 'hand'"
                 @click="emit('selectTool', 'hand')">
                 <svg
@@ -147,7 +150,7 @@ defineExpose({ handleClickOutside });
             <button
                 class="toolbar-btn"
                 :class="{ active: currentTool === 'rectangle' }"
-                aria-label="Rectangle tool (R)"
+                :aria-label="t('drawing.rectangle_tool', { shortcut: 'R' })"
                 :aria-pressed="currentTool === 'rectangle'"
                 @click="emit('selectTool', 'rectangle')">
                 <svg
@@ -172,7 +175,7 @@ defineExpose({ handleClickOutside });
             <button
                 class="toolbar-btn"
                 :class="{ active: currentTool === 'diamond' }"
-                aria-label="Diamond tool (D)"
+                :aria-label="t('drawing.diamond_tool', { shortcut: 'D' })"
                 :aria-pressed="currentTool === 'diamond'"
                 @click="emit('selectTool', 'diamond')">
                 <svg
@@ -192,7 +195,7 @@ defineExpose({ handleClickOutside });
             <button
                 class="toolbar-btn"
                 :class="{ active: currentTool === 'ellipse' }"
-                aria-label="Ellipse tool (O)"
+                :aria-label="t('drawing.ellipse_tool', { shortcut: 'O' })"
                 :aria-pressed="currentTool === 'ellipse'"
                 @click="emit('selectTool', 'ellipse')">
                 <svg
@@ -215,7 +218,7 @@ defineExpose({ handleClickOutside });
             <button
                 class="toolbar-btn"
                 :class="{ active: currentTool === 'triangle' }"
-                aria-label="Triangle tool (T)"
+                :aria-label="t('drawing.triangle_tool', { shortcut: 'T' })"
                 :aria-pressed="currentTool === 'triangle'"
                 @click="emit('selectTool', 'triangle')">
                 <svg
@@ -235,7 +238,7 @@ defineExpose({ handleClickOutside });
             <button
                 class="toolbar-btn"
                 :class="{ active: currentTool === 'arrow' }"
-                aria-label="Arrow tool (A)"
+                :aria-label="t('drawing.arrow_tool', { shortcut: 'A' })"
                 :aria-pressed="currentTool === 'arrow'"
                 @click="emit('selectTool', 'arrow')">
                 <svg
@@ -262,7 +265,7 @@ defineExpose({ handleClickOutside });
             <button
                 class="toolbar-btn"
                 :class="{ active: currentTool === 'line' }"
-                aria-label="Line tool (L)"
+                :aria-label="t('drawing.line_tool', { shortcut: 'L' })"
                 :aria-pressed="currentTool === 'line'"
                 @click="emit('selectTool', 'line')">
                 <svg
@@ -291,7 +294,7 @@ defineExpose({ handleClickOutside });
             <button
                 class="toolbar-btn"
                 :class="{ active: currentTool === 'freedraw' }"
-                aria-label="Pen tool (P)"
+                :aria-label="t('drawing.freedraw_tool', { shortcut: 'P' })"
                 :aria-pressed="currentTool === 'freedraw'"
                 @click="emit('selectTool', 'freedraw')">
                 <svg
@@ -313,7 +316,7 @@ defineExpose({ handleClickOutside });
             <button
                 class="toolbar-btn"
                 :class="{ active: currentTool === 'text' }"
-                aria-label="Text tool (X)"
+                :aria-label="t('drawing.text_tool', { shortcut: 'X' })"
                 :aria-pressed="currentTool === 'text'"
                 @click="emit('selectTool', 'text')">
                 <svg
@@ -345,7 +348,7 @@ defineExpose({ handleClickOutside });
             <button
                 class="toolbar-btn"
                 :class="{ active: currentTool === 'eraser' }"
-                aria-label="Eraser tool (E)"
+                :aria-label="t('drawing.eraser_tool', { shortcut: 'E' })"
                 :aria-pressed="currentTool === 'eraser'"
                 @click="emit('selectTool', 'eraser')">
                 <svg
@@ -374,7 +377,7 @@ defineExpose({ handleClickOutside });
                 <button
                     class="toolbar-btn"
                     :class="{ active: isArchTool }"
-                    aria-label="Architecture shapes"
+                    :aria-label="t('drawing.architecture_shapes')"
                     :aria-pressed="isArchTool"
                     :aria-expanded="archDropdownOpen"
                     aria-haspopup="menu"
@@ -404,7 +407,7 @@ defineExpose({ handleClickOutside });
                         v-if="archDropdownOpen"
                         class="arch-dropdown-menu"
                         role="menu"
-                        aria-label="Architecture shape options">
+                        :aria-label="t('drawing.architecture_shape_options')">
                         <button
                             v-for="shape in archShapes"
                             :key="shape.tool"

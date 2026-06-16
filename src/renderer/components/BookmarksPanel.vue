@@ -2,6 +2,9 @@
 import { computed } from 'vue';
 import { useListKeyboardNavigation } from '../composables/ui/useListKeyboardNavigation';
 import type { FileInfo } from '../types/electron';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     files: FileInfo[];
@@ -54,7 +57,7 @@ function removeBookmark(file: FileInfo) {
 <template>
     <section
         class="bookmarks-panel"
-        aria-label="Bookmarks">
+        :aria-label="t('bookmarks.bookmarks_panel')">
         <header class="bookmarks-header">
             <div class="header-title">
                 <svg
@@ -72,13 +75,14 @@ function removeBookmark(file: FileInfo) {
                         stroke-linecap="round"
                         stroke-linejoin="round" />
                 </svg>
-                <h2>Bookmarks</h2>
+                <h2>{{ t('bookmarks.title') }}</h2>
             </div>
             <div
                 v-if="bookmarkedFiles.length > 0"
                 class="bookmarks-info"
                 aria-live="polite">
-                {{ bookmarkedFiles.length }} {{ bookmarkedFiles.length === 1 ? 'file' : 'files' }}
+                {{ bookmarkedFiles.length }}
+                {{ bookmarkedFiles.length === 1 ? t('bookmarks.file') : t('bookmarks.files') }}
             </div>
         </header>
 
@@ -101,8 +105,8 @@ function removeBookmark(file: FileInfo) {
                         stroke-linecap="round"
                         stroke-linejoin="round" />
                 </svg>
-                <p>No bookmarked files</p>
-                <p class="hint">Right-click a file and select "Add to Bookmarks"</p>
+                <p>{{ t('bookmarks.no_bookmarks') }}</p>
+                <p class="hint">{{ t('bookmarks.add_bookmark_hint') }}</p>
             </div>
             <ul
                 v-else
@@ -149,7 +153,7 @@ function removeBookmark(file: FileInfo) {
                         </div>
                         <button
                             class="unbookmark-btn"
-                            :aria-label="`Remove ${file.name} from bookmarks`"
+                            :aria-label="t('bookmarks.remove_file_bookmark', { file: file.name })"
                             @click.stop="removeBookmark(file)">
                             <svg
                                 width="14"

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useContextMenu } from '../composables/ui/useContextMenu';
+import { useI18n } from 'vue-i18n';
 
 export type ContextMenuItem = {
     label: string;
@@ -7,6 +8,8 @@ export type ContextMenuItem = {
     shortcut?: string;
     disabled?: boolean;
 };
+
+const { t } = useI18n();
 
 const props = defineProps<{
     visible: boolean;
@@ -41,7 +44,7 @@ function handleItemClick(item: ContextMenuItem) {
             ref="menuRef"
             class="context-menu"
             role="menu"
-            aria-label="Context menu"
+            :aria-label="t('context_menu.label')"
             :style="{ top: adjustedPosition.y + 'px', left: adjustedPosition.x + 'px' }"
             @click.stop>
             <button
@@ -56,7 +59,7 @@ function handleItemClick(item: ContextMenuItem) {
                 <span
                     v-if="item.shortcut"
                     class="menu-shortcut"
-                    aria-label="`Keyboard shortcut: ${item.shortcut}`"
+                    :aria-label="t('context_menu.keyboard_shortcut', { shortcut: item.shortcut })"
                     >{{ item.shortcut }}</span
                 >
             </button>

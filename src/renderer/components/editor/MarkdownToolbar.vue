@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
+
 defineEmits<{
     (e: 'format', type: string): void;
     (e: 'heading', event: Event): void;
@@ -9,13 +13,13 @@ defineEmits<{
     <div
         class="md-toolbar"
         role="toolbar"
-        aria-label="Markdown formatting toolbar">
+        :aria-label="t('editor.markdown_formatting_toolbar')">
         <!-- Text formatting buttons -->
         <button
             class="md-toolbar-btn"
             type="button"
-            title="Bold (⌘B)"
-            aria-label="Bold"
+            :title="t('editor.bold') + ' (⌘B)'"
+            :aria-label="t('editor.bold')"
             @mousedown.prevent="$emit('format', 'bold')">
             <svg
                 width="14"
@@ -34,8 +38,8 @@ defineEmits<{
         <button
             class="md-toolbar-btn"
             type="button"
-            title="Italic (⌘I)"
-            aria-label="Italic"
+            :title="t('editor.italic') + ' (⌘I)'"
+            :aria-label="t('editor.italic')"
             @mousedown.prevent="$emit('format', 'italic')">
             <svg
                 width="14"
@@ -67,8 +71,8 @@ defineEmits<{
         <button
             class="md-toolbar-btn"
             type="button"
-            title="Strikethrough"
-            aria-label="Strikethrough"
+            :title="t('editor.strikethrough')"
+            :aria-label="t('editor.strikethrough')"
             @mousedown.prevent="$emit('format', 'strikethrough')">
             <svg
                 width="14"
@@ -88,8 +92,8 @@ defineEmits<{
         <button
             class="md-toolbar-btn"
             type="button"
-            title="Highlight (⌘⇧H)"
-            aria-label="Highlight"
+            :title="t('editor.highlight') + ' (⌘⇧H)'"
+            :aria-label="t('editor.highlight')"
             @mousedown.prevent="$emit('format', 'highlight')">
             <svg
                 width="14"
@@ -108,8 +112,8 @@ defineEmits<{
         <button
             class="md-toolbar-btn"
             type="button"
-            title="Inline code"
-            aria-label="Inline code"
+            :title="t('editor.inline_code')"
+            :aria-label="t('editor.inline_code')"
             @mousedown.prevent="$emit('format', 'code')">
             <svg
                 width="14"
@@ -133,14 +137,14 @@ defineEmits<{
         <!-- Heading level selector -->
         <select
             class="md-toolbar-select"
-            title="Heading level"
-            aria-label="Heading level"
+            :title="t('editor.heading_level')"
+            :aria-label="t('editor.heading_level')"
             @change="$emit('heading', $event)">
             <option
                 value=""
                 selected
                 disabled
-                >Heading</option
+                >{{ t('editor.heading') }}</option
             >
             <option value="1">H1</option>
             <option value="2">H2</option>
@@ -156,8 +160,8 @@ defineEmits<{
         <button
             class="md-toolbar-btn"
             type="button"
-            title="Bullet list"
-            aria-label="Bullet list"
+            :title="t('editor.bullet_list')"
+            :aria-label="t('editor.bullet_list')"
             @mousedown.prevent="$emit('format', 'ul')">
             <svg
                 width="14"
@@ -204,8 +208,8 @@ defineEmits<{
         <button
             class="md-toolbar-btn"
             type="button"
-            title="Numbered list"
-            aria-label="Numbered list"
+            :title="t('editor.numbered_list')"
+            :aria-label="t('editor.numbered_list')"
             @mousedown.prevent="$emit('format', 'ol')">
             <svg
                 width="14"
@@ -240,8 +244,8 @@ defineEmits<{
         <button
             class="md-toolbar-btn"
             type="button"
-            title="Checkbox"
-            aria-label="Checkbox"
+            :title="t('editor.checkbox')"
+            :aria-label="t('editor.checkbox')"
             @mousedown.prevent="$emit('format', 'checkbox')">
             <svg
                 width="14"
@@ -272,8 +276,8 @@ defineEmits<{
         <button
             class="md-toolbar-btn"
             type="button"
-            title="Blockquote"
-            aria-label="Blockquote"
+            :title="t('editor.blockquote')"
+            :aria-label="t('editor.blockquote')"
             @mousedown.prevent="$emit('format', 'quote')">
             <svg
                 width="14"
@@ -288,8 +292,8 @@ defineEmits<{
         <button
             class="md-toolbar-btn"
             type="button"
-            title="Link (⌘K)"
-            aria-label="Link"
+            :title="t('editor.link')"
+            :aria-label="t('editor.link')"
             @mousedown.prevent="$emit('format', 'link')">
             <svg
                 width="14"
@@ -308,8 +312,8 @@ defineEmits<{
         <button
             class="md-toolbar-btn"
             type="button"
-            title="Table"
-            aria-label="Table"
+            :title="t('editor.table')"
+            :aria-label="t('editor.table')"
             @mousedown.prevent="$emit('format', 'table')">
             <svg
                 width="14"
@@ -353,8 +357,8 @@ defineEmits<{
         <button
             class="md-toolbar-btn"
             type="button"
-            title="Horizontal rule"
-            aria-label="Horizontal rule"
+            :title="t('editor.horizontal_rule')"
+            :aria-label="t('editor.horizontal_rule')"
             @mousedown.prevent="$emit('format', 'hr')">
             <svg
                 width="14"

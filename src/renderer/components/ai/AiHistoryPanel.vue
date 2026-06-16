@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue';
 import type { ConversationMeta } from '../../types/ai';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     conversationList: ConversationMeta[];
@@ -46,22 +49,22 @@ function formatRelativeDate(dateStr: string): string {
 <template>
     <nav
         class="ai-history-panel"
-        aria-label="Conversation history">
+        :aria-label="t('ai.conversation_history')">
         <!-- Header -->
         <header class="ai-history-header">
-            <h2 class="ai-history-title">History</h2>
+            <h2 class="ai-history-title">{{ t('ai.history') }}</h2>
         </header>
 
         <!-- Conversation list -->
         <section
             class="ai-history-list"
             aria-live="polite"
-            aria-label="Saved conversations">
+            :aria-label="t('ai.saved_conversations')">
             <div
                 v-if="conversationList.length === 0"
                 class="ai-history-empty"
                 role="status">
-                No conversations yet
+                {{ t('ai.no_conversations_yet') }}
             </div>
 
             <ul
@@ -77,7 +80,7 @@ function formatRelativeDate(dateStr: string): string {
                     <button
                         class="ai-history-item-button"
                         :aria-current="currentConversationId === conv.id ? 'page' : false"
-                        :aria-label="`Open conversation: ${conv.title}`"
+                        :aria-label="t('ai.open_conversation', { title: conv.title })"
                         @click="$emit('load', conv.id)">
                         <!-- Item content area -->
                         <div class="ai-history-item-content">
@@ -89,7 +92,7 @@ function formatRelativeDate(dateStr: string): string {
                                     :value="renameValue"
                                     type="text"
                                     class="ai-history-rename-input"
-                                    aria-label="Rename conversation"
+                                    :aria-label="t('ai.rename_conversation')"
                                     @input="$emit('update:renameValue', ($event.target as HTMLInputElement).value)"
                                     @keydown.enter.prevent="$emit('confirm-rename', conv.id)"
                                     @keydown.escape.prevent="$emit('cancel-rename')"
@@ -103,7 +106,7 @@ function formatRelativeDate(dateStr: string): string {
                             >
                             <span
                                 class="ai-history-item-meta"
-                                aria-label="Conversation metadata">
+                                :aria-label="t('ai.conversation_metadata')">
                                 {{ conv.messageCount }} msgs · {{ formatRelativeDate(conv.updatedAt) }}
                             </span>
                         </div>
@@ -113,12 +116,12 @@ function formatRelativeDate(dateStr: string): string {
                     <div
                         class="ai-history-item-actions"
                         role="group"
-                        aria-label="Conversation actions">
+                        :aria-label="t('ai.conversation_actions')">
                         <button
                             class="ai-btn-icon ai-btn-tiny"
                             type="button"
-                            title="Rename conversation"
-                            aria-label="Rename this conversation"
+                            :title="t('ai.rename_conversation')"
+                            :aria-label="t('ai.rename_conversation')"
                             @click.stop="$emit('start-rename', conv)">
                             <svg
                                 width="12"
@@ -137,8 +140,8 @@ function formatRelativeDate(dateStr: string): string {
                         <button
                             class="ai-btn-icon ai-btn-tiny ai-btn-danger"
                             type="button"
-                            title="Delete conversation"
-                            aria-label="Delete this conversation"
+                            :title="t('ai.delete_conversation')"
+                            :aria-label="t('ai.delete_conversation')"
                             @click.stop="$emit('delete', conv.id)">
                             <svg
                                 width="12"

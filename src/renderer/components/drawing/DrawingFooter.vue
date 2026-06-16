@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
+
 defineProps<{
     zoom: number;
     zoomPercent: number;
@@ -20,16 +24,16 @@ const emit = defineEmits<{
 <template>
     <footer
         class="canvas-footer"
-        aria-label="Canvas controls">
+        :aria-label="t('drawing.canvas_controls')">
         <!-- Zoom controls -->
         <div class="footer-left">
             <div
                 class="zoom-controls"
                 role="group"
-                aria-label="Zoom controls">
+                :aria-label="t('drawing.zoom_controls')">
                 <button
                     class="zoom-btn"
-                    aria-label="Zoom out"
+                    :aria-label="t('drawing.zoom_out')"
                     @click="emit('zoomToCenter', zoom - 0.1)">
                     <svg
                         width="14"
@@ -49,13 +53,13 @@ const emit = defineEmits<{
                 </button>
                 <button
                     class="zoom-value"
-                    aria-label="Reset zoom to 100%"
+                    :aria-label="t('drawing.reset_zoom')"
                     @click="emit('zoomToCenter', 1)">
                     <span aria-hidden="true">{{ zoomPercent }}%</span>
                 </button>
                 <button
                     class="zoom-btn"
-                    aria-label="Zoom in"
+                    :aria-label="t('drawing.zoom_in')"
                     @click="emit('zoomToCenter', zoom + 0.1)">
                     <svg
                         width="14"
@@ -86,7 +90,7 @@ const emit = defineEmits<{
             <button
                 class="footer-btn"
                 :disabled="historyIndex <= 0"
-                aria-label="Undo (Cmd+Z)"
+                :aria-label="t('drawing.undo')"
                 @click="emit('undo')">
                 <svg
                     width="16"
@@ -106,7 +110,7 @@ const emit = defineEmits<{
             <button
                 class="footer-btn"
                 :disabled="historyIndex >= historyLength - 1"
-                aria-label="Redo (Cmd+Shift+Z)"
+                :aria-label="t('drawing.redo')"
                 @click="emit('redo')">
                 <svg
                     width="16"
@@ -125,7 +129,7 @@ const emit = defineEmits<{
             </button>
             <button
                 class="footer-btn"
-                aria-label="Clear canvas"
+                :aria-label="t('drawing.clear_canvas')"
                 @click="emit('clearAll')">
                 <svg
                     width="16"
@@ -154,11 +158,11 @@ const emit = defineEmits<{
                 role="status"
                 aria-live="polite"
                 aria-atomic="true">
-                {{ isSaving ? 'Saving...' : 'Unsaved' }}
+                {{ isSaving ? t('drawing.saving') : t('drawing.unsaved') }}
             </output>
             <button
                 class="footer-btn export-btn"
-                aria-label="Export image"
+                :aria-label="t('drawing.export_image')"
                 @click="emit('openExportDialog')">
                 <svg
                     width="16"

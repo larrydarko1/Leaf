@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { watch, onMounted, onUnmounted } from 'vue';
 import { useAudioPlayer } from '../../composables/editor/useAudioPlayer';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     filePath: string;
@@ -59,7 +62,7 @@ function onKeydown(e: KeyboardEvent) {
     <div
         class="audio-viewer"
         role="region"
-        aria-label="Audio player">
+        :aria-label="t('editor.audio_player')">
         <div class="audio-container">
             <!-- Audio icon display -->
             <div
@@ -92,7 +95,7 @@ function onKeydown(e: KeyboardEvent) {
                 class="audio-loading"
                 role="status"
                 aria-live="polite">
-                <p>Loading audio...</p>
+                <p>{{ t('editor.loading_audio') }}</p>
             </div>
 
             <!-- Hidden native audio element -->
@@ -111,12 +114,12 @@ function onKeydown(e: KeyboardEvent) {
                 v-if="audioUrl && !audioError && !isLoadingAudio"
                 class="custom-audio-player"
                 role="group"
-                aria-label="Audio playback controls">
+                :aria-label="t('editor.audio_playback_controls')">
                 <!-- Play/pause button -->
                 <button
                     class="audio-play-btn"
-                    :aria-label="audioPlaying ? 'Pause audio' : 'Play audio'"
-                    :title="audioPlaying ? 'Pause' : 'Play'"
+                    :aria-label="audioPlaying ? t('editor.pause_audio') : t('editor.play_audio')"
+                    :title="audioPlaying ? t('editor.pause') : t('editor.play')"
                     @click="toggleAudioPlayback">
                     <svg
                         v-if="!audioPlaying"
@@ -152,7 +155,7 @@ function onKeydown(e: KeyboardEvent) {
                 <!-- Current time display -->
                 <time
                     class="audio-time"
-                    aria-label="Current playback time"
+                    :aria-label="t('editor.current_playback_time')"
                     >{{ formatTime(audioCurrentTime) }}</time
                 >
 
@@ -163,7 +166,7 @@ function onKeydown(e: KeyboardEvent) {
                     :aria-valuenow="Math.round(audioProgressPercent)"
                     aria-valuemin="0"
                     aria-valuemax="100"
-                    :aria-label="`Audio progress: ${Math.round(audioProgressPercent)}%`"
+                    :aria-label="t('editor.audio_progress', { progress: Math.round(audioProgressPercent) })"
                     :aria-valuetext="`${formatTime(audioCurrentTime)} of ${formatTime(audioDuration)}`"
                     tabindex="0"
                     @click="seekAudio">
@@ -177,7 +180,7 @@ function onKeydown(e: KeyboardEvent) {
                 <!-- Total duration display -->
                 <time
                     class="audio-time"
-                    aria-label="Total duration"
+                    :aria-label="t('editor.total_duration')"
                     >{{ formatTime(audioDuration) }}</time
                 >
 
@@ -185,11 +188,11 @@ function onKeydown(e: KeyboardEvent) {
                 <div
                     class="audio-volume-wrapper"
                     role="group"
-                    aria-label="Volume controls">
+                    :aria-label="t('editor.volume_controls')">
                     <button
                         class="audio-volume-btn"
-                        :aria-label="audioVolume === 0 ? 'Unmute audio' : 'Mute audio'"
-                        :title="audioVolume === 0 ? 'Unmute' : 'Mute'"
+                        :aria-label="audioVolume === 0 ? t('editor.unmute_audio') : t('editor.mute_audio')"
+                        :title="audioVolume === 0 ? t('editor.unmute') : t('editor.mute')"
                         @click="toggleMute">
                         <svg
                             v-if="audioVolume === 0"
@@ -251,7 +254,7 @@ function onKeydown(e: KeyboardEvent) {
                         step="0.01"
                         :value="audioVolume"
                         :style="{ '--volume': audioVolume }"
-                        aria-label="Volume level"
+                        :aria-label="t('editor.volume_controls')"
                         @input="onVolumeChange" />
                 </div>
             </div>
@@ -261,8 +264,8 @@ function onKeydown(e: KeyboardEvent) {
                 v-if="audioError"
                 class="audio-error"
                 role="alert">
-                <p>Failed to load audio</p>
-                <p class="audio-error-hint">This format may not be supported</p>
+                <p>{{ t('editor.audio_load_error') }}</p>
+                <p class="audio-error-hint">{{ t('editor.audio_format_not_supported') }}</p>
             </div>
         </div>
     </div>

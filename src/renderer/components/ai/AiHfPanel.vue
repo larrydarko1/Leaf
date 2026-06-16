@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import type { HfRepoFile, HfModelInfo, HfSearchResult, HfDownloadProgress, HfSortOption } from '../../types/hf';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 defineProps<{
     hfSearchQuery: string;
@@ -25,10 +28,10 @@ defineEmits<{
 }>();
 
 const sortOptions: { value: HfSortOption; label: string }[] = [
-    { value: 'downloads', label: 'Downloads' },
-    { value: 'likes', label: 'Likes' },
-    { value: 'lastModified', label: 'Recent' },
-    { value: 'trending', label: 'Trending' },
+    { value: 'downloads', label: t('ai.downloads') },
+    { value: 'likes', label: t('ai.likes') },
+    { value: 'lastModified', label: t('ai.recent') },
+    { value: 'trending', label: t('ai.trending') },
 ];
 
 function formatNumber(n: number): string {
@@ -41,15 +44,15 @@ function formatNumber(n: number): string {
 <template>
     <aside
         class="ai-hf-panel"
-        aria-label="Download models from Hugging Face">
+        :aria-label="t('ai.hf_panel')">
         <!-- Header -->
         <header class="ai-hf-header">
-            <h2 class="ai-hf-title">Download Models</h2>
+            <h2 class="ai-hf-title">{{ t('ai.download_models') }}</h2>
             <button
                 class="ai-btn-icon ai-btn-tiny"
                 type="button"
-                title="Close panel"
-                aria-label="Close download models panel"
+                :title="t('ai.close_panel')"
+                :aria-label="t('ai.close_panel')"
                 @click="$emit('close')">
                 <svg
                     width="9"
@@ -82,17 +85,17 @@ function formatNumber(n: number): string {
             <input
                 :value="hfSearchQuery"
                 type="text"
-                placeholder="Search GGUF models..."
+                :placeholder="t('ai.search_models')"
                 class="ai-hf-search-input"
-                aria-label="Search for GGUF models"
+                :aria-label="t('ai.search_models')"
                 @input="$emit('update:hfSearchQuery', ($event.target as HTMLInputElement).value)"
                 @keydown.enter.prevent="$emit('search')" />
             <button
                 class="ai-btn-icon"
                 type="submit"
                 :disabled="hfIsSearching"
-                title="Search models"
-                aria-label="Search for models">
+                :title="t('ai.search_models')"
+                :aria-label="t('ai.search_models')">
                 <svg
                     width="10"
                     height="10"
@@ -120,7 +123,7 @@ function formatNumber(n: number): string {
         <fieldset
             v-if="!hfSelectedRepo"
             class="ai-hf-sort-bar"
-            aria-label="Sort search results by">
+            :aria-label="t('ai.sort_search_results_by')">
             <button
                 v-for="opt in sortOptions"
                 :key="opt.value"
@@ -138,7 +141,7 @@ function formatNumber(n: number): string {
             v-if="hfSelectedRepo"
             type="button"
             class="ai-hf-back-btn"
-            aria-label="Go back to search results"
+            :aria-label="t('ai.back_to_results')"
             @click="$emit('back')">
             <svg
                 width="10"
@@ -157,14 +160,14 @@ function formatNumber(n: number): string {
                     y2="12" />
                 <polyline points="12 19 5 12 12 5" />
             </svg>
-            Back to results
+            {{ t('ai.back_to_results') }}
         </button>
 
         <!-- Results area -->
         <section
             class="ai-hf-results"
             aria-live="polite"
-            aria-label="Search results">
+            :aria-label="t('ai.search_results')">
             <!-- Download error message -->
             <div
                 v-if="hfDownloadError"
@@ -178,7 +181,7 @@ function formatNumber(n: number): string {
                 v-if="hfIsSearching || hfIsLoadingFiles"
                 class="ai-hf-loading"
                 role="status">
-                Searching...
+                {{ t('ai.searching') }}
             </div>
 
             <!-- Repo file listing -->
@@ -191,7 +194,7 @@ function formatNumber(n: number): string {
                         <span
                             v-if="hfModelInfo.architecture"
                             class="ai-hf-meta-tag"
-                            title="Model Architecture">
+                            :title="t('ai.model_architecture')">
                             <svg
                                 width="9"
                                 height="9"
@@ -210,7 +213,7 @@ function formatNumber(n: number): string {
                         <span
                             v-if="hfModelInfo.contextLength"
                             class="ai-hf-meta-tag"
-                            title="Context Window">
+                            :title="t('ai.context_window')">
                             <svg
                                 width="9"
                                 height="9"
@@ -238,7 +241,7 @@ function formatNumber(n: number): string {
                         <span
                             v-if="hfModelInfo.totalParamSize"
                             class="ai-hf-meta-tag"
-                            title="Total Parameter Size (unquantized)">
+                            :title="t('ai.total_param_size')">
                             <svg
                                 width="9"
                                 height="9"
@@ -278,25 +281,25 @@ function formatNumber(n: number): string {
                             <div class="ai-hf-file-details">
                                 <span
                                     class="ai-hf-file-size"
-                                    title="Download size"
+                                    :title="t('ai.download_size')"
                                     >{{ file.sizeFormatted }}</span
                                 >
                                 <span
                                     v-if="file.quantType"
                                     class="ai-hf-quant-badge"
-                                    title="Quantization type"
+                                    :title="t('ai.quantization_type')"
                                     >{{ file.quantType }}</span
                                 >
                                 <span
                                     v-if="file.estimatedRamFormatted"
                                     class="ai-hf-ram-estimate"
-                                    title="Estimated RAM needed for inference">
+                                    :title="t('ai.estimated_ram')">
                                     RAM: ~{{ file.estimatedRamFormatted }}
                                 </span>
                                 <span
                                     v-if="file.isSharded"
                                     class="ai-hf-shard-info"
-                                    title="Model is split into multiple files">
+                                    :title="t('ai.model_sharded')">
                                     {{ file.shardCount }} parts
                                 </span>
                             </div>
@@ -304,7 +307,7 @@ function formatNumber(n: number): string {
                         <div
                             class="ai-hf-file-actions"
                             role="group"
-                            aria-label="Download options">
+                            :aria-label="t('ai.download_options')">
                             <template v-if="hfActiveDownloads.has(file.name)">
                                 <div
                                     v-if="hfDownloadProgress && hfDownloadProgress.fileName === file.name"
@@ -313,7 +316,7 @@ function formatNumber(n: number): string {
                                     :aria-valuenow="hfDownloadProgress.percent"
                                     aria-valuemin="0"
                                     aria-valuemax="100"
-                                    :aria-label="`Download progress: ${hfDownloadProgress.percent}%`">
+                                    :aria-label="t('ai.download_progress', { percent: hfDownloadProgress.percent })">
                                     <div class="ai-hf-progress-bar">
                                         <div
                                             class="ai-hf-progress-fill"
@@ -324,8 +327,8 @@ function formatNumber(n: number): string {
                                 <button
                                     class="ai-btn-icon ai-btn-tiny ai-btn-danger"
                                     type="button"
-                                    title="Cancel download"
-                                    aria-label="Cancel this download"
+                                    :title="t('ai.cancel_download')"
+                                    :aria-label="t('ai.cancel_download')"
                                     @click="$emit('cancel-download', file.name)">
                                     <svg
                                         width="9"
@@ -354,8 +357,8 @@ function formatNumber(n: number): string {
                                 v-else-if="file.isSharded"
                                 class="ai-hf-download-btn ai-hf-download-sharded"
                                 type="button"
-                                title="Download all parts to ~/leaf-models/"
-                                :aria-label="`Download all ${file.shardCount} parts of ${file.name}`"
+                                :title="t('ai.download_all_parts', { count: file.shardCount, name: file.name })"
+                                :aria-label="t('ai.download_all_parts', { count: file.shardCount, name: file.name })"
                                 @click="$emit('download', file)">
                                 <svg
                                     width="10"
@@ -375,14 +378,14 @@ function formatNumber(n: number): string {
                                         x2="12"
                                         y2="3" />
                                 </svg>
-                                <span class="ai-hf-download-label">All</span>
+                                <span class="ai-hf-download-label">{{ t('ai.all') }}</span>
                             </button>
                             <button
                                 v-else
                                 class="ai-hf-download-btn"
                                 type="button"
-                                title="Download to ~/leaf-models/"
-                                :aria-label="`Download ${file.name}`"
+                                :title="t('ai.download_to', { name: file.name })"
+                                :aria-label="t('ai.download_to', { name: file.name })"
                                 @click="$emit('download', file)">
                                 <svg
                                     width="10"
@@ -413,7 +416,7 @@ function formatNumber(n: number): string {
                 v-else-if="hfSelectedRepo && !hfIsLoadingFiles"
                 class="ai-hf-empty"
                 role="status">
-                No .gguf files found in this repository
+                {{ t('ai.no_gguf_files_found') }}
             </div>
 
             <!-- Search results list -->
@@ -429,23 +432,23 @@ function formatNumber(n: number): string {
                         <button
                             type="button"
                             class="ai-hf-result-button"
-                            :aria-label="`Open repository: ${repo.id}`"
+                            :aria-label="t('ai.open_repository', { id: repo.id })"
                             @click="$emit('select-repo', repo.id)">
                             <div class="ai-hf-result-info">
                                 <span class="ai-hf-result-name">{{ repo.id }}</span>
                                 <div class="ai-hf-result-meta">
-                                    <span title="Downloads">↓ {{ formatNumber(repo.downloads) }}</span>
-                                    <span title="Likes">♥ {{ formatNumber(repo.likes) }}</span>
+                                    <span :title="t('ai.downloads')">↓ {{ formatNumber(repo.downloads) }}</span>
+                                    <span :title="t('ai.likes')">♥ {{ formatNumber(repo.likes) }}</span>
                                     <span
                                         v-if="repo.architecture"
                                         class="ai-hf-result-tag"
-                                        title="Architecture"
+                                        :title="t('ai.architecture')"
                                         >{{ repo.architecture }}</span
                                     >
                                     <span
                                         v-if="repo.parameterCount"
                                         class="ai-hf-result-tag"
-                                        title="Parameters"
+                                        :title="t('ai.parameters')"
                                         >{{ repo.parameterCount }}</span
                                     >
                                 </div>
@@ -472,9 +475,9 @@ function formatNumber(n: number): string {
                     class="ai-hf-load-more"
                     type="button"
                     :disabled="hfIsLoadingMore"
-                    aria-label="Load more results"
+                    :aria-label="t('ai.load_more_results')"
                     @click="$emit('load-more')">
-                    {{ hfIsLoadingMore ? 'Loading...' : 'Load more' }}
+                    {{ hfIsLoadingMore ? t('ai.loading') : t('ai.load_more') }}
                 </button>
             </template>
 
@@ -483,7 +486,7 @@ function formatNumber(n: number): string {
                 v-else-if="!hfIsSearching"
                 class="ai-hf-empty"
                 role="status">
-                Search for GGUF models on Hugging Face
+                {{ t('ai.search_for_gguf_models') }}
             </div>
         </section>
     </aside>

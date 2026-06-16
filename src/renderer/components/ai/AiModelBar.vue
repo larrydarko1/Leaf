@@ -2,6 +2,9 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import type { AiModelInfo, AiStatus } from '../../types/ai';
 import { useSystemPrompt } from '../../composables/ai/useSystemPrompt';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 defineProps<{
     status: AiStatus;
@@ -120,7 +123,7 @@ function truncate(str: string, len: number): string {
     <div
         class="ai-model-bar"
         role="toolbar"
-        aria-label="AI model controls">
+        :aria-label="t('ai.model_controls')">
         <!-- Model selection and status pill -->
         <div class="ai-model-pill">
             <!-- Model selector (when not loaded) -->
@@ -161,18 +164,18 @@ function truncate(str: string, len: number): string {
                             <div
                                 v-if="availableModels.length === 0"
                                 class="ai-dropdown-empty">
-                                No models found
+                                {{ t('ai.no_models_found') }}
                             </div>
                             <div
-                                v-for="m in availableModels"
-                                :key="m.path"
+                                v-for="model in availableModels"
+                                :key="model.path"
                                 class="ai-dropdown-item"
-                                :class="{ selected: selectedModelPath === m.path }"
+                                :class="{ selected: selectedModelPath === model.path }"
                                 role="option"
-                                :aria-selected="selectedModelPath === m.path"
-                                @click="handleSelectModel(m)">
-                                <span class="ai-dropdown-item-name">{{ truncate(m.name, 30) }}</span>
-                                <span class="ai-dropdown-item-size">{{ m.sizeFormatted }}</span>
+                                :aria-selected="selectedModelPath === model.path"
+                                @click="handleSelectModel(model)">
+                                <span class="ai-dropdown-item-name">{{ truncate(model.name, 30) }}</span>
+                                <span class="ai-dropdown-item-size">{{ model.sizeFormatted }}</span>
                             </div>
                         </div>
                     </Teleport>
@@ -181,7 +184,7 @@ function truncate(str: string, len: number): string {
                     class="ai-btn-small"
                     :disabled="selectedModelPath === null || selectedModelPath === '' || isLoading"
                     @click="$emit('load-model')">
-                    {{ isLoading ? '...' : 'Load' }}
+                    {{ isLoading ? t('ai.loading') : t('ai.load') }}
                 </button>
             </div>
 
@@ -195,8 +198,8 @@ function truncate(str: string, len: number): string {
                 <span class="ai-model-name">{{ status.currentModelName }}</span>
                 <button
                     class="ai-btn-icon ai-btn-danger"
-                    title="Unload model"
-                    aria-label="Unload current model"
+                    :title="t('ai.unload_model')"
+                    :aria-label="t('ai.unload_current_model')"
                     :disabled="status.isGenerating"
                     @click="$emit('unload-model')">
                     <svg
@@ -226,8 +229,8 @@ function truncate(str: string, len: number): string {
             <!-- Open models folder -->
             <button
                 class="ai-btn-icon"
-                title="Open Leaf folder"
-                aria-label="Open Leaf models folder"
+                :title="t('ai.open_models_folder')"
+                :aria-label="t('ai.open_models_folder')"
                 @click="$emit('open-models-folder')">
                 <svg
                     width="11"
@@ -247,8 +250,8 @@ function truncate(str: string, len: number): string {
                 <button
                     class="ai-btn-icon"
                     :class="{ 'ai-btn-active': showPromptDropdown }"
-                    :title="`System prompt: ${activePromptName}`"
-                    :aria-label="`System prompt: ${activePromptName}`"
+                    :title="`${t('ai.system_prompt')}: ${activePromptName}`"
+                    :aria-label="`${t('ai.system_prompt')}: ${activePromptName}`"
                     aria-haspopup="listbox"
                     :aria-expanded="showPromptDropdown"
                     @click="togglePromptDropdown()">
@@ -271,26 +274,26 @@ function truncate(str: string, len: number): string {
                         class="ai-dropdown-menu ai-prompt-menu"
                         role="listbox"
                         :style="promptDropdownPosition">
-                        <div class="ai-prompt-menu-header">System prompt</div>
+                        <div class="ai-prompt-menu-header">{{ t('ai.system_prompt') }}</div>
                         <div
                             v-if="prompts.length === 0"
                             class="ai-dropdown-empty">
-                            No prompts found
+                            {{ t('ai.no_prompts_found') }}
                         </div>
                         <div
-                            v-for="p in prompts"
-                            :key="p.id"
+                            v-for="prompt in prompts"
+                            :key="prompt.id"
                             class="ai-dropdown-item ai-prompt-item"
-                            :class="{ selected: p.id === activeId }"
+                            :class="{ selected: prompt.id === activeId }"
                             role="option"
-                            :aria-selected="p.id === activeId"
-                            @click="handleSelectPrompt(p.id)">
+                            :aria-selected="prompt.id === activeId"
+                            @click="handleSelectPrompt(prompt.id)">
                             <div class="ai-prompt-item-main">
-                                <span class="ai-prompt-item-name">{{ p.name }}</span>
+                                <span class="ai-prompt-item-name">{{ prompt.name }}</span>
                                 <span
-                                    v-if="p.description"
+                                    v-if="prompt.description"
                                     class="ai-prompt-item-desc">
-                                    {{ p.description }}
+                                    {{ prompt.description }}
                                 </span>
                             </div>
                         </div>
@@ -302,8 +305,8 @@ function truncate(str: string, len: number): string {
             <button
                 class="ai-btn-icon"
                 :class="{ 'ai-btn-active': showHfPanel }"
-                title="Download models from Hugging Face"
-                aria-label="Download models from Hugging Face"
+                :title="t('ai.hf_model_browser')"
+                :aria-label="t('ai.hf_model_browser')"
                 :aria-pressed="showHfPanel"
                 @click="$emit('toggle-hf-panel')">
                 <svg
@@ -329,8 +332,8 @@ function truncate(str: string, len: number): string {
             <!-- Refresh models folder -->
             <button
                 class="ai-btn-icon"
-                title="Refresh .leaf folder"
-                aria-label="Refresh models folder"
+                :title="t('ai.refresh_models_folder')"
+                :aria-label="t('ai.refresh_models_folder')"
                 @click="handleRefresh()">
                 <svg
                     width="11"
@@ -351,8 +354,8 @@ function truncate(str: string, len: number): string {
             <button
                 class="ai-btn-icon"
                 :class="{ 'ai-btn-active': showHistory }"
-                title="Conversation history"
-                aria-label="Toggle conversation history"
+                :title="t('ai.conversation_history')"
+                :aria-label="t('ai.conversation_history')"
                 :aria-pressed="showHistory"
                 @click="$emit('toggle-history')">
                 <svg
@@ -378,8 +381,8 @@ function truncate(str: string, len: number): string {
                 v-if="status.isModelLoaded"
                 class="ai-btn-icon"
                 :class="{ 'ai-btn-active': agentMode }"
-                title="Agent mode — AI can read and edit files"
-                aria-label="Toggle agent mode (AI can read and edit files)"
+                :title="t('ai.agent_mode')"
+                :aria-label="t('ai.agent_mode')"
                 :aria-pressed="agentMode"
                 @click="$emit('toggle-agent-mode')">
                 <svg
@@ -401,8 +404,8 @@ function truncate(str: string, len: number): string {
             <!-- New conversation -->
             <button
                 class="ai-btn-icon"
-                title="New conversation"
-                aria-label="Start new conversation"
+                :title="t('ai.new_conversation')"
+                :aria-label="t('ai.new_conversation')"
                 @click="$emit('new-conversation')">
                 <svg
                     width="11"
@@ -430,8 +433,8 @@ function truncate(str: string, len: number): string {
             <!-- Close -->
             <button
                 class="ai-btn-icon"
-                title="Close"
-                aria-label="Close AI model bar"
+                :title="t('ai.close')"
+                :aria-label="t('ai.close')"
                 @click="$emit('close')">
                 <svg
                     width="11"

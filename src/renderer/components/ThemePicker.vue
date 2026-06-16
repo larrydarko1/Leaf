@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import { useTheme } from '../composables/ui/useTheme';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const emit = defineEmits<{ close: [] }>();
 
@@ -27,17 +30,17 @@ async function handleRefresh() {
 <template>
     <aside
         class="theme-panel"
-        aria-label="Theme selection panel">
+        :aria-label="t('theme.selection_panel')">
         <header class="theme-header">
-            <span class="theme-title">Theme</span>
+            <span class="theme-title">{{ t('theme.title') }}</span>
             <div
                 class="header-actions"
                 role="toolbar"
-                aria-label="Theme panel controls">
+                :aria-label="t('theme.panel_controls')">
                 <button
                     class="icon-btn"
-                    title="Refresh list"
-                    aria-label="Refresh theme list"
+                    :title="t('theme.refresh_list')"
+                    :aria-label="t('theme.refresh_list')"
                     @click="handleRefresh">
                     <svg
                         width="14"
@@ -53,8 +56,8 @@ async function handleRefresh() {
                 </button>
                 <button
                     class="icon-btn"
-                    title="Close"
-                    aria-label="Close theme panel"
+                    :title="t('theme.close_panel')"
+                    :aria-label="t('theme.close_panel')"
                     @click="emit('close')">
                     <svg
                         width="14"
@@ -75,7 +78,7 @@ async function handleRefresh() {
         <div
             class="theme-list"
             role="listbox"
-            aria-label="Available themes">
+            :aria-label="t('theme.available_themes')">
             <button
                 v-for="theme in themes"
                 :key="theme.id"
@@ -129,19 +132,23 @@ async function handleRefresh() {
                 v-if="!themes.length"
                 class="theme-empty"
                 role="status"
-                >No themes found.</div
+                >{{ t('theme.no_themes_found') }}</div
             >
         </div>
 
         <footer class="theme-footer">
             <button
                 class="footer-btn"
-                aria-label="Open themes folder"
+                :aria-label="t('theme.open_folder')"
                 @click="handleOpenFolder">
-                Open themes folder…
+                {{ t('theme.open_folder') }}
             </button>
             <p class="footer-hint">
-                Drop <code>.json</code> files in <code>~/.leaf/themes/</code> to add presets. Edit one to customise.
+                {{ t('theme.footer_hint_intro') }}
+                <code>{{ t('theme.footer_hint_file_type') }}</code>
+                files in
+                <code>{{ t('theme.footer_hint_path') }}</code>
+                {{ t('theme.footer_hint_action') }}
             </p>
         </footer>
     </aside>

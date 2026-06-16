@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import type { FileInfo } from '../../types/electron';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 defineProps<{
     agentMode: boolean;
@@ -73,7 +76,7 @@ onMounted(() => {
         <div
             class="ai-resize-handle"
             :class="{ 'ai-resize-active': isResizing }"
-            title="Drag to resize input area"
+            :title="t('ai.drag_to_resize_input_area')"
             @mousedown="startResize">
             <div class="ai-resize-grip" />
         </div>
@@ -98,14 +101,14 @@ onMounted(() => {
             <span
                 v-if="activeFile"
                 class="ai-agent-file-name"
-                aria-label="Agent mode active with file"
-                >Agent · {{ activeFile.name }}</span
+                :aria-label="t('ai.agent_mode_active_with_file', { file: activeFile.name })"
+                >{{ t('ai.agent_mode_active_with_file', { file: activeFile.name }) }}</span
             >
             <span
                 v-else
                 class="ai-agent-no-file"
-                aria-label="Agent mode active"
-                >Agent · No file open</span
+                :aria-label="t('ai.agent_mode_active_no_file')"
+                >{{ t('ai.agent_mode_active_no_file') }}</span
             >
         </div>
 
@@ -121,18 +124,20 @@ onMounted(() => {
                 aria-hidden="true">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z" />
             </svg>
-            <span aria-label="Current note included as context">{{ activeFile.name }}</span>
+            <span :aria-label="t('ai.current_note_included_as_context', { file: activeFile.name })">{{
+                t('ai.current_note_included_as_context', { file: activeFile.name })
+            }}</span>
         </div>
 
         <div class="ai-input-row">
             <label
                 class="ai-context-toggle"
-                title="Include current note as context">
+                :title="t('ai.include_current_note_as_context')">
                 <input
                     :checked="includeNoteContext"
                     type="checkbox"
                     :disabled="!activeFile"
-                    aria-label="Include current note as context"
+                    :aria-label="t('ai.include_current_note_as_context')"
                     @change="$emit('update:includeNoteContext', ($event.target as HTMLInputElement).checked)" />
                 <svg
                     width="14"
@@ -147,7 +152,7 @@ onMounted(() => {
             <textarea
                 ref="inputField"
                 :value="inputMessage"
-                placeholder="Ask something..."
+                :placeholder="t('ai.ask_something')"
                 class="ai-input"
                 :style="{ height: maxHeightPx + 'px' }"
                 :disabled="!isReady || isAnyGenerating"
@@ -158,8 +163,8 @@ onMounted(() => {
             <button
                 v-if="isStreaming"
                 class="ai-btn-send ai-btn-stop"
-                title="Stop generating"
-                aria-label="Stop AI response"
+                :title="t('ai.stop_generating')"
+                :aria-label="t('ai.stop_generating')"
                 @click="$emit('stop')">
                 <svg
                     width="14"
@@ -181,8 +186,8 @@ onMounted(() => {
                 v-else
                 class="ai-btn-send"
                 :disabled="!inputMessage.trim() || !isReady || isStreaming"
-                title="Send message"
-                aria-label="Send message"
+                :title="t('ai.send_message')"
+                :aria-label="t('ai.send_message')"
                 @click="$emit('send')">
                 <svg
                     width="20"

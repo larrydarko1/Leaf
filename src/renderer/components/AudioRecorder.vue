@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { useAudioRecorder } from '../composables/useAudioRecorder';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{ currentFolder: string | null }>();
 const emit = defineEmits<{ recordingSaved: [filePath: string] }>();
@@ -14,7 +17,11 @@ const { isRecording, hasPermission, formattedDuration, toggle } = useAudioRecord
     <button
         class="btn-menu-icon"
         :class="{ recording: isRecording }"
-        :aria-label="isRecording ? `Stop recording (${formattedDuration})` : 'Record audio'"
+        :aria-label="
+            isRecording
+                ? t('audio_recorder.stop_recording', { duration: formattedDuration })
+                : t('audio_recorder.record_audio')
+        "
         :aria-pressed="isRecording"
         :disabled="!hasPermission && !isRecording"
         @click="toggle">

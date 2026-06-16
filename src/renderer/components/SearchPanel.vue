@@ -2,6 +2,9 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { useListKeyboardNavigation } from '../composables/ui/useListKeyboardNavigation';
 import type { FileInfo } from '../types/electron';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     files: FileInfo[];
@@ -130,7 +133,7 @@ function highlightMatch(text: string): string {
 <template>
     <section
         class="search-panel"
-        aria-label="File search panel">
+        :aria-label="t('search.search_panel')">
         <header class="search-header">
             <div class="search-input-wrapper">
                 <svg
@@ -152,17 +155,17 @@ function highlightMatch(text: string): string {
                     ref="searchInput"
                     v-model="searchQuery"
                     type="text"
-                    placeholder="Search files..."
+                    :placeholder="t('search.search_placeholder')"
                     class="search-input"
-                    aria-label="Search files by name or path"
+                    :aria-label="t('search.search_placeholder')"
                     aria-describedby="search-results-count"
                     @keydown.escape="clearSearch"
                     @keydown.enter="openSelectedResult" />
                 <button
                     v-if="searchQuery"
                     class="clear-button"
-                    title="Clear search"
-                    aria-label="Clear search query"
+                    :title="t('search.clear_search')"
+                    :aria-label="t('search.clear_search')"
                     @click="clearSearch">
                     <svg
                         width="14"
@@ -186,7 +189,7 @@ function highlightMatch(text: string): string {
                 class="search-info"
                 aria-live="polite"
                 aria-atomic="true">
-                {{ searchResults.length }} {{ searchResults.length === 1 ? 'result' : 'results' }}
+                {{ searchResults.length }} {{ searchResults.length === 1 ? t('search.result') : t('search.results') }}
             </div>
         </header>
 
@@ -195,21 +198,21 @@ function highlightMatch(text: string): string {
                 v-if="!searchQuery"
                 class="search-empty-state"
                 role="status"
-                aria-label="Search instructions">
-                <p>Type to search files by name</p>
+                :aria-label="t('search.clear_search')">
+                <p>{{ t('search.clear_search') }}</p>
             </div>
             <div
                 v-else-if="searchResults.length === 0"
                 class="search-empty-state"
                 role="status"
-                aria-label="No results">
-                <p>No files found</p>
+                :aria-label="t('search.no_results')">
+                <p>{{ t('search.no_results') }}</p>
             </div>
             <ul
                 v-else
                 class="search-results-list"
                 role="listbox"
-                aria-label="Search results">
+                :aria-label="t('search.search_results')">
                 <li
                     v-for="(file, index) in searchResults"
                     :key="file.path"
