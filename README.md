@@ -58,8 +58,8 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 ### Design
 
 - **Obsidian-inspired UI** - Clean, familiar interface
-- **Dark mode** - Easy on the eyes
-- **Distraction-free** - Focus on your writing
+- **Multi-language support** - Built-in English and Italian with easy language switching; add your own translations
+- **Theme customization** - 20+ built-in color themes; drop in your own for automatic detection
 
 ## Security & Privacy
 
@@ -110,6 +110,64 @@ Leaf stores AI models in `~/.leaf/models/`. To get started with the AI assistant
 > **Tip:** You can also manually place `.gguf` files in `~/.leaf/models/` or click the folder icon to open the directory.
 
 > **Migrating from older versions:** If you previously stored models in `~/leaf-models/`, Leaf automatically moves them to `~/.leaf/models/` on first launch. No action required.
+
+### Themes
+
+Leaf ships with 20+ built-in color themes. All themes are stored in `~/.leaf/themes/`:
+
+1. Open the app and click the **palette icon** in the sidebar (or use the theme menu)
+2. Select a theme from the built-in list to apply it instantly
+3. To add custom themes:
+    - Create a new `.json` file in `~/.leaf/themes/` with your color definitions
+    - Restart the app — your custom theme appears automatically in the picker
+
+Theme file format (see `~/.leaf/themes/dark.json` for examples):
+
+```json
+{
+    "name": "My Custom Theme",
+    "description": "A Small description",
+    "scheme": "dark", // or light
+    "colors": {
+        "text1": "#ffffff",
+        "bg-primary": "#1e1e1e",
+        "accent-color": "#3eb489"
+        // ... more color definitions
+    }
+}
+```
+
+Bundled defaults (`dark.json`, `light.json`, etc.) are seeded on first launch and never overwritten if you've edited them.
+
+### Languages & Localization
+
+Leaf supports multiple languages. Currently available:
+
+- **English** (default)
+- **Italian**
+
+To switch languages:
+
+1. Click the **language menu** in the settings (top-right or settings panel)
+2. Select your preferred language — the UI updates instantly
+3. To add your own language translations:
+    - Create a new `.json` file in `~/.leaf/locales/` (e.g. `fr.json` for French)
+    - Use the format from `~/.leaf/locales/en.json` as a template
+    - Restart the app — your new language appears in the language picker
+
+Language file format:
+
+```json
+{
+    "theme": "Theme",
+    "language": "Language",
+    "vault": "Vault",
+    "notes": "Notes"
+    // ... more translation keys
+}
+```
+
+For a complete list of translation keys, check `~/.leaf/locales/en.json`.
 
 ### Using Agent Mode
 
@@ -315,7 +373,7 @@ leaf/
 │   │   │   ├── extensions.ts       # Allowed file extension sets for vault scanning
 │   │   │   ├── logger.ts           # electron-log wrapper; rotating file logger
 │   │   │   ├── mime.ts             # MIME type maps for images, audio, video, PDF
-│   │   │   ├── paths.ts            # App path constants: LEAF_HOME, models, prompts, themes
+│   │   │   ├── paths.ts            # App path constants: LEAF_HOME, models, prompts, themes, locales
 │   │   │   └── validation.ts       # Path-traversal & filename safety checks for IPC
 │   │   └── services/
 │   │       ├── agent.ts            # AI file editing with backup/restore version control
@@ -323,6 +381,7 @@ leaf/
 │   │       ├── conversation.ts     # Chat conversation persistence as JSON in userData
 │   │       ├── fs.ts               # Vault file/folder IPC handlers and FS watcher
 │   │       ├── hf-download.ts      # Hugging Face model search and GGUF download
+│   │       ├── language.ts         # Language/locale management and IPC registration
 │   │       ├── media.ts            # Audio recording saves and spellcheck suggestions
 │   │       ├── speech.ts           # Local Whisper speech-to-text via ONNX/transformers
 │   │       ├── systemPrompt.ts     # System prompt template management and active-prompt state
@@ -332,6 +391,7 @@ leaf/
 │   └── renderer/                   # Vue 3 frontend
 │       ├── index.html              # Entry HTML
 │       ├── main.ts                 # Mounts the Vue app onto #app
+│       ├── i18n.ts                 # Vue i18n setup and message loading
 │       ├── App.vue                 # Root component: layout, sidebar, tab bar
 │       ├── style.scss              # Global SCSS styles and CSS custom properties
 │       ├── vite-env.d.ts
@@ -402,6 +462,7 @@ leaf/
 │       │   │   └── useVideoPlayer.ts       # Reactive video playback state and controls
 │       │   ├── ui/                 # General UI composables
 │       │   │   ├── useContextMenu.ts           # Context menu position and open/close state
+│       │   │   ├── useLanguage.ts              # Language listing and switching; calls IPC service
 │       │   │   ├── useListKeyboardNavigation.ts # Arrow-key navigation for list elements
 │       │   │   └── useTheme.ts                 # Theme listing, CSS property application
 │       │   └── vault/              # Vault & file management
@@ -424,7 +485,8 @@ leaf/
 │   ├── main/
 │   │   ├── bookmarks.test.ts
 │   │   ├── extensions.test.ts
-│   │   ├── fs.scan.test.ts
+│   │   ├── fs-scan.test.ts
+│   │   ├── language.test.ts
 │   │   ├── mime.test.ts
 │   │   ├── paths.test.ts
 │   │   ├── systemPrompt.test.ts
@@ -451,6 +513,7 @@ leaf/
 │       ├── useFileSelection.test.ts
 │       ├── useFolderTree.test.ts
 │       ├── useHfDownload.test.ts
+│       ├── useLanguage.test.ts
 │       ├── useListKeyboardNavigation.test.ts
 │       ├── useNotePersistence.test.ts
 │       ├── useSystemPrompt.test.ts
@@ -458,6 +521,10 @@ leaf/
 │       ├── useTreeNodeDrag.test.ts
 │       └── useVault.test.ts
 ├── assets/                         # Bundled app assets seeded to LEAF_HOME on first launch
+│   ├── locales/                    # Default language translations (JSON)
+│   │   ├── en.json
+│   │   ├── it.json
+│   │   └── ...
 │   ├── prompts/                    # Default system prompt templates (Markdown)
 │   │   ├── coding.md
 │   │   ├── default.md
