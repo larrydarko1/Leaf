@@ -3,7 +3,14 @@
  * in markdown documents.
  */
 
-import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
+import {
+    Decoration,
+    type DecorationSet,
+    type EditorView,
+    ViewPlugin,
+    type ViewUpdate,
+    WidgetType,
+} from '@codemirror/view';
 import { type EditorState, type Range } from '@codemirror/state';
 import { codeFolding, foldEffect, unfoldEffect, foldedRanges, foldService } from '@codemirror/language';
 

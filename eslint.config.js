@@ -66,10 +66,15 @@ export default [
                 allowNumber: false,
                 allowNullableObject: false,
             }],
+            
 
             // ── Existing rules ───────────────────────────────────────────────
             // Only allow types, not interfaces
             '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
+            '@typescript-eslint/consistent-type-imports': ['error', {
+                prefer: 'type-imports',
+                fixStyle: 'inline-type-imports',
+            }],
             '@typescript-eslint/no-empty-object-type': 'error',
             
             // never allow console logs in production code — use a proper logger instead
