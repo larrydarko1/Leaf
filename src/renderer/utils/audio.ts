@@ -8,10 +8,13 @@
  */
 export async function convertWebMToWav(webmBlob: Blob): Promise<ArrayBuffer> {
     const audioContext = new AudioContext();
-    const arrayBuffer = await webmBlob.arrayBuffer();
-    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-    audioContext.close();
-    return audioBufferToWav(audioBuffer);
+    try {
+        const arrayBuffer = await webmBlob.arrayBuffer();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        return audioBufferToWav(audioBuffer);
+    } finally {
+        await audioContext.close();
+    }
 }
 
 /**

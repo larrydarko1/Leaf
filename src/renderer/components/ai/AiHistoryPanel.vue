@@ -10,12 +10,9 @@ const props = defineProps<{
 }>();
 
 defineEmits<{
-    (e: 'load', id: string): void;
+    (e: 'load' | 'confirm-rename' | 'delete' | 'update:renameValue', value: string): void;
     (e: 'start-rename', conv: ConversationMeta): void;
-    (e: 'confirm-rename', id: string): void;
     (e: 'cancel-rename'): void;
-    (e: 'delete', id: string): void;
-    (e: 'update:renameValue', value: string): void;
 }>();
 
 const renameInputRef = ref<HTMLInputElement[]>();
@@ -23,7 +20,7 @@ const renameInputRef = ref<HTMLInputElement[]>();
 watch(
     () => props.renamingConversationId,
     async (id) => {
-        if (id) {
+        if (id !== null && id !== '') {
             await nextTick();
             renameInputRef.value?.[0]?.focus();
             renameInputRef.value?.[0]?.select();

@@ -35,7 +35,7 @@ function handleMiddleClick(e: MouseEvent, index: number) {
 
 function onDragStart(e: DragEvent, index: number) {
     dragStartIndex.value = index;
-    if (e.dataTransfer) {
+    if (e.dataTransfer !== null) {
         e.dataTransfer.effectAllowed = 'move';
         // Suppress the default favicon ghost with a pre-loaded transparent image
         e.dataTransfer.setDragImage(dragGhost, 0, 0);
@@ -44,7 +44,7 @@ function onDragStart(e: DragEvent, index: number) {
 
 function onDragOver(e: DragEvent, index: number) {
     e.preventDefault();
-    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+    if (e.dataTransfer !== null) e.dataTransfer.dropEffect = 'move';
     dragOverIndex.value = index;
 }
 

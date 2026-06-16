@@ -24,12 +24,12 @@ export function useConversationHistory(
 
     function toggleHistory() {
         showHistory.value = !showHistory.value;
-        if (showHistory.value) refreshConversationList();
+        if (showHistory.value) void refreshConversationList();
     }
 
     function openHistory() {
         showHistory.value = true;
-        refreshConversationList();
+        void refreshConversationList();
     }
 
     async function refreshConversationList() {
@@ -44,9 +44,9 @@ export function useConversationHistory(
     /** Create a new conversation record (internal, called before the first message). */
     async function createNewConversation() {
         try {
-            const modelName = status.value.currentModelName || 'unknown';
+            const modelName = status.value.currentModelName ?? 'unknown';
             const result = await window.electronAPI.conversationCreate(modelName);
-            if (result.success && result.conversation) {
+            if (result.success && result.conversation != null) {
                 currentConversationId.value = result.conversation.id;
             }
         } catch (error) {
@@ -72,10 +72,10 @@ export function useConversationHistory(
     }
 
     async function saveCurrentConversation() {
-        if (!currentConversationId.value) return;
+        if (currentConversationId.value === null || currentConversationId.value === '') return;
         try {
             const result = await window.electronAPI.conversationLoad(currentConversationId.value);
-            if (result.success && result.conversation) {
+            if (result.success && result.conversation != null) {
                 result.conversation.messages = messages.value
                     .filter((m) => m.role !== 'system')
                     .map((m) => ({
@@ -92,10 +92,10 @@ export function useConversationHistory(
     }
 
     async function saveTokenCountToConversation() {
-        if (!currentConversationId.value) return;
+        if (currentConversationId.value === null || currentConversationId.value === '') return;
         try {
             const result = await window.electronAPI.conversationLoad(currentConversationId.value);
-            if (result.success && result.conversation) {
+            if (result.success && result.conversation != null) {
                 result.conversation.tokenCount = conversationTokenCount.value;
                 await window.electronAPI.conversationSave(result.conversation);
             }
@@ -112,7 +112,7 @@ export function useConversationHistory(
         try {
             await saveCurrentConversation();
             const result = await window.electronAPI.conversationLoad(id);
-            if (result.success && result.conversation) {
+            if (result.success && result.conversation != null) {
                 if (status.value.isModelLoaded) {
                     await window.electronAPI.aiResetChat();
                 }
@@ -121,10 +121,10 @@ export function useConversationHistory(
                     role: m.role,
                     content: m.content,
                 }));
-                if (result.conversation.model) {
+                if (result.conversation.model !== null && result.conversation.model !== '') {
                     lastUsedModelName.value = result.conversation.model;
                 }
-                conversationTokenCount.value = result.conversation.tokenCount || 0;
+                conversationTokenCount.value = result.conversation.tokenCount ?? 0;
                 if (status.value.isModelLoaded && messages.value.length > 0) {
                     await window.electronAPI.aiRestoreChatHistory(
                         messages.value
@@ -154,11 +154,11 @@ export function useConversationHistory(
         }
     }
 
-    function startRename(conv: ConversationMeta) {
+    async function startRename(conv: ConversationMeta) {
         renamingConversationId.value = conv.id;
         renameValue.value = conv.title;
-        nextTick(() => {
-            if (renameInputRef.value && renameInputRef.value.length > 0) {
+        await nextTick(() => {
+            if (renameInputRef.value !== null && renameInputRef.value.length > 0) {
                 renameInputRef.value[0].focus();
                 renameInputRef.value[0].select();
             }
@@ -166,7 +166,7 @@ export function useConversationHistory(
     }
 
     async function confirmRename(id: string) {
-        if (!renameValue.value.trim()) {
+        if (renameValue.value.trim() === '') {
             cancelRename();
             return;
         }

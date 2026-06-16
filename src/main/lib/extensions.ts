@@ -3,9 +3,9 @@
  * Used by fs-service to decide which files to index.
  */
 
-export const TEXT_EXTENSIONS = ['.txt', '.md'];
+export const TEXT_EXTENSIONS: string[] = ['.txt', '.md'];
 
-export const CODE_EXTENSIONS = [
+export const CODE_EXTENSIONS: string[] = [
     '.py',
     '.js',
     '.jsx',
@@ -70,13 +70,13 @@ export const CODE_EXTENSIONS = [
     '.cjs',
 ];
 
-export const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico'];
-export const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
-export const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.flac', '.aac', '.m4a', '.ogg', '.wma', '.aiff'];
-export const PDF_EXTENSIONS = ['.pdf'];
-export const DRAWING_EXTENSIONS = ['.drawing'];
+export const IMAGE_EXTENSIONS: string[] = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico'];
+export const VIDEO_EXTENSIONS: string[] = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
+export const AUDIO_EXTENSIONS: string[] = ['.mp3', '.wav', '.flac', '.aac', '.m4a', '.ogg', '.wma', '.aiff'];
+export const PDF_EXTENSIONS: string[] = ['.pdf'];
+export const DRAWING_EXTENSIONS: string[] = ['.drawing'];
 
-export const ALLOWED_EXTENSIONS = new Set([
+export const ALLOWED_EXTENSIONS: Set<string> = new Set<string>([
     ...TEXT_EXTENSIONS,
     ...CODE_EXTENSIONS,
     ...IMAGE_EXTENSIONS,

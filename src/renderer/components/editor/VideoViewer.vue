@@ -39,7 +39,7 @@ onMounted(() => window.addEventListener('keydown', onKeydown));
 onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 
 function onKeydown(e: KeyboardEvent) {
-    if (e.key !== ' ' || !videoRef.value) return;
+    if (e.key !== ' ' || videoRef.value === null) return;
     const target = e.target as HTMLElement;
     if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
     e.preventDefault();
@@ -47,9 +47,8 @@ function onKeydown(e: KeyboardEvent) {
 }
 
 function seekVideoBySeconds(seconds: number): void {
-    if (videoRef.value) {
-        videoRef.value.currentTime = Math.max(0, videoRef.value.currentTime + seconds);
-    }
+    if (videoRef.value === null) return;
+    videoRef.value.currentTime = Math.max(0, videoRef.value.currentTime + seconds);
 }
 </script>
 

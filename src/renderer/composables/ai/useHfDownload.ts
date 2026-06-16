@@ -1,5 +1,5 @@
 /**
- * useHfDownload — searches Hugging Face for GGUF models and manages downloads via IPC.
+ * useHfDownload – searches Hugging Face for GGUF models and manages downloads via IPC.
  */
 
 import { ref, onMounted, onUnmounted } from 'vue';
@@ -21,25 +21,26 @@ export function useHfDownload(onModelsRefresh: () => Promise<void>) {
     const hfHasMore = ref(false);
     const hfIsLoadingMore = ref(false);
 
-    function handleHfProgress(progress: HfDownloadProgress) {
+    function handleHfProgress(progress: HfDownloadProgress): void {
         hfDownloadProgress.value = progress;
     }
 
-    function toggleHfPanel() {
+    function toggleHfPanel(): void {
         showHfPanel.value = !showHfPanel.value;
         if (showHfPanel.value && hfSearchResults.value.length === 0) {
-            searchHfModels();
+            void searchHfModels();
         }
     }
 
-    async function searchHfModels() {
+    async function searchHfModels(): Promise<void> {
         hfIsSearching.value = true;
         hfSelectedRepo.value = null;
         hfRepoFiles.value = [];
         hfHasMore.value = false;
         try {
             const result = await window.electronAPI.hfSearch(hfSearchQuery.value, hfSortBy.value, 0);
-            hfSearchResults.value = result.success && result.results ? result.results : [];
+            hfSearchResults.value =
+                result.success && result.results !== null && result.results !== undefined ? result.results : [];
             hfHasMore.value = result.hasMore ?? false;
         } catch (error) {
             window.electronAPI.log.error('Failed to search HF:', error);
@@ -49,13 +50,15 @@ export function useHfDownload(onModelsRefresh: () => Promise<void>) {
         }
     }
 
-    async function loadMoreResults() {
-        if (hfIsLoadingMore.value || !hfHasMore.value) return;
+    async function loadMoreResults(): Promise<void> {
+        if (hfIsLoadingMore.value || !hfHasMore.value) {
+            return;
+        }
         hfIsLoadingMore.value = true;
         try {
             const offset = hfSearchResults.value.length;
             const result = await window.electronAPI.hfSearch(hfSearchQuery.value, hfSortBy.value, offset);
-            if (result.success && result.results) {
+            if (result.success && result.results !== null && result.results !== undefined) {
                 hfSearchResults.value = [...hfSearchResults.value, ...result.results];
                 hfHasMore.value = result.hasMore ?? false;
             }
@@ -66,22 +69,24 @@ export function useHfDownload(onModelsRefresh: () => Promise<void>) {
         }
     }
 
-    function changeSortBy(sort: HfSortOption) {
-        if (hfSortBy.value === sort) return;
+    function changeSortBy(sort: HfSortOption): void {
+        if (hfSortBy.value === sort) {
+            return;
+        }
         hfSortBy.value = sort;
-        searchHfModels();
+        void searchHfModels();
     }
 
-    async function selectHfRepo(repoId: string) {
+    async function selectHfRepo(repoId: string): Promise<void> {
         hfSelectedRepo.value = repoId;
         hfIsLoadingFiles.value = true;
         hfRepoFiles.value = [];
         hfModelInfo.value = null;
         try {
             const result = await window.electronAPI.hfListFiles(repoId);
-            if (result.success && result.files) {
+            if (result.success && result.files !== null && result.files !== undefined) {
                 hfRepoFiles.value = result.files;
-                hfModelInfo.value = result.modelInfo || null;
+                hfModelInfo.value = result.modelInfo ?? null;
             }
         } catch (error) {
             window.electronAPI.log.error('Failed to list HF repo files:', error);
@@ -90,8 +95,10 @@ export function useHfDownload(onModelsRefresh: () => Promise<void>) {
         }
     }
 
-    async function downloadHfModel(file: HfRepoFile) {
-        if (hfActiveDownloads.value.has(file.name)) return;
+    async function downloadHfModel(file: HfRepoFile): Promise<void> {
+        if (hfActiveDownloads.value.has(file.name)) {
+            return;
+        }
         hfActiveDownloads.value.add(file.name);
         hfDownloadError.value = null;
         try {
@@ -99,7 +106,8 @@ export function useHfDownload(onModelsRefresh: () => Promise<void>) {
             if (result.success) {
                 await onModelsRefresh();
             } else {
-                hfDownloadError.value = result.error || 'Download failed.';
+                const errorMessage = result.error ?? 'Download failed.';
+                hfDownloadError.value = errorMessage;
                 window.electronAPI.log.error('Download failed:', result.error);
             }
         } catch (error) {
@@ -111,7 +119,7 @@ export function useHfDownload(onModelsRefresh: () => Promise<void>) {
         }
     }
 
-    async function cancelHfDownload(fileName: string) {
+    async function cancelHfDownload(fileName: string): Promise<void> {
         try {
             await window.electronAPI.hfCancelDownload(fileName);
             hfActiveDownloads.value.delete(fileName);
@@ -122,16 +130,20 @@ export function useHfDownload(onModelsRefresh: () => Promise<void>) {
     }
 
     function formatNumber(n: number): string {
-        if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
-        if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+        if (n >= 1000000) {
+            return `${(n / 1000000).toFixed(1)}M`;
+        }
+        if (n >= 1000) {
+            return `${(n / 1000).toFixed(1)}k`;
+        }
         return String(n);
     }
 
-    onMounted(() => {
+    onMounted((): void => {
         window.electronAPI.onHfDownloadProgress(handleHfProgress);
     });
 
-    onUnmounted(() => {
+    onUnmounted((): void => {
         window.electronAPI.removeHfDownloadProgressListener();
     });
 

@@ -2,12 +2,12 @@
  * File extension classification — pure constants for routing files to viewers.
  */
 
-export const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico'];
-export const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
-export const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.flac', '.aac', '.m4a', '.ogg', '.wma', '.aiff'];
-export const PDF_EXTENSIONS = ['.pdf'];
-export const DRAWING_EXTENSIONS = ['.drawing'];
-export const CODE_EXTENSIONS = [
+export const IMAGE_EXTENSIONS: string[] = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico'];
+export const VIDEO_EXTENSIONS: string[] = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
+export const AUDIO_EXTENSIONS: string[] = ['.mp3', '.wav', '.flac', '.aac', '.m4a', '.ogg', '.wma', '.aiff'];
+export const PDF_EXTENSIONS: string[] = ['.pdf'];
+export const DRAWING_EXTENSIONS: string[] = ['.drawing'];
+export const CODE_EXTENSIONS: string[] = [
     '.py',
     '.js',
     '.jsx',

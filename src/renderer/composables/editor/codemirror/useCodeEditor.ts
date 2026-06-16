@@ -89,7 +89,7 @@ export function useCodeEditor(
     function buildExtensions(langExtension?: Extension | null): Extension[] {
         return [
             // Language support (loaded asynchronously)
-            ...(langExtension ? [langExtension] : []),
+            ...(langExtension !== null && langExtension !== undefined ? [langExtension] : []),
             syntaxHighlighting(leafHighlightStyle),
             indentOnInput(),
             bracketMatching(),
@@ -111,7 +111,7 @@ export function useCodeEditor(
             keymap.of([...closeBracketsKeymap, ...defaultKeymap, ...searchKeymap, ...historyKeymap, indentWithTab]),
 
             // Sync changes back to Vue ref
-            EditorView.updateListener.of((update) => {
+            EditorView.updateListener.of((update): void => {
                 if (update.docChanged && !updatingFromExternal) {
                     content.value = update.state.doc.toString();
                     onContentChange();
@@ -125,7 +125,7 @@ export function useCodeEditor(
         ];
     }
 
-    async function createEditor(container: HTMLElement) {
+    async function createEditor(container: HTMLElement): Promise<void> {
         const langExt = await languageForExtension(fileExtension.value);
 
         const state = EditorState.create({
@@ -141,12 +141,12 @@ export function useCodeEditor(
 
     watch(
         containerRef,
-        async (container) => {
-            if (view.value) {
+        async (container): Promise<void> => {
+            if (view.value !== null) {
                 view.value.destroy();
                 view.value = null;
             }
-            if (!container) return;
+            if (container === null) return;
 
             await nextTick();
             await createEditor(container);
@@ -154,16 +154,18 @@ export function useCodeEditor(
         { flush: 'post' },
     );
 
-    onUnmounted(() => {
-        view.value?.destroy();
+    onUnmounted((): void => {
+        if (view.value !== null) {
+            view.value.destroy();
+        }
         view.value = null;
     });
 
     // When a different file is loaded, recreate the editor with the new language
-    if (fileId) {
-        watch(fileId, async () => {
+    if (fileId !== undefined) {
+        watch(fileId, async (): Promise<void> => {
             const v = view.value;
-            if (!v) return;
+            if (v === null) return;
 
             const langExt = await languageForExtension(fileExtension.value);
 
@@ -179,9 +181,9 @@ export function useCodeEditor(
     }
 
     // Push external content changes into the editor
-    watch(content, (newVal) => {
+    watch(content, (newVal): void => {
         const v = view.value;
-        if (!v) return;
+        if (v === null) return;
 
         const current = v.state.doc.toString();
         if (current === newVal) return;
@@ -201,13 +203,13 @@ export function useCodeEditor(
  */
 async function languageForExtension(ext: string): Promise<Extension | null> {
     const langName = EXT_TO_LANG[ext.toLowerCase()];
-    if (!langName) return null;
+    if (langName === null || langName === undefined || langName.length === 0) return null;
 
     const desc =
-        languages.find((l) => l.name.toLowerCase() === langName.toLowerCase()) ??
-        languages.find((l) => l.alias.some((a) => a.toLowerCase() === langName.toLowerCase()));
+        languages.find((l): boolean => l.name.toLowerCase() === langName.toLowerCase()) ??
+        languages.find((l): boolean => l.alias.some((a): boolean => a.toLowerCase() === langName.toLowerCase()));
 
-    if (!desc) return null;
+    if (desc === null || desc === undefined) return null;
 
     const support = await desc.load();
     return support;

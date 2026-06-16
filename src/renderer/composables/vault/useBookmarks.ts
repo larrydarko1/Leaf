@@ -10,7 +10,7 @@ export function useBookmarks(_getCurrentFolder: () => string | null) {
     async function load() {
         try {
             const result = await window.electronAPI.bookmarksLoad();
-            bookmarkedFiles.value = result.success && result.bookmarks ? result.bookmarks : [];
+            bookmarkedFiles.value = result.success === true && result.bookmarks !== undefined ? result.bookmarks : [];
         } catch {
             bookmarkedFiles.value = [];
         }
@@ -24,21 +24,21 @@ export function useBookmarks(_getCurrentFolder: () => string | null) {
         }
     }
 
-    function toggle(filePath: string) {
+    function toggle(filePath: string): void {
         const index = bookmarkedFiles.value.indexOf(filePath);
         if (index >= 0) {
             bookmarkedFiles.value.splice(index, 1);
         } else {
             bookmarkedFiles.value.push(filePath);
         }
-        save();
+        void save();
     }
 
-    function remove(filePath: string) {
+    function remove(filePath: string): void {
         const index = bookmarkedFiles.value.indexOf(filePath);
         if (index >= 0) {
             bookmarkedFiles.value.splice(index, 1);
-            save();
+            void save();
         }
     }
 

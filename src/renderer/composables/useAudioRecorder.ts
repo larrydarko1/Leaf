@@ -53,7 +53,7 @@ export function useAudioRecorder(getCurrentFolder: () => string | null, onSaved:
         stream?.getTracks().forEach((t) => t.stop());
         stream = null;
 
-        if (durationInterval) {
+        if (durationInterval !== null) {
             clearInterval(durationInterval);
             durationInterval = null;
         }
@@ -70,7 +70,7 @@ export function useAudioRecorder(getCurrentFolder: () => string | null, onSaved:
 
     async function save() {
         const folder = getCurrentFolder();
-        if (!folder || audioChunks.length === 0) return;
+        if (folder === null || audioChunks.length === 0) return;
 
         try {
             const webmBlob = new Blob(audioChunks, { type: 'audio/webm' });
@@ -80,7 +80,7 @@ export function useAudioRecorder(getCurrentFolder: () => string | null, onSaved:
             const fileName = `recording-${timestamp}.wav`;
 
             const result = await window.electronAPI.saveAudioRecording(folder, fileName, base64);
-            if (result.success && result.path) onSaved(result.path);
+            if (result.success && typeof result.path === 'string' && result.path !== '') onSaved(result.path);
         } catch (error) {
             window.electronAPI.log.error('[useAudioRecorder] Failed to save recording:', error);
         }

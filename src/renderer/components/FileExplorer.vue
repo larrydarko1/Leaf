@@ -58,7 +58,7 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
         ];
     } else {
         // Check if file is bookmarked
-        const isBookmarked = props.bookmarkedFiles?.includes(contextMenu.value.targetPath) || false;
+        const isBookmarked = props.bookmarkedFiles?.includes(contextMenu.value.targetPath) ?? false;
         return [
             { label: isBookmarked ? 'Remove from Bookmarks' : 'Add to Bookmarks', action: 'bookmark' },
             { label: 'Rename', action: 'rename', shortcut: 'F2' },
@@ -71,7 +71,7 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
 watch(
     () => props.renamingFile,
     (newRenamingFile) => {
-        if (newRenamingFile) {
+        if (newRenamingFile !== null) {
             renameValue.value = getFileNameWithoutExtension(newRenamingFile.name);
         }
     },
@@ -81,8 +81,8 @@ watch(
 watch(
     () => props.renamingFolder,
     (newRenamingFolder) => {
-        if (newRenamingFolder) {
-            renameValue.value = newRenamingFolder.split('/').pop() || newRenamingFolder;
+        if (newRenamingFolder !== null && newRenamingFolder !== '') {
+            renameValue.value = newRenamingFolder.split('/').pop() ?? newRenamingFolder;
         }
     },
 );
@@ -99,7 +99,7 @@ onUnmounted(() => {
 // Keyboard navigation handler
 function handleKeyDown(e: KeyboardEvent) {
     // Don't navigate if we're renaming
-    if (props.renamingFile || props.renamingFolder) return;
+    if (props.renamingFile !== null || (props.renamingFolder !== null && props.renamingFolder !== '')) return;
 
     // Don't intercept arrow keys when focus is inside an editable element (e.g. the note editor)
     const target = e.target as HTMLElement;
@@ -114,7 +114,7 @@ function handleKeyDown(e: KeyboardEvent) {
 
     // Handle left/right for folder expand/collapse
     if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
-        if (props.selectedFolder) {
+        if (props.selectedFolder !== null && props.selectedFolder !== '') {
             const isExpanded = expandedFolders.value.has(props.selectedFolder);
             if (e.key === 'ArrowRight' && !isExpanded) {
                 // Expand folder
@@ -135,11 +135,11 @@ function handleKeyDown(e: KeyboardEvent) {
     // Find current index — check selectedFolder first because editorTabs.activeFile
     // remains set even after folder selection, so activeFile alone can't be trusted.
     let currentIndex = -1;
-    if (props.selectedFolder) {
+    if (props.selectedFolder !== null && props.selectedFolder !== '') {
         const idx = items.findIndex((item) => item.type === 'folder' && item.folderPath === props.selectedFolder);
         if (idx !== -1) currentIndex = idx;
     }
-    if (currentIndex === -1 && props.activeFile) {
+    if (currentIndex === -1 && props.activeFile !== null) {
         currentIndex = items.findIndex((item) => item.type === 'file' && item.file?.path === props.activeFile?.path);
     }
 
@@ -153,21 +153,26 @@ function handleKeyDown(e: KeyboardEvent) {
 
     // Select the new item
     const newItem = items[newIndex];
-    if (newItem.type === 'file' && newItem.file) {
+    if (newItem.type === 'file' && newItem.file !== null && newItem.file !== undefined) {
         emit('selectFile', newItem.file);
-    } else if (newItem.type === 'folder' && newItem.folderPath) {
+    } else if (
+        newItem.type === 'folder' &&
+        newItem.folderPath !== null &&
+        newItem.folderPath !== undefined &&
+        newItem.folderPath !== ''
+    ) {
         emit('selectFolder', newItem.folderPath);
     }
 }
 
 function selectFile(file: FileInfo, event?: MouseEvent) {
-    if (!props.renamingFile && !props.renamingFolder) {
+    if (props.renamingFile === null && (props.renamingFolder === null || props.renamingFolder === '')) {
         emit('selectFile', file, event, visibleFiles.value);
     }
 }
 
 function selectFolder(folderPath: string) {
-    if (!props.renamingFile && !props.renamingFolder) {
+    if (props.renamingFile === null && (props.renamingFolder === null || props.renamingFolder === '')) {
         emit('selectFolder', folderPath);
     }
 }
@@ -197,7 +202,7 @@ function handleContextMenuAction(action: string) {
             emit('startRenameFolder', targetPath);
         } else if (type === 'file') {
             const file = props.files.find((f) => f.path === targetPath);
-            if (file) {
+            if (file !== undefined) {
                 emit('startRenameFile', file);
             }
         }
@@ -206,7 +211,7 @@ function handleContextMenuAction(action: string) {
             emit('deleteFolder', targetPath);
         } else if (type === 'file') {
             const file = props.files.find((f) => f.path === targetPath);
-            if (file) {
+            if (file !== undefined) {
                 emit('deleteFile', file);
             }
         }
@@ -216,15 +221,15 @@ function handleContextMenuAction(action: string) {
 }
 
 function confirmRename() {
-    if (props.renamingFile && renameValue.value.trim() !== '') {
+    if (props.renamingFile !== null && renameValue.value.trim() !== '') {
         const currentName = getFileNameWithoutExtension(props.renamingFile.name);
         if (renameValue.value.trim() !== currentName) {
             emit('renameFile', props.renamingFile, renameValue.value.trim());
         } else {
             emit('cancelRename');
         }
-    } else if (props.renamingFolder && renameValue.value.trim() !== '') {
-        const currentName = props.renamingFolder.split('/').pop() || props.renamingFolder;
+    } else if (props.renamingFolder !== null && props.renamingFolder !== '' && renameValue.value.trim() !== '') {
+        const currentName = props.renamingFolder.split('/').pop() ?? props.renamingFolder;
         if (renameValue.value.trim() !== currentName) {
             emit('renameFolder', props.renamingFolder, renameValue.value.trim());
         } else {
@@ -250,7 +255,7 @@ function handleMoveFolder(folderPath: string, targetFolderPath: string) {
 function handleRootDragOver(event: DragEvent) {
     event.preventDefault();
     isDragOverRoot.value = true;
-    if (event.dataTransfer) {
+    if (event.dataTransfer !== null) {
         event.dataTransfer.dropEffect = 'move';
     }
 }
@@ -269,7 +274,7 @@ function handleRootDrop(event: DragEvent) {
     isDragOverRoot.value = false;
 
     const data = event.dataTransfer?.getData('text/plain');
-    if (data) {
+    if (data !== undefined && data !== '') {
         if (data.startsWith('file:')) {
             const filePath = data.substring(5);
             emit('moveFile', filePath, '.');

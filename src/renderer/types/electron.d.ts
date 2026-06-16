@@ -173,12 +173,12 @@ export type ElectronAPI = {
     aiChat: (userMessage: string, noteContext?: string | null) => Promise<AiChatResult>;
     aiStopChat: () => Promise<AiSimpleResult>;
     aiResetChat: () => Promise<AiSimpleResult>;
-    aiRestoreChatHistory: (messages: Array<{ role: string; content: string }>) => Promise<AiSimpleResult>;
+    aiRestoreChatHistory: (messages: { role: string; content: string }[]) => Promise<AiSimpleResult>;
     aiGetStatus: () => Promise<AiStatus>;
     aiOpenLeafDir: () => Promise<AiSimpleResult>;
     systemPromptList: () => Promise<{
         success: boolean;
-        prompts: Array<{ id: string; name: string; description: string; path: string }>;
+        prompts: { id: string; name: string; description: string; path: string }[];
         activeId: string;
         promptsDir: string;
         error?: string;
@@ -189,13 +189,13 @@ export type ElectronAPI = {
     // Theme presets (~/.leaf/themes/*.json)
     themeList: () => Promise<{
         success: boolean;
-        themes: Array<{
+        themes: {
             id: string;
             name: string;
             description: string;
             colors: Record<string, string>;
             path: string;
-        }>;
+        }[];
         activeId: string;
         themesDir: string;
         error?: string;

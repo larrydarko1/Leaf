@@ -17,7 +17,7 @@ export function useFileSelection() {
         const fileList = visibleFiles ?? [];
         const fileIndex = fileList.findIndex((f) => f.path === file.path);
 
-        if (event?.metaKey || event?.ctrlKey) {
+        if ((event?.metaKey ?? false) || (event?.ctrlKey ?? false)) {
             const index = selectedFiles.value.findIndex((f) => f.path === file.path);
             if (index >= 0) {
                 selectedFiles.value.splice(index, 1);
@@ -29,7 +29,7 @@ export function useFileSelection() {
                 activeFile.value = file;
             }
             lastSelectedIndex.value = fileIndex;
-        } else if (event?.shiftKey && lastSelectedIndex.value >= 0 && fileList.length > 0) {
+        } else if ((event?.shiftKey ?? false) && lastSelectedIndex.value >= 0 && fileList.length > 0) {
             const start = Math.min(lastSelectedIndex.value, fileIndex);
             const end = Math.max(lastSelectedIndex.value, fileIndex);
             selectedFiles.value = fileList.slice(start, end + 1);
@@ -40,7 +40,7 @@ export function useFileSelection() {
             lastSelectedIndex.value = fileIndex;
         }
 
-        if (activeFile.value) {
+        if (activeFile.value !== null) {
             localStorage.setItem('leaf-last-selected-file', activeFile.value.path);
         }
     }
@@ -76,8 +76,9 @@ export function useFileSelection() {
         const stillExist = availableFiles.filter((f) => previousPaths.includes(f.path));
         if (stillExist.length > 0) {
             selectedFiles.value = stillExist;
-            if (previousActivePath) {
-                activeFile.value = stillExist.find((f) => f.path === previousActivePath) ?? stillExist[0];
+            if (previousActivePath !== undefined) {
+                const found = stillExist.find((f) => f.path === previousActivePath);
+                activeFile.value = found !== undefined ? found : stillExist[0];
             } else {
                 activeFile.value = stillExist[0];
             }
@@ -93,9 +94,9 @@ export function useFileSelection() {
      */
     function restoreFromStorage(availableFiles: FileInfo[]) {
         const lastPath = localStorage.getItem('leaf-last-selected-file');
-        if (lastPath) {
+        if (lastPath !== null) {
             const lastFile = availableFiles.find((f) => f.path === lastPath);
-            if (lastFile) {
+            if (lastFile !== undefined) {
                 selectedFiles.value = [lastFile];
                 activeFile.value = lastFile;
                 return;

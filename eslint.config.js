@@ -13,6 +13,9 @@ export default [
 
     // ── TypeScript rules ─────────────────────────────────────────────────────
     ...ts.configs.recommended,
+    ...ts.configs.recommendedTypeChecked,
+    ...ts.configs.strict,
+    ...ts.configs.stylistic,
 
     // ── Vue rules ────────────────────────────────────────────────────────────
     ...vue.configs['flat/recommended'],
@@ -21,7 +24,12 @@ export default [
     {
         files: ['**/*.vue'],
         languageOptions: {
-            parserOptions: { parser: ts.parser },
+            parserOptions: { 
+                parser: ts.parser,
+                projectService: true,
+                tsconfigRootDir: import.meta.dirname,
+                extraFileExtensions: ['.vue'],
+            },
         },
     },
 
@@ -35,13 +43,44 @@ export default [
 
    // ── Project-wide overrides ───────────────────────────────────────────────
     {
+        files: ['**/*.{ts,tsx,vue}'],
+        languageOptions: {
+            parserOptions: {
+                projectService: true,
+                tsconfigRootDir: import.meta.dirname,
+            },
+        },
         rules: {
+            // ── Strict TypeScript type checking ──────────────────────────────
+            '@typescript-eslint/no-explicit-any': 'error',
+            '@typescript-eslint/no-unsafe-assignment': 'error',
+            '@typescript-eslint/no-unsafe-member-access': 'error',
+            '@typescript-eslint/no-unsafe-call': 'error',
+            '@typescript-eslint/no-unsafe-return': 'error',
+            '@typescript-eslint/no-unsafe-argument': 'error',
+            '@typescript-eslint/no-floating-promises': 'error',
+            '@typescript-eslint/await-thenable': 'error',
+            '@typescript-eslint/no-misused-promises': 'error',
+            '@typescript-eslint/strict-boolean-expressions': ['error', {
+                allowString: false,
+                allowNumber: false,
+                allowNullableObject: false,
+            }],
+
+            // ── Existing rules ───────────────────────────────────────────────
             // Only allow types, not interfaces
             '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
-            '@typescript-eslint/no-empty-interface': 'error',
+            '@typescript-eslint/no-empty-object-type': 'error',
             
-            // Allow unused vars when prefixed with _ (common pattern for ignored params)
-            '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+            // never allow console logs in production code — use a proper logger instead
+            "no-console": "error",
+
+            // Allow unused vars when prefixed with _
+            '@typescript-eslint/no-unused-vars': ['error', { 
+                argsIgnorePattern: '^_', 
+                varsIgnorePattern: '^_',
+                caughtErrorsIgnorePattern: '^_',
+            }],
 
             // naming convention
             '@typescript-eslint/naming-convention': [
@@ -50,7 +89,7 @@ export default [
                 {
                     selector: 'default',
                     format: ['camelCase'],
-                    leadingUnderscore: 'allow', // allow _id (MongoDB), _unused etc.
+                    leadingUnderscore: 'allow',
                     trailingUnderscore: 'forbid',
                 },
                 // Variables: camelCase or UPPER_CASE constants; PascalCase for Vue component refs
@@ -60,12 +99,12 @@ export default [
                     leadingUnderscore: 'allow',
                     trailingUnderscore: 'forbid',
                 },
-                // Import bindings: PascalCase for Vue SFCs and class constructors (Redis, Hls, etc.)
+                // Import bindings: PascalCase for Vue SFCs and class constructors
                 {
                     selector: 'import',
                     format: ['camelCase', 'PascalCase'],
                 },
-                // Functions: camelCase; PascalCase allowed for Vue SFCs defined as functions
+                // Functions: camelCase; PascalCase allowed for Vue SFCs
                 {
                     selector: 'function',
                     format: ['camelCase', 'PascalCase'],
@@ -77,28 +116,27 @@ export default [
                     leadingUnderscore: 'allow',
                     trailingUnderscore: 'forbid',
                 },
-                // Class / type properties: camelCase; UPPER_CASE for static readonly constants
+                // Class / type properties: camelCase; UPPER_CASE for static readonly
                 {
                     selector: 'property',
                     format: ['camelCase', 'UPPER_CASE'],
                     leadingUnderscore: 'allow',
                     trailingUnderscore: 'forbid',
                 },
-                // Escape hatch for class/type quoted properties ('Content-Type', '__v', etc.)
+                // Escape hatch for class/type quoted properties
                 {
                     selector: 'property',
                     modifiers: ['requiresQuotes'],
                     format: null,
                 },
-                // Object literal properties: PascalCase for AWS SDK / vi.mock keys; snake_case for
-                // DB field names and wire-format identifiers (notification types, action names, etc.)
+                // Object literal properties
                 {
                     selector: 'objectLiteralProperty',
                     format: ['camelCase', 'UPPER_CASE', 'PascalCase', 'snake_case'],
                     leadingUnderscore: 'allow',
                     trailingUnderscore: 'forbid',
                 },
-                // Escape hatch for object literals with keys that require quotes
+                // Escape hatch for object literals with quoted keys
                 {
                     selector: 'objectLiteralProperty',
                     modifiers: ['requiresQuotes'],
@@ -109,12 +147,12 @@ export default [
                     selector: 'typeLike',
                     format: ['PascalCase'],
                 },
-                // Enum members: UPPER_CASE — Status.ACTIVE not Status.Active
+                // Enum members: UPPER_CASE
                 {
                     selector: 'enumMember',
                     format: ['UPPER_CASE'],
                 },
-                // Generic type parameters: T-prefixed PascalCase — TKey, TValue, TResult
+                // Generic type parameters: T-prefixed PascalCase
                 {
                     selector: 'typeParameter',
                     format: ['PascalCase'],
@@ -122,10 +160,7 @@ export default [
                 },
             ],
 
-            // We use explicit `any` sparingly at external boundaries
-            '@typescript-eslint/no-explicit-any': 'warn',
-
-            // Vue component naming — single-word names are ok for App.vue
+            // Vue component naming
             'vue/multi-word-component-names': 'off',
 
             // v-html is used intentionally for rendered content

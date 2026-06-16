@@ -26,11 +26,11 @@ export function useNotePersistence(
     let embedResolveTimeout: number | null = null;
 
     async function loadFile(file: FileInfo) {
-        if (autoSaveTimeout) {
+        if (autoSaveTimeout !== null) {
             clearTimeout(autoSaveTimeout);
             autoSaveTimeout = null;
         }
-        if (embedResolveTimeout) {
+        if (embedResolveTimeout !== null) {
             clearTimeout(embedResolveTimeout);
             embedResolveTimeout = null;
         }
@@ -55,11 +55,11 @@ export function useNotePersistence(
         hasUnsavedChanges.value = content.value !== originalContent.value;
         onContentChanged(hasUnsavedChanges.value);
 
-        if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+        if (autoSaveTimeout !== null) clearTimeout(autoSaveTimeout);
 
         // Debounce embed resolution — avoid IPC storms on every keystroke
         if (isMarkdownFile() && content.value.includes('![[')) {
-            if (embedResolveTimeout) clearTimeout(embedResolveTimeout);
+            if (embedResolveTimeout !== null) clearTimeout(embedResolveTimeout);
             embedResolveTimeout = window.setTimeout(() => {
                 resolveEmbeds(content.value);
             }, 500);
@@ -67,14 +67,14 @@ export function useNotePersistence(
 
         if (hasUnsavedChanges.value) {
             autoSaveTimeout = window.setTimeout(() => {
-                saveFile();
+                void saveFile();
             }, 3000);
         }
     }
 
     async function saveFile() {
         const file = getFile();
-        if (!file || !hasUnsavedChanges.value || isSaving.value) return;
+        if (file === null || !hasUnsavedChanges.value || isSaving.value) return;
 
         isSaving.value = true;
         try {
@@ -99,7 +99,7 @@ export function useNotePersistence(
 
     async function handleDrawingSave(drawingContent: string) {
         const file = getFile();
-        if (!file) return;
+        if (file === null) return;
         try {
             const result = await window.electronAPI.writeFile(file.path, drawingContent);
             if (result.success) {
@@ -117,11 +117,11 @@ export function useNotePersistence(
     }
 
     function clearAutoSaveTimeout() {
-        if (autoSaveTimeout) {
+        if (autoSaveTimeout !== null) {
             clearTimeout(autoSaveTimeout);
             autoSaveTimeout = null;
         }
-        if (embedResolveTimeout) {
+        if (embedResolveTimeout !== null) {
             clearTimeout(embedResolveTimeout);
             embedResolveTimeout = null;
         }

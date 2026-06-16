@@ -34,7 +34,7 @@ export function useTheme() {
                 themes.value = result.themes;
                 activeId.value = result.activeId;
                 const active = result.themes.find((t) => t.id === result.activeId) ?? result.themes[0];
-                if (active) applyTheme(active);
+                if (active !== undefined) applyTheme(active);
             }
         } catch (err) {
             window.electronAPI.log.error('Failed to list themes:', err);
@@ -45,7 +45,7 @@ export function useTheme() {
 
     async function setActive(id: string): Promise<boolean> {
         const theme = themes.value.find((t) => t.id === id);
-        if (!theme) return false;
+        if (theme === undefined) return false;
         try {
             const result = await window.electronAPI.themeSetActive(id);
             if (result.success) {

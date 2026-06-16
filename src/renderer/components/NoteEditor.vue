@@ -77,8 +77,10 @@ const {
     clearAutoSaveTimeout,
 } = useNotePersistence(
     () => props.file,
-    () => !!props.file && checkMarkdown(props.file.extension),
-    resolveEmbeds,
+    () => props.file !== null && checkMarkdown(props.file.extension),
+    (s) => {
+        void resolveEmbeds(s);
+    },
     (c) => emit('save', c),
     (v) => emit('contentChanged', v),
 );
@@ -87,17 +89,17 @@ const {
 const { isDictating, isDictationLoading, toggleDictation, stopDictation } = useDictation(content, onContentChange);
 
 // Check if current file is an image
-const isImageFile = computed(() => !!props.file && checkImage(props.file.extension));
-const isVideoFile = computed(() => !!props.file && checkVideo(props.file.extension));
-const isAudioFile = computed(() => !!props.file && checkAudio(props.file.extension));
-const isPdfFile = computed(() => !!props.file && checkPdf(props.file.extension));
-const isCodeFile = computed(() => !!props.file && checkCode(props.file.extension));
-const isMarkdownFile = computed(() => !!props.file && checkMarkdown(props.file.extension));
-const isDrawingFile = computed(() => !!props.file && checkDrawing(props.file.extension));
+const isImageFile = computed(() => props.file !== null && checkImage(props.file.extension));
+const isVideoFile = computed(() => props.file !== null && checkVideo(props.file.extension));
+const isAudioFile = computed(() => props.file !== null && checkAudio(props.file.extension));
+const isPdfFile = computed(() => props.file !== null && checkPdf(props.file.extension));
+const isCodeFile = computed(() => props.file !== null && checkCode(props.file.extension));
+const isMarkdownFile = computed(() => props.file !== null && checkMarkdown(props.file.extension));
+const isDrawingFile = computed(() => props.file !== null && checkDrawing(props.file.extension));
 
 // Check if current file supports dictation (txt or md only)
 const isDictatable = computed(() => {
-    if (!props.file) return false;
+    if (props.file === null) return false;
     const ext = props.file.extension.toLowerCase();
     return ext === '.txt' || ext === '.md';
 });
@@ -118,7 +120,7 @@ const cmExtensions = [
         {
             key: 'Mod-s',
             run: () => {
-                saveFile();
+                void saveFile();
                 return true;
             },
         },
@@ -128,9 +130,9 @@ const cmExtensions = [
     EditorView.domEventHandlers({
         drop(event) {
             const dt = event.dataTransfer;
-            if (!dt) return false;
+            if (dt === null) return false;
             const plain = dt.getData('text/plain');
-            if ((plain && plain.startsWith('file:')) || dt.types.includes('Files')) {
+            if ((plain !== '' && plain.startsWith('file:')) || dt.types.includes('Files')) {
                 return true; // mark handled — CM6 won't insert raw text
             }
             return false;
@@ -162,14 +164,14 @@ watch(
 );
 
 // ── Code file editor (syntax-highlighted, non-markdown) ──────────────
-const codeFileExtension = computed(() => props.file?.extension ?? '');
+const codeFileExtension = computed(() => (props.file !== null ? props.file.extension : ''));
 useCodeEditor(codeContainerRef, content, onContentChange, codeFileExtension, cmFileId);
 
 // When embed cache updates (async resolution), poke CodeMirror so the
 // widget plugin re-evaluates and renders the newly resolved embeds.
 watch(embedCacheVersion, () => {
     const v = cmViewRef.value;
-    if (!v) return;
+    if (v === null) return;
     // Dispatch a no-op transaction to trigger plugin update() calls
     v.dispatch({});
 });
@@ -183,7 +185,7 @@ watch(
     async (newFile) => {
         // If the file path hasn't changed, skip the full reload.
         // This prevents autosave-triggered FS watcher refreshes from overwriting content.
-        if (newFile && newFile.path === lastLoadedPath.value) {
+        if (newFile !== null && lastLoadedPath.value !== null && newFile.path === lastLoadedPath.value) {
             // If we just saved, clear the flag and skip entirely
             if (justSaved.value) {
                 justSaved.value = false;
@@ -202,15 +204,20 @@ watch(
         }
 
         // Different file — do a full load with state reset
-        lastLoadedPath.value = newFile?.path || null;
+        lastLoadedPath.value = newFile !== null ? newFile.path : null;
 
         // Clear embed cache when switching files
         clearEmbedCache();
 
-        if (newFile) {
+        if (newFile !== null) {
             const ext = newFile.extension.toLowerCase();
 
-            if (checkImage(ext) || checkVideo(ext) || checkAudio(ext) || checkPdf(ext)) {
+            if (
+                checkImage(ext) === true ||
+                checkVideo(ext) === true ||
+                checkAudio(ext) === true ||
+                checkPdf(ext) === true
+            ) {
                 // Media file: clear text state (sub-components handle their own loading)
                 content.value = '';
                 originalContent.value = '';
@@ -242,34 +249,34 @@ const { isDragOverEditor, onEditorDragEnter, onEditorDragOver, onEditorDragLeave
 );
 
 onMounted(() => {
-    document.addEventListener('drop', preventGlobalDrop, true);
-    document.addEventListener('dragover', preventGlobalDragOver, true);
+    document.addEventListener('drop', preventGlobalDrop as EventListener, true);
+    document.addEventListener('dragover', preventGlobalDragOver as EventListener, true);
 });
 
 // Cleanup
 onUnmounted(() => {
     clearAutoSaveTimeout();
-    if (isDictating.value) {
+    if (isDictating.value === true) {
         stopDictation();
     }
     window.electronAPI.removeSpeechStatusListener();
-    document.removeEventListener('drop', preventGlobalDrop, true);
-    document.removeEventListener('dragover', preventGlobalDragOver, true);
-    window.removeEventListener('keydown', handleKeyboard);
+    document.removeEventListener('drop', preventGlobalDrop as EventListener, true);
+    document.removeEventListener('dragover', preventGlobalDragOver as EventListener, true);
+    window.removeEventListener('keydown', handleKeyboard as EventListener);
 });
 
 /** Reload the current file's content from disk */
 async function reloadContent() {
-    if (props.file) {
+    if (props.file !== null) {
         await loadFile(props.file);
     }
 }
 
 // Keyboard shortcuts
 function handleKeyboard(e: KeyboardEvent) {
-    if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+    if ((e.metaKey === true || e.ctrlKey === true) && e.key === 's') {
         e.preventDefault();
-        saveFile();
+        void saveFile();
     }
 }
 
@@ -283,7 +290,7 @@ function preventGlobalDragOver(event: DragEvent) {
 
 // Add keyboard listener
 if (typeof window !== 'undefined') {
-    window.addEventListener('keydown', handleKeyboard);
+    window.addEventListener('keydown', handleKeyboard as EventListener);
 }
 </script>
 

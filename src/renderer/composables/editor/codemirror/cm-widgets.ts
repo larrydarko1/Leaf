@@ -103,7 +103,7 @@ export class TableWidget extends WidgetType {
         const headerRow = document.createElement('tr');
         headerCells.forEach((cell, i) => {
             const th = document.createElement('th');
-            if (aligns[i]) th.style.textAlign = aligns[i];
+            if (aligns[i] !== '') th.style.textAlign = aligns[i];
             th.innerHTML = this.renderInline(cell);
             headerRow.appendChild(th);
         });
@@ -118,7 +118,7 @@ export class TableWidget extends WidgetType {
                 const tr = document.createElement('tr');
                 cells.forEach((cell, i) => {
                     const td = document.createElement('td');
-                    if (aligns[i]) td.style.textAlign = aligns[i];
+                    if (aligns[i] !== '') td.style.textAlign = aligns[i];
                     td.innerHTML = this.renderInline(cell);
                     tr.appendChild(td);
                 });
@@ -156,7 +156,7 @@ export class EmbedWidget extends WidgetType {
     }
 
     toDOM(): HTMLElement {
-        if (!this.resolvedPath) {
+        if (this.resolvedPath == null || this.resolvedPath === '') {
             const placeholder = document.createElement('div');
             placeholder.className = 'cm-embed-placeholder';
             placeholder.innerHTML = `<span class="embed-placeholder-icon">\u{1F4CE}</span> <span>${this.escapeHtml(this.fileName)}</span>`;
@@ -174,11 +174,11 @@ export class EmbedWidget extends WidgetType {
                 img.alt = this.fileName;
                 img.className = 'cm-embed-image';
                 img.loading = 'lazy';
-                if (this.displayOptions) {
+                if (this.displayOptions !== '') {
                     const dimMatch = this.displayOptions.match(/^(\d+)(?:x(\d+))?$/);
-                    if (dimMatch) {
+                    if (dimMatch !== null) {
                         img.width = parseInt(dimMatch[1]);
-                        if (dimMatch[2]) img.height = parseInt(dimMatch[2]);
+                        if (dimMatch[2] !== undefined) img.height = parseInt(dimMatch[2]);
                     }
                 }
                 wrapper.appendChild(img);
@@ -270,7 +270,7 @@ export class EmbedWidget extends WidgetType {
 
                 media.addEventListener('loadedmetadata', () => {
                     captureDuration();
-                    if (!realDuration) {
+                    if (realDuration === 0) {
                         probing = true;
                         media.currentTime = 1e10;
                     }
@@ -289,7 +289,7 @@ export class EmbedWidget extends WidgetType {
                 media.addEventListener('timeupdate', () => {
                     if (probing) return;
                     timeEl.textContent = fmt(media.currentTime);
-                    if (realDuration > 0) {
+                    if (realDuration !== 0) {
                         progressFill.style.width = `${(media.currentTime / realDuration) * 100}%`;
                     }
                 });
@@ -306,20 +306,20 @@ export class EmbedWidget extends WidgetType {
 
                 playBtn.onclick = (e) => {
                     e.stopPropagation();
-                    if (media.paused) media.play();
-                    else media.pause();
+                    if (media.paused) void media.play();
+                    else void media.pause();
                 };
                 if (isVideo)
                     (media as HTMLVideoElement).onclick = () => {
-                        if (media.paused) media.play();
-                        else media.pause();
+                        if (media.paused) void media.play();
+                        else void media.pause();
                     };
 
                 // Seek handler — uses realDuration from closure (set by probe)
                 progressWrap.onclick = (e) => {
                     e.stopPropagation();
-                    const dur = realDuration || (isFinite(media.duration) ? media.duration : 0);
-                    if (!dur) return;
+                    const dur = realDuration !== 0 ? realDuration : isFinite(media.duration) ? media.duration : 0;
+                    if (dur === 0) return;
                     const rect = progressTrack.getBoundingClientRect();
                     const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
                     media.currentTime = ratio * dur;

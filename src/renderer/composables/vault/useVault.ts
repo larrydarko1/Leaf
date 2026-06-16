@@ -24,7 +24,7 @@ export function useVault() {
         try {
             window.electronAPI.removeFsChangedListener();
             window.electronAPI.onFsChanged(() => {
-                if (debounceTimer) clearTimeout(debounceTimer);
+                if (debounceTimer != null) clearTimeout(debounceTimer);
                 debounceTimer = setTimeout(() => {
                     onExternalChange?.();
                 }, 500);
@@ -35,19 +35,19 @@ export function useVault() {
         }
     }
 
-    function stopFolderWatcher() {
-        if (debounceTimer) {
+    async function stopFolderWatcher() {
+        if (debounceTimer != null) {
             clearTimeout(debounceTimer);
             debounceTimer = null;
         }
         window.electronAPI.removeFsChangedListener();
-        window.electronAPI.unwatchFolder();
+        await window.electronAPI.unwatchFolder();
     }
 
     // --- Core folder operations ---
     async function scanFolder(folderPath: string): Promise<{ files: FileInfo[]; folders: FolderInfo[] } | null> {
         const result = await window.electronAPI.scanFolder(folderPath);
-        if (result.success && result.files) {
+        if (result.success != null && result.files != null) {
             return { files: result.files, folders: result.folders ?? [] };
         }
         window.electronAPI.log.error('Failed to scan folder:', result.error);
@@ -56,7 +56,7 @@ export function useVault() {
 
     async function loadFolder(folderPath: string): Promise<{ files: FileInfo[]; folders: FolderInfo[] } | null> {
         const scanned = await scanFolder(folderPath);
-        if (!scanned) {
+        if (scanned === null) {
             alert('Failed to load folder.');
             return null;
         }
@@ -64,14 +64,14 @@ export function useVault() {
         files.value = scanned.files;
         folders.value = scanned.folders;
         localStorage.setItem('leaf-folder-path', folderPath);
-        startFolderWatcher(folderPath);
+        void startFolderWatcher(folderPath);
         return scanned;
     }
 
     async function refreshFiles(): Promise<void> {
-        if (!currentFolder.value) return;
+        if (currentFolder.value === null || currentFolder.value === '') return;
         const scanned = await scanFolder(currentFolder.value);
-        if (scanned) {
+        if (scanned !== null) {
             files.value = scanned.files;
             folders.value = scanned.folders;
         }
@@ -80,7 +80,7 @@ export function useVault() {
     async function openFolderDialog(): Promise<string | null> {
         try {
             const folderPath = await window.electronAPI.openFolderDialog();
-            if (folderPath) {
+            if (folderPath !== null && folderPath !== '') {
                 await loadFolder(folderPath);
                 return folderPath;
             }
@@ -92,7 +92,7 @@ export function useVault() {
     }
 
     function closeVault() {
-        stopFolderWatcher();
+        void stopFolderWatcher();
         currentFolder.value = null;
         files.value = [];
         folders.value = [];
@@ -102,12 +102,12 @@ export function useVault() {
 
     // --- File CRUD ---
     async function createFile(): Promise<FileInfo | null> {
-        if (!currentFolder.value) return null;
+        if (currentFolder.value === null || currentFolder.value === '') return null;
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
         const fileName = `note-${timestamp}.md`;
         try {
             const result = await window.electronAPI.createFile(currentFolder.value, fileName);
-            if (result.success && result.path) {
+            if (result.success && result.path !== null && result.path !== undefined && result.path !== '') {
                 await refreshFiles();
                 return files.value.find((f) => f.path === result.path) ?? null;
             }
@@ -121,13 +121,13 @@ export function useVault() {
     }
 
     async function createDrawing(): Promise<FileInfo | null> {
-        if (!currentFolder.value) return null;
+        if (currentFolder.value === null || currentFolder.value === '') return null;
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
         const fileName = `drawing-${timestamp}.drawing`;
         const emptyDrawing = JSON.stringify({ version: 1, strokes: [], backgroundColor: '#1a1a1a' }, null, 2);
         try {
             const result = await window.electronAPI.createFile(currentFolder.value, fileName);
-            if (result.success && result.path) {
+            if (result.success && result.path !== null && result.path !== undefined && result.path !== '') {
                 await window.electronAPI.writeFile(result.path, emptyDrawing);
                 await refreshFiles();
                 return files.value.find((f) => f.path === result.path) ?? null;
@@ -142,7 +142,7 @@ export function useVault() {
     }
 
     async function createFolder(): Promise<void> {
-        if (!currentFolder.value) return;
+        if (currentFolder.value === null || currentFolder.value === '') return;
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
         const folderName = `folder-${timestamp}`;
         try {
@@ -163,7 +163,7 @@ export function useVault() {
         const newFileName = newBaseName + extension;
         try {
             const result = await window.electronAPI.renameFile(file.path, newFileName);
-            if (result.success && result.newPath) {
+            if (result.success && result.newPath !== null && result.newPath !== undefined && result.newPath !== '') {
                 // Cascade: update ![[embed]] references in all md files
                 if (oldFileName !== newFileName) {
                     window.electronAPI
@@ -183,16 +183,16 @@ export function useVault() {
     }
 
     async function renameFolder(relativePath: string, newName: string): Promise<string | null> {
-        if (!currentFolder.value) return null;
+        if (currentFolder.value === null || currentFolder.value === '') return null;
         const absolutePath = currentFolder.value + '/' + relativePath;
         try {
             const result = await window.electronAPI.renameFolder(absolutePath, newName);
-            if (result.success && result.newPath) {
+            if (result.success && result.newPath !== null && result.newPath !== undefined && result.newPath !== '') {
                 await refreshFiles();
                 const parentPath = relativePath.includes('/')
                     ? relativePath.substring(0, relativePath.lastIndexOf('/'))
                     : '';
-                return parentPath ? parentPath + '/' + newName : newName;
+                return parentPath !== '' ? parentPath + '/' + newName : newName;
             }
             alert('Failed to rename folder: ' + result.error);
             return null;
@@ -219,7 +219,7 @@ export function useVault() {
     }
 
     async function deleteFolder(relativePath: string): Promise<boolean> {
-        if (!currentFolder.value) return false;
+        if (currentFolder.value === null || currentFolder.value === '') return false;
         const absolutePath = currentFolder.value + '/' + relativePath;
         try {
             const result = await window.electronAPI.deleteFolder(absolutePath);
@@ -236,7 +236,7 @@ export function useVault() {
     }
 
     async function moveFiles(filePaths: string[], targetRelativePath: string): Promise<string[]> {
-        if (!currentFolder.value) return [];
+        if (currentFolder.value === null || currentFolder.value === '') return [];
         const absoluteTarget =
             targetRelativePath === '.' || targetRelativePath === ''
                 ? currentFolder.value
@@ -245,9 +245,19 @@ export function useVault() {
         for (const path of filePaths) {
             try {
                 const result = await window.electronAPI.moveFile(path, absoluteTarget);
-                if (result.success && result.newPath) {
+                if (
+                    result.success &&
+                    result.newPath !== null &&
+                    result.newPath !== undefined &&
+                    result.newPath !== ''
+                ) {
                     movedPaths.push(result.newPath);
-                } else if (result.error && !result.error.includes('ENOENT')) {
+                } else if (
+                    result.error !== null &&
+                    result.error !== undefined &&
+                    result.error !== '' &&
+                    !result.error.includes('ENOENT')
+                ) {
                     const name = path.split('/').pop() ?? path;
                     alert(`Failed to move ${name}: ${result.error}`);
                 }
@@ -260,7 +270,7 @@ export function useVault() {
     }
 
     async function moveFolder(relativePath: string, targetRelativePath: string): Promise<boolean> {
-        if (!currentFolder.value) return false;
+        if (currentFolder.value === null || currentFolder.value === '') return false;
         const absolutePath = currentFolder.value + '/' + relativePath;
         const absoluteTarget =
             targetRelativePath === '.' || targetRelativePath === ''

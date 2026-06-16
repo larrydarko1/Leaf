@@ -101,8 +101,8 @@ export function buildEmbedDecos(
                 fileName = inner.split('#')[0].trim();
             }
 
-            const resolvedPath = embedCache.get(fileName) || undefined;
-            const mediaType = resolvedPath ? getEmbedMediaType(fileName) : 'unknown';
+            const resolvedPath = embedCache.get(fileName);
+            const mediaType = resolvedPath !== undefined ? getEmbedMediaType(fileName) : 'unknown';
 
             decos.push(
                 Decoration.replace({
@@ -252,7 +252,7 @@ export function buildSyntaxDecos(
                     );
                     const text = state.doc.sliceString(from, to);
                     const markerMatch = text.match(/^(#{1,6})\s/);
-                    if (markerMatch) {
+                    if (markerMatch !== null) {
                         decos.push(Decoration.replace({}).range(from, from + markerMatch[0].length));
                     }
                 }
@@ -321,7 +321,7 @@ export function buildSyntaxDecos(
                             decos.push(Decoration.line({ class: 'cm-blockquote' }).range(line.from));
                             const lineText = line.text;
                             const markerMatch = lineText.match(/^(\s*>\s?)/);
-                            if (markerMatch) {
+                            if (markerMatch !== null) {
                                 decos.push(Decoration.replace({}).range(line.from, line.from + markerMatch[0].length));
                             }
                         }
@@ -332,7 +332,7 @@ export function buildSyntaxDecos(
                 if (name === 'Link') {
                     const text = state.doc.sliceString(from, to);
                     const linkMatch = text.match(/^\[([^\]]*)\]\(([^)]*)\)$/);
-                    if (linkMatch) {
+                    if (linkMatch !== null) {
                         decos.push(
                             Decoration.mark({
                                 class: 'cm-link',
@@ -349,7 +349,7 @@ export function buildSyntaxDecos(
                 if (name === 'Image') {
                     const text = state.doc.sliceString(from, to);
                     const imgMatch = text.match(/^!\[([^\]]*)\]\(([^)]*)\)$/);
-                    if (imgMatch) {
+                    if (imgMatch !== null) {
                         decos.push(Decoration.mark({ class: 'cm-image-link' }).range(from, to));
                     }
                 }

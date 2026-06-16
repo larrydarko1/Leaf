@@ -6,15 +6,11 @@ import { ref, computed } from 'vue';
 import type { FileInfo } from '../../types/electron';
 
 export type TabState = {
-    file: FileInfo;
-    /** Cached text content — only populated for text/markdown/code files */
-    content: string | null;
-    /** The last-saved content snapshot used to detect unsaved changes */
+    file: FileInfo; // Cached text content — only populated for text/markdown/code files
+    content: string | null; // The last-saved content snapshot used to detect unsaved changes
     savedContent: string | null;
-    /** True when content differs from savedContent */
-    hasUnsavedChanges: boolean;
-    /** Scroll position to restore on tab switch */
-    scrollTop: number;
+    hasUnsavedChanges: boolean; // True when content differs from savedContent
+    scrollTop: number; // Scroll position to restore on tab switch
 };
 
 type PersistedTab = {
@@ -41,12 +37,12 @@ export function useEditorTabs() {
     // --- Persistence helpers ---
 
     function storageKey(): string | null {
-        return currentFolderPath ? `${STORAGE_KEY_PREFIX}${currentFolderPath}` : null;
+        return currentFolderPath !== null ? `${STORAGE_KEY_PREFIX}${currentFolderPath}` : null;
     }
 
-    function persistTabs() {
+    function persistTabs(): void {
         const key = storageKey();
-        if (!key) return;
+        if (key === null) return;
         const data: PersistedTabState = {
             tabs: tabs.value.map((t) => ({ path: t.file.path, scrollTop: t.scrollTop })),
             activeIndex: activeIndex.value,
@@ -66,25 +62,27 @@ export function useEditorTabs() {
     function restoreTabs(folderPath: string, availableFiles: FileInfo[]): boolean {
         currentFolderPath = folderPath;
         const key = storageKey();
-        if (!key) return false;
+        if (key === null) return false;
 
         let data: PersistedTabState;
         try {
             const raw = localStorage.getItem(key);
-            if (!raw) return false;
-            data = JSON.parse(raw);
+            if (raw === null) return false;
+            const parsed = JSON.parse(raw) as unknown;
+            if (!isValidPersistedTabState(parsed)) return false;
+            data = parsed;
         } catch {
             return false;
         }
 
-        if (!data.tabs || !Array.isArray(data.tabs) || data.tabs.length === 0) return false;
+        if (data.tabs.length === 0) return false;
 
         const fileMap = new Map(availableFiles.map((f) => [f.path, f]));
         const restoredTabs: TabState[] = [];
 
         for (const persisted of data.tabs) {
             const file = fileMap.get(persisted.path);
-            if (file) {
+            if (file !== undefined) {
                 restoredTabs.push({
                     file,
                     content: null,
@@ -108,7 +106,7 @@ export function useEditorTabs() {
     }
 
     /** Set the current folder path for persistence scoping. */
-    function setFolderPath(folderPath: string | null) {
+    function setFolderPath(folderPath: string | null): void {
         currentFolderPath = folderPath;
     }
 
@@ -152,7 +150,7 @@ export function useEditorTabs() {
     }
 
     /** Close tab by index. Activates nearest remaining tab. */
-    function closeTab(index: number) {
+    function closeTab(index: number): void {
         if (index < 0 || index >= tabs.value.length) return;
         tabs.value.splice(index, 1);
 
@@ -172,7 +170,7 @@ export function useEditorTabs() {
     }
 
     /** Activate an existing tab by index. */
-    function switchTab(index: number) {
+    function switchTab(index: number): void {
         if (index >= 0 && index < tabs.value.length) {
             activeIndex.value = index;
             persistTabs();
@@ -180,18 +178,18 @@ export function useEditorTabs() {
     }
 
     /** Update the cached content for the active tab (called by NoteEditor on input). */
-    function updateTabContent(filePath: string, content: string, hasUnsavedChanges: boolean) {
+    function updateTabContent(filePath: string, content: string, hasUnsavedChanges: boolean): void {
         const tab = tabs.value.find((t) => t.file.path === filePath);
-        if (tab) {
+        if (tab !== undefined) {
             tab.content = content;
             tab.hasUnsavedChanges = hasUnsavedChanges;
         }
     }
 
     /** Called after a successful save — clear unsaved flag and update savedContent snapshot. */
-    function markTabSaved(filePath: string, content: string) {
+    function markTabSaved(filePath: string, content: string): void {
         const tab = tabs.value.find((t) => t.file.path === filePath);
-        if (tab) {
+        if (tab !== undefined) {
             tab.savedContent = content;
             tab.content = content;
             tab.hasUnsavedChanges = false;
@@ -199,20 +197,20 @@ export function useEditorTabs() {
     }
 
     /** Save scroll position when leaving a tab. */
-    function saveScrollPosition(filePath: string, scrollTop: number) {
+    function saveScrollPosition(filePath: string, scrollTop: number): void {
         const tab = tabs.value.find((t) => t.file.path === filePath);
-        if (tab) {
+        if (tab !== undefined) {
             tab.scrollTop = scrollTop;
             persistTabs();
         }
     }
 
     /** Called after a vault refresh — update FileInfo references for existing tabs. */
-    function syncTabFiles(availableFiles: FileInfo[]) {
+    function syncTabFiles(availableFiles: FileInfo[]): void {
         const before = tabs.value.length;
         tabs.value = tabs.value.filter((tab) => {
             const updated = availableFiles.find((f) => f.path === tab.file.path);
-            if (updated) {
+            if (updated !== undefined) {
                 tab.file = updated;
                 return true;
             }
@@ -227,16 +225,16 @@ export function useEditorTabs() {
     }
 
     /** Called when a file is renamed — update the matching tab. */
-    function renameTabFile(oldPath: string, newFile: FileInfo) {
+    function renameTabFile(oldPath: string, newFile: FileInfo): void {
         const tab = tabs.value.find((t) => t.file.path === oldPath);
-        if (tab) {
+        if (tab !== undefined) {
             tab.file = newFile;
             persistTabs();
         }
     }
 
     /** Move a tab from one position to another (drag-and-drop reorder). */
-    function reorderTab(from: number, to: number) {
+    function reorderTab(from: number, to: number): void {
         if (from === to || from < 0 || to < 0 || from >= tabs.value.length || to >= tabs.value.length) return;
         const newTabs = [...tabs.value];
         const [moved] = newTabs.splice(from, 1);
@@ -255,7 +253,7 @@ export function useEditorTabs() {
     }
 
     /** Remove all tabs (e.g. on vault close). */
-    function clearTabs() {
+    function clearTabs(): void {
         tabs.value = [];
         activeIndex.value = -1;
         persistTabs();
@@ -280,4 +278,21 @@ export function useEditorTabs() {
         setFolderPath,
         MAX_TABS,
     };
+}
+
+// Type guard for PersistedTabState
+function isValidPersistedTabState(data: unknown): data is PersistedTabState {
+    if (typeof data !== 'object' || data === null) return false;
+    const obj = data as Record<string, unknown>;
+    return (
+        Array.isArray(obj.tabs) &&
+        obj.tabs.every(
+            (tab: unknown) =>
+                typeof tab === 'object' &&
+                tab !== null &&
+                typeof (tab as Record<string, unknown>).path === 'string' &&
+                typeof (tab as Record<string, unknown>).scrollTop === 'number',
+        ) &&
+        typeof obj.activeIndex === 'number'
+    );
 }

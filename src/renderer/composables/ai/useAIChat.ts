@@ -70,15 +70,15 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
 
     function scrollToBottom(force = false) {
         if (!force && userScrolledUp.value) return;
-        nextTick(() => {
-            if (messagesContainer.value) {
+        void nextTick(() => {
+            if (messagesContainer.value !== null) {
                 messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
             }
         });
     }
 
     function onMessagesScroll() {
-        if (!messagesContainer.value || !isStreaming.value) return;
+        if (messagesContainer.value === null || !isStreaming.value) return;
         const el = messagesContainer.value;
         userScrolledUp.value = el.scrollHeight - el.scrollTop - el.clientHeight >= 40;
     }
@@ -86,16 +86,16 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
     // Markdown and clipboard
 
     function renderMarkdown(content: string): string {
-        if (!content) return '';
-        return marked.parse(content, { async: false }) as string;
+        if (content.length === 0) return '';
+        return marked.parse(content, { async: false });
     }
 
     async function copyMessage(content: string, index: number) {
         try {
             await window.electronAPI.writeClipboard(content);
             copiedIndex.value = index;
-            setTimeout(() => {
-                if (copiedIndex.value === index) copiedIndex.value = null;
+            void setTimeout(() => {
+                if (copiedIndex.value !== null && copiedIndex.value === index) copiedIndex.value = null;
             }, 2000);
         } catch (err) {
             window.electronAPI.log.error('Failed to copy:', err);
@@ -108,8 +108,8 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         if (messages.value[index]?.role !== 'user') return;
         editingIndex.value = index;
         editContent.value = messages.value[index].content;
-        nextTick(() => {
-            if (editInputRef.value && editInputRef.value.length > 0) editInputRef.value[0].focus();
+        void nextTick(() => {
+            if (editInputRef.value !== null && editInputRef.value.length > 0) editInputRef.value[0].focus();
         });
     }
 
@@ -120,7 +120,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
 
     async function confirmEditMessage(index: number) {
         const newContent = editContent.value.trim();
-        if (!newContent) {
+        if (newContent.length === 0) {
             cancelEditMessage();
             return;
         }
@@ -164,22 +164,27 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         userScrolledUp.value = false;
         scrollToBottom(true);
         let noteContext: string | null = null;
-        if (includeNoteContext.value && activeFile.value) {
+        if (includeNoteContext.value && activeFile.value !== null) {
             try {
                 const result = await window.electronAPI.readFile(activeFile.value.path);
-                if (result.success && result.content) noteContext = result.content;
+                if (result.success && result.content !== null && result.content !== undefined)
+                    noteContext = result.content;
             } catch (error) {
                 window.electronAPI.log.error('Failed to read note for context:', error);
             }
         }
         try {
             const result = await window.electronAPI.aiChat(msg.content, noteContext);
-            if (!result.success) {
+            if (result.success === false) {
                 const lastMsg = messages.value[messages.value.length - 1];
-                if (lastMsg.role === 'assistant') lastMsg.content = `Error: ${result.error}`;
+                if (lastMsg !== undefined && lastMsg.role === 'assistant') lastMsg.content = `Error: ${result.error}`;
             }
             const assistantMsg = messages.value[messages.value.length - 1];
-            if (currentConversationId.value && assistantMsg.role === 'assistant') {
+            if (
+                currentConversationId.value !== null &&
+                assistantMsg !== undefined &&
+                assistantMsg.role === 'assistant'
+            ) {
                 await window.electronAPI.conversationAddMessage(currentConversationId.value, {
                     role: 'assistant',
                     content: assistantMsg.content,
@@ -187,7 +192,8 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
             }
         } catch (error) {
             const lastMsg = messages.value[messages.value.length - 1];
-            if (lastMsg.role === 'assistant') lastMsg.content = `Error: ${(error as Error).message}`;
+            if (lastMsg !== undefined && lastMsg.role === 'assistant')
+                lastMsg.content = `Error: ${(error as Error).message}`;
         } finally {
             isStreaming.value = false;
             userScrolledUp.value = false;
@@ -234,12 +240,12 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
 
     async function sendMessage() {
         const text = inputMessage.value.trim();
-        if (!text || !isReady.value || isAnyGenerating.value) return;
-        if (!currentConversationId.value) await createNewConversation();
+        if (text.length === 0 || isReady.value === false || isAnyGenerating.value === true) return;
+        if (currentConversationId.value === null) await createNewConversation();
         const userMsg: ChatMessage = { role: 'user', content: text };
         messages.value.push(userMsg);
         inputMessage.value = '';
-        if (currentConversationId.value) {
+        if (currentConversationId.value !== null) {
             await window.electronAPI.conversationAddMessage(currentConversationId.value, {
                 role: 'user',
                 content: userMsg.content,
@@ -251,21 +257,22 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         scrollToBottom(true);
 
         let noteContext: string | null = null;
-        if (agentMode.value && workspacePath.value && activeFile.value) {
+        if (agentMode.value && workspacePath.value !== null && activeFile.value !== null) {
             let agentContext = AGENT_SYSTEM_PROMPT + '\n\n';
             try {
                 const fileResult = await window.electronAPI.agentReadFile(activeFile.value.path, workspacePath.value);
-                if (fileResult.success && fileResult.content !== undefined) {
+                if (fileResult.success && fileResult.content !== null && fileResult.content !== undefined) {
                     agentContext += `Current content of "${activeFile.value.name}" (${activeFile.value.relativePath}):\n\`\`\`\n${fileResult.content}\n\`\`\`\n\n`;
                 }
             } catch (err) {
                 agentContext += `Note: Could not read "${activeFile.value.name}": ${(err as Error).message}\n\n`;
             }
             noteContext = agentContext;
-        } else if (includeNoteContext.value && activeFile.value) {
+        } else if (includeNoteContext.value && activeFile.value !== null) {
             try {
                 const result = await window.electronAPI.readFile(activeFile.value.path);
-                if (result.success && result.content) noteContext = result.content;
+                if (result.success && result.content !== null && result.content !== undefined)
+                    noteContext = result.content;
             } catch (error) {
                 window.electronAPI.log.error('Failed to read note for context:', error);
             }
@@ -273,12 +280,17 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
 
         try {
             const result = await window.electronAPI.aiChat(text, noteContext);
-            if (!result.success) {
+            if (result.success === false) {
                 const lastMsg = messages.value[messages.value.length - 1];
-                if (lastMsg.role === 'assistant') lastMsg.content = `Error: ${result.error}`;
+                if (lastMsg !== undefined && lastMsg.role === 'assistant') lastMsg.content = `Error: ${result.error}`;
             }
             const assistantMsg = messages.value[messages.value.length - 1];
-            if (agentMode.value && assistantMsg.role === 'assistant' && assistantMsg.content) {
+            if (
+                agentMode.value &&
+                assistantMsg !== undefined &&
+                assistantMsg.role === 'assistant' &&
+                assistantMsg.content.length > 0
+            ) {
                 const { cleanContent, edits } = parseAgentEdits(assistantMsg.content);
                 if (edits.length > 0) {
                     assistantMsg.content = cleanContent;
@@ -286,13 +298,17 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
                     await processAgentEdits(messages.value.length - 1, edits);
                 }
             }
-            if (currentConversationId.value && assistantMsg.role === 'assistant') {
+            if (
+                currentConversationId.value !== null &&
+                assistantMsg !== undefined &&
+                assistantMsg.role === 'assistant'
+            ) {
                 await window.electronAPI.conversationAddMessage(currentConversationId.value, {
                     role: 'assistant',
                     content: assistantMsg.content,
                 });
             }
-            if (result && result.compacted) {
+            if (result !== null && result !== undefined && result.compacted === true) {
                 messages.value.push({
                     role: 'system',
                     content:
@@ -301,7 +317,8 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
             }
         } catch (error) {
             const lastMsg = messages.value[messages.value.length - 1];
-            if (lastMsg.role === 'assistant') lastMsg.content = `Error: ${(error as Error).message}`;
+            if (lastMsg !== undefined && lastMsg.role === 'assistant')
+                lastMsg.content = `Error: ${(error as Error).message}`;
         } finally {
             isStreaming.value = false;
             userScrolledUp.value = false;
@@ -331,7 +348,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
 
     function handleToken(token: string) {
         const lastMsg = messages.value[messages.value.length - 1];
-        if (lastMsg && lastMsg.role === 'assistant') {
+        if (lastMsg !== undefined && lastMsg.role === 'assistant') {
             lastMsg.content += token;
             scrollToBottom();
         }
@@ -342,7 +359,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         return String(n);
     }
 
-    watch(
+    void watch(
         () => messages.value.length,
         () => {
             scrollToBottom();

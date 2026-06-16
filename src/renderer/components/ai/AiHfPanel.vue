@@ -18,15 +18,10 @@ defineProps<{
 }>();
 
 defineEmits<{
-    (e: 'update:hfSearchQuery', value: string): void;
-    (e: 'search'): void;
-    (e: 'select-repo', id: string): void;
+    (e: 'update:hfSearchQuery' | 'select-repo' | 'cancel-download', value: string): void;
+    (e: 'search' | 'load-more' | 'back' | 'close'): void;
     (e: 'download', file: HfRepoFile): void;
-    (e: 'cancel-download', fileName: string): void;
     (e: 'change-sort', sort: HfSortOption): void;
-    (e: 'load-more'): void;
-    (e: 'back'): void;
-    (e: 'close'): void;
 }>();
 
 const sortOptions: { value: HfSortOption; label: string }[] = [
@@ -845,7 +840,7 @@ function formatNumber(n: number): string {
     border-radius: $border-radius-sm;
     white-space: nowrap;
     flex-shrink: 0;
-    color: $text3;
+    color: $text1;
 
     &.ai-hf-tier-green {
         background: rgb(40 167 69 / 15%);

@@ -13,22 +13,22 @@ import { log } from './logger';
 //   ~/.leaf/models/      → GGUF model files
 //   ~/.leaf/prompts/     → markdown system prompts (one per template)
 //   ~/.leaf/state.json   → small key/value file (active prompt id, etc.)
-export const LEAF_HOME = path.join(os.homedir(), '.leaf');
+export const LEAF_HOME: string = path.join(os.homedir(), '.leaf');
 
 // Directory where the user stores their GGUF models: ~/.leaf/models/
-export const DEFAULT_MODELS_DIR = path.join(LEAF_HOME, 'models');
+export const DEFAULT_MODELS_DIR: string = path.join(LEAF_HOME, 'models');
 
 // Directory where system-prompt templates live: ~/.leaf/prompts/
-export const PROMPTS_DIR = path.join(LEAF_HOME, 'prompts');
+export const PROMPTS_DIR: string = path.join(LEAF_HOME, 'prompts');
 
 // Directory where user-editable theme presets live: ~/.leaf/themes/
-export const THEMES_DIR = path.join(LEAF_HOME, 'themes');
+export const THEMES_DIR: string = path.join(LEAF_HOME, 'themes');
 
 // Persistent app state (active prompt id, active theme id, etc.): ~/.leaf/state.json
-export const STATE_FILE = path.join(LEAF_HOME, 'state.json');
+export const STATE_FILE: string = path.join(LEAF_HOME, 'state.json');
 
 // Legacy location used before the ~/.leaf/ consolidation.
-const LEGACY_MODELS_DIR = path.join(os.homedir(), 'leaf-models');
+const LEGACY_MODELS_DIR: string = path.join(os.homedir(), 'leaf-models');
 
 /**
  * Migrate legacy `~/leaf-models/` → `~/.leaf/models/` on first launch.
@@ -59,7 +59,7 @@ export function migrateLegacyPaths(): void {
 export function getBundledPromptsDir(): string {
     const devPath = path.join(__dirname, '../../assets/prompts');
 
-    if (process.resourcesPath) {
+    if (process.resourcesPath != null) {
         const prodPath = path.join(process.resourcesPath, 'assets/prompts');
         if (fs.existsSync(prodPath)) return prodPath;
     }
@@ -75,7 +75,7 @@ export function getBundledPromptsDir(): string {
 export function getBundledThemesDir(): string {
     const devPath = path.join(__dirname, '../../assets/themes');
 
-    if (process.resourcesPath) {
+    if (process.resourcesPath != null) {
         const prodPath = path.join(process.resourcesPath, 'assets/themes');
         if (fs.existsSync(prodPath)) return prodPath;
     }
@@ -94,7 +94,7 @@ export function getBundledThemesDir(): string {
 export function getWhisperModelDir(): string {
     const devPath = path.join(__dirname, '../../models/whisper');
 
-    if (process.resourcesPath) {
+    if (process.resourcesPath != null) {
         const prodPath = path.join(process.resourcesPath, 'models/whisper');
         if (fs.existsSync(prodPath)) {
             log.info('[paths] Whisper model → production:', prodPath);

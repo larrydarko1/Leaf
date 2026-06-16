@@ -49,7 +49,7 @@ export function useAgentMode(
     }
 
     async function processAgentEdits(_msgIndex: number, edits: AgentFileEdit[]) {
-        if (!workspacePath.value) return;
+        if (workspacePath.value === null) return;
         for (const edit of edits) {
             const fullPath = pathHelper.resolve(workspacePath.value, edit.filePath);
             try {
@@ -61,50 +61,64 @@ export function useAgentMode(
                 if (result.success) {
                     edit.editId = result.editId;
                     edit.originalContent = result.originalContent;
-                    edit.newContent = result.newContent!;
+                    edit.newContent = result.newContent ?? edit.newContent;
                     edit.relativePath = result.relativePath;
                     edit.isNewFile = result.isNewFile;
                     edit.status = 'pending';
                 } else {
                     edit.status = 'error';
-                    edit.error = result.error || 'Failed to propose edit';
+                    edit.error = result.error ?? 'Failed to propose edit';
                 }
             } catch (err) {
                 edit.status = 'error';
-                edit.error = (err as Error).message;
+                edit.error = (err as Error).message ?? 'Unknown error';
             }
         }
     }
 
     async function approveAgentEdit(msgIndex: number, editIdx: number) {
         const edit = messages.value[msgIndex]?.agentEdits?.[editIdx];
-        if (!edit?.editId || edit.status !== 'pending') return;
+        if (
+            edit === undefined ||
+            edit.editId === null ||
+            edit.editId === undefined ||
+            edit.editId === '' ||
+            edit.status !== 'pending'
+        )
+            return;
         try {
             const result = await window.electronAPI.agentApproveEdit(edit.editId);
             if (result.success) {
                 edit.status = 'approved';
                 onFileChanged(edit.filePath);
             } else {
-                edit.error = result.error || 'Failed to approve edit';
+                edit.error = result.error ?? 'Failed to approve edit';
             }
         } catch (err) {
-            edit.error = (err as Error).message;
+            edit.error = (err as Error).message ?? 'Unknown error';
         }
     }
 
     async function rejectAgentEdit(msgIndex: number, editIdx: number) {
         const edit = messages.value[msgIndex]?.agentEdits?.[editIdx];
-        if (!edit?.editId || edit.status !== 'pending') return;
+        if (
+            edit === undefined ||
+            edit.editId === null ||
+            edit.editId === undefined ||
+            edit.editId === '' ||
+            edit.status !== 'pending'
+        )
+            return;
         try {
             const result = await window.electronAPI.agentRejectEdit(edit.editId);
             if (result.success) {
                 edit.status = 'rejected';
                 onFileChanged(edit.filePath);
             } else {
-                edit.error = result.error || 'Failed to reject edit';
+                edit.error = result.error ?? 'Failed to reject edit';
             }
         } catch (err) {
-            edit.error = (err as Error).message;
+            edit.error = (err as Error).message ?? 'Unknown error';
         }
     }
 

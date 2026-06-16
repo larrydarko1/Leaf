@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, nextTick } from 'vue';
 import type { FileInfo } from '../types/electron';
+import type { TreeNode } from '../types/vault';
 import {
     isImageFile as checkImage,
     isVideoFile as checkVideo,
@@ -10,14 +11,6 @@ import {
     isCodeFile as checkCode,
 } from '../utils/fileTypes';
 import { useTreeNodeDrag } from '../composables/vault/useTreeNodeDrag';
-
-export type TreeNode = {
-    path: string;
-    name: string;
-    type: 'folder' | 'file';
-    children?: TreeNode[];
-    file?: FileInfo;
-};
 
 const props = defineProps<{
     node: TreeNode;
@@ -92,8 +85,8 @@ const isActive = computed(() => {
 
 watch(isRenaming, (renaming) => {
     if (renaming) {
-        nextTick(() => {
-            if (renameInput.value) {
+        void nextTick(() => {
+            if (renameInput.value !== null) {
                 renameInput.value.focus();
                 renameInput.value.select();
             }
@@ -106,7 +99,7 @@ function handleFolderClick() {
 }
 
 function handleFileClick(event: MouseEvent) {
-    if (props.node.file) {
+    if (props.node.file !== undefined) {
         emit('selectFile', props.node.file, event, undefined);
     }
 }

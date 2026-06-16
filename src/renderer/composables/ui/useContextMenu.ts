@@ -14,7 +14,7 @@ export function useContextMenu(
     const adjustedPosition = ref({ x: 0, y: 0 });
 
     function handleClickOutside(event: MouseEvent) {
-        if (menuRef.value && !menuRef.value.contains(event.target as Node)) {
+        if (menuRef.value !== null && !menuRef.value.contains(event.target as Node)) {
             onClose();
         }
     }
@@ -34,8 +34,8 @@ export function useContextMenu(
     watch(getVisible, (visible) => {
         if (visible) {
             adjustedPosition.value = { ...getPosition() };
-            nextTick(() => {
-                if (menuRef.value) {
+            void nextTick(() => {
+                if (menuRef.value !== null) {
                     const rect = menuRef.value.getBoundingClientRect();
                     let { x, y } = getPosition();
                     if (y + rect.height > window.innerHeight) {

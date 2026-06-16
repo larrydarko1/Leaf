@@ -141,9 +141,9 @@ async function listThemes(): Promise<ThemeInfo[]> {
         const file = path.join(THEMES_DIR, entry.name);
         try {
             const raw = await fs.readFile(file, 'utf-8');
-            const parsed = JSON.parse(raw);
+            const parsed = JSON.parse(raw) as unknown;
             const info = normalizeTheme(id, file, parsed);
-            if (info) list.push(info);
+            if (info !== null) list.push(info);
         } catch (err) {
             log.warn(`[theme] failed to parse ${entry.name}:`, err);
         }
@@ -159,15 +159,15 @@ async function listThemes(): Promise<ThemeInfo[]> {
 }
 
 function normalizeTheme(id: string, filePath: string, raw: unknown): ThemeInfo | null {
-    if (!raw || typeof raw !== 'object') return null;
+    if (raw === null || raw === undefined || typeof raw !== 'object') return null;
     const obj = raw as Record<string, unknown>;
 
-    const name = typeof obj.name === 'string' && obj.name.trim() ? obj.name.trim() : id;
+    const name = typeof obj.name === 'string' && obj.name.trim() !== '' ? obj.name.trim() : id;
     const description = typeof obj.description === 'string' ? obj.description.trim() : '';
 
     const colorsRaw = obj.colors;
     const colors: Record<string, string> = {};
-    if (colorsRaw && typeof colorsRaw === 'object') {
+    if (colorsRaw !== null && colorsRaw !== undefined && typeof colorsRaw === 'object') {
         for (const [key, value] of Object.entries(colorsRaw as Record<string, unknown>)) {
             if (typeof value !== 'string') continue;
             // Only allow safe CSS-variable keys (letters, digits, dashes, underscore).
@@ -183,8 +183,8 @@ async function readState(): Promise<ThemeState> {
     try {
         if (!existsSync(STATE_FILE)) return {};
         const raw = await fs.readFile(STATE_FILE, 'utf-8');
-        const parsed = JSON.parse(raw);
-        return typeof parsed === 'object' && parsed ? parsed : {};
+        const parsed = JSON.parse(raw) as unknown;
+        return typeof parsed === 'object' && parsed !== null ? (parsed as ThemeState) : {};
     } catch (err) {
         log.warn('[theme] state read failed:', err);
         return {};

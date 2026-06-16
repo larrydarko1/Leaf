@@ -48,7 +48,7 @@ export async function createConversation(
         const conversation: Conversation = {
             id: generateId(),
             title: 'New Conversation',
-            model: modelName || 'unknown',
+            model: modelName.trim() !== '' ? modelName.trim() : 'unknown',
             createdAt: now,
             updatedAt: now,
             messages: [],
@@ -86,7 +86,7 @@ export async function addMessage(
 ): Promise<{ success: boolean; error?: string }> {
     try {
         const conversation = await getConversation(conversationId);
-        if (!conversation) {
+        if (conversation === null) {
             return { success: false, error: 'Conversation not found' };
         }
 
@@ -106,7 +106,7 @@ export async function updateLastMessage(
 ): Promise<{ success: boolean; error?: string }> {
     try {
         const conversation = await getConversation(conversationId);
-        if (!conversation) {
+        if (conversation === null) {
             return { success: false, error: 'Conversation not found' };
         }
 
@@ -135,13 +135,16 @@ export async function getConversation(id: string): Promise<Conversation | null> 
 
 export async function listConversations(): Promise<{ success: boolean; conversations: object[]; error?: string }> {
     try {
-        const entries = await fs.readdir(conversationsDir!, { withFileTypes: true });
+        if (conversationsDir === null) {
+            return { success: false, conversations: [], error: 'Conversations directory not initialized' };
+        }
+        const entries = await fs.readdir(conversationsDir, { withFileTypes: true });
         const conversations = [];
 
         for (const entry of entries) {
             if (entry.isFile() && entry.name.endsWith('.json')) {
                 try {
-                    const filePath = path.join(conversationsDir!, entry.name);
+                    const filePath = path.join(conversationsDir, entry.name);
                     const data = await fs.readFile(filePath, 'utf-8');
                     const conv = JSON.parse(data) as Conversation;
                     conversations.push({
@@ -150,8 +153,8 @@ export async function listConversations(): Promise<{ success: boolean; conversat
                         model: conv.model,
                         createdAt: conv.createdAt,
                         updatedAt: conv.updatedAt,
-                        messageCount: conv.messages ? conv.messages.length : 0,
-                        tokenCount: conv.tokenCount || 0,
+                        messageCount: Array.isArray(conv.messages) ? conv.messages.length : 0,
+                        tokenCount: conv.tokenCount !== undefined && conv.tokenCount !== 0 ? conv.tokenCount : 0,
                     });
                 } catch (err) {
                     log.error(`Failed to read conversation file ${entry.name}:`, err);
@@ -159,9 +162,7 @@ export async function listConversations(): Promise<{ success: boolean; conversat
             }
         }
 
-        conversations.sort(
-            (a, b) => new Date(b.updatedAt as string).getTime() - new Date(a.updatedAt as string).getTime(),
-        );
+        conversations.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
         return { success: true, conversations };
     } catch (error) {
@@ -175,7 +176,7 @@ export async function loadConversation(
 ): Promise<{ success: boolean; conversation?: Conversation; error?: string }> {
     try {
         const conversation = await getConversation(id);
-        if (!conversation) {
+        if (conversation === null) {
             return { success: false, error: 'Conversation not found' };
         }
         return { success: true, conversation };
@@ -198,7 +199,7 @@ export async function deleteConversation(id: string): Promise<{ success: boolean
 export async function renameConversation(id: string, newTitle: string): Promise<{ success: boolean; error?: string }> {
     try {
         const conversation = await getConversation(id);
-        if (!conversation) {
+        if (conversation === null) {
             return { success: false, error: 'Conversation not found' };
         }
         conversation.title = newTitle;
@@ -264,7 +265,7 @@ function generateId(): string {
 
 function deriveTitle(messages: Message[]): string {
     const firstUserMsg = messages.find((m) => m.role === 'user');
-    if (!firstUserMsg) return 'New Conversation';
+    if (firstUserMsg === undefined) return 'New Conversation';
     const text = firstUserMsg.content.trim();
     if (text.length <= 60) return text;
     return text.slice(0, 57) + '...';
@@ -272,8 +273,11 @@ function deriveTitle(messages: Message[]): string {
 
 function getConversationPath(id: string): string {
     // Prevent path traversal via crafted IDs like "../../etc/passwd"
+    if (conversationsDir === null) {
+        throw new Error('Conversations directory not initialized');
+    }
     assertSafeFileName(id);
-    const filePath = path.join(conversationsDir!, `${id}.json`);
-    assertInsideBoundary(filePath, conversationsDir!);
+    const filePath = path.join(conversationsDir, `${id}.json`);
+    assertInsideBoundary(filePath, conversationsDir);
     return filePath;
 }

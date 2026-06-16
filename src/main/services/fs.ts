@@ -51,7 +51,7 @@ export function getVaultRoot(): string | null {
 
 /** Close the folder watcher if active. Called during app shutdown. */
 export function cleanup(): void {
-    if (folderWatcher) {
+    if (folderWatcher !== null) {
         folderWatcher.close();
         folderWatcher = null;
     }
@@ -61,7 +61,8 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
     // Open folder dialog
     ipc.handle('dialog:openFolder', async () => {
         const win = getMainWindow();
-        const result = await dialog.showOpenDialog(win!, {
+        if (win === null) return { success: false, error: 'No window available' };
+        const result = await dialog.showOpenDialog(win, {
             properties: ['openDirectory'],
             title: 'Select Your Notes Folder',
             buttonLabel: 'Select Folder',
@@ -74,7 +75,8 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
         'dialog:showSaveDialog',
         async (_event, options: { defaultPath?: string; filters?: { name: string; extensions: string[] }[] }) => {
             const win = getMainWindow();
-            const result = await dialog.showSaveDialog(win!, {
+            if (win === null) return { success: false, error: 'No window available' };
+            const result = await dialog.showSaveDialog(win, {
                 defaultPath: options.defaultPath,
                 filters: options.filters,
             });
@@ -107,16 +109,16 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
     });
 
     // Watch vault for external changes
-    ipc.handle('fs:watchFolder', async (_event, folderPath: string) => {
+    ipc.handle('fs:watchFolder', (_event, folderPath: string) => {
         if (typeof folderPath !== 'string') return { success: false, error: 'Invalid path' };
         try {
-            if (folderWatcher) {
+            if (folderWatcher !== null && folderWatcher !== undefined) {
                 folderWatcher.close();
                 folderWatcher = null;
             }
             folderWatcher = watch(folderPath, { recursive: true }, (eventType, filename) => {
                 const win = getMainWindow();
-                if (win && !win.isDestroyed()) win.webContents.send('fs:changed', { eventType, filename });
+                if (win !== null && !win.isDestroyed()) win.webContents.send('fs:changed', { eventType, filename });
             });
             folderWatcher.on('error', (err) => log.error('[fs-service] Watcher error:', err));
             return { success: true };
@@ -125,8 +127,8 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
         }
     });
 
-    ipc.handle('fs:unwatchFolder', async () => {
-        if (folderWatcher) {
+    ipc.handle('fs:unwatchFolder', () => {
+        if (folderWatcher !== null) {
             folderWatcher.close();
             folderWatcher = null;
         }
@@ -163,7 +165,7 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
                 }
             }
             const found = await findFileRecursive(embedVaultRoot, path.basename(fileName));
-            if (found) {
+            if (found !== null) {
                 assertInsideBoundary(found, root);
                 return { success: true, path: found };
             }
@@ -486,7 +488,7 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
 }
 
 function requireVaultRoot(): string {
-    if (!vaultRoot) throw new Error('No vault is open.');
+    if (vaultRoot === null) throw new Error('No vault is open.');
     return vaultRoot;
 }
 
@@ -550,7 +552,7 @@ async function findFileRecursive(dir: string, targetName: string): Promise<strin
         if (entry.isFile() && entry.name === targetName) return fullPath;
         if (entry.isDirectory()) {
             const found = await findFileRecursive(fullPath, targetName);
-            if (found) return found;
+            if (found !== null) return found;
         }
     }
     return null;

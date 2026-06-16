@@ -13,6 +13,8 @@ import { DEFAULT_MODELS_DIR, LEAF_HOME } from '../lib/paths';
 import { getActiveSystemPrompt } from './systemPrompt';
 import { log } from '../lib/logger';
 
+import type { Llama, LlamaModel, LlamaContext, LlamaChatSession, LlamaContextSequence } from 'node-llama-cpp';
+
 type ModelEntry = {
     name: string;
     path: string;
@@ -22,7 +24,7 @@ type ModelEntry = {
 };
 
 const COMPACTION_THRESHOLD = 0.9;
-const NON_MODEL_PREFIXES = ['mmproj-', 'projector-', 'tokenizer', 'adapter'];
+const NON_MODEL_PREFIXES: string[] = ['mmproj-', 'projector-', 'tokenizer', 'adapter'];
 
 // Architectures whose Metal (GPU) backend has known execution failures.
 // For these we force CPU-only inference (gpuLayers: 0).
@@ -30,21 +32,17 @@ const NON_MODEL_PREFIXES = ['mmproj-', 'projector-', 'tokenizer', 'adapter'];
 //   with status 5 (MTLCommandBufferStatusError) on Apple Silicon.
 const CPU_ONLY_ARCHITECTURES = new Set(['mistral3']);
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let llama: any = null;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let model: any = null;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let context: any = null;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let session: any = null;
+let llama: Llama | null = null;
+let model: LlamaModel | null = null;
+let context: LlamaContext | null = null;
+let session: LlamaChatSession | null = null;
 
 let isModelLoaded = false;
 let currentModelPath: string | null = null;
 let isGenerating = false;
 let currentAbortController: AbortController | null = null;
-let pendingConversationHistory: Array<{ role: string; content: string }> | null = null;
-let trackedMessages: Array<{ role: string; content: string }> = [];
+let pendingConversationHistory: { role: string; content: string }[] | null = null;
+let trackedMessages: { role: string; content: string }[] = [];
 
 export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null): void {
     ipc.handle('ai:listModels', async () => listModels());
@@ -61,23 +59,23 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
         return chat(
             userMessage,
             (token) => {
-                const win = getMainWindow();
-                if (win && !win.isDestroyed()) win.webContents.send('ai:token', token);
+                const window = getMainWindow();
+                if (window !== null && !window.isDestroyed()) window.webContents.send('ai:token', token);
             },
             noteContext,
         );
     });
 
-    ipc.handle('ai:stopChat', async () => stopChat());
+    ipc.handle('ai:stopChat', () => stopChat());
     ipc.handle('ai:resetChat', async () => resetChat());
 
-    ipc.handle('ai:restoreChatHistory', async (_event, messages: Array<{ role: string; content: string }>) => {
+    ipc.handle('ai:restoreChatHistory', (_event, messages: { role: string; content: string }[]) => {
         if (!Array.isArray(messages)) return { success: false, error: 'Invalid messages' };
         return restoreChatHistory(messages);
     });
 
-    ipc.handle('ai:getStatus', async () => getStatus());
-    ipc.handle('ai:openLeafDir', async () => openLeafDir());
+    ipc.handle('ai:getStatus', () => getStatus());
+    ipc.handle('ai:openLeafDir', async () => await openLeafDir());
 }
 
 /** Graceful shutdown: unload the model and free resources. */
@@ -95,9 +93,8 @@ async function ensureModelsDir(): Promise<void> {
     }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function getLlamaInstance(): Promise<any> {
-    if (llama) return llama;
+async function getLlamaInstance(): Promise<Llama> {
+    if (llama !== null) return llama;
     const { getLlama } = await import('node-llama-cpp');
     llama = await getLlama();
     return llama;
@@ -171,7 +168,7 @@ async function getModelLoadOptions(modelPath: string): Promise<{ gpuLayers?: num
         const { readGgufFileInfo } = await import('node-llama-cpp');
         const info = await readGgufFileInfo(modelPath);
         const arch = info.metadata?.['general']?.['architecture'] as string | undefined;
-        if (arch && CPU_ONLY_ARCHITECTURES.has(arch.toLowerCase())) {
+        if (arch != null && arch !== '' && CPU_ONLY_ARCHITECTURES.has(arch.toLowerCase())) {
             log.info(`[ai] Architecture '${arch}' requires CPU-only inference — disabling GPU layers.`);
             return { gpuLayers: 0 };
         }
@@ -209,7 +206,7 @@ async function loadModel(modelPath: string): Promise<{ success: boolean; modelNa
         const systemPrompt = await getActiveSystemPrompt();
         session = new LlamaChatSession({
             contextSequence: context.getSequence(),
-            systemPrompt: systemPrompt || undefined,
+            systemPrompt: systemPrompt !== '' ? systemPrompt : undefined,
         });
 
         isModelLoaded = true;
@@ -231,11 +228,11 @@ async function loadModel(modelPath: string): Promise<{ success: boolean; modelNa
 async function unloadModel(): Promise<{ success: boolean; error?: string }> {
     try {
         session = null;
-        if (context) {
+        if (context !== null) {
             await context.dispose();
             context = null;
         }
-        if (model) {
+        if (model !== null) {
             await model.dispose();
             model = null;
         }
@@ -246,7 +243,7 @@ async function unloadModel(): Promise<{ success: boolean; error?: string }> {
         pendingConversationHistory = null;
         trackedMessages = [];
 
-        if (global.gc) {
+        if (global.gc !== null && global.gc !== undefined) {
             global.gc();
         }
 
@@ -262,7 +259,7 @@ async function chat(
     onToken: (token: string) => void,
     noteContext: string | null = null,
 ): Promise<{ success: boolean; response?: string; compacted?: boolean; error?: string }> {
-    if (!isModelLoaded || !session) {
+    if (!isModelLoaded || session === null) {
         return { success: false, error: 'No model loaded. Please load a model first.' };
     }
 
@@ -276,13 +273,13 @@ async function chat(
     try {
         let prompt = userMessage;
 
-        if (pendingConversationHistory) {
+        if (pendingConversationHistory !== null) {
             const summary = buildConversationSummary(pendingConversationHistory);
             pendingConversationHistory = null;
             prompt = `Here is a summary of our previous conversation for context:\n\n---\n${summary}\n---\n\n${prompt}`;
         }
 
-        if (noteContext) {
+        if (noteContext !== null && noteContext !== '') {
             prompt = `Here is the content of the current note for context:\n\n---\n${noteContext}\n---\n\nUser question: ${prompt}`;
         }
 
@@ -302,25 +299,26 @@ async function chat(
 
         let compacted = false;
         try {
-            const seq = session.sequence;
-            if (seq) {
+            const seq: LlamaContextSequence | undefined = session.sequence;
+            if (seq !== undefined) {
                 const usage = seq.nextTokenIndex / seq.contextSize;
                 if (usage >= COMPACTION_THRESHOLD) {
                     log.info(`Context usage at ${Math.round(usage * 100)}% — auto-compacting...`);
                     pendingConversationHistory = [...trackedMessages];
                     const { LlamaChatSession } = await import('node-llama-cpp');
                     const systemPrompt = await getActiveSystemPrompt();
+                    const resolvedSystemPrompt = systemPrompt !== '' ? systemPrompt : undefined;
                     // Reuse existing sequence to avoid exhausting sequence slots
-                    if (seq && !seq.disposed) {
+                    if (!seq.disposed) {
                         await seq.clearHistory();
                         session = new LlamaChatSession({
                             contextSequence: seq,
-                            systemPrompt: systemPrompt || undefined,
+                            systemPrompt: resolvedSystemPrompt,
                         });
-                    } else {
+                    } else if (context !== null) {
                         session = new LlamaChatSession({
                             contextSequence: context.getSequence(),
-                            systemPrompt: systemPrompt || undefined,
+                            systemPrompt: resolvedSystemPrompt,
                         });
                     }
                     compacted = true;
@@ -343,7 +341,7 @@ async function chat(
 }
 
 function stopChat(): { success: boolean; error?: string } {
-    if (isGenerating && currentAbortController) {
+    if (isGenerating && currentAbortController !== null) {
         currentAbortController.abort();
         isGenerating = false;
         currentAbortController = null;
@@ -354,7 +352,7 @@ function stopChat(): { success: boolean; error?: string } {
 }
 
 async function resetChat(): Promise<{ success: boolean; error?: string }> {
-    if (!isModelLoaded || !model || !context) {
+    if (!isModelLoaded || model === null || context === null) {
         return { success: false, error: 'No model loaded.' };
     }
 
@@ -363,20 +361,21 @@ async function resetChat(): Promise<{ success: boolean; error?: string }> {
         trackedMessages = [];
         const { LlamaChatSession } = await import('node-llama-cpp');
         const systemPrompt = await getActiveSystemPrompt();
+        const resolvedSystemPrompt = systemPrompt !== '' ? systemPrompt : undefined;
         // Reuse the existing sequence (clear its KV cache) instead of
         // calling context.getSequence() which allocates a new slot and
         // can exhaust the context's sequence limit, crashing Metal.
-        const existingSeq = session?.sequence;
-        if (existingSeq && !existingSeq.disposed) {
+        const existingSeq: LlamaContextSequence | undefined = session?.sequence;
+        if (existingSeq !== undefined && !existingSeq.disposed) {
             await existingSeq.clearHistory();
             session = new LlamaChatSession({
                 contextSequence: existingSeq,
-                systemPrompt: systemPrompt || undefined,
+                systemPrompt: resolvedSystemPrompt,
             });
         } else {
             session = new LlamaChatSession({
                 contextSequence: context.getSequence(),
-                systemPrompt: systemPrompt || undefined,
+                systemPrompt: resolvedSystemPrompt,
             });
         }
         return { success: true };
@@ -385,10 +384,8 @@ async function resetChat(): Promise<{ success: boolean; error?: string }> {
     }
 }
 
-async function restoreChatHistory(
-    messages: Array<{ role: string; content: string }>,
-): Promise<{ success: boolean; error?: string }> {
-    if (!messages || messages.length === 0) {
+function restoreChatHistory(messages: { role: string; content: string }[]): { success: boolean; error?: string } {
+    if (messages.length === 0) {
         pendingConversationHistory = null;
         return { success: true };
     }
@@ -404,7 +401,7 @@ async function restoreChatHistory(
     }
 }
 
-function buildConversationSummary(messages: Array<{ role: string; content: string }>): string {
+function buildConversationSummary(messages: { role: string; content: string }[]): string {
     const MAX_MSG_LENGTH = 2000;
     const MAX_MESSAGES = 50;
 
@@ -423,10 +420,10 @@ function getStatus(): object {
     let contextTokens = 0;
     let contextSize = 0;
 
-    if (isModelLoaded && session) {
+    if (isModelLoaded && session !== null) {
         try {
-            const seq = session.sequence;
-            if (seq) {
+            const seq: LlamaContextSequence | undefined = session.sequence;
+            if (seq !== undefined) {
                 contextTokens = seq.nextTokenIndex;
                 contextSize = seq.contextSize;
             }
@@ -438,7 +435,7 @@ function getStatus(): object {
     return {
         isModelLoaded,
         currentModelPath,
-        currentModelName: currentModelPath ? path.basename(currentModelPath) : null,
+        currentModelName: currentModelPath !== null && currentModelPath !== '' ? path.basename(currentModelPath) : null,
         isGenerating,
         modelsDir: DEFAULT_MODELS_DIR,
         contextTokens,

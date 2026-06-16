@@ -7,7 +7,7 @@ const emit = defineEmits<{ close: [] }>();
 const { themes, activeId, refresh, setActive, openThemesFolder } = useTheme();
 
 onMounted(() => {
-    refresh();
+    void refresh();
 });
 
 async function handleSelect(id: string) {

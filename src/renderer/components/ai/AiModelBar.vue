@@ -17,15 +17,18 @@ defineProps<{
 
 const emit = defineEmits<{
     (e: 'select-model', model: AiModelInfo): void;
-    (e: 'load-model'): void;
-    (e: 'unload-model'): void;
-    (e: 'open-models-folder'): void;
-    (e: 'refresh-models'): void;
-    (e: 'toggle-hf-panel'): void;
-    (e: 'toggle-history'): void;
-    (e: 'toggle-agent-mode'): void;
-    (e: 'new-conversation'): void;
-    (e: 'close'): void;
+    (
+        e:
+            | 'load-model'
+            | 'unload-model'
+            | 'open-models-folder'
+            | 'refresh-models'
+            | 'toggle-hf-panel'
+            | 'toggle-history'
+            | 'toggle-agent-mode'
+            | 'new-conversation'
+            | 'close',
+    ): void;
 }>();
 
 const dropdownRef = ref<HTMLElement | null>(null);
@@ -37,12 +40,15 @@ const showPromptDropdown = ref(false);
 const promptDropdownPosition = ref<Record<string, string>>({});
 const activePromptName = computed(() => {
     const found = prompts.value.find((p) => p.id === activeId.value);
-    return found?.name || activeId.value || 'default';
+    return (
+        (found?.name !== undefined && found.name !== '' ? found.name : null) ??
+        (activeId.value !== null && activeId.value !== '' ? activeId.value : 'default')
+    );
 });
 
 onMounted(() => {
     document.addEventListener('click', handleClickOutside);
-    refreshPrompts();
+    void refreshPrompts();
 });
 onUnmounted(() => document.removeEventListener('click', handleClickOutside));
 
@@ -51,7 +57,7 @@ function toggleDropdown() {
         showDropdown.value = false;
         return;
     }
-    if (dropdownRef.value) {
+    if (dropdownRef.value !== null) {
         const rect = dropdownRef.value.getBoundingClientRect();
         const menuWidth = Math.min(rect.width + 60, window.innerWidth - rect.left - 12);
         dropdownPosition.value = {
@@ -70,10 +76,10 @@ function handleSelectModel(model: AiModelInfo) {
 
 function handleClickOutside(event: MouseEvent) {
     const target = event.target as Node;
-    if (dropdownRef.value && !dropdownRef.value.contains(target)) {
+    if (dropdownRef.value !== null && !dropdownRef.value.contains(target)) {
         showDropdown.value = false;
     }
-    if (promptDropdownRef.value && !promptDropdownRef.value.contains(target)) {
+    if (promptDropdownRef.value !== null && !promptDropdownRef.value.contains(target)) {
         showPromptDropdown.value = false;
     }
 }
@@ -83,7 +89,7 @@ function togglePromptDropdown() {
         showPromptDropdown.value = false;
         return;
     }
-    if (promptDropdownRef.value) {
+    if (promptDropdownRef.value !== null) {
         const rect = promptDropdownRef.value.getBoundingClientRect();
         promptDropdownPosition.value = {
             top: `${rect.bottom + 4}px`,
@@ -102,7 +108,7 @@ async function handleSelectPrompt(id: string) {
 
 function handleRefresh() {
     emit('refresh-models');
-    refreshPrompts();
+    void refreshPrompts();
 }
 
 function truncate(str: string, len: number): string {
@@ -173,7 +179,7 @@ function truncate(str: string, len: number): string {
                 </div>
                 <button
                     class="ai-btn-small"
-                    :disabled="!selectedModelPath || isLoading"
+                    :disabled="selectedModelPath === null || selectedModelPath === '' || isLoading"
                     @click="$emit('load-model')">
                     {{ isLoading ? '...' : 'Load' }}
                 </button>

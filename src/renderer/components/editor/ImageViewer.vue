@@ -16,7 +16,7 @@ async function loadImage(path: string) {
     imageUrl.value = '';
     try {
         const result = await window.electronAPI.readImage(path);
-        if (result.success && result.dataUrl) {
+        if (result.success && result.dataUrl !== undefined) {
             imageUrl.value = result.dataUrl;
         } else {
             hasError.value = true;

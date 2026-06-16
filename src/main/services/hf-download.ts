@@ -31,6 +31,35 @@ type ProgressInfo = {
 
 type SortOption = 'downloads' | 'likes' | 'lastModified' | 'trending';
 
+// HF API response shapes
+type HfGgufMeta = {
+    total?: number;
+    architecture?: string;
+    contextLength?: number;
+};
+
+type HfModel = {
+    id?: string;
+    modelId?: string;
+    author?: string;
+    downloads?: number;
+    likes?: number;
+    tags?: string[];
+    lastModified?: string;
+    gguf?: HfGgufMeta;
+};
+
+type HfTreeEntryLfs = {
+    size?: number;
+};
+
+type HfTreeEntry = {
+    type: 'file' | 'directory';
+    path: string;
+    size?: number;
+    lfs?: HfTreeEntryLfs;
+};
+
 // Only allow downloads from Hugging Face domains (including XetHub CDN)
 const ALLOWED_DOWNLOAD_SUFFIXES = ['.hf.co', '.huggingface.co'];
 const ALLOWED_DOWNLOAD_EXACT = ['huggingface.co', 'hf.co'];
@@ -59,7 +88,7 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
         try {
             return await downloadModel(url, fileName, (progress) => {
                 const win = getMainWindow();
-                if (win && !win.isDestroyed()) win.webContents.send('hf:downloadProgress', progress);
+                if (win !== null && !win.isDestroyed()) win.webContents.send('hf:downloadProgress', progress);
             });
         } catch (err) {
             return { success: false, error: (err as Error).message };
@@ -71,7 +100,7 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
         return cancelDownload(fileName);
     });
 
-    ipc.handle('hf:getActiveDownloads', async () => ({
+    ipc.handle('hf:getActiveDownloads', (): { success: boolean; downloads: string[] } => ({
         success: true,
         downloads: getActiveDownloads(),
     }));
@@ -120,8 +149,8 @@ function hfApiGet(apiPath: string): Promise<any> {
                 }
                 try {
                     resolve(JSON.parse(body));
-                } catch (err) {
-                    reject(err);
+                } catch (err: unknown) {
+                    reject(err instanceof Error ? err : new Error(String(err)));
                 }
             });
         });
@@ -140,10 +169,10 @@ function formatParamCount(n: number): string {
 async function searchModels(
     query: string,
     sort: SortOption = 'downloads',
-    offset: number = 0,
+    offset = 0,
 ): Promise<{ success: boolean; results?: object[]; hasMore?: boolean; error?: string }> {
     try {
-        const searchQuery = query.trim() || '';
+        const searchQuery = query.trim();
         const limit = RESULTS_PER_PAGE + 1; // fetch one extra to detect hasMore
 
         let sortParam: string;
@@ -166,24 +195,25 @@ async function searchModels(
             .map((f) => `expand[]=${f}`)
             .join('&');
         const apiPath = `/api/models?search=${encodeURIComponent(searchQuery)}&filter=gguf&sort=${sortParam}&direction=${directionParam}&limit=${limit}&offset=${offset}&${expands}`;
-        const models: any[] = await hfApiGet(apiPath); // eslint-disable-line @typescript-eslint/no-explicit-any
+        const models = (await hfApiGet(apiPath)) as HfModel[];
 
         const hasMore = models.length > RESULTS_PER_PAGE;
         const sliced = hasMore ? models.slice(0, RESULTS_PER_PAGE) : models;
 
         const results = sliced.map((m) => {
-            const gguf = m.gguf || {};
-            const paramCount = gguf.total || null;
+            const gguf: HfGgufMeta = m.gguf ?? {};
+            const paramCount = gguf.total ?? null;
+            const modelId = m.modelId ?? m.id ?? '';
             return {
-                id: m.modelId || m.id,
-                author: m.author || (m.id ? m.id.split('/')[0] : ''),
-                name: m.id ? m.id.split('/').pop() : m.modelId || '',
-                downloads: m.downloads || 0,
-                likes: m.likes || 0,
-                tags: m.tags || [],
-                lastModified: m.lastModified || '',
-                architecture: gguf.architecture || null,
-                parameterCount: paramCount ? formatParamCount(paramCount) : null,
+                id: modelId,
+                author: m.author ?? (m.id != null ? m.id.split('/')[0] : ''),
+                name: m.id != null ? (m.id.split('/').pop() ?? '') : (m.modelId ?? ''),
+                downloads: m.downloads ?? 0,
+                likes: m.likes ?? 0,
+                tags: m.tags ?? [],
+                lastModified: m.lastModified ?? '',
+                architecture: gguf.architecture ?? null,
+                parameterCount: paramCount != null ? formatParamCount(paramCount) : null,
             };
         });
 
@@ -206,11 +236,11 @@ function extractQuantType(filename: string): string | null {
 
     for (const pat of patterns) {
         const match = filename.match(pat);
-        if (match) return match[1].toUpperCase();
+        if (match !== null) return match[1].toUpperCase();
     }
 
     const dirMatch = filename.match(/^(IQ[1-4]_[A-Z]+|Q[0-9]+_K_[A-Z]+|Q[0-9]+_K|Q[0-9]+_[0-9]+|BF16|F16|F32)\//i);
-    if (dirMatch) return dirMatch[1].toUpperCase();
+    if (dirMatch !== null) return dirMatch[1].toUpperCase();
 
     return null;
 }
@@ -237,13 +267,13 @@ function formatFileSize(bytes: number): string {
 }
 
 async function fetchTree(repoId: string, treePath: string): Promise<TreeFile[]> {
-    const apiPath = `/api/models/${repoId}/tree/main${treePath ? '/' + treePath : ''}`;
-    const entries: any[] = await hfApiGet(apiPath); // eslint-disable-line @typescript-eslint/no-explicit-any
+    const apiPath = `/api/models/${repoId}/tree/main${treePath !== '' ? '/' + treePath : ''}`;
+    const entries = (await hfApiGet(apiPath)) as HfTreeEntry[];
 
     let files: TreeFile[] = [];
     for (const entry of entries) {
         if (entry.type === 'file') {
-            const size = entry.lfs && entry.lfs.size ? entry.lfs.size : entry.size || 0;
+            const size = entry.lfs?.size != null ? entry.lfs.size : (entry.size ?? 0);
             files.push({ path: entry.path, size });
         } else if (entry.type === 'directory') {
             const subFiles = await fetchTree(repoId, entry.path);
@@ -255,16 +285,15 @@ async function fetchTree(repoId: string, treePath: string): Promise<TreeFile[]> 
 
 async function listRepoFiles(repoId: string): Promise<object> {
     try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const [modelData, treeFiles]: [any, TreeFile[]] = await Promise.all([
-            hfApiGet(`/api/models/${repoId}`),
+        const [modelData, treeFiles]: [HfModel, TreeFile[]] = await Promise.all([
+            hfApiGet(`/api/models/${repoId}`) as Promise<HfModel>,
             fetchTree(repoId, ''),
         ]);
 
-        const ggufMeta = modelData.gguf || {};
-        const architecture = ggufMeta.architecture || null;
-        const contextLength = ggufMeta.context_length || null;
-        const totalParamSize = ggufMeta.total || null;
+        const ggufMeta: HfGgufMeta = modelData.gguf ?? {};
+        const architecture = ggufMeta.architecture ?? null;
+        const contextLength = ggufMeta.contextLength ?? null;
+        const totalParamSize = ggufMeta.total ?? null;
 
         const ggufTreeFiles = treeFiles.filter((f) => f.path.endsWith('.gguf'));
 
@@ -274,7 +303,7 @@ async function listRepoFiles(repoId: string): Promise<object> {
                 files: [],
                 modelInfo: { architecture, contextLength, totalParamSize },
                 repoId,
-                repoName: modelData.modelId || repoId,
+                repoName: modelData.modelId ?? repoId,
             };
         }
 
@@ -286,16 +315,20 @@ async function listRepoFiles(repoId: string): Promise<object> {
         const standaloneFiles: TreeFile[] = [];
 
         for (const f of ggufTreeFiles) {
-            const fileName = f.path.split('/').pop()!;
+            const parts = f.path.split('/');
+            const fileName = parts[parts.length - 1] ?? '';
             const match = fileName.match(shardPattern);
-            if (match) {
+            if (match !== null) {
                 const baseName = match[1];
                 const dir = f.path.includes('/') ? f.path.split('/').slice(0, -1).join('/') : '';
-                const groupKey = dir ? `${dir}/${baseName}` : baseName;
+                const groupKey = dir !== '' ? `${dir}/${baseName}` : baseName;
                 if (!shardGroups.has(groupKey)) {
                     shardGroups.set(groupKey, { files: [], totalShards: parseInt(match[3], 10), baseName, dir });
                 }
-                shardGroups.get(groupKey)!.files.push(f);
+                const group = shardGroups.get(groupKey);
+                if (group !== undefined) {
+                    group.files.push(f);
+                }
             } else {
                 standaloneFiles.push(f);
             }
@@ -304,7 +337,8 @@ async function listRepoFiles(repoId: string): Promise<object> {
         const resultFiles: object[] = [];
 
         for (const f of standaloneFiles) {
-            const fileName = f.path.split('/').pop()!;
+            const parts = f.path.split('/');
+            const fileName = parts[parts.length - 1] ?? '';
             resultFiles.push({
                 name: fileName,
                 path: f.path,
@@ -328,20 +362,23 @@ async function listRepoFiles(repoId: string): Promise<object> {
             const displayName = `${group.baseName}.gguf (${group.files.length} parts)`;
             const shardFiles = group.files
                 .sort((a, b) => a.path.localeCompare(b.path))
-                .map((f) => ({
-                    name: f.path.split('/').pop(),
-                    path: f.path,
-                    size: f.size,
-                    sizeFormatted: formatFileSize(f.size),
-                    downloadUrl: `https://huggingface.co/${repoId}/resolve/main/${f.path}`,
-                }));
+                .map((f) => {
+                    const nameParts = f.path.split('/');
+                    return {
+                        name: nameParts[nameParts.length - 1] ?? '',
+                        path: f.path,
+                        size: f.size,
+                        sizeFormatted: formatFileSize(f.size),
+                        downloadUrl: `https://huggingface.co/${repoId}/resolve/main/${f.path}`,
+                    };
+                });
 
             resultFiles.push({
                 name: displayName,
-                path: group.dir ? `${group.dir}/${group.baseName}.gguf` : `${group.baseName}.gguf`,
+                path: group.dir !== '' ? `${group.dir}/${group.baseName}.gguf` : `${group.baseName}.gguf`,
                 size: totalSize,
                 sizeFormatted: formatFileSize(totalSize),
-                downloadUrl: shardFiles[0].downloadUrl,
+                downloadUrl: shardFiles[0]?.downloadUrl ?? '',
                 quantType: extractQuantType(groupKey),
                 estimatedRam: estimateRam(totalSize),
                 estimatedRamFormatted: formatFileSize(estimateRam(totalSize)),
@@ -354,7 +391,8 @@ async function listRepoFiles(repoId: string): Promise<object> {
             });
         }
 
-        resultFiles.sort((a: any, b: any) => a.size - b.size); // eslint-disable-line @typescript-eslint/no-explicit-any
+        type ResultFileWithSize = { size: number };
+        (resultFiles as ResultFileWithSize[]).sort((a, b) => a.size - b.size);
 
         return {
             success: true,
@@ -363,10 +401,10 @@ async function listRepoFiles(repoId: string): Promise<object> {
                 architecture,
                 contextLength,
                 totalParamSize,
-                totalParamSizeFormatted: formatFileSize(totalParamSize || 0),
+                totalParamSizeFormatted: formatFileSize(totalParamSize ?? 0),
             },
             repoId,
-            repoName: modelData.modelId || repoId,
+            repoName: modelData.modelId ?? repoId,
         };
     } catch (err) {
         return { success: false, error: `Failed to list files: ${(err as Error).message}` };
@@ -415,26 +453,28 @@ async function downloadModel(
             };
 
             const req = https.request(options, (res) => {
-                if (res.statusCode! >= 300 && res.statusCode! < 400 && res.headers.location) {
+                const statusCode = res.statusCode ?? 0;
+                const location = res.headers.location;
+                if (statusCode >= 300 && statusCode < 400 && location != null && location !== '') {
                     // Validate redirect targets against the same whitelist
                     try {
-                        assertAllowedDownloadUrl(res.headers.location);
+                        assertAllowedDownloadUrl(location);
                     } catch (err) {
                         activeDownloads.delete(fileName);
                         resolve({ success: false, error: (err as Error).message });
                         return;
                     }
-                    doRequest(res.headers.location);
+                    doRequest(location);
                     return;
                 }
 
-                if (res.statusCode !== 200) {
+                if (statusCode !== 200) {
                     activeDownloads.delete(fileName);
-                    resolve({ success: false, error: `Download failed: HTTP ${res.statusCode}` });
+                    resolve({ success: false, error: `Download failed: HTTP ${statusCode}` });
                     return;
                 }
 
-                const totalSize = parseInt(res.headers['content-length'] || '0', 10);
+                const totalSize = parseInt(res.headers['content-length'] ?? '0', 10);
                 let downloaded = 0;
 
                 const writeStream = createWriteStream(tempPath);
@@ -459,48 +499,43 @@ async function downloadModel(
                     }
                 });
 
-                res.on('end', async () => {
+                res.on('end', () => {
                     writeStream.close();
 
                     if (abortController.aborted) {
-                        try {
-                            await fs.unlink(tempPath);
-                        } catch {
+                        fs.unlink(tempPath).catch(() => {
                             /* ignore */
-                        }
+                        });
                         activeDownloads.delete(fileName);
                         resolve({ success: false, error: 'Download cancelled.' });
                         return;
                     }
 
-                    try {
-                        await fs.rename(tempPath, filePath);
-                        activeDownloads.delete(fileName);
-                        resolve({ success: true, filePath });
-                    } catch (err) {
-                        activeDownloads.delete(fileName);
-                        resolve({ success: false, error: `Failed to save file: ${(err as Error).message}` });
-                    }
+                    fs.rename(tempPath, filePath)
+                        .then(() => {
+                            activeDownloads.delete(fileName);
+                            resolve({ success: true, filePath });
+                        })
+                        .catch((err: unknown) => {
+                            activeDownloads.delete(fileName);
+                            resolve({ success: false, error: `Failed to save file: ${(err as Error).message}` });
+                        });
                 });
 
-                res.on('error', async (err) => {
+                res.on('error', (err: Error) => {
                     writeStream.close();
-                    try {
-                        await fs.unlink(tempPath);
-                    } catch {
+                    fs.unlink(tempPath).catch(() => {
                         /* ignore */
-                    }
+                    });
                     activeDownloads.delete(fileName);
                     resolve({ success: false, error: `Download error: ${err.message}` });
                 });
             });
 
-            req.on('error', async (err) => {
-                try {
-                    await fs.unlink(tempPath);
-                } catch {
+            req.on('error', (err: Error) => {
+                fs.unlink(tempPath).catch(() => {
                     /* ignore */
-                }
+                });
                 activeDownloads.delete(fileName);
                 resolve({ success: false, error: `Network error: ${err.message}` });
             });
@@ -514,7 +549,7 @@ async function downloadModel(
 
 async function cancelDownload(fileName: string): Promise<{ success: boolean; error?: string }> {
     const download = activeDownloads.get(fileName);
-    if (!download) {
+    if (download === undefined) {
         return { success: false, error: 'No active download found for this file.' };
     }
 

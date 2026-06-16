@@ -21,9 +21,12 @@
  *      color-mix(in srgb, var(--color-accent) 12%, transparent)
  */
 
-// ── Dark theme fallback ───────────────────────────────────────────────────────
-// Applied on first paint before JS loads the user's active theme.
-// Matches assets/themes/dark.json. Must stay in sync.
+/* ––––– Dark theme fallback ––––– */
+
+/**
+ * Applied on first paint before JS loads the user's active theme. 
+ * Matches assets/themes/dark.json. Must stay in sync.
+ */
 
 :root {
     --text1: #fff;
@@ -53,157 +56,98 @@
     --grid-color: rgb(255 255 255 / 6%);
 }
 
-// ── Typography ────────────────────────────────────────────────────────────────
+/* stylelint-disable scss/dollar-variable-empty-line-before */
+
+/* ––––– Typography ––––– */
 $font-family: 'Helvetica', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-
 $font-family-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Menlo', 'Consolas', 'DejaVu Sans Mono', monospace;
-
 $line-height: 1.6;
-
 $font-weight-normal: 400;
-
 $font-weight-medium: 500;
-
 $font-weight-semibold: 600;
-
 $font-weight-bold: 700;
-
 $font-size-xxs: 0.625rem;
-
 $font-size-xs: 0.75rem;
-
 $font-size-sm: 0.875rem;
-
 $font-size-base: 1rem;
-
 $font-size-lg: 1.125rem;
-
 $font-size-xl: 1.25rem;
-
 $font-size-2xl: 1.5rem;
-
 $font-size-3xl: 2rem;
-
 $font-size-4xl: 3rem;
-
 $font-size-5xl: 5rem;
 
-// ── Spacing ──────────────────────────────────────────────────
+/* ––––– Spacing ––––– */
 $space-0: 0.125em;
-
 $space-1: 0.25em;
-
 $space-2: 0.5em;
-
 $space-3: 0.75em;
-
 $space-4: 1em;
-
 $space-5: 1.25em;
-
 $space-6: 1.5em;
-
 $space-8: 2em;
-
 $space-9: 2.25em;
-
 $space-10: 2.5em;
-
 $space-11: 3em;
 
-// ── Layout ────────────────────────────────────────────────────────────────────
+/* ––––– Layout ––––– */
 $border-radius-xs: 0.1875em;
-
 $border-radius-sm: 0.25em;
-
 $border-radius: 0.375em;
-
 $border-radius-lg: 0.5em;
-
 $border-radius-xl: 0.75em;
-
 $border-radius-round: 9999em;
 
-// ── Motion ────────────────────────────────────────────────────────────────────
+/* ––––– Motion ––––– */
 $transition-fast: 0.12s ease;
-
 $transition-base: 0.2s ease;
-
 $transition-slow: 0.35s ease;
 
-// ── Z-index scale ─────────────────────────────────────────────────────────────
+/* ––––– Z-index scale ––––– */
 $z-base: 0;
-
 $z-normal: 1;
-
 $z-raised: 10;
-
 $z-mid: 20;
-
 $z-dropdown: 50;
-
 $z-overlay: 100;
-
 $z-modal: 200;
-
 $z-max: 1000;
-
 $z-extreme: 10000;
 
-// ── SCSS ALIASES ───────────────────────────────────────────────────────────────
-// Maps CSS custom properties to SCSS variables for use in components.
+/* –––––––––– SCSS ALIASES –––––––––– */
+
+/* ––– Maps CSS custom properties to SCSS variables for use in components. ––– */
 $text1: var(--text1);
-
 $text2: var(--text2);
-
 $text3: var(--text3);
-
 $text-primary: var(--text-primary);
-
 $text-muted: var(--text-muted);
-
 $base1: var(--base1);
-
 $base2: var(--base2);
-
 $base3: var(--base3);
-
 $bg-primary: var(--bg-primary);
-
 $bg-secondary: var(--bg-secondary);
-
 $bg-tertiary: var(--bg-tertiary);
-
 $bg-hover: var(--bg-hover);
-
 $bg-selected: var(--bg-selected);
-
 $border-color: var(--border-color);
-
 $accent-color: var(--accent-color);
-
 $accent-color-alpha: var(--accent-color-alpha);
-
 $success-color: var(--success-color);
-
 $success-color-alpha: var(--success-color-alpha);
-
 $warning-color: var(--warning-color);
-
 $warning-color-alpha: var(--warning-color-alpha);
-
 $danger-color: var(--danger-color);
-
 $danger-color-alpha: var(--danger-color-alpha);
-
 $scrollbar-thumb: var(--scrollbar-thumb);
-
 $scrollbar-thumb-hover: var(--scrollbar-thumb-hover);
-
 $grid-color: var(--grid-color);
 
-// ── GLOBAL RESET & BASE STYLES ────────────────────────────────────────────────
-// ── Universal box-sizing ──────────────────────────────────────────────────────
+/* stylelint-enable scss/dollar-variable-empty-line-before */
+
+/* –––––––––– GLOBAL RESET & BASE STYLES ––––––––– */
+
+/* ––––– Universal box-sizing ––––– */
 
 *,
 *::before,
@@ -211,7 +155,7 @@ $grid-color: var(--grid-color);
     box-sizing: border-box;
 }
 
-// ── Root ───────────────────────────────────────────────────────────────────────
+/* ––––– Root ––––– */
 
 :root {
     font-family: $font-family;
@@ -225,7 +169,7 @@ $grid-color: var(--grid-color);
     -moz-osx-font-smoothing: grayscale;
 }
 
-// ── Html, Body, App ───────────────────────────────────────────────────────────
+/* ––––– Html, Body, App ––––– */
 
 html {
     scroll-behavior: smooth;
@@ -244,7 +188,7 @@ html,
     overflow: hidden;
 }
 
-// ── Interactive elements ──────────────────────────────────────────────────────
+/* ––––– Interactive elements ––––– */
 
 button,
 input,
@@ -256,7 +200,7 @@ a,
     cursor: pointer;
 }
 
-// ── Scrollbar ─────────────────────────────────────────────────────────────────
+/* ––––– Scrollbar ––––– */
 
 ::-webkit-scrollbar {
     width: 6px;
@@ -277,7 +221,7 @@ a,
     }
 }
 
-// ── Focus & Selection ─────────────────────────────────────────────────────────
+/* ––––– Focus & Selection ––––– */
 
 :focus-visible {
     outline: 1.5px solid $accent-color;
@@ -290,7 +234,7 @@ a,
     color: $text1;
 }
 
-// ── Accessibility related ─────────────────────────────────────────────────────────
+/* ––––– Accessibility related ––––– */
 .sr-only {
     position: absolute;
     width: 1px;

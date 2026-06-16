@@ -31,21 +31,21 @@ export function useAIModel() {
     });
 
     const previousModelMatch = computed(() => {
-        if (!lastUsedModelName.value || status.value.isModelLoaded) return null;
-        return (
-            availableModels.value.find(
-                (m) => m.name === lastUsedModelName.value || m.path.endsWith(lastUsedModelName.value!),
-            ) || null
-        );
+        const modelName = lastUsedModelName.value;
+        if (modelName === null || modelName === '' || status.value.isModelLoaded) {
+            return null;
+        }
+        return availableModels.value.find((m) => m.name === modelName || m.path.endsWith(modelName)) ?? null;
     });
-
     const isReady = computed(() => status.value.isModelLoaded);
     const isAnyGenerating = computed(() => status.value.isGenerating);
 
     const selectedModelLabel = computed(() => {
-        if (!selectedModelPath.value) return 'Select a model...';
+        if (selectedModelPath.value === '') {
+            return 'Select a model...';
+        }
         const model = availableModels.value.find((m) => m.path === selectedModelPath.value);
-        return model ? truncate(model.name, 30) : 'Select a model...';
+        return model !== undefined ? truncate(model.name, 30) : 'Select a model...';
     });
 
     function truncate(text: string, max: number): string {
@@ -57,7 +57,7 @@ export function useAIModel() {
             showDropdown.value = false;
             return;
         }
-        if (dropdownRef.value) {
+        if (dropdownRef.value !== null) {
             const rect = dropdownRef.value.getBoundingClientRect();
             const menuWidth = Math.min(rect.width + 60, window.innerWidth - rect.left - 12);
             dropdownPosition.value = {
@@ -75,7 +75,7 @@ export function useAIModel() {
     }
 
     function handleDropdownClickOutside(event: MouseEvent) {
-        if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
+        if (dropdownRef.value !== null && !dropdownRef.value.contains(event.target as Node)) {
             showDropdown.value = false;
         }
     }
@@ -99,7 +99,9 @@ export function useAIModel() {
 
     /** Load a model by path (defaults to selectedModelPath). Caller handles post-load orchestration. */
     async function loadModel(path: string = selectedModelPath.value): Promise<{ success: boolean; error?: string }> {
-        if (!path) return { success: false, error: 'No model selected' };
+        if (path === '') {
+            return { success: false, error: 'No model selected' };
+        }
         isLoading.value = true;
         try {
             const result = await window.electronAPI.aiLoadModel(path);
@@ -118,12 +120,12 @@ export function useAIModel() {
     /** Bare unload — caller must stop generation and save conversation before calling. */
     async function unloadModel() {
         try {
-            if (status.value.currentModelName) {
+            if (status.value.currentModelName !== null && status.value.currentModelName !== '') {
                 lastUsedModelName.value = status.value.currentModelName;
             }
             await window.electronAPI.aiUnloadModel();
             await refreshStatus();
-            if (previousModelMatch.value) {
+            if (previousModelMatch.value !== null) {
                 selectedModelPath.value = previousModelMatch.value.path;
             }
         } catch (error) {
@@ -139,7 +141,8 @@ export function useAIModel() {
         chatHistory: { role: string; content: string }[],
         hasActiveConversation: boolean,
     ): Promise<{ success: boolean; error?: string }> {
-        const result = await loadModel(previousModelMatch.value?.path ?? '');
+        const previousPath = previousModelMatch.value !== null ? previousModelMatch.value.path : '';
+        const result = await loadModel(previousPath);
         if (result.success && hasActiveConversation && chatHistory.length > 0) {
             try {
                 await window.electronAPI.aiRestoreChatHistory(

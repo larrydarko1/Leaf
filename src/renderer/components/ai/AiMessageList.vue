@@ -22,21 +22,20 @@ const props = defineProps<{
 }>();
 
 defineEmits<{
-    (e: 'scroll'): void;
+    (
+        e:
+            | 'scroll'
+            | 'cancel-edit'
+            | 'regenerate'
+            | 'delete-last-pair'
+            | 'open-models-folder'
+            | 'open-history'
+            | 'load-previous-model',
+    ): void;
     (e: 'copy', content: string, index: number): void;
-    (e: 'copy-code', code: string): void;
-    (e: 'start-edit', index: number): void;
-    (e: 'cancel-edit'): void;
-    (e: 'confirm-edit', index: number): void;
-    (e: 'update:editContent', value: string): void;
-    (e: 'resend', index: number): void;
-    (e: 'regenerate'): void;
-    (e: 'delete-last-pair'): void;
-    (e: 'approve-agent-edit', msgIndex: number, editIndex: number): void;
-    (e: 'reject-agent-edit', msgIndex: number, editIndex: number): void;
-    (e: 'open-models-folder'): void;
-    (e: 'open-history'): void;
-    (e: 'load-previous-model'): void;
+    (e: 'copy-code' | 'update:editContent', value: string): void;
+    (e: 'start-edit' | 'confirm-edit' | 'resend', index: number): void;
+    (e: 'approve-agent-edit' | 'reject-agent-edit', msgIndex: number, editIndex: number): void;
 }>();
 
 const editInputRef = ref<HTMLTextAreaElement[]>();
@@ -94,14 +93,15 @@ function renderWithCopyBtns(content: string): string {
 
 async function onMarkdownClick(content: string, event: MouseEvent) {
     const target = event.target as Element;
-    const btn = target.closest('.ai-code-copy-btn') as HTMLButtonElement | null;
-    if (!btn) return;
+    const closest = target.closest('.ai-code-copy-btn');
+    const btn = closest instanceof HTMLButtonElement ? closest : null;
+    if (btn === null) return;
 
     const idx = parseInt(btn.dataset.blockIdx ?? '-1', 10);
     if (idx < 0) return;
 
     const code = extractCodeBlocks(content)[idx]?.code;
-    if (!code) return;
+    if (code === undefined || code === '') return;
 
     try {
         await window.electronAPI.writeClipboard(code);

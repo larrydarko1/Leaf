@@ -147,7 +147,7 @@ const maxWidth = 600;
 const isResizing = ref(false);
 
 const tokenUsagePercent = computed(() => {
-    if (!status.value.contextSize) return 0;
+    if (status.value.contextSize === 0 || status.value.contextSize === undefined) return 0;
     return Math.min(100, Math.round((conversationTokenCount.value / status.value.contextSize) * 100));
 });
 
@@ -155,7 +155,7 @@ onMounted(async () => {
     await refreshStatus();
     await refreshModels();
     await refreshConversationList();
-    if (status.value.isModelLoaded && inputField.value) {
+    if (status.value.isModelLoaded && inputField.value !== null) {
         inputField.value.focus();
     }
 });
@@ -191,13 +191,13 @@ async function loadConversation(id: string) {
 }
 
 async function loadPreviousModel() {
-    const hasConversation = !!currentConversationId.value;
+    const hasConversation = currentConversationId.value !== null && currentConversationId.value !== '';
     const history = messages.value.map((m) => ({ role: m.role, content: m.content }));
     const result = await model.loadPreviousModel(history, hasConversation);
     if (result.success) {
         if (!hasConversation) await startNewConversation();
         inputField.value?.focus();
-    } else if (result.error) {
+    } else if (result.error !== null && result.error !== undefined && result.error !== '') {
         messages.value.push({ role: 'assistant', content: `Failed to load model: ${result.error}` });
     }
 }

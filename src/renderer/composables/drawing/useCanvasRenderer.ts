@@ -33,14 +33,15 @@ export function useCanvasRenderer(
     // Canvas setup
 
     function setupCanvas() {
-        if (!canvas.value || !containerEl.value) return;
-        dpr = window.devicePixelRatio || 1;
+        if (canvas.value === null || containerEl.value === null) return;
+        dpr = window.devicePixelRatio ?? 1;
         const rect = containerEl.value.getBoundingClientRect();
         canvas.value.width = rect.width * dpr;
         canvas.value.height = rect.height * dpr;
         canvas.value.style.width = rect.width + 'px';
         canvas.value.style.height = rect.height + 'px';
-        ctx = canvas.value.getContext('2d')!;
+        const ctx2d = canvas.value.getContext('2d');
+        if (ctx2d !== null) ctx = ctx2d;
     }
 
     function handleResize() {
@@ -49,10 +50,10 @@ export function useCanvasRenderer(
     }
 
     function cssWidth() {
-        return canvas.value ? canvas.value.width / dpr : 0;
+        return canvas.value !== null ? canvas.value.width / dpr : 0;
     }
     function cssHeight() {
-        return canvas.value ? canvas.value.height / dpr : 0;
+        return canvas.value !== null ? canvas.value.height / dpr : 0;
     }
 
     // Coordinate transforms
@@ -72,14 +73,15 @@ export function useCanvasRenderer(
     }
 
     function getScreenPoint(e: PointerEvent | Touch) {
-        const rect = canvas.value!.getBoundingClientRect();
+        if (canvas.value === null) return { x: 0, y: 0 };
+        const rect = canvas.value.getBoundingClientRect();
         return { x: e.clientX - rect.left, y: e.clientY - rect.top };
     }
 
     // Rendering
 
     function renderScene() {
-        if (!ctx || !canvas.value) return;
+        if (ctx === null || canvas.value === null) return;
         const w = cssWidth();
         const h = cssHeight();
 
@@ -99,7 +101,7 @@ export function useCanvasRenderer(
             drawElement(el);
         }
 
-        if (creatingElement.value) {
+        if (creatingElement.value !== null) {
             drawElement(creatingElement.value);
         }
 
@@ -112,7 +114,7 @@ export function useCanvasRenderer(
         }
 
         // Draw marquee selection rectangle
-        if (marqueeRect.value) {
+        if (marqueeRect.value !== null) {
             drawMarquee(marqueeRect.value);
         }
 
@@ -120,7 +122,7 @@ export function useCanvasRenderer(
     }
 
     function drawGrid(w: number, h: number) {
-        if (!ctx) return;
+        if (ctx === null) return;
         const g = GRID_SIZE;
         const zg = g * zoom.value;
         if (zg < 4) return;
@@ -143,7 +145,7 @@ export function useCanvasRenderer(
     }
 
     function drawElement(el: CanvasElement) {
-        if (!ctx) return;
+        if (ctx === null) return;
 
         ctx.save();
         ctx.strokeStyle = el.strokeColor;
@@ -163,7 +165,7 @@ export function useCanvasRenderer(
                 ctx.setLineDash([]);
         }
 
-        const hasFill = el.fillColor && el.fillColor !== 'transparent';
+        const hasFill = el.fillColor !== null && el.fillColor !== undefined && el.fillColor !== 'transparent';
         if (hasFill) ctx.fillStyle = el.fillColor;
 
         const br = el.borderRadius ?? 0;
@@ -178,7 +180,7 @@ export function useCanvasRenderer(
                 const r = Math.min(br, maxR);
                 ctx.beginPath();
                 ctx.roundRect(rx, ry, rw, rh, r);
-                if (hasFill) ctx.fill();
+                if (hasFill === true) ctx.fill();
                 ctx.stroke();
                 break;
             }
@@ -189,7 +191,7 @@ export function useCanvasRenderer(
                 const rry = Math.abs(el.height) / 2;
                 ctx.beginPath();
                 ctx.ellipse(cx, cy, Math.max(0.1, rrx), Math.max(0.1, rry), 0, 0, Math.PI * 2);
-                if (hasFill) ctx.fill();
+                if (hasFill === true) ctx.fill();
                 ctx.stroke();
                 break;
             }
@@ -217,7 +219,7 @@ export function useCanvasRenderer(
                     ctx.lineTo(dcx - dhw, dcy);
                     ctx.closePath();
                 }
-                if (hasFill) ctx.fill();
+                if (hasFill === true) ctx.fill();
                 ctx.stroke();
                 break;
             }
@@ -243,7 +245,7 @@ export function useCanvasRenderer(
                     ctx.lineTo(tx, ty + th);
                     ctx.closePath();
                 }
-                if (hasFill) ctx.fill();
+                if (hasFill === true) ctx.fill();
                 ctx.stroke();
                 break;
             }
@@ -280,7 +282,7 @@ export function useCanvasRenderer(
                 break;
             }
             case 'freedraw': {
-                if (!el.points || el.points.length < 2) break;
+                if (el.points === null || el.points === undefined || el.points.length < 2) break;
                 ctx.beginPath();
                 ctx.moveTo(el.x + el.points[0].x, el.y + el.points[0].y);
                 for (let i = 1; i < el.points.length; i++) {
@@ -290,13 +292,14 @@ export function useCanvasRenderer(
                 break;
             }
             case 'text': {
-                if (!el.text) break;
-                const fs = el.fontSize || 20;
-                ctx.font = `${fs}px "Helvetica", "Segoe UI", sans-serif`;
+                if (el.text === null || el.text === undefined || el.text === '') break;
+                const fs = el.fontSize ?? 20;
+                const fsNum = fs !== null && fs !== undefined && fs > 0 ? fs : 20;
+                ctx.font = `${fsNum}px "Helvetica", "Segoe UI", sans-serif`;
                 ctx.fillStyle = el.strokeColor;
                 ctx.textBaseline = 'top';
                 const lines = el.text.split('\n');
-                const lh = fs * 1.3;
+                const lh = fsNum * 1.3;
                 for (let i = 0; i < lines.length; i++) {
                     ctx.fillText(lines[i], el.x, el.y + i * lh);
                 }
@@ -317,12 +320,12 @@ export function useCanvasRenderer(
                 ctx.scale(dsx, dsy);
                 ctx.lineWidth = el.strokeWidth / Math.sqrt(dsx * dsy);
                 const dbBodyPath = new Path2D('M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5');
-                if (hasFill) ctx.fill(dbBodyPath);
+                if (hasFill === true) ctx.fill(dbBodyPath);
                 ctx.stroke(dbBodyPath);
                 ctx.stroke(new Path2D('M3 12c0 1.66 4 3 9 3s9-1.34 9-3'));
                 const dbTopPath = new Path2D();
                 dbTopPath.ellipse(12, 5, 9, 3, 0, 0, Math.PI * 2);
-                if (hasFill) ctx.fill(dbTopPath);
+                if (hasFill === true) ctx.fill(dbTopPath);
                 ctx.stroke(dbTopPath);
                 ctx.restore();
                 break;
@@ -340,11 +343,11 @@ export function useCanvasRenderer(
                 ctx.lineWidth = el.strokeWidth / Math.sqrt(svrSX * svrSY);
                 ctx.beginPath();
                 ctx.roundRect(2, 2, 20, 8, 2);
-                if (hasFill) ctx.fill();
+                if (hasFill === true) ctx.fill();
                 ctx.stroke();
                 ctx.beginPath();
                 ctx.roundRect(2, 14, 20, 8, 2);
-                if (hasFill) ctx.fill();
+                if (hasFill === true) ctx.fill();
                 ctx.stroke();
                 ctx.beginPath();
                 ctx.arc(6, 6, 1, 0, Math.PI * 2);
@@ -369,7 +372,7 @@ export function useCanvasRenderer(
                 ctx.lineWidth = el.strokeWidth / Math.sqrt(usx * usy);
                 ctx.beginPath();
                 ctx.arc(12, 8, 5, 0, Math.PI * 2);
-                if (hasFill) ctx.fill();
+                if (hasFill === true) ctx.fill();
                 ctx.stroke();
                 ctx.stroke(new Path2D('M3 21c0-4.42 4-8 9-8s9 3.58 9 8'));
                 ctx.restore();
@@ -387,7 +390,7 @@ export function useCanvasRenderer(
                 ctx.scale(clsx, clsy);
                 ctx.lineWidth = el.strokeWidth / Math.sqrt(clsx * clsy);
                 const cloudPath = new Path2D('M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z');
-                if (hasFill) ctx.fill(cloudPath);
+                if (hasFill === true) ctx.fill(cloudPath);
                 ctx.stroke(cloudPath);
                 ctx.restore();
                 break;
@@ -404,7 +407,7 @@ export function useCanvasRenderer(
                 ctx.scale(ddsx, ddsy);
                 ctx.lineWidth = el.strokeWidth / Math.sqrt(ddsx * ddsy);
                 const pagePath = new Path2D('M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z');
-                if (hasFill) ctx.fill(pagePath);
+                if (hasFill === true) ctx.fill(pagePath);
                 ctx.stroke(pagePath);
                 ctx.stroke(new Path2D('M14 2 L14 8 L20 8'));
                 ctx.stroke(new Path2D('M8 13 L16 13'));
@@ -424,7 +427,7 @@ export function useCanvasRenderer(
                 ctx.scale(hsx, hsy);
                 ctx.lineWidth = el.strokeWidth / Math.sqrt(hsx * hsy);
                 const hexPath = new Path2D('M12 2 L22 7 L22 17 L12 22 L2 17 L2 7 Z');
-                if (hasFill) ctx.fill(hexPath);
+                if (hasFill === true) ctx.fill(hexPath);
                 ctx.stroke(hexPath);
                 ctx.restore();
                 break;
@@ -441,7 +444,7 @@ export function useCanvasRenderer(
                 ctx.scale(psx, psy);
                 ctx.lineWidth = el.strokeWidth / Math.sqrt(psx * psy);
                 const paraPath = new Path2D('M6 4 L22 4 L18 20 L2 20 Z');
-                if (hasFill) ctx.fill(paraPath);
+                if (hasFill === true) ctx.fill(paraPath);
                 ctx.stroke(paraPath);
                 ctx.restore();
                 break;
@@ -460,14 +463,14 @@ export function useCanvasRenderer(
                 const starPath = new Path2D(
                     'M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z',
                 );
-                if (hasFill) ctx.fill(starPath);
+                if (hasFill === true) ctx.fill(starPath);
                 ctx.stroke(starPath);
                 ctx.restore();
                 break;
             }
         }
 
-        if (el.type !== 'text' && el.text) {
+        if (el.type !== 'text' && el.text !== null && el.text !== undefined && el.text !== '') {
             drawEmbeddedText(el);
         }
 
@@ -503,17 +506,18 @@ export function useCanvasRenderer(
     }
 
     function drawEmbeddedText(el: CanvasElement) {
-        if (!ctx || !el.text) return;
+        if (ctx === null || el.text === null || el.text === undefined || el.text === '') return;
         const bounds = getElementBounds(el);
-        const fs = el.fontSize || 16;
+        const fs = el.fontSize ?? 16;
+        const fsNum = fs !== null && fs !== undefined && fs > 0 ? fs : 16;
         ctx.save();
-        ctx.font = `${fs}px "Helvetica", "Segoe UI", sans-serif`;
+        ctx.font = `${fsNum}px "Helvetica", "Segoe UI", sans-serif`;
         ctx.fillStyle = el.strokeColor;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.setLineDash([]);
         const lines = el.text.split('\n');
-        const lh = fs * 1.3;
+        const lh = fsNum * 1.3;
         const totalH = lines.length * lh;
         const cx = bounds.x + bounds.width / 2;
         const cy = bounds.y + bounds.height / 2;
@@ -525,7 +529,7 @@ export function useCanvasRenderer(
     }
 
     function drawSelectionOutline(el: CanvasElement, showHandles: boolean) {
-        if (!ctx) return;
+        if (ctx === null) return;
         ctx.save();
         const bounds = getElementBounds(el);
         const pad = 6 / zoom.value;
@@ -535,7 +539,7 @@ export function useCanvasRenderer(
         ctx.setLineDash([6 / zoom.value, 4 / zoom.value]);
         ctx.strokeRect(bounds.x - pad, bounds.y - pad, bounds.width + pad * 2, bounds.height + pad * 2);
         ctx.setLineDash([]);
-        if (showHandles) {
+        if (showHandles === true) {
             const handles = getHandlePositions(el);
             const hs = HANDLE_SIZE / zoom.value;
             for (const pos of Object.values(handles)) {
@@ -550,7 +554,7 @@ export function useCanvasRenderer(
     }
 
     function drawMarquee(rect: { x: number; y: number; width: number; height: number }) {
-        if (!ctx) return;
+        if (ctx === null) return;
         ctx.save();
         ctx.fillStyle = 'rgba(74, 144, 217, 0.08)';
         ctx.strokeStyle = SELECTION_COLOR;
@@ -599,10 +603,11 @@ export function useCanvasRenderer(
         const offscreen = document.createElement('canvas');
         offscreen.width = width;
         offscreen.height = height;
-        const offCtx = offscreen.getContext('2d')!;
+        const offCtx = offscreen.getContext('2d');
+        if (offCtx === null) return Promise.resolve(null);
 
         // Background
-        if (opts.withBackground) {
+        if (opts.withBackground === true) {
             offCtx.fillStyle = getCSSVariable('--base1');
             offCtx.fillRect(0, 0, width, height);
         }

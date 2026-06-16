@@ -28,12 +28,12 @@ export const interactiveExtension = EditorView.domEventHandlers({
         const target = event.target as HTMLElement;
 
         // ── Block CM6 from processing clicks inside embed media controls ────
-        if (target.closest('.cm-embed-controls')) {
+        if (target.closest('.cm-embed-controls') != null) {
             return true;
         }
 
         // ── Block CM6 for clicks on the video element itself ────────────────
-        if (target.closest('.cm-embed-video')) {
+        if (target.closest('.cm-embed-video') != null) {
             return true;
         }
 
@@ -42,13 +42,13 @@ export const interactiveExtension = EditorView.domEventHandlers({
         if (pos != null) {
             const tree = syntaxTree(view.state);
             let node = tree.resolveInner(pos, 1);
-            for (let depth = 0; depth < 10 && node; depth++) {
+            for (let depth = 0; depth < 10 && node != null; depth++) {
                 if (node.name === 'Link') {
                     const text = view.state.doc.sliceString(node.from, node.to);
                     const m = text.match(/\]\(([^)]+)\)$/);
-                    if (m && (m[1].startsWith('http://') || m[1].startsWith('https://'))) {
+                    if (m != null && (m[1].startsWith('http://') || m[1].startsWith('https://'))) {
                         event.preventDefault();
-                        window.electronAPI.openExternal(m[1]);
+                        void window.electronAPI.openExternal(m[1]);
                         return true;
                     }
                     break;
@@ -57,12 +57,12 @@ export const interactiveExtension = EditorView.domEventHandlers({
                     const url = view.state.doc.sliceString(node.from, node.to);
                     if (url.startsWith('http://') || url.startsWith('https://')) {
                         event.preventDefault();
-                        window.electronAPI.openExternal(url);
+                        void window.electronAPI.openExternal(url);
                         return true;
                     }
                     break;
                 }
-                if (!node.parent) break;
+                if (node.parent == null) break;
                 node = node.parent;
             }
         }
@@ -152,8 +152,8 @@ export function createMarkdownWidgetsPlugin(
                     const target = event.target as HTMLElement;
 
                     // ── Task checkbox toggle ──
-                    const label = target.closest('.cm-task-label') as HTMLElement | null;
-                    if (!label) return;
+                    const label = target.closest('.cm-task-label');
+                    if (label == null || !(label instanceof HTMLElement)) return;
 
                     const posStr = label.dataset.taskPos;
                     if (posStr == null) return;

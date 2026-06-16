@@ -16,11 +16,10 @@ defineProps<{
 defineEmits<{
     (e: 'update:inputMessage', value: string): void;
     (e: 'update:includeNoteContext', value: boolean): void;
-    (e: 'send'): void;
-    (e: 'stop'): void;
+    (e: 'send' | 'stop'): void;
 }>();
 
-const inputAreaRef = ref<HTMLDivElement>(null!);
+const inputAreaRef = ref<HTMLDivElement | null>(null);
 const isResizing = ref(false);
 const maxHeightPx = ref(120);
 const minHeight = 40;
@@ -58,7 +57,7 @@ function startResize(e: MouseEvent) {
 onMounted(() => {
     // Restore saved height preference if available
     const saved = localStorage.getItem('ai-input-max-height');
-    if (saved) {
+    if (saved !== null && saved !== '') {
         const value = parseInt(saved, 10);
         if (!isNaN(value) && value >= minHeight && value <= maxHeight) {
             maxHeightPx.value = value;

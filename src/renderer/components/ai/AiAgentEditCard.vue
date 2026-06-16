@@ -6,8 +6,8 @@ defineProps<{
 }>();
 
 defineEmits<{
-    (e: 'approve'): void;
-    (e: 'reject'): void;
+    // eslint-disable-next-line @typescript-eslint/prefer-function-type
+    (e: 'approve' | 'reject'): void;
 }>();
 </script>
 

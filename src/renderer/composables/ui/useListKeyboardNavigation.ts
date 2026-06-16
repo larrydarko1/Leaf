@@ -45,7 +45,7 @@ export function useListKeyboardNavigation<T>(
     }
 
     function getCurrentIndex(): number {
-        return getExternalIndex ? getExternalIndex() : selectedIndex.value;
+        return getExternalIndex !== undefined ? getExternalIndex() : selectedIndex.value;
     }
 
     function navigate(direction: 1 | -1) {
@@ -66,9 +66,9 @@ export function useListKeyboardNavigation<T>(
                 next = current < 0 ? 0 : Math.max(current - 1, 0);
             }
         }
-        if (!getExternalIndex) selectedIndex.value = next;
+        if (getExternalIndex === undefined) selectedIndex.value = next;
         callbacks.onSelect(list[next], next);
-        if (scrollSelector) {
+        if (scrollSelector !== undefined) {
             setTimeout(() => {
                 document.querySelector(scrollSelector)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }, 0);
@@ -92,7 +92,7 @@ export function useListKeyboardNavigation<T>(
                 e.preventDefault();
                 callbacks.onOpen(list[idx], idx);
             }
-        } else if (e.key === 'Escape' && callbacks.onEscape) {
+        } else if (e.key === 'Escape' && callbacks.onEscape !== undefined) {
             callbacks.onEscape();
         }
     }

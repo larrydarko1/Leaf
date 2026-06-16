@@ -20,21 +20,21 @@ export function useAudioPlayer() {
     }
 
     function onAudioLoaded() {
-        if (audioRef.value) {
+        if (audioRef.value !== null) {
             audioDuration.value = audioRef.value.duration;
         }
     }
 
     function onAudioEnded() {
         audioPlaying.value = false;
-        if (audioRafId) {
+        if (audioRafId !== null) {
             cancelAnimationFrame(audioRafId);
             audioRafId = null;
         }
     }
 
     function updateAudioProgress() {
-        if (audioRef.value) {
+        if (audioRef.value !== null) {
             audioCurrentTime.value = audioRef.value.currentTime;
         }
         if (audioPlaying.value) {
@@ -43,16 +43,16 @@ export function useAudioPlayer() {
     }
 
     function toggleAudioPlayback() {
-        if (!audioRef.value) return;
+        if (audioRef.value === null) return;
         if (audioPlaying.value) {
             audioRef.value.pause();
             audioPlaying.value = false;
-            if (audioRafId) {
+            if (audioRafId !== null) {
                 cancelAnimationFrame(audioRafId);
                 audioRafId = null;
             }
         } else {
-            audioRef.value.play();
+            void audioRef.value.play();
             audioPlaying.value = true;
             updateAudioProgress();
         }
@@ -64,7 +64,7 @@ export function useAudioPlayer() {
     });
 
     function seekAudio(event: MouseEvent) {
-        if (!audioRef.value || audioDuration.value === 0) return;
+        if (audioRef.value === null || audioDuration.value === 0) return;
         const wrapper = event.currentTarget as HTMLElement;
         const rect = wrapper.getBoundingClientRect();
         const percent = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
@@ -75,7 +75,7 @@ export function useAudioPlayer() {
     function onVolumeChange(event: Event) {
         const value = parseFloat((event.target as HTMLInputElement).value);
         audioVolume.value = value;
-        if (audioRef.value) {
+        if (audioRef.value !== null) {
             audioRef.value.volume = value;
         }
     }
@@ -86,7 +86,7 @@ export function useAudioPlayer() {
         } else {
             audioVolume.value = 1;
         }
-        if (audioRef.value) {
+        if (audioRef.value !== null) {
             audioRef.value.volume = audioVolume.value;
         }
     }
@@ -98,7 +98,7 @@ export function useAudioPlayer() {
 
         try {
             const result = await window.electronAPI.readAudio(filePath);
-            if (result.success && result.dataUrl) {
+            if (result.success && result.dataUrl !== undefined) {
                 audioUrl.value = result.dataUrl;
             } else {
                 window.electronAPI.log.error('Failed to load audio:', result.error);
@@ -113,7 +113,7 @@ export function useAudioPlayer() {
     }
 
     function reset() {
-        if (audioRafId) {
+        if (audioRafId !== null) {
             cancelAnimationFrame(audioRafId);
             audioRafId = null;
         }

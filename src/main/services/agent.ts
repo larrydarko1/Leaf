@@ -26,10 +26,10 @@ type EditRecord = {
 };
 
 // Backup directory inside system temp
-const BACKUP_DIR = path.join(os.tmpdir(), 'leaf-agent-backups');
+const BACKUP_DIR: string = path.join(os.tmpdir(), 'leaf-agent-backups');
 
 // In-memory registry of pending edits
-const pendingEdits = new Map<string, EditRecord>();
+const pendingEdits: Map<string, EditRecord> = new Map<string, EditRecord>();
 
 export async function cleanupAllPendingEdits(): Promise<void> {
     for (const [editId] of pendingEdits) {
@@ -64,7 +64,7 @@ export function register(ipc: IpcMain): void {
         return rejectEdit(editId);
     });
 
-    ipc.handle('agent:getPendingEdits', async () => getPendingEdits());
+    ipc.handle('agent:getPendingEdits', () => getPendingEdits());
 }
 
 async function ensureBackupDir(): Promise<void> {
@@ -166,7 +166,7 @@ async function proposeEdit(
 async function approveEdit(editId: string): Promise<{ success: boolean; error?: string }> {
     try {
         const edit = pendingEdits.get(editId);
-        if (!edit) {
+        if (edit === undefined) {
             return { success: false, error: `Edit ${editId} not found or already resolved.` };
         }
 
@@ -188,7 +188,7 @@ async function approveEdit(editId: string): Promise<{ success: boolean; error?: 
 async function rejectEdit(editId: string): Promise<{ success: boolean; error?: string }> {
     try {
         const edit = pendingEdits.get(editId);
-        if (!edit) {
+        if (edit === undefined) {
             return { success: false, error: `Edit ${editId} not found or already resolved.` };
         }
 

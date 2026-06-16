@@ -19,7 +19,7 @@ const searchInput = ref<HTMLInputElement | null>(null);
 const searchQuery = ref('');
 
 const searchResults = computed(() => {
-    if (!searchQuery.value.trim()) {
+    if (searchQuery.value.trim() === '') {
         return [];
     }
 
@@ -68,8 +68,11 @@ const { selectedIndex, resetIndex } = useListKeyboardNavigation<FileInfo>(
         onSelect: (file) => emit('selectFile', file),
         onOpen: openSelectedResult,
         onEscape: () => {
-            if (searchQuery.value) clearSearch();
-            else emit('close');
+            if (searchQuery.value.trim() !== '') {
+                clearSearch();
+            } else {
+                emit('close');
+            }
         },
     },
     {
@@ -114,7 +117,9 @@ function openSelectedResult() {
 }
 
 function highlightMatch(text: string): string {
-    if (!searchQuery.value.trim()) return text;
+    if (searchQuery.value.trim() === '') {
+        return text;
+    }
 
     const escaped = searchQuery.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(`(${escaped})`, 'gi');

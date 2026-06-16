@@ -17,7 +17,7 @@ export function useDictation(content: Ref<string>, onContentChange: () => void) 
     let dictationInterval: number | null = null;
     let whisperModelReady = false;
 
-    async function toggleDictation() {
+    async function toggleDictation(): Promise<void> {
         if (isDictating.value) {
             stopDictation();
             return;
@@ -58,7 +58,7 @@ export function useDictation(content: Ref<string>, onContentChange: () => void) 
         dictationProcessor = dictationAudioContext.createScriptProcessor(4096, 1, 1);
         dictationRawSamples = [];
 
-        dictationProcessor.onaudioprocess = (e) => {
+        dictationProcessor.onaudioprocess = (e): void => {
             const channelData = e.inputBuffer.getChannelData(0);
             dictationRawSamples.push(new Float32Array(channelData));
         };
@@ -68,48 +68,54 @@ export function useDictation(content: Ref<string>, onContentChange: () => void) 
 
         isDictating.value = true;
 
-        dictationInterval = window.setInterval(async () => {
-            if (dictationRawSamples.length === 0) return;
-
-            const chunks = dictationRawSamples.slice();
-            dictationRawSamples = [];
-
-            const totalLength = chunks.reduce((sum, c) => sum + c.length, 0);
-            const fullAudio = new Float32Array(totalLength);
-            let offset = 0;
-            for (const chunk of chunks) {
-                fullAudio.set(chunk, offset);
-                offset += chunk.length;
-            }
-
-            const nativeSampleRate = dictationAudioContext?.sampleRate || 44100;
-            const resampled = resampleTo16kHz(fullAudio, nativeSampleRate);
-
-            try {
-                const result = await window.electronAPI.speechTranscribe(Array.from(resampled));
-                if (result.success && result.text && result.text.length > 0) {
-                    const trimmedText = result.text.trim();
-                    if (trimmedText) {
-                        const needsSpace = content.value.length > 0 && !/\s$/.test(content.value);
-                        content.value += (needsSpace ? ' ' : '') + trimmedText;
-                        onContentChange();
-                    }
-                }
-            } catch (err) {
-                window.electronAPI.log.error('Transcription error:', err);
-            }
+        dictationInterval = window.setInterval((): void => {
+            void processDictationChunk();
         }, 5000);
     }
 
-    function stopDictation() {
+    async function processDictationChunk(): Promise<void> {
+        if (dictationRawSamples.length === 0) return;
+
+        const chunks = dictationRawSamples.slice();
+        dictationRawSamples = [];
+
+        const totalLength = chunks.reduce((sum, c) => sum + c.length, 0);
+        const fullAudio = new Float32Array(totalLength);
+        let offset = 0;
+        for (const chunk of chunks) {
+            fullAudio.set(chunk, offset);
+            offset += chunk.length;
+        }
+
+        const nativeSampleRate = dictationAudioContext?.sampleRate ?? 44100;
+        if (nativeSampleRate <= 0) return;
+
+        const resampled = resampleTo16kHz(fullAudio, nativeSampleRate);
+
+        try {
+            const result = await window.electronAPI.speechTranscribe(Array.from(resampled));
+            if (result.success && result.text !== null && result.text !== undefined && result.text.length > 0) {
+                const trimmedText = result.text.trim();
+                if (trimmedText.length > 0) {
+                    const needsSpace = content.value.length > 0 && !/\s$/.test(content.value);
+                    content.value += (needsSpace ? ' ' : '') + trimmedText;
+                    onContentChange();
+                }
+            }
+        } catch (err) {
+            window.electronAPI.log.error('Transcription error:', err);
+        }
+    }
+
+    function stopDictation(): void {
         isDictating.value = false;
 
-        if (dictationInterval) {
+        if (dictationInterval !== null) {
             clearInterval(dictationInterval);
             dictationInterval = null;
         }
 
-        if (dictationRawSamples.length > 0 && dictationAudioContext) {
+        if (dictationRawSamples.length > 0 && dictationAudioContext !== null) {
             const chunks = dictationRawSamples.slice();
             dictationRawSamples = [];
             const totalLength = chunks.reduce((sum, c) => sum + c.length, 0);
@@ -122,30 +128,39 @@ export function useDictation(content: Ref<string>, onContentChange: () => void) 
             const nativeSampleRate = dictationAudioContext.sampleRate;
             const resampled = resampleTo16kHz(fullAudio, nativeSampleRate);
 
-            window.electronAPI
+            void window.electronAPI
                 .speechTranscribe(Array.from(resampled))
-                .then((result) => {
-                    if (result.success && result.text && result.text.trim()) {
+                .then((result): void => {
+                    if (
+                        result.success &&
+                        result.text !== null &&
+                        result.text !== undefined &&
+                        result.text.trim().length > 0
+                    ) {
                         const needsSpace = content.value.length > 0 && !/\s$/.test(content.value);
                         content.value += (needsSpace ? ' ' : '') + result.text.trim();
                         onContentChange();
                     }
                 })
-                .catch(() => {});
+                .catch((): void => {
+                    // Silently ignore transcription errors on stop
+                });
         }
 
-        if (dictationProcessor) {
+        if (dictationProcessor !== null) {
             dictationProcessor.disconnect();
             dictationProcessor = null;
         }
 
-        if (dictationAudioContext) {
-            dictationAudioContext.close();
+        if (dictationAudioContext !== null) {
+            void dictationAudioContext.close();
             dictationAudioContext = null;
         }
 
-        if (dictationStream) {
-            dictationStream.getTracks().forEach((track) => track.stop());
+        if (dictationStream !== null) {
+            dictationStream.getTracks().forEach((track): void => {
+                track.stop();
+            });
             dictationStream = null;
         }
     }
@@ -165,7 +180,7 @@ function resampleTo16kHz(input: Float32Array, inputSampleRate: number): Float32A
         if (floor + 1 < input.length) {
             output[i] = input[floor] * (1 - frac) + input[floor + 1] * frac;
         } else {
-            output[i] = input[floor] || 0;
+            output[i] = input[floor] ?? 0;
         }
     }
     return output;

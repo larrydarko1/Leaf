@@ -10,12 +10,12 @@ export function useCodemirrorToolbar(view: Ref<EditorView | null>) {
     /** Wrap selection with markers, or insert placeholder text with markers. */
     function wrapSelection(openMarker: string, closeMarker: string, placeholder: string) {
         const v = view.value;
-        if (!v) return;
+        if (v === null) return;
         const { state } = v;
         const { from, to } = state.selection.main;
         const selected = state.sliceDoc(from, to);
 
-        if (selected) {
+        if (selected !== '') {
             const replacement = openMarker + selected + closeMarker;
             v.dispatch({
                 changes: { from, to, insert: replacement },
@@ -37,7 +37,7 @@ export function useCodemirrorToolbar(view: Ref<EditorView | null>) {
     /** Prefix each line in the selection with a string. */
     function prefixLines(prefix: string | ((i: number) => string)) {
         const v = view.value;
-        if (!v) return;
+        if (v === null) return;
         const { state } = v;
         const { from, to } = state.selection.main;
 
@@ -59,7 +59,7 @@ export function useCodemirrorToolbar(view: Ref<EditorView | null>) {
 
     function mdFormatText(format: string) {
         const v = view.value;
-        if (!v) return;
+        if (v === null) return;
 
         switch (format) {
             case 'bold':
@@ -104,7 +104,7 @@ export function useCodemirrorToolbar(view: Ref<EditorView | null>) {
             case 'link': {
                 const { from, to } = v.state.selection.main;
                 const selected = v.state.sliceDoc(from, to);
-                if (selected) {
+                if (selected !== '') {
                     const replacement = `[${selected}](url)`;
                     v.dispatch({
                         changes: { from, to, insert: replacement },
@@ -149,7 +149,7 @@ export function useCodemirrorToolbar(view: Ref<EditorView | null>) {
 
     function mdInsertHeading(event: Event) {
         const v = view.value;
-        if (!v) return;
+        if (v === null) return;
 
         const select = event.target as HTMLSelectElement;
         const level = parseInt(select.value);

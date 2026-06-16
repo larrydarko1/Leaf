@@ -23,10 +23,10 @@ export function useDrawingElements() {
     const selectedId = computed({
         get: () => {
             const first = selectedIds.value.values().next();
-            return first.done ? null : first.value;
+            return first.done === true ? null : first.value;
         },
         set: (id: string | null) => {
-            if (id) {
+            if (id !== null && id.length > 0) {
                 selectedIds.value = new Set([id]);
             } else {
                 selectedIds.value = new Set();
@@ -35,7 +35,9 @@ export function useDrawingElements() {
     });
 
     const selectedElement = computed(() =>
-        selectedId.value ? (elements.value.find((el) => el.id === selectedId.value) ?? null) : null,
+        selectedId.value !== null && selectedId.value.length > 0
+            ? (elements.value.find((el) => el.id === selectedId.value) ?? null)
+            : null,
     );
 
     const selectedElements = computed(() => elements.value.filter((el) => selectedIds.value.has(el.id)));
@@ -62,11 +64,11 @@ export function useDrawingElements() {
     // Bounds
 
     function getElementBounds(el: CanvasElement) {
-        if (el.type === 'freedraw' && el.points && el.points.length > 0) {
-            let minX = Infinity,
-                minY = Infinity,
-                maxX = -Infinity,
-                maxY = -Infinity;
+        if (el.type === 'freedraw' && el.points !== undefined && el.points !== null && el.points.length > 0) {
+            let minX = Infinity;
+            let minY = Infinity;
+            let maxX = -Infinity;
+            let maxY = -Infinity;
             for (const p of el.points) {
                 minX = Math.min(minX, el.x + p.x);
                 minY = Math.min(minY, el.y + p.y);
@@ -102,14 +104,14 @@ export function useDrawingElements() {
     // Hit testing
 
     function distanceToSegment(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {
-        const dx = x2 - x1,
-            dy = y2 - y1;
+        const dx = x2 - x1;
+        const dy = y2 - y1;
         const len2 = dx * dx + dy * dy;
         if (len2 === 0) return Math.sqrt((px - x1) ** 2 + (py - y1) ** 2);
         let t = ((px - x1) * dx + (py - y1) * dy) / len2;
         t = Math.max(0, Math.min(1, t));
-        const nx = x1 + t * dx,
-            ny = y1 + t * dy;
+        const nx = x1 + t * dx;
+        const ny = y1 + t * dy;
         return Math.sqrt((px - nx) ** 2 + (py - ny) ** 2);
     }
 
@@ -119,7 +121,7 @@ export function useDrawingElements() {
         if (el.type === 'line' || el.type === 'arrow') {
             return distanceToSegment(wx, wy, el.x, el.y, el.x + el.width, el.y + el.height) <= t + el.strokeWidth / 2;
         }
-        if (el.type === 'freedraw' && el.points) {
+        if (el.type === 'freedraw' && el.points !== undefined && el.points !== null) {
             for (let i = 1; i < el.points.length; i++) {
                 const p1 = el.points[i - 1];
                 const p2 = el.points[i];
@@ -145,7 +147,7 @@ export function useDrawingElements() {
     }
 
     function hitTestHandle(wx: number, wy: number, zoom: number): { elementId: string; handle: string } | null {
-        if (selectedIds.value.size !== 1 || !selectedElement.value) return null;
+        if (selectedIds.value.size !== 1 || selectedElement.value === null) return null;
         const handles = getHandlePositions(selectedElement.value);
         const hs = (HANDLE_SIZE + 4) / zoom;
         for (const [name, pos] of Object.entries(handles)) {
@@ -158,7 +160,7 @@ export function useDrawingElements() {
 
     // Element type checks
 
-    const shapeTools: Array<CanvasElement['type'] | 'select' | 'hand' | 'eraser' | 'freedraw' | 'text'> = [
+    const shapeTools: (CanvasElement['type'] | 'select' | 'hand' | 'eraser' | 'freedraw' | 'text')[] = [
         'rectangle',
         'ellipse',
         'diamond',

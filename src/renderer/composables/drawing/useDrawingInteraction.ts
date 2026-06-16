@@ -93,7 +93,10 @@ export function useDrawingInteraction(
             finalizeText();
             return;
         }
-        containerEl.value?.focus();
+        const container = containerEl.value;
+        if (container !== null) {
+            container.focus();
+        }
 
         const screenPt = getScreenPoint(e);
         const worldPt = screenToWorld(screenPt.x, screenPt.y);
@@ -102,9 +105,9 @@ export function useDrawingInteraction(
         // Text tool — don't capture pointer (textarea needs focus)
         if (tool === 'text') {
             const hit = hitTestElement(worldPt.x, worldPt.y, zoom.value);
-            if (hit && hit.type === 'text') {
+            if (hit !== null && hit.type === 'text') {
                 startEditText(hit);
-            } else if (hit && isShapeElement(hit) && hit.text) {
+            } else if (hit !== null && isShapeElement(hit) && hit.text !== undefined && hit.text.length > 0) {
                 startEditShapeText(hit);
             } else {
                 startNewText(worldPt.x, worldPt.y);
@@ -114,7 +117,10 @@ export function useDrawingInteraction(
         }
 
         // Non-text tools: capture pointer for drag
-        canvas.value?.setPointerCapture(e.pointerId);
+        const canvasEl = canvas.value;
+        if (canvasEl !== null) {
+            canvasEl.setPointerCapture(e.pointerId);
+        }
         isDragging.value = true;
         dragStartWorld.value = { ...worldPt };
         dragStartScreen.value = { ...screenPt };
@@ -127,16 +133,24 @@ export function useDrawingInteraction(
         if (tool === 'select') {
             // Resize handle only when single selection
             const handleHit = hitTestHandle(worldPt.x, worldPt.y, zoom.value);
-            if (handleHit) {
-                const el = elements.value.find((e) => e.id === handleHit.elementId)!;
-                dragAction.value = 'resize';
-                dragHandle.value = handleHit.handle;
-                dragOriginal.value = { x: el.x, y: el.y, width: el.width, height: el.height, fontSize: el.fontSize };
-                return;
+            if (handleHit !== null) {
+                const el = elements.value.find((e) => e.id === handleHit.elementId);
+                if (el !== undefined) {
+                    dragAction.value = 'resize';
+                    dragHandle.value = handleHit.handle;
+                    dragOriginal.value = {
+                        x: el.x,
+                        y: el.y,
+                        width: el.width,
+                        height: el.height,
+                        fontSize: el.fontSize,
+                    };
+                    return;
+                }
             }
 
             const hit = hitTestElement(worldPt.x, worldPt.y, zoom.value);
-            if (hit) {
+            if (hit !== null) {
                 if (shiftHeld.value) {
                     // Shift-click: toggle element in selection
                     const newSet = new Set(selectedIds.value);
@@ -174,10 +188,12 @@ export function useDrawingInteraction(
             dragAction.value = 'erase';
             erasedIds.value = [];
             const hit = hitTestElement(worldPt.x, worldPt.y, zoom.value);
-            if (hit) {
+            if (hit !== null) {
                 erasedIds.value.push(hit.id);
                 elements.value = elements.value.filter((el) => el.id !== hit.id);
-                if (selectedId.value === hit.id) selectedId.value = null;
+                if (selectedId.value === hit.id) {
+                    selectedId.value = null;
+                }
                 renderScene();
             }
             return;
@@ -243,16 +259,17 @@ export function useDrawingInteraction(
             }
 
             case 'create': {
-                if (!creatingElement.value) break;
-                let w = worldPt.x - creatingElement.value.x;
-                let h = worldPt.y - creatingElement.value.y;
+                const creating = creatingElement.value;
+                if (creating === null) break;
+                let w = worldPt.x - creating.x;
+                let h = worldPt.y - creating.y;
                 if (shiftHeld.value) {
-                    const constrained = constrainDimensions(creatingElement.value.type, w, h);
+                    const constrained = constrainDimensions(creating.type, w, h);
                     w = constrained.w;
                     h = constrained.h;
                 }
-                creatingElement.value.width = w;
-                creatingElement.value.height = h;
+                creating.width = w;
+                creating.height = h;
                 renderScene();
                 break;
             }
@@ -263,7 +280,7 @@ export function useDrawingInteraction(
                 const dy = worldPt.y - dragStartWorld.value.y;
                 for (const el of selectedElements.value) {
                     const orig = dragOriginals.value.get(el.id);
-                    if (orig) {
+                    if (orig !== undefined) {
                         el.x = orig.x + dx;
                         el.y = orig.y + dy;
                     }
@@ -274,24 +291,25 @@ export function useDrawingInteraction(
 
             case 'resize': {
                 const el = selectedElement.value;
-                if (!el || !dragOriginal.value || !dragHandle.value) break;
+                if (el === null || dragOriginal.value === null || dragHandle.value === null) break;
                 applyResize(el, dragHandle.value, worldPt.x, worldPt.y, dragOriginal.value);
                 renderScene();
                 break;
             }
 
             case 'freedraw': {
-                if (!creatingElement.value?.points) break;
-                const relX = worldPt.x - creatingElement.value.x;
-                const relY = worldPt.y - creatingElement.value.y;
-                creatingElement.value.points.push({ x: relX, y: relY });
+                const creating = creatingElement.value;
+                if (creating === null || creating.points === undefined) break;
+                const relX = worldPt.x - creating.x;
+                const relY = worldPt.y - creating.y;
+                creating.points.push({ x: relX, y: relY });
                 renderScene();
                 break;
             }
 
             case 'erase': {
                 const hit = hitTestElement(worldPt.x, worldPt.y, zoom.value);
-                if (hit && !erasedIds.value.includes(hit.id)) {
+                if (hit !== null && !erasedIds.value.includes(hit.id)) {
                     erasedIds.value.push(hit.id);
                     elements.value = elements.value.filter((el) => el.id !== hit.id);
                     if (selectedIds.value.has(hit.id)) {
@@ -305,14 +323,15 @@ export function useDrawingInteraction(
             }
 
             case 'marquee': {
-                if (!marqueeRect.value) break;
-                marqueeRect.value.width = worldPt.x - marqueeRect.value.x;
-                marqueeRect.value.height = worldPt.y - marqueeRect.value.y;
+                const marquee = marqueeRect.value;
+                if (marquee === null) break;
+                marquee.width = worldPt.x - marquee.x;
+                marquee.height = worldPt.y - marquee.y;
                 // Find elements inside marquee
-                const mx = Math.min(marqueeRect.value.x, marqueeRect.value.x + marqueeRect.value.width);
-                const my = Math.min(marqueeRect.value.y, marqueeRect.value.y + marqueeRect.value.height);
-                const mw = Math.abs(marqueeRect.value.width);
-                const mh = Math.abs(marqueeRect.value.height);
+                const mx = Math.min(marquee.x, marquee.x + marquee.width);
+                const my = Math.min(marquee.y, marquee.y + marquee.height);
+                const mw = Math.abs(marquee.width);
+                const mh = Math.abs(marquee.height);
                 const newSet = shiftHeld.value ? new Set(selectedIds.value) : new Set<string>();
                 for (const el of elements.value) {
                     const b = getElementBounds(el);
@@ -329,7 +348,10 @@ export function useDrawingInteraction(
 
     function onPointerUp(e: PointerEvent) {
         if (!isDragging.value) return;
-        canvas.value?.releasePointerCapture(e.pointerId);
+        const canvasEl = canvas.value;
+        if (canvasEl !== null) {
+            canvasEl.releasePointerCapture(e.pointerId);
+        }
 
         const action = dragAction.value;
         isDragging.value = false;
@@ -337,8 +359,9 @@ export function useDrawingInteraction(
 
         switch (action) {
             case 'create': {
-                if (!creatingElement.value) break;
-                const el = creatingElement.value;
+                const creating = creatingElement.value;
+                if (creating === null) break;
+                const el = creating;
                 if (!['line', 'arrow'].includes(el.type)) {
                     if (el.width < 0) {
                         el.x += el.width;
@@ -369,25 +392,26 @@ export function useDrawingInteraction(
             }
 
             case 'freedraw': {
-                if (!creatingElement.value?.points || creatingElement.value.points.length < 2) {
+                const creating = creatingElement.value;
+                if (creating === null || creating.points === undefined || creating.points.length < 2) {
                     creatingElement.value = null;
                     break;
                 }
-                const pts = creatingElement.value.points;
-                let minX = Infinity,
-                    minY = Infinity,
-                    maxX = -Infinity,
-                    maxY = -Infinity;
+                const pts = creating.points;
+                let minX = Infinity;
+                let minY = Infinity;
+                let maxX = -Infinity;
+                let maxY = -Infinity;
                 for (const p of pts) {
                     minX = Math.min(minX, p.x);
                     minY = Math.min(minY, p.y);
                     maxX = Math.max(maxX, p.x);
                     maxY = Math.max(maxY, p.y);
                 }
-                creatingElement.value.width = maxX - minX;
-                creatingElement.value.height = maxY - minY;
-                elements.value.push(creatingElement.value);
-                selectedId.value = creatingElement.value.id;
+                creating.width = maxX - minX;
+                creating.height = maxY - minY;
+                elements.value.push(creating);
+                selectedId.value = creating.id;
                 creatingElement.value = null;
                 saveToHistory();
                 scheduleAutoSave();
@@ -440,10 +464,10 @@ export function useDrawingInteraction(
             return;
         }
 
-        const ox = orig.x,
-            oy = orig.y,
-            ow = orig.width,
-            oh = orig.height;
+        const ox = orig.x;
+        const oy = orig.y;
+        const ow = orig.width;
+        const oh = orig.height;
         switch (handle) {
             case 'nw':
                 el.x = wx;
@@ -468,28 +492,32 @@ export function useDrawingInteraction(
         }
 
         // Scale font size proportionally for text elements
-        if ((el.type === 'text' || el.text) && orig.fontSize) {
+        const origFontSize = orig.fontSize;
+        if ((el.type === 'text' || el.text !== undefined) && origFontSize !== undefined) {
             const scaleW = ow !== 0 ? Math.abs(el.width) / Math.abs(ow) : 1;
             const scaleH = oh !== 0 ? Math.abs(el.height) / Math.abs(oh) : 1;
             const scale = Math.max(scaleW, scaleH);
-            const newFs = Math.max(8, Math.round(orig.fontSize * scale));
+            const newFs = Math.max(8, Math.round(origFontSize * scale));
             el.fontSize = newFs;
 
             // Recalculate text bounds to match the new font size
-            if (el.type === 'text' && el.text) {
-                const ctx = canvas.value?.getContext('2d');
-                if (ctx) {
-                    ctx.save();
-                    ctx.font = `${newFs}px "Helvetica", "Segoe UI", sans-serif`;
-                    const lines = el.text.split('\n');
-                    const lh = newFs * 1.3;
-                    let maxW = 0;
-                    for (const line of lines) {
-                        maxW = Math.max(maxW, ctx.measureText(line).width);
+            if (el.type === 'text' && el.text !== undefined && el.text.length > 0) {
+                const canvasEl = canvas.value;
+                if (canvasEl !== null) {
+                    const ctx = canvasEl.getContext('2d');
+                    if (ctx !== null) {
+                        ctx.save();
+                        ctx.font = `${newFs}px "Helvetica", "Segoe UI", sans-serif`;
+                        const lines = el.text.split('\n');
+                        const lh = newFs * 1.3;
+                        let maxW = 0;
+                        for (const line of lines) {
+                            maxW = Math.max(maxW, ctx.measureText(line).width);
+                        }
+                        ctx.restore();
+                        el.width = maxW;
+                        el.height = lines.length * lh;
                     }
-                    ctx.restore();
-                    el.width = maxW;
-                    el.height = lines.length * lh;
                 }
             }
         }
@@ -592,12 +620,13 @@ export function useDrawingInteraction(
             return;
         }
 
-        if (e.key === 'Enter' && selectedElement.value) {
+        if (e.key === 'Enter' && selectedElement.value !== null) {
             e.preventDefault();
-            if (selectedElement.value.type === 'text') {
-                startEditText(selectedElement.value);
-            } else if (isShapeElement(selectedElement.value)) {
-                startEditShapeText(selectedElement.value);
+            const sel = selectedElement.value;
+            if (sel.type === 'text') {
+                startEditText(sel);
+            } else if (isShapeElement(sel)) {
+                startEditShapeText(sel);
             }
             return;
         }
@@ -627,7 +656,7 @@ export function useDrawingInteraction(
                 '0': 'eraser',
             };
             const tool = toolMap[e.key.toLowerCase()];
-            if (tool) {
+            if (tool !== undefined) {
                 e.preventDefault();
                 selectTool(tool);
                 return;

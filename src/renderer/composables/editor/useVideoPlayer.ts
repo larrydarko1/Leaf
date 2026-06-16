@@ -15,7 +15,7 @@ export function useVideoPlayer() {
     let videoRafId: number | null = null;
 
     function formatTime(seconds: number): string {
-        if (!seconds || !isFinite(seconds)) return '0:00';
+        if (isNaN(seconds) || !isFinite(seconds)) return '0:00';
         const m = Math.floor(seconds / 60);
         const s = Math.floor(seconds % 60);
         return `${m}:${s.toString().padStart(2, '0')}`;
@@ -26,21 +26,21 @@ export function useVideoPlayer() {
     }
 
     function onVideoLoaded() {
-        if (videoRef.value) {
+        if (videoRef.value !== null) {
             videoDuration.value = videoRef.value.duration;
         }
     }
 
     function onVideoEnded() {
         videoPlaying.value = false;
-        if (videoRafId) {
+        if (videoRafId !== null) {
             cancelAnimationFrame(videoRafId);
             videoRafId = null;
         }
     }
 
     function updateVideoProgress() {
-        if (videoRef.value) {
+        if (videoRef.value !== null) {
             videoCurrentTime.value = videoRef.value.currentTime;
         }
         if (videoPlaying.value) {
@@ -49,16 +49,16 @@ export function useVideoPlayer() {
     }
 
     function toggleVideoPlayback() {
-        if (!videoRef.value) return;
+        if (videoRef.value === null) return;
         if (videoPlaying.value) {
             videoRef.value.pause();
             videoPlaying.value = false;
-            if (videoRafId) {
+            if (videoRafId !== null) {
                 cancelAnimationFrame(videoRafId);
                 videoRafId = null;
             }
         } else {
-            videoRef.value.play();
+            void videoRef.value.play();
             videoPlaying.value = true;
             updateVideoProgress();
         }
@@ -70,7 +70,7 @@ export function useVideoPlayer() {
     });
 
     function seekVideo(event: MouseEvent) {
-        if (!videoRef.value || videoDuration.value === 0) return;
+        if (videoRef.value === null || videoDuration.value === 0) return;
         const wrapper = event.currentTarget as HTMLElement;
         const rect = wrapper.getBoundingClientRect();
         const percent = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
@@ -81,7 +81,7 @@ export function useVideoPlayer() {
     function onVideoVolumeChange(event: Event) {
         const value = parseFloat((event.target as HTMLInputElement).value);
         videoVolume.value = value;
-        if (videoRef.value) {
+        if (videoRef.value !== null) {
             videoRef.value.volume = value;
         }
     }
@@ -92,13 +92,13 @@ export function useVideoPlayer() {
         } else {
             videoVolume.value = 1;
         }
-        if (videoRef.value) {
+        if (videoRef.value !== null) {
             videoRef.value.volume = videoVolume.value;
         }
     }
 
     function reset() {
-        if (videoRafId) {
+        if (videoRafId !== null) {
             cancelAnimationFrame(videoRafId);
             videoRafId = null;
         }

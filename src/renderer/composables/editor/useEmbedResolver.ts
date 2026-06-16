@@ -13,7 +13,7 @@ export function useEmbedResolver(getFile: () => { path: string } | null, getWork
     async function resolveEmbeds(text: string) {
         const file = getFile();
         const workspacePath = getWorkspacePath();
-        if (!file || !workspacePath) return;
+        if (file === null || workspacePath === null) return;
 
         const embedRegex = /!\[\[([^\]]+)\]\]/g;
         const matches = [...text.matchAll(embedRegex)];
@@ -26,7 +26,7 @@ export function useEmbedResolver(getFile: () => { path: string } | null, getWork
         for (const match of matches) {
             const inner = match[1];
             const fileName = inner.split('|')[0].split('#')[0].trim();
-            if (fileName && !embedCache.value.has(fileName)) {
+            if (fileName !== '' && !embedCache.value.has(fileName)) {
                 fileNames.add(fileName);
             }
         }
@@ -47,10 +47,15 @@ export function useEmbedResolver(getFile: () => { path: string } | null, getWork
 
         let changed = false;
         for (const entry of results) {
-            if (entry?.result.success && entry.result.path) {
+            if (
+                entry !== null &&
+                entry.result.success === true &&
+                typeof entry.result.path === 'string' &&
+                entry.result.path !== ''
+            ) {
                 embedCache.value.set(entry.fileName, entry.result.path);
                 changed = true;
-            } else if (entry) {
+            } else if (entry !== null) {
                 // Cache negative results so we don't re-resolve on every keystroke
                 embedCache.value.set(entry.fileName, '');
                 changed = true;
@@ -63,7 +68,8 @@ export function useEmbedResolver(getFile: () => { path: string } | null, getWork
     }
 
     function getEmbedMediaType(fileName: string): 'image' | 'video' | 'audio' | 'pdf' | 'note' | 'unknown' {
-        const ext = '.' + fileName.split('.').pop()!.toLowerCase();
+        const lastPart = fileName.split('.').pop() ?? 'unknown';
+        const ext = '.' + lastPart.toLowerCase();
         if (checkImage(ext)) return 'image';
         if (checkVideo(ext)) return 'video';
         if (checkAudio(ext)) return 'audio';

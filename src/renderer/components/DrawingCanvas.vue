@@ -215,7 +215,7 @@ const shouldShowProperties = computed(() => {
 
 const showFillOption = computed(() => {
     const tool = effectiveTool.value;
-    if (selectedElement.value) {
+    if (selectedElement.value !== null) {
         return !['line', 'arrow', 'freedraw', 'text'].includes(selectedElement.value.type);
     }
     return !['freedraw', 'line', 'arrow', 'text', 'select', 'hand', 'eraser'].includes(tool);
@@ -230,7 +230,9 @@ const activeFontSize = computed(() => selectedElement.value?.fontSize ?? default
 
 const showFontSizeOption = computed(() => {
     if (selectedElements.value.length > 0) {
-        return selectedElements.value.some((el) => el.type === 'text' || !!el.text);
+        return selectedElements.value.some(
+            (el) => el.type === 'text' || (el.text !== null && el.text !== undefined && el.text !== ''),
+        );
     }
     return currentTool.value === 'text';
 });
@@ -238,7 +240,7 @@ const showFontSizeOption = computed(() => {
 const showRoundnessOption = computed(() => {
     const roundableTypes = ['rectangle', 'diamond', 'triangle', 'hexagon', 'parallelogram'];
     const tool = effectiveTool.value;
-    if (selectedElement.value) {
+    if (selectedElement.value !== null) {
         return roundableTypes.includes(selectedElement.value.type);
     }
     return roundableTypes.includes(tool);
@@ -261,7 +263,7 @@ onMounted(() => {
     loadDrawing();
     window.addEventListener('resize', handleResize);
     document.addEventListener('mousedown', handleClickOutside);
-    nextTick(() => containerEl.value?.focus());
+    void nextTick(() => containerEl.value?.focus());
 });
 
 onUnmounted(() => {
@@ -290,9 +292,16 @@ function setProperty(prop: StyleKey, value: string | number) {
             el[prop] = value as never;
 
             // When fontSize changes on a text element, recalculate bounds to fit
-            if (prop === 'fontSize' && typeof value === 'number' && el.type === 'text' && el.text) {
+            if (
+                prop === 'fontSize' &&
+                typeof value === 'number' &&
+                el.type === 'text' &&
+                el.text !== null &&
+                el.text !== undefined &&
+                el.text !== ''
+            ) {
                 const ctx = getCtx();
-                if (ctx) {
+                if (ctx !== null) {
                     ctx.save();
                     ctx.font = `${value}px "Helvetica", "Segoe UI", sans-serif`;
                     const lines = el.text.split('\n');

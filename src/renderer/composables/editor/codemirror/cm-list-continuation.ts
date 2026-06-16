@@ -27,7 +27,7 @@ function renumberOrderedList(text: string, fromPos: number, indent: string, star
 
     for (let i = 0; i < lines.length; i++) {
         const match = lines[i].match(pattern);
-        if (!match) break;
+        if (match == null) break;
         const oldNum = parseInt(match[1]);
         if (oldNum !== num) {
             lines[i] = lines[i].replace(pattern, `${indent}${num}. `);
@@ -55,13 +55,15 @@ function listContinuation(view: EditorView): boolean {
 
     // Bullet list: "  - content" or "  - [ ] content" or "  - [x] content" or "  - [/] content"
     const bulletMatch = textBeforeCursor.match(/^(\s*)- (\[[ x/]\] )?(.*)$/i);
-    if (bulletMatch) {
+    if (bulletMatch != null) {
         const indent = bulletMatch[1];
-        const checkbox = bulletMatch[2] || '';
+        const checkbox = bulletMatch[2] ?? '';
         const lineContent = bulletMatch[3];
+        const trimmedContent = lineContent.trim();
+        const isEmpty = trimmedContent.length === 0;
 
         // Empty list item → remove the prefix
-        if (!lineContent.trim()) {
+        if (isEmpty) {
             view.dispatch({
                 changes: { from: line.from, to: cursorPos, insert: '' },
                 selection: EditorSelection.cursor(line.from),
@@ -70,7 +72,7 @@ function listContinuation(view: EditorView): boolean {
         }
 
         // Continue the list
-        const prefix = checkbox ? `${indent}- [ ] ` : `${indent}- `;
+        const prefix = checkbox !== '' ? `${indent}- [ ] ` : `${indent}- `;
         view.dispatch({
             changes: { from: cursorPos, to: cursorPos, insert: '\n' + prefix },
             selection: EditorSelection.cursor(cursorPos + 1 + prefix.length),
@@ -80,13 +82,15 @@ function listContinuation(view: EditorView): boolean {
 
     // Ordered list: "  1. content"
     const orderedMatch = textBeforeCursor.match(/^(\s*)(\d+)\. (.*)$/);
-    if (orderedMatch) {
+    if (orderedMatch != null) {
         const indent = orderedMatch[1];
         const num = parseInt(orderedMatch[2]);
         const lineContent = orderedMatch[3];
+        const trimmedContent = lineContent.trim();
+        const isEmpty = trimmedContent.length === 0;
 
         // Empty list item → remove the prefix
-        if (!lineContent.trim()) {
+        if (isEmpty) {
             view.dispatch({
                 changes: { from: line.from, to: cursorPos, insert: '' },
                 selection: EditorSelection.cursor(line.from),

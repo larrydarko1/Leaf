@@ -37,10 +37,12 @@ import * as themeService from './services/theme';
 import { migrateLegacyPaths } from './lib/paths';
 import { log } from './lib/logger';
 
-// ─── Scheme privileges ───────────────────────────────────────────────────────
-// Must be called before app.whenReady(). Tells Chromium the leaf:// scheme
-// supports streaming (needed for video/audio playback with range requests),
-// is secure (needed for iframe PDF viewing), and supports fetch.
+/**
+ * ─── Scheme privileges ───────────────────────────────────────────────────────
+ * Must be called before app.whenReady(). Tells Chromium the leaf:// scheme
+ * supports streaming (needed for video/audio playback with range requests),
+ * is secure (needed for iframe PDF viewing), and supports fetch.
+ * */
 protocol.registerSchemesAsPrivileged([
     {
         scheme: 'leaf',
@@ -94,18 +96,20 @@ function createWindow(): void {
 
     // Context menu: spellcheck suggestions + standard editing actions
     mainWindow.webContents.on('context-menu', (_event, params) => {
+        const win = mainWindow;
+        if (win === null) return;
+
         const menu = Menu.buildFromTemplate([
             ...params.dictionarySuggestions.map((s) => ({
                 label: s,
-                click: () => mainWindow!.webContents.replaceMisspelling(s),
+                click: () => win.webContents.replaceMisspelling(s),
             })),
             ...(params.dictionarySuggestions.length > 0 ? [{ type: 'separator' as const }] : []),
-            ...(params.misspelledWord
+            ...(params.misspelledWord !== ''
                 ? [
                       {
                           label: 'Add to Dictionary',
-                          click: () =>
-                              mainWindow!.webContents.session.addWordToSpellCheckerDictionary(params.misspelledWord),
+                          click: () => win.webContents.session.addWordToSpellCheckerDictionary(params.misspelledWord),
                       },
                       { type: 'separator' as const },
                   ]
@@ -119,41 +123,43 @@ function createWindow(): void {
         menu.popup();
     });
 
-    // Load the app
-    // electron-vite sets ELECTRON_RENDERER_URL in dev mode
-    if (process.env['ELECTRON_RENDERER_URL']) {
-        mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
-        mainWindow.webContents.openDevTools();
+    // Load the app, electron-vite sets ELECTRON_RENDERER_URL in dev mode
+    const rendererUrl = process.env['ELECTRON_RENDERER_URL'];
+    if (rendererUrl !== undefined && rendererUrl !== '') {
+        void mainWindow.loadURL(rendererUrl);
+        void mainWindow.webContents.openDevTools();
     } else {
-        mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+        void mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
     }
 
     // Keep external links out of the app window
     mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-        if (url.startsWith('http://') || url.startsWith('https://')) shell.openExternal(url);
+        if (url.startsWith('http://') || url.startsWith('https://')) void shell.openExternal(url);
         return { action: 'deny' };
     });
 
     mainWindow.webContents.on('will-navigate', (event, url) => {
-        const isDevServer = !!process.env['ELECTRON_RENDERER_URL'];
-        const appOrigin = isDevServer ? process.env['ELECTRON_RENDERER_URL']! : 'file://';
+        const isDevServer = rendererUrl !== undefined && rendererUrl !== '';
+        const appOrigin = isDevServer ? rendererUrl : 'file://';
         if (!url.startsWith(appOrigin) && !url.startsWith('leaf://')) {
             event.preventDefault();
-            if (url.startsWith('http://') || url.startsWith('https://')) shell.openExternal(url);
+            if (url.startsWith('http://') || url.startsWith('https://')) void shell.openExternal(url);
         }
     });
 
-    mainWindow.once('ready-to-show', () => mainWindow!.show());
+    const win = mainWindow;
+    mainWindow.once('ready-to-show', () => win.show());
     mainWindow.on('closed', () => {
         mainWindow = null;
     });
 }
 
-// ─── Custom protocol: leaf:// ─────────────────────────────────────────────────
-// Serves local files (images, audio, video) to the renderer process with
-// correct MIME types, replacing the need for webSecurity:false.
-// Usage from renderer: <img src="leaf://localhost/absolute/path/to/file.png">
-
+/**
+ * ─── Custom protocol: leaf:// ─────────────────────────────────────────────────
+ * Serves local files (images, audio, video) to the renderer process with
+ * correct MIME types, replacing the need for webSecurity:false.
+ * Usage from renderer: <img src="leaf://localhost/absolute/path/to/file.png">
+ */
 function registerLeafProtocol(ses: Electron.Session): void {
     ses.protocol.handle('leaf', (request) => {
         // leaf://localhost/path/to/file  →  /path/to/file
@@ -169,16 +175,18 @@ function registerLeafProtocol(ses: Electron.Session): void {
 
 // ─── App lifecycle ────────────────────────────────────────────────────────────
 
-app.whenReady().then(() => {
+void app.whenReady().then(() => {
     const leafSession = session.fromPartition('persist:leaf');
 
     registerLeafProtocol(leafSession);
     createWindow();
 
-    // Grant microphone access for audio recording.
-    // In production (file:// origin) Electron denies all permission requests
-    // by default, so we need an explicit handler.
-    // Must target the partition session used by the BrowserWindow.
+    /**
+     * Grant microphone access for audio recording.
+     * In production (file:// origin) Electron denies all permission requests
+     * by default, so we need an explicit handler.
+     * Must target the partition session used by the BrowserWindow.
+     */
     leafSession.setPermissionRequestHandler((_webContents, permission, callback) => {
         // 'media' covers microphone and camera access in Electron
         callback(permission === 'media');
@@ -234,11 +242,13 @@ app.on('window-all-closed', () => {
 
 // ─── Graceful shutdown ────────────────────────────────────────────────────────
 // Clean up resources held by services before the process exits.
-app.on('before-quit', async () => {
-    fsService.cleanup();
-    await agentService.cleanupAllPendingEdits();
-    await aiService.cleanup();
-    await speechService.cleanup();
+app.on('before-quit', () => {
+    void (async () => {
+        fsService.cleanup();
+        await agentService.cleanupAllPendingEdits();
+        await aiService.cleanup();
+        speechService.cleanup();
+    })();
 });
 
 process.on('uncaughtException', (error) => {

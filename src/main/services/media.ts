@@ -25,7 +25,7 @@ export function register(ipc: IpcMain, vaultRootFn: () => string | null): void {
 
             // Validate target folder is inside the active vault
             const vaultRoot = getVaultRoot?.();
-            if (!vaultRoot) return { success: false, error: 'No vault is open.' };
+            if (vaultRoot === undefined || vaultRoot === null) return { success: false, error: 'No vault is open.' };
             const resolvedFolder = path.resolve(folderPath);
             const resolvedRoot = path.resolve(vaultRoot);
             if (resolvedFolder !== resolvedRoot && !resolvedFolder.startsWith(resolvedRoot + path.sep)) {
@@ -42,7 +42,7 @@ export function register(ipc: IpcMain, vaultRootFn: () => string | null): void {
 
     // Spellcheck suggestions — Chromium handles this natively via the context menu.
     // This stub exists so the renderer's API call doesn't throw.
-    ipc.handle('spellcheck:getSuggestions', async () => {
+    ipc.handle('spellcheck:getSuggestions', () => {
         return { success: true, suggestions: [] };
     });
 }

@@ -12,8 +12,8 @@ import path from 'path';
  * @returns The resolved absolute path (cleaned of `..`, symlink-safe via resolve).
  */
 export function assertInsideBoundary(targetPath: string, rootDir: string): string {
-    const resolved = path.resolve(targetPath);
-    const root = path.resolve(rootDir);
+    const resolved: string = path.resolve(targetPath);
+    const root: string = path.resolve(rootDir);
     if (resolved !== root && !resolved.startsWith(root + path.sep)) {
         throw new Error('Access denied: path is outside the allowed directory.');
     }
@@ -25,7 +25,7 @@ export function assertInsideBoundary(targetPath: string, rootDir: string): strin
  * Throws if `name` contains slashes or resolves differently from itself.
  */
 export function assertSafeFileName(name: string): void {
-    if (!name || path.basename(name) !== name) {
+    if (name === '' || path.basename(name) !== name) {
         throw new Error('Invalid name: must be a plain filename without path separators.');
     }
 }

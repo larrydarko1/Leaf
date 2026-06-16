@@ -42,7 +42,6 @@ export function useTextEditing(
     scheduleAutoSave: () => void,
 ) {
     // State
-
     const textEditing = ref(false);
     const textValue = ref('');
     const textWorldPos = ref({ x: 0, y: 0 });
@@ -53,36 +52,35 @@ export function useTextEditing(
     const textEditColor = ref('');
 
     // Computed
-
     const textOverlayStyle = computed(() => {
         const screen = worldToScreen(textWorldPos.value.x, textWorldPos.value.y);
-        const fontSize = (textEditFontSize.value || defaultStyle.value.fontSize) * zoom.value;
+        const fontSize = textEditFontSize.value !== 0 ? textEditFontSize.value : defaultStyle.value.fontSize;
         const style: Record<string, string> = {
-            fontSize: fontSize + 'px',
-            lineHeight: fontSize * 1.3 + 'px',
-            color: textEditColor.value || defaultStyle.value.strokeColor,
+            fontSize: `${fontSize}px`,
+            lineHeight: `${fontSize * 1.3}px`,
+            color: textEditColor.value.length > 0 ? textEditColor.value : defaultStyle.value.strokeColor,
             textAlign: textEditCentered.value ? 'center' : 'left',
         };
-        if (textEditCentered.value && textEditBounds.value) {
+
+        if (textEditCentered.value && textEditBounds.value !== null) {
             const tl = worldToScreen(textEditBounds.value.x, textEditBounds.value.y);
             const br = worldToScreen(
                 textEditBounds.value.x + textEditBounds.value.width,
                 textEditBounds.value.y + textEditBounds.value.height,
             );
             const pad = 8 * zoom.value;
-            style.left = tl.x + pad + 'px';
-            style.top = tl.y + pad + 'px';
-            style.width = br.x - tl.x - pad * 2 + 'px';
-            style.height = br.y - tl.y - pad * 2 + 'px';
+            style.left = `${tl.x + pad}px`;
+            style.top = `${tl.y + pad}px`;
+            style.width = `${br.x - tl.x - pad * 2}px`;
+            style.height = `${br.y - tl.y - pad * 2}px`;
         } else {
-            style.left = screen.x + 'px';
-            style.top = screen.y + 'px';
+            style.left = `${screen.x}px`;
+            style.top = `${screen.y}px`;
         }
         return style;
     });
 
     // Entry points
-
     function startNewText(wx: number, wy: number) {
         selectedId.value = null;
         textEditing.value = true;
@@ -93,34 +91,40 @@ export function useTextEditing(
         textEditBounds.value = null;
         textEditFontSize.value = defaultStyle.value.fontSize;
         textEditColor.value = defaultStyle.value.strokeColor;
-        nextTick(() => textInputEl.value?.focus());
+        void nextTick(() => {
+            textInputEl.value?.focus();
+        });
     }
 
     function startEditText(el: CanvasElement) {
         selectedId.value = null;
         textEditing.value = true;
-        textValue.value = el.text || '';
+        textValue.value = el.text ?? '';
         textWorldPos.value = { x: el.x, y: el.y };
         editingElementId.value = el.id;
         textEditCentered.value = false;
         textEditBounds.value = null;
-        textEditFontSize.value = el.fontSize || defaultStyle.value.fontSize;
+        textEditFontSize.value = el.fontSize ?? defaultStyle.value.fontSize;
         textEditColor.value = el.strokeColor;
-        nextTick(() => textInputEl.value?.focus());
+        void nextTick(() => {
+            textInputEl.value?.focus();
+        });
     }
 
     function startEditShapeText(el: CanvasElement) {
         selectedId.value = el.id;
         textEditing.value = true;
-        textValue.value = el.text || '';
+        textValue.value = el.text ?? '';
         const bounds = getElementBounds(el);
         textWorldPos.value = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 };
         editingElementId.value = el.id;
         textEditCentered.value = true;
         textEditBounds.value = { ...bounds };
-        textEditFontSize.value = el.fontSize || 16;
+        textEditFontSize.value = el.fontSize ?? 16;
         textEditColor.value = el.strokeColor;
-        nextTick(() => textInputEl.value?.focus());
+        void nextTick(() => {
+            textInputEl.value?.focus();
+        });
     }
 
     function cancelText() {
@@ -140,25 +144,30 @@ export function useTextEditing(
 
     function finalizeText() {
         if (!textEditing.value) return;
+
         const txt = textValue.value.trim();
         const wasCentered = textEditCentered.value;
         textEditing.value = false;
 
-        if (!txt) {
-            if (editingElementId.value && !wasCentered) {
+        if (txt.length === 0) {
+            if (editingElementId.value !== null && !wasCentered) {
                 const el = elements.value.find((e) => e.id === editingElementId.value);
-                if (el && el.type === 'text') {
+                if (el !== undefined && el.type === 'text') {
                     elements.value = elements.value.filter((el) => el.id !== editingElementId.value);
-                    if (selectedId.value === editingElementId.value) selectedId.value = null;
+                    if (selectedId.value === editingElementId.value) {
+                        selectedId.value = null;
+                    }
                 }
             }
-            if (editingElementId.value && wasCentered) {
+
+            if (editingElementId.value !== null && wasCentered) {
                 const el = elements.value.find((e) => e.id === editingElementId.value);
-                if (el) {
+                if (el !== undefined) {
                     el.text = undefined;
                     el.fontSize = undefined;
                 }
             }
+
             editingElementId.value = null;
             textEditCentered.value = false;
             textEditBounds.value = null;
@@ -170,21 +179,23 @@ export function useTextEditing(
 
         // Measure text dimensions using the canvas context
         const ctx = getCtx();
-        if (!ctx) return;
-        const fs = textEditFontSize.value || defaultStyle.value.fontSize;
+        if (ctx === null) return;
+
+        const fs = textEditFontSize.value ?? defaultStyle.value.fontSize;
         ctx.save();
         ctx.font = `${fs}px "Helvetica", "Segoe UI", sans-serif`;
         const lines = txt.split('\n');
         const lh = fs * 1.3;
         let maxW = 0;
+
         for (const line of lines) {
             maxW = Math.max(maxW, ctx.measureText(line).width);
         }
         ctx.restore();
 
-        if (editingElementId.value) {
+        if (editingElementId.value !== null) {
             const el = elements.value.find((e) => e.id === editingElementId.value);
-            if (el) {
+            if (el !== undefined) {
                 el.text = txt;
                 el.fontSize = fs;
                 if (el.type === 'text') {
@@ -200,7 +211,7 @@ export function useTextEditing(
                 y: textWorldPos.value.y,
                 width: maxW,
                 height: lines.length * lh,
-                strokeColor: textEditColor.value || defaultStyle.value.strokeColor,
+                strokeColor: textEditColor.value.length > 0 ? textEditColor.value : defaultStyle.value.strokeColor,
                 fillColor: 'transparent',
                 strokeWidth: 1,
                 strokeStyle: 'solid',
@@ -221,13 +232,15 @@ export function useTextEditing(
     }
 
     // Double-click handler
-
     function onDoubleClick(e: MouseEvent) {
-        const rect = canvas.value!.getBoundingClientRect();
+        const canvasEl = canvas.value;
+        if (canvasEl === null) return;
+
+        const rect = canvasEl.getBoundingClientRect();
         const worldPt = screenToWorld(e.clientX - rect.left, e.clientY - rect.top);
         const hit = hitTestElement(worldPt.x, worldPt.y, zoom.value);
 
-        if (hit) {
+        if (hit !== null) {
             if (hit.type === 'text') {
                 startEditText(hit);
             } else if (isShapeElement(hit)) {

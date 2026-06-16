@@ -1,11 +1,11 @@
 /**
- * useFolderTree — builds a recursive tree structure from flat file/folder lists
+ * useFolderTree – builds a recursive tree structure from flat file/folder lists
  * and manages expand/collapse state.
  */
 
 import { ref, computed, watch } from 'vue';
 import type { FileInfo, FolderInfo } from '../../types/electron';
-import type { TreeNode } from '../../components/FolderNode.vue';
+import type { TreeNode } from '../../types/vault';
 
 export function useFolderTree(
     getFiles: () => FileInfo[],
@@ -26,7 +26,7 @@ export function useFolderTree(
         const folderMap = new Map<string, TreeNode>();
 
         // First pass: create folder nodes from explicit folders list
-        if (folders) {
+        if (folders !== null && folders !== undefined) {
             folders.forEach((folder) => {
                 if (!folderMap.has(folder.relativePath)) {
                     folderMap.set(folder.relativePath, {
@@ -45,7 +45,7 @@ export function useFolderTree(
             const parts = file.folder.split(/[/\\]/);
             let currentPath = '';
             parts.forEach((part) => {
-                currentPath = currentPath ? `${currentPath}/${part}` : part;
+                currentPath = currentPath !== '' ? `${currentPath}/${part}` : part;
                 if (!folderMap.has(currentPath)) {
                     folderMap.set(currentPath, {
                         path: currentPath,
@@ -59,12 +59,15 @@ export function useFolderTree(
 
         // Third pass: build the tree hierarchy
         folderMap.forEach((node, path) => {
-            const parentPath = path.substring(0, path.lastIndexOf('/'));
-            if (!parentPath) {
+            const lastSlashIndex = path.lastIndexOf('/');
+            const parentPath = lastSlashIndex > 0 ? path.substring(0, lastSlashIndex) : '';
+            if (parentPath === '') {
                 root.push(node);
             } else {
                 const parent = folderMap.get(parentPath);
-                if (parent?.children) parent.children.push(node);
+                if (parent !== undefined && Array.isArray(parent.children)) {
+                    parent.children.push(node);
+                }
             }
         });
 
@@ -80,18 +83,22 @@ export function useFolderTree(
                 root.push(fileNode);
             } else {
                 const parent = folderMap.get(file.folder);
-                if (parent?.children) parent.children.push(fileNode);
+                if (parent !== undefined && Array.isArray(parent.children)) {
+                    parent.children.push(fileNode);
+                }
             }
         });
 
         // Sort: folders first, then alphabetical within each group
-        const sortNodes = (nodes: TreeNode[]) => {
+        const sortNodes = (nodes: TreeNode[]): void => {
             nodes.sort((a, b) => {
                 if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
                 return a.name.localeCompare(b.name);
             });
             nodes.forEach((node) => {
-                if (node.children) sortNodes(node.children);
+                if (node.children !== undefined && Array.isArray(node.children)) {
+                    sortNodes(node.children);
+                }
             });
         };
         sortNodes(root);
@@ -101,14 +108,15 @@ export function useFolderTree(
     const flattenedItems = computed(() => {
         const items: { type: 'file' | 'folder'; file?: FileInfo; folderPath?: string }[] = [];
 
-        function traverse(nodes: TreeNode[]) {
+        function traverse(nodes: TreeNode[]): void {
             for (const node of nodes) {
                 if (node.type === 'folder') {
                     items.push({ type: 'folder', folderPath: node.path });
-                    if (expandedFolders.value.has(node.path) && node.children) {
+                    const hasExpandedFolder = expandedFolders.value.has(node.path);
+                    if (hasExpandedFolder && node.children !== undefined && Array.isArray(node.children)) {
                         traverse(node.children);
                     }
-                } else if (node.type === 'file' && node.file) {
+                } else if (node.type === 'file' && node.file !== undefined) {
                     items.push({ type: 'file', file: node.file });
                 }
             }
@@ -119,10 +127,12 @@ export function useFolderTree(
     });
 
     const visibleFiles = computed(() =>
-        flattenedItems.value.filter((item) => item.type === 'file' && item.file).map((item) => item.file!),
+        flattenedItems.value
+            .filter((item) => item.type === 'file' && item.file !== undefined)
+            .map((item) => item.file as FileInfo),
     );
 
-    function toggleFolder(folderPath: string) {
+    function toggleFolder(folderPath: string): void {
         if (expandedFolders.value.has(folderPath)) {
             expandedFolders.value.delete(folderPath);
         } else {
@@ -135,11 +145,16 @@ export function useFolderTree(
     watch(
         getCurrentFolder,
         (newFolder) => {
-            if (newFolder) {
+            if (newFolder !== null && newFolder !== '') {
                 const saved = localStorage.getItem(`leaf-expanded-folders-${newFolder}`);
-                if (saved) {
+                if (saved !== null && saved !== '') {
                     try {
-                        expandedFolders.value = new Set(JSON.parse(saved));
+                        const parsed = JSON.parse(saved) as string[];
+                        if (Array.isArray(parsed)) {
+                            expandedFolders.value = new Set(parsed);
+                        } else {
+                            expandedFolders.value = new Set();
+                        }
                     } catch {
                         expandedFolders.value = new Set();
                     }
@@ -156,7 +171,7 @@ export function useFolderTree(
         expandedFolders,
         (newExpanded) => {
             const currentFolder = getCurrentFolder();
-            if (currentFolder) {
+            if (currentFolder !== null && currentFolder !== '') {
                 localStorage.setItem(`leaf-expanded-folders-${currentFolder}`, JSON.stringify(Array.from(newExpanded)));
             }
         },

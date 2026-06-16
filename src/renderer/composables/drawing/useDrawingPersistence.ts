@@ -31,7 +31,9 @@ export function useDrawingPersistence(
     function scheduleAutoSave() {
         hasUnsavedChanges.value = true;
         onContentChanged(true);
-        if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+        if (autoSaveTimeout !== null) {
+            clearTimeout(autoSaveTimeout);
+        }
         autoSaveTimeout = window.setTimeout(saveDrawing, 1000);
     }
 
@@ -54,7 +56,10 @@ export function useDrawingPersistence(
 
     function loadDrawing() {
         const content = initialContent();
-        if (!content || !getCtx() || !canvas.value) {
+        const ctx = getCtx();
+        const canvasEl = canvas.value;
+
+        if (content === undefined || content.length === 0 || ctx === null || canvasEl === null) {
             elements.value = [];
             scrollX.value = 0;
             scrollY.value = 0;
@@ -62,30 +67,57 @@ export function useDrawingPersistence(
             history.value = [JSON.stringify([])];
             historyIndex.value = 0;
             hasUnsavedChanges.value = false;
-            nextTick(renderScene);
+            void nextTick(renderScene);
             return;
         }
+
         try {
-            const data = JSON.parse(content);
-            if (data.version === 2) {
-                elements.value = data.elements || [];
-                scrollX.value = data.viewState?.scrollX ?? 0;
-                scrollY.value = data.viewState?.scrollY ?? 0;
-                zoom.value = data.viewState?.zoom ?? 1;
-            } else {
-                elements.value = migrateV1(data);
+            const parsedData = JSON.parse(content) as unknown;
+
+            if (!isDrawingDataV2(parsedData) && !isV1Data(parsedData)) {
+                throw new Error('Invalid drawing data format');
             }
+
+            if (isDrawingDataV2(parsedData)) {
+                elements.value = parsedData.elements ?? [];
+                scrollX.value = parsedData.viewState?.scrollX ?? 0;
+                scrollY.value = parsedData.viewState?.scrollY ?? 0;
+                zoom.value = parsedData.viewState?.zoom ?? 1;
+            } else if (isV1Data(parsedData)) {
+                elements.value = migrateV1(parsedData);
+            }
+
             history.value = [JSON.stringify(elements.value)];
             historyIndex.value = 0;
             hasUnsavedChanges.value = false;
             renderScene();
         } catch (e) {
-            window.electronAPI.log.error('Failed to load drawing:', e);
+            const errorMessage = e instanceof Error ? e.message : String(e);
+            window.electronAPI.log.error('Failed to load drawing:', errorMessage);
             elements.value = [];
             history.value = [JSON.stringify([])];
             historyIndex.value = 0;
             renderScene();
         }
+    }
+
+    // Type guards
+
+    function isDrawingDataV2(data: unknown): data is DrawingDataV2 {
+        if (typeof data !== 'object' || data === null) return false;
+        const obj = data as Record<string, unknown>;
+        return (
+            typeof obj.version === 'number' &&
+            obj.version === 2 &&
+            Array.isArray(obj.elements) &&
+            typeof obj.viewState === 'object'
+        );
+    }
+
+    function isV1Data(data: unknown): data is V1Data {
+        if (typeof data !== 'object' || data === null) return false;
+        const obj = data as Record<string, unknown>;
+        return Array.isArray(obj.strokes) || Object.keys(obj).length === 0;
     }
 
     // Migration
@@ -97,19 +129,26 @@ export function useDrawingPersistence(
         shape?: { type: string; x1: number; y1: number; x2: number; y2: number; fill?: boolean };
         points?: { x: number; y: number }[];
     };
+
     type V1Data = {
         strokes?: V1Stroke[];
     };
 
     function migrateV1(data: V1Data): CanvasElement[] {
         const result: CanvasElement[] = [];
-        if (!data.strokes) return result;
+        const strokes = data.strokes;
 
-        for (const stroke of data.strokes) {
+        if (strokes === undefined || strokes === null) {
+            return result;
+        }
+
+        for (const stroke of strokes) {
             if (stroke.tool === 'eraser') continue;
 
-            if (stroke.shape) {
-                const s = stroke.shape;
+            const shape = stroke.shape;
+
+            if (shape !== undefined && shape !== null) {
+                const s = shape;
                 const isLine = s.type === 'line' || s.type === 'arrow';
                 const el: CanvasElement = {
                     id: genId(),
@@ -119,23 +158,28 @@ export function useDrawingPersistence(
                     width: isLine ? s.x2 - s.x1 : Math.abs(s.x2 - s.x1),
                     height: isLine ? s.y2 - s.y1 : Math.abs(s.y2 - s.y1),
                     strokeColor: stroke.color,
-                    fillColor: s.fill ? stroke.color : 'transparent',
+                    fillColor: shape.fill === true ? stroke.color : 'transparent',
                     strokeWidth: stroke.size,
                     strokeStyle: 'solid',
                     opacity: 1,
                 };
                 result.push(el);
-            } else if (stroke.points && stroke.points.length > 1) {
-                let minX = Infinity,
-                    minY = Infinity;
-                let maxX = -Infinity,
-                    maxY = -Infinity;
-                for (const p of stroke.points) {
+            }
+
+            const points = stroke.points;
+            if (points !== undefined && points !== null && points.length > 1) {
+                let minX = Infinity;
+                let minY = Infinity;
+                let maxX = -Infinity;
+                let maxY = -Infinity;
+
+                for (const p of points) {
                     minX = Math.min(minX, p.x);
                     minY = Math.min(minY, p.y);
                     maxX = Math.max(maxX, p.x);
                     maxY = Math.max(maxY, p.y);
                 }
+
                 const el: CanvasElement = {
                     id: genId(),
                     type: 'freedraw',
@@ -148,7 +192,10 @@ export function useDrawingPersistence(
                     strokeWidth: stroke.size,
                     strokeStyle: 'solid',
                     opacity: 1,
-                    points: stroke.points.map((p: { x: number; y: number }) => ({ x: p.x - minX, y: p.y - minY })),
+                    points: points.map((p: { x: number; y: number }) => ({
+                        x: p.x - minX,
+                        y: p.y - minY,
+                    })),
                 };
                 result.push(el);
             }
@@ -163,7 +210,9 @@ export function useDrawingPersistence(
         saveDrawing,
         loadDrawing,
         cleanup: () => {
-            if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+            if (autoSaveTimeout !== null) {
+                clearTimeout(autoSaveTimeout);
+            }
         },
     };
 }

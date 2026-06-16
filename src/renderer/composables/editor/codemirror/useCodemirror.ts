@@ -139,11 +139,11 @@ export function useCodemirror(
         containerRef,
         async (container, _oldContainer) => {
             // Destroy previous instance if container changed or disappeared
-            if (view.value) {
+            if (view.value !== null) {
                 view.value.destroy();
                 view.value = null;
             }
-            if (!container) return;
+            if (container === null) return;
 
             // Wait for Vue to finish flushing DOM updates
             await nextTick();
@@ -168,10 +168,10 @@ export function useCodemirror(
 
     // When a different file is loaded, recreate the EditorState so the undo
     // history, cursor position, and scroll are all reset cleanly.
-    if (fileId) {
+    if (fileId !== undefined) {
         watch(fileId, () => {
             const v = view.value;
-            if (!v) return;
+            if (v === null) return;
 
             updatingFromExternal = true;
             v.setState(
@@ -188,7 +188,7 @@ export function useCodemirror(
     // push the new content into the editor without firing our own listener.
     watch(content, (newVal) => {
         const v = view.value;
-        if (!v) return;
+        if (v === null) return;
 
         const current = v.state.doc.toString();
         if (current === newVal) return;

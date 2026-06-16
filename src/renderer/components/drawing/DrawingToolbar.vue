@@ -79,7 +79,7 @@ function selectArchTool(tool: ToolType) {
 }
 
 function handleClickOutside(e: MouseEvent) {
-    if (archDropdownOpen.value && archDropdownEl.value && !archDropdownEl.value.contains(e.target as Node)) {
+    if (archDropdownOpen.value && archDropdownEl.value !== null && !archDropdownEl.value.contains(e.target as Node)) {
         archDropdownOpen.value = false;
     }
 }

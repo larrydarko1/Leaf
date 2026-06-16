@@ -48,7 +48,7 @@ export function register(ipc: IpcMain): void {
             return {
                 success: true,
                 prompts,
-                activeId: state.activePrompt || DEFAULT_PROMPT_ID,
+                activeId: state.activePrompt ?? DEFAULT_PROMPT_ID,
                 promptsDir: PROMPTS_DIR,
             };
         } catch (err) {
@@ -98,7 +98,7 @@ export async function getActiveSystemPrompt(): Promise<string> {
     try {
         await ensureSeeded();
         const state = await readState();
-        const id = state.activePrompt || DEFAULT_PROMPT_ID;
+        const id = state.activePrompt ?? DEFAULT_PROMPT_ID;
         if (!isValidPromptId(id)) return '';
         const file = path.join(PROMPTS_DIR, `${id}.md`);
         if (!existsSync(file)) return '';
@@ -135,7 +135,7 @@ export async function ensureSeeded(): Promise<void> {
             // Backfill activePrompt if state exists but lacks it (e.g. theme
             // service wrote first on a fresh install).
             const state = await readState();
-            if (!state.activePrompt) {
+            if (state.activePrompt === undefined) {
                 await writeState({ ...state, activePrompt: DEFAULT_PROMPT_ID });
             }
         }
@@ -172,8 +172,8 @@ async function listPrompts(): Promise<PromptInfo[]> {
 
         list.push({
             id,
-            name: meta.name?.trim() || id,
-            description: meta.description?.trim() || '',
+            name: meta.name?.trim() ?? id,
+            description: meta.description?.trim() ?? '',
             path: file,
         });
     }
@@ -200,17 +200,17 @@ export function parseFrontmatter(content: string): {
     body: string;
 } {
     const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
-    if (!match) return { meta: {}, body: content };
+    if (match === null) return { meta: {}, body: content };
 
     const meta: Record<string, string> = {};
     for (const line of match[1].split(/\r?\n/)) {
-        const kv = line.match(/^([A-Za-z][A-Za-z0-9_-]*)\s*:\s*(.*)$/);
-        if (!kv) continue;
-        let v = kv[2].trim();
-        if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
-            v = v.slice(1, -1);
+        const keyValue = line.match(/^([A-Za-z][A-Za-z0-9_-]*)\s*:\s*(.*)$/);
+        if (keyValue === null) continue;
+        let value = keyValue[2].trim();
+        if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+            value = value.slice(1, -1);
         }
-        meta[kv[1].toLowerCase()] = v;
+        meta[keyValue[1].toLowerCase()] = value;
     }
     return { meta, body: match[2] };
 }
@@ -219,8 +219,8 @@ async function readState(): Promise<PromptState> {
     try {
         if (!existsSync(STATE_FILE)) return {};
         const raw = await fs.readFile(STATE_FILE, 'utf-8');
-        const parsed = JSON.parse(raw);
-        return typeof parsed === 'object' && parsed ? parsed : {};
+        const parsed = JSON.parse(raw) as unknown;
+        return typeof parsed === 'object' && parsed !== null ? (parsed as PromptState) : {};
     } catch (err) {
         log.warn('[systemPrompt] state read failed:', err);
         return {};

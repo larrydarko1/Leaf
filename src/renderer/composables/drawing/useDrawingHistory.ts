@@ -17,6 +17,23 @@ export function useDrawingHistory(
     scheduleAutoSave: () => void,
     renderScene: () => void,
 ) {
+    // Type guard to validate parsed elements
+    function isCanvasElementArray(data: unknown): data is CanvasElement[] {
+        if (!Array.isArray(data)) return false;
+        return data.every((item) => {
+            if (typeof item !== 'object' || item === null) return false;
+            const obj = item as Record<string, unknown>;
+            return (
+                typeof obj.id === 'string' &&
+                typeof obj.type === 'string' &&
+                typeof obj.x === 'number' &&
+                typeof obj.y === 'number' &&
+                typeof obj.width === 'number' &&
+                typeof obj.height === 'number'
+            );
+        });
+    }
+
     // History
 
     function saveToHistory() {
@@ -35,19 +52,43 @@ export function useDrawingHistory(
     function undo() {
         if (historyIndex.value <= 0) return;
         historyIndex.value--;
-        elements.value = JSON.parse(history.value[historyIndex.value]);
-        selectedIds.value = new Set();
-        scheduleAutoSave();
-        renderScene();
+        const historyEntry = history.value[historyIndex.value];
+        if (historyEntry === undefined) {
+            historyIndex.value = 0;
+            return;
+        }
+        try {
+            const parsed = JSON.parse(historyEntry) as unknown;
+            if (isCanvasElementArray(parsed)) {
+                elements.value = parsed;
+                selectedIds.value = new Set();
+                scheduleAutoSave();
+                renderScene();
+            }
+        } catch {
+            historyIndex.value = 0;
+        }
     }
 
     function redo() {
         if (historyIndex.value >= history.value.length - 1) return;
         historyIndex.value++;
-        elements.value = JSON.parse(history.value[historyIndex.value]);
-        selectedIds.value = new Set();
-        scheduleAutoSave();
-        renderScene();
+        const historyEntry = history.value[historyIndex.value];
+        if (historyEntry === undefined) {
+            historyIndex.value = history.value.length - 1;
+            return;
+        }
+        try {
+            const parsed = JSON.parse(historyEntry) as unknown;
+            if (isCanvasElementArray(parsed)) {
+                elements.value = parsed;
+                selectedIds.value = new Set();
+                scheduleAutoSave();
+                renderScene();
+            }
+        } catch {
+            historyIndex.value = history.value.length - 1;
+        }
     }
 
     function clearAll() {
@@ -62,21 +103,30 @@ export function useDrawingHistory(
 
     function copySelected() {
         if (selectedElements.value.length === 0) return;
-        clipboard.value = JSON.parse(JSON.stringify(selectedElements.value));
+        const serialized = JSON.stringify(selectedElements.value);
+        const parsed = JSON.parse(serialized) as unknown;
+        if (isCanvasElementArray(parsed)) {
+            clipboard.value = parsed;
+        }
     }
 
     function pasteClipboard() {
         if (clipboard.value.length === 0) return;
         const newIds = new Set<string>();
         for (const src of clipboard.value) {
-            const newEl: CanvasElement = {
-                ...JSON.parse(JSON.stringify(src)),
-                id: crypto.randomUUID(),
-                x: src.x + 20,
-                y: src.y + 20,
-            };
-            elements.value.push(newEl);
-            newIds.add(newEl.id);
+            const serialized = JSON.stringify(src);
+            const parsed = JSON.parse(serialized) as unknown;
+            if (typeof parsed === 'object' && parsed !== null) {
+                const cloned = parsed as Record<string, unknown>;
+                const newEl: CanvasElement = {
+                    ...(cloned as CanvasElement),
+                    id: crypto.randomUUID(),
+                    x: typeof src.x === 'number' ? src.x + 20 : 0,
+                    y: typeof src.y === 'number' ? src.y + 20 : 0,
+                };
+                elements.value.push(newEl);
+                newIds.add(newEl.id);
+            }
         }
         selectedIds.value = newIds;
         // Offset clipboard for subsequent pastes

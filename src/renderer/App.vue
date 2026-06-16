@@ -33,12 +33,14 @@ const showAiPanel = ref(false);
 const showThemePanel = ref(false);
 
 onMounted(() => {
-    theme.refresh();
+    void theme.refresh();
 
     const savedFolder = localStorage.getItem('leaf-folder-path');
-    if (savedFolder) loadFolderPath(savedFolder);
+    if (savedFolder !== null && savedFolder !== '') void loadFolderPath(savedFolder);
 
-    vault.setExternalChangeCallback(() => refreshFiles());
+    vault.setExternalChangeCallback(() => {
+        void refreshFiles();
+    });
     window.addEventListener('keydown', handleKeydown);
     document.addEventListener('click', handleExternalLinkClick, true);
 });
@@ -50,13 +52,14 @@ onBeforeUnmount(() => {
 });
 
 function handleExternalLinkClick(e: MouseEvent) {
-    const target = (e.target as HTMLElement)?.closest('a') as HTMLAnchorElement | null;
-    if (!target) return;
+    const closest = (e.target as HTMLElement)?.closest('a');
+    const target = closest instanceof HTMLAnchorElement ? closest : null;
+    if (target === null) return;
     const href = target.getAttribute('href');
-    if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
+    if (href !== null && href !== '' && (href.startsWith('http://') || href.startsWith('https://'))) {
         e.preventDefault();
         e.stopPropagation();
-        window.electronAPI.openExternal(href);
+        void window.electronAPI.openExternal(href);
     }
 }
 
@@ -68,17 +71,17 @@ async function refreshFiles() {
 
 async function selectFolder() {
     const folderPath = await vault.openFolderDialog();
-    if (folderPath) {
+    if (folderPath !== null && folderPath !== '') {
         editorTabs.clearTabs();
         const restored = editorTabs.restoreTabs(folderPath, vault.files.value);
         if (!restored) {
             selection.restoreFromStorage(vault.files.value);
             const restoredFile = selection.activeFile.value;
-            if (restoredFile) editorTabs.openTab(restoredFile);
+            if (restoredFile !== null) editorTabs.openTab(restoredFile);
         } else {
             // Sync file selection with the restored active tab
             const activeTabFile = editorTabs.activeFile.value;
-            if (activeTabFile) selection.openFile(activeTabFile);
+            if (activeTabFile !== null) selection.openFile(activeTabFile);
         }
         await bookmarks.loadBookmarks();
     }
@@ -90,11 +93,11 @@ async function loadFolderPath(folderPath: string) {
     if (!restored) {
         selection.restoreFromStorage(vault.files.value);
         const restoredFile = selection.activeFile.value;
-        if (restoredFile) editorTabs.openTab(restoredFile);
+        if (restoredFile !== null) editorTabs.openTab(restoredFile);
     } else {
         // Sync file selection with the restored active tab
         const activeTabFile = editorTabs.activeFile.value;
-        if (activeTabFile) selection.openFile(activeTabFile);
+        if (activeTabFile !== null) selection.openFile(activeTabFile);
     }
     await bookmarks.loadBookmarks();
 }
@@ -109,9 +112,13 @@ function changeFolder() {
 function handleKeydown(e: KeyboardEvent) {
     if (e.key === 'F2') {
         e.preventDefault();
-        if (activeFile.value && !renamingFile.value) {
+        if (activeFile.value !== null && renamingFile.value === null) {
             startRenameFile(activeFile.value);
-        } else if (selectedFolder.value && !renamingFolder.value) {
+        } else if (
+            selectedFolder.value !== null &&
+            selectedFolder.value !== '' &&
+            (renamingFolder.value === null || renamingFolder.value === '')
+        ) {
             startRenameFolder(selectedFolder.value);
         }
     }
@@ -120,7 +127,7 @@ function handleKeydown(e: KeyboardEvent) {
 function handleFileSelect(file: FileInfo, event?: MouseEvent, visibleFiles?: FileInfo[]) {
     selection.selectFile(file, event, visibleFiles);
     // Open/activate a tab for the single active file (ignore multi-select)
-    if (!event?.shiftKey) {
+    if (event?.shiftKey !== true) {
         editorTabs.openTab(file);
     }
 }
@@ -131,19 +138,19 @@ function handleFolderSelect(folderPath: string) {
 
 function handleFileSave() {
     // Mark the active tab as saved
-    if (activeFile.value) {
-        const tab = editorTabs.tabs.value.find((t) => t.file.path === activeFile.value!.path);
-        if (tab && tab.content !== null) {
+    if (activeFile.value !== null) {
+        const tab = editorTabs.tabs.value.find((t) => t.file.path === activeFile.value?.path);
+        if (tab !== null && tab !== undefined && tab.content !== null) {
             editorTabs.markTabSaved(activeFile.value.path, tab.content);
         }
     }
-    refreshFiles();
+    void refreshFiles();
 }
 
 function handleContentChanged(hasChanges: boolean) {
-    if (activeFile.value) {
-        const tab = editorTabs.tabs.value.find((t) => t.file.path === activeFile.value!.path);
-        if (tab) tab.hasUnsavedChanges = hasChanges;
+    if (activeFile.value !== null) {
+        const tab = editorTabs.tabs.value.find((t) => t.file.path === activeFile.value?.path);
+        if (tab !== null && tab !== undefined) tab.hasUnsavedChanges = hasChanges;
     }
 }
 
@@ -151,13 +158,13 @@ function handleAiFileChanged(changedPath: string) {
     if (activeFile.value?.path === changedPath) {
         noteEditorRef.value?.reloadContent();
     }
-    refreshFiles();
+    void refreshFiles();
 }
 
 async function handleRecordingSaved(filePath: string) {
     await refreshFiles();
     const recordingFile = vault.files.value.find((f: FileInfo) => f.path === filePath);
-    if (recordingFile) {
+    if (recordingFile !== undefined) {
         selection.openFile(recordingFile);
         editorTabs.openTab(recordingFile);
     }
@@ -165,7 +172,7 @@ async function handleRecordingSaved(filePath: string) {
 
 async function createNewFile() {
     const newFile = await vault.createFile();
-    if (newFile) {
+    if (newFile !== null) {
         selection.openFile(newFile);
         editorTabs.openTab(newFile);
     }
@@ -173,7 +180,7 @@ async function createNewFile() {
 
 async function createNewDrawing() {
     const newFile = await vault.createDrawing();
-    if (newFile) {
+    if (newFile !== null) {
         selection.openFile(newFile);
         editorTabs.openTab(newFile);
     }
@@ -202,7 +209,7 @@ function cancelRename() {
 async function handleFileRename(file: FileInfo, newName: string) {
     const renamed = await vault.renameFile(file, newName);
     renamingFile.value = null;
-    if (renamed) {
+    if (renamed !== null) {
         editorTabs.renameTabFile(file.path, renamed);
         selection.openFile(renamed);
     }
@@ -211,7 +218,7 @@ async function handleFileRename(file: FileInfo, newName: string) {
 async function handleFolderRename(folderPath: string, newName: string) {
     const newRelativePath = await vault.renameFolder(folderPath, newName);
     renamingFolder.value = null;
-    if (newRelativePath) selectedFolder.value = newRelativePath;
+    if (newRelativePath !== null && newRelativePath !== '') selectedFolder.value = newRelativePath;
 }
 
 async function handleFolderDelete(folderPath: string) {
@@ -276,7 +283,7 @@ function handleSearchFileOpen(file: FileInfo) {
 function handleTabSwitch(index: number) {
     editorTabs.switchTab(index);
     const file = editorTabs.activeFile.value;
-    if (file) {
+    if (file !== null) {
         selection.openFile(file);
     }
 }
@@ -779,7 +786,7 @@ function toggleThemePanel() {
     flex-direction: column;
     align-items: center;
     gap: $space-0;
-    background: $bg-selected;
+    background: $bg-primary;
     border: 1px solid $text3;
     border-radius: $border-radius-xl;
     padding: $space-0;

@@ -34,13 +34,13 @@ watch(
     (v) => {
         if (v) {
             exportOnlySelected.value = props.hasSelection;
-            updateExportPreview();
+            void updateExportPreview();
         }
     },
 );
 
 watch([exportWithBackground, exportScale, exportOnlySelected], () => {
-    if (props.visible) updateExportPreview();
+    if (props.visible) void updateExportPreview();
 });
 
 function getExportElements(): CanvasElement[] {
@@ -50,7 +50,7 @@ function getExportElements(): CanvasElement[] {
 }
 
 async function updateExportPreview() {
-    if (exportPreviewUrl.value) {
+    if (exportPreviewUrl.value !== null) {
         URL.revokeObjectURL(exportPreviewUrl.value);
         exportPreviewUrl.value = null;
     }
@@ -64,7 +64,7 @@ async function updateExportPreview() {
         scale: exportScale.value,
     });
 
-    if (blob) {
+    if (blob !== null) {
         exportPreviewUrl.value = URL.createObjectURL(blob);
         const img = new Image();
         img.onload = () => {
@@ -76,7 +76,7 @@ async function updateExportPreview() {
 }
 
 function close() {
-    if (exportPreviewUrl.value) {
+    if (exportPreviewUrl.value !== null) {
         URL.revokeObjectURL(exportPreviewUrl.value);
         exportPreviewUrl.value = null;
     }
@@ -91,7 +91,7 @@ async function savePng() {
             withBackground: exportWithBackground.value,
             scale: exportScale.value,
         });
-        if (!blob) return;
+        if (blob === null) return;
 
         const baseName =
             props.filePath
@@ -104,7 +104,7 @@ async function savePng() {
             defaultPath: defaultName,
             filters: [{ name: 'PNG Image', extensions: ['png'] }],
         });
-        if (!filePath) return;
+        if (filePath === null) return;
 
         const buffer = await blob.arrayBuffer();
         const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
@@ -122,7 +122,7 @@ async function copyClipboard() {
             withBackground: exportWithBackground.value,
             scale: exportScale.value,
         });
-        if (!blob) return;
+        if (blob === null) return;
         await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
     } finally {
         isExporting.value = false;

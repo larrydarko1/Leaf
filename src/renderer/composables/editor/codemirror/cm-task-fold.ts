@@ -64,7 +64,7 @@ const taskFoldTogglePlugin = ViewPlugin.fromClass(
                     const line = state.doc.lineAt(pos);
                     const range = taskFoldRange(state, line.from);
 
-                    if (range) {
+                    if (range != null) {
                         let isFolded = false;
                         folded.between(range.from, range.from + 1, () => {
                             isFolded = true;
@@ -109,7 +109,7 @@ const taskFoldTogglePlugin = ViewPlugin.fromClass(
                 const pos = view.posAtDOM(target);
                 const line = view.state.doc.lineAt(pos);
                 const range = taskFoldRange(view.state, line.from);
-                if (!range) return false;
+                if (range == null) return false;
 
                 const folded = foldedRanges(view.state);
                 let isFolded = false;
@@ -123,7 +123,7 @@ const taskFoldTogglePlugin = ViewPlugin.fromClass(
                     folded.between(range.from, range.from + 1, (from, to) => {
                         effects.push(unfoldEffect.of({ from, to }));
                     });
-                    if (effects.length) view.dispatch({ effects });
+                    if (effects.length > 0) view.dispatch({ effects });
                 } else {
                     view.dispatch({
                         effects: [foldEffect.of({ from: range.from, to: range.to })],
@@ -173,7 +173,7 @@ export function taskFoldExtension() {
 function taskFoldRange(state: EditorState, lineStart: number): { from: number; to: number } | null {
     const line = state.doc.lineAt(lineStart);
     const match = line.text.match(taskLineRegex);
-    if (!match) return null;
+    if (match == null) return null;
 
     const parentIndent = match[1].length;
     let lastNonEmptyChildLine = line.number;
