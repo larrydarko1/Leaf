@@ -338,7 +338,7 @@ function toggleLanguagePanel() {
                         <img
                             draggable="false"
                             src="./assets/icons/icon.png"
-                            alt="Leaf"
+                            alt="Leaf logo"
                             class="welcome-logo-icon" />
                         <span class="welcome-logo-text">leaf.</span>
                     </div>
@@ -359,7 +359,7 @@ function toggleLanguagePanel() {
                 <div class="left-column">
                     <nav
                         class="sidebar-menu"
-                        aria-label="Main navigation">
+                        :aria-label="t('app.main_navigation')">
                         <!-- Workspace pill -->
                         <div class="menu-pill">
                             <button

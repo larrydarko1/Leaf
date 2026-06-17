@@ -1,9 +1,29 @@
 {
   "app": {
-    "open_files": "Apri file",
-    "tab_unsaved_indicator": "Modifiche non salvate",
-    "tab_close_button": "Chiudi {filename}"
-  },
+  "select_folder_description": "Seleziona una cartella da usare come archivio delle note. Puoi modificarla in seguito nelle impostazioni.",
+  "select_folder": "Seleziona cartella",
+  "main_navigation": "Navigazione principale",
+  "change_folder": "Cambia cartella delle note",
+  "create_new_note": "Crea nuova nota",
+  "create_new_folder": "Crea nuova cartella",
+  "search_files": "Cerca file",
+  "view_bookmarks": "Visualizza segnalibri",
+  "create_new_drawing": "Crea nuovo disegno",
+  "audio_recorder": "Registratore audio",
+  "ai_assistant": "Assistente AI",
+  "theme_selector": "Selettore tema",
+  "language_selector": "Selettore lingua",
+  "file_explorer_and_panels": "Esplora file e pannelli",
+  "file_explorer": "Esplora file",
+  "search_results": "Pannello risultati di ricerca",
+  "bookmarked_files": "Pannello file nei segnalibri",
+  "editor": "Editor",
+  "open_files": "Schede file aperti",
+  "note_editor": "Editor note",
+  "ai_assistant_panel": "Pannello assistente AI",
+  "theme_picker": "Pannello selettore tema",
+  "language_picker": "Pannello selettore lingua"
+},
   "file": {
     "image": "File immagine",
     "video": "File video",

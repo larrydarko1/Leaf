@@ -1,8 +1,28 @@
 {
   "app": {
-    "open_files": "Open Files",
-    "tab_unsaved_indicator": "Unsaved Changes",
-    "tab_close_button": "Close {filename}"
+    "select_folder_description": "Select a folder to use as your notes vault. You can change this later in settings.",
+    "select_folder": "Select Folder",
+    "main_navigation": "Main navigation",
+    "change_folder": "Change notes folder",
+    "create_new_note": "Create new note",
+    "create_new_folder": "Create new folder",
+    "search_files": "Search files",
+    "view_bookmarks": "View bookmarks",
+    "create_new_drawing": "Create new drawing",
+    "audio_recorder": "Audio recorder",
+    "ai_assistant": "AI assistant",
+    "theme_selector": "Theme selector",
+    "language_selector": "Language selector",
+    "file_explorer_and_panels": "File explorer and panels",
+    "file_explorer": "File explorer",
+    "search_results": "Search results panel",
+    "bookmarked_files": "Bookmarked files panel",
+    "editor": "Editor",
+    "open_files": "Open files tabs",
+    "note_editor": "Note editor",
+    "ai_assistant_panel": "AI assistant panel",
+    "theme_picker": "Theme picker panel",
+    "language_picker": "Language picker panel"
   },
   "file": {
     "image": "Image file",
