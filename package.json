@@ -52,6 +52,7 @@
         "@huggingface/transformers": "^3.8.1",
         "@lezer/highlight": "^1.2.3",
         "@lezer/markdown": "^1.6.3",
+        "dompurify": "^3.4.11",
         "electron-log": "~5.4.3",
         "marked": "^17.0.1",
         "node-llama-cpp": "^3.15.1",

@@ -6,6 +6,7 @@
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import type { Ref } from 'vue';
 import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 import type { FileInfo } from '../../types/electron';
 import type { AiStatus } from '../../types/ai';
 import type { ChatMessage, AgentFileEdit } from '../../types/chat';
@@ -87,7 +88,44 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
 
     function renderMarkdown(content: string): string {
         if (content.length === 0) return '';
-        return marked.parse(content, { async: false });
+        const html = marked.parse(content, { async: false });
+        // Sanitize marked output to prevent XSS from user/AI-generated markdown
+        return DOMPurify.sanitize(html, {
+            ALLOWED_TAGS: [
+                'h1',
+                'h2',
+                'h3',
+                'h4',
+                'h5',
+                'h6',
+                'p',
+                'br',
+                'strong',
+                'b',
+                'em',
+                'i',
+                'u',
+                'del',
+                'mark',
+                'code',
+                'pre',
+                'blockquote',
+                'ol',
+                'ul',
+                'li',
+                'table',
+                'thead',
+                'tbody',
+                'tr',
+                'th',
+                'td',
+                'a',
+                'img',
+                'hr',
+                'span',
+            ],
+            ALLOWED_ATTR: ['href', 'target', 'src', 'alt', 'title', 'class'],
+        });
     }
 
     async function copyMessage(content: string, index: number) {

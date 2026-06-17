@@ -12,6 +12,11 @@ type Props = {
     activeFile: FileInfo | null;
 };
 
+type HighlightPart = {
+    text: string;
+    highlighted: boolean;
+};
+
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
@@ -121,14 +126,35 @@ function openSelectedResult() {
     }
 }
 
-function highlightMatch(text: string): string {
+function splitHighlightedText(text: string): HighlightPart[] {
     if (searchQuery.value.trim() === '') {
-        return text;
+        return [{ text, highlighted: false }];
     }
 
     const escaped = searchQuery.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(`(${escaped})`, 'gi');
-    return text.replace(regex, '<mark>$1</mark>');
+    const parts: HighlightPart[] = [];
+    let lastIndex = 0;
+    let match;
+
+    // Reset regex for global search
+    regex.lastIndex = 0;
+    while ((match = regex.exec(text)) !== null) {
+        // Non-highlighted part before match
+        if (match.index > lastIndex) {
+            parts.push({ text: text.slice(lastIndex, match.index), highlighted: false });
+        }
+        // Highlighted match
+        parts.push({ text: match[0], highlighted: true });
+        lastIndex = match.index + match[0].length;
+    }
+
+    // Remaining non-highlighted text
+    if (lastIndex < text.length) {
+        parts.push({ text: text.slice(lastIndex), highlighted: false });
+    }
+
+    return parts.length > 0 ? parts : [{ text, highlighted: false }];
 }
 </script>
 
@@ -252,9 +278,14 @@ function highlightMatch(text: string): string {
                                 stroke-linejoin="round" />
                         </svg>
                         <div class="file-details">
-                            <div
-                                class="file-name"
-                                v-html="highlightMatch(file.name)"></div>
+                            <div class="file-name">
+                                <span
+                                    v-for="(part, idx) in splitHighlightedText(file.name)"
+                                    :key="idx"
+                                    :class="{ highlighted: part.highlighted }">
+                                    {{ part.text }}
+                                </span>
+                            </div>
                             <div class="file-path">{{ file.folder === '.' ? '' : file.folder }}</div>
                         </div>
                     </div>
