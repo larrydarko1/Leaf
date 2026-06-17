@@ -5,9 +5,11 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
-const props = defineProps<{
+type Props = {
     currentTool: ToolType;
-}>();
+};
+
+const props = defineProps<Props>();
 
 const emit = defineEmits<{
     selectTool: [tool: ToolType];

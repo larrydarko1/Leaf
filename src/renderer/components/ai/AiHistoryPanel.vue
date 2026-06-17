@@ -5,20 +5,25 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
-const props = defineProps<{
+type Props = {
     conversationList: ConversationMeta[];
     currentConversationId: string | null;
     renamingConversationId: string | null;
     renameValue: string;
-}>();
+};
+
+const props = defineProps<Props>();
 
 defineEmits<{
-    (e: 'load' | 'confirm-rename' | 'delete' | 'update:renameValue', value: string): void;
-    (e: 'start-rename', conv: ConversationMeta): void;
-    (e: 'cancel-rename'): void;
+    'load': [value: string];
+    'confirm-rename': [value: string];
+    'delete': [value: string];
+    'update:renameValue': [value: string];
+    'start-rename': [conv: ConversationMeta];
+    'cancel-rename': [];
 }>();
 
-const renameInputRef = ref<HTMLInputElement[]>();
+const renameInputRef = ref<HTMLInputElement[]>([]);
 
 watch(
     () => props.renamingConversationId,

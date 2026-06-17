@@ -19,6 +19,7 @@ import { useTheme } from './composables/ui/useTheme';
 import { useLanguage } from './composables/ui/useLanguage';
 
 const { t } = useI18n();
+
 const noteEditorRef = ref<InstanceType<typeof NoteEditor> | null>(null);
 const vault = useVault();
 const selection = useFileSelection();

@@ -106,7 +106,18 @@ export default {
     'at-rule-no-unknown': [
       true,
       {
-        'ignoreAtRules': ['mixin', 'include', 'extend', 'if', 'else', 'for', 'each', 'while', 'function', 'return']
+        'ignoreAtRules': [
+          'mixin', 
+          'include', 
+          'extend', 
+          'if', 
+          'else', 
+          'for', 
+          'each', 
+          'while', 
+          'function', 
+          'return'
+        ]
       }
     ],
 

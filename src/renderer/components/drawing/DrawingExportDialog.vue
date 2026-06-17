@@ -5,14 +5,16 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
-const props = defineProps<{
+type Props = {
     visible: boolean;
     hasSelection: boolean;
     filePath: string;
     elements: CanvasElement[];
     selectedIds: Set<string>;
     exportToBlob: (opts: { elements: CanvasElement[]; withBackground: boolean; scale: number }) => Promise<Blob | null>;
-}>();
+};
+
+const props = defineProps<Props>();
 
 const emit = defineEmits<{
     close: [];

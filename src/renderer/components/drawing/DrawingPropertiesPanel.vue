@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 
 type StyleKey = 'strokeColor' | 'fillColor' | 'strokeWidth' | 'strokeStyle' | 'borderRadius' | 'fontSize';
 
-defineProps<{
+type Props = {
     visible: boolean;
     activeStrokeColor: string;
     activeFillColor: string;
@@ -16,7 +16,10 @@ defineProps<{
     showFontSizeOption: boolean;
     showRoundnessOption: boolean;
     hasSelection: boolean;
-}>();
+};
+
+const props = defineProps<Props>();
+void props;
 
 const { t } = useI18n();
 

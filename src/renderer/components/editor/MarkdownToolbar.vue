@@ -4,8 +4,8 @@ import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 
 defineEmits<{
-    (e: 'format', type: string): void;
-    (e: 'heading', event: Event): void;
+    format: [type: string];
+    heading: [event: Event];
 }>();
 </script>
 

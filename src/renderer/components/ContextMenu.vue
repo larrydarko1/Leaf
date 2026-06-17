@@ -11,11 +11,13 @@ export type ContextMenuItem = {
 
 const { t } = useI18n();
 
-const props = defineProps<{
+type Props = {
     visible: boolean;
     position: { x: number; y: number };
     items: ContextMenuItem[];
-}>();
+};
+
+const props = defineProps<Props>();
 
 const emit = defineEmits<{
     close: [];

@@ -4,7 +4,11 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
-const props = defineProps<{ currentFolder: string | null }>();
+type Props = {
+    currentFolder: string | null;
+};
+
+const props = defineProps<Props>();
 const emit = defineEmits<{ recordingSaved: [filePath: string] }>();
 
 const { isRecording, hasPermission, formattedDuration, toggle } = useAudioRecorder(

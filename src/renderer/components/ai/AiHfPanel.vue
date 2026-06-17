@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
-defineProps<{
+type Props = {
     hfSearchQuery: string;
     hfSearchResults: HfSearchResult[];
     hfIsSearching: boolean;
@@ -18,13 +18,21 @@ defineProps<{
     hfSortBy: HfSortOption;
     hfHasMore: boolean;
     hfIsLoadingMore: boolean;
-}>();
+};
+
+const props = defineProps<Props>();
+void props;
 
 defineEmits<{
-    (e: 'update:hfSearchQuery' | 'select-repo' | 'cancel-download', value: string): void;
-    (e: 'search' | 'load-more' | 'back' | 'close'): void;
-    (e: 'download', file: HfRepoFile): void;
-    (e: 'change-sort', sort: HfSortOption): void;
+    'update:hfSearchQuery': [value: string];
+    'select-repo': [value: string];
+    'cancel-download': [value: string];
+    'search': [];
+    'load-more': [];
+    'back': [];
+    'close': [];
+    'download': [file: HfRepoFile];
+    'change-sort': [sort: HfSortOption];
 }>();
 
 const sortOptions: { value: HfSortOption; label: string }[] = [

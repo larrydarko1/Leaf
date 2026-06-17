@@ -6,11 +6,13 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
-const props = defineProps<{
+type Props = {
     files: FileInfo[];
     selectedFiles: FileInfo[];
     activeFile: FileInfo | null;
-}>();
+};
+
+const props = defineProps<Props>();
 
 const emit = defineEmits<{
     selectFile: [file: FileInfo, event?: MouseEvent];

@@ -15,10 +15,12 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
-const props = defineProps<{
+type Props = {
     filePath: string;
     initialContent?: string;
-}>();
+};
+
+const props = defineProps<Props>();
 
 const emit = defineEmits<{
     save: [content: string];

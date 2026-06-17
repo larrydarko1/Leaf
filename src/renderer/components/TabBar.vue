@@ -3,10 +3,13 @@ import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { TabState } from '../composables/editor/useEditorTabs';
 
-defineProps<{
+type Props = {
     tabs: TabState[];
     activeIndex: number;
-}>();
+};
+
+const props = defineProps<Props>();
+void props;
 
 const { t } = useI18n();
 

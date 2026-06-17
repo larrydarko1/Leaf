@@ -3,14 +3,17 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
-defineProps<{
+type Props = {
     zoom: number;
     zoomPercent: number;
     historyIndex: number;
     historyLength: number;
     isSaving: boolean;
     hasUnsavedChanges: boolean;
-}>();
+};
+
+const props = defineProps<Props>();
+void props;
 
 const emit = defineEmits<{
     zoomToCenter: [value: number];

@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
-defineProps<{
+type Props = {
     agentMode: boolean;
     includeNoteContext: boolean;
     activeFile: FileInfo | null;
@@ -14,12 +14,16 @@ defineProps<{
     isAnyGenerating: boolean;
     isStreaming: boolean;
     inputField: HTMLTextAreaElement | null;
-}>();
+};
+
+const props = defineProps<Props>();
+void props;
 
 defineEmits<{
-    (e: 'update:inputMessage', value: string): void;
-    (e: 'update:includeNoteContext', value: boolean): void;
-    (e: 'send' | 'stop'): void;
+    'update:inputMessage': [value: string];
+    'update:includeNoteContext': [value: boolean];
+    'send': [];
+    'stop': [];
 }>();
 
 const inputAreaRef = ref<HTMLDivElement | null>(null);

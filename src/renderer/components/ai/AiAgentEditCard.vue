@@ -4,13 +4,16 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
-defineProps<{
+type Props = {
     edit: AgentFileEdit;
-}>();
+};
+
+const props = defineProps<Props>();
+void props;
 
 defineEmits<{
-    // eslint-disable-next-line @typescript-eslint/prefer-function-type
-    (e: 'approve' | 'reject'): void;
+    approve: [];
+    reject: [];
 }>();
 </script>
 

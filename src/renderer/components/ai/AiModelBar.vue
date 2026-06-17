@@ -6,7 +6,7 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
-defineProps<{
+type Props = {
     status: AiStatus;
     availableModels: AiModelInfo[];
     isLoading: boolean;
@@ -16,22 +16,22 @@ defineProps<{
     showHistory: boolean;
     agentMode: boolean;
     isAnyGenerating: boolean;
-}>();
+};
+
+const props = defineProps<Props>();
+void props;
 
 const emit = defineEmits<{
-    (e: 'select-model', model: AiModelInfo): void;
-    (
-        e:
-            | 'load-model'
-            | 'unload-model'
-            | 'open-models-folder'
-            | 'refresh-models'
-            | 'toggle-hf-panel'
-            | 'toggle-history'
-            | 'toggle-agent-mode'
-            | 'new-conversation'
-            | 'close',
-    ): void;
+    'select-model': [model: AiModelInfo];
+    'load-model': [];
+    'unload-model': [];
+    'open-models-folder': [];
+    'refresh-models': [];
+    'toggle-hf-panel': [];
+    'toggle-history': [];
+    'toggle-agent-mode': [];
+    'new-conversation': [];
+    'close': [];
 }>();
 
 const dropdownRef = ref<HTMLElement | null>(null);

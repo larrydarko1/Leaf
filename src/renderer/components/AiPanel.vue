@@ -16,14 +16,16 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
-const props = defineProps<{
+type Props = {
     activeFile: FileInfo | null;
     workspacePath: string | null;
-}>();
+};
+
+const props = defineProps<Props>();
 
 const emit = defineEmits<{
-    (e: 'close'): void;
-    (e: 'file-changed', path: string): void;
+    'close': [];
+    'file-changed': [path: string];
 }>();
 
 const model = useAIModel();
