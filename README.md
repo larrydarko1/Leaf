@@ -400,10 +400,8 @@ leaf/
 │       │   ├── AiPanel.vue         # AI chat panel orchestrator
 │       │   ├── AudioRecorder.vue   # Voice recording and WAV capture UI
 │       │   ├── BookmarksPanel.vue  # Bookmarked notes panel
-│       │   ├── ContextMenu.vue     # Right-click context menu
 │       │   ├── DrawingCanvas.vue   # Freehand drawing canvas orchestrator
 │       │   ├── FileExplorer.vue    # Vault file browser with drag & drop
-│       │   ├── FolderNode.vue      # Recursive tree node for folder/file rendering
 │       │   ├── NoteEditor.vue      # CodeMirror 6 markdown editor orchestrator
 │       │   ├── SearchPanel.vue     # Full-text search across vault
 │       │   ├── TabBar.vue          # Editor tab bar
@@ -421,11 +419,14 @@ leaf/
 │       │   │   ├── DrawingPropertiesPanel.vue # Color, stroke & style controls
 │       │   │   └── DrawingToolbar.vue       # Tool buttons & architecture shapes
 │       │   └── editor/             # Editor & media viewer sub-components
-│       │       ├── AudioViewer.vue     # Audio player with playback controls
-│       │       ├── ImageViewer.vue     # Image viewer with zoom
-│       │       ├── MarkdownToolbar.vue # Markdown formatting toolbar
-│       │       ├── PdfViewer.vue       # PDF embed viewer
-│       │       └── VideoViewer.vue     # Video player with custom controls
+│       │   │   ├── AudioViewer.vue     # Audio player with playback controls
+│       │   │   ├── ImageViewer.vue     # Image viewer with zoom
+│       │   │   ├── MarkdownToolbar.vue # Markdown formatting toolbar
+│       │   │   ├── PdfViewer.vue       # PDF embed viewer
+│       │   │   └── VideoViewer.vue     # Video player with custom controls
+│       │   └── explorer/             # Editor & media viewer sub-components
+│       │       ├── ContextMenu.vue     # Right-click context menu
+│       │       └── FolderNode.vue      # Recursive tree node for folder/file rendering
 │       ├── composables/            # Vue composables (grouped by domain)
 │       │   ├── useAudioRecorder.ts # Microphone capture and WAV encoding
 │       │   ├── ai/                 # AI chat, model, agent, history, system prompts, downloads
