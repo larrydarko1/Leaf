@@ -4,6 +4,7 @@
  */
 
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
+import { useThrottleFn } from '@vueuse/core';
 import type { Ref } from 'vue';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
@@ -83,6 +84,9 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         const el = messagesContainer.value;
         userScrolledUp.value = el.scrollHeight - el.scrollTop - el.clientHeight >= 40;
     }
+
+    type ThrottledScrollFn = (() => void) & { cancel?: () => void };
+    const throttledMessagesScroll = useThrottleFn(onMessagesScroll, 100) as unknown as ThrottledScrollFn;
 
     // Markdown and clipboard
 
@@ -408,6 +412,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         window.electronAPI.onAiToken(handleToken);
     });
     onUnmounted(() => {
+        throttledMessagesScroll.cancel?.();
         window.electronAPI.removeAiTokenListener();
     });
 
@@ -422,7 +427,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         editContent,
         editInputRef,
         scrollToBottom,
-        onMessagesScroll,
+        onMessagesScroll: throttledMessagesScroll,
         renderMarkdown,
         copyMessage,
         startEditMessage,

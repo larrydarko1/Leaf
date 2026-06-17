@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
+import { useThrottleFn, useEventListener } from '@vueuse/core';
 import type { ToolType, StrokeStyle } from '../types/drawing';
 import { useDrawingElements, genId } from '../composables/drawing/useDrawingElements';
 import { useCanvasRenderer } from '../composables/drawing/useCanvasRenderer';
@@ -266,15 +267,16 @@ const hasSelection = computed(() => selectedIds.value.size > 0);
 onMounted(() => {
     setupCanvas();
     loadDrawing();
-    window.addEventListener('resize', handleResize);
+    useEventListener(window, 'resize', useThrottleFn(handleResize, 100) as unknown as () => void);
     document.addEventListener('mousedown', handleClickOutside);
     void nextTick(() => containerEl.value?.focus());
 });
 
 onUnmounted(() => {
-    window.removeEventListener('resize', handleResize);
     document.removeEventListener('mousedown', handleClickOutside);
     cleanupAutoSave();
+    onPointerMove.cancel?.();
+    onWheel.cancel?.();
 });
 
 watch(() => props.filePath, loadDrawing);

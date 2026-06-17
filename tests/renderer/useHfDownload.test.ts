@@ -247,15 +247,30 @@ describe('useHfDownload', () => {
     // ── changeSortBy ──────────────────────────────────────────────────────────
 
     describe('changeSortBy', () => {
-        it('updates the sort option and triggers a new search', async () => {
+        beforeEach(() => vi.useFakeTimers());
+        afterEach(() => vi.useRealTimers());
+
+        it('updates the sort option and triggers a new search after debounce', async () => {
             mockAPI.hfSearch.mockResolvedValue({ success: true, results: [], hasMore: false });
-            await hf.changeSortBy('trending');
+            hf.changeSortBy('trending');
             expect(hf.hfSortBy.value).toBe('trending');
+            expect(mockAPI.hfSearch).not.toHaveBeenCalled(); // not yet — debounce pending
+            await vi.runAllTimersAsync();
             expect(mockAPI.hfSearch).toHaveBeenCalled();
         });
 
+        it('fires only one search when sort is changed rapidly', async () => {
+            mockAPI.hfSearch.mockResolvedValue({ success: true, results: [], hasMore: false });
+            hf.changeSortBy('likes');
+            hf.changeSortBy('lastModified');
+            hf.changeSortBy('trending');
+            await vi.runAllTimersAsync();
+            expect(mockAPI.hfSearch).toHaveBeenCalledTimes(1);
+        });
+
         it('is a no-op when the sort option is the same', async () => {
-            await hf.changeSortBy('downloads'); // default is already 'downloads'
+            hf.changeSortBy('downloads'); // default is already 'downloads'
+            await vi.runAllTimersAsync();
             expect(mockAPI.hfSearch).not.toHaveBeenCalled();
         });
     });

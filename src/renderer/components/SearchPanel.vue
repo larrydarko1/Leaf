@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, watch, onMounted } from 'vue';
+import { watchDebounced } from '@vueuse/core';
 import { useListKeyboardNavigation } from '../composables/ui/useListKeyboardNavigation';
 import type { FileInfo } from '../types/electron';
 import { useI18n } from 'vue-i18n';
@@ -27,14 +28,16 @@ const emit = defineEmits<{
 
 const searchInput = ref<HTMLInputElement | null>(null);
 const searchQuery = ref('');
+const searchResults = ref<FileInfo[]>([]);
 
-const searchResults = computed(() => {
+function runSearch() {
     if (searchQuery.value.trim() === '') {
-        return [];
+        searchResults.value = [];
+        return;
     }
 
     const query = searchQuery.value.toLowerCase();
-    const results = props.files
+    searchResults.value = props.files
         .map((file) => {
             const fileName = file.name.toLowerCase();
             const folderPath = file.folder.toLowerCase();
@@ -68,9 +71,10 @@ const searchResults = computed(() => {
         .filter((result) => result.matched)
         .sort((a, b) => b.score - a.score)
         .map((result) => result.file);
+}
 
-    return results;
-});
+// Debounce the search — watchDebounced auto-stops on component unmount
+watchDebounced(searchQuery, runSearch, { debounce: 150, maxWait: 600 });
 
 const { selectedIndex, resetIndex } = useListKeyboardNavigation<FileInfo>(
     () => searchResults.value,
@@ -115,11 +119,14 @@ function openFile(file: FileInfo) {
 
 function clearSearch() {
     searchQuery.value = '';
+    searchResults.value = [];
     resetIndex();
     searchInput.value?.focus();
 }
 
 function openSelectedResult() {
+    // Flush any pending debounce so results are current before opening
+    runSearch();
     const idx = selectedIndex.value;
     if (idx >= 0 && idx < searchResults.value.length) {
         openFile(searchResults.value[idx]);

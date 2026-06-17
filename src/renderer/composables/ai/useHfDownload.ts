@@ -3,6 +3,7 @@
  */
 
 import { ref, onMounted, onUnmounted } from 'vue';
+import { watchDebounced } from '@vueuse/core';
 import type { HfSearchResult, HfRepoFile, HfModelInfo, HfDownloadProgress, HfSortOption } from '../../types/hf';
 
 export function useHfDownload(onModelsRefresh: () => Promise<void>) {
@@ -74,7 +75,7 @@ export function useHfDownload(onModelsRefresh: () => Promise<void>) {
             return;
         }
         hfSortBy.value = sort;
-        void searchHfModels();
+        // search triggered by watchDebounced below
     }
 
     async function selectHfRepo(repoId: string): Promise<void> {
@@ -138,6 +139,23 @@ export function useHfDownload(onModelsRefresh: () => Promise<void>) {
         }
         return String(n);
     }
+
+    // Debounce sort-change searches — rapid sort button clicks collapse into one call
+    watchDebounced(hfSortBy, () => void searchHfModels(), { debounce: 300, immediate: false });
+
+    // Debounce search query changes — wait until user stops typing, then search
+    watchDebounced(
+        hfSearchQuery,
+        () => {
+            // Reset to first page when query changes
+            if (hfSearchQuery.value.trim().length > 0) {
+                void searchHfModels();
+            } else {
+                hfSearchResults.value = [];
+            }
+        },
+        { debounce: 300, maxWait: 1000, immediate: false },
+    );
 
     onMounted((): void => {
         window.electronAPI.onHfDownloadProgress(handleHfProgress);

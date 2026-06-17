@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { useThrottleFn } from '@vueuse/core';
 import type { FileInfo } from '../types/electron';
 import type { ChatMessage } from '../types/chat';
 import { useAIModel } from '../composables/ai/useAIModel';
@@ -212,15 +213,17 @@ function startResize(e: MouseEvent) {
     const startX = e.clientX;
     const startWidth = panelWidth.value;
 
-    function onMouseMove(e: MouseEvent) {
-        const delta = startX - e.clientX;
+    type ThrottledMouseMoveFn = ((moveEvent: MouseEvent) => void) & { cancel?: () => void };
+    const onMouseMove = useThrottleFn((moveEvent: MouseEvent) => {
+        const delta = startX - moveEvent.clientX;
         panelWidth.value = Math.min(maxWidth, Math.max(minWidth, startWidth + delta));
-    }
+    }, 16) as unknown as ThrottledMouseMoveFn;
 
     function onMouseUp() {
         isResizing.value = false;
         window.removeEventListener('mousemove', onMouseMove);
         window.removeEventListener('mouseup', onMouseUp);
+        onMouseMove.cancel?.();
     }
 
     window.addEventListener('mousemove', onMouseMove);
