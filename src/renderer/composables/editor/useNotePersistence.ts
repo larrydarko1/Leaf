@@ -4,7 +4,7 @@
  */
 
 import { ref } from 'vue';
-import type { FileInfo } from '../../types/electron';
+import type { FileInfo } from '@/types/electron';
 
 export function useNotePersistence(
     getFile: () => FileInfo | null,

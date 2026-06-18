@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
-import type { FileInfo, FolderInfo } from '../types/electron';
-import FolderNode from './explorer/FolderNode.vue';
-import ContextMenu, { type ContextMenuItem } from './explorer/ContextMenu.vue';
-import { useFolderTree } from '../composables/vault/useFolderTree';
+import type { FileInfo, FolderInfo } from '@/types/electron';
+import FolderNode from '@/components/explorer/FolderNode.vue';
+import ContextMenu, { type ContextMenuItem } from '@/components/explorer/ContextMenu.vue';
+import { useFolderTree } from '@/composables/vault/useFolderTree';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();

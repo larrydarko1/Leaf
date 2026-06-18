@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { StrokeStyle } from '../../types/drawing';
+import type { StrokeStyle } from '@/types/drawing';
 import { useI18n } from 'vue-i18n';
 
 type StyleKey = 'strokeColor' | 'fillColor' | 'strokeWidth' | 'strokeStyle' | 'borderRadius' | 'fontSize';

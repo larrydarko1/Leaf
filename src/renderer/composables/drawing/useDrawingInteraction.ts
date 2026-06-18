@@ -6,7 +6,7 @@
 import { ref, computed } from 'vue';
 import { useThrottleFn } from '@vueuse/core';
 import type { Ref, ComputedRef } from 'vue';
-import type { ToolType, ElementType, DragAction, CanvasElement, StrokeStyle } from '../../types/drawing';
+import type { ToolType, ElementType, DragAction, CanvasElement, StrokeStyle } from '@/types/drawing';
 
 const MIN_ELEMENT_SIZE = 3;
 

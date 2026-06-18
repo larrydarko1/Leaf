@@ -14,7 +14,7 @@ import {
     buildSyntaxDecos,
     buildTaskDecos,
     mergeVisibleRanges,
-} from './cm-deco-builders';
+} from '@/composables/editor/codemirror/cm-deco-builders';
 
 // ── Interactive extension (links + media controls) ───────────────────────────
 

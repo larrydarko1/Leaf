@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
-import { useLanguage } from '../composables/ui/useLanguage';
+import { useLanguage } from '@/composables/ui/useLanguage';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();

@@ -1,22 +1,22 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
-import FileExplorer from './components/FileExplorer.vue';
-import NoteEditor from './components/NoteEditor.vue';
-import TabBar from './components/TabBar.vue';
-import SearchPanel from './components/SearchPanel.vue';
-import BookmarksPanel from './components/BookmarksPanel.vue';
-import AudioRecorder from './components/AudioRecorder.vue';
-import AiPanel from './components/AiPanel.vue';
-import ThemePicker from './components/ThemePicker.vue';
-import LanguagePicker from './components/LanguagePicker.vue';
-import type { FileInfo } from './types/electron';
-import { useVault } from './composables/vault/useVault';
-import { useFileSelection } from './composables/vault/useFileSelection';
-import { useBookmarks } from './composables/vault/useBookmarks';
-import { useEditorTabs } from './composables/editor/useEditorTabs';
-import { useTheme } from './composables/ui/useTheme';
-import { useLanguage } from './composables/ui/useLanguage';
+import FileExplorer from '@/components/FileExplorer.vue';
+import NoteEditor from '@/components/NoteEditor.vue';
+import TabBar from '@/components/TabBar.vue';
+import SearchPanel from '@/components/SearchPanel.vue';
+import BookmarksPanel from '@/components/BookmarksPanel.vue';
+import AudioRecorder from '@/components/AudioRecorder.vue';
+import AiPanel from '@/components/AiPanel.vue';
+import ThemePicker from '@/components/ThemePicker.vue';
+import LanguagePicker from '@/components/LanguagePicker.vue';
+import type { FileInfo } from '@/types/electron';
+import { useVault } from '@/composables/vault/useVault';
+import { useFileSelection } from '@/composables/vault/useFileSelection';
+import { useBookmarks } from '@/composables/vault/useBookmarks';
+import { useEditorTabs } from '@/composables/editor/useEditorTabs';
+import { useTheme } from '@/composables/ui/useTheme';
+import { useLanguage } from '@/composables/ui/useLanguage';
 
 const { t } = useI18n();
 

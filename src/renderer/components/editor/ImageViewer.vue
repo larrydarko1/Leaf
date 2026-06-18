@@ -58,7 +58,7 @@ watch(
         <img
             v-else-if="imageUrl && !hasError"
             :src="imageUrl"
-            :alt="fileName"
+            :alt="props.fileName"
             class="image-preview"
             @load="hasError = false"
             @error="hasError = true" />

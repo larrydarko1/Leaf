@@ -5,7 +5,12 @@
 import { Decoration } from '@codemirror/view';
 import { type EditorState, type Range } from '@codemirror/state';
 import { syntaxTree } from '@codemirror/language';
-import { EmbedWidget, HorizontalRuleWidget, TableWidget, TaskCheckboxWidget } from './cm-widgets';
+import {
+    EmbedWidget,
+    HorizontalRuleWidget,
+    TableWidget,
+    TaskCheckboxWidget,
+} from '@/composables/editor/codemirror/cm-widgets';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

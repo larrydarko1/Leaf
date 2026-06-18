@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { watch, onMounted, onUnmounted } from 'vue';
-import { useVideoPlayer } from '../../composables/editor/useVideoPlayer';
+import { useVideoPlayer } from '@/composables/editor/useVideoPlayer';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();

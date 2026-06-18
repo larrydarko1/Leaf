@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useListKeyboardNavigation } from '../composables/ui/useListKeyboardNavigation';
-import type { FileInfo } from '../types/electron';
+import { useListKeyboardNavigation } from '@/composables/ui/useListKeyboardNavigation';
+import type { FileInfo } from '@/types/electron';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();

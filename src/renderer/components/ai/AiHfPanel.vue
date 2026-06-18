@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { HfRepoFile, HfModelInfo, HfSearchResult, HfDownloadProgress, HfSortOption } from '../../types/hf';
+import type { HfRepoFile, HfModelInfo, HfSearchResult, HfDownloadProgress, HfSortOption } from '@/types/hf';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();

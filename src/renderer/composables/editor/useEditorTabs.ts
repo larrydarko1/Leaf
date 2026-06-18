@@ -3,7 +3,7 @@
  */
 
 import { ref, computed } from 'vue';
-import type { FileInfo } from '../../types/electron';
+import type { FileInfo } from '@/types/electron';
 
 export type TabState = {
     file: FileInfo; // Cached text content — only populated for text/markdown/code files

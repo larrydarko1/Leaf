@@ -4,7 +4,7 @@
  */
 
 import { ref, computed, shallowRef } from 'vue';
-import type { CanvasElement, ElementType } from '../../types/drawing';
+import type { CanvasElement, ElementType } from '@/types/drawing';
 
 const HANDLE_SIZE = 8;
 

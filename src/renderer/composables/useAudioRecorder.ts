@@ -5,7 +5,7 @@
  */
 
 import { ref, computed, onUnmounted } from 'vue';
-import { convertWebMToWav, arrayBufferToBase64 } from '../utils/audio';
+import { convertWebMToWav, arrayBufferToBase64 } from '@/utils/audio';
 
 export function useAudioRecorder(getCurrentFolder: () => string | null, onSaved: (filePath: string) => void) {
     const isRecording = ref(false);

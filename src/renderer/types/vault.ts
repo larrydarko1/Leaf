@@ -1,4 +1,4 @@
-import type { FileInfo } from '../types/electron';
+import type { FileInfo } from '@/types/electron';
 
 export type TreeNode = {
     path: string;

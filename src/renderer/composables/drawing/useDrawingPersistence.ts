@@ -5,7 +5,7 @@
 
 import { ref, nextTick } from 'vue';
 import type { Ref } from 'vue';
-import type { CanvasElement, DrawingDataV2, ElementType } from '../../types/drawing';
+import type { CanvasElement, DrawingDataV2, ElementType } from '@/types/drawing';
 
 export function useDrawingPersistence(
     canvas: Ref<HTMLCanvasElement | null>,

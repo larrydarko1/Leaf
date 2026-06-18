@@ -3,7 +3,7 @@
  */
 
 import { ref, shallowRef, computed, onMounted, onUnmounted } from 'vue';
-import type { AiModelInfo, AiStatus } from '../../types/ai';
+import type { AiModelInfo, AiStatus } from '@/types/ai';
 
 export function useAIModel() {
     const status = ref<AiStatus>({

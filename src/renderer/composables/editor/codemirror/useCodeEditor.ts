@@ -18,8 +18,8 @@ import { syntaxHighlighting, indentOnInput, foldGutter, bracketMatching } from '
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { languages } from '@codemirror/language-data';
-import { leafHighlightStyle } from './useCodemirror';
-import { leafCodeEditorTheme } from './cm-theme';
+import { leafHighlightStyle } from '@/composables/editor/codemirror/useCodemirror';
+import { leafCodeEditorTheme } from '@/composables/editor/codemirror/cm-theme';
 
 /**
  * Map file extensions to CodeMirror language names for lookup in @codemirror/language-data.

@@ -10,7 +10,10 @@
         "erasableSyntaxOnly": true,
         "noFallthroughCasesInSwitch": true,
         "noUncheckedSideEffectImports": true,
-        "types": ["node"]
+        "types": ["node"],
+        "paths": {
+            "@/*": ["./src/renderer/*"]
+        }
     },
     "include": ["src/renderer/**/*.ts", "src/renderer/**/*.tsx", "src/renderer/**/*.vue"]
 }

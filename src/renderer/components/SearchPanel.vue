@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
 import { watchDebounced } from '@vueuse/core';
-import { useListKeyboardNavigation } from '../composables/ui/useListKeyboardNavigation';
-import type { FileInfo } from '../types/electron';
+import { useListKeyboardNavigation } from '@/composables/ui/useListKeyboardNavigation';
+import type { FileInfo } from '@/types/electron';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();

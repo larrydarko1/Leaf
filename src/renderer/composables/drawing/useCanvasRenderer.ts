@@ -4,7 +4,7 @@
  */
 
 import { computed, type Ref, type ComputedRef } from 'vue';
-import type { CanvasElement } from '../../types/drawing';
+import type { CanvasElement } from '@/types/drawing';
 
 const GRID_SIZE = 20;
 const HANDLE_SIZE = 8;

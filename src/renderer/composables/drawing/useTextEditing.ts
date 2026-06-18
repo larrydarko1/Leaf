@@ -5,7 +5,7 @@
 
 import { ref, computed, nextTick } from 'vue';
 import type { Ref } from 'vue';
-import type { CanvasElement, StrokeStyle } from '../../types/drawing';
+import type { CanvasElement, StrokeStyle } from '@/types/drawing';
 
 type DefaultStyle = {
     strokeColor: string;

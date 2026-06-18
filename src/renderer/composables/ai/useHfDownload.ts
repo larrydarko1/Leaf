@@ -4,7 +4,7 @@
 
 import { ref, shallowRef, onMounted, onUnmounted } from 'vue';
 import { watchDebounced } from '@vueuse/core';
-import type { HfSearchResult, HfRepoFile, HfModelInfo, HfDownloadProgress, HfSortOption } from '../../types/hf';
+import type { HfSearchResult, HfRepoFile, HfModelInfo, HfDownloadProgress, HfSortOption } from '@/types/hf';
 
 export function useHfDownload(onModelsRefresh: () => Promise<void>) {
     const showHfPanel = ref(false);

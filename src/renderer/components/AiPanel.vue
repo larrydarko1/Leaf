@@ -1,18 +1,18 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useThrottleFn } from '@vueuse/core';
-import type { FileInfo } from '../types/electron';
-import type { ChatMessage } from '../types/chat';
-import { useAIModel } from '../composables/ai/useAIModel';
-import { useConversationHistory } from '../composables/ai/useConversationHistory';
-import { useAgentMode } from '../composables/ai/useAgentMode';
-import { useHfDownload } from '../composables/ai/useHfDownload';
-import { useAIChat } from '../composables/ai/useAIChat';
-import AiModelBar from './ai/AiModelBar.vue';
-import AiHfPanel from './ai/AiHfPanel.vue';
-import AiHistoryPanel from './ai/AiHistoryPanel.vue';
-import AiMessageList from './ai/AiMessageList.vue';
-import AiInputArea from './ai/AiInputArea.vue';
+import type { FileInfo } from '@/types/electron';
+import type { ChatMessage } from '@/types/chat';
+import { useAIModel } from '@/composables/ai/useAIModel';
+import { useConversationHistory } from '@/composables/ai/useConversationHistory';
+import { useAgentMode } from '@/composables/ai/useAgentMode';
+import { useHfDownload } from '@/composables/ai/useHfDownload';
+import { useAIChat } from '@/composables/ai/useAIChat';
+import AiModelBar from '@/components/ai/AiModelBar.vue';
+import AiHfPanel from '@/components/ai/AiHfPanel.vue';
+import AiHistoryPanel from '@/components/ai/AiHistoryPanel.vue';
+import AiMessageList from '@/components/ai/AiMessageList.vue';
+import AiInputArea from '@/components/ai/AiInputArea.vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();

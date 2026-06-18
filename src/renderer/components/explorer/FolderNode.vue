@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, nextTick } from 'vue';
-import type { FileInfo } from '../../types/electron';
-import type { TreeNode } from '../../types/vault';
+import type { FileInfo } from '@/types/electron';
+import type { TreeNode } from '@/types/vault';
 import {
     isImageFile as checkImage,
     isVideoFile as checkVideo,
@@ -9,8 +9,8 @@ import {
     isPdfFile as checkPdf,
     isDrawingFile as checkDrawing,
     isCodeFile as checkCode,
-} from '../../utils/fileTypes';
-import { useTreeNodeDrag } from '../../composables/vault/useTreeNodeDrag';
+} from '@/utils/fileTypes';
+import { useTreeNodeDrag } from '@/composables/vault/useTreeNodeDrag';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();

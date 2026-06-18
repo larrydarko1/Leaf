@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useThrottleFn } from '@vueuse/core';
-import type { FileInfo } from '../../types/electron';
+import type { FileInfo } from '@/types/electron';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();

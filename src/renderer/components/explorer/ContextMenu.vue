@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useContextMenu } from '../../composables/ui/useContextMenu';
+import { useContextMenu } from '@/composables/ui/useContextMenu';
 import { useI18n } from 'vue-i18n';
 
 export type ContextMenuItem = {

@@ -13,9 +13,9 @@ import type {
     AgentProposeEditResult,
     AgentEditResult,
     AgentPendingEditsResult,
-} from './ai';
-import type { HfSearchResponse, HfListFilesResponse, HfDownloadProgress, HfDownloadResult } from './hf';
-import type { SpeechInitResult, SpeechTranscribeResult, SpeechStatus, SpeechStatusEvent } from './speech';
+} from '@/types/ai';
+import type { HfSearchResponse, HfListFilesResponse, HfDownloadProgress, HfDownloadResult } from '@/types/hf';
+import type { SpeechInitResult, SpeechTranscribeResult, SpeechStatus, SpeechStatusEvent } from '@/types/speech';
 
 export type FileInfo = {
     name: string;

@@ -4,7 +4,7 @@
  */
 
 import { ref } from 'vue';
-import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS, AUDIO_EXTENSIONS, PDF_EXTENSIONS } from '../../utils/fileTypes';
+import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS, AUDIO_EXTENSIONS, PDF_EXTENSIONS } from '@/utils/fileTypes';
 import type { Ref, ShallowRef } from 'vue';
 import type { EditorView } from '@codemirror/view';
 
