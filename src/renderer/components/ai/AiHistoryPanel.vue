@@ -79,6 +79,7 @@ function formatRelativeDate(dateStr: string): string {
                 <li
                     v-for="conv in conversationList"
                     :key="conv.id"
+                    v-memo="[conv.id, currentConversationId]"
                     class="ai-history-item"
                     :class="{ active: currentConversationId === conv.id }"
                     role="listitem">

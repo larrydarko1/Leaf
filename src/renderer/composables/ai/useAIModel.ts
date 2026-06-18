@@ -2,7 +2,7 @@
  * useAIModel — manages model discovery, loading/unloading, and status polling via IPC.
  */
 
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, shallowRef, computed, onMounted, onUnmounted } from 'vue';
 import type { AiModelInfo, AiStatus } from '../../types/ai';
 
 export function useAIModel() {
@@ -16,7 +16,7 @@ export function useAIModel() {
         contextSize: 0,
     });
 
-    const availableModels = ref<AiModelInfo[]>([]);
+    const availableModels = shallowRef<AiModelInfo[]>([]);
     const isLoading = ref(false);
     const selectedModelPath = ref('');
     const lastUsedModelName = ref<string | null>(null);

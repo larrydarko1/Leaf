@@ -2,14 +2,14 @@
  * useHfDownload – searches Hugging Face for GGUF models and manages downloads via IPC.
  */
 
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, shallowRef, onMounted, onUnmounted } from 'vue';
 import { watchDebounced } from '@vueuse/core';
 import type { HfSearchResult, HfRepoFile, HfModelInfo, HfDownloadProgress, HfSortOption } from '../../types/hf';
 
 export function useHfDownload(onModelsRefresh: () => Promise<void>) {
     const showHfPanel = ref(false);
     const hfSearchQuery = ref('');
-    const hfSearchResults = ref<HfSearchResult[]>([]);
+    const hfSearchResults = shallowRef<HfSearchResult[]>([]);
     const hfIsSearching = ref(false);
     const hfSelectedRepo = ref<string | null>(null);
     const hfRepoFiles = ref<HfRepoFile[]>([]);

@@ -251,6 +251,7 @@ function splitHighlightedText(text: string): HighlightPart[] {
                 <li
                     v-for="(file, index) in searchResults"
                     :key="file.path"
+                    v-memo="[file.path, selectedIndex === index, activeFile?.path === file.path]"
                     class="search-result-item"
                     :class="{
                         'active': activeFile?.path === file.path,

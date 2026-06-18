@@ -2,7 +2,7 @@
  * useConversationHistory — persists and navigates LLM conversation sessions via IPC.
  */
 
-import { ref, nextTick } from 'vue';
+import { ref, shallowRef, nextTick } from 'vue';
 import type { Ref } from 'vue';
 import type { AiStatus, ConversationMeta } from '../../types/ai';
 import type { ChatMessage } from '../../types/chat';
@@ -13,7 +13,7 @@ export function useConversationHistory(
     messages: Ref<ChatMessage[]>,
 ) {
     const showHistory = ref(false);
-    const conversationList = ref<ConversationMeta[]>([]);
+    const conversationList = shallowRef<ConversationMeta[]>([]);
     const currentConversationId = ref<string | null>(null);
     const conversationTokenCount = ref(0);
 

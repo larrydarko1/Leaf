@@ -188,6 +188,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
         <div
             v-for="(msg, index) in messages"
             :key="index"
+            v-memo="[msg.role, msg.content, msg.agentEdits?.length]"
             class="ai-message"
             :class="msg.role"
             role="article"

@@ -3,7 +3,7 @@
  * hit testing, and element type classification.
  */
 
-import { ref, computed } from 'vue';
+import { ref, computed, shallowRef } from 'vue';
 import type { CanvasElement, ElementType } from '../../types/drawing';
 
 const HANDLE_SIZE = 8;
@@ -14,10 +14,10 @@ export function genId(): string {
 }
 
 export function useDrawingElements() {
-    const elements = ref<CanvasElement[]>([]);
+    const elements = shallowRef<CanvasElement[]>([]);
     const selectedIds = ref<Set<string>>(new Set());
     const creatingElement = ref<CanvasElement | null>(null);
-    const clipboard = ref<CanvasElement[]>([]);
+    const clipboard = shallowRef<CanvasElement[]>([]);
 
     // Backward-compat: single selected ID (first in set, or null)
     const selectedId = computed({

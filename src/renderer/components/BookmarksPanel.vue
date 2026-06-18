@@ -117,6 +117,7 @@ function removeBookmark(file: FileInfo) {
                 <li
                     v-for="file in bookmarkedFiles"
                     :key="file.path"
+                    v-memo="[file.path, activeFile?.path, selectedFiles.some((f) => f.path === file.path)]"
                     role="listitem"
                     class="bookmark-item"
                     :class="{

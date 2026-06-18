@@ -3,13 +3,13 @@
  * registration, and workspace path tracking via IPC.
  */
 
-import { ref } from 'vue';
+import { ref, shallowRef } from 'vue';
 import type { FileInfo, FolderInfo } from '../../types/electron';
 
 export function useVault() {
     const currentFolder = ref<string | null>(null);
-    const files = ref<FileInfo[]>([]);
-    const folders = ref<FolderInfo[]>([]);
+    const files = shallowRef<FileInfo[]>([]);
+    const folders = shallowRef<FolderInfo[]>([]);
 
     // --- FS watcher ---
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;

@@ -169,6 +169,7 @@ function truncate(str: string, len: number): string {
                             <div
                                 v-for="model in availableModels"
                                 :key="model.path"
+                                v-memo="[model.path, selectedModelPath]"
                                 class="ai-dropdown-item"
                                 :class="{ selected: selectedModelPath === model.path }"
                                 role="option"
@@ -283,6 +284,7 @@ function truncate(str: string, len: number): string {
                         <div
                             v-for="prompt in prompts"
                             :key="prompt.id"
+                            v-memo="[prompt.id, activeId]"
                             class="ai-dropdown-item ai-prompt-item"
                             :class="{ selected: prompt.id === activeId }"
                             role="option"
