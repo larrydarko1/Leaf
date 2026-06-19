@@ -22,7 +22,8 @@
   "note_editor": "Editor note",
   "ai_assistant_panel": "Pannello assistente AI",
   "theme_picker": "Pannello selettore tema",
-  "language_picker": "Pannello selettore lingua"
+  "language_picker": "Pannello selettore lingua",
+  "tab_close_button": "Pulsante chiudi scheda"
 },
   "file": {
     "image": "File immagine",
@@ -297,13 +298,17 @@
     "solid": "Continuo",
     "dashed": "Tratteggiato",
     "dotted": "Punteggiato",
-    "font_size_options.s": "P",
-    "font_size_options.m": "M",
-    "font_size_options.l": "G",
-    "font_size_options.xl": "XL",
-    "border_radius_options.sharp": "Acuto",
-    "border_radius_options.round": "Arrotondato",
-    "border_radius_options.extra_round": "Extra arrotondato",
+    "font_size_option": {
+      "s": "P",
+      "m": "M",
+      "l": "G",
+      "xl": "XL"
+    },
+    "border_radius_options": {
+      "sharp": "Acuto",
+      "round": "Arrotondato",
+      "extra_round": "Extra arrotondato"
+    },
     "stroke": "Tratto",
     "stroke_color_options": "Opzioni colore tratto",
     "fill": "Riempimento",

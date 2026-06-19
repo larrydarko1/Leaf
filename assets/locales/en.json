@@ -22,7 +22,8 @@
     "note_editor": "Note editor",
     "ai_assistant_panel": "AI assistant panel",
     "theme_picker": "Theme picker panel",
-    "language_picker": "Language picker panel"
+    "language_picker": "Language picker panel",
+    "tab_close_button": "Close tab button"
   },
   "file": {
     "image": "Image file",
@@ -297,13 +298,17 @@
     "solid": "Solid",
     "dashed": "Dashed",
     "dotted": "Dotted",
-    "font_size_options.s": "S",
-    "font_size_options.m": "M",
-    "font_size_options.l": "L",
-    "font_size_options.xl": "XL",
-    "border_radius_options.sharp": "Sharp",
-    "border_radius_options.round": "Round",
-    "border_radius_options.extra_round": "Extra round",
+    "font_size_option": {
+      "s": "S",
+      "m": "M",
+      "l": "L",
+      "xl": "XL"
+    },
+    "border_radius_options": {
+      "sharp": "Sharp",
+      "round": "Round",
+      "extra_round": "Extra round"
+    },
     "stroke": "Stroke",
     "stroke_color_options": "Stroke color options",
     "fill": "Fill",

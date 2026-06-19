@@ -67,10 +67,10 @@ const strokeStyleOptions = [
 ];
 
 const fontSizeOptions = [
-    { label: t('drawing.font_size_options.s'), value: 16 },
-    { label: t('drawing.font_size_options.m'), value: 20 },
-    { label: t('drawing.font_size_options.l'), value: 28 },
-    { label: t('drawing.font_size_options.xl'), value: 36 },
+    { label: t('drawing.font_size_option.s'), value: 16 },
+    { label: t('drawing.font_size_option.m'), value: 20 },
+    { label: t('drawing.font_size_option.l'), value: 28 },
+    { label: t('drawing.font_size_option.xl'), value: 36 },
 ];
 
 const borderRadiusOptions = [
