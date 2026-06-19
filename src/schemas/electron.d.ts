@@ -121,6 +121,11 @@ export type ElectronAPI = {
         error?: string;
     }>;
     languageSetActive: (id: string) => Promise<AiSimpleResult>;
+    languageLoad: (id: string) => Promise<{
+        success: boolean;
+        content?: Record<string, unknown>;
+        error?: string;
+    }>;
     languageOpenLeafDir: () => Promise<AiSimpleResult>;
 
     onAiToken: (callback: (token: string) => void) => void;

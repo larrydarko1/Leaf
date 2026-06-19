@@ -83,6 +83,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // Language files (~/.leaf/locales/*.json)
     languageList: () => ipcRenderer.invoke('language:list'),
     languageSetActive: (id: string) => ipcRenderer.invoke('language:setActive', id),
+    languageLoad: (id: string) => ipcRenderer.invoke('language:load', id),
     languageOpenLeafDir: () => ipcRenderer.invoke('language:openLeafDir'),
 
     // AI streaming token listener

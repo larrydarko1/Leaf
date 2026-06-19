@@ -35,6 +35,10 @@ export function register(ipc: IpcMain): void {
         return setActiveLanguage(id as string);
     });
 
+    ipc.handle('language:load', async (_event, id: unknown) => {
+        return loadLanguageContent(id as string);
+    });
+
     ipc.handle('language:openLeafDir', async () => {
         try {
             await fs.mkdir(LOCALES_DIR, { recursive: true });
@@ -157,6 +161,28 @@ export async function setActiveLanguage(id: string): Promise<{
         await writeState({ ...state, activeLanguage: id });
         return { success: true };
     } catch (err) {
+        return { success: false, error: (err as Error).message };
+    }
+}
+
+export async function loadLanguageContent(id: string): Promise<{
+    success: boolean;
+    content?: Record<string, unknown>;
+    error?: string;
+}> {
+    if (typeof id !== 'string' || !isValidLanguageId(id)) {
+        return { success: false, error: 'Invalid language id' };
+    }
+    const file = path.join(LOCALES_DIR, `${id}.json`);
+    if (!existsSync(file)) {
+        return { success: false, error: 'Language file not found' };
+    }
+    try {
+        const data = await fs.readFile(file, 'utf-8');
+        const content = JSON.parse(data) as Record<string, unknown>;
+        return { success: true, content };
+    } catch (err) {
+        log.error(`[language] failed to load ${id}:`, err);
         return { success: false, error: (err as Error).message };
     }
 }
