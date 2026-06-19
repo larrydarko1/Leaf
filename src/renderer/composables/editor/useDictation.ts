@@ -3,8 +3,20 @@
  * and inserts transcribed text into the editor.
  */
 
-import { ref } from 'vue';
-import type { Ref } from 'vue';
+import { ref, type Ref } from 'vue';
+
+const DICTATION_WORKLET_CODE = `
+class DictationProcessor extends AudioWorkletProcessor {
+    process(inputs) {
+        const input = inputs[0];
+        if (input && input[0] && input[0].length > 0) {
+            this.port.postMessage(input[0].slice());
+        }
+        return true;
+    }
+}
+registerProcessor('dictation-processor', DictationProcessor);
+`;
 
 export function useDictation(content: Ref<string>, onContentChange: () => void) {
     const isDictating = ref(false);
@@ -12,7 +24,8 @@ export function useDictation(content: Ref<string>, onContentChange: () => void) 
 
     let dictationStream: MediaStream | null = null;
     let dictationAudioContext: AudioContext | null = null;
-    let dictationProcessor: ScriptProcessorNode | null = null;
+    let dictationWorkletNode: AudioWorkletNode | null = null;
+    let dictationWorkletUrl: string | null = null;
     let dictationRawSamples: Float32Array[] = [];
     let dictationInterval: number | null = null;
     let whisperModelReady = false;
@@ -55,16 +68,27 @@ export function useDictation(content: Ref<string>, onContentChange: () => void) 
 
         dictationAudioContext = new AudioContext();
         const source = dictationAudioContext.createMediaStreamSource(dictationStream);
-        dictationProcessor = dictationAudioContext.createScriptProcessor(4096, 1, 1);
-        dictationRawSamples = [];
 
-        dictationProcessor.onaudioprocess = (e): void => {
-            const channelData = e.inputBuffer.getChannelData(0);
-            dictationRawSamples.push(new Float32Array(channelData));
+        dictationWorkletUrl = URL.createObjectURL(
+            new Blob([DICTATION_WORKLET_CODE], { type: 'application/javascript' }),
+        );
+        try {
+            await dictationAudioContext.audioWorklet.addModule(dictationWorkletUrl);
+        } catch (err) {
+            window.electronAPI.log.error('Failed to load audio worklet:', err);
+            URL.revokeObjectURL(dictationWorkletUrl);
+            dictationWorkletUrl = null;
+            return;
+        }
+
+        dictationRawSamples = [];
+        dictationWorkletNode = new AudioWorkletNode(dictationAudioContext, 'dictation-processor');
+        dictationWorkletNode.port.onmessage = (e: MessageEvent<Float32Array>): void => {
+            dictationRawSamples.push(e.data);
         };
 
-        source.connect(dictationProcessor);
-        dictationProcessor.connect(dictationAudioContext.destination);
+        source.connect(dictationWorkletNode);
+        dictationWorkletNode.connect(dictationAudioContext.destination);
 
         isDictating.value = true;
 
@@ -147,9 +171,15 @@ export function useDictation(content: Ref<string>, onContentChange: () => void) 
                 });
         }
 
-        if (dictationProcessor !== null) {
-            dictationProcessor.disconnect();
-            dictationProcessor = null;
+        if (dictationWorkletNode !== null) {
+            dictationWorkletNode.disconnect();
+            dictationWorkletNode.port.onmessage = null;
+            dictationWorkletNode = null;
+        }
+
+        if (dictationWorkletUrl !== null) {
+            URL.revokeObjectURL(dictationWorkletUrl);
+            dictationWorkletUrl = null;
         }
 
         if (dictationAudioContext !== null) {
