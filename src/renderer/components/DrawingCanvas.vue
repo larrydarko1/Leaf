@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useThrottleFn, useEventListener } from '@vueuse/core';
-import type { ToolType, StrokeStyle } from '@/types/drawing';
-import { useDrawingElements, genId } from '@/composables/drawing/useDrawingElements';
-import { useCanvasRenderer } from '@/composables/drawing/useCanvasRenderer';
-import { useDrawingInteraction } from '@/composables/drawing/useDrawingInteraction';
-import { useTextEditing } from '@/composables/drawing/useTextEditing';
-import { useDrawingHistory } from '@/composables/drawing/useDrawingHistory';
-import { useDrawingPersistence } from '@/composables/drawing/useDrawingPersistence';
-import DrawingToolbar from '@/components/drawing/DrawingToolbar.vue';
-import DrawingPropertiesPanel from '@/components/drawing/DrawingPropertiesPanel.vue';
-import DrawingFooter from '@/components/drawing/DrawingFooter.vue';
-import DrawingExportDialog from '@/components/drawing/DrawingExportDialog.vue';
+import type { ToolType, StrokeStyle, DefaultStyle } from '@/schemas/drawing';
+import { useDrawingElements, genId } from '@/renderer/composables/drawing/useDrawingElements';
+import { useCanvasRenderer } from '@/renderer/composables/drawing/useCanvasRenderer';
+import { useDrawingInteraction } from '@/renderer/composables/drawing/useDrawingInteraction';
+import { useTextEditing } from '@/renderer/composables/drawing/useTextEditing';
+import { useDrawingHistory } from '@/renderer/composables/drawing/useDrawingHistory';
+import { useDrawingPersistence } from '@/renderer/composables/drawing/useDrawingPersistence';
+import DrawingToolbar from '@/renderer/components/drawing/DrawingToolbar.vue';
+import DrawingPropertiesPanel from '@/renderer/components/drawing/DrawingPropertiesPanel.vue';
+import DrawingFooter from '@/renderer/components/drawing/DrawingFooter.vue';
+import DrawingExportDialog from '@/renderer/components/drawing/DrawingExportDialog.vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -63,7 +63,7 @@ const defaultStyle = ref({
     strokeStyle: 'solid' as StrokeStyle,
     borderRadius: 0,
     fontSize: 20,
-});
+} as DefaultStyle);
 
 const history = ref<string[]>([]);
 const historyIndex = ref(-1);

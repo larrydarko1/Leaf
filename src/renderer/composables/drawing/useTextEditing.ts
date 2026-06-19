@@ -5,16 +5,7 @@
 
 import { ref, computed, nextTick } from 'vue';
 import type { Ref } from 'vue';
-import type { CanvasElement, StrokeStyle } from '@/types/drawing';
-
-type DefaultStyle = {
-    strokeColor: string;
-    fillColor: string;
-    strokeWidth: number;
-    strokeStyle: StrokeStyle;
-    borderRadius: number;
-    fontSize: number;
-};
+import type { CanvasElement, DefaultStyle } from '@/schemas/drawing';
 
 export function useTextEditing(
     // DOM refs

@@ -6,18 +6,9 @@
 import { ref, computed } from 'vue';
 import { useThrottleFn } from '@vueuse/core';
 import type { Ref, ComputedRef } from 'vue';
-import type { ToolType, ElementType, DragAction, CanvasElement, StrokeStyle } from '@/types/drawing';
+import type { ToolType, ElementType, DragAction, CanvasElement, DefaultStyle } from '@/schemas/drawing';
 
 const MIN_ELEMENT_SIZE = 3;
-
-type DefaultStyle = {
-    strokeColor: string;
-    fillColor: string;
-    strokeWidth: number;
-    strokeStyle: StrokeStyle;
-    borderRadius: number;
-    fontSize: number;
-};
 
 export function useDrawingInteraction(
     // DOM refs

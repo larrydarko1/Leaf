@@ -4,8 +4,8 @@
 
 import { ref, shallowRef, nextTick } from 'vue';
 import type { Ref } from 'vue';
-import type { AiStatus, ConversationMeta } from '@/types/ai';
-import type { ChatMessage } from '@/types/chat';
+import type { AiStatus, ConversationMeta } from '@/schemas/ai';
+import type { ChatMessage } from '@/schemas/chat';
 
 export function useConversationHistory(
     status: Ref<AiStatus>,

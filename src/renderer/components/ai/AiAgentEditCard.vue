@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AgentFileEdit } from '@/types/chat';
+import type { AgentFileEdit } from '@/schemas/chat';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();

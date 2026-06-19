@@ -20,19 +20,9 @@ import { shell, type IpcMain } from 'electron';
 import path from 'path';
 import fs from 'fs/promises';
 import { existsSync } from 'fs';
-import { LEAF_HOME, LOCALES_DIR, STATE_FILE, getBundledLocalesDir } from '../lib/paths';
-import { log } from '../lib/logger';
-
-type LanguageInfo = {
-    id: string;
-    name: string;
-    path: string;
-};
-
-type LanguageState = {
-    activeLanguage?: string;
-    [key: string]: unknown; // (other keys are preserved untouched)
-};
+import { LEAF_HOME, LOCALES_DIR, STATE_FILE, getBundledLocalesDir } from '@/main/lib/paths';
+import { log } from '@/main/lib/logger';
+import type { LanguageInfo, LanguageState } from '@/schemas/vault';
 
 const DEFAULT_LANGUAGE_ID = 'en';
 const LANGUAGE_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;

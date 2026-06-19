@@ -27,22 +27,9 @@ import { type IpcMain, shell } from 'electron';
 import path from 'path';
 import fs from 'fs/promises';
 import { existsSync } from 'fs';
-import { LEAF_HOME, THEMES_DIR, STATE_FILE, getBundledThemesDir } from '../lib/paths';
-import { log } from '../lib/logger';
-
-type ThemeInfo = {
-    id: string;
-    name: string;
-    description: string;
-    colors: Record<string, string>;
-    path: string;
-};
-
-type ThemeState = {
-    activeTheme?: string;
-    // (other keys, e.g. activePrompt, are preserved untouched)
-    [key: string]: unknown;
-};
+import { LEAF_HOME, THEMES_DIR, STATE_FILE, getBundledThemesDir } from '@/main/lib/paths';
+import { log } from '@/main/lib/logger';
+import type { ThemeInfo, ThemeState } from '@/schemas/vault';
 
 const DEFAULT_THEME_ID = 'dark';
 const THEME_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;

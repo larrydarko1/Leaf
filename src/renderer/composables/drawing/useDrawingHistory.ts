@@ -3,7 +3,7 @@
  */
 
 import type { Ref, ComputedRef } from 'vue';
-import type { CanvasElement } from '@/types/drawing';
+import type { CanvasElement } from '@/schemas/drawing';
 
 export function useDrawingHistory(
     elements: Ref<CanvasElement[]>,

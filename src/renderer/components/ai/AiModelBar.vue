@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import type { AiModelInfo, AiStatus } from '@/types/ai';
-import { useSystemPrompt } from '@/composables/ai/useSystemPrompt';
+import type { AiModelInfo, AiStatus } from '@/schemas/ai';
+import { useSystemPrompt } from '@/renderer/composables/ai/useSystemPrompt';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();

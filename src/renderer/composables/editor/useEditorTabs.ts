@@ -3,25 +3,7 @@
  */
 
 import { ref, computed } from 'vue';
-import type { FileInfo } from '@/types/electron';
-
-export type TabState = {
-    file: FileInfo; // Cached text content — only populated for text/markdown/code files
-    content: string | null; // The last-saved content snapshot used to detect unsaved changes
-    savedContent: string | null;
-    hasUnsavedChanges: boolean; // True when content differs from savedContent
-    scrollTop: number; // Scroll position to restore on tab switch
-};
-
-type PersistedTab = {
-    path: string;
-    scrollTop: number;
-};
-
-type PersistedTabState = {
-    tabs: PersistedTab[];
-    activeIndex: number;
-};
+import type { FileInfo, TabState, PersistedTabState } from '@/schemas/vault';
 
 const MAX_TABS = 10;
 const STORAGE_KEY_PREFIX = 'leaf-tabs-';

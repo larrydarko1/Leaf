@@ -5,6 +5,12 @@ import { fileURLToPath } from 'url';
 
 export default defineConfig({
     main: {
+        resolve: {
+            alias: {
+                '@/main': fileURLToPath(new URL('./src/main', import.meta.url)),
+                '@/schemas': fileURLToPath(new URL('./src/schemas', import.meta.url)),
+            },
+        },
         esbuild: { tsconfigRaw: { compilerOptions: { target: 'ESNext' } } },
         build: {
             rollupOptions: {
@@ -15,6 +21,12 @@ export default defineConfig({
         },
     },
     preload: {
+        resolve: {
+            alias: {
+                '@/preload': fileURLToPath(new URL('./src/preload', import.meta.url)),
+                '@/schemas': fileURLToPath(new URL('./src/schemas', import.meta.url)),
+            },
+        },
         esbuild: { tsconfigRaw: { compilerOptions: { target: 'ESNext' } } },
         build: {
             rollupOptions: {
@@ -28,16 +40,16 @@ export default defineConfig({
         plugins: [vue()],
         resolve: {
             alias: {
-                '@': fileURLToPath(new URL('./src/renderer', import.meta.url)),
+                '@/renderer': fileURLToPath(new URL('./src/renderer', import.meta.url)),
+                '@/schemas': fileURLToPath(new URL('./src/schemas', import.meta.url)),
             },
         },
         css: {
             preprocessorOptions: {
                 scss: {
+                    loadPaths: [fileURLToPath(new URL('./src/renderer', import.meta.url))],
                     additionalData: (source: string, filename: string) =>
-                        filename.endsWith('style.scss')
-                            ? source
-                            : `@use 'sass:color';\n@use '@/style' as *;\n${source}`,
+                        filename.endsWith('style.scss') ? source : `@use 'sass:color';\n@use 'style' as *;\n${source}`,
                 },
             },
         },

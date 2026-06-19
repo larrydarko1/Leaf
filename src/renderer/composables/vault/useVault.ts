@@ -4,7 +4,7 @@
  */
 
 import { ref, shallowRef } from 'vue';
-import type { FileInfo, FolderInfo } from '../../types/electron';
+import type { FileInfo, FolderInfo } from '@/schemas/vault';
 
 export function useVault() {
     const currentFolder = ref<string | null>(null);

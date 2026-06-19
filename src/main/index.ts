@@ -26,18 +26,18 @@ import path from 'path';
 import { pathToFileURL } from 'url';
 
 // ─── Service modules ─────────────────────────────────────────────────────────
-import * as fsService from './services/fs';
-import * as mediaService from './services/media';
-import * as aiService from './services/ai';
-import * as conversationService from './services/conversation';
-import * as agentService from './services/agent';
-import * as hfDownloadService from './services/hf-download';
-import * as speechService from './services/speech';
-import * as systemPromptService from './services/systemPrompt';
-import * as themeService from './services/theme';
-import * as languageService from './services/language';
-import { migrateLegacyPaths } from './lib/paths';
-import { log } from './lib/logger';
+import * as fsService from '@/main/services/fs';
+import * as mediaService from '@/main/services/media';
+import * as aiService from '@/main/services/ai';
+import * as conversationService from '@/main/services/conversation';
+import * as agentService from '@/main/services/agent';
+import * as hfDownloadService from '@/main/services/hf-download';
+import * as speechService from '@/main/services/speech';
+import * as systemPromptService from '@/main/services/systemPrompt';
+import * as themeService from '@/main/services/theme';
+import * as languageService from '@/main/services/language';
+import { migrateLegacyPaths } from '@/main/lib/paths';
+import { log } from '@/main/lib/logger';
 
 /**
  * ─── Scheme privileges ───────────────────────────────────────────────────────

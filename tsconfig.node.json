@@ -20,7 +20,12 @@
         "noFallthroughCasesInSwitch": true,
         "noUncheckedSideEffectImports": true,
         /* Node types for Electron main/preload */
-        "types": ["node"]
+        "types": ["node"],
+        "paths": {
+            "@/main/*": ["./src/main/*"],
+            "@/preload/*": ["./src/preload/*"],
+            "@/schemas/*": ["./src/schemas/*"]
+        }
     },
     "include": [
         "electron.vite.config.ts",

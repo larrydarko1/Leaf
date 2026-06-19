@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
 import { watchDebounced } from '@vueuse/core';
-import { useListKeyboardNavigation } from '@/composables/ui/useListKeyboardNavigation';
-import type { FileInfo } from '@/types/electron';
+import { useListKeyboardNavigation } from '@/renderer/composables/ui/useListKeyboardNavigation';
+import type { FileInfo, HighlightPart } from '@/schemas/vault';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -11,11 +11,6 @@ type Props = {
     files: FileInfo[];
     selectedFiles: FileInfo[];
     activeFile: FileInfo | null;
-};
-
-type HighlightPart = {
-    text: string;
-    highlighted: boolean;
 };
 
 const props = defineProps<Props>();

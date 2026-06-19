@@ -7,16 +7,10 @@
  */
 
 import { ref } from 'vue';
-
-export type SystemPromptInfo = {
-    id: string;
-    name: string;
-    description: string;
-    path: string;
-};
+import type { PromptInfo } from '@/schemas/ai';
 
 export function useSystemPrompt() {
-    const prompts = ref<SystemPromptInfo[]>([]);
+    const prompts = ref<PromptInfo[]>([]);
     const activeId = ref<string>('default');
     const isLoading = ref(false);
 

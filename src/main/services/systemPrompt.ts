@@ -18,22 +18,9 @@ import { shell } from 'electron';
 import path from 'path';
 import fs from 'fs/promises';
 import { existsSync } from 'fs';
-import { LEAF_HOME, PROMPTS_DIR, STATE_FILE, getBundledPromptsDir } from '../lib/paths';
-import { log } from '../lib/logger';
-
-type PromptInfo = {
-    id: string;
-    name: string;
-    description: string;
-    path: string;
-};
-
-type PromptState = {
-    activePrompt?: string;
-    // Other services (theme.ts) may write additional keys to state.json.
-    // We preserve them on every write.
-    [key: string]: unknown;
-};
+import { LEAF_HOME, PROMPTS_DIR, STATE_FILE, getBundledPromptsDir } from '@/main/lib/paths';
+import { log } from '@/main/lib/logger';
+import type { PromptInfo, PromptState } from '@/schemas/ai';
 
 const DEFAULT_PROMPT_ID = 'default';
 const PROMPT_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;

@@ -11,19 +11,9 @@ import fs from 'fs/promises';
 import { existsSync } from 'fs';
 import { randomUUID } from 'crypto';
 import os from 'os';
-import { assertInsideBoundary } from '../lib/validation';
-import { log } from '../lib/logger';
-
-type EditRecord = {
-    editId: string;
-    filePath: string;
-    relativePath: string;
-    backupPath: string;
-    originalContent: string;
-    newContent: string;
-    isNewFile: boolean;
-    timestamp: string;
-};
+import { assertInsideBoundary } from '@/main/lib/validation';
+import { log } from '@/main/lib/logger';
+import type { EditRecord } from '@/schemas/ai';
 
 // Backup directory inside system temp
 const BACKUP_DIR: string = path.join(os.tmpdir(), 'leaf-agent-backups');

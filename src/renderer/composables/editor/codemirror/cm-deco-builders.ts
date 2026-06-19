@@ -10,7 +10,7 @@ import {
     HorizontalRuleWidget,
     TableWidget,
     TaskCheckboxWidget,
-} from '@/composables/editor/codemirror/cm-widgets';
+} from '@/renderer/composables/editor/codemirror/cm-widgets';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

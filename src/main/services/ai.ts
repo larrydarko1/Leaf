@@ -5,23 +5,18 @@
  */
 
 import type { IpcMain, BrowserWindow } from 'electron';
+import { z } from 'zod';
 import { shell } from 'electron';
 import path from 'path';
 import fs from 'fs/promises';
 import { existsSync } from 'fs';
-import { DEFAULT_MODELS_DIR, LEAF_HOME } from '../lib/paths';
-import { getActiveSystemPrompt } from './systemPrompt';
-import { log } from '../lib/logger';
-
+import { type AiModelInfo, ConversationMessageSchema } from '@/schemas/ai';
+import { DEFAULT_MODELS_DIR, LEAF_HOME } from '@/main/lib/paths';
+import { getActiveSystemPrompt } from '@/main/services/systemPrompt';
+import { log } from '@/main/lib/logger';
 import type { Llama, LlamaModel, LlamaContext, LlamaChatSession, LlamaContextSequence } from 'node-llama-cpp';
 
-type ModelEntry = {
-    name: string;
-    path: string;
-    size: number;
-    sizeFormatted: string;
-    modified: string;
-};
+type ModelEntry = AiModelInfo;
 
 const COMPACTION_THRESHOLD = 0.9;
 const NON_MODEL_PREFIXES: string[] = ['mmproj-', 'projector-', 'tokenizer', 'adapter'];
@@ -47,31 +42,35 @@ let trackedMessages: { role: string; content: string }[] = [];
 export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null): void {
     ipc.handle('ai:listModels', async () => listModels());
 
-    ipc.handle('ai:loadModel', async (_event, modelPath: string) => {
-        if (typeof modelPath !== 'string') return { success: false, error: 'Invalid model path' };
-        return loadModel(modelPath);
+    ipc.handle('ai:loadModel', async (_event, modelPath: unknown) => {
+        const parsed = z.string().min(1).safeParse(modelPath);
+        if (!parsed.success) return { success: false, error: 'Invalid model path' };
+        return loadModel(parsed.data);
     });
 
     ipc.handle('ai:unloadModel', async () => unloadModel());
 
-    ipc.handle('ai:chat', async (_event, userMessage: string, noteContext: string) => {
-        if (typeof userMessage !== 'string') return { success: false, error: 'Invalid message' };
+    ipc.handle('ai:chat', async (_event, userMessage: unknown, noteContext: unknown) => {
+        const msgParsed = z.string().min(1).safeParse(userMessage);
+        const ctxParsed = z.string().optional().safeParse(noteContext);
+        if (!msgParsed.success || !ctxParsed.success) return { success: false, error: 'Invalid arguments' };
         return chat(
-            userMessage,
+            msgParsed.data,
             (token) => {
                 const window = getMainWindow();
                 if (window !== null && !window.isDestroyed()) window.webContents.send('ai:token', token);
             },
-            noteContext,
+            ctxParsed.data,
         );
     });
 
     ipc.handle('ai:stopChat', () => stopChat());
     ipc.handle('ai:resetChat', async () => resetChat());
 
-    ipc.handle('ai:restoreChatHistory', (_event, messages: { role: string; content: string }[]) => {
-        if (!Array.isArray(messages)) return { success: false, error: 'Invalid messages' };
-        return restoreChatHistory(messages);
+    ipc.handle('ai:restoreChatHistory', (_event, messages: unknown) => {
+        const parsed = z.array(ConversationMessageSchema).safeParse(messages);
+        if (!parsed.success) return { success: false, error: 'Invalid messages' };
+        return restoreChatHistory(parsed.data);
     });
 
     ipc.handle('ai:getStatus', () => getStatus());
@@ -151,7 +150,7 @@ async function scanForModels(dir: string, baseDir: string): Promise<ModelEntry[]
     return models;
 }
 
-async function listModels(): Promise<{ success: boolean; models: ModelEntry[]; modelsDir: string; error?: string }> {
+async function listModels(): Promise<{ success: boolean; models: AiModelInfo[]; modelsDir: string; error?: string }> {
     await ensureModelsDir();
 
     try {
@@ -391,8 +390,9 @@ function restoreChatHistory(messages: { role: string; content: string }[]): { su
     }
 
     try {
-        pendingConversationHistory = messages;
-        trackedMessages = [...messages];
+        // Convert ConversationMessage[] back to working format for llama session
+        pendingConversationHistory = messages.map((m) => ({ role: m.role, content: m.content }));
+        trackedMessages = [...pendingConversationHistory];
         log.info(`Stored ${messages.length} messages for context restoration`);
         return { success: true };
     } catch (error) {

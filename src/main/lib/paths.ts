@@ -6,7 +6,7 @@
 import path from 'path';
 import os from 'os';
 import fs from 'fs';
-import { log } from './logger';
+import { log } from '@/main/lib/logger';
 
 // ─── Leaf user directory: ~/.leaf/ ───────────────────────────────────────────
 // All user-owned, user-editable Leaf data lives under here.

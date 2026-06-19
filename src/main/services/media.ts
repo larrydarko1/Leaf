@@ -5,7 +5,7 @@
 import type { IpcMain } from 'electron';
 import path from 'path';
 import fs from 'fs/promises';
-import { assertSafeFileName } from '../lib/validation';
+import { assertSafeFileName } from '@/main/lib/validation';
 
 // The vault root is passed in from the register call so media-service
 // can validate that audio recordings are written inside the vault.

@@ -10,33 +10,11 @@ import path from 'path';
 import fs from 'fs/promises';
 import { watch } from 'fs';
 import type { FSWatcher } from 'fs';
-import { ALLOWED_EXTENSIONS } from '../lib/extensions';
-import { IMAGE_MIMETYPES, AUDIO_MIMETYPES } from '../lib/mime';
-import { assertInsideBoundary } from '../lib/validation';
-import { log } from '../lib/logger';
-
-type FileEntry = {
-    name: string;
-    path: string;
-    relativePath: string;
-    extension: string;
-    size: number;
-    modified: string;
-    folder: string;
-};
-
-type FolderEntry = {
-    name: string;
-    path: string;
-    relativePath: string;
-    type: 'folder';
-    folder: string;
-};
-
-type ScanResult = {
-    files: FileEntry[];
-    folders: FolderEntry[];
-};
+import { ALLOWED_EXTENSIONS } from '@/main/lib/extensions';
+import { IMAGE_MIMETYPES, AUDIO_MIMETYPES } from '@/main/lib/mime';
+import { assertInsideBoundary } from '@/main/lib/validation';
+import { log } from '@/main/lib/logger';
+import type { FileInfo, FolderInfo, ScanResult } from '@/schemas/vault';
 
 let folderWatcher: FSWatcher | null = null;
 
@@ -498,8 +476,8 @@ function assertInsideVault(p: string): string {
 }
 
 async function scanFolder(folderPath: string, basePath = folderPath): Promise<ScanResult> {
-    const files: FileEntry[] = [];
-    const folders: FolderEntry[] = [];
+    const files: FileInfo[] = [];
+    const folders: FolderInfo[] = [];
     try {
         const entries = await fs.readdir(folderPath, { withFileTypes: true });
         for (const entry of entries) {
@@ -536,7 +514,7 @@ async function scanFolder(folderPath: string, basePath = folderPath): Promise<Sc
     } catch (error) {
         log.error('[fs-service] Error scanning folder:', error);
     }
-    return { files, folders };
+    return { success: true, files, folders };
 }
 
 async function findFileRecursive(dir: string, targetName: string): Promise<string | null> {

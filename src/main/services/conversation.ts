@@ -8,24 +8,15 @@ import path from 'path';
 import fs from 'fs/promises';
 import { existsSync, mkdirSync } from 'fs';
 import { randomUUID } from 'crypto';
-import { assertSafeFileName, assertInsideBoundary } from '../lib/validation';
-import { log } from '../lib/logger';
-
-type Message = {
-    role: 'user' | 'assistant';
-    content: string;
-    timestamp?: string;
-};
-
-type Conversation = {
-    id: string;
-    title: string;
-    model: string;
-    createdAt: string;
-    updatedAt: string;
-    messages: Message[];
-    tokenCount: number;
-};
+import { assertSafeFileName, assertInsideBoundary } from '@/main/lib/validation';
+import { log } from '@/main/lib/logger';
+import { z } from 'zod';
+import {
+    type Conversation,
+    type ConversationMessage,
+    ConversationSchema,
+    ConversationMessageSchema,
+} from '@/schemas/ai';
 
 let conversationsDir: string | null = null;
 
@@ -82,7 +73,7 @@ export async function saveConversation(conversation: Conversation): Promise<{ su
 
 export async function addMessage(
     conversationId: string,
-    message: Message,
+    message: ConversationMessage,
 ): Promise<{ success: boolean; error?: string }> {
     try {
         const conversation = await getConversation(conversationId);
@@ -127,7 +118,12 @@ export async function getConversation(id: string): Promise<Conversation | null> 
     try {
         const filePath = getConversationPath(id);
         const data = await fs.readFile(filePath, 'utf-8');
-        return JSON.parse(data) as Conversation;
+        const result = ConversationSchema.safeParse(JSON.parse(data));
+        if (!result.success) {
+            log.error('Corrupt conversation file:', result.error.message);
+            return null;
+        }
+        return result.data;
     } catch {
         return null;
     }
@@ -146,7 +142,12 @@ export async function listConversations(): Promise<{ success: boolean; conversat
                 try {
                     const filePath = path.join(conversationsDir, entry.name);
                     const data = await fs.readFile(filePath, 'utf-8');
-                    const conv = JSON.parse(data) as Conversation;
+                    const parsed = ConversationSchema.safeParse(JSON.parse(data));
+                    if (!parsed.success) {
+                        log.error(`Skipping corrupt conversation file ${entry.name}:`, parsed.error.message);
+                        continue;
+                    }
+                    const conv = parsed.data;
                     conversations.push({
                         id: conv.id,
                         title: conv.title,
@@ -212,43 +213,49 @@ export async function renameConversation(id: string, newTitle: string): Promise<
 export function register(ipc: IpcMain): void {
     ipc.handle('conversations:list', async () => listConversations());
 
-    ipc.handle('conversations:create', async (_event, modelName: string) => {
-        if (typeof modelName !== 'string') return { success: false, error: 'Invalid model name' };
-        return createConversation(modelName);
+    ipc.handle('conversations:create', async (_event, modelName: unknown) => {
+        const parsed = z.string().min(1).safeParse(modelName);
+        if (!parsed.success) return { success: false, error: 'Invalid model name' };
+        return createConversation(parsed.data);
     });
 
-    ipc.handle('conversations:load', async (_event, id: string) => {
-        if (typeof id !== 'string') return { success: false, error: 'Invalid id' };
-        return loadConversation(id);
+    ipc.handle('conversations:load', async (_event, id: unknown) => {
+        const parsed = z.string().min(1).safeParse(id);
+        if (!parsed.success) return { success: false, error: 'Invalid id' };
+        return loadConversation(parsed.data);
     });
 
-    ipc.handle('conversations:save', async (_event, conversation: Conversation) => {
-        if (typeof conversation !== 'object' || conversation === null)
-            return { success: false, error: 'Invalid conversation' };
-        return saveConversation(conversation);
+    ipc.handle('conversations:save', async (_event, conversation: unknown) => {
+        const parsed = ConversationSchema.safeParse(conversation);
+        if (!parsed.success) return { success: false, error: 'Invalid conversation' };
+        return saveConversation(parsed.data);
     });
 
-    ipc.handle('conversations:addMessage', async (_event, conversationId: string, message: Message) => {
-        if (typeof conversationId !== 'string' || typeof message !== 'object')
-            return { success: false, error: 'Invalid arguments' };
-        return addMessage(conversationId, message);
+    ipc.handle('conversations:addMessage', async (_event, conversationId: unknown, message: unknown) => {
+        const idParsed = z.string().min(1).safeParse(conversationId);
+        const msgParsed = ConversationMessageSchema.safeParse(message);
+        if (!idParsed.success || !msgParsed.success) return { success: false, error: 'Invalid arguments' };
+        return addMessage(idParsed.data, msgParsed.data);
     });
 
-    ipc.handle('conversations:updateLastMessage', async (_event, conversationId: string, content: string) => {
-        if (typeof conversationId !== 'string' || typeof content !== 'string')
-            return { success: false, error: 'Invalid arguments' };
-        return updateLastMessage(conversationId, content);
+    ipc.handle('conversations:updateLastMessage', async (_event, conversationId: unknown, content: unknown) => {
+        const idParsed = z.string().min(1).safeParse(conversationId);
+        const contentParsed = z.string().safeParse(content);
+        if (!idParsed.success || !contentParsed.success) return { success: false, error: 'Invalid arguments' };
+        return updateLastMessage(idParsed.data, contentParsed.data);
     });
 
-    ipc.handle('conversations:delete', async (_event, id: string) => {
-        if (typeof id !== 'string') return { success: false, error: 'Invalid id' };
-        return deleteConversation(id);
+    ipc.handle('conversations:delete', async (_event, id: unknown) => {
+        const parsed = z.string().min(1).safeParse(id);
+        if (!parsed.success) return { success: false, error: 'Invalid id' };
+        return deleteConversation(parsed.data);
     });
 
-    ipc.handle('conversations:rename', async (_event, id: string, newTitle: string) => {
-        if (typeof id !== 'string' || typeof newTitle !== 'string')
-            return { success: false, error: 'Invalid arguments' };
-        return renameConversation(id, newTitle);
+    ipc.handle('conversations:rename', async (_event, id: unknown, newTitle: unknown) => {
+        const idParsed = z.string().min(1).safeParse(id);
+        const titleParsed = z.string().min(1).safeParse(newTitle);
+        if (!idParsed.success || !titleParsed.success) return { success: false, error: 'Invalid arguments' };
+        return renameConversation(idParsed.data, titleParsed.data);
     });
 }
 
@@ -263,7 +270,7 @@ function generateId(): string {
     return randomUUID();
 }
 
-function deriveTitle(messages: Message[]): string {
+function deriveTitle(messages: ConversationMessage[]): string {
     const firstUserMsg = messages.find((m) => m.role === 'user');
     if (firstUserMsg === undefined) return 'New Conversation';
     const text = firstUserMsg.content.trim();

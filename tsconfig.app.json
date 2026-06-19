@@ -12,8 +12,9 @@
         "noUncheckedSideEffectImports": true,
         "types": ["node"],
         "paths": {
-            "@/*": ["./src/renderer/*"]
+            "@/renderer/*": ["./src/renderer/*"],
+            "@/schemas/*": ["./src/schemas/*"]
         }
     },
-    "include": ["src/renderer/**/*.ts", "src/renderer/**/*.tsx", "src/renderer/**/*.vue"]
+    "include": ["src/renderer/**/*.ts", "src/renderer/**/*.tsx", "src/renderer/**/*.vue", "src/schemas/**/*.ts"]
 }

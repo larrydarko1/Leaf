@@ -4,7 +4,11 @@
  */
 
 import { ref } from 'vue';
-import { isImageFile as checkImage, isVideoFile as checkVideo, isAudioFile as checkAudio } from '@/utils/fileTypes';
+import {
+    isImageFile as checkImage,
+    isVideoFile as checkVideo,
+    isAudioFile as checkAudio,
+} from '@/renderer/utils/fileTypes';
 
 export function useEmbedResolver(getFile: () => { path: string } | null, getWorkspacePath: () => string | null) {
     const embedCache = ref<Map<string, string>>(new Map());

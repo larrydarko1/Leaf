@@ -8,57 +8,17 @@ import https from 'https';
 import { createWriteStream } from 'fs';
 import fs from 'fs/promises';
 import path from 'path';
-import { DEFAULT_MODELS_DIR } from '../lib/paths';
-import { assertSafeFileName } from '../lib/validation';
-
-type DownloadEntry = {
-    abortController: { aborted: boolean };
-    filePath: string;
-    tempPath: string;
-};
-
-type TreeFile = {
-    path: string;
-    size: number;
-};
-
-type ProgressInfo = {
-    downloaded: number;
-    total: number;
-    percent: number;
-    fileName: string;
-};
-
-type SortOption = 'downloads' | 'likes' | 'lastModified' | 'trending';
-
-// HF API response shapes
-type HfGgufMeta = {
-    total?: number;
-    architecture?: string;
-    contextLength?: number;
-};
-
-type HfModel = {
-    id?: string;
-    modelId?: string;
-    author?: string;
-    downloads?: number;
-    likes?: number;
-    tags?: string[];
-    lastModified?: string;
-    gguf?: HfGgufMeta;
-};
-
-type HfTreeEntryLfs = {
-    size?: number;
-};
-
-type HfTreeEntry = {
-    type: 'file' | 'directory';
-    path: string;
-    size?: number;
-    lfs?: HfTreeEntryLfs;
-};
+import { DEFAULT_MODELS_DIR } from '@/main/lib/paths';
+import { assertSafeFileName } from '@/main/lib/validation';
+import type {
+    HfDownloadEntry,
+    HfTreeFile,
+    HfProgressInfo,
+    SortOption,
+    HfGgufMeta,
+    HfModel,
+    HfTreeEntry,
+} from '@/schemas/hf';
 
 // Only allow downloads from Hugging Face domains (including XetHub CDN)
 const ALLOWED_DOWNLOAD_SUFFIXES = ['.hf.co', '.huggingface.co'];
@@ -66,7 +26,7 @@ const ALLOWED_DOWNLOAD_EXACT = ['huggingface.co', 'hf.co'];
 const RESULTS_PER_PAGE = 20;
 
 // Track active downloads
-const activeDownloads = new Map<string, DownloadEntry>();
+const activeDownloads = new Map<string, HfDownloadEntry>();
 
 export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null): void {
     ipc.handle('hf:search', async (_event, query: string, sort?: string, offset?: number) => {
@@ -266,11 +226,11 @@ function formatFileSize(bytes: number): string {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-async function fetchTree(repoId: string, treePath: string): Promise<TreeFile[]> {
+async function fetchTree(repoId: string, treePath: string): Promise<HfTreeFile[]> {
     const apiPath = `/api/models/${repoId}/tree/main${treePath !== '' ? '/' + treePath : ''}`;
     const entries = (await hfApiGet(apiPath)) as HfTreeEntry[];
 
-    let files: TreeFile[] = [];
+    let files: HfTreeFile[] = [];
     for (const entry of entries) {
         if (entry.type === 'file') {
             const size = entry.lfs?.size != null ? entry.lfs.size : (entry.size ?? 0);
@@ -285,7 +245,7 @@ async function fetchTree(repoId: string, treePath: string): Promise<TreeFile[]> 
 
 async function listRepoFiles(repoId: string): Promise<object> {
     try {
-        const [modelData, treeFiles]: [HfModel, TreeFile[]] = await Promise.all([
+        const [modelData, treeFiles]: [HfModel, HfTreeFile[]] = await Promise.all([
             hfApiGet(`/api/models/${repoId}`) as Promise<HfModel>,
             fetchTree(repoId, ''),
         ]);
@@ -310,9 +270,9 @@ async function listRepoFiles(repoId: string): Promise<object> {
         const shardPattern = /^(.+)-(\d{5})-of-(\d{5})\.gguf$/;
         const shardGroups = new Map<
             string,
-            { files: TreeFile[]; totalShards: number; baseName: string; dir: string }
+            { files: HfTreeFile[]; totalShards: number; baseName: string; dir: string }
         >();
-        const standaloneFiles: TreeFile[] = [];
+        const standaloneFiles: HfTreeFile[] = [];
 
         for (const f of ggufTreeFiles) {
             const parts = f.path.split('/');
@@ -414,7 +374,7 @@ async function listRepoFiles(repoId: string): Promise<object> {
 async function downloadModel(
     url: string,
     fileName: string,
-    onProgress: (p: ProgressInfo) => void,
+    onProgress: (p: HfProgressInfo) => void,
 ): Promise<{ success: boolean; filePath?: string; error?: string }> {
     // Validate URL against whitelist and filename against traversal
     assertAllowedDownloadUrl(url);

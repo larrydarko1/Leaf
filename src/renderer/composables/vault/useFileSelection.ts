@@ -3,7 +3,7 @@
  */
 
 import { ref } from 'vue';
-import type { FileInfo } from '@/types/electron';
+import type { FileInfo } from '@/schemas/vault';
 
 export function useFileSelection() {
     const selectedFiles = ref<FileInfo[]>([]);

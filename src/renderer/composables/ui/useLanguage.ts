@@ -9,12 +9,7 @@
 
 import { ref, type Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-
-export type LanguageInfo = {
-    id: string;
-    name: string;
-    path: string;
-};
+import type { LanguageInfo } from '@/schemas/vault';
 
 const ACTIVE_LANGUAGE_LS_KEY = 'leaf-language-id';
 

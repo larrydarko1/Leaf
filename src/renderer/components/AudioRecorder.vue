@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useAudioRecorder } from '@/composables/useAudioRecorder';
+import { useAudioRecorder } from '@/renderer/composables/useAudioRecorder';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();

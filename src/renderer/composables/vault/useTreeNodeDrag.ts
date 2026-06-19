@@ -4,8 +4,7 @@
  */
 
 import { ref } from 'vue';
-import type { TreeNode } from '../../types/vault.ts';
-import type { FileInfo } from '../../types/electron';
+import type { TreeNode, FileInfo } from '@/schemas/vault';
 
 export function useTreeNodeDrag(
     getNode: () => TreeNode,

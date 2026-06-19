@@ -4,8 +4,7 @@
  */
 
 import { ref, computed, watch } from 'vue';
-import type { FileInfo, FolderInfo } from '../../types/electron';
-import type { TreeNode } from '../../types/vault';
+import type { FileInfo, FolderInfo, TreeNode } from '@/schemas/vault';
 
 export function useFolderTree(
     getFiles: () => FileInfo[],

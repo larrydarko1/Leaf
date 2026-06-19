@@ -3,6 +3,8 @@ import ts from 'typescript-eslint';
 import vue from 'eslint-plugin-vue';
 import prettier from 'eslint-config-prettier';
 import globals from 'globals';
+import importX from 'eslint-plugin-import-x';
+import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
 
 export default [
     // ── Global ignores ───────────────────────────────────────────────────────
@@ -68,7 +70,6 @@ export default [
             }],
             
 
-            // ── Existing rules ───────────────────────────────────────────────
             // Only allow types, not interfaces
             '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
             '@typescript-eslint/consistent-type-imports': ['error', {
@@ -170,6 +171,23 @@ export default [
 
             // v-html is used intentionally for rendered content
             'vue/no-v-html': 'off',
+
+        },
+    },
+
+    // ── Import extension rule — strip extensions from TS/JS, require for .vue ─
+    {
+        files: ['**/*.{ts,tsx,vue}'],
+        plugins: { 'import-x': importX },
+        settings: {
+            'import-x/resolver-next': [
+                createTypeScriptImportResolver({ alwaysTryTypes: true }),
+            ],
+        },
+        rules: {
+            // Disallow file extensions on TS/JS imports; .vue/.json must keep theirs.
+            // ignorePackages skips deep package imports (e.g. 'electron-log/main.js')
+            'import-x/extensions': ['error', 'never', { ignorePackages: true, pattern: { vue: 'always', json: 'always' } }],
         },
     },
 

@@ -13,122 +13,27 @@ import type {
     AgentProposeEditResult,
     AgentEditResult,
     AgentPendingEditsResult,
-} from '@/types/ai';
-import type { HfSearchResponse, HfListFilesResponse, HfDownloadProgress, HfDownloadResult } from '@/types/hf';
-import type { SpeechInitResult, SpeechTranscribeResult, SpeechStatus, SpeechStatusEvent } from '@/types/speech';
-
-export type FileInfo = {
-    name: string;
-    path: string;
-    relativePath: string;
-    extension: string;
-    size: number;
-    modified: string;
-    folder: string;
-};
-
-export type FolderInfo = {
-    name: string;
-    path: string;
-    relativePath: string;
-    type: 'folder';
-    folder: string;
-};
-
-export type ScanResult = {
-    success: boolean;
-    files?: FileInfo[];
-    folders?: FolderInfo[];
-    error?: string;
-};
-
-export type FileReadResult = {
-    success: boolean;
-    content?: string;
-    error?: string;
-};
-
-export type ImageReadResult = {
-    success: boolean;
-    dataUrl?: string;
-    error?: string;
-};
-
-export type AudioReadResult = {
-    success: boolean;
-    dataUrl?: string;
-    error?: string;
-};
-
-export type EmbedResolveResult = {
-    success: boolean;
-    path?: string;
-    error?: string;
-};
-
-export type CopyToVaultResult = {
-    success: boolean;
-    fileName?: string;
-    path?: string;
-    error?: string;
-};
-
-export type FileWriteResult = {
-    success: boolean;
-    error?: string;
-};
-
-export type FileCreateResult = {
-    success: boolean;
-    path?: string;
-    error?: string;
-};
-
-export type FolderCreateResult = {
-    success: boolean;
-    path?: string;
-    error?: string;
-};
-
-export type FileDeleteResult = {
-    success: boolean;
-    error?: string;
-};
-
-export type FileRenameResult = {
-    success: boolean;
-    newPath?: string;
-    error?: string;
-};
-
-export type FolderRenameResult = {
-    success: boolean;
-    newPath?: string;
-    error?: string;
-};
-
-export type FolderDeleteResult = {
-    success: boolean;
-    error?: string;
-};
-
-export type FileMoveResult = {
-    success: boolean;
-    newPath?: string;
-    error?: string;
-};
-
-export type FolderMoveResult = {
-    success: boolean;
-    newPath?: string;
-    error?: string;
-};
-
-export type AudioSaveResult = {
-    success: boolean;
-    path?: string;
-    error?: string;
-};
+} from '@/schemas/ai';
+import type { HfSearchResponse, HfListFilesResponse, HfDownloadProgress, HfDownloadResult } from '@/schemas/hf';
+import type { SpeechInitResult, SpeechTranscribeResult, SpeechStatus, SpeechStatusEvent } from '@/schemas/speech';
+import type {
+    ScanResult,
+    FileReadResult,
+    ImageReadResult,
+    AudioReadResult,
+    EmbedResolveResult,
+    CopyToVaultResult,
+    FileWriteResult,
+    FileCreateResult,
+    FolderCreateResult,
+    FileDeleteResult,
+    FileRenameResult,
+    FolderRenameResult,
+    FolderDeleteResult,
+    FileMoveResult,
+    FolderMoveResult,
+    AudioSaveResult,
+} from '@/schemas/vault';
 
 export type ElectronAPI = {
     log: {

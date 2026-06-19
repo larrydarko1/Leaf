@@ -8,10 +8,10 @@ import { useThrottleFn } from '@vueuse/core';
 import type { Ref } from 'vue';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
-import type { FileInfo } from '@/types/electron';
-import type { AiStatus } from '@/types/ai';
-import type { ChatMessage, AgentFileEdit } from '@/types/chat';
-import { AGENT_SYSTEM_PROMPT } from '@/composables/ai/useAgentMode';
+import type { FileInfo } from '@/schemas/vault';
+import type { AiStatus } from '@/schemas/ai';
+import type { ChatMessage, AgentFileEdit } from '@/schemas/chat';
+import { AGENT_SYSTEM_PROMPT } from '@/renderer/composables/ai/useAgentMode';
 
 // Configure marked once at module level
 marked.setOptions({ breaks: true, gfm: true });

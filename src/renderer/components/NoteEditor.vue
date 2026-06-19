@@ -9,25 +9,28 @@ import {
     isCodeFile as checkCode,
     isMarkdownFile as checkMarkdown,
     isDrawingFile as checkDrawing,
-} from '@/utils/fileTypes';
-import DrawingCanvas from '@/components/DrawingCanvas.vue';
-import ImageViewer from '@/components/editor/ImageViewer.vue';
-import VideoViewer from '@/components/editor/VideoViewer.vue';
-import AudioViewer from '@/components/editor/AudioViewer.vue';
-import PdfViewer from '@/components/editor/PdfViewer.vue';
-import MarkdownToolbar from '@/components/editor/MarkdownToolbar.vue';
-import type { FileInfo } from '@/types/electron';
-import { useEmbedResolver } from '@/composables/editor/useEmbedResolver';
-import { useEditorDrop } from '@/composables/editor/useEditorDrop';
-import { useDictation } from '@/composables/editor/useDictation';
-import { useNotePersistence } from '@/composables/editor/useNotePersistence';
-import { useCodemirror } from '@/composables/editor/codemirror/useCodemirror';
-import { useCodemirrorToolbar, markdownKeymap } from '@/composables/editor/codemirror/cm-toolbar';
-import { createMarkdownWidgetsPlugin, interactiveExtension } from '@/composables/editor/codemirror/cm-markdown-widgets';
-import { leafEditorTheme } from '@/composables/editor/codemirror/cm-theme';
-import { listContinuationKeymap } from '@/composables/editor/codemirror/cm-list-continuation';
-import { taskFoldExtension } from '@/composables/editor/codemirror/cm-task-fold';
-import { useCodeEditor } from '@/composables/editor/codemirror/useCodeEditor';
+} from '@/renderer/utils/fileTypes';
+import DrawingCanvas from '@/renderer/components/DrawingCanvas.vue';
+import ImageViewer from '@/renderer/components/editor/ImageViewer.vue';
+import VideoViewer from '@/renderer/components/editor/VideoViewer.vue';
+import AudioViewer from '@/renderer/components/editor/AudioViewer.vue';
+import PdfViewer from '@/renderer/components/editor/PdfViewer.vue';
+import MarkdownToolbar from '@/renderer/components/editor/MarkdownToolbar.vue';
+import type { FileInfo } from '@/schemas/vault';
+import { useEmbedResolver } from '@/renderer/composables/editor/useEmbedResolver';
+import { useEditorDrop } from '@/renderer/composables/editor/useEditorDrop';
+import { useDictation } from '@/renderer/composables/editor/useDictation';
+import { useNotePersistence } from '@/renderer/composables/editor/useNotePersistence';
+import { useCodemirror } from '@/renderer/composables/editor/codemirror/useCodemirror';
+import { useCodemirrorToolbar, markdownKeymap } from '@/renderer/composables/editor/codemirror/cm-toolbar';
+import {
+    createMarkdownWidgetsPlugin,
+    interactiveExtension,
+} from '@/renderer/composables/editor/codemirror/cm-markdown-widgets';
+import { leafEditorTheme } from '@/renderer/composables/editor/codemirror/cm-theme';
+import { listContinuationKeymap } from '@/renderer/composables/editor/codemirror/cm-list-continuation';
+import { taskFoldExtension } from '@/renderer/composables/editor/codemirror/cm-task-fold';
+import { useCodeEditor } from '@/renderer/composables/editor/codemirror/useCodeEditor';
 import { keymap, EditorView } from '@codemirror/view';
 import { useI18n } from 'vue-i18n';
 
@@ -501,7 +504,7 @@ if (typeof window !== 'undefined') {
                 <div class="empty-logo">
                     <img
                         draggable="false"
-                        src="@/assets/icons/icon.png"
+                        src="@/renderer/assets/icons/icon.png"
                         :alt="t('editor.leaf_logo')"
                         class="empty-logo-icon" />
                     <span class="empty-logo-text">leaf.</span>

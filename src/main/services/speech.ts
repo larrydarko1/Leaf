@@ -8,25 +8,9 @@ import type { IpcMain, BrowserWindow } from 'electron';
 import type { pipeline as PipelineFn } from '@huggingface/transformers';
 import path from 'path';
 import { existsSync } from 'fs';
-import { getWhisperModelDir } from '../lib/paths';
-import { log } from '../lib/logger';
-
-// Minimal shape of the parts of @huggingface/transformers we actually touch
-type TransformersEnv = {
-    cacheDir: string;
-    allowRemoteModels: boolean;
-};
-
-type TransformersModule = {
-    pipeline: typeof PipelineFn;
-    env: TransformersEnv;
-};
-
-// The return type of pipeline('automatic-speech-recognition', ...) for audio
-type TranscriptionResult = { text: string } | string;
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Transcriber = (audio: Float32Array) => Promise<any>;
+import { getWhisperModelDir } from '@/main/lib/paths';
+import { log } from '@/main/lib/logger';
+import type { Transcriber, TranscriptionResult, TransformersModule } from '@/schemas/vault';
 
 let pipelineFn: typeof PipelineFn | null = null;
 let transcriber: Transcriber | null = null;
