@@ -357,6 +357,7 @@ After building:
 - **AI:** [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) + [llama.cpp](https://github.com/ggml-org/llama.cpp) (local LLM inference)
 - **Speech-to-Text:** [Whisper](https://github.com/openai/whisper) via [@huggingface/transformers](https://github.com/huggingface/transformers.js) + ONNX Runtime (local dictation)
 - **Storage:** Plain text files (txt, md), images, videos, audio, and embedded media in your local vault
+- **Schema Validation:** [Zod](https://zod.dev) (runtime TypeScript-first schema validation)
 - **Build Tools:** [electron-vite](https://electron-vite.org) + [Electron Builder](https://www.electron.build)
 - **Testing:** [Vitest](https://vitest.dev) + [Vue Test Utils](https://test-utils.vuejs.org)
 - **Linting:** [ESLint](https://eslint.org) (flat config) + [typescript-eslint](https://typescript-eslint.io) + [Prettier](https://prettier.io)
@@ -472,16 +473,17 @@ leaf/
 │       │       ├── useFolderTree.ts    # Recursive tree structure from flat file/folder lists
 │       │       ├── useTreeNodeDrag.ts  # Drag-and-drop file/folder moves in tree
 │       │       └── useVault.ts         # Core vault: folder open, FS watcher, CRUD
-│       ├── types/                  # TypeScript type definitions
-│       │   ├── ai.ts               # AI model info, load result, and status types
-│       │   ├── chat.ts             # Chat message and agent file edit types
-│       │   ├── drawing.ts          # Drawing element, tool, and canvas types
-│       │   ├── electron.d.ts       # Electron IPC & preload API type declarations
-│       │   ├── hf.ts               # Hugging Face search, repo file, and download types
-│       │   └── speech.ts           # Speech-to-text result types
 │       └── utils/                  # Shared utilities
 │           ├── audio.ts            # WebM→WAV conversion and PCM encoding helpers
 │           └── fileTypes.ts        # File extension classification constants and predicates
+├── src/schemas/                    # Zod validation schemas (centralized types)
+│   ├── ai.ts                       # AI model info, load result, and status schemas
+│   ├── chat.ts                     # Chat message and agent file edit schemas
+│   ├── drawing.ts                  # Drawing element, tool, and canvas schemas
+│   ├── electron.d.ts               # Electron IPC & preload API type declarations
+│   ├── hf.ts                       # Hugging Face search, repo file, and download schemas
+│   ├── speech.ts                   # Speech-to-text result schemas
+│   └── vault.ts                    # Vault tree node, file, and folder schemas
 ├── tests/                          # Unit tests (mirrors src/ structure)
 │   ├── main/
 │   │   ├── bookmarks.test.ts
