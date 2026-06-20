@@ -38,8 +38,9 @@
         "stylelint": "stylelint \"src/**/*.{scss,vue}\"",
         "stylelint:fix": "stylelint \"src/**/*.{scss,vue}\" --fix",
         "prepare": "husky",
+        "test:e2e": "playwright test --config=e2e/playwright.config.ts",
         "test:coverage": "npx vitest run --coverage",
-        "ci:check": "npm audit --audit-level=high --omit=dev && npm run lint && npm run format:check && npm run stylelint && npm test && npm run build"
+        "ci:check": "npm audit --audit-level=high --omit=dev && npm run lint && npm run format:check && npm run stylelint && npm test && npm run build && npm run test:e2e"
     },
     "dependencies": {
         "@codemirror/autocomplete": "^6.20.1",
@@ -67,6 +68,7 @@
         "@commitlint/cli": "^20.5.0",
         "@commitlint/config-conventional": "^20.5.0",
         "@eslint/js": "^10.0.1",
+        "@playwright/test": "^1.61.0",
         "@types/node": "^24.0.13",
         "@vitejs/plugin-vue": "^6.0.6",
         "@vitest/coverage-v8": "^4.1.0",
