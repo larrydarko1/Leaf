@@ -101,6 +101,7 @@ function onKeydown(e: KeyboardEvent) {
             </div>
 
             <!-- Hidden native audio element -->
+            <!-- eslint-disable-next-line vuejs-accessibility/media-has-caption -->
             <audio
                 v-if="audioUrl && !audioError"
                 ref="audioRef"
@@ -162,6 +163,7 @@ function onKeydown(e: KeyboardEvent) {
                 >
 
                 <!-- Progress bar and seek control -->
+                <!-- eslint-disable-next-line vuejs-accessibility/click-events-have-key-events -->
                 <div
                     class="audio-progress-wrapper"
                     role="slider"

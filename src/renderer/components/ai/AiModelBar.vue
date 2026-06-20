@@ -166,6 +166,7 @@ function truncate(str: string, len: number): string {
                                 class="ai-dropdown-empty">
                                 {{ t('ai.no_models_found') }}
                             </div>
+                            <!-- eslint-disable-next-line vuejs-accessibility/click-events-have-key-events vuejs-accessibility/interactive-supports-focus -->
                             <div
                                 v-for="model in availableModels"
                                 :key="model.path"
@@ -281,6 +282,7 @@ function truncate(str: string, len: number): string {
                             class="ai-dropdown-empty">
                             {{ t('ai.no_prompts_found') }}
                         </div>
+                        <!-- eslint-disable-next-line vuejs-accessibility/click-events-have-key-events vuejs-accessibility/interactive-supports-focus -->
                         <div
                             v-for="prompt in prompts"
                             :key="prompt.id"

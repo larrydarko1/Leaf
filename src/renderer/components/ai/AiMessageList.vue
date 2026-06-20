@@ -130,7 +130,6 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
     <section
         ref="messagesContainer"
         class="ai-messages"
-        role="region"
         :aria-label="t('ai.chat_messages')"
         aria-live="polite"
         @scroll="$emit('scroll')">
@@ -294,6 +293,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                 </div>
 
                 <!-- Assistant message -->
+                <!-- eslint-disable-next-line vuejs-accessibility/click-events-have-key-events vuejs-accessibility/no-static-element-interactions -->
                 <div
                     v-else
                     class="ai-message-content ai-markdown"

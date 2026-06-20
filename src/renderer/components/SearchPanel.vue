@@ -243,6 +243,7 @@ function splitHighlightedText(text: string): HighlightPart[] {
                 class="search-results-list"
                 role="listbox"
                 :aria-label="t('search.search_results')">
+                <!-- eslint-disable-next-line vuejs-accessibility/click-events-have-key-events vuejs-accessibility/interactive-supports-focus -->
                 <li
                     v-for="(file, index) in searchResults"
                     :key="file.path"

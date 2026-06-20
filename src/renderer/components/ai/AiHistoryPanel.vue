@@ -74,15 +74,13 @@ function formatRelativeDate(dateStr: string): string {
 
             <ul
                 v-else
-                class="ai-history-items"
-                role="list">
+                class="ai-history-items">
                 <li
                     v-for="conv in conversationList"
                     :key="conv.id"
                     v-memo="[conv.id, currentConversationId]"
                     class="ai-history-item"
-                    :class="{ active: currentConversationId === conv.id }"
-                    role="listitem">
+                    :class="{ active: currentConversationId === conv.id }">
                     <button
                         class="ai-history-item-button"
                         :aria-current="currentConversationId === conv.id ? 'page' : false"

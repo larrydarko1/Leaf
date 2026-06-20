@@ -229,6 +229,14 @@ function startResize(e: MouseEvent) {
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
 }
+
+function decreaseWidth() {
+    panelWidth.value = Math.max(minWidth, panelWidth.value - 50);
+}
+
+function increaseWidth() {
+    panelWidth.value = Math.min(maxWidth, panelWidth.value + 50);
+}
 </script>
 
 <template>
@@ -238,14 +246,16 @@ function startResize(e: MouseEvent) {
         :aria-label="t('ai.assistant_panel')">
         <div
             class="ai-panel-resize-handle"
-            role="separator"
+            role="slider"
             aria-orientation="vertical"
             :aria-label="t('ai.resize_panel')"
-            aria-valuenow="panelWidth"
+            :aria-valuenow="panelWidth"
             aria-valuemin="340"
             aria-valuemax="600"
             tabindex="0"
-            @mousedown.prevent="startResize" />
+            @mousedown.prevent="startResize"
+            @keydown.left="decreaseWidth"
+            @keydown.right="increaseWidth" />
 
         <AiModelBar
             :status="status"

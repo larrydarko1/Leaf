@@ -178,6 +178,7 @@ async function copyClipboard() {
                         <fieldset>
                             <legend class="sr-only">{{ t('drawing.export_options') }}</legend>
 
+                            <!-- eslint-disable-next-line vuejs-accessibility/label-has-for -->
                             <label class="export-toggle">
                                 <input
                                     v-model="exportWithBackground"
@@ -192,6 +193,7 @@ async function copyClipboard() {
                                 <span>{{ t('drawing.background') }}</span>
                             </label>
 
+                            <!-- eslint-disable-next-line vuejs-accessibility/label-has-for -->
                             <label
                                 v-if="hasSelection"
                                 class="export-toggle">

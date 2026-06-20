@@ -154,11 +154,11 @@ const emit = defineEmits<{
 
         <!-- Save status and export -->
         <div class="footer-right">
+            <!-- eslint-disable-next-line vuejs-accessibility/form-control-has-label -->
             <output
                 v-if="isSaving || hasUnsavedChanges"
                 class="save-status"
                 :class="{ saving: isSaving, unsaved: hasUnsavedChanges }"
-                role="status"
                 aria-live="polite"
                 aria-atomic="true">
                 {{ isSaving ? t('drawing.saving') : t('drawing.unsaved') }}

@@ -267,14 +267,11 @@ function formatNumber(n: number): string {
                         </span>
                     </div>
                 </div>
-                <ul
-                    class="ai-hf-files-list"
-                    role="list">
+                <ul class="ai-hf-files-list">
                     <li
                         v-for="file in hfRepoFiles"
                         :key="file.name"
-                        class="ai-hf-file-item"
-                        role="listitem">
+                        class="ai-hf-file-item">
                         <div class="ai-hf-file-info">
                             <div class="ai-hf-file-top-row">
                                 <span class="ai-hf-file-name">{{ file.name }}</span>
@@ -429,14 +426,11 @@ function formatNumber(n: number): string {
 
             <!-- Search results list -->
             <template v-else-if="hfSearchResults.length > 0">
-                <ul
-                    class="ai-hf-repos-list"
-                    role="list">
+                <ul class="ai-hf-repos-list">
                     <li
                         v-for="repo in hfSearchResults"
                         :key="repo.id"
-                        class="ai-hf-result-item"
-                        role="listitem">
+                        class="ai-hf-result-item">
                         <button
                             type="button"
                             class="ai-hf-result-button"

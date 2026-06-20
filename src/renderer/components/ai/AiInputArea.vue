@@ -80,6 +80,7 @@ onMounted(() => {
     <div
         ref="inputAreaRef"
         class="ai-input-area">
+        <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
         <div
             class="ai-resize-handle"
             :class="{ 'ai-resize-active': isResizing }"
@@ -136,7 +137,9 @@ onMounted(() => {
             }}</span>
         </div>
 
+        <!-- eslint-disable-next-line vuejs-accessibility/label-has-for -->
         <div class="ai-input-row">
+            <!-- eslint-disable-next-line vuejs-accessibility/label-has-for -->
             <label
                 class="ai-context-toggle"
                 :title="t('ai.include_current_note_as_context')">

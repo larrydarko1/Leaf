@@ -1,6 +1,7 @@
 import js from '@eslint/js';
 import ts from 'typescript-eslint';
 import vue from 'eslint-plugin-vue';
+import a11y from 'eslint-plugin-vuejs-accessibility';
 import prettier from 'eslint-config-prettier';
 import globals from 'globals';
 import importX from 'eslint-plugin-import-x';
@@ -21,6 +22,15 @@ export default [
 
     // ── Vue rules ────────────────────────────────────────────────────────────
     ...vue.configs['flat/recommended'],
+
+    // ── Vue Accessibility rules ──────────────────────────────────────────────
+    {
+        files: ['src/renderer/**/*.vue'],
+        plugins: { 'vuejs-accessibility': a11y },
+        rules: {
+            ...a11y.configs.recommended.rules,
+        },
+    },
 
     // Vue files need the TypeScript parser inside <script> blocks
     {

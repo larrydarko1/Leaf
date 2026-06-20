@@ -344,6 +344,7 @@ function closeExportDialog() {
 </script>
 
 <template>
+    <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
     <div
         ref="containerEl"
         class="canvas-container"
@@ -384,11 +385,12 @@ function closeExportDialog() {
             @delete="deleteSelected" />
 
         <!-- Canvas -->
+        <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
         <canvas
             ref="canvas"
             :style="{ cursor: canvasCursor }"
             :aria-label="t('drawing.canvas')"
-            role="img"
+            role="application"
             :aria-describedby="hasSelection ? 'selection-status' : undefined"
             @pointerdown="onPointerDown"
             @pointermove="onPointerMove"

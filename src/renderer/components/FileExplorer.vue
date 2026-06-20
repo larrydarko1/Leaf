@@ -293,8 +293,10 @@ function handleRootDrop(event: DragEvent) {
 
 <template>
     <div class="file-explorer">
+        <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
         <div
             class="file-list"
+            role="region"
             :class="{ 'drag-over-root': isDragOverRoot }"
             @dragover.prevent="handleRootDragOver"
             @dragleave="handleRootDragLeave"

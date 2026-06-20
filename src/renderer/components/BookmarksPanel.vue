@@ -16,7 +16,7 @@ type Props = {
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-    selectFile: [file: FileInfo, event?: MouseEvent];
+    selectFile: [file: FileInfo, event?: MouseEvent | KeyboardEvent];
     openFile: [file: FileInfo];
     removeBookmark: [filePath: string];
 }>();
@@ -43,7 +43,7 @@ function isFileSelected(file: FileInfo): boolean {
     return props.selectedFiles.some((f) => f.path === file.path);
 }
 
-function selectFile(file: FileInfo, event?: MouseEvent) {
+function selectFile(file: FileInfo, event?: MouseEvent | KeyboardEvent) {
     emit('selectFile', file, event);
 }
 
@@ -112,13 +112,12 @@ function removeBookmark(file: FileInfo) {
             </div>
             <ul
                 v-else
-                class="bookmarks-results-list"
-                role="list">
+                class="bookmarks-results-list">
+                <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
                 <li
                     v-for="file in bookmarkedFiles"
                     :key="file.path"
                     v-memo="[file.path, activeFile?.path, selectedFiles.some((f) => f.path === file.path)]"
-                    role="listitem"
                     class="bookmark-item"
                     :class="{
                         active: activeFile?.path === file.path,
@@ -126,8 +125,11 @@ function removeBookmark(file: FileInfo) {
                     }"
                     :aria-current="activeFile?.path === file.path ? 'true' : undefined"
                     :aria-selected="isFileSelected(file)"
+                    tabindex="0"
                     @click="selectFile(file, $event)"
-                    @dblclick="openFile(file)">
+                    @dblclick="openFile(file)"
+                    @keydown.enter="openFile(file)"
+                    @keydown.space.prevent="selectFile(file, $event)">
                     <div class="file-info">
                         <svg
                             class="file-icon"
