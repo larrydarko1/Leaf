@@ -29,7 +29,7 @@ import fs from 'fs/promises';
 import { existsSync } from 'fs';
 import { LEAF_HOME, THEMES_DIR, STATE_FILE, getBundledThemesDir } from '@/main/lib/paths';
 import { log } from '@/main/lib/logger';
-import type { ThemeInfo, ThemeState } from '@/schemas/vault';
+import { type ThemeInfo, type ThemeState, ThemeStateSchema } from '@/schemas/vault';
 
 const DEFAULT_THEME_ID = 'dark';
 const THEME_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
@@ -169,8 +169,13 @@ async function readState(): Promise<ThemeState> {
     try {
         if (!existsSync(STATE_FILE)) return {};
         const raw = await fs.readFile(STATE_FILE, 'utf-8');
-        const parsed = JSON.parse(raw) as unknown;
-        return typeof parsed === 'object' && parsed !== null ? (parsed as ThemeState) : {};
+        const result = ThemeStateSchema.safeParse(JSON.parse(raw));
+        if (result.success) {
+            return result.data;
+        } else {
+            log.warn('[theme] state validation failed:', result.error);
+            return {};
+        }
     } catch (err) {
         log.warn('[theme] state read failed:', err);
         return {};

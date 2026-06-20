@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useThrottleFn, useEventListener } from '@vueuse/core';
-import type { ToolType, StrokeStyle, DefaultStyle } from '@/schemas/drawing';
+import type { ToolType, StrokeStyle, DefaultStyle, StyleKey } from '@/schemas/drawing';
 import { useDrawingElements, genId } from '@/renderer/composables/drawing/useDrawingElements';
 import { useCanvasRenderer } from '@/renderer/composables/drawing/useCanvasRenderer';
 import { useDrawingInteraction } from '@/renderer/composables/drawing/useDrawingInteraction';
@@ -27,8 +27,6 @@ const emit = defineEmits<{
     save: [content: string];
     contentChanged: [hasChanges: boolean];
 }>();
-
-type StyleKey = 'strokeColor' | 'fillColor' | 'strokeWidth' | 'strokeStyle' | 'borderRadius' | 'fontSize';
 
 const containerEl = ref<HTMLDivElement | null>(null);
 const canvas = ref<HTMLCanvasElement | null>(null);

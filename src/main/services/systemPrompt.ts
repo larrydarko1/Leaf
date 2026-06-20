@@ -20,7 +20,7 @@ import fs from 'fs/promises';
 import { existsSync } from 'fs';
 import { LEAF_HOME, PROMPTS_DIR, STATE_FILE, getBundledPromptsDir } from '@/main/lib/paths';
 import { log } from '@/main/lib/logger';
-import type { PromptInfo, PromptState } from '@/schemas/ai';
+import { type PromptInfo, type PromptState, PromptStateSchema } from '@/schemas/ai';
 
 const DEFAULT_PROMPT_ID = 'default';
 const PROMPT_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
@@ -207,7 +207,8 @@ async function readState(): Promise<PromptState> {
         if (!existsSync(STATE_FILE)) return {};
         const raw = await fs.readFile(STATE_FILE, 'utf-8');
         const parsed = JSON.parse(raw) as unknown;
-        return typeof parsed === 'object' && parsed !== null ? (parsed as PromptState) : {};
+        const result = PromptStateSchema.safeParse(parsed);
+        return result.success ? result.data : {};
     } catch (err) {
         log.warn('[systemPrompt] state read failed:', err);
         return {};

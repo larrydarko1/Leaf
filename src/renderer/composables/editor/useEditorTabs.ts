@@ -3,7 +3,7 @@
  */
 
 import { ref, computed } from 'vue';
-import type { FileInfo, TabState, PersistedTabState } from '@/schemas/vault';
+import { type FileInfo, type TabState, type PersistedTabState, PersistedTabStateSchema } from '@/schemas/vault';
 
 const MAX_TABS = 10;
 const STORAGE_KEY_PREFIX = 'leaf-tabs-';
@@ -50,9 +50,9 @@ export function useEditorTabs() {
         try {
             const raw = localStorage.getItem(key);
             if (raw === null) return false;
-            const parsed = JSON.parse(raw) as unknown;
-            if (!isValidPersistedTabState(parsed)) return false;
-            data = parsed;
+            const result = PersistedTabStateSchema.safeParse(JSON.parse(raw));
+            if (!result.success) return false;
+            data = result.data;
         } catch {
             return false;
         }
@@ -260,21 +260,4 @@ export function useEditorTabs() {
         setFolderPath,
         MAX_TABS,
     };
-}
-
-// Type guard for PersistedTabState
-function isValidPersistedTabState(data: unknown): data is PersistedTabState {
-    if (typeof data !== 'object' || data === null) return false;
-    const obj = data as Record<string, unknown>;
-    return (
-        Array.isArray(obj.tabs) &&
-        obj.tabs.every(
-            (tab: unknown) =>
-                typeof tab === 'object' &&
-                tab !== null &&
-                typeof (tab as Record<string, unknown>).path === 'string' &&
-                typeof (tab as Record<string, unknown>).scrollTop === 'number',
-        ) &&
-        typeof obj.activeIndex === 'number'
-    );
 }

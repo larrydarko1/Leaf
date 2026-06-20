@@ -22,7 +22,7 @@ import fs from 'fs/promises';
 import { existsSync } from 'fs';
 import { LEAF_HOME, LOCALES_DIR, STATE_FILE, getBundledLocalesDir } from '@/main/lib/paths';
 import { log } from '@/main/lib/logger';
-import type { LanguageInfo, LanguageState } from '@/schemas/vault';
+import { type LanguageInfo, type LanguageState, LanguageStateSchema } from '@/schemas/vault';
 
 const DEFAULT_LANGUAGE_ID = 'en';
 const LANGUAGE_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
@@ -77,7 +77,13 @@ export async function ensureSeeded(): Promise<void> {
 async function readState(): Promise<LanguageState> {
     try {
         const data = await fs.readFile(STATE_FILE, 'utf-8');
-        return JSON.parse(data) as LanguageState;
+        const result = LanguageStateSchema.safeParse(JSON.parse(data));
+        if (result.success) {
+            return result.data;
+        } else {
+            log.warn('[language] state validation failed:', result.error);
+            return {};
+        }
     } catch {
         return {};
     }

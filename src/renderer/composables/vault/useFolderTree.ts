@@ -4,6 +4,7 @@
  */
 
 import { ref, computed, watch } from 'vue';
+import { z } from 'zod';
 import type { FileInfo, FolderInfo, TreeNode } from '@/schemas/vault';
 
 export function useFolderTree(
@@ -148,12 +149,8 @@ export function useFolderTree(
                 const saved = localStorage.getItem(`leaf-expanded-folders-${newFolder}`);
                 if (saved !== null && saved !== '') {
                     try {
-                        const parsed = JSON.parse(saved) as string[];
-                        if (Array.isArray(parsed)) {
-                            expandedFolders.value = new Set(parsed);
-                        } else {
-                            expandedFolders.value = new Set();
-                        }
+                        const result = z.array(z.string()).safeParse(JSON.parse(saved));
+                        expandedFolders.value = result.success ? new Set(result.data) : new Set();
                     } catch {
                         expandedFolders.value = new Set();
                     }

@@ -10,14 +10,17 @@ import fs from 'fs/promises';
 import path from 'path';
 import { DEFAULT_MODELS_DIR } from '@/main/lib/paths';
 import { assertSafeFileName } from '@/main/lib/validation';
-import type {
-    HfDownloadEntry,
-    HfTreeFile,
-    HfProgressInfo,
-    SortOption,
-    HfGgufMeta,
-    HfModel,
-    HfTreeEntry,
+import { z } from 'zod';
+import {
+    type HfDownloadEntry,
+    type HfTreeFile,
+    type HfProgressInfo,
+    type SortOption,
+    type HfGgufMeta,
+    type HfModel,
+    type HfDownloadResult,
+    HfModelSchema,
+    HfTreeEntrySchema,
 } from '@/schemas/hf';
 
 // Only allow downloads from Hugging Face domains (including XetHub CDN)
@@ -84,8 +87,7 @@ function assertAllowedDownloadUrl(url: string): void {
     }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function hfApiGet(apiPath: string): Promise<any> {
+function hfApiGet(apiPath: string): Promise<unknown> {
     return new Promise((resolve, reject) => {
         const options = {
             hostname: 'huggingface.co',
@@ -155,7 +157,7 @@ async function searchModels(
             .map((f) => `expand[]=${f}`)
             .join('&');
         const apiPath = `/api/models?search=${encodeURIComponent(searchQuery)}&filter=gguf&sort=${sortParam}&direction=${directionParam}&limit=${limit}&offset=${offset}&${expands}`;
-        const models = (await hfApiGet(apiPath)) as HfModel[];
+        const models = z.array(HfModelSchema).parse(await hfApiGet(apiPath));
 
         const hasMore = models.length > RESULTS_PER_PAGE;
         const sliced = hasMore ? models.slice(0, RESULTS_PER_PAGE) : models;
@@ -228,7 +230,7 @@ function formatFileSize(bytes: number): string {
 
 async function fetchTree(repoId: string, treePath: string): Promise<HfTreeFile[]> {
     const apiPath = `/api/models/${repoId}/tree/main${treePath !== '' ? '/' + treePath : ''}`;
-    const entries = (await hfApiGet(apiPath)) as HfTreeEntry[];
+    const entries = z.array(HfTreeEntrySchema).parse(await hfApiGet(apiPath));
 
     let files: HfTreeFile[] = [];
     for (const entry of entries) {
@@ -245,10 +247,8 @@ async function fetchTree(repoId: string, treePath: string): Promise<HfTreeFile[]
 
 async function listRepoFiles(repoId: string): Promise<object> {
     try {
-        const [modelData, treeFiles]: [HfModel, HfTreeFile[]] = await Promise.all([
-            hfApiGet(`/api/models/${repoId}`) as Promise<HfModel>,
-            fetchTree(repoId, ''),
-        ]);
+        const [rawModelData, treeFiles] = await Promise.all([hfApiGet(`/api/models/${repoId}`), fetchTree(repoId, '')]);
+        const modelData: HfModel = HfModelSchema.parse(rawModelData);
 
         const ggufMeta: HfGgufMeta = modelData.gguf ?? {};
         const architecture = ggufMeta.architecture ?? null;
@@ -375,7 +375,7 @@ async function downloadModel(
     url: string,
     fileName: string,
     onProgress: (p: HfProgressInfo) => void,
-): Promise<{ success: boolean; filePath?: string; error?: string }> {
+): Promise<HfDownloadResult> {
     // Validate URL against whitelist and filename against traversal
     assertAllowedDownloadUrl(url);
     assertSafeFileName(fileName);

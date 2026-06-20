@@ -261,3 +261,66 @@ export const HighlightPartSchema = z.object({
 });
 
 export type HighlightPart = z.infer<typeof HighlightPartSchema>;
+
+// IPC handler input schemas — validated at the boundary before any FS operation
+export const SaveDialogOptionsSchema = z.object({
+    defaultPath: z.string().optional(),
+    filters: z.array(z.object({ name: z.string(), extensions: z.array(z.string()) })).optional(),
+});
+export type SaveDialogOptions = z.infer<typeof SaveDialogOptionsSchema>;
+
+export const FileWriteBufferArgsSchema = z.object({
+    filePath: z.string(),
+    base64Data: z.string(),
+});
+
+export const ResolveEmbedArgsSchema = z.object({
+    fileName: z.string(),
+    noteDir: z.string(),
+    embedVaultRoot: z.string(),
+});
+
+export const FileCopyToVaultArgsSchema = z.object({
+    sourcePath: z.string(),
+    targetDir: z.string(),
+});
+
+export const FileWriteArgsSchema = z.object({
+    filePath: z.string(),
+    content: z.string(),
+});
+
+export const FileCreateArgsSchema = z.object({
+    folderPath: z.string(),
+    fileName: z.string(),
+});
+
+export const FolderCreateArgsSchema = z.object({
+    parentPath: z.string(),
+    folderName: z.string(),
+});
+
+export const FileRenameArgsSchema = z.object({
+    oldPath: z.string(),
+    newFileName: z.string(),
+});
+
+export const UpdateEmbedRefsArgsSchema = z.object({
+    oldFileName: z.string(),
+    newFileName: z.string(),
+});
+
+export const FolderRenameArgsSchema = z.object({
+    oldPath: z.string(),
+    newFolderName: z.string(),
+});
+
+export const FileMoveArgsSchema = z.object({
+    filePath: z.string(),
+    targetFolderPath: z.string(),
+});
+
+export const FolderMoveArgsSchema = z.object({
+    folderPath: z.string(),
+    targetFolderPath: z.string(),
+});

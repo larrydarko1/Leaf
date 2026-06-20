@@ -3,9 +3,8 @@
  * and migrates legacy v1 stroke format to v2 elements.
  */
 
-import { ref, nextTick } from 'vue';
-import type { Ref } from 'vue';
-import type { CanvasElement, DrawingDataV2, ElementType } from '@/schemas/drawing';
+import { ref, nextTick, type Ref } from 'vue';
+import { type CanvasElement, type DrawingDataV2, type ElementType, DrawingDataV2Schema } from '@/schemas/drawing';
 
 export function useDrawingPersistence(
     canvas: Ref<HTMLCanvasElement | null>,
@@ -72,19 +71,18 @@ export function useDrawingPersistence(
         }
 
         try {
-            const parsedData = JSON.parse(content) as unknown;
+            const parsedData: unknown = JSON.parse(content);
+            const v2Result = DrawingDataV2Schema.safeParse(parsedData);
 
-            if (!isDrawingDataV2(parsedData) && !isV1Data(parsedData)) {
-                throw new Error('Invalid drawing data format');
-            }
-
-            if (isDrawingDataV2(parsedData)) {
-                elements.value = parsedData.elements ?? [];
-                scrollX.value = parsedData.viewState?.scrollX ?? 0;
-                scrollY.value = parsedData.viewState?.scrollY ?? 0;
-                zoom.value = parsedData.viewState?.zoom ?? 1;
+            if (v2Result.success) {
+                elements.value = v2Result.data.elements ?? [];
+                scrollX.value = v2Result.data.viewState?.scrollX ?? 0;
+                scrollY.value = v2Result.data.viewState?.scrollY ?? 0;
+                zoom.value = v2Result.data.viewState?.zoom ?? 1;
             } else if (isV1Data(parsedData)) {
                 elements.value = migrateV1(parsedData);
+            } else {
+                throw new Error('Invalid drawing data format');
             }
 
             history.value = [JSON.stringify(elements.value)];
@@ -99,19 +97,6 @@ export function useDrawingPersistence(
             historyIndex.value = 0;
             renderScene();
         }
-    }
-
-    // Type guards
-
-    function isDrawingDataV2(data: unknown): data is DrawingDataV2 {
-        if (typeof data !== 'object' || data === null) return false;
-        const obj = data as Record<string, unknown>;
-        return (
-            typeof obj.version === 'number' &&
-            obj.version === 2 &&
-            Array.isArray(obj.elements) &&
-            typeof obj.viewState === 'object'
-        );
     }
 
     function isV1Data(data: unknown): data is V1Data {

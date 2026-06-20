@@ -277,8 +277,8 @@ function closeSearch() {
     showSearchPanel.value = false;
 }
 
-function handleSearchFileSelect(file: FileInfo, event?: MouseEvent) {
-    selection.selectFile(file, event);
+function handleSearchFileSelect(file: FileInfo, event?: MouseEvent | KeyboardEvent) {
+    selection.selectFile(file, event instanceof MouseEvent ? event : undefined);
     editorTabs.openTab(file);
 }
 
