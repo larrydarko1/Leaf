@@ -204,6 +204,28 @@ export default [
     // ── Prettier last — disables formatting rules that conflict ──────────────
     prettier,
 
+    // E2E files — use the standalone e2e/tsconfig.json (not part of the build)
+    {
+        files: ['e2e/**/*.ts'],
+        languageOptions: {
+            parserOptions: {
+                projectService: false,
+                project: ['./e2e/tsconfig.json'],
+                tsconfigRootDir: import.meta.dirname,
+            },
+        },
+        rules: {
+            'no-console': 'off',
+            '@typescript-eslint/no-explicit-any': 'off',
+            '@typescript-eslint/no-unsafe-assignment': 'off',
+            '@typescript-eslint/no-unsafe-member-access': 'off',
+            '@typescript-eslint/no-unsafe-call': 'off',
+            '@typescript-eslint/no-unsafe-return': 'off',
+            '@typescript-eslint/no-unsafe-argument': 'off',
+            '@typescript-eslint/strict-boolean-expressions': 'off',
+        },
+    },
+
     // Test files — use a dedicated tsconfig.test.json so the project service
     // can find them without allowDefaultProject hacks
     // Strict type rules are relaxed here since test/mock code routinely uses `any`

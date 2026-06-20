@@ -7,5 +7,5 @@
         "lib": ["ES2025", "DOM"],
         "types": ["node", "vitest/globals"]
     },
-    "include": ["vitest.setup.ts", "tests/**/*.ts", "e2e/**/*.ts"]
+    "include": ["vitest.setup.ts", "tests/**/*.ts"]
 }
