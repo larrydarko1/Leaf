@@ -143,8 +143,22 @@ Bundled defaults (`dark.json`, `light.json`, etc.) are seeded on first launch an
 
 Leaf supports multiple languages. Currently available:
 
+- **Chinese (simplified)**
 - **English** (default)
+- **Esperanto**
+- **French**
+- **German**
+- **Greek**
+- **Hindi**
 - **Italian**
+- **Japanese**
+- **Korean**
+- **Latin**
+- **Portuguese**
+- **Russian**
+- **Spanish**
+
+disclaimer: translations are done by AI, they may be inaccurate.
 
 To switch languages:
 
