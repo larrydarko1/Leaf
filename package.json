@@ -38,6 +38,7 @@
         "stylelint": "stylelint \"src/**/*.{scss,vue}\"",
         "stylelint:fix": "stylelint \"src/**/*.{scss,vue}\" --fix",
         "prepare": "husky",
+        "test:coverage": "npx vitest run --coverage",
         "ci:check": "npm audit --audit-level=high --omit=dev && npm run lint && npm run format:check && npm run stylelint && npm test && npm run build"
     },
     "dependencies": {

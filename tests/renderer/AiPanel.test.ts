@@ -96,10 +96,10 @@ describe('AiPanel – resize feature', () => {
             expect(panel.attributes('style')).toContain('width: 340px');
         });
 
-        it('resize handle has role="separator"', () => {
+        it('resize handle has role="slider"', () => {
             const wrapper = mountWithI18n(AiPanel, { props: defaultProps });
             const handle = wrapper.find('.ai-panel-resize-handle');
-            expect(handle.attributes('role')).toBe('separator');
+            expect(handle.attributes('role')).toBe('slider');
         });
 
         it('resize handle has aria-orientation="vertical"', () => {
