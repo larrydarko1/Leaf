@@ -7,7 +7,7 @@ vi.mock('electron', () => ({
     app: { getPath: vi.fn(), getVersion: vi.fn() },
 }));
 
-vi.mock('../../src/main/lib/logger', () => ({
+vi.mock('@/main/lib/logger', () => ({
     log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 
@@ -43,8 +43,10 @@ import {
     STATE_FILE,
     getWhisperModelDir,
     getBundledPromptsDir,
+    getBundledThemesDir,
+    getBundledLocalesDir,
     migrateLegacyPaths,
-} from '../../src/main/lib/paths';
+} from '@/main/lib/paths';
 
 describe('paths', () => {
     describe('LEAF_HOME', () => {
@@ -152,6 +154,74 @@ describe('paths', () => {
 
             const result = getWhisperModelDir();
             expect(result).toContain('models/whisper');
+            expect(result).not.toContain('/app/Contents/Resources');
+        });
+    });
+
+    describe('getBundledThemesDir', () => {
+        const originalResourcesPath = process.resourcesPath;
+
+        beforeEach(() => {
+            vi.mocked(fs.existsSync).mockReset();
+            (process as { resourcesPath?: string }).resourcesPath = originalResourcesPath;
+        });
+
+        afterEach(() => {
+            (process as { resourcesPath?: string }).resourcesPath = originalResourcesPath;
+        });
+
+        it('returns dev path when resourcesPath is undefined', () => {
+            (process as { resourcesPath?: string }).resourcesPath = undefined;
+            const result = getBundledThemesDir();
+            expect(result).toContain('assets/themes');
+        });
+
+        it('returns production path when resourcesPath is set and path exists', () => {
+            (process as { resourcesPath?: string }).resourcesPath = '/app/Contents/Resources';
+            vi.mocked(fs.existsSync).mockReturnValue(true);
+            const result = getBundledThemesDir();
+            expect(result).toBe(path.join('/app/Contents/Resources', 'assets/themes'));
+        });
+
+        it('falls back to dev path when production path does not exist', () => {
+            (process as { resourcesPath?: string }).resourcesPath = '/app/Contents/Resources';
+            vi.mocked(fs.existsSync).mockReturnValue(false);
+            const result = getBundledThemesDir();
+            expect(result).toContain('assets/themes');
+            expect(result).not.toContain('/app/Contents/Resources');
+        });
+    });
+
+    describe('getBundledLocalesDir', () => {
+        const originalResourcesPath = process.resourcesPath;
+
+        beforeEach(() => {
+            vi.mocked(fs.existsSync).mockReset();
+            (process as { resourcesPath?: string }).resourcesPath = originalResourcesPath;
+        });
+
+        afterEach(() => {
+            (process as { resourcesPath?: string }).resourcesPath = originalResourcesPath;
+        });
+
+        it('returns dev path when resourcesPath is undefined', () => {
+            (process as { resourcesPath?: string }).resourcesPath = undefined;
+            const result = getBundledLocalesDir();
+            expect(result).toContain('assets/locales');
+        });
+
+        it('returns production path when resourcesPath is set and path exists', () => {
+            (process as { resourcesPath?: string }).resourcesPath = '/app/Contents/Resources';
+            vi.mocked(fs.existsSync).mockReturnValue(true);
+            const result = getBundledLocalesDir();
+            expect(result).toBe(path.join('/app/Contents/Resources', 'assets/locales'));
+        });
+
+        it('falls back to dev path when production path does not exist', () => {
+            (process as { resourcesPath?: string }).resourcesPath = '/app/Contents/Resources';
+            vi.mocked(fs.existsSync).mockReturnValue(false);
+            const result = getBundledLocalesDir();
+            expect(result).toContain('assets/locales');
             expect(result).not.toContain('/app/Contents/Resources');
         });
     });

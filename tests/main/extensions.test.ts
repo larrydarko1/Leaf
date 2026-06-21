@@ -8,7 +8,7 @@ import {
     PDF_EXTENSIONS,
     DRAWING_EXTENSIONS,
     ALLOWED_EXTENSIONS,
-} from '../../src/main/lib/extensions';
+} from '@/main/lib/extensions';
 
 describe('extensions', () => {
     describe('individual arrays', () => {

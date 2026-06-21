@@ -47,5 +47,5 @@ jobs:
       - name: Build
         run: npx electron-vite build
 
-      - name: Tests
-        run: npx vitest run
+      - name: Tests (with 80% coverage enforcement)
+        run: npm run test:coverage

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { IMAGE_MIMETYPES, AUDIO_MIMETYPES, VIDEO_MIMETYPES, MIME_MAP } from '../../src/main/lib/mime';
+import { IMAGE_MIMETYPES, AUDIO_MIMETYPES, VIDEO_MIMETYPES, MIME_MAP } from '@/main/lib/mime';
 
 describe('mime', () => {
     describe('IMAGE_MIMETYPES', () => {

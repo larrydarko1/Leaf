@@ -11,6 +11,7 @@ export default defineConfig({
             '@/renderer': fileURLToPath(new URL('./src/renderer', import.meta.url)),
             '@/schemas': fileURLToPath(new URL('./src/schemas', import.meta.url)),
             '@/preload': fileURLToPath(new URL('./src/preload', import.meta.url)),
+            '@test-utils': fileURLToPath(new URL('./tests/renderer/test-utils', import.meta.url)),
         },
     },
     esbuild: { tsconfigRaw: { compilerOptions: { target: 'ESNext' } } },
@@ -19,5 +20,17 @@ export default defineConfig({
         environment: 'jsdom',
         exclude: [...configDefaults.exclude, 'e2e/**'],
         setupFiles: ['./vitest.setup.ts'],
+        coverage: {
+            provider: 'v8',
+            include: ['src/**'],
+            exclude: ['src/renderer/main.ts', 'src/main/index.ts', 'src/**/*.d.ts'],
+            reporter: ['text', 'text-summary', 'html'],
+            thresholds: {
+                statements: 80,
+                branches: 80,
+                functions: 80,
+                lines: 80,
+            },
+        },
     },
 });

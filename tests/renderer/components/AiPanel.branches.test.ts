@@ -1,0 +1,533 @@
+/**
+ * Branch-focused tests for AiPanel.vue script section.
+ * Uses shallowMount + fully-mocked composables to exercise
+ * loadSelectedModel, unloadModel, loadPreviousModel, tokenUsagePercent,
+ * panel toggles, and keyboard resize shortcuts.
+ */
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { ref, computed } from 'vue';
+import { shallowMount } from '@vue/test-utils';
+import { i18n } from '@/renderer/i18n';
+import AiPanel from '@/renderer/components/AiPanel.vue';
+import type { FileInfo } from '@/schemas/vault';
+
+// ── useAIModel mock ───────────────────────────────────────────────────────────
+
+const mockStatus = ref({
+    isModelLoaded: false,
+    isGenerating: false,
+    currentModelPath: null as string | null,
+    currentModelName: null as string | null,
+    contextSize: 0,
+    contextTokens: 0,
+    modelsDir: '',
+});
+const mockAvailableModels = ref<unknown[]>([]);
+const mockIsLoading = ref(false);
+const mockSelectedModelPath = ref<string | null>(null);
+const mockLastUsedModelName = ref<string | null>(null);
+const mockIsReady = computed(() => mockStatus.value.isModelLoaded);
+const mockIsAnyGenerating = computed(() => mockStatus.value.isGenerating);
+const mockSelectedModelLabel = ref('');
+const mockShowDropdown = ref(false);
+const mockDropdownRef = ref(null);
+const mockDropdownPosition = ref({ top: 0, left: 0 });
+const mockPreviousModelMatch = ref(null);
+const mockToggleDropdown = vi.fn();
+const mockSelectModel = vi.fn();
+const mockRefreshModels = vi.fn().mockResolvedValue(undefined);
+const mockRefreshStatus = vi.fn().mockResolvedValue(undefined);
+const mockOpenModelsFolder = vi.fn();
+const mockLoadModel = vi.fn().mockResolvedValue({ success: true });
+const mockUnloadModel = vi.fn().mockResolvedValue(undefined);
+const mockLoadPreviousModel = vi.fn().mockResolvedValue({ success: false, error: null });
+
+vi.mock('@/renderer/composables/ai/useAIModel', () => ({
+    useAIModel: vi.fn(() => ({
+        status: mockStatus,
+        availableModels: mockAvailableModels,
+        isLoading: mockIsLoading,
+        selectedModelPath: mockSelectedModelPath,
+        lastUsedModelName: mockLastUsedModelName,
+        isReady: mockIsReady,
+        isAnyGenerating: mockIsAnyGenerating,
+        selectedModelLabel: mockSelectedModelLabel,
+        showDropdown: mockShowDropdown,
+        dropdownRef: mockDropdownRef,
+        dropdownPosition: mockDropdownPosition,
+        previousModelMatch: mockPreviousModelMatch,
+        toggleDropdown: mockToggleDropdown,
+        selectModel: mockSelectModel,
+        refreshModels: mockRefreshModels,
+        refreshStatus: mockRefreshStatus,
+        openModelsFolder: mockOpenModelsFolder,
+        loadModel: mockLoadModel,
+        unloadModel: mockUnloadModel,
+        loadPreviousModel: mockLoadPreviousModel,
+    })),
+}));
+
+// ── useConversationHistory mock ────────────────────────────────────────────────
+
+const mockShowHistory = ref(false);
+const mockConversationList = ref<unknown[]>([]);
+const mockCurrentConversationId = ref<string | null>(null);
+const mockConversationTokenCount = ref(0);
+const mockRenamingConversationId = ref<string | null>(null);
+const mockRenameValue = ref('');
+const mockToggleHistory = vi.fn();
+const mockOpenHistory = vi.fn();
+const mockRefreshConversationList = vi.fn().mockResolvedValue(undefined);
+const mockCreateNewConversation = vi.fn().mockResolvedValue(undefined);
+const mockSaveCurrentConversation = vi.fn().mockResolvedValue(undefined);
+const mockSaveTokenCountToConversation = vi.fn().mockResolvedValue(undefined);
+const mockDeleteConversation = vi.fn().mockResolvedValue(undefined);
+const mockStartRename = vi.fn();
+const mockConfirmRename = vi.fn().mockResolvedValue(undefined);
+const mockCancelRename = vi.fn();
+const mockStartNewConversation = vi.fn().mockResolvedValue(undefined);
+const mockLoadConversation = vi.fn().mockResolvedValue(undefined);
+
+vi.mock('@/renderer/composables/ai/useConversationHistory', () => ({
+    useConversationHistory: vi.fn(() => ({
+        showHistory: mockShowHistory,
+        conversationList: mockConversationList,
+        currentConversationId: mockCurrentConversationId,
+        conversationTokenCount: mockConversationTokenCount,
+        renamingConversationId: mockRenamingConversationId,
+        renameValue: mockRenameValue,
+        toggleHistory: mockToggleHistory,
+        openHistory: mockOpenHistory,
+        refreshConversationList: mockRefreshConversationList,
+        createNewConversation: mockCreateNewConversation,
+        saveCurrentConversation: mockSaveCurrentConversation,
+        saveTokenCountToConversation: mockSaveTokenCountToConversation,
+        deleteConversation: mockDeleteConversation,
+        startRename: mockStartRename,
+        confirmRename: mockConfirmRename,
+        cancelRename: mockCancelRename,
+        startNewConversation: mockStartNewConversation,
+        loadConversation: mockLoadConversation,
+    })),
+}));
+
+// ── useAgentMode mock ─────────────────────────────────────────────────────────
+
+const mockAgentMode = ref(false);
+vi.mock('@/renderer/composables/ai/useAgentMode', () => ({
+    useAgentMode: vi.fn(() => ({
+        agentMode: mockAgentMode,
+        toggleAgentMode: vi.fn(),
+        parseAgentEdits: vi.fn(),
+        processAgentEdits: vi.fn(),
+        approveAgentEdit: vi.fn(),
+        rejectAgentEdit: vi.fn(),
+    })),
+}));
+
+// ── useHfDownload mock ────────────────────────────────────────────────────────
+
+const mockShowHfPanel = ref(false);
+vi.mock('@/renderer/composables/ai/useHfDownload', () => ({
+    useHfDownload: vi.fn(() => ({
+        showHfPanel: mockShowHfPanel,
+        hfSearchQuery: ref(''),
+        hfSearchResults: ref([]),
+        hfIsSearching: ref(false),
+        hfSelectedRepo: ref(null),
+        hfRepoFiles: ref([]),
+        hfModelInfo: ref(null),
+        hfIsLoadingFiles: ref(false),
+        hfDownloadProgress: ref({}),
+        hfActiveDownloads: ref([]),
+        hfDownloadError: ref(null),
+        hfSortBy: ref('downloads'),
+        hfHasMore: ref(false),
+        hfIsLoadingMore: ref(false),
+        toggleHfPanel: vi.fn(),
+        searchHfModels: vi.fn(),
+        loadMoreResults: vi.fn(),
+        changeSortBy: vi.fn(),
+        selectHfRepo: vi.fn(),
+        downloadHfModel: vi.fn(),
+        cancelHfDownload: vi.fn(),
+    })),
+}));
+
+// ── useAIChat mock ────────────────────────────────────────────────────────────
+
+const mockInputField = ref<HTMLTextAreaElement | null>(null);
+const mockScrollToBottom = vi.fn();
+const mockStopGeneration = vi.fn().mockResolvedValue(undefined);
+
+vi.mock('@/renderer/composables/ai/useAIChat', () => ({
+    useAIChat: vi.fn(() => ({
+        messagesContainer: ref(null),
+        inputField: mockInputField,
+        inputMessage: ref(''),
+        isStreaming: ref(false),
+        includeNoteContext: ref(false),
+        copiedIndex: ref(null),
+        editingIndex: ref(null),
+        editContent: ref(''),
+        onMessagesScroll: vi.fn(),
+        renderMarkdown: vi.fn(),
+        copyMessage: vi.fn(),
+        startEditMessage: vi.fn(),
+        cancelEditMessage: vi.fn(),
+        confirmEditMessage: vi.fn(),
+        resendMessage: vi.fn(),
+        deleteLastMessagePair: vi.fn(),
+        regenerateLastResponse: vi.fn(),
+        sendMessage: vi.fn(),
+        stopGeneration: mockStopGeneration,
+        scrollToBottom: mockScrollToBottom,
+    })),
+}));
+
+// ── @vueuse/core mock (bypass throttle) ───────────────────────────────────────
+
+vi.mock('@vueuse/core', () => ({
+    useThrottleFn: (fn: (...a: unknown[]) => unknown) => Object.assign(fn, { cancel: vi.fn() }),
+}));
+
+// ── helpers ───────────────────────────────────────────────────────────────────
+
+const defaultProps: { activeFile: FileInfo | null; workspacePath: string | null } = {
+    activeFile: null,
+    workspacePath: '/vault',
+};
+
+function mountPanel(props = defaultProps) {
+    return shallowMount(AiPanel, {
+        props,
+        global: { plugins: [i18n] },
+    });
+}
+
+beforeEach(() => {
+    vi.clearAllMocks();
+    mockStatus.value = {
+        isModelLoaded: false,
+        isGenerating: false,
+        currentModelPath: null,
+        currentModelName: null,
+        contextSize: 0,
+        contextTokens: 0,
+        modelsDir: '',
+    };
+    mockConversationTokenCount.value = 0;
+    mockCurrentConversationId.value = null;
+    mockShowHfPanel.value = false;
+    mockShowHistory.value = false;
+    mockLoadModel.mockResolvedValue({ success: true });
+    mockLoadPreviousModel.mockResolvedValue({ success: false, error: null });
+    mockRefreshStatus.mockResolvedValue(undefined);
+    mockRefreshModels.mockResolvedValue(undefined);
+    mockRefreshConversationList.mockResolvedValue(undefined);
+    mockSaveCurrentConversation.mockResolvedValue(undefined);
+    mockStopGeneration.mockResolvedValue(undefined);
+    mockStartNewConversation.mockResolvedValue(undefined);
+    mockLoadConversation.mockResolvedValue(undefined);
+    mockInputField.value = null;
+});
+
+// ── tokenUsagePercent computed ────────────────────────────────────────────────
+
+describe('tokenUsagePercent', () => {
+    it('returns 0 when contextSize is 0', async () => {
+        mockStatus.value.contextSize = 0;
+        mockConversationTokenCount.value = 50;
+        const wrapper = mountPanel();
+        const msgList = wrapper.findComponent({ name: 'AiMessageList' });
+        expect(msgList.props('tokenUsagePercent')).toBe(0);
+        wrapper.unmount();
+    });
+
+    it('returns 0 when contextSize is undefined', async () => {
+        (mockStatus.value as Record<string, unknown>).contextSize = undefined;
+        mockConversationTokenCount.value = 50;
+        const wrapper = mountPanel();
+        const msgList = wrapper.findComponent({ name: 'AiMessageList' });
+        expect(msgList.props('tokenUsagePercent')).toBe(0);
+        wrapper.unmount();
+    });
+
+    it('computes correct percentage', async () => {
+        mockStatus.value.contextSize = 1000;
+        mockConversationTokenCount.value = 300;
+        const wrapper = mountPanel();
+        const msgList = wrapper.findComponent({ name: 'AiMessageList' });
+        expect(msgList.props('tokenUsagePercent')).toBe(30);
+        wrapper.unmount();
+    });
+
+    it('clamps to 100 when over capacity', async () => {
+        mockStatus.value.contextSize = 100;
+        mockConversationTokenCount.value = 200;
+        const wrapper = mountPanel();
+        const msgList = wrapper.findComponent({ name: 'AiMessageList' });
+        expect(msgList.props('tokenUsagePercent')).toBe(100);
+        wrapper.unmount();
+    });
+});
+
+// ── onMounted ─────────────────────────────────────────────────────────────────
+
+describe('onMounted', () => {
+    it('calls refreshStatus, refreshModels, refreshConversationList', async () => {
+        mountPanel();
+        await new Promise((r) => setTimeout(r, 0));
+        expect(mockRefreshStatus).toHaveBeenCalled();
+        expect(mockRefreshModels).toHaveBeenCalled();
+        expect(mockRefreshConversationList).toHaveBeenCalled();
+    });
+
+    it('focuses inputField when model is loaded and inputField exists', async () => {
+        mockStatus.value.isModelLoaded = true;
+        const mockFocus = vi.fn();
+        mockInputField.value = { focus: mockFocus } as unknown as HTMLTextAreaElement;
+        mountPanel();
+        await new Promise((r) => setTimeout(r, 0));
+        expect(mockFocus).toHaveBeenCalled();
+    });
+
+    it('does not focus when model is not loaded', async () => {
+        mockStatus.value.isModelLoaded = false;
+        const mockFocus = vi.fn();
+        mockInputField.value = { focus: mockFocus } as unknown as HTMLTextAreaElement;
+        mountPanel();
+        await new Promise((r) => setTimeout(r, 0));
+        expect(mockFocus).not.toHaveBeenCalled();
+    });
+});
+
+// ── loadSelectedModel ─────────────────────────────────────────────────────────
+
+describe('loadSelectedModel', () => {
+    it('calls startNewConversation on success', async () => {
+        mockLoadModel.mockResolvedValue({ success: true });
+        const wrapper = mountPanel();
+        const vm = wrapper.vm as unknown as { loadSelectedModel: () => Promise<void> };
+        await vm.loadSelectedModel();
+        expect(mockStartNewConversation).toHaveBeenCalled();
+        wrapper.unmount();
+    });
+
+    it('pushes error message on failure (visible in AiMessageList messages prop)', async () => {
+        mockLoadModel.mockResolvedValue({ success: false, error: 'OOM' });
+        const wrapper = mountPanel();
+        const vm = wrapper.vm as unknown as { loadSelectedModel: () => Promise<void> };
+        await vm.loadSelectedModel();
+        await wrapper.vm.$nextTick();
+        const msgs = wrapper.findComponent({ name: 'AiMessageList' }).props('messages') as {
+            role: string;
+            content: string;
+        }[];
+        expect(msgs.some((m) => m.role === 'assistant' && m.content.includes('OOM'))).toBe(true);
+        wrapper.unmount();
+    });
+});
+
+// ── unloadModel ───────────────────────────────────────────────────────────────
+
+describe('unloadModel', () => {
+    it('calls stopGeneration when model is generating', async () => {
+        mockStatus.value.isGenerating = true;
+        const wrapper = mountPanel();
+        const vm = wrapper.vm as unknown as { unloadModel: () => Promise<void> };
+        await vm.unloadModel();
+        expect(mockStopGeneration).toHaveBeenCalled();
+        expect(mockSaveCurrentConversation).toHaveBeenCalled();
+        expect(mockUnloadModel).toHaveBeenCalled();
+        wrapper.unmount();
+    });
+
+    it('skips stopGeneration when not generating', async () => {
+        mockStatus.value.isGenerating = false;
+        const wrapper = mountPanel();
+        const vm = wrapper.vm as unknown as { unloadModel: () => Promise<void> };
+        await vm.unloadModel();
+        expect(mockStopGeneration).not.toHaveBeenCalled();
+        expect(mockUnloadModel).toHaveBeenCalled();
+        wrapper.unmount();
+    });
+
+    it('resets conversationTokenCount to 0', async () => {
+        mockConversationTokenCount.value = 500;
+        const wrapper = mountPanel();
+        const vm = wrapper.vm as unknown as { unloadModel: () => Promise<void> };
+        await vm.unloadModel();
+        expect(mockConversationTokenCount.value).toBe(0);
+        wrapper.unmount();
+    });
+});
+
+// ── startNewConversation ──────────────────────────────────────────────────────
+
+describe('startNewConversation', () => {
+    it('calls conversation.startNewConversation', async () => {
+        const wrapper = mountPanel();
+        const vm = wrapper.vm as unknown as { startNewConversation: () => Promise<void> };
+        await vm.startNewConversation();
+        expect(mockStartNewConversation).toHaveBeenCalled();
+        wrapper.unmount();
+    });
+
+    it('focuses input field if available', async () => {
+        const mockFocus = vi.fn();
+        mockInputField.value = { focus: mockFocus } as unknown as HTMLTextAreaElement;
+        const wrapper = mountPanel();
+        const vm = wrapper.vm as unknown as { startNewConversation: () => Promise<void> };
+        await vm.startNewConversation();
+        expect(mockFocus).toHaveBeenCalled();
+        wrapper.unmount();
+    });
+});
+
+// ── loadConversation ──────────────────────────────────────────────────────────
+
+describe('loadConversation', () => {
+    it('calls conversation.loadConversation and scrollToBottom', async () => {
+        const wrapper = mountPanel();
+        const vm = wrapper.vm as unknown as { loadConversation: (id: string) => Promise<void> };
+        await vm.loadConversation('conv-1');
+        expect(mockLoadConversation).toHaveBeenCalledWith('conv-1');
+        expect(mockScrollToBottom).toHaveBeenCalled();
+        wrapper.unmount();
+    });
+});
+
+// ── loadPreviousModel ─────────────────────────────────────────────────────────
+
+describe('loadPreviousModel', () => {
+    it('success + no conversation: calls startNewConversation', async () => {
+        mockCurrentConversationId.value = null;
+        mockLoadPreviousModel.mockResolvedValue({ success: true, error: null });
+        const wrapper = mountPanel();
+        const vm = wrapper.vm as unknown as { loadPreviousModel: () => Promise<void> };
+        await vm.loadPreviousModel();
+        expect(mockStartNewConversation).toHaveBeenCalled();
+        wrapper.unmount();
+    });
+
+    it('success + existing conversation: skips startNewConversation', async () => {
+        mockCurrentConversationId.value = 'conv-1';
+        mockLoadPreviousModel.mockResolvedValue({ success: true, error: null });
+        const wrapper = mountPanel();
+        const vm = wrapper.vm as unknown as { loadPreviousModel: () => Promise<void> };
+        await vm.loadPreviousModel();
+        expect(mockStartNewConversation).not.toHaveBeenCalled();
+        wrapper.unmount();
+    });
+
+    it('failure with error string: pushes error message', async () => {
+        mockLoadPreviousModel.mockResolvedValue({ success: false, error: 'Not found' });
+        const wrapper = mountPanel();
+        const vm = wrapper.vm as unknown as { loadPreviousModel: () => Promise<void> };
+        await vm.loadPreviousModel();
+        await wrapper.vm.$nextTick();
+        const msgs = wrapper.findComponent({ name: 'AiMessageList' }).props('messages') as { content: string }[];
+        expect(msgs.some((m) => m.content.includes('Not found'))).toBe(true);
+        wrapper.unmount();
+    });
+
+    it('failure with empty error: does not push message', async () => {
+        mockLoadPreviousModel.mockResolvedValue({ success: false, error: '' });
+        const wrapper = mountPanel();
+        const vm = wrapper.vm as unknown as { loadPreviousModel: () => Promise<void> };
+        await vm.loadPreviousModel();
+        await wrapper.vm.$nextTick();
+        const msgs = wrapper.findComponent({ name: 'AiMessageList' }).props('messages') as unknown[];
+        expect(msgs.length).toBe(0);
+        wrapper.unmount();
+    });
+
+    it('failure with null error: does not push message', async () => {
+        mockLoadPreviousModel.mockResolvedValue({ success: false, error: null });
+        const wrapper = mountPanel();
+        const vm = wrapper.vm as unknown as { loadPreviousModel: () => Promise<void> };
+        await vm.loadPreviousModel();
+        await wrapper.vm.$nextTick();
+        const msgs = wrapper.findComponent({ name: 'AiMessageList' }).props('messages') as unknown[];
+        expect(msgs.length).toBe(0);
+        wrapper.unmount();
+    });
+});
+
+// ── v-if panel branches ───────────────────────────────────────────────────────
+
+describe('v-if panel rendering', () => {
+    it('renders AiHfPanel when showHfPanel is true', async () => {
+        mockShowHfPanel.value = true;
+        const wrapper = mountPanel();
+        await wrapper.vm.$nextTick();
+        expect(wrapper.findComponent({ name: 'AiHfPanel' }).exists()).toBe(true);
+        wrapper.unmount();
+    });
+
+    it('does not render AiHfPanel when showHfPanel is false', () => {
+        mockShowHfPanel.value = false;
+        const wrapper = mountPanel();
+        expect(wrapper.findComponent({ name: 'AiHfPanel' }).exists()).toBe(false);
+        wrapper.unmount();
+    });
+
+    it('renders AiHistoryPanel when showHistory is true', async () => {
+        mockShowHistory.value = true;
+        const wrapper = mountPanel();
+        await wrapper.vm.$nextTick();
+        expect(wrapper.findComponent({ name: 'AiHistoryPanel' }).exists()).toBe(true);
+        wrapper.unmount();
+    });
+
+    it('does not render AiHistoryPanel when showHistory is false', () => {
+        mockShowHistory.value = false;
+        const wrapper = mountPanel();
+        expect(wrapper.findComponent({ name: 'AiHistoryPanel' }).exists()).toBe(false);
+        wrapper.unmount();
+    });
+});
+
+// ── decreaseWidth / increaseWidth ─────────────────────────────────────────────
+
+describe('decreaseWidth / increaseWidth', () => {
+    it('decreaseWidth reduces panelWidth by 50 (keyboard ArrowLeft on handle)', async () => {
+        const wrapper = mountPanel();
+        // Initial width is 340 (minWidth) — should stay clamped
+        const handle = wrapper.find('.ai-panel-resize-handle');
+        await handle.trigger('keydown.left');
+        // 340 - 50 = 290 → clamped to 340 (minWidth)
+        expect(wrapper.find('.ai-panel').attributes('style')).toContain('width: 340px');
+        wrapper.unmount();
+    });
+
+    it('increaseWidth increases panelWidth by 50 (keyboard ArrowRight on handle)', async () => {
+        const wrapper = mountPanel();
+        const handle = wrapper.find('.ai-panel-resize-handle');
+        await handle.trigger('keydown.right');
+        // 340 + 50 = 390
+        expect(wrapper.find('.ai-panel').attributes('style')).toContain('width: 390px');
+        wrapper.unmount();
+    });
+
+    it('increaseWidth clamps to maxWidth (600)', async () => {
+        const wrapper = mountPanel();
+        const handle = wrapper.find('.ai-panel-resize-handle');
+        // Increase many times
+        for (let i = 0; i < 20; i++) {
+            await handle.trigger('keydown.right');
+        }
+        expect(wrapper.find('.ai-panel').attributes('style')).toContain('width: 600px');
+        wrapper.unmount();
+    });
+});
+
+// ── onBeforeUnmount ───────────────────────────────────────────────────────────
+
+describe('onBeforeUnmount', () => {
+    it('sets isResizing to false on unmount', () => {
+        const wrapper = mountPanel();
+        expect(() => wrapper.unmount()).not.toThrow();
+    });
+});

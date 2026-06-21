@@ -28,11 +28,11 @@ vi.mock('electron', () => ({
 }));
 
 // Mock the logger to keep test output clean.
-vi.mock('../../src/main/lib/logger', () => ({
+vi.mock('@/main/lib/logger', () => ({
     log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 
-vi.mock('../../src/main/lib/paths', () => ({
+vi.mock('@/main/lib/paths', () => ({
     LEAF_HOME: PATHS.LEAF_HOME,
     DEFAULT_MODELS_DIR: PATHS.DEFAULT_MODELS_DIR,
     PROMPTS_DIR: PATHS.PROMPTS_DIR,
@@ -62,7 +62,7 @@ afterEach(() => {
 // Static import for parseFrontmatter only — getActiveSystemPrompt and
 // ensureSeeded are imported fresh per-test (because the service caches the
 // `seeded` flag at module scope).
-import { parseFrontmatter } from '../../src/main/services/systemPrompt';
+import { parseFrontmatter } from '@/main/services/systemPrompt';
 
 describe('parseFrontmatter', () => {
     it('returns empty meta and full body when there is no frontmatter', () => {
@@ -129,7 +129,7 @@ describe('ensureSeeded + getActiveSystemPrompt', () => {
         fs.writeFileSync(path.join(BUNDLED_DIR, 'coding.md'), 'no frontmatter coder');
 
         // Re-import to get a fresh `seeded` flag.
-        const mod = await import('../../src/main/services/systemPrompt');
+        const mod = await import('@/main/services/systemPrompt');
         await mod.ensureSeeded();
 
         expect(fs.existsSync(path.join(PROMPTS_DIR, 'default.md'))).toBe(true);
@@ -145,7 +145,7 @@ describe('ensureSeeded + getActiveSystemPrompt', () => {
         fs.mkdirSync(PROMPTS_DIR, { recursive: true });
         fs.writeFileSync(path.join(PROMPTS_DIR, 'default.md'), 'USER EDIT');
 
-        const mod = await import('../../src/main/services/systemPrompt');
+        const mod = await import('@/main/services/systemPrompt');
         await mod.ensureSeeded();
 
         expect(fs.readFileSync(path.join(PROMPTS_DIR, 'default.md'), 'utf-8')).toBe('USER EDIT');
@@ -156,7 +156,7 @@ describe('ensureSeeded + getActiveSystemPrompt', () => {
             path.join(BUNDLED_DIR, 'default.md'),
             `---\nname: Default\ndescription: foo\n---\nThis is the system prompt.`,
         );
-        const mod = await import('../../src/main/services/systemPrompt');
+        const mod = await import('@/main/services/systemPrompt');
         const body = await mod.getActiveSystemPrompt();
         expect(body).toBe('This is the system prompt.');
     });
@@ -165,7 +165,7 @@ describe('ensureSeeded + getActiveSystemPrompt', () => {
         fs.writeFileSync(path.join(BUNDLED_DIR, 'default.md'), 'default body');
         fs.writeFileSync(path.join(BUNDLED_DIR, 'coding.md'), 'coding body');
 
-        const mod = await import('../../src/main/services/systemPrompt');
+        const mod = await import('@/main/services/systemPrompt');
         await mod.ensureSeeded();
         // Switch active prompt by writing state directly.
         fs.writeFileSync(STATE_FILE, JSON.stringify({ activePrompt: 'coding' }), 'utf-8');
@@ -175,7 +175,7 @@ describe('ensureSeeded + getActiveSystemPrompt', () => {
     });
 
     it('returns empty string when active prompt file is missing', async () => {
-        const mod = await import('../../src/main/services/systemPrompt');
+        const mod = await import('@/main/services/systemPrompt');
         fs.mkdirSync(LEAF_HOME, { recursive: true });
         fs.writeFileSync(STATE_FILE, JSON.stringify({ activePrompt: 'nonexistent' }), 'utf-8');
 
@@ -184,11 +184,105 @@ describe('ensureSeeded + getActiveSystemPrompt', () => {
     });
 
     it('rejects prompt ids with invalid characters in state', async () => {
-        const mod = await import('../../src/main/services/systemPrompt');
+        const mod = await import('@/main/services/systemPrompt');
         fs.mkdirSync(LEAF_HOME, { recursive: true });
         fs.writeFileSync(STATE_FILE, JSON.stringify({ activePrompt: '../etc/passwd' }), 'utf-8');
 
         const body = await mod.getActiveSystemPrompt();
         expect(body).toBe('');
+    });
+});
+
+// ── IPC register ──────────────────────────────────────────────────────────────
+
+async function makeHandlers() {
+    const mod = await import('@/main/services/systemPrompt');
+    const handlers: Record<string, (...args: unknown[]) => unknown> = {};
+    const ipc = {
+        handle: vi.fn((ch: string, fn: (...args: unknown[]) => unknown) => {
+            handlers[ch] = fn;
+        }),
+    };
+    mod.register(ipc as never);
+    return handlers;
+}
+
+describe('systemPrompt:list', () => {
+    it('returns empty list when prompts directory does not exist', async () => {
+        const handlers = await makeHandlers();
+        const result = (await handlers['systemPrompt:list']?.()) as { success: boolean; prompts: unknown[] };
+        expect(result.success).toBe(true);
+        expect(result.prompts).toHaveLength(0);
+    });
+
+    it('returns prompts sorted with default first, then alphabetically', async () => {
+        fs.mkdirSync(PROMPTS_DIR, { recursive: true });
+        fs.writeFileSync(path.join(PROMPTS_DIR, 'zebra.md'), '---\nname: Zebra\n---\nbody');
+        fs.writeFileSync(path.join(PROMPTS_DIR, 'alpha.md'), '---\nname: Alpha\n---\nbody');
+        fs.writeFileSync(path.join(PROMPTS_DIR, 'default.md'), '---\nname: Default\n---\nbody');
+        fs.mkdirSync(LEAF_HOME, { recursive: true });
+        fs.writeFileSync(STATE_FILE, JSON.stringify({ activePrompt: 'default' }));
+
+        const handlers = await makeHandlers();
+        const result = (await handlers['systemPrompt:list']?.()) as {
+            success: boolean;
+            prompts: { id: string; name: string }[];
+            activeId: string;
+        };
+        expect(result.success).toBe(true);
+        expect(result.prompts[0].id).toBe('default');
+        expect(result.prompts.map((p) => p.id)).toEqual(['default', 'alpha', 'zebra']);
+        expect(result.activeId).toBe('default');
+    });
+
+    it('skips files with invalid prompt ids', async () => {
+        fs.mkdirSync(PROMPTS_DIR, { recursive: true });
+        fs.writeFileSync(path.join(PROMPTS_DIR, 'valid.md'), 'body');
+        fs.writeFileSync(path.join(PROMPTS_DIR, 'invalid name.md'), 'body'); // space in name
+        fs.mkdirSync(LEAF_HOME, { recursive: true });
+        fs.writeFileSync(STATE_FILE, JSON.stringify({ activePrompt: 'valid' }));
+
+        const handlers = await makeHandlers();
+        const result = (await handlers['systemPrompt:list']?.()) as { prompts: unknown[] };
+        expect(result.prompts).toHaveLength(1);
+    });
+});
+
+describe('systemPrompt:setActive', () => {
+    it('returns failure for non-string id', async () => {
+        const handlers = await makeHandlers();
+        const result = (await handlers['systemPrompt:setActive']?.({}, 123)) as { success: boolean };
+        expect(result.success).toBe(false);
+    });
+
+    it('returns failure for an id with invalid characters', async () => {
+        const handlers = await makeHandlers();
+        const result = (await handlers['systemPrompt:setActive']?.({}, '../etc/passwd')) as { success: boolean };
+        expect(result.success).toBe(false);
+    });
+
+    it('returns failure when the prompt file does not exist', async () => {
+        fs.mkdirSync(PROMPTS_DIR, { recursive: true });
+        const handlers = await makeHandlers();
+        const result = (await handlers['systemPrompt:setActive']?.({}, 'missing')) as {
+            success: boolean;
+            error: string;
+        };
+        expect(result.success).toBe(false);
+        expect(result.error).toMatch(/not found/i);
+    });
+
+    it('sets the active prompt and updates the state file', async () => {
+        fs.mkdirSync(PROMPTS_DIR, { recursive: true });
+        fs.writeFileSync(path.join(PROMPTS_DIR, 'custom.md'), 'body');
+        fs.mkdirSync(LEAF_HOME, { recursive: true });
+        fs.writeFileSync(STATE_FILE, JSON.stringify({ activePrompt: 'default' }));
+
+        const handlers = await makeHandlers();
+        const result = (await handlers['systemPrompt:setActive']?.({}, 'custom')) as { success: boolean };
+        expect(result.success).toBe(true);
+
+        const state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf-8')) as { activePrompt: string };
+        expect(state.activePrompt).toBe('custom');
     });
 });

@@ -10,7 +10,7 @@ vi.mock('electron', () => ({
     shell: { openExternal: vi.fn() },
 }));
 
-vi.mock('../../src/main/lib/logger', () => ({
+vi.mock('@/main/lib/logger', () => ({
     log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 
@@ -56,7 +56,7 @@ describe('bookmarks IPC handlers', () => {
         vi.resetModules();
         tmpVault = newTmpVault();
         ipc = makeMockIpc();
-        const { register } = await import('../../src/main/services/fs');
+        const { register } = await import('@/main/services/fs');
         register(ipc as never, () => null);
         // Scan the vault to set the module-level vaultRoot
         await ipc.invoke('files:scan', tmpVault);
@@ -213,7 +213,7 @@ describe('bookmarks IPC handlers', () => {
             // Reset so vaultRoot is null for this sub-suite
             vi.resetModules();
             ipc = makeMockIpc();
-            const { register } = await import('../../src/main/services/fs');
+            const { register } = await import('@/main/services/fs');
             register(ipc as never, () => null);
             // Intentionally skip files:scan — vaultRoot stays null
         });

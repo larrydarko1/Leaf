@@ -10,7 +10,7 @@ vi.mock('electron', () => ({
     shell: { openExternal: vi.fn() },
 }));
 
-vi.mock('../../src/main/lib/logger', () => ({
+vi.mock('@/main/lib/logger', () => ({
     log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 
@@ -58,7 +58,7 @@ describe('files:scan IPC handler', () => {
         vi.resetModules();
         tmpVault = newTmpVault();
         ipc = makeMockIpc();
-        const { register } = await import('../../src/main/services/fs');
+        const { register } = await import('@/main/services/fs');
         register(ipc as never, () => null);
     });
 

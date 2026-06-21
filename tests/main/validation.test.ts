@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import path from 'path';
-import { assertInsideBoundary, assertSafeFileName } from '../../src/main/lib/validation';
+import { assertInsideBoundary, assertSafeFileName } from '@/main/lib/validation';
 
 describe('validation', () => {
     describe('assertInsideBoundary', () => {
@@ -22,15 +22,11 @@ describe('validation', () => {
         });
 
         it('blocks path traversal with ../', () => {
-            expect(() => assertInsideBoundary('/home/user/vault/../secret.txt', root)).toThrow(
-                'Access denied',
-            );
+            expect(() => assertInsideBoundary('/home/user/vault/../secret.txt', root)).toThrow('Access denied');
         });
 
         it('blocks path traversal escaping multiple levels', () => {
-            expect(() => assertInsideBoundary('/home/user/vault/../../etc/passwd', root)).toThrow(
-                'Access denied',
-            );
+            expect(() => assertInsideBoundary('/home/user/vault/../../etc/passwd', root)).toThrow('Access denied');
         });
 
         it('blocks absolute path outside root', () => {
@@ -39,15 +35,11 @@ describe('validation', () => {
 
         it('blocks sibling directory with same prefix', () => {
             // "/home/user/vault-backup" starts with "/home/user/vault" but is not inside it
-            expect(() => assertInsideBoundary('/home/user/vault-backup/file.txt', root)).toThrow(
-                'Access denied',
-            );
+            expect(() => assertInsideBoundary('/home/user/vault-backup/file.txt', root)).toThrow('Access denied');
         });
 
         it('blocks root path with trailing characters', () => {
-            expect(() => assertInsideBoundary('/home/user/vaultx/file.txt', root)).toThrow(
-                'Access denied',
-            );
+            expect(() => assertInsideBoundary('/home/user/vaultx/file.txt', root)).toThrow('Access denied');
         });
 
         it('handles relative target paths (resolved against cwd)', () => {
