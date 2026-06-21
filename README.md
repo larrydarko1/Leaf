@@ -373,8 +373,8 @@ After building:
 - **Storage:** Plain text files (txt, md), images, videos, audio, and embedded media in your local vault
 - **Schema Validation:** [Zod](https://zod.dev) (runtime TypeScript-first schema validation)
 - **Build Tools:** [electron-vite](https://electron-vite.org) + [Electron Builder](https://www.electron.build)
-- **Testing:** [Vitest](https://vitest.dev) + [Vue Test Utils](https://test-utils.vuejs.org)
-- **Linting:** [ESLint](https://eslint.org) (flat config) + [typescript-eslint](https://typescript-eslint.io) + [Prettier](https://prettier.io)
+- **Testing:** [Vitest](https://vitest.dev) + [Vue Test Utils](https://test-utils.vuejs.org) + [Playwright](https://playwright.dev) (E2E)
+- **Linting:** [ESLint](https://eslint.org) (flat config) + [typescript-eslint](https://typescript-eslint.io) + [Prettier](https://prettier.io) + [stylelint](https://stylelint.io/)
 - **Git Hooks:** [Husky](https://typicode.github.io/husky) + [lint-staged](https://github.com/lint-staged/lint-staged) + [commitlint](https://commitlint.js.org) (Conventional Commits)
 
 ## Project Structure
@@ -498,45 +498,13 @@ leaf/
 │   ├── hf.ts                       # Hugging Face search, repo file, and download schemas
 │   ├── speech.ts                   # Speech-to-text result schemas
 │   └── vault.ts                    # Vault tree node, file, and folder schemas
-├── tests/                          # Unit tests (mirrors src/ structure)
+├── tests/                          # Mirrors src/ structure (unit tests)
 │   ├── main/
-│   │   ├── bookmarks.test.ts
-│   │   ├── extensions.test.ts
-│   │   ├── fs-scan.test.ts
-│   │   ├── language.test.ts
-│   │   ├── mime.test.ts
-│   │   ├── paths.test.ts
-│   │   ├── systemPrompt.test.ts
-│   │   └── validation.test.ts
-│   └── renderer/
-│       ├── AiInputArea.test.ts
-│       ├── AiPanel.test.ts
-│       ├── audio.test.ts
-│       ├── cm-list-continuation.test.ts
-│       ├── cm-task-fold.test.ts
-│       ├── cm-toolbar.test.ts
-│       ├── exportDrawing.test.ts
-│       ├── fileTypes.test.ts
-│       ├── useAIChat.test.ts
-│       ├── useAIModel.test.ts
-│       ├── useAgentMode.test.ts
-│       ├── useBookmarks.test.ts
-│       ├── useContextMenu.test.ts
-│       ├── useConversationHistory.test.ts
-│       ├── useDrawingElements.test.ts
-│       ├── useDrawingHistory.test.ts
-│       ├── useEditorTabs.test.ts
-│       ├── useEmbedResolver.test.ts
-│       ├── useFileSelection.test.ts
-│       ├── useFolderTree.test.ts
-│       ├── useHfDownload.test.ts
-│       ├── useLanguage.test.ts
-│       ├── useListKeyboardNavigation.test.ts
-│       ├── useNotePersistence.test.ts
-│       ├── useSystemPrompt.test.ts
-│       ├── useTheme.test.ts
-│       ├── useTreeNodeDrag.test.ts
-│       └── useVault.test.ts
+│   │   └── ... (mirrors src/main/)
+│   ├── renderer/
+│   │   └── ... (mirrors src/renderer/)
+│   └── schemas/
+│       └── ... (mirrors src/schemas/)
 ├── assets/                         # Bundled app assets seeded to LEAF_HOME on first launch
 │   ├── locales/                    # Default language translations (JSON)
 │   │   ├── en.json
