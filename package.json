@@ -38,9 +38,8 @@
         "stylelint": "stylelint \"src/**/*.{scss,vue}\"",
         "stylelint:fix": "stylelint \"src/**/*.{scss,vue}\" --fix",
         "prepare": "husky",
-        "test:e2e": "playwright test --config=e2e/playwright.config.ts",
         "test:coverage": "npx vitest run --coverage",
-        "ci:check": "npm audit --audit-level=high --omit=dev && npm run lint && npm run format:check && npm run stylelint && npm run test:coverage && npm run build && npm run test:e2e"
+        "ci:check": "npm audit --audit-level=high --omit=dev && npm run lint && npm run format:check && npm run stylelint && npm run test:coverage && npm run build"
     },
     "dependencies": {
         "@codemirror/autocomplete": "^6.20.1",
@@ -68,15 +67,13 @@
         "@commitlint/cli": "^20.5.0",
         "@commitlint/config-conventional": "^20.5.0",
         "@eslint/js": "^10.0.1",
-        "@playwright/test": "^1.61.0",
         "@testing-library/vue": "^8.1.0",
         "@types/node": "^24.0.13",
         "@vitejs/plugin-vue": "^6.0.6",
         "@vitest/coverage-v8": "^4.1.0",
         "@vue/test-utils": "^2.4.6",
         "@vue/tsconfig": "^0.9.0",
-        "axe-core": "^4.12.1",
-        "electron": "^40.0.0",
+        "electron": "^40.10.4",
         "electron-builder": "^26.4.0",
         "electron-vite": "^5.0.0",
         "eslint": "^10.0.3",

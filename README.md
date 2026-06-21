@@ -332,6 +332,8 @@ npm run format
 
 Tests live in the `tests/` directory and mirror the `src/` structure. The CI pipeline runs type-checking, building, and all tests on every push and pull request — the release pipeline only triggers if CI passes.
 
+> **No E2E tests:** Playwright's Electron support is experimental and broken for Electron 30+ (`--remote-debugging-port` was removed as a valid CLI flag, and the workaround requires patching application code). Unit test coverage sits above 80% across all branches and keeps the CI feedback loop fast. E2E support should be revisited once Playwright ships a stable fix for Electron 30+.
+
 ### Building for Production
 
 ```sh
@@ -373,7 +375,7 @@ After building:
 - **Storage:** Plain text files (txt, md), images, videos, audio, and embedded media in your local vault
 - **Schema Validation:** [Zod](https://zod.dev) (runtime TypeScript-first schema validation)
 - **Build Tools:** [electron-vite](https://electron-vite.org) + [Electron Builder](https://www.electron.build)
-- **Testing:** [Vitest](https://vitest.dev) + [Vue Test Utils](https://test-utils.vuejs.org) + [Playwright](https://playwright.dev) (E2E)
+- **Testing:** [Vitest](https://vitest.dev) + [Vue Test Utils](https://test-utils.vuejs.org)
 - **Linting:** [ESLint](https://eslint.org) (flat config) + [typescript-eslint](https://typescript-eslint.io) + [Prettier](https://prettier.io) + [stylelint](https://stylelint.io/)
 - **Git Hooks:** [Husky](https://typicode.github.io/husky) + [lint-staged](https://github.com/lint-staged/lint-staged) + [commitlint](https://commitlint.js.org) (Conventional Commits)
 
