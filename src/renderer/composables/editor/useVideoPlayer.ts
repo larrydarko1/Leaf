@@ -70,7 +70,7 @@ export function useVideoPlayer() {
     });
 
     function seekVideo(event: MouseEvent) {
-        if (videoRef.value === null || videoDuration.value === 0) return;
+        if (videoRef.value === null || !(videoDuration.value > 0)) return;
         const wrapper = event.currentTarget as HTMLElement;
         const rect = wrapper.getBoundingClientRect();
         const percent = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));

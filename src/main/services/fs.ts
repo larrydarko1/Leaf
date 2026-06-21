@@ -8,7 +8,7 @@ import type { IpcMain, BrowserWindow } from 'electron';
 import { dialog, shell } from 'electron';
 import path from 'path';
 import fs from 'fs/promises';
-import { watch } from 'fs';
+import { watch, existsSync } from 'fs';
 import type { FSWatcher } from 'fs';
 import { z } from 'zod';
 import { ALLOWED_EXTENSIONS } from '@/main/lib/extensions';
@@ -108,6 +108,7 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
         const parsed = z.string().safeParse(rawFolderPath);
         if (!parsed.success) return { success: false, error: 'Invalid path' };
         const folderPath = parsed.data;
+        if (!existsSync(folderPath)) return { success: false, error: `Folder does not exist: ${folderPath}` };
         try {
             if (folderWatcher !== null && folderWatcher !== undefined) {
                 folderWatcher.close();

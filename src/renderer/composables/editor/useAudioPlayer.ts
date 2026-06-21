@@ -64,7 +64,7 @@ export function useAudioPlayer() {
     });
 
     function seekAudio(event: MouseEvent) {
-        if (audioRef.value === null || audioDuration.value === 0) return;
+        if (audioRef.value === null || !(audioDuration.value > 0)) return;
         const wrapper = event.currentTarget as HTMLElement;
         const rect = wrapper.getBoundingClientRect();
         const percent = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));

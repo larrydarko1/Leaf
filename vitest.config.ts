@@ -23,7 +23,7 @@ export default defineConfig({
         coverage: {
             provider: 'v8',
             include: ['src/**'],
-            exclude: ['src/renderer/main.ts', 'src/main/index.ts', 'src/**/*.d.ts'],
+            exclude: ['src/renderer/main.ts', 'src/main/index.ts', 'src/**/*.d.ts', 'src/**/*.html'],
             reporter: ['text', 'text-summary', 'html'],
             thresholds: {
                 statements: 80,
