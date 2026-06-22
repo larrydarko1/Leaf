@@ -52,7 +52,7 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
 
     ipc.handle('ai:chat', async (_event, userMessage: unknown, noteContext: unknown) => {
         const msgParsed = z.string().min(1).safeParse(userMessage);
-        const ctxParsed = z.string().optional().safeParse(noteContext);
+        const ctxParsed = z.string().nullish().safeParse(noteContext);
         if (!msgParsed.success || !ctxParsed.success) return { success: false, error: 'Invalid arguments' };
         return chat(
             msgParsed.data,
