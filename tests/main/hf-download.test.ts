@@ -127,7 +127,7 @@ describe('hf:search', () => {
     it('returns failure for non-string query', async () => {
         const result = (await handlers['hf:search']?.({}, 123)) as { success: boolean; error: string };
         expect(result.success).toBe(false);
-        expect(result.error).toMatch(/invalid query/i);
+        expect(result.error).toMatch(/invalid arguments/i);
     });
 });
 
@@ -136,6 +136,18 @@ describe('hf:search', () => {
 describe('hf:listFiles', () => {
     it('returns failure for non-string repoId', async () => {
         const result = (await handlers['hf:listFiles']?.({}, 123)) as { success: boolean; error: string };
+        expect(result.success).toBe(false);
+        expect(result.error).toMatch(/invalid repoId/i);
+    });
+
+    it('returns failure for a string that does not match owner/repo format', async () => {
+        const result = (await handlers['hf:listFiles']?.({}, 'notarepo')) as { success: boolean; error: string };
+        expect(result.success).toBe(false);
+        expect(result.error).toMatch(/invalid repoId/i);
+    });
+
+    it('returns failure for a repoId with path traversal', async () => {
+        const result = (await handlers['hf:listFiles']?.({}, '../owner/repo')) as { success: boolean; error: string };
         expect(result.success).toBe(false);
         expect(result.error).toMatch(/invalid repoId/i);
     });

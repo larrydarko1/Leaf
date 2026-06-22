@@ -32,11 +32,13 @@ export function register(ipc: IpcMain): void {
     ipc.handle('language:list', listLanguages);
 
     ipc.handle('language:setActive', async (_event, id: unknown) => {
-        return setActiveLanguage(id as string);
+        if (typeof id !== 'string') return { success: false, error: 'Invalid language id' };
+        return setActiveLanguage(id);
     });
 
     ipc.handle('language:load', async (_event, id: unknown) => {
-        return loadLanguageContent(id as string);
+        if (typeof id !== 'string') return { success: false, error: 'Invalid language id' };
+        return loadLanguageContent(id);
     });
 
     ipc.handle('language:openLeafDir', async () => {

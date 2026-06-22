@@ -124,11 +124,10 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
                 'th',
                 'td',
                 'a',
-                'img',
                 'hr',
                 'span',
             ],
-            ALLOWED_ATTR: ['href', 'target', 'src', 'alt', 'title', 'class'],
+            ALLOWED_ATTR: ['href', 'target', 'alt', 'title', 'class'],
         });
     }
 

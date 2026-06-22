@@ -21,6 +21,8 @@ import {
     type HfDownloadResult,
     HfModelSchema,
     HfTreeEntrySchema,
+    HfRepoIdSchema,
+    HfSearchArgsSchema,
 } from '@/schemas/hf';
 
 // Only allow downloads from Hugging Face domains (including XetHub CDN)
@@ -32,17 +34,16 @@ const RESULTS_PER_PAGE = 20;
 const activeDownloads = new Map<string, HfDownloadEntry>();
 
 export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null): void {
-    ipc.handle('hf:search', async (_event, query: string, sort?: string, offset?: number) => {
-        if (typeof query !== 'string') return { success: false, error: 'Invalid query' };
-        const validSorts: SortOption[] = ['downloads', 'likes', 'lastModified', 'trending'];
-        const resolvedSort = validSorts.includes(sort as SortOption) ? (sort as SortOption) : 'downloads';
-        const resolvedOffset = typeof offset === 'number' && offset >= 0 ? offset : 0;
-        return searchModels(query, resolvedSort, resolvedOffset);
+    ipc.handle('hf:search', async (_event, rawQuery: unknown, rawSort: unknown, rawOffset: unknown) => {
+        const parsed = HfSearchArgsSchema.safeParse({ query: rawQuery, sort: rawSort, offset: rawOffset });
+        if (!parsed.success) return { success: false, error: 'Invalid arguments' };
+        return searchModels(parsed.data.query, parsed.data.sort, parsed.data.offset);
     });
 
-    ipc.handle('hf:listFiles', async (_event, repoId: string) => {
-        if (typeof repoId !== 'string') return { success: false, error: 'Invalid repoId' };
-        return listRepoFiles(repoId);
+    ipc.handle('hf:listFiles', async (_event, rawRepoId: unknown) => {
+        const parsed = HfRepoIdSchema.safeParse(rawRepoId);
+        if (!parsed.success) return { success: false, error: 'Invalid repoId' };
+        return listRepoFiles(parsed.data);
     });
 
     ipc.handle('hf:download', async (_event, url: string, fileName: string) => {
@@ -87,6 +88,8 @@ function assertAllowedDownloadUrl(url: string): void {
     }
 }
 
+const HF_API_MAX_BODY = 10 * 1024 * 1024; // 10 MB — well above any realistic JSON metadata response
+
 function hfApiGet(apiPath: string): Promise<unknown> {
     return new Promise((resolve, reject) => {
         const options = {
@@ -103,6 +106,9 @@ function hfApiGet(apiPath: string): Promise<unknown> {
             let body = '';
             res.on('data', (chunk: string) => {
                 body += chunk;
+                if (body.length > HF_API_MAX_BODY) {
+                    req.destroy(new Error('HF API response exceeded size limit'));
+                }
             });
             res.on('end', () => {
                 if (res.statusCode !== 200) {

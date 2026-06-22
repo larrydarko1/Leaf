@@ -130,6 +130,16 @@ export const SortOptionSchema = z.enum(['downloads', 'likes', 'lastModified', 't
 
 export type SortOption = z.infer<typeof SortOptionSchema>;
 
+export const HfRepoIdSchema = z
+    .string()
+    .regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]*\/[a-zA-Z0-9][a-zA-Z0-9._-]*$/, 'Invalid repo ID');
+
+export const HfSearchArgsSchema = z.object({
+    query: z.string(),
+    sort: SortOptionSchema.catch('downloads'),
+    offset: z.number().int().nonnegative().catch(0),
+});
+
 // HF API response shapes
 
 export const HfGgufMetaSchema = z.object({
