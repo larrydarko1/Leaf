@@ -7,11 +7,11 @@ on:
     branches: [main]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_sha }}
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   # ── Read version and create tag ────────────────────────
@@ -28,6 +28,8 @@ jobs:
       exists: ${{ steps.check.outputs.exists }}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Read version from package.json
         id: pkg
@@ -56,6 +58,8 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
@@ -69,9 +73,9 @@ jobs:
         run: |
           mkdir -p models/whisper/Xenova/whisper-tiny.en/onnx
           curl -L -o models/whisper/Xenova/whisper-tiny.en/onnx/encoder_model.onnx \
-            https://huggingface.co/Xenova/whisper-tiny.en/resolve/main/onnx/encoder_model.onnx
+            https://huggingface.co/Xenova/whisper-tiny.en/resolve/79fb389fc764e7c395bd330e9531d9d32ada7049/onnx/encoder_model.onnx
           curl -L -o models/whisper/Xenova/whisper-tiny.en/onnx/decoder_model_merged.onnx \
-            https://huggingface.co/Xenova/whisper-tiny.en/resolve/main/onnx/decoder_model_merged.onnx
+            https://huggingface.co/Xenova/whisper-tiny.en/resolve/79fb389fc764e7c395bd330e9531d9d32ada7049/onnx/decoder_model_merged.onnx
 
       - name: Build macOS DMG (ad-hoc signed)
         run: npm run build:mac
@@ -89,6 +93,8 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
@@ -102,9 +108,9 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path models/whisper/Xenova/whisper-tiny.en/onnx
-          Invoke-WebRequest -Uri "https://huggingface.co/Xenova/whisper-tiny.en/resolve/main/onnx/encoder_model.onnx" `
+          Invoke-WebRequest -Uri "https://huggingface.co/Xenova/whisper-tiny.en/resolve/79fb389fc764e7c395bd330e9531d9d32ada7049/onnx/encoder_model.onnx" `
             -OutFile "models/whisper/Xenova/whisper-tiny.en/onnx/encoder_model.onnx"
-          Invoke-WebRequest -Uri "https://huggingface.co/Xenova/whisper-tiny.en/resolve/main/onnx/decoder_model_merged.onnx" `
+          Invoke-WebRequest -Uri "https://huggingface.co/Xenova/whisper-tiny.en/resolve/79fb389fc764e7c395bd330e9531d9d32ada7049/onnx/decoder_model_merged.onnx" `
             -OutFile "models/whisper/Xenova/whisper-tiny.en/onnx/decoder_model_merged.onnx"
 
       - name: Build Windows EXE (unsigned)
@@ -123,6 +129,8 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
@@ -136,9 +144,9 @@ jobs:
         run: |
           mkdir -p models/whisper/Xenova/whisper-tiny.en/onnx
           curl -L -o models/whisper/Xenova/whisper-tiny.en/onnx/encoder_model.onnx \
-            https://huggingface.co/Xenova/whisper-tiny.en/resolve/main/onnx/encoder_model.onnx
+            https://huggingface.co/Xenova/whisper-tiny.en/resolve/79fb389fc764e7c395bd330e9531d9d32ada7049/onnx/encoder_model.onnx
           curl -L -o models/whisper/Xenova/whisper-tiny.en/onnx/decoder_model_merged.onnx \
-            https://huggingface.co/Xenova/whisper-tiny.en/resolve/main/onnx/decoder_model_merged.onnx
+            https://huggingface.co/Xenova/whisper-tiny.en/resolve/79fb389fc764e7c395bd330e9531d9d32ada7049/onnx/decoder_model_merged.onnx
 
       - name: Build Linux AppImage
         run: npm run build:linux
@@ -153,8 +161,12 @@ jobs:
     needs: [version, build-mac, build-win, build-linux]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Create tag
         run: |

@@ -222,14 +222,23 @@ void app.whenReady().then(() => {
 
     // Clipboard
     ipcMain.handle('clipboard:write', (_event, text: string) => {
-        if (typeof text === 'string') clipboard.writeText(text);
+        try {
+            if (typeof text === 'string') clipboard.writeText(text);
+        } catch (err) {
+            log.error({ err, op: 'clipboard:write' }, 'Failed to write to clipboard');
+        }
     });
 
     // Shell — open external URLs safely (http/https only)
     ipcMain.handle('shell:openExternal', async (_event, url: string) => {
         if (typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://'))) {
-            await shell.openExternal(url);
-            return true;
+            try {
+                await shell.openExternal(url);
+                return true;
+            } catch (err) {
+                log.error({ err, op: 'shell:openExternal' }, 'Failed to open external URL');
+                return false;
+            }
         }
         return false;
     });
