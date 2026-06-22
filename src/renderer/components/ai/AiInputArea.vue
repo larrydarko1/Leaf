@@ -138,7 +138,9 @@ onMounted(() => {
         </div>
 
         <!-- eslint-disable-next-line vuejs-accessibility/label-has-for -->
-        <div class="ai-input-row">
+        <div
+            class="ai-input-row"
+            :class="{ 'ai-input-activated': isStreaming }">
             <!-- eslint-disable-next-line vuejs-accessibility/label-has-for -->
             <label
                 class="ai-context-toggle"
@@ -327,6 +329,47 @@ onMounted(() => {
 
     &:focus-within {
         border-color: $accent-color;
+    }
+
+    &.ai-input-activated {
+        border-color: transparent;
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+
+        &::before {
+            content: '';
+            position: absolute;
+            inset: -50%;
+            background: conic-gradient(
+                from 0deg,
+                transparent 0deg,
+                transparent 260deg,
+                $accent-color 290deg,
+                $accent-color 340deg,
+                transparent 360deg
+            );
+            animation: ai-border-spin 2s linear infinite;
+            z-index: -2;
+        }
+
+        &::after {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            background: $bg-primary;
+            border-radius: $border-radius-xl;
+            z-index: -1;
+        }
+    }
+}
+
+@keyframes ai-border-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
     }
 }
 

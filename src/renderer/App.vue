@@ -875,6 +875,10 @@ function toggleLanguagePanel() {
     &:hover:not(:disabled) {
         background: $bg-hover;
         color: $text1;
+
+        & svg {
+            transform: scale(1.1) rotate(-2deg);
+        }
     }
 
     &.active {

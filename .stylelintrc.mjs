@@ -57,7 +57,8 @@ export default {
             'background-size',
             'background-position',
             'text-shadow',
-            'filter'
+            'filter',
+            'inset'
           ]
         }
       }
