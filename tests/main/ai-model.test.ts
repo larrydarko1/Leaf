@@ -20,14 +20,18 @@ const PATHS = vi.hoisted(() => {
 // ── node-llama-cpp mock ──────────────────────────────────────────────────────
 
 const mockPrompt = vi.hoisted(() =>
-    vi
-        .fn()
-        .mockImplementation(
-            async (_text: string, opts: { onTextChunk?: (t: string) => void; signal?: AbortSignal }) => {
-                opts.onTextChunk?.('Hello');
-                opts.onTextChunk?.(' world');
+    vi.fn().mockImplementation(
+        async (
+            _text: string,
+            opts: {
+                onResponseChunk?: (chunk: { type: undefined; segmentType: undefined; text: string }) => void;
+                signal?: AbortSignal;
             },
-        ),
+        ) => {
+            opts.onResponseChunk?.({ type: undefined, segmentType: undefined, text: 'Hello' });
+            opts.onResponseChunk?.({ type: undefined, segmentType: undefined, text: ' world' });
+        },
+    ),
 );
 
 const mockClearHistory = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));

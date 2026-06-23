@@ -29,6 +29,8 @@ Object.defineProperty(globalThis, 'window', {
             writeClipboard: vi.fn().mockResolvedValue(undefined),
             onAiToken: vi.fn(),
             removeAiTokenListener: vi.fn(),
+            onAiThinkingToken: vi.fn(),
+            removeAiThinkingTokenListener: vi.fn(),
             log: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
         },
     },

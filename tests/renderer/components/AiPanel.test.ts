@@ -24,6 +24,8 @@ const mockElectronAPI = {
     aiOpenLeafDir: vi.fn().mockResolvedValue({ success: true }),
     onAiToken: vi.fn(),
     removeAiTokenListener: vi.fn(),
+    onAiThinkingToken: vi.fn(),
+    removeAiThinkingTokenListener: vi.fn(),
     conversationList: vi.fn().mockResolvedValue({ success: true, conversations: [] }),
     conversationCreate: vi.fn().mockResolvedValue({ success: true, id: 'test-id' }),
     conversationLoad: vi.fn().mockResolvedValue({ success: true, conversation: null }),
