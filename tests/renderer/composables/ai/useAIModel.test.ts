@@ -2,6 +2,17 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useAIModel } from '@/renderer/composables/ai/useAIModel';
 import type { AiModelInfo, AiStatus } from '@/renderer/types/ai';
 
+vi.mock('vue-i18n', () => ({
+    useI18n: () => ({
+        t: (key: string) => {
+            const translations: Record<string, string> = {
+                'ai.select_model': 'Select a model...',
+            };
+            return translations[key] ?? key;
+        },
+    }),
+}));
+
 // ── electronAPI mock ─────────────────────────────────────────────────────────
 
 const mockAiListModels = vi.fn();
