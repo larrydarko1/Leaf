@@ -195,6 +195,9 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                 msg.agentEdits?.length,
                 index >= messages.length - 2 && isStreaming,
                 showThinking,
+                copiedIndex === index,
+                editingIndex === index,
+                editingIndex === index && editContent,
             ]"
             class="ai-message"
             :class="msg.role"
