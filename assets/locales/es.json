@@ -52,6 +52,7 @@
     "conversation_messages": "Mensajes de la conversación",
     "message_input_area": "Área de entrada de mensajes",
     "model_controls": "Controles del modelo",
+    "select_model": "Seleccionar modelo...",
     "no_models_found": "No se han encontrado modelos",
     "loading": "...",
     "load": "Cargar",

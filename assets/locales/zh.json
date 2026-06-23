@@ -52,6 +52,7 @@
     "conversation_messages": "对话消息",
     "message_input_area": "消息输入区域",
     "model_controls": "模型控制",
+    "select_model": "选择模型...",
     "no_models_found": "未找到模型",
     "loading": "...",
     "load": "加载",

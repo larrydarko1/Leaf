@@ -52,6 +52,7 @@
     "conversation_messages": "会話メッセージ",
     "message_input_area": "メッセージ入力エリア",
     "model_controls": "モデル操作",
+    "select_model": "モデルを選択...",
     "no_models_found": "モデルが見つかりません",
     "loading": "...",
     "load": "読み込む",

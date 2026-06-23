@@ -52,6 +52,7 @@
     "conversation_messages": "Gesprächsnachrichten",
     "message_input_area": "Eingabebereich für Nachrichten",
     "model_controls": "Modellsteuerung",
+    "select_model": "Modell auswählen...",
     "no_models_found": "Keine Modelle gefunden",
     "loading": "...",
     "load": "Laden",

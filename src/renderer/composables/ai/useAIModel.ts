@@ -4,8 +4,11 @@
 
 import { ref, shallowRef, computed, onMounted, onUnmounted } from 'vue';
 import type { AiModelInfo, AiStatus } from '@/schemas/ai';
+import { useI18n } from 'vue-i18n';
 
 export function useAIModel() {
+    const { t } = useI18n();
+
     const status = ref<AiStatus>({
         isModelLoaded: false,
         currentModelPath: null,
@@ -15,7 +18,6 @@ export function useAIModel() {
         contextTokens: 0,
         contextSize: 0,
     });
-
     const availableModels = shallowRef<AiModelInfo[]>([]);
     const isLoading = ref(false);
     const selectedModelPath = ref('');
@@ -42,10 +44,10 @@ export function useAIModel() {
 
     const selectedModelLabel = computed(() => {
         if (selectedModelPath.value === '') {
-            return 'Select a model...';
+            return t('ai.select_model');
         }
         const model = availableModels.value.find((m) => m.path === selectedModelPath.value);
-        return model !== undefined ? truncate(model.name, 30) : 'Select a model...';
+        return model !== undefined ? truncate(model.name, 30) : t('ai.select_model');
     });
 
     function truncate(text: string, max: number): string {

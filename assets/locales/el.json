@@ -52,6 +52,7 @@
     "conversation_messages": "Μηνύματα Συνομιλίας",
     "message_input_area": "Περιοχή Εισαγωγής Μηνύματος",
     "model_controls": "Στοιχεία Ελέγχου Μοντέλου",
+    "select_model": "Επιλέξτε ένα μοντέλο...",
     "no_models_found": "Δεν βρέθηκαν μοντέλα",
     "loading": "...",
     "load": "Φόρτωση",

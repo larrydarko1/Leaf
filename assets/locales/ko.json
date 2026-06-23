@@ -52,6 +52,7 @@
     "conversation_messages": "대화 메시지",
     "message_input_area": "메시지 입력 영역",
     "model_controls": "모델 제어",
+    "select_model": "모델 선택...",
     "no_models_found": "모델을 찾을 수 없습니다",
     "loading": "...",
     "load": "불러오기",

@@ -52,6 +52,7 @@
     "conversation_messages": "बातचीत के संदेश",
     "message_input_area": "संदेश इनपुट क्षेत्र",
     "model_controls": "मॉडल नियंत्रण",
+    "select_model": "मॉडल चुनें...",
     "no_models_found": "कोई मॉडल नहीं मिला",
     "loading": "...",
     "load": "लोड करें",

@@ -52,6 +52,7 @@
     "conversation_messages": "Сообщения беседы",
     "message_input_area": "Поле ввода сообщения",
     "model_controls": "Управление моделью",
+    "select_model": "Выбрать модель...",
     "no_models_found": "Модели не найдены",
     "loading": "...",
     "load": "Загрузить",

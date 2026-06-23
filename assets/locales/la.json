@@ -52,6 +52,7 @@
     "conversation_messages": "Nuntii Sermonis",
     "message_input_area": "Area Nuntii Scribendi",
     "model_controls": "Moderamina Exemplaris",
+    "select_model": "Exemplar Eligere...",
     "no_models_found": "Nulla exemplaria inventa sunt",
     "loading": "...",
     "load": "Onerare",
