@@ -41,12 +41,12 @@ function makeIpc() {
 }
 
 function createModelFiles() {
-    const modelDir = path.join(PATHS.modelRoot, 'Xenova', 'whisper-tiny.en');
+    const modelDir = path.join(PATHS.modelRoot, 'Xenova', 'whisper-base');
     const onnxDir = path.join(modelDir, 'onnx');
     fs.mkdirSync(onnxDir, { recursive: true });
     fs.writeFileSync(path.join(modelDir, 'config.json'), '{}');
-    fs.writeFileSync(path.join(onnxDir, 'encoder_model.onnx'), '');
-    fs.writeFileSync(path.join(onnxDir, 'decoder_model_merged.onnx'), '');
+    fs.writeFileSync(path.join(onnxDir, 'encoder_model_quantized.onnx'), '');
+    fs.writeFileSync(path.join(onnxDir, 'decoder_model_merged_quantized.onnx'), '');
 }
 
 beforeEach(() => {

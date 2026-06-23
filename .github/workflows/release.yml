@@ -69,13 +69,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Download Whisper ONNX model
+      - name: Download Whisper model
         run: |
-          mkdir -p models/whisper/Xenova/whisper-tiny.en/onnx
-          curl -L -o models/whisper/Xenova/whisper-tiny.en/onnx/encoder_model.onnx \
-            https://huggingface.co/Xenova/whisper-tiny.en/resolve/79fb389fc764e7c395bd330e9531d9d32ada7049/onnx/encoder_model.onnx
-          curl -L -o models/whisper/Xenova/whisper-tiny.en/onnx/decoder_model_merged.onnx \
-            https://huggingface.co/Xenova/whisper-tiny.en/resolve/79fb389fc764e7c395bd330e9531d9d32ada7049/onnx/decoder_model_merged.onnx
+          mkdir -p models/whisper/Xenova/whisper-base/onnx
+          BASE=https://huggingface.co/Xenova/whisper-base/resolve/64da57285918e20ea79ea5c88eed7197933abaa8
+          DEST=models/whisper/Xenova/whisper-base
+          curl -fL -o $DEST/config.json                              $BASE/config.json
+          curl -fL -o $DEST/generation_config.json                   $BASE/generation_config.json
+          curl -fL -o $DEST/preprocessor_config.json                 $BASE/preprocessor_config.json
+          curl -fL -o $DEST/tokenizer.json                           $BASE/tokenizer.json
+          curl -fL -o $DEST/tokenizer_config.json                    $BASE/tokenizer_config.json
+          curl -fL -o $DEST/onnx/encoder_model_quantized.onnx        $BASE/onnx/encoder_model_quantized.onnx
+          curl -fL -o $DEST/onnx/decoder_model_merged_quantized.onnx $BASE/onnx/decoder_model_merged_quantized.onnx
 
       - name: Build macOS DMG (ad-hoc signed)
         run: npm run build:mac
@@ -104,14 +109,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Download Whisper ONNX model
+      - name: Download Whisper model
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path models/whisper/Xenova/whisper-tiny.en/onnx
-          Invoke-WebRequest -Uri "https://huggingface.co/Xenova/whisper-tiny.en/resolve/79fb389fc764e7c395bd330e9531d9d32ada7049/onnx/encoder_model.onnx" `
-            -OutFile "models/whisper/Xenova/whisper-tiny.en/onnx/encoder_model.onnx"
-          Invoke-WebRequest -Uri "https://huggingface.co/Xenova/whisper-tiny.en/resolve/79fb389fc764e7c395bd330e9531d9d32ada7049/onnx/decoder_model_merged.onnx" `
-            -OutFile "models/whisper/Xenova/whisper-tiny.en/onnx/decoder_model_merged.onnx"
+          New-Item -ItemType Directory -Force -Path models/whisper/Xenova/whisper-base/onnx
+          $base = "https://huggingface.co/Xenova/whisper-base/resolve/64da57285918e20ea79ea5c88eed7197933abaa8"
+          $dest = "models/whisper/Xenova/whisper-base"
+          Invoke-WebRequest -Uri "$base/config.json"                              -OutFile "$dest/config.json"
+          Invoke-WebRequest -Uri "$base/generation_config.json"                   -OutFile "$dest/generation_config.json"
+          Invoke-WebRequest -Uri "$base/preprocessor_config.json"                 -OutFile "$dest/preprocessor_config.json"
+          Invoke-WebRequest -Uri "$base/tokenizer.json"                           -OutFile "$dest/tokenizer.json"
+          Invoke-WebRequest -Uri "$base/tokenizer_config.json"                    -OutFile "$dest/tokenizer_config.json"
+          Invoke-WebRequest -Uri "$base/onnx/encoder_model_quantized.onnx"        -OutFile "$dest/onnx/encoder_model_quantized.onnx"
+          Invoke-WebRequest -Uri "$base/onnx/decoder_model_merged_quantized.onnx" -OutFile "$dest/onnx/decoder_model_merged_quantized.onnx"
 
       - name: Build Windows EXE (unsigned)
         run: npm run build:win
@@ -140,13 +150,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Download Whisper ONNX model
+      - name: Download Whisper model
         run: |
-          mkdir -p models/whisper/Xenova/whisper-tiny.en/onnx
-          curl -L -o models/whisper/Xenova/whisper-tiny.en/onnx/encoder_model.onnx \
-            https://huggingface.co/Xenova/whisper-tiny.en/resolve/79fb389fc764e7c395bd330e9531d9d32ada7049/onnx/encoder_model.onnx
-          curl -L -o models/whisper/Xenova/whisper-tiny.en/onnx/decoder_model_merged.onnx \
-            https://huggingface.co/Xenova/whisper-tiny.en/resolve/79fb389fc764e7c395bd330e9531d9d32ada7049/onnx/decoder_model_merged.onnx
+          mkdir -p models/whisper/Xenova/whisper-base/onnx
+          BASE=https://huggingface.co/Xenova/whisper-base/resolve/64da57285918e20ea79ea5c88eed7197933abaa8
+          DEST=models/whisper/Xenova/whisper-base
+          curl -fL -o $DEST/config.json                              $BASE/config.json
+          curl -fL -o $DEST/generation_config.json                   $BASE/generation_config.json
+          curl -fL -o $DEST/preprocessor_config.json                 $BASE/preprocessor_config.json
+          curl -fL -o $DEST/tokenizer.json                           $BASE/tokenizer.json
+          curl -fL -o $DEST/tokenizer_config.json                    $BASE/tokenizer_config.json
+          curl -fL -o $DEST/onnx/encoder_model_quantized.onnx        $BASE/onnx/encoder_model_quantized.onnx
+          curl -fL -o $DEST/onnx/decoder_model_merged_quantized.onnx $BASE/onnx/decoder_model_merged_quantized.onnx
 
       - name: Build Linux AppImage
         run: npm run build:linux

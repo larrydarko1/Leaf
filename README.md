@@ -23,7 +23,7 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 - **Video support** - Play videos directly in the app (`.mp4`, `.webm`, `.ogg`, `.mov`, `.avi`, `.mkv`)
 - **Audio support** - Play audio files directly in the app (`.mp3`, `.wav`, `.flac`, `.aac`, `.m4a`, `.ogg`, `.wma`, `.aiff`)
 - **Audio recording** - Record voice notes directly in the app and save as `.wav` files to your vault
-- **Speech-to-text dictation** - Dictate into `.txt` and `.md` files using local Whisper speech recognition — no cloud, no API keys
+- **Speech-to-text dictation** - Dictate into `.txt` and `.md` files using local Whisper speech recognition with automatic language detection — no cloud, no API keys
 - **File browser** - Navigate your notes with a tree-based folder structure
 - **Obsidian-style media embeds** - Use `![[image.png]]` syntax in Markdown to embed images, videos, audio, and PDFs inline — fully interoperable with Obsidian vaults
 - **Drag & drop embed** - Drag media files from the file explorer onto a Markdown note to automatically insert embed syntax
@@ -234,26 +234,26 @@ Leaf includes a built-in speech-to-text feature powered by [Whisper](https://git
 
 #### Speech-to-Text Model Setup
 
-The app uses [`Xenova/whisper-tiny.en`](https://huggingface.co/Xenova/whisper-tiny.en) from Hugging Face. Download the two required ONNX files and place them at the exact paths shown:
+The app uses [`Xenova/whisper-base`](https://huggingface.co/Xenova/whisper-base) from Hugging Face — a multilingual model that **automatically detects the spoken language** without any configuration. Download the two required quantized ONNX files and place them at the exact paths shown:
 
 ```
-models/whisper/Xenova/whisper-tiny.en/onnx/encoder_model.onnx
-models/whisper/Xenova/whisper-tiny.en/onnx/decoder_model_merged.onnx
+models/whisper/Xenova/whisper-base/onnx/encoder_model_quantized.onnx
+models/whisper/Xenova/whisper-base/onnx/decoder_model_merged_quantized.onnx
 ```
 
 Download links (right-click → Save Link As):
 
-- [`encoder_model.onnx`](https://huggingface.co/Xenova/whisper-tiny.en/resolve/main/onnx/encoder_model.onnx)
-- [`decoder_model_merged.onnx`](https://huggingface.co/Xenova/whisper-tiny.en/resolve/main/onnx/decoder_model_merged.onnx)
+- [`encoder_model_quantized.onnx`](https://huggingface.co/Xenova/whisper-base/resolve/main/onnx/encoder_model_quantized.onnx)
+- [`decoder_model_merged_quantized.onnx`](https://huggingface.co/Xenova/whisper-base/resolve/main/onnx/decoder_model_merged_quantized.onnx)
 
 Or via `curl`:
 
 ```sh
-mkdir -p models/whisper/Xenova/whisper-tiny.en/onnx
-curl -L -o models/whisper/Xenova/whisper-tiny.en/onnx/encoder_model.onnx \
-  https://huggingface.co/Xenova/whisper-tiny.en/resolve/main/onnx/encoder_model.onnx
-curl -L -o models/whisper/Xenova/whisper-tiny.en/onnx/decoder_model_merged.onnx \
-  https://huggingface.co/Xenova/whisper-tiny.en/resolve/main/onnx/decoder_model_merged.onnx
+mkdir -p models/whisper/Xenova/whisper-base/onnx
+curl -L -o models/whisper/Xenova/whisper-base/onnx/encoder_model_quantized.onnx \
+  https://huggingface.co/Xenova/whisper-base/resolve/main/onnx/encoder_model_quantized.onnx
+curl -L -o models/whisper/Xenova/whisper-base/onnx/decoder_model_merged_quantized.onnx \
+  https://huggingface.co/Xenova/whisper-base/resolve/main/onnx/decoder_model_merged_quantized.onnx
 ```
 
 Once the files are in place, dictation works fully offline — no cloud or API keys needed.
