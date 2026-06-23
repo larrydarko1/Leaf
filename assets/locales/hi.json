@@ -86,6 +86,8 @@
     "agent_mode_active_no_file": "एजेंट मोड सक्रिय, कोई फ़ाइल नहीं",
     "current_note_included_as_context": "मौजूदा नोट को संदर्भ के रूप में शामिल किया गया: {file}",
     "include_current_note_as_context": "मौजूदा नोट को संदर्भ के रूप में शामिल करें",
+    "show_thinking": "मॉडल की सोच दिखाएं",
+    "thinking": "सोच",
     "ask_something": "कुछ पूछें...",
     "stop_generating": "जनरेट करना रोकें",
     "send_message": "संदेश भेजें",

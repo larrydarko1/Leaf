@@ -86,6 +86,8 @@
     "agent_mode_active_no_file": "Modus Vicarii activus, sine scapo",
     "current_note_included_as_context": "Nota praesens ut contextus inclusa: {file}",
     "include_current_note_as_context": "Notam Praesentem ut Contextum Includere",
+    "show_thinking": "Cogitationem Exemplaris Monstrare",
+    "thinking": "Cogitatio",
     "ask_something": "Aliquid quaere...",
     "stop_generating": "Generationem Sistere",
     "send_message": "Nuntium Mittere",

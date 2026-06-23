@@ -130,6 +130,7 @@ const {
     inputMessage,
     isStreaming,
     includeNoteContext,
+    showThinking,
     copiedIndex,
     editingIndex,
     editContent,
@@ -341,6 +342,7 @@ function increaseWidth() {
             :token-usage-percent="tokenUsagePercent"
             :conversation-token-count="conversationTokenCount"
             :render-markdown="renderMarkdown"
+            :show-thinking="showThinking"
             role="log"
             :aria-label="t('ai.conversation_messages')"
             aria-live="polite"
@@ -363,6 +365,7 @@ function increaseWidth() {
         <AiInputArea
             :agent-mode="agentMode"
             :include-note-context="includeNoteContext"
+            :show-thinking="showThinking"
             :active-file="activeFile"
             :input-message="inputMessage"
             :is-ready="isReady"
@@ -372,6 +375,7 @@ function increaseWidth() {
             :aria-label="t('ai.message_input_area')"
             @update:input-message="inputMessage = $event"
             @update:include-note-context="includeNoteContext = $event"
+            @update:show-thinking="showThinking = $event"
             @send="sendMessage"
             @stop="stopGeneration" />
     </main>

@@ -86,6 +86,8 @@
     "agent_mode_active_no_file": "에이전트 모드 활성화됨, 대상 파일 없음",
     "current_note_included_as_context": "현재 노트가 컨텍스트로 포함됨: {file}",
     "include_current_note_as_context": "현재 노트를 컨텍스트로 포함",
+    "show_thinking": "모델 사고 과정 표시",
+    "thinking": "사고 과정",
     "ask_something": "무엇이든 물어보세요...",
     "stop_generating": "생성 중지",
     "send_message": "메시지 보내기",

@@ -86,6 +86,8 @@
     "agent_mode_active_no_file": "Agentenmodus aktiv ohne Datei",
     "current_note_included_as_context": "Aktuelle Notiz als Kontext einbezogen: {file}",
     "include_current_note_as_context": "Aktuelle Notiz als Kontext einbeziehen",
+    "show_thinking": "Modelldenken anzeigen",
+    "thinking": "Denken",
     "ask_something": "Frag etwas...",
     "stop_generating": "Generierung stoppen",
     "send_message": "Nachricht senden",

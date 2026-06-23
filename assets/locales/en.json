@@ -86,6 +86,8 @@
     "agent_mode_active_no_file": "Agent mode active with no file",
     "current_note_included_as_context": "Current note included as context: {file}",
     "include_current_note_as_context": "Include current note as context",
+    "show_thinking": "Show model thinking",
+    "thinking": "Thinking",
     "ask_something": "Ask something...",
     "stop_generating": "Stop generating",
     "send_message": "Send message",

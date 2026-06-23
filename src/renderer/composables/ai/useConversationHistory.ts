@@ -81,6 +81,7 @@ export function useConversationHistory(
                     .map((m) => ({
                         role: m.role as 'user' | 'assistant',
                         content: m.content,
+                        thinking: m.thinking,
                         timestamp: new Date().toISOString(),
                     }));
                 result.conversation.tokenCount = conversationTokenCount.value;
@@ -120,6 +121,7 @@ export function useConversationHistory(
                 messages.value = result.conversation.messages.map((m) => ({
                     role: m.role,
                     content: m.content,
+                    thinking: m.thinking,
                 }));
                 if (result.conversation.model !== null && result.conversation.model !== '') {
                     lastUsedModelName.value = result.conversation.model;

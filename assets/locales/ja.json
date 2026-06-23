@@ -86,6 +86,8 @@
     "agent_mode_active_no_file": "エージェントモード有効（対象ファイルなし）",
     "current_note_included_as_context": "現在のノートをコンテキストとして含める: {file}",
     "include_current_note_as_context": "現在のノートをコンテキストとして含める",
+    "show_thinking": "モデルの思考を表示",
+    "thinking": "思考",
     "ask_something": "何か質問してください...",
     "stop_generating": "生成を停止",
     "send_message": "メッセージを送信",

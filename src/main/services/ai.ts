@@ -60,6 +60,10 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
                 const window = getMainWindow();
                 if (window !== null && !window.isDestroyed()) window.webContents.send('ai:token', token);
             },
+            (token) => {
+                const window = getMainWindow();
+                if (window !== null && !window.isDestroyed()) window.webContents.send('ai:thinkingToken', token);
+            },
             ctxParsed.data,
         );
     });
@@ -256,6 +260,7 @@ async function unloadModel(): Promise<{ success: boolean; error?: string }> {
 async function chat(
     userMessage: string,
     onToken: (token: string) => void,
+    onThinkingToken: (token: string) => void,
     noteContext: string | null = null,
 ): Promise<{ success: boolean; response?: string; compacted?: boolean; error?: string }> {
     if (!isModelLoaded || session === null) {
@@ -287,9 +292,14 @@ async function chat(
         await session.prompt(prompt, {
             signal: currentAbortController.signal,
             stopOnAbortSignal: true,
-            onTextChunk: (text: string) => {
-                fullResponse += text;
-                onToken(text);
+            onResponseChunk: (chunk) => {
+                if (chunk.text.length === 0) return;
+                if (chunk.type === 'segment' && chunk.segmentType === 'thought') {
+                    onThinkingToken(chunk.text);
+                } else if (chunk.type === undefined) {
+                    fullResponse += chunk.text;
+                    onToken(chunk.text);
+                }
             },
         });
 

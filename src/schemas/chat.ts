@@ -16,6 +16,7 @@ export type AgentFileEdit = z.infer<typeof AgentFileEditSchema>;
 export const ChatMessageSchema = z.object({
     role: z.enum(['user', 'assistant', 'system']),
     content: z.string(),
+    thinking: z.string().optional(),
     agentEdits: z.array(AgentFileEditSchema).optional(),
 });
 

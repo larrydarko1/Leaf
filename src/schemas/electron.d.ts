@@ -130,6 +130,8 @@ export type ElectronAPI = {
 
     onAiToken: (callback: (token: string) => void) => void;
     removeAiTokenListener: () => void;
+    onAiThinkingToken: (callback: (token: string) => void) => void;
+    removeAiThinkingTokenListener: () => void;
 
     // Conversation persistence
     conversationList: () => Promise<ConversationListResult>;

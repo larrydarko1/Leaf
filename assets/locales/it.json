@@ -86,6 +86,8 @@
     "agent_mode_active_no_file": "Modalità agente attiva senza file",
     "current_note_included_as_context": "Nota corrente inclusa come contesto: {file}",
     "include_current_note_as_context": "Includi la nota corrente come contesto",
+    "show_thinking": "Mostra il ragionamento del modello",
+    "thinking": "Ragionamento",
     "ask_something": "Chiedi qualcosa...",
     "stop_generating": "Interrompi generazione",
     "send_message": "Invia messaggio",

@@ -93,6 +93,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     removeAiTokenListener: () => {
         ipcRenderer.removeAllListeners('ai:token');
     },
+    onAiThinkingToken: (callback: (token: string) => void) => {
+        ipcRenderer.on('ai:thinkingToken', (_event, token: string) => callback(token));
+    },
+    removeAiThinkingTokenListener: () => {
+        ipcRenderer.removeAllListeners('ai:thinkingToken');
+    },
 
     // Conversation persistence
     conversationList: () => ipcRenderer.invoke('conversations:list'),

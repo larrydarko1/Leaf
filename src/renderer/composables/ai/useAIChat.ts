@@ -57,6 +57,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
     const inputMessage = ref('');
     const isStreaming = ref(false);
     const includeNoteContext = ref(false);
+    const showThinking = ref(false);
     const copiedIndex = ref<number | null>(null);
     const userScrolledUp = ref(false);
 
@@ -395,6 +396,14 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         }
     }
 
+    function handleThinkingToken(token: string) {
+        const lastMsg = messages.value[messages.value.length - 1];
+        if (lastMsg !== undefined && lastMsg.role === 'assistant') {
+            lastMsg.thinking = (lastMsg.thinking ?? '') + token;
+            scrollToBottom();
+        }
+    }
+
     function formatTokenCount(n: number): string {
         if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
         return String(n);
@@ -409,10 +418,12 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
 
     onMounted(() => {
         window.electronAPI.onAiToken(handleToken);
+        window.electronAPI.onAiThinkingToken(handleThinkingToken);
     });
     onUnmounted(() => {
         throttledMessagesScroll.cancel?.();
         window.electronAPI.removeAiTokenListener();
+        window.electronAPI.removeAiThinkingTokenListener();
     });
 
     return {
@@ -421,6 +432,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         inputMessage,
         isStreaming,
         includeNoteContext,
+        showThinking,
         copiedIndex,
         editingIndex,
         editContent,

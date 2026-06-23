@@ -22,6 +22,7 @@ type Props = {
     tokenUsagePercent: number;
     conversationTokenCount: number;
     renderMarkdown: (content: string) => string;
+    showThinking: boolean;
 };
 
 const props = defineProps<Props>();
@@ -187,7 +188,14 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
         <div
             v-for="(msg, index) in messages"
             :key="index"
-            v-memo="[msg.role, msg.content, msg.agentEdits?.length, index >= messages.length - 2 && isStreaming]"
+            v-memo="[
+                msg.role,
+                msg.content,
+                msg.thinking,
+                msg.agentEdits?.length,
+                index >= messages.length - 2 && isStreaming,
+                showThinking,
+            ]"
             class="ai-message"
             :class="msg.role"
             role="article"
@@ -293,14 +301,25 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                 </div>
 
                 <!-- Assistant message -->
-                <!-- eslint-disable-next-line vuejs-accessibility/click-events-have-key-events vuejs-accessibility/no-static-element-interactions -->
-                <div
-                    v-else
-                    class="ai-message-content ai-markdown"
-                    role="article"
-                    @click="onMarkdownClick(msg.content, $event)">
-                    <div v-html="renderWithCopyBtns(msg.content)"></div>
-                </div>
+                <template v-else>
+                    <div
+                        v-if="showThinking && msg.thinking"
+                        class="ai-thinking-block">
+                        <span
+                            class="ai-thinking-label"
+                            :class="{ 'thinking-progress': isStreaming && index === messages.length - 1 }">
+                            {{ t('ai.thinking') }}
+                        </span>
+                        <div class="ai-thinking-content">{{ msg.thinking }}</div>
+                    </div>
+                    <!-- eslint-disable-next-line vuejs-accessibility/click-events-have-key-events vuejs-accessibility/no-static-element-interactions -->
+                    <div
+                        class="ai-message-content ai-markdown"
+                        role="article"
+                        @click="onMarkdownClick(msg.content, $event)">
+                        <div v-html="renderWithCopyBtns(msg.content)"></div>
+                    </div>
+                </template>
 
                 <!-- Agent edit cards -->
                 <div
@@ -952,6 +971,54 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
 
 .ai-btn-tiny {
     padding: $space-1;
+}
+
+/* ––– Thinking Block ––– */
+
+.ai-thinking-block {
+    background: $bg-secondary;
+    border: 1px solid $text3;
+    border-radius: $border-radius;
+    padding: $space-2 $space-3;
+    margin-bottom: $space-2;
+    font-size: $font-size-xs;
+    color: $text2;
+    font-style: italic;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.ai-thinking-label {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    color: $text-muted;
+    opacity: 0.7;
+    font-style: normal;
+    margin-bottom: $space-1;
+    cursor: default;
+}
+
+.thinking-progress {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.2;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.2;
+    }
 }
 
 /* ––– Agent Edit Cards ––– */

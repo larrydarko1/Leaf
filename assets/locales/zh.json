@@ -86,6 +86,8 @@
     "agent_mode_active_no_file": "代理模式已启用，未关联文件",
     "current_note_included_as_context": "当前笔记已作为上下文包含：{file}",
     "include_current_note_as_context": "将当前笔记作为上下文包含",
+    "show_thinking": "显示模型思考过程",
+    "thinking": "思考过程",
     "ask_something": "提出问题...",
     "stop_generating": "停止生成",
     "send_message": "发送消息",

@@ -86,6 +86,8 @@
     "agent_mode_active_no_file": "Режим агента активен, без файла",
     "current_note_included_as_context": "Текущая заметка включена как контекст: {file}",
     "include_current_note_as_context": "Включить текущую заметку как контекст",
+    "show_thinking": "Показать рассуждение модели",
+    "thinking": "Рассуждение",
     "ask_something": "Задайте вопрос...",
     "stop_generating": "Остановить генерацию",
     "send_message": "Отправить сообщение",

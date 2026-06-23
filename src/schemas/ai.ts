@@ -60,6 +60,7 @@ export type AiSimpleResult = z.infer<typeof AiSimpleResultSchema>;
 export const ConversationMessageSchema = z.object({
     role: z.enum(['user', 'assistant']),
     content: z.string(),
+    thinking: z.string().optional(),
     timestamp: z.string().optional(),
 });
 

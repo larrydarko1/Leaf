@@ -86,6 +86,8 @@
     "agent_mode_active_no_file": "Λειτουργία πράκτορα ενεργή, χωρίς αρχείο",
     "current_note_included_as_context": "Η τρέχουσα σημείωση συμπεριλήφθηκε ως πλαίσιο: {file}",
     "include_current_note_as_context": "Συμπερίληψη Τρέχουσας Σημείωσης ως Πλαίσιο",
+    "show_thinking": "Εμφάνιση Σκέψης Μοντέλου",
+    "thinking": "Σκέψη",
     "ask_something": "Ρωτήστε κάτι...",
     "stop_generating": "Διακοπή Δημιουργίας",
     "send_message": "Αποστολή Μηνύματος",

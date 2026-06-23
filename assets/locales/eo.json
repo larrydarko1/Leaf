@@ -86,6 +86,8 @@
     "agent_mode_active_no_file": "Agenta reĝimo aktiva, sen dosiero",
     "current_note_included_as_context": "Nuna noto inkluzivita kiel kunteksto: {file}",
     "include_current_note_as_context": "Inkluzivi Nunan Noton kiel Kuntekston",
+    "show_thinking": "Montri la Pensodon de Modelo",
+    "thinking": "Pensodo",
     "ask_something": "Demandu ion...",
     "stop_generating": "Halti Generadon",
     "send_message": "Sendi Mesaĝon",
