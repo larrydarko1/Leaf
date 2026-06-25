@@ -63,7 +63,7 @@ function seekVideoBySeconds(seconds: number): void {
         <div
             v-if="videoUrl && !videoError"
             class="video-player-wrapper">
-            <!-- eslint-disable-next-line vuejs-accessibility/media-has-caption vuejs-accessibility/click-events-have-key-events vuejs-accessibility/no-static-element-interactions -->
+            <!-- eslint-disable-next-line a11y/media-has-caption a11y/click-events-have-key-events a11y/no-static-element-interactions -->
             <video
                 ref="videoRef"
                 :key="videoUrl"

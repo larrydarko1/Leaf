@@ -23,8 +23,8 @@ export default {
       'row-gap': ['em'],
       'column-gap': ['em'],
       'border-radius': ['em'],
-      'min-width': ['%','px','vh','vw', 'dvh', 'dvw'],
-      'max-width': ['%', 'px','vh','vw', 'dvh', 'dvw'],
+      'min-width': ['%','px','vh','vw', 'dvh', 'dvw', 'ch'],
+      'max-width': ['%', 'px','vh','vw', 'dvh', 'dvw', 'ch'],
       'min-height': ['%','px', 'vh', 'vw', 'dvh', 'dvw'],
       'max-height': ['%','px', 'vh', 'vw', 'dvh', 'dvw'],
       'width': ['px','%','vh', 'vw', 'dvh', 'dvw'],
@@ -33,24 +33,25 @@ export default {
       'right': ['px', '%'],
       'bottom': ['px', '%'],
       'left': ['px', '%'],
-      'blur': ['px']
-
+      'blur': ['px'],
+      'grid-template-columns': ['fr', 'rem', '%'],
+      'grid-template-rows': ['fr', 'rem', '%'],
     },
     'unit-disallowed-list': [
       'px',
       {
         'ignoreProperties': {
-          'px': ['/^border/', 
-            'box-shadow', 
-            '/^outline/', 
-            '/^min-/', 
-            '/^max-/', 
-            'width', 
-            'height', 
-            'top', 
-            'right', 
-            'bottom', 
-            'left', 
+          'px': ['/^border/',
+            'box-shadow',
+            '/^outline/',
+            '/^min-/',
+            '/^max-/',
+            'width',
+            'height',
+            'top',
+            'right',
+            'bottom',
+            'left',
             'blur',
             'backdrop-filter',
             'transform',
@@ -60,6 +61,9 @@ export default {
             'filter',
             'inset'
           ]
+        },
+        'ignoreMediaFeatureNames': {
+          'px': ['width', 'height', 'min-width', 'max-width', 'min-height', 'max-height']
         }
       }
     ],

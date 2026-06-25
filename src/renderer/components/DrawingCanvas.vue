@@ -342,7 +342,7 @@ function closeExportDialog() {
 </script>
 
 <template>
-    <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
+    <!-- eslint-disable-next-line a11y/no-static-element-interactions -->
     <div
         ref="containerEl"
         class="canvas-container"
@@ -383,7 +383,7 @@ function closeExportDialog() {
             @delete="deleteSelected" />
 
         <!-- Canvas -->
-        <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
+        <!-- eslint-disable-next-line a11y/no-static-element-interactions -->
         <canvas
             ref="canvas"
             :style="{ cursor: canvasCursor }"
@@ -443,6 +443,7 @@ function closeExportDialog() {
 
 <style scoped lang="scss">
 /* ––– Main Container ––– */
+
 .canvas-container {
     position: relative;
     width: 100%;
@@ -453,6 +454,7 @@ function closeExportDialog() {
 }
 
 /* ––– Canvas ––– */
+
 canvas {
     display: block;
     width: 100%;
@@ -460,6 +462,7 @@ canvas {
 }
 
 /* ––– Text Editing Overlay ––– */
+
 .text-edit-overlay {
     position: absolute;
     z-index: $z-dropdown;

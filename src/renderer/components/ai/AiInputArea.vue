@@ -82,7 +82,7 @@ onMounted(() => {
     <div
         ref="inputAreaRef"
         class="ai-input-area">
-        <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
+        <!-- eslint-disable-next-line a11y/no-static-element-interactions -->
         <div
             class="ai-resize-handle"
             :class="{ 'ai-resize-active': isResizing }"

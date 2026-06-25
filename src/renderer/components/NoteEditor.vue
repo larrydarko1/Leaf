@@ -355,7 +355,7 @@ if (typeof window !== 'undefined') {
         </section>
 
         <!-- Text editor for text files -->
-        <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
+        <!-- eslint-disable-next-line a11y/no-static-element-interactions -->
         <section
             v-else-if="file && !isImageFile && !isVideoFile && !isAudioFile && !isPdfFile && !isDrawingFile"
             class="text-editor-container"

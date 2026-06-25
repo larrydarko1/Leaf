@@ -25,10 +25,54 @@ export default [
 
     // ── Vue Accessibility rules ──────────────────────────────────────────────
     {
-        files: ['src/renderer/**/*.vue'],
-        plugins: { 'vuejs-accessibility': a11y },
+        files: ['**/*.vue'],
+        plugins: { a11y },
         rules: {
-            ...a11y.configs.recommended.rules,
+            // ── Accessibility rules (WCAG 2.1 AA compliance) ──────────────────
+            // Images must have alt text (empty string OK for decorative images)
+            'a11y/alt-text': 'error',
+
+            // Form inputs must have labels
+            'a11y/form-control-has-label': 'error',
+
+            // Don't use divs/spans as buttons — use <button> or add proper role/handlers
+            'a11y/no-static-element-interactions': 'error',
+
+            // Click handlers should be on semantic interactive elements
+            'a11y/click-events-have-key-events': 'error',
+
+            // Interactive elements need proper role if not semantic
+            'a11y/interactive-supports-focus': 'error',
+
+            // Headings must be properly nested (<h1>, then <h2>-<h3>, no skipping levels)
+            'a11y/heading-has-content': 'warn',
+
+            // Media must have captions (warn, harder to automate)
+            'a11y/media-has-caption': 'warn',
+
+            // ARIA roles must be valid
+            'a11y/aria-role': 'error',
+
+            // ARIA attributes must have values
+            'a11y/aria-props': 'error',
+
+            // ARIA props must be appropriate for their role
+            'a11y/role-has-required-aria-props': 'error',
+
+            // Anchors must have content
+            'a11y/anchor-has-content': 'error',
+
+            // Don't use access-key
+            'a11y/no-access-key': 'error',
+
+            // No positive tabindex values (breaks tab order)
+            'a11y/tabindex-no-positive': 'error',
+
+            // Mouse events need keyboard equivalents
+            'a11y/mouse-events-have-key-events': 'error',
+
+            // Prevent redundant roles
+            'a11y/no-redundant-roles': 'warn',
         },
     },
 

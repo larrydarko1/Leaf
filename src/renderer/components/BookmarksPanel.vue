@@ -113,7 +113,7 @@ function removeBookmark(file: FileInfo) {
             <ul
                 v-else
                 class="bookmarks-results-list">
-                <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
+                <!-- eslint-disable-next-line a11y/no-static-element-interactions -->
                 <li
                     v-for="file in bookmarkedFiles"
                     :key="file.path"

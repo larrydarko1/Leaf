@@ -122,7 +122,7 @@ const getFileTypeLabel = (): string => {
 <template>
     <div class="tree-node">
         <!-- Folder item -->
-        <!-- eslint-disable-next-line vuejs-accessibility/click-events-have-key-events vuejs-accessibility/interactive-supports-focus -->
+        <!-- eslint-disable-next-line a11y/click-events-have-key-events a11y/interactive-supports-focus -->
         <div
             v-if="node.type === 'folder'"
             class="folder-item"
@@ -227,7 +227,7 @@ const getFileTypeLabel = (): string => {
         </div>
 
         <!-- File item -->
-        <!-- eslint-disable-next-line vuejs-accessibility/click-events-have-key-events vuejs-accessibility/interactive-supports-focus -->
+        <!-- eslint-disable-next-line a11y/click-events-have-key-events a11y/interactive-supports-focus -->
         <div
             v-else
             class="file-item"

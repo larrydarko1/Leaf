@@ -315,7 +315,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                         </span>
                         <div class="ai-thinking-content">{{ msg.thinking }}</div>
                     </div>
-                    <!-- eslint-disable-next-line vuejs-accessibility/click-events-have-key-events vuejs-accessibility/no-static-element-interactions -->
+                    <!-- eslint-disable-next-line a11y/click-events-have-key-events a11y/no-static-element-interactions -->
                     <div
                         class="ai-message-content ai-markdown"
                         role="article"

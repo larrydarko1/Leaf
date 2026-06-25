@@ -293,7 +293,7 @@ function handleRootDrop(event: DragEvent) {
 
 <template>
     <div class="file-explorer">
-        <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
+        <!-- eslint-disable-next-line a11y/no-static-element-interactions -->
         <div
             class="file-list"
             role="region"
