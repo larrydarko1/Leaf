@@ -99,6 +99,13 @@ export function useCodemirror(
     // Flag to avoid infinite loops when we push content → editor
     let updatingFromExternal = false;
 
+    /**
+     * Set to true when the fileId watcher fires but content hasn't updated yet.
+     * The content watcher checks this to use setState (no undo history) instead
+     * of dispatch for the first content update after a file switch.
+     */
+    let isPendingFileSwitch = false;
+
     /** Build the full extension set */
     function buildExtensions(): Extension[] {
         return [
@@ -166,13 +173,23 @@ export function useCodemirror(
         view.value = null;
     });
 
-    // When a different file is loaded, recreate the EditorState so the undo
-    // history, cursor position, and scroll are all reset cleanly.
+    /**
+     * When a different file is loaded, recreate the EditorState so the undo
+     * history, cursor position, and scroll are all reset cleanly.
+     *
+     * IMPORTANT: this watcher fires before the props.file watcher in NoteEditor.vue
+     * updates content.value (Vue runs watchers in registration order). So at this
+     * point content.value is still the old file's content. We reset state now for
+     * cursor/scroll, then set isPendingFileSwitch so the content watcher below will
+     * use setState (not dispatch) when the new content arrives — preventing an undo
+     * history entry that would let Cmd+Z bleed old note content into the new note.
+     */
     if (fileId !== undefined) {
         watch(fileId, () => {
             const v = view.value;
             if (v === null) return;
 
+            isPendingFileSwitch = true;
             updatingFromExternal = true;
             v.setState(
                 EditorState.create({
@@ -184,19 +201,41 @@ export function useCodemirror(
         });
     }
 
-    // When content ref changes externally (file load, dictation, etc.)
-    // push the new content into the editor without firing our own listener.
+    /**
+     * When content ref changes externally (file load, dictation, etc.)
+     * push the new content into the editor without firing our own listener.
+     */
     watch(content, (newVal) => {
         const v = view.value;
         if (v === null) return;
 
         const current = v.state.doc.toString();
-        if (current === newVal) return;
+        if (current === newVal) {
+            // Content matches — clear any pending file switch flag and bail.
+            isPendingFileSwitch = false;
+            return;
+        }
 
         updatingFromExternal = true;
-        v.dispatch({
-            changes: { from: 0, to: current.length, insert: newVal },
-        });
+        if (isPendingFileSwitch) {
+            /**
+             * New file content just arrived after a note switch — reset state
+             * cleanly so no undo history entry is created. Without this, the
+             * dispatch below would add an entry and Cmd+Z would restore the
+             * previous note's content into the newly selected note.
+             */
+            isPendingFileSwitch = false;
+            v.setState(
+                EditorState.create({
+                    doc: newVal,
+                    extensions: buildExtensions(),
+                }),
+            );
+        } else {
+            v.dispatch({
+                changes: { from: 0, to: current.length, insert: newVal },
+            });
+        }
         updatingFromExternal = false;
     });
 

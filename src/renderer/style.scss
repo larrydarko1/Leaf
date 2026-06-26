@@ -56,8 +56,6 @@
     --grid-color: rgb(255 255 255 / 6%);
 }
 
-/* stylelint-disable scss/dollar-variable-empty-line-before */
-
 /* ––––– Typography ––––– */
 $font-family: 'Helvetica', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
 $font-family-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Menlo', 'Consolas', 'DejaVu Sans Mono', monospace;
@@ -142,8 +140,6 @@ $danger-color-alpha: var(--danger-color-alpha);
 $scrollbar-thumb: var(--scrollbar-thumb);
 $scrollbar-thumb-hover: var(--scrollbar-thumb-hover);
 $grid-color: var(--grid-color);
-
-/* stylelint-enable scss/dollar-variable-empty-line-before */
 
 /* –––––––––– GLOBAL RESET & BASE STYLES ––––––––– */
 

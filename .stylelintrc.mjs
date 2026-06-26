@@ -37,36 +37,6 @@ export default {
       'grid-template-columns': ['fr', 'rem', '%'],
       'grid-template-rows': ['fr', 'rem', '%'],
     },
-    'unit-disallowed-list': [
-      'px',
-      {
-        'ignoreProperties': {
-          'px': ['/^border/',
-            'box-shadow',
-            '/^outline/',
-            '/^min-/',
-            '/^max-/',
-            'width',
-            'height',
-            'top',
-            'right',
-            'bottom',
-            'left',
-            'blur',
-            'backdrop-filter',
-            'transform',
-            'background-size',
-            'background-position',
-            'text-shadow',
-            'filter',
-            'inset'
-          ]
-        },
-        'ignoreMediaFeatureNames': {
-          'px': ['width', 'height', 'min-width', 'max-width', 'min-height', 'max-height']
-        }
-      }
-    ],
 
     // –– NO VENDOR PREFIXES –––––––––––––––––––––––––––––––––––––––––––––––
     'property-no-vendor-prefix': true,
@@ -76,12 +46,7 @@ export default {
 
     // –– SCSS VARIABLES –––––––––––––––––––––––––––––––––––––––––––––––
     'scss/dollar-variable-pattern': '^[a-z][a-z0-9-]*$',
-    'scss/dollar-variable-empty-line-before': [
-      'always',
-      {
-        'except': ['first-nested', 'after-comment']
-      }
-    ],
+    'scss/dollar-variable-empty-line-before': null,
 
     // –– LAYOUT –––––––––––––––––––––––––––––––––––––––––––––––––––––––––
     'property-no-unknown': [
