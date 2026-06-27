@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ref } from 'vue';
 import { useAgentMode } from '@/renderer/composables/ai/useAgentMode';
-import type { AgentFileEdit, ChatMessage } from '@/renderer/types/chat';
+import type { AgentFileEdit, ChatMessage } from '@/schemas/chat';
 
 // ── electronAPI mock ─────────────────────────────────────────────────────────
 

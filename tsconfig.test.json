@@ -14,5 +14,5 @@
             "@test-utils": ["./tests/renderer/test-utils"]
         }
     },
-    "include": ["vitest.setup.ts", "tests/**/*.ts"]
+    "include": ["vitest.setup.ts", "tests/**/*.ts", "src/**/*.d.ts"]
 }

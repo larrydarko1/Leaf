@@ -37,17 +37,9 @@ function makeEl(id = genId()): CanvasElement {
         fillColor: '#ffffff',
         strokeWidth: 2,
         opacity: 1,
-        isLocked: false,
-        zIndex: 0,
-        rotation: 0,
         borderRadius: 0,
         strokeStyle: 'solid',
-        roughness: 0,
-        label: '',
         fontSize: 16,
-        fontFamily: 'sans-serif',
-        textAlign: 'center',
-        verticalAlign: 'middle',
     };
 }
 

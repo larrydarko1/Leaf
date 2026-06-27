@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { useHfDownload } from '@/renderer/composables/ai/useHfDownload';
-import type { HfRepoFile, HfSearchResult } from '@/renderer/types/hf';
+import type { HfRepoFile, HfSearchResult } from '@/schemas/hf';
 import { defineComponent, createApp } from 'vue';
 
 // ── lifecycle helper ──────────────────────────────────────────────────────────
@@ -84,8 +84,7 @@ const sampleFile: HfRepoFile = {
     estimatedRamFormatted: '3.7 GB',
     tier: { label: 'Large', color: 'orange', description: 'Large model' },
     isSharded: false,
-    shardCount: 0,
-    shardFiles: null,
+    shardCount: null,
     architecture: null,
     contextLength: null,
 };

@@ -3,6 +3,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { ref, nextTick, defineComponent, h } from 'vue';
 import { mount } from '@vue/test-utils';
 import { EditorView } from '@codemirror/view';
+import { undo } from '@codemirror/commands';
 import { useCodemirror, leafHighlightStyle } from '@/renderer/composables/editor/codemirror/useCodemirror';
 
 // Mock ResizeObserver — not in jsdom
@@ -321,6 +322,67 @@ describe('useCodemirror', () => {
         await nextTick();
         await nextTick();
         expect(true).toBe(true); // didn't throw
+        wrapper.unmount();
+    });
+
+    // ── Regression: undo must not cross note boundaries ──────────────────────
+    //
+    // Bug: when switching notes, Vue's watcher ordering caused the fileId watcher
+    // to reset state with stale content, then the content watcher dispatched the
+    // new file's content as a transaction — creating an undo history entry.
+    // Pressing Cmd+Z would then restore the previous note's content into the
+    // newly selected note, potentially overwriting it.
+
+    it('does not create an undo history entry for content loaded after a file switch', async () => {
+        const { wrapper, content, fileId, getView } = mountComposable({
+            initialContent: 'note one content',
+            initialFileId: 'note1.md',
+        });
+        await nextTick();
+        await nextTick();
+
+        // Simulate switching to a different note: fileId updates first (synchronous),
+        // then content arrives asynchronously from loadFile (next tick).
+        fileId.value = 'note2.md';
+        await nextTick();
+        content.value = 'note two content';
+        await nextTick();
+
+        const v = getView()!;
+        expect(v.state.doc.toString()).toBe('note two content');
+
+        // Cmd+Z must not restore "note one content" into the new note.
+        undo(v);
+        expect(v.state.doc.toString()).toBe('note two content');
+
+        wrapper.unmount();
+    });
+
+    it('external content changes after a file switch (e.g. dictation) remain undoable', async () => {
+        const { wrapper, content, fileId, getView } = mountComposable({
+            initialContent: 'note one content',
+            initialFileId: 'note1.md',
+        });
+        await nextTick();
+        await nextTick();
+
+        // Switch to note 2 and load its content.
+        fileId.value = 'note2.md';
+        await nextTick();
+        content.value = 'note two base content';
+        await nextTick();
+
+        // Dictation appends transcribed text to the content ref.
+        content.value = 'note two base content dictated text';
+        await nextTick();
+
+        const v = getView()!;
+        expect(v.state.doc.toString()).toBe('note two base content dictated text');
+
+        // Undo should remove only the dictation — not cross back to note one.
+        undo(v);
+        expect(v.state.doc.toString()).toBe('note two base content');
+
         wrapper.unmount();
     });
 });

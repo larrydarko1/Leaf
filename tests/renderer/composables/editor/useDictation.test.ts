@@ -53,11 +53,10 @@ vi.stubGlobal('AudioContext', MockAudioContext);
 vi.stubGlobal('AudioWorkletNode', MockAudioWorkletNode);
 vi.stubGlobal(
     'Blob',
+    // eslint-disable-next-line @typescript-eslint/no-extraneous-class
     class FakeBlob {
-        constructor(
-            public parts: unknown[],
-            public opts?: unknown,
-        ) {}
+        // eslint-disable-next-line @typescript-eslint/no-useless-constructor
+        constructor(_parts: unknown[], _opts?: unknown) {}
     },
 );
 vi.stubGlobal('URL', {
@@ -406,7 +405,7 @@ describe('interval-based chunk processing', () => {
         sendChunk(new Float32Array([0.1, 0.2]));
         // Fire the interval callback if captured
         if (storedIntervalFn) {
-            await storedIntervalFn();
+            storedIntervalFn();
         }
         await new Promise((r) => setTimeout(r, 20));
         stopDictation();
@@ -418,7 +417,7 @@ describe('interval-based chunk processing', () => {
         await toggleDictation();
         // No chunks — fire interval anyway
         if (storedIntervalFn) {
-            await storedIntervalFn();
+            storedIntervalFn();
         }
         await new Promise((r) => setTimeout(r, 10));
         stopDictation();
@@ -431,7 +430,7 @@ describe('interval-based chunk processing', () => {
         await toggleDictation();
         sendChunk(new Float32Array([0.1]));
         if (storedIntervalFn) {
-            await storedIntervalFn();
+            storedIntervalFn();
         }
         await new Promise((r) => setTimeout(r, 20));
         stopDictation();

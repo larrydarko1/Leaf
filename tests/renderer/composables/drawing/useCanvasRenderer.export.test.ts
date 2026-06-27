@@ -192,7 +192,7 @@ describe('exportToBlob', () => {
 
             // Spy on document.createElement to capture the offscreen canvas
             let offscreen: HTMLCanvasElement | null = null;
-            vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+            vi.spyOn(document, 'createElement').mockImplementation(((tag: string) => {
                 const elem = originalCreateElement(tag);
                 if (tag === 'canvas') {
                     offscreen = elem as HTMLCanvasElement;
@@ -240,7 +240,7 @@ describe('exportToBlob', () => {
                     }) as unknown as typeof offscreen.getContext;
                 }
                 return elem;
-            });
+            }) as any);
 
             const blob = await renderer.exportToBlob({
                 elements: [el],
@@ -262,7 +262,7 @@ describe('exportToBlob', () => {
             const { renderer } = setupRenderer([el]);
 
             let offscreen: HTMLCanvasElement | null = null;
-            vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+            vi.spyOn(document, 'createElement').mockImplementation(((tag: string) => {
                 const elem = originalCreateElement(tag);
                 if (tag === 'canvas') {
                     offscreen = elem as HTMLCanvasElement;
@@ -309,7 +309,7 @@ describe('exportToBlob', () => {
                     }) as unknown as typeof offscreen.getContext;
                 }
                 return elem;
-            });
+            }) as any);
 
             await renderer.exportToBlob({
                 elements: [el],
@@ -330,7 +330,7 @@ describe('exportToBlob', () => {
             const { renderer } = setupRenderer([el]);
 
             let offscreen: HTMLCanvasElement | null = null;
-            vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+            vi.spyOn(document, 'createElement').mockImplementation(((tag: string) => {
                 const elem = originalCreateElement(tag);
                 if (tag === 'canvas') {
                     offscreen = elem as HTMLCanvasElement;
@@ -377,7 +377,7 @@ describe('exportToBlob', () => {
                     }) as unknown as typeof offscreen.getContext;
                 }
                 return elem;
-            });
+            }) as any);
 
             await renderer.exportToBlob({
                 elements: [el],
@@ -401,7 +401,7 @@ describe('exportToBlob', () => {
 
             const fillRectCalls: unknown[][] = [];
             const fillStyleLog: string[] = [];
-            vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+            vi.spyOn(document, 'createElement').mockImplementation(((tag: string) => {
                 const elem = originalCreateElement(tag);
                 if (tag === 'canvas') {
                     (elem as HTMLCanvasElement).toBlob = vi.fn((cb: BlobCallback) => {
@@ -454,7 +454,7 @@ describe('exportToBlob', () => {
                     ) as unknown as HTMLCanvasElement['getContext'];
                 }
                 return elem;
-            });
+            }) as any);
 
             await renderer.exportToBlob({
                 elements: [el],
@@ -475,7 +475,7 @@ describe('exportToBlob', () => {
             const { renderer } = setupRenderer([el]);
 
             const fillStyleLog: string[] = [];
-            vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+            vi.spyOn(document, 'createElement').mockImplementation(((tag: string) => {
                 const elem = originalCreateElement(tag);
                 if (tag === 'canvas') {
                     (elem as HTMLCanvasElement).toBlob = vi.fn((cb: BlobCallback) => {
@@ -528,7 +528,7 @@ describe('exportToBlob', () => {
                     ) as unknown as HTMLCanvasElement['getContext'];
                 }
                 return elem;
-            });
+            }) as any);
 
             await renderer.exportToBlob({
                 elements: [el],
@@ -546,7 +546,7 @@ describe('exportToBlob', () => {
             const { renderer } = setupRenderer([el]);
 
             let bgFillRectCalled = false;
-            vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+            vi.spyOn(document, 'createElement').mockImplementation(((tag: string) => {
                 const elem = originalCreateElement(tag);
                 if (tag === 'canvas') {
                     (elem as HTMLCanvasElement).toBlob = vi.fn((cb: BlobCallback) => {
@@ -598,7 +598,7 @@ describe('exportToBlob', () => {
                     ) as unknown as HTMLCanvasElement['getContext'];
                 }
                 return elem;
-            });
+            }) as any);
 
             await renderer.exportToBlob({
                 elements: [el],
@@ -619,7 +619,7 @@ describe('exportToBlob', () => {
             const { renderer } = setupRenderer([el1, el2]);
 
             let offscreen: HTMLCanvasElement | null = null;
-            vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+            vi.spyOn(document, 'createElement').mockImplementation(((tag: string) => {
                 const elem = originalCreateElement(tag);
                 if (tag === 'canvas') {
                     offscreen = elem as HTMLCanvasElement;
@@ -666,7 +666,7 @@ describe('exportToBlob', () => {
                     }) as unknown as typeof offscreen.getContext;
                 }
                 return elem;
-            });
+            }) as any);
 
             await renderer.exportToBlob({
                 elements: [el1, el2],
@@ -689,7 +689,7 @@ describe('exportToBlob', () => {
             const { renderer } = setupRenderer([el]);
 
             let offscreen: HTMLCanvasElement | null = null;
-            vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+            vi.spyOn(document, 'createElement').mockImplementation(((tag: string) => {
                 const elem = originalCreateElement(tag);
                 if (tag === 'canvas') {
                     offscreen = elem as HTMLCanvasElement;
@@ -736,7 +736,7 @@ describe('exportToBlob', () => {
                     }) as unknown as typeof offscreen.getContext;
                 }
                 return elem;
-            });
+            }) as any);
 
             await renderer.exportToBlob({
                 elements: [el],
@@ -757,7 +757,7 @@ describe('exportToBlob', () => {
             const { renderer } = setupRenderer([el]);
 
             let offscreen: HTMLCanvasElement | null = null;
-            vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+            vi.spyOn(document, 'createElement').mockImplementation(((tag: string) => {
                 const elem = originalCreateElement(tag);
                 if (tag === 'canvas') {
                     offscreen = elem as HTMLCanvasElement;
@@ -804,7 +804,7 @@ describe('exportToBlob', () => {
                     }) as unknown as typeof offscreen.getContext;
                 }
                 return elem;
-            });
+            }) as any);
 
             await renderer.exportToBlob({
                 elements: [el],
@@ -826,7 +826,7 @@ describe('exportToBlob', () => {
             const el = makeElement({ id: 'k', type: 'rectangle', x: 0, y: 0, width: 50, height: 50 });
             const { renderer } = setupRenderer([el]);
 
-            vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+            vi.spyOn(document, 'createElement').mockImplementation(((tag: string) => {
                 const elem = originalCreateElement(tag);
                 if (tag === 'canvas') {
                     (elem as HTMLCanvasElement).toBlob = vi.fn((cb: BlobCallback, type?: string) => {
@@ -872,7 +872,7 @@ describe('exportToBlob', () => {
                     }) as unknown as HTMLCanvasElement['getContext'];
                 }
                 return elem;
-            });
+            }) as any);
 
             const blob = await renderer.exportToBlob({
                 elements: [el],
@@ -906,7 +906,7 @@ describe('exportToBlob', () => {
             const { renderer } = setupRenderer([el]);
 
             let offscreen: HTMLCanvasElement | null = null;
-            vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+            vi.spyOn(document, 'createElement').mockImplementation(((tag: string) => {
                 const elem = originalCreateElement(tag);
                 if (tag === 'canvas') {
                     offscreen = elem as HTMLCanvasElement;
@@ -953,7 +953,7 @@ describe('exportToBlob', () => {
                     }) as unknown as typeof offscreen.getContext;
                 }
                 return elem;
-            });
+            }) as any);
 
             await renderer.exportToBlob({
                 elements: [el],
@@ -977,7 +977,7 @@ describe('exportToBlob', () => {
             const { renderer } = setupRenderer([el]);
 
             let offscreen: HTMLCanvasElement | null = null;
-            vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+            vi.spyOn(document, 'createElement').mockImplementation(((tag: string) => {
                 const elem = originalCreateElement(tag);
                 if (tag === 'canvas') {
                     offscreen = elem as HTMLCanvasElement;
@@ -1024,7 +1024,7 @@ describe('exportToBlob', () => {
                     }) as unknown as typeof offscreen.getContext;
                 }
                 return elem;
-            });
+            }) as any);
 
             await renderer.exportToBlob({
                 elements: [el],

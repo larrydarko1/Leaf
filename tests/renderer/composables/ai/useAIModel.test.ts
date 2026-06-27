@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useAIModel } from '@/renderer/composables/ai/useAIModel';
-import type { AiModelInfo, AiStatus } from '@/renderer/types/ai';
+import type { AiModelInfo, AiStatus } from '@/schemas/ai';
 
 vi.mock('vue-i18n', () => ({
     useI18n: () => ({

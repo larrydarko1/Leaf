@@ -24,17 +24,9 @@ function makeEl(id = genId()): CanvasElement {
         fillColor: '#fff',
         strokeWidth: 2,
         strokeStyle: 'solid',
-        roughness: 0,
         opacity: 1,
-        isLocked: false,
-        zIndex: 0,
-        rotation: 0,
         borderRadius: 0,
-        label: '',
         fontSize: 16,
-        fontFamily: 'sans-serif',
-        textAlign: 'center',
-        verticalAlign: 'middle',
     };
 }
 
@@ -61,12 +53,8 @@ function makeInteraction(
         fillColor: '#ffffff',
         strokeWidth: 2,
         strokeStyle: 'solid',
-        roughness: 0,
-        opacity: 1,
+        borderRadius: 0,
         fontSize: 20,
-        fontFamily: 'sans-serif',
-        textAlign: 'center',
-        verticalAlign: 'middle',
     });
     const marqueeRect = ref<{ x: number; y: number; width: number; height: number } | null>(null);
     const textEditing = ref(opts.textEditing ?? false);

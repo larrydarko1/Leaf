@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ref } from 'vue';
 import { useAIChat } from '@/renderer/composables/ai/useAIChat';
-import type { ChatMessage } from '@/renderer/types/chat';
-import type { AiStatus } from '@/renderer/types/ai';
+import type { ChatMessage } from '@/schemas/chat';
+import type { AiStatus } from '@/schemas/ai';
 
 // ── electronAPI mock ─────────────────────────────────────────────────────────
 

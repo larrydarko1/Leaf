@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useEditorTabs } from '@/renderer/composables/editor/useEditorTabs';
-import type { FileInfo } from '@/renderer/types/electron';
+import type { FileInfo } from '@/schemas/vault';
 
 function makeFile(name: string, path = `/${name}`): FileInfo {
     return {

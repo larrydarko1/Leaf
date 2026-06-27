@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useFolderTree } from '@/renderer/composables/vault/useFolderTree';
-import type { FileInfo, FolderInfo } from '@/renderer/types/electron';
+import type { FileInfo, FolderInfo } from '@/schemas/vault';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 

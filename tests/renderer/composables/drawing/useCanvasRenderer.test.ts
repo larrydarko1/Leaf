@@ -351,14 +351,11 @@ describe('useCanvasRenderer', () => {
                 y: 0,
                 width: 100,
                 height: 100,
-                x2: 100,
-                y2: 100,
                 strokeColor: '#000',
                 fillColor: 'transparent',
                 strokeWidth: 2,
                 strokeStyle: 'solid',
                 opacity: 1,
-                borderRadius: 0,
             };
             const { renderer } = makeRenderer({ elements: [line] });
             renderer.renderScene();
@@ -373,8 +370,6 @@ describe('useCanvasRenderer', () => {
                 y: 0,
                 width: 100,
                 height: 100,
-                x2: 100,
-                y2: 100,
                 strokeColor: '#000',
                 fillColor: 'transparent',
                 strokeWidth: 2,
