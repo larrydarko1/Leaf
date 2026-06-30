@@ -1,6 +1,6 @@
 {
     "name": "leaf",
-    "version": "2.4.1",
+    "version": "2.6.2",
     "description": "A local-first, privacy-focused note-taking app for desktop with built-in AI assistance. Simple interface for reading and editing txt and md files, plus support for loading local LLMs (GGUF format) for private, on-device chat and assistance. All notes and AI interactions stay on your device.",
     "keywords": [
         "notes",
