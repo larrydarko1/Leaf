@@ -8,6 +8,7 @@ import { useConversationHistory } from '@/renderer/composables/ai/useConversatio
 import { useAgentMode } from '@/renderer/composables/ai/useAgentMode';
 import { useHfDownload } from '@/renderer/composables/ai/useHfDownload';
 import { useAIChat } from '@/renderer/composables/ai/useAIChat';
+import { MAX_CONTEXT_FILES } from '@/renderer/composables/ai/useAIChat';
 import AiModelBar from '@/renderer/components/ai/AiModelBar.vue';
 import AiHfPanel from '@/renderer/components/ai/AiHfPanel.vue';
 import AiHistoryPanel from '@/renderer/components/ai/AiHistoryPanel.vue';
@@ -20,9 +21,12 @@ const { t } = useI18n();
 type Props = {
     activeFile: FileInfo | null;
     workspacePath: string | null;
+    files?: FileInfo[];
 };
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+    files: () => [],
+});
 
 const emit = defineEmits<{
     'close': [];
@@ -129,8 +133,10 @@ const {
     inputField,
     inputMessage,
     isStreaming,
-    includeNoteContext,
     showThinking,
+    contextFiles,
+    addContextFile,
+    removeContextFile,
     copiedIndex,
     editingIndex,
     editContent,
@@ -152,6 +158,13 @@ const panelWidth = ref(340);
 const minWidth = 340;
 const maxWidth = 600;
 const isResizing = ref(false);
+
+// Files selectable as additional context: text/markdown files not already attached
+const availableContextFiles = computed(() =>
+    props.files.filter(
+        (f) => (f.extension === '.md' || f.extension === '.txt') && !contextFiles.value.some((c) => c.path === f.path),
+    ),
+);
 
 const tokenUsagePercent = computed(() => {
     if (status.value.contextSize === 0 || status.value.contextSize === undefined) return 0;
@@ -364,7 +377,6 @@ function increaseWidth() {
 
         <AiInputArea
             :agent-mode="agentMode"
-            :include-note-context="includeNoteContext"
             :show-thinking="showThinking"
             :active-file="activeFile"
             :input-message="inputMessage"
@@ -372,10 +384,14 @@ function increaseWidth() {
             :is-any-generating="isAnyGenerating"
             :is-streaming="isStreaming"
             :input-field="inputField"
+            :context-files="contextFiles"
+            :available-files="availableContextFiles"
+            :max-context-files="MAX_CONTEXT_FILES"
             :aria-label="t('ai.message_input_area')"
             @update:input-message="inputMessage = $event"
-            @update:include-note-context="includeNoteContext = $event"
             @update:show-thinking="showThinking = $event"
+            @add-context-file="addContextFile"
+            @remove-context-file="removeContextFile"
             @send="sendMessage"
             @stop="stopGeneration" />
     </main>

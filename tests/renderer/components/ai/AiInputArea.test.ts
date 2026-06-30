@@ -72,6 +72,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: false,
                     isStreaming: false,
                     inputField: null,
+                    showThinking: false,
                 },
             });
             const textarea = wrapper.find('textarea');
@@ -89,6 +90,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: false,
                     isStreaming: false,
                     inputField: null,
+                    showThinking: false,
                 },
             });
             const handle = wrapper.find('.ai-resize-handle');
@@ -106,6 +108,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: false,
                     isStreaming: false,
                     inputField: null,
+                    showThinking: false,
                 },
             });
             const sendBtn = wrapper.find('.ai-btn-send:not(.ai-btn-stop)');
@@ -123,6 +126,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: false,
                     isStreaming: true,
                     inputField: null,
+                    showThinking: false,
                 },
             });
             const stopBtn = wrapper.find('.ai-btn-stop');
@@ -144,6 +148,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: false,
                     isStreaming: false,
                     inputField: null,
+                    showThinking: false,
                 },
                 attachTo: document.body,
             });
@@ -176,6 +181,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: false,
                     isStreaming: false,
                     inputField: null,
+                    showThinking: false,
                 },
                 attachTo: document.body,
             });
@@ -204,6 +210,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: false,
                     isStreaming: false,
                     inputField: null,
+                    showThinking: false,
                 },
                 attachTo: document.body,
             });
@@ -232,6 +239,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: false,
                     isStreaming: false,
                     inputField: null,
+                    showThinking: false,
                 },
                 attachTo: document.body,
             });
@@ -260,6 +268,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: false,
                     isStreaming: false,
                     inputField: null,
+                    showThinking: false,
                 },
                 attachTo: document.body,
             });
@@ -291,6 +300,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: false,
                     isStreaming: false,
                     inputField: null,
+                    showThinking: false,
                 },
                 attachTo: document.body,
             });
@@ -323,6 +333,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: false,
                     isStreaming: false,
                     inputField: null,
+                    showThinking: false,
                 },
             });
 
@@ -344,6 +355,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: false,
                     isStreaming: false,
                     inputField: null,
+                    showThinking: false,
                 },
             });
 
@@ -365,6 +377,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: false,
                     isStreaming: false,
                     inputField: null,
+                    showThinking: false,
                 },
             });
 
@@ -387,6 +400,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: false,
                     isStreaming: false,
                     inputField: null,
+                    showThinking: false,
                 },
             });
 
@@ -407,6 +421,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: false,
                     isStreaming: false,
                     inputField: null,
+                    showThinking: false,
                 },
             });
 
@@ -429,6 +444,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: false,
                     isStreaming: false,
                     inputField: null,
+                    showThinking: false,
                 },
             });
 
@@ -449,6 +465,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: false,
                     isStreaming: true,
                     inputField: null,
+                    showThinking: false,
                 },
             });
 
@@ -469,6 +486,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: false,
                     isStreaming: false,
                     inputField: null,
+                    showThinking: false,
                 },
             });
 
@@ -479,73 +497,11 @@ describe('AiInputArea', () => {
             expect(emitted).toBeTruthy();
             expect(emitted?.[0]).toEqual(['new message']);
         });
-
-        it('emits update:includeNoteContext on checkbox toggle', async () => {
-            const activeFile = makeFile('test.md');
-            const wrapper = mountWithI18n(AiInputArea, {
-                props: {
-                    agentMode: false,
-                    includeNoteContext: false,
-                    activeFile,
-                    inputMessage: '',
-                    isReady: true,
-                    isAnyGenerating: false,
-                    isStreaming: false,
-                    inputField: null,
-                },
-            });
-
-            const checkbox = wrapper.find('input[type="checkbox"]') as any;
-            // Manually set the checked property and trigger change
-            checkbox.element.checked = true;
-            await checkbox.trigger('change');
-
-            const emitted = wrapper.emitted('update:includeNoteContext');
-            expect(emitted).toBeTruthy();
-            expect(emitted?.[0]).toEqual([true]);
-        });
     });
 
     // ── UI state and interactions ────────────────────────────────────────────
 
     describe('UI state', () => {
-        it('disables context toggle when no activeFile', () => {
-            const wrapper = mountWithI18n(AiInputArea, {
-                props: {
-                    agentMode: false,
-                    includeNoteContext: false,
-                    activeFile: null,
-                    inputMessage: '',
-                    isReady: true,
-                    isAnyGenerating: false,
-                    isStreaming: false,
-                    inputField: null,
-                },
-            });
-
-            const checkbox = wrapper.find('input[type="checkbox"]');
-            expect(checkbox.attributes('disabled')).toBeDefined();
-        });
-
-        it('enables context toggle when activeFile exists', () => {
-            const activeFile = makeFile('test.md');
-            const wrapper = mountWithI18n(AiInputArea, {
-                props: {
-                    agentMode: false,
-                    includeNoteContext: false,
-                    activeFile,
-                    inputMessage: '',
-                    isReady: true,
-                    isAnyGenerating: false,
-                    isStreaming: false,
-                    inputField: null,
-                },
-            });
-
-            const checkbox = wrapper.find('input[type="checkbox"]');
-            expect(checkbox.attributes('disabled')).toBeUndefined();
-        });
-
         it('disables textarea when not ready', () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
@@ -557,6 +513,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: false,
                     isStreaming: false,
                     inputField: null,
+                    showThinking: false,
                 },
             });
 
@@ -575,6 +532,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: true,
                     isStreaming: false,
                     inputField: null,
+                    showThinking: false,
                 },
             });
 
@@ -593,6 +551,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: false,
                     isStreaming: false,
                     inputField: null,
+                    showThinking: false,
                 },
             });
 
@@ -611,6 +570,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: false,
                     isStreaming: false,
                     inputField: null,
+                    showThinking: false,
                 },
             });
 
@@ -629,6 +589,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: false,
                     isStreaming: false,
                     inputField: null,
+                    showThinking: false,
                 },
             });
 
@@ -651,6 +612,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: false,
                     isStreaming: false,
                     inputField: null,
+                    showThinking: false,
                 },
             });
 
@@ -670,6 +632,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: false,
                     isStreaming: false,
                     inputField: null,
+                    showThinking: false,
                 },
             });
 
@@ -688,6 +651,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: false,
                     isStreaming: false,
                     inputField: null,
+                    showThinking: false,
                 },
             });
 
@@ -706,6 +670,7 @@ describe('AiInputArea', () => {
                     isAnyGenerating: false,
                     isStreaming: false,
                     inputField: null,
+                    showThinking: false,
                 },
             });
 
@@ -714,64 +679,121 @@ describe('AiInputArea', () => {
         });
     });
 
-    // ── context hint ─────────────────────────────────────────────────────────
+    // ── context files ────────────────────────────────────────────────────────
 
-    describe('context hint', () => {
-        it('shows context hint when includeNoteContext is true and activeFile exists', () => {
-            const activeFile = makeFile('test.md');
+    describe('context files', () => {
+        it('renders a chip for each attached context file', () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
                     agentMode: false,
-                    includeNoteContext: true,
-                    activeFile,
-                    inputMessage: '',
-                    isReady: true,
-                    isAnyGenerating: false,
-                    isStreaming: false,
-                    inputField: null,
-                },
-            });
-
-            const hint = wrapper.find('.ai-context-hint');
-            expect(hint.exists()).toBe(true);
-            expect(hint.text()).toContain('test.md');
-        });
-
-        it('hides context hint when includeNoteContext is false', () => {
-            const activeFile = makeFile('test.md');
-            const wrapper = mountWithI18n(AiInputArea, {
-                props: {
-                    agentMode: false,
-                    includeNoteContext: false,
-                    activeFile,
-                    inputMessage: '',
-                    isReady: true,
-                    isAnyGenerating: false,
-                    isStreaming: false,
-                    inputField: null,
-                },
-            });
-
-            const hint = wrapper.find('.ai-context-hint');
-            expect(hint.exists()).toBe(false);
-        });
-
-        it('hides context hint when activeFile is null', () => {
-            const wrapper = mountWithI18n(AiInputArea, {
-                props: {
-                    agentMode: false,
-                    includeNoteContext: true,
                     activeFile: null,
                     inputMessage: '',
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
                     inputField: null,
+                    showThinking: false,
+                    contextFiles: [makeFile('a.md'), makeFile('b.md')],
+                    availableFiles: [],
+                    maxContextFiles: 10,
                 },
             });
 
-            const hint = wrapper.find('.ai-context-hint');
-            expect(hint.exists()).toBe(false);
+            const chips = wrapper.findAll('.ai-context-chip');
+            expect(chips).toHaveLength(2);
+            expect(wrapper.find('.ai-context-files-label').text()).toContain('2/10');
+        });
+
+        it('does not render the context files area when none are attached', () => {
+            const wrapper = mountWithI18n(AiInputArea, {
+                props: {
+                    agentMode: false,
+                    activeFile: null,
+                    inputMessage: '',
+                    isReady: true,
+                    isAnyGenerating: false,
+                    isStreaming: false,
+                    inputField: null,
+                    showThinking: false,
+                    contextFiles: [],
+                    availableFiles: [],
+                    maxContextFiles: 10,
+                },
+            });
+
+            expect(wrapper.find('.ai-context-files').exists()).toBe(false);
+        });
+
+        it('emits remove-context-file when a chip remove button is clicked', async () => {
+            const wrapper = mountWithI18n(AiInputArea, {
+                props: {
+                    agentMode: false,
+                    activeFile: null,
+                    inputMessage: '',
+                    isReady: true,
+                    isAnyGenerating: false,
+                    isStreaming: false,
+                    inputField: null,
+                    showThinking: false,
+                    contextFiles: [makeFile('a.md', '/a.md')],
+                    availableFiles: [],
+                    maxContextFiles: 10,
+                },
+            });
+
+            await wrapper.find('.ai-context-chip-remove').trigger('click');
+
+            const emitted = wrapper.emitted('remove-context-file');
+            expect(emitted).toBeTruthy();
+            expect(emitted?.[0]).toEqual(['/a.md']);
+        });
+
+        it('opens the picker and emits add-context-file on selection', async () => {
+            const wrapper = mountWithI18n(AiInputArea, {
+                props: {
+                    agentMode: false,
+                    activeFile: null,
+                    inputMessage: '',
+                    isReady: true,
+                    isAnyGenerating: false,
+                    isStreaming: false,
+                    inputField: null,
+                    showThinking: false,
+                    contextFiles: [],
+                    availableFiles: [makeFile('pick-me.md', '/pick-me.md')],
+                    maxContextFiles: 10,
+                },
+            });
+
+            await wrapper.find('.ai-add-context-btn').trigger('click');
+            const item = wrapper.find('.ai-file-picker-item');
+            expect(item.exists()).toBe(true);
+            await item.trigger('click');
+
+            const emitted = wrapper.emitted('add-context-file');
+            expect(emitted).toBeTruthy();
+            expect((emitted?.[0]?.[0] as FileInfo).path).toBe('/pick-me.md');
+        });
+
+        it('disables the add button when the max is reached', () => {
+            const contextFiles = Array.from({ length: 10 }, (_, i) => makeFile(`f${i}.md`, `/f${i}.md`));
+            const wrapper = mountWithI18n(AiInputArea, {
+                props: {
+                    agentMode: false,
+                    activeFile: null,
+                    inputMessage: '',
+                    isReady: true,
+                    isAnyGenerating: false,
+                    isStreaming: false,
+                    inputField: null,
+                    showThinking: false,
+                    contextFiles,
+                    availableFiles: [],
+                    maxContextFiles: 10,
+                },
+            });
+
+            expect(wrapper.find('.ai-add-context-btn').attributes('disabled')).toBeDefined();
         });
     });
 });

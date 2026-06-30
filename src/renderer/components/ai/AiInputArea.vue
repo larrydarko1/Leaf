@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed, nextTick } from 'vue';
 import { useThrottleFn } from '@vueuse/core';
 import type { FileInfo } from '@/schemas/vault';
 import { useI18n } from 'vue-i18n';
@@ -8,7 +8,6 @@ const { t } = useI18n();
 
 type Props = {
     agentMode: boolean;
-    includeNoteContext: boolean;
     showThinking: boolean;
     activeFile: FileInfo | null;
     inputMessage: string;
@@ -16,18 +15,57 @@ type Props = {
     isAnyGenerating: boolean;
     isStreaming: boolean;
     inputField: HTMLTextAreaElement | null;
+    contextFiles?: FileInfo[];
+    availableFiles?: FileInfo[];
+    maxContextFiles?: number;
 };
 
-const props = defineProps<Props>();
-void props;
+const props = withDefaults(defineProps<Props>(), {
+    contextFiles: () => [],
+    availableFiles: () => [],
+    maxContextFiles: 10,
+});
 
-defineEmits<{
+const emit = defineEmits<{
     'update:inputMessage': [value: string];
-    'update:includeNoteContext': [value: boolean];
     'update:showThinking': [value: boolean];
+    'add-context-file': [file: FileInfo];
+    'remove-context-file': [path: string];
     'send': [];
     'stop': [];
 }>();
+
+// ––– Context file picker –––
+
+const showFilePicker = ref(false);
+const fileSearch = ref('');
+const fileSearchInput = ref<HTMLInputElement | null>(null);
+
+const canAddMore = computed(() => props.contextFiles.length < props.maxContextFiles);
+
+const filteredAvailableFiles = computed(() => {
+    const query = fileSearch.value.trim().toLowerCase();
+    if (query === '') return props.availableFiles;
+    return props.availableFiles.filter(
+        (f) => f.name.toLowerCase().includes(query) || f.relativePath.toLowerCase().includes(query),
+    );
+});
+
+function toggleFilePicker() {
+    if (showFilePicker.value) {
+        showFilePicker.value = false;
+        return;
+    }
+    if (!canAddMore.value) return;
+    showFilePicker.value = true;
+    fileSearch.value = '';
+    void nextTick(() => fileSearchInput.value?.focus());
+}
+
+function selectContextFile(file: FileInfo) {
+    emit('add-context-file', file);
+    showFilePicker.value = false;
+}
 
 const inputAreaRef = ref<HTMLDivElement | null>(null);
 const isResizing = ref(false);
@@ -122,59 +160,132 @@ onMounted(() => {
             >
         </div>
 
-        <!-- Context inclusion indicator -->
+        <!-- Attached context files -->
         <div
-            v-if="includeNoteContext && activeFile"
-            class="ai-context-hint">
-            <svg
-                width="10"
-                height="10"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                aria-hidden="true">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z" />
-            </svg>
-            <span :aria-label="t('ai.current_note_included_as_context', { file: activeFile.name })">{{
-                t('ai.current_note_included_as_context', { file: activeFile.name })
-            }}</span>
+            v-if="contextFiles.length > 0"
+            class="ai-context-files">
+            <span class="ai-context-files-label"
+                >{{ t('ai.context_files') }} ({{ contextFiles.length }}/{{ maxContextFiles }})</span
+            >
+            <div class="ai-context-chips">
+                <span
+                    v-for="file in contextFiles"
+                    :key="file.path"
+                    class="ai-context-chip"
+                    :title="file.relativePath">
+                    <svg
+                        width="11"
+                        height="11"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        aria-hidden="true">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z" />
+                    </svg>
+                    <span class="ai-context-chip-name">{{ file.name }}</span>
+                    <button
+                        type="button"
+                        class="ai-context-chip-remove"
+                        :title="t('ai.remove_from_context')"
+                        :aria-label="t('ai.remove_file_from_context', { file: file.name })"
+                        @click="$emit('remove-context-file', file.path)">
+                        <svg
+                            width="10"
+                            height="10"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            aria-hidden="true">
+                            <line
+                                x1="18"
+                                y1="6"
+                                x2="6"
+                                y2="18" />
+                            <line
+                                x1="6"
+                                y1="6"
+                                x2="18"
+                                y2="18" />
+                        </svg>
+                    </button>
+                </span>
+            </div>
         </div>
 
-        <!-- eslint-disable-next-line vuejs-accessibility/label-has-for -->
         <div
             class="ai-input-row"
             :class="{ 'ai-input-activated': isStreaming }">
-            <!-- eslint-disable-next-line vuejs-accessibility/label-has-for -->
-            <label
+            <!-- Add files to context -->
+            <div class="ai-context-picker">
+                <button
+                    type="button"
+                    class="ai-context-toggle ai-add-context-btn"
+                    :class="{ 'ai-context-active': showFilePicker }"
+                    :title="t('ai.add_files_to_context')"
+                    :aria-label="t('ai.add_files_to_context')"
+                    :disabled="!canAddMore && !showFilePicker"
+                    @click="toggleFilePicker">
+                    <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true">
+                        <path
+                            d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                    </svg>
+                </button>
+                <!-- eslint-disable-next-line a11y/no-static-element-interactions, a11y/click-events-have-key-events -->
+                <div
+                    v-if="showFilePicker"
+                    class="ai-file-picker-overlay"
+                    @click="showFilePicker = false" />
+                <div
+                    v-if="showFilePicker"
+                    class="ai-file-picker">
+                    <input
+                        ref="fileSearchInput"
+                        v-model="fileSearch"
+                        type="text"
+                        class="ai-file-picker-search"
+                        :placeholder="t('ai.search_files')"
+                        :aria-label="t('ai.search_files')" />
+                    <ul class="ai-file-picker-list">
+                        <li
+                            v-if="filteredAvailableFiles.length === 0"
+                            class="ai-file-picker-empty">
+                            {{ t('ai.no_files_to_add') }}
+                        </li>
+                        <li
+                            v-for="file in filteredAvailableFiles"
+                            :key="file.path">
+                            <button
+                                type="button"
+                                class="ai-file-picker-item"
+                                @click="selectContextFile(file)">
+                                <span class="ai-file-picker-item-name">{{ file.name }}</span>
+                                <span class="ai-file-picker-item-path">{{ file.relativePath }}</span>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <button
+                type="button"
                 class="ai-context-toggle"
-                :title="t('ai.include_current_note_as_context')">
-                <input
-                    :checked="includeNoteContext"
-                    type="checkbox"
-                    :disabled="!activeFile"
-                    :aria-label="t('ai.include_current_note_as_context')"
-                    @change="$emit('update:includeNoteContext', ($event.target as HTMLInputElement).checked)" />
-                <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    :class="{ 'ai-context-active': includeNoteContext && activeFile }"
-                    aria-hidden="true">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z" />
-                </svg>
-            </label>
-            <!-- eslint-disable-next-line vuejs-accessibility/label-has-for -->
-            <label
-                class="ai-context-toggle"
-                :title="t('ai.show_thinking')">
-                <input
-                    :checked="showThinking"
-                    type="checkbox"
-                    :aria-label="t('ai.show_thinking')"
-                    @change="$emit('update:showThinking', ($event.target as HTMLInputElement).checked)" />
+                :class="{ 'ai-context-active': showThinking }"
+                :title="t('ai.show_thinking')"
+                :aria-label="t('ai.show_thinking')"
+                :aria-pressed="showThinking"
+                @click="$emit('update:showThinking', !showThinking)">
                 <svg
                     id="_x32_"
-                    :class="{ 'ai-context-active': showThinking }"
                     aria-hidden="true"
                     height="14"
                     width="14"
@@ -202,7 +313,7 @@ onMounted(() => {
                         </g>
                     </g>
                 </svg>
-            </label>
+            </button>
             <textarea
                 ref="inputField"
                 :value="inputMessage"
@@ -343,20 +454,6 @@ onMounted(() => {
     }
 }
 
-/* ––– Context Hint ––– */
-
-.ai-context-hint {
-    display: flex;
-    align-items: center;
-    gap: $space-1;
-    font-size: $font-size-xs;
-    color: $accent-color;
-    padding: 0 $space-1 $space-2;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
 /* ––– Input Row ––– */
 
 .ai-input-row {
@@ -420,6 +517,8 @@ onMounted(() => {
 
 .ai-context-toggle {
     display: flex;
+    border: none;
+    background: transparent;
     align-items: center;
     justify-content: center;
     cursor: pointer;
@@ -443,6 +542,186 @@ onMounted(() => {
 
 .ai-context-active {
     color: $accent-color;
+}
+
+/* ––– Context Files (attached) ––– */
+
+.ai-context-files {
+    display: flex;
+    flex-direction: column;
+    gap: $space-1;
+    padding: 0 $space-1 $space-2;
+}
+
+.ai-context-files-label {
+    font-size: $font-size-xs;
+    color: $text2;
+    font-weight: $font-weight-semibold;
+}
+
+.ai-context-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-1;
+}
+
+.ai-context-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
+    max-width: 100%;
+    padding: $space-0 $space-1 $space-0 $space-2;
+    background: $bg-hover;
+    border: 1px solid $text3;
+    border-radius: $border-radius;
+    font-size: $font-size-xs;
+    color: $text1;
+
+    svg {
+        flex-shrink: 0;
+        color: $accent-color;
+    }
+}
+
+.ai-context-chip-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 140px;
+}
+
+.ai-context-chip-remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $space-0;
+    background: transparent;
+    border: none;
+    border-radius: $border-radius-xs;
+    color: $text2;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition:
+        color $transition-fast,
+        background $transition-fast;
+
+    &:hover {
+        color: $danger-color;
+        background: $bg-primary;
+    }
+}
+
+/* ––– Context File Picker ––– */
+
+.ai-context-picker {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.ai-add-context-btn {
+    background: transparent;
+    border: none;
+
+    &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+
+        &:hover {
+            color: $text2;
+            background: transparent;
+        }
+    }
+}
+
+.ai-file-picker-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: $z-dropdown;
+}
+
+.ai-file-picker {
+    position: absolute;
+    bottom: calc(100% + #{$space-1});
+    left: 0;
+    z-index: $z-overlay;
+    width: 280px;
+    max-width: 80vw;
+    display: flex;
+    flex-direction: column;
+    background: $bg-primary;
+    border: 1px solid $text3;
+    border-radius: $border-radius-lg;
+    box-shadow: 0 4px 16px rgb(0 0 0 / 25%);
+    overflow: hidden;
+}
+
+.ai-file-picker-search {
+    padding: $space-2;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid $text3;
+    color: $text1;
+    font-size: $font-size-sm;
+    font-family: inherit;
+
+    &::placeholder {
+        color: $text2;
+    }
+
+    &:focus {
+        outline: none;
+    }
+}
+
+.ai-file-picker-list {
+    list-style: none;
+    margin: 0;
+    padding: $space-1;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.ai-file-picker-empty {
+    padding: $space-2;
+    font-size: $font-size-xs;
+    color: $text2;
+    text-align: center;
+}
+
+.ai-file-picker-item {
+    display: flex;
+    flex-direction: column;
+    gap: $space-0;
+    width: 100%;
+    padding: $space-1 $space-2;
+    background: transparent;
+    border: none;
+    border-radius: $border-radius;
+    text-align: left;
+    cursor: pointer;
+    transition: background $transition-fast;
+
+    &:hover {
+        background: $bg-hover;
+    }
+}
+
+.ai-file-picker-item-name {
+    font-size: $font-size-sm;
+    color: $text1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ai-file-picker-item-path {
+    font-size: $font-size-xs;
+    color: $text2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* ––– Message Input ––– */

@@ -161,12 +161,16 @@ const mockScrollToBottom = vi.fn();
 const mockStopGeneration = vi.fn().mockResolvedValue(undefined);
 
 vi.mock('@/renderer/composables/ai/useAIChat', () => ({
+    MAX_CONTEXT_FILES: 10,
     useAIChat: vi.fn(() => ({
         messagesContainer: ref(null),
         inputField: mockInputField,
         inputMessage: ref(''),
         isStreaming: ref(false),
-        includeNoteContext: ref(false),
+        showThinking: ref(false),
+        contextFiles: ref([]),
+        addContextFile: vi.fn(),
+        removeContextFile: vi.fn(),
         copiedIndex: ref(null),
         editingIndex: ref(null),
         editContent: ref(''),

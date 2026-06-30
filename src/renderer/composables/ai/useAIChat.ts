@@ -36,6 +36,9 @@ type AiChatActions = {
     processAgentEdits: (msgIndex: number, edits: AgentFileEdit[]) => Promise<void>;
 };
 
+// Maximum number of files a user can attach as additional context
+export const MAX_CONTEXT_FILES = 10;
+
 export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
     const { messages, status, conversationTokenCount, currentConversationId, agentMode, activeFile, workspacePath } =
         deps;
@@ -56,8 +59,8 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
     // Chat state
     const inputMessage = ref('');
     const isStreaming = ref(false);
-    const includeNoteContext = ref(false);
     const showThinking = ref(false);
+    const contextFiles = ref<FileInfo[]>([]);
     const copiedIndex = ref<number | null>(null);
     const userScrolledUp = ref(false);
 
@@ -68,6 +71,89 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
 
     const isReady = computed(() => status.value.isModelLoaded);
     const isAnyGenerating = computed(() => status.value.isGenerating);
+
+    // Context file management
+
+    function addContextFile(file: FileInfo) {
+        if (contextFiles.value.length >= MAX_CONTEXT_FILES) return;
+        if (contextFiles.value.some((f) => f.path === file.path)) return;
+        contextFiles.value.push(file);
+    }
+
+    function removeContextFile(path: string) {
+        contextFiles.value = contextFiles.value.filter((f) => f.path !== path);
+    }
+
+    async function readFileForContext(file: FileInfo): Promise<string | null> {
+        try {
+            const result = await window.electronAPI.readFile(file.path);
+            if (result.success && result.content !== null && result.content !== undefined) return result.content;
+        } catch (error) {
+            window.electronAPI.log.error('Failed to read file for context:', error);
+        }
+        return null;
+    }
+
+    /**
+     * Collects the files to send as context, de-duplicated by path. In agent
+     * mode the active file is always included so the agent can edit it; any
+     * files the user attached via the context picker are always included.
+     */
+    function collectContextFiles(includeActive: boolean): FileInfo[] {
+        const files: FileInfo[] = [];
+        const seen = new Set<string>();
+        if (includeActive && activeFile.value !== null) {
+            files.push(activeFile.value);
+            seen.add(activeFile.value.path);
+        }
+        for (const file of contextFiles.value) {
+            if (!seen.has(file.path)) {
+                files.push(file);
+                seen.add(file.path);
+            }
+        }
+        return files;
+    }
+
+    /**
+     * Builds the note-context string passed to the model, supporting multiple
+     * attached files. Returns null when there is nothing to include.
+     */
+    async function buildNoteContext(): Promise<string | null> {
+        // Agent mode: always include the active file plus any attached files,
+        // wrapped with the agent system prompt and the agent-aware reader.
+        if (agentMode.value && workspacePath.value !== null) {
+            const files = collectContextFiles(true);
+            if (files.length === 0) return null;
+            let agentContext = AGENT_SYSTEM_PROMPT + '\n\n';
+            for (const file of files) {
+                try {
+                    const fileResult = await window.electronAPI.agentReadFile(file.path, workspacePath.value);
+                    if (fileResult.success && fileResult.content !== null && fileResult.content !== undefined) {
+                        agentContext += `Current content of "${file.name}" (${file.relativePath}):\n\`\`\`\n${fileResult.content}\n\`\`\`\n\n`;
+                    }
+                } catch (err) {
+                    agentContext += `Note: Could not read "${file.name}": ${(err as Error).message}\n\n`;
+                }
+            }
+            return agentContext;
+        }
+
+        // Normal mode: include only the files the user attached as context.
+        const files = collectContextFiles(false);
+        if (files.length === 0) return null;
+
+        // Single file: pass raw content.
+        if (files.length === 1) return await readFileForContext(files[0]);
+
+        // Multiple files: label each clearly so the model can tell them apart.
+        const parts: string[] = [];
+        for (const file of files) {
+            const content = await readFileForContext(file);
+            if (content !== null) parts.push(`File: ${file.relativePath}\n\`\`\`\n${content}\n\`\`\``);
+        }
+        return parts.length > 0 ? parts.join('\n\n') : null;
+    }
 
     // Scroll helpers
 
@@ -205,16 +291,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         isStreaming.value = true;
         userScrolledUp.value = false;
         scrollToBottom(true);
-        let noteContext: string | null = null;
-        if (includeNoteContext.value && activeFile.value !== null) {
-            try {
-                const result = await window.electronAPI.readFile(activeFile.value.path);
-                if (result.success && result.content !== null && result.content !== undefined)
-                    noteContext = result.content;
-            } catch (error) {
-                window.electronAPI.log.error('Failed to read note for context:', error);
-            }
-        }
+        const noteContext = await buildNoteContext();
         try {
             const result = await window.electronAPI.aiChat(msg.content, noteContext);
             if (result.success === false) {
@@ -298,27 +375,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         userScrolledUp.value = false;
         scrollToBottom(true);
 
-        let noteContext: string | null = null;
-        if (agentMode.value && workspacePath.value !== null && activeFile.value !== null) {
-            let agentContext = AGENT_SYSTEM_PROMPT + '\n\n';
-            try {
-                const fileResult = await window.electronAPI.agentReadFile(activeFile.value.path, workspacePath.value);
-                if (fileResult.success && fileResult.content !== null && fileResult.content !== undefined) {
-                    agentContext += `Current content of "${activeFile.value.name}" (${activeFile.value.relativePath}):\n\`\`\`\n${fileResult.content}\n\`\`\`\n\n`;
-                }
-            } catch (err) {
-                agentContext += `Note: Could not read "${activeFile.value.name}": ${(err as Error).message}\n\n`;
-            }
-            noteContext = agentContext;
-        } else if (includeNoteContext.value && activeFile.value !== null) {
-            try {
-                const result = await window.electronAPI.readFile(activeFile.value.path);
-                if (result.success && result.content !== null && result.content !== undefined)
-                    noteContext = result.content;
-            } catch (error) {
-                window.electronAPI.log.error('Failed to read note for context:', error);
-            }
-        }
+        const noteContext = await buildNoteContext();
 
         try {
             const result = await window.electronAPI.aiChat(text, noteContext);
@@ -431,8 +488,10 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         inputField,
         inputMessage,
         isStreaming,
-        includeNoteContext,
         showThinking,
+        contextFiles,
+        addContextFile,
+        removeContextFile,
         copiedIndex,
         editingIndex,
         editContent,

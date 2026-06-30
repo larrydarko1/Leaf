@@ -678,6 +678,7 @@ function toggleLanguagePanel() {
                     v-if="showAiPanel"
                     :active-file="activeFile"
                     :workspace-path="currentFolder"
+                    :files="files"
                     :aria-label="t('app.ai_assistant_panel')"
                     @close="showAiPanel = false"
                     @file-changed="handleAiFileChanged" />

@@ -529,13 +529,9 @@ describe('useAIChat', () => {
             expect(sysMsg?.content).toContain('summarized');
         });
 
-        it('reads note content when includeNoteContext is true', async () => {
-            const { chat } = makeChat();
-            chat.includeNoteContext.value = true;
-            chat.inputMessage.value = 'Hello';
+        it('reads note content for an attached context file', async () => {
             mockReadFile.mockResolvedValueOnce({ success: true, content: 'note text' });
 
-            // Supply an activeFile by rebuilding chat with activeFile set
             const messages = ref<ChatMessage[]>([]);
             const status = ref(makeStatus());
             const conversationTokenCount = ref(0);
@@ -568,12 +564,12 @@ describe('useAIChat', () => {
                     conversationTokenCount,
                     currentConversationId,
                     agentMode,
-                    activeFile: { value: fakeFile },
+                    activeFile: { value: null },
                     workspacePath: { value: null },
                 },
                 actions,
             );
-            chatWithFile.includeNoteContext.value = true;
+            chatWithFile.addContextFile(fakeFile);
             chatWithFile.inputMessage.value = 'Hi';
             mockReadFile.mockResolvedValueOnce({ success: true, content: 'note text' });
 
