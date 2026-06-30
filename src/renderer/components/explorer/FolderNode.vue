@@ -43,6 +43,14 @@ const emit = defineEmits<{
 
 const renameInput = ref<HTMLInputElement | null>(null);
 
+// Marquee-on-hover: scroll truncated names so the full text becomes readable.
+const folderNameTextEl = ref<HTMLElement | null>(null);
+const fileNameTextEl = ref<HTMLElement | null>(null);
+const folderScrollDistance = ref(0);
+const fileScrollDistance = ref(0);
+const folderScrollStyle = computed(() => scrollStyle(folderScrollDistance.value));
+const fileScrollStyle = computed(() => scrollStyle(fileScrollDistance.value));
+
 const { isDragging, isDragOver, handleDragStart, handleDragEnd, handleDragOver, handleDragLeave, handleDrop } =
     useTreeNodeDrag(
         () => props.node,
@@ -108,6 +116,37 @@ function handleFileClick(event: MouseEvent) {
     }
 }
 
+function scrollStyle(distance: number): Record<string, string> {
+    if (distance <= 0) return {};
+    const duration = Math.max(1.2, distance / 40 + 0.8);
+    return {
+        '--scroll-distance': `-${distance}px`,
+        '--scroll-duration': `${duration}s`,
+    };
+}
+
+function onFolderNameEnter() {
+    const el = folderNameTextEl.value;
+    if (el === null) return;
+    const overflow = el.scrollWidth - el.clientWidth;
+    if (overflow > 0) folderScrollDistance.value = overflow + 6;
+}
+
+function onFolderNameLeave() {
+    folderScrollDistance.value = 0;
+}
+
+function onFileNameEnter() {
+    const el = fileNameTextEl.value;
+    if (el === null) return;
+    const overflow = el.scrollWidth - el.clientWidth;
+    if (overflow > 0) fileScrollDistance.value = overflow + 6;
+}
+
+function onFileNameLeave() {
+    fileScrollDistance.value = 0;
+}
+
 const getFileTypeLabel = (): string => {
     if (isImageFile.value) return t('file.image');
     if (isVideoFile.value) return t('file.video');
@@ -141,6 +180,10 @@ const getFileTypeLabel = (): string => {
             draggable="true"
             @click="handleFolderClick"
             @contextmenu.prevent="$emit('contextMenu', 'folder', node.path, $event)"
+            @mouseenter="onFolderNameEnter"
+            @mouseleave="onFolderNameLeave"
+            @focusin="onFolderNameEnter"
+            @focusout="onFolderNameLeave"
             @dragstart="handleDragStart"
             @dragend="handleDragEnd"
             @dragover.prevent="handleDragOver"
@@ -211,7 +254,7 @@ const getFileTypeLabel = (): string => {
                 :value="renameValue"
                 class="folder-name-input"
                 type="text"
-                :aria-label="`${t('folder.rename')}: ${node.name}`"
+                :aria-label="`${t('file.rename')}: ${node.name}`"
                 @input="$emit('updateRenameValue', ($event.target as HTMLInputElement).value)"
                 @keydown.enter="($event.target as HTMLInputElement).blur()"
                 @keydown.esc="$emit('cancelRename')"
@@ -221,9 +264,15 @@ const getFileTypeLabel = (): string => {
             <!-- Folder name display -->
             <span
                 v-else
-                class="folder-name"
-                >{{ node.name }}</span
-            >
+                class="folder-name">
+                <span
+                    ref="folderNameTextEl"
+                    class="name-text"
+                    :class="{ scrolling: folderScrollDistance > 0 }"
+                    :style="folderScrollStyle"
+                    >{{ node.name }}</span
+                >
+            </span>
         </div>
 
         <!-- File item -->
@@ -251,6 +300,10 @@ const getFileTypeLabel = (): string => {
             draggable="true"
             @click="handleFileClick"
             @contextmenu.prevent="node.file && $emit('contextMenu', 'file', node.file.path, $event)"
+            @mouseenter="onFileNameEnter"
+            @mouseleave="onFileNameLeave"
+            @focusin="onFileNameEnter"
+            @focusout="onFileNameLeave"
             @dragstart="handleDragStart"
             @dragend="handleDragEnd">
             <!-- Image icon for image files -->
@@ -425,9 +478,15 @@ const getFileTypeLabel = (): string => {
             <!-- File name display -->
             <span
                 v-else
-                class="file-name"
-                >{{ node.name }}</span
-            >
+                class="file-name">
+                <span
+                    ref="fileNameTextEl"
+                    class="name-text"
+                    :class="{ scrolling: fileScrollDistance > 0 }"
+                    :style="fileScrollStyle"
+                    >{{ node.name }}</span
+                >
+            </span>
 
             <!-- Bookmark indicator -->
             <svg
@@ -449,7 +508,7 @@ const getFileTypeLabel = (): string => {
         <template v-if="node.type === 'folder' && isExpanded && node.children">
             <div
                 role="group"
-                :aria-label="`${t('folder.contents_of')}: ${node.name}`">
+                :aria-label="`${t('file.content_of')}: ${node.name}`">
                 <FolderNode
                     v-for="child in node.children"
                     :key="child.path"
@@ -572,9 +631,8 @@ const getFileTypeLabel = (): string => {
 
     .folder-name {
         flex: 1;
-        white-space: nowrap;
+        min-width: 0;
         overflow: hidden;
-        text-overflow: ellipsis;
     }
 
     .folder-name-input {
@@ -650,12 +708,51 @@ const getFileTypeLabel = (): string => {
 
 .file-name {
     flex: 1;
+    min-width: 0;
     font-size: $font-size-sm;
     color: $text1;
+    overflow: hidden;
+    line-height: $line-height;
+}
+
+/* ––– Truncated name marquee on hover ––– */
+
+.name-text {
+    display: block;
+    max-width: 100%;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    line-height: $line-height;
+
+    &.scrolling {
+        width: max-content;
+        max-width: none;
+        overflow: visible;
+        text-overflow: clip;
+        animation: name-scroll var(--scroll-duration, 2s) linear infinite;
+    }
+}
+
+@keyframes name-scroll {
+    0%,
+    12% {
+        transform: translateX(0);
+    }
+
+    50%,
+    62% {
+        transform: translateX(var(--scroll-distance, 0));
+    }
+
+    100% {
+        transform: translateX(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .name-text.scrolling {
+        animation: none;
+    }
 }
 
 .bookmark-star {
