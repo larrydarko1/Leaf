@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ref } from 'vue';
-import { useAIChat } from '@/renderer/composables/ai/useAIChat';
+import { useAIChat, MAX_CONTEXT_FILES } from '@/renderer/composables/ai/useAIChat';
 import type { ChatMessage } from '@/schemas/chat';
 import type { AiStatus } from '@/schemas/ai';
 
@@ -595,6 +595,176 @@ describe('useAIChat', () => {
             await chat.sendMessage();
 
             expect(chat.inputMessage.value).toBe('');
+        });
+    });
+
+    // ── context files ──────────────────────────────────────────────────────
+    describe('context files', () => {
+        const fileA = {
+            name: 'a.md',
+            path: '/vault/a.md',
+            relativePath: 'a.md',
+            extension: '.md',
+            size: 0,
+            modified: '',
+            folder: '.',
+        };
+        const fileB = {
+            name: 'b.md',
+            path: '/vault/b.md',
+            relativePath: 'b.md',
+            extension: '.md',
+            size: 0,
+            modified: '',
+            folder: '.',
+        };
+
+        function makeAgentChat(activeFile: typeof fileA | null) {
+            const messages = ref<ChatMessage[]>([]);
+            const status = ref<AiStatus>(makeStatus());
+            const conversationTokenCount = ref(0);
+            const currentConversationId = ref<string | null>('conv-1');
+            const agentMode = ref(true);
+            const actions = {
+                createNewConversation: vi.fn().mockResolvedValue(undefined),
+                saveCurrentConversation: vi.fn().mockResolvedValue(undefined),
+                saveTokenCountToConversation: vi.fn().mockResolvedValue(undefined),
+                refreshConversationList: vi.fn().mockResolvedValue(undefined),
+                refreshStatus: vi.fn().mockResolvedValue(undefined),
+                parseAgentEdits: vi.fn().mockReturnValue({ cleanContent: '', edits: [] }),
+                processAgentEdits: vi.fn().mockResolvedValue(undefined),
+            };
+            const chat = useAIChat(
+                {
+                    messages,
+                    status,
+                    conversationTokenCount,
+                    currentConversationId,
+                    agentMode,
+                    activeFile: { value: activeFile },
+                    workspacePath: { value: '/vault' },
+                },
+                actions,
+            );
+            return { chat, messages };
+        }
+
+        it('addContextFile adds a file', () => {
+            const { chat } = makeChat();
+            chat.addContextFile(fileA);
+            expect(chat.contextFiles.value).toHaveLength(1);
+        });
+
+        it('addContextFile ignores duplicates by path', () => {
+            const { chat } = makeChat();
+            chat.addContextFile(fileA);
+            chat.addContextFile({ ...fileA });
+            expect(chat.contextFiles.value).toHaveLength(1);
+        });
+
+        it('addContextFile respects MAX_CONTEXT_FILES cap', () => {
+            const { chat } = makeChat();
+            for (let i = 0; i < MAX_CONTEXT_FILES + 5; i++) {
+                chat.addContextFile({ ...fileA, path: `/vault/f${i}.md`, name: `f${i}.md` });
+            }
+            expect(chat.contextFiles.value).toHaveLength(MAX_CONTEXT_FILES);
+        });
+
+        it('removeContextFile removes by path', () => {
+            const { chat } = makeChat();
+            chat.addContextFile(fileA);
+            chat.addContextFile(fileB);
+            chat.removeContextFile('/vault/a.md');
+            expect(chat.contextFiles.value.map((f) => f.path)).toEqual(['/vault/b.md']);
+        });
+
+        it('sends labeled context for multiple attached files', async () => {
+            const { chat } = makeChat();
+            mockReadFile.mockResolvedValue({ success: true, content: 'CONTENT' });
+            chat.addContextFile(fileA);
+            chat.addContextFile(fileB);
+            chat.inputMessage.value = 'Hi';
+
+            await chat.sendMessage();
+
+            const ctx = mockAiChat.mock.calls[0][1] as string;
+            expect(ctx).toContain('File: a.md');
+            expect(ctx).toContain('File: b.md');
+            expect(ctx).toContain('CONTENT');
+        });
+
+        it('skips files that fail to read in multi-file context', async () => {
+            const { chat } = makeChat();
+            mockReadFile
+                .mockResolvedValueOnce({ success: true, content: 'OK' })
+                .mockResolvedValueOnce({ success: false });
+            chat.addContextFile(fileA);
+            chat.addContextFile(fileB);
+            chat.inputMessage.value = 'Hi';
+
+            await chat.sendMessage();
+
+            const ctx = mockAiChat.mock.calls[0][1] as string;
+            expect(ctx).toContain('File: a.md');
+            expect(ctx).not.toContain('File: b.md');
+        });
+
+        it('passes null context when every attached file fails to read', async () => {
+            const { chat } = makeChat();
+            mockReadFile.mockResolvedValue({ success: false });
+            chat.addContextFile(fileA);
+            chat.addContextFile(fileB);
+            chat.inputMessage.value = 'Hi';
+
+            await chat.sendMessage();
+
+            expect(mockAiChat.mock.calls[0][1]).toBeNull();
+        });
+
+        it('logs and yields null context when readFile throws', async () => {
+            const { chat } = makeChat();
+            mockReadFile.mockRejectedValueOnce(new Error('boom'));
+            chat.addContextFile(fileA);
+            chat.inputMessage.value = 'Hi';
+
+            await chat.sendMessage();
+
+            expect(window.electronAPI.log.error).toHaveBeenCalled();
+            expect(mockAiChat.mock.calls[0][1]).toBeNull();
+        });
+
+        it('agent mode wraps the active file and attached files via agentReadFile', async () => {
+            mockAgentReadFile.mockResolvedValue({ success: true, content: 'AGENT CONTENT' });
+            const { chat } = makeAgentChat(fileA);
+            chat.addContextFile(fileB);
+            chat.inputMessage.value = 'Hi';
+
+            await chat.sendMessage();
+
+            const ctx = mockAiChat.mock.calls[0][1] as string;
+            expect(ctx).toContain('Current content of "a.md"');
+            expect(ctx).toContain('Current content of "b.md"');
+            expect(ctx).toContain('AGENT CONTENT');
+        });
+
+        it('agent mode notes files that cannot be read', async () => {
+            mockAgentReadFile.mockRejectedValueOnce(new Error('nope'));
+            const { chat } = makeAgentChat(fileA);
+            chat.inputMessage.value = 'Hi';
+
+            await chat.sendMessage();
+
+            const ctx = mockAiChat.mock.calls[0][1] as string;
+            expect(ctx).toContain('Could not read "a.md"');
+        });
+
+        it('agent mode passes null context when there are no files', async () => {
+            const { chat } = makeAgentChat(null);
+            chat.inputMessage.value = 'Hi';
+
+            await chat.sendMessage();
+
+            expect(mockAiChat.mock.calls[0][1]).toBeNull();
         });
     });
 });

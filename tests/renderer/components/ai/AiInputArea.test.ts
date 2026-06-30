@@ -795,5 +795,129 @@ describe('AiInputArea', () => {
 
             expect(wrapper.find('.ai-add-context-btn').attributes('disabled')).toBeDefined();
         });
+
+        it('filters the picker list by the search query', async () => {
+            const wrapper = mountWithI18n(AiInputArea, {
+                props: {
+                    agentMode: false,
+                    activeFile: null,
+                    inputMessage: '',
+                    isReady: true,
+                    isAnyGenerating: false,
+                    isStreaming: false,
+                    inputField: null,
+                    showThinking: false,
+                    contextFiles: [],
+                    availableFiles: [makeFile('alpha.md', '/alpha.md'), makeFile('beta.md', '/beta.md')],
+                    maxContextFiles: 10,
+                },
+            });
+
+            await wrapper.find('.ai-add-context-btn').trigger('click');
+            await wrapper.find('.ai-file-picker-search').setValue('beta');
+
+            const items = wrapper.findAll('.ai-file-picker-item');
+            expect(items).toHaveLength(1);
+            expect(items[0].text()).toContain('beta.md');
+        });
+
+        it('shows an empty message when the search matches nothing', async () => {
+            const wrapper = mountWithI18n(AiInputArea, {
+                props: {
+                    agentMode: false,
+                    activeFile: null,
+                    inputMessage: '',
+                    isReady: true,
+                    isAnyGenerating: false,
+                    isStreaming: false,
+                    inputField: null,
+                    showThinking: false,
+                    contextFiles: [],
+                    availableFiles: [makeFile('alpha.md', '/alpha.md')],
+                    maxContextFiles: 10,
+                },
+            });
+
+            await wrapper.find('.ai-add-context-btn').trigger('click');
+            await wrapper.find('.ai-file-picker-search').setValue('zzz');
+
+            expect(wrapper.find('.ai-file-picker-empty').exists()).toBe(true);
+            expect(wrapper.findAll('.ai-file-picker-item')).toHaveLength(0);
+        });
+
+        it('closes the picker when the add button is clicked again', async () => {
+            const wrapper = mountWithI18n(AiInputArea, {
+                props: {
+                    agentMode: false,
+                    activeFile: null,
+                    inputMessage: '',
+                    isReady: true,
+                    isAnyGenerating: false,
+                    isStreaming: false,
+                    inputField: null,
+                    showThinking: false,
+                    contextFiles: [],
+                    availableFiles: [makeFile('alpha.md', '/alpha.md')],
+                    maxContextFiles: 10,
+                },
+            });
+
+            const btn = wrapper.find('.ai-add-context-btn');
+            await btn.trigger('click');
+            expect(wrapper.find('.ai-file-picker').exists()).toBe(true);
+            await btn.trigger('click');
+            expect(wrapper.find('.ai-file-picker').exists()).toBe(false);
+        });
+
+        it('closes the picker when the overlay is clicked', async () => {
+            const wrapper = mountWithI18n(AiInputArea, {
+                props: {
+                    agentMode: false,
+                    activeFile: null,
+                    inputMessage: '',
+                    isReady: true,
+                    isAnyGenerating: false,
+                    isStreaming: false,
+                    inputField: null,
+                    showThinking: false,
+                    contextFiles: [],
+                    availableFiles: [makeFile('alpha.md', '/alpha.md')],
+                    maxContextFiles: 10,
+                },
+            });
+
+            await wrapper.find('.ai-add-context-btn').trigger('click');
+            expect(wrapper.find('.ai-file-picker').exists()).toBe(true);
+            await wrapper.find('.ai-file-picker-overlay').trigger('click');
+            expect(wrapper.find('.ai-file-picker').exists()).toBe(false);
+        });
+
+        it('emits update:showThinking when the thinking toggle is clicked', async () => {
+            const wrapper = mountWithI18n(AiInputArea, {
+                props: {
+                    agentMode: false,
+                    activeFile: null,
+                    inputMessage: '',
+                    isReady: true,
+                    isAnyGenerating: false,
+                    isStreaming: false,
+                    inputField: null,
+                    showThinking: false,
+                    contextFiles: [],
+                    availableFiles: [],
+                    maxContextFiles: 10,
+                },
+            });
+
+            const thinkingBtn = wrapper
+                .findAll('.ai-context-toggle')
+                .find((b) => !b.classes().includes('ai-add-context-btn'));
+            expect(thinkingBtn).toBeTruthy();
+            await thinkingBtn!.trigger('click');
+
+            const emitted = wrapper.emitted('update:showThinking');
+            expect(emitted).toBeTruthy();
+            expect(emitted?.[0]).toEqual([true]);
+        });
     });
 });
