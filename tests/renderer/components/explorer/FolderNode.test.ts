@@ -1,7 +1,17 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { mountWithI18n } from '@test-utils';
 import FolderNode from '@/renderer/components/explorer/FolderNode.vue';
 import type { FileInfo, TreeNode } from '@/schemas/vault';
+
+function makeDataTransfer(data = ''): DataTransfer {
+    return {
+        effectAllowed: '',
+        dropEffect: '',
+        types: [] as string[],
+        setData: vi.fn(),
+        getData: vi.fn(() => data),
+    } as unknown as DataTransfer;
+}
 
 function makeFile(name: string, path: string, ext = 'md'): FileInfo {
     return {
@@ -301,6 +311,178 @@ describe('FolderNode — renaming', () => {
             await input.trigger('blur');
             expect(wrapper.emitted('rename')).toBeDefined();
         }
+        wrapper.unmount();
+    });
+
+    it('emits "updateRenameValue" and "rename" (via Enter) from the file rename input', async () => {
+        const wrapper = mountWithI18n(FolderNode, {
+            props: { ...baseProps, node: makeFileNode(noteFile), renamingFile: noteFile, renameValue: 'notes' },
+        });
+        await wrapper.vm.$nextTick();
+        const input = wrapper.find('.file-name-input');
+        await input.setValue('renamed');
+        expect(wrapper.emitted('updateRenameValue')?.at(-1)).toEqual(['renamed']);
+        await input.trigger('keydown', { key: 'Enter' });
+        await input.trigger('blur');
+        expect(wrapper.emitted('rename')).toBeDefined();
+        wrapper.unmount();
+    });
+
+    it('wires the folder rename input handlers', async () => {
+        const wrapper = mountWithI18n(FolderNode, {
+            props: {
+                ...baseProps,
+                node: makeFolderNode('/vault/docs', 'docs'),
+                renamingFolder: '/vault/docs',
+                renameValue: 'docs',
+            },
+        });
+        await wrapper.vm.$nextTick();
+        const input = wrapper.find('.folder-name-input');
+        expect(input.exists()).toBe(true);
+        await input.setValue('renamed');
+        expect(wrapper.emitted('updateRenameValue')?.at(-1)).toEqual(['renamed']);
+        await input.trigger('keydown', { key: 'Escape' });
+        expect(wrapper.emitted('cancelRename')).toBeDefined();
+        await input.trigger('keydown', { key: 'Enter' });
+        await input.trigger('blur');
+        expect(wrapper.emitted('rename')).toBeDefined();
+        wrapper.unmount();
+    });
+});
+
+describe('FolderNode — drag and drop', () => {
+    const folderNode = makeFolderNode('/vault/docs', 'docs', [makeFileNode(noteFile)]);
+
+    it('marks the folder as dragging/drag-over through the drag lifecycle', async () => {
+        const wrapper = mountWithI18n(FolderNode, { props: { ...baseProps, node: folderNode } });
+        const item = wrapper.find('.folder-item');
+        await item.trigger('dragstart', { dataTransfer: makeDataTransfer() });
+        expect(item.classes()).toContain('is-dragging');
+        await item.trigger('dragover', { dataTransfer: makeDataTransfer() });
+        expect(item.classes()).toContain('drag-over');
+        await item.trigger('dragleave');
+        await item.trigger('dragend');
+        expect(wrapper.find('.folder-item').classes()).not.toContain('is-dragging');
+        wrapper.unmount();
+    });
+
+    it('emits "moveFile" when a file is dropped on the folder', async () => {
+        const wrapper = mountWithI18n(FolderNode, { props: { ...baseProps, node: folderNode } });
+        await wrapper.find('.folder-item').trigger('drop', { dataTransfer: makeDataTransfer('file:/vault/other.md') });
+        expect(wrapper.emitted('moveFile')?.[0]).toEqual(['/vault/other.md', '/vault/docs']);
+        wrapper.unmount();
+    });
+
+    it('emits "moveFolder" when a folder is dropped on the folder', async () => {
+        const wrapper = mountWithI18n(FolderNode, { props: { ...baseProps, node: folderNode } });
+        await wrapper.find('.folder-item').trigger('drop', { dataTransfer: makeDataTransfer('folder:/vault/other') });
+        expect(wrapper.emitted('moveFolder')?.[0]).toEqual(['/vault/other', '/vault/docs']);
+        wrapper.unmount();
+    });
+
+    it('marks a file item as dragging through drag start/end', async () => {
+        const wrapper = mountWithI18n(FolderNode, { props: { ...baseProps, node: makeFileNode(noteFile) } });
+        const item = wrapper.find('.file-item');
+        await item.trigger('dragstart', { dataTransfer: makeDataTransfer() });
+        expect(item.classes()).toContain('is-dragging');
+        await item.trigger('dragend');
+        expect(wrapper.find('.file-item').classes()).not.toContain('is-dragging');
+        wrapper.unmount();
+    });
+});
+
+describe('FolderNode — hover marquee', () => {
+    it('scrolls an overflowing folder name on hover and resets on leave', async () => {
+        const wrapper = mountWithI18n(FolderNode, {
+            props: { ...baseProps, node: makeFolderNode('/vault/docs', 'docs') },
+        });
+        const el = wrapper.find('.folder-name .name-text').element as HTMLElement;
+        Object.defineProperty(el, 'scrollWidth', { value: 200, configurable: true });
+        Object.defineProperty(el, 'clientWidth', { value: 100, configurable: true });
+        await wrapper.find('.folder-item').trigger('mouseenter');
+        expect(wrapper.find('.folder-name .name-text').classes()).toContain('scrolling');
+        await wrapper.find('.folder-item').trigger('mouseleave');
+        expect(wrapper.find('.folder-name .name-text').classes()).not.toContain('scrolling');
+        wrapper.unmount();
+    });
+
+    it('scrolls an overflowing file name on hover and resets on leave', async () => {
+        const wrapper = mountWithI18n(FolderNode, { props: { ...baseProps, node: makeFileNode(noteFile) } });
+        const el = wrapper.find('.file-name .name-text').element as HTMLElement;
+        Object.defineProperty(el, 'scrollWidth', { value: 200, configurable: true });
+        Object.defineProperty(el, 'clientWidth', { value: 100, configurable: true });
+        await wrapper.find('.file-item').trigger('mouseenter');
+        expect(wrapper.find('.file-name .name-text').classes()).toContain('scrolling');
+        await wrapper.find('.file-item').trigger('mouseleave');
+        expect(wrapper.find('.file-name .name-text').classes()).not.toContain('scrolling');
+        wrapper.unmount();
+    });
+
+    it('does not scroll when the name fits (no overflow)', async () => {
+        const wrapper = mountWithI18n(FolderNode, { props: { ...baseProps, node: makeFileNode(noteFile) } });
+        await wrapper.find('.file-item').trigger('mouseenter');
+        expect(wrapper.find('.file-name .name-text').classes()).not.toContain('scrolling');
+        wrapper.unmount();
+    });
+});
+
+describe('FolderNode — recursive child forwarding', () => {
+    const grandchildFile = makeFile('child.md', '/vault/docs/sub/child.md');
+    const childFolder = makeFolderNode('/vault/docs/sub', 'sub', [makeFileNode(grandchildFile)]);
+    const parent = makeFolderNode('/vault/docs', 'docs', [childFolder]);
+    const expanded = new Set(['/vault/docs', '/vault/docs/sub']);
+
+    it('re-emits selectFolder/toggleFolder/contextMenu from a child folder', async () => {
+        const wrapper = mountWithI18n(FolderNode, {
+            props: { ...baseProps, node: parent, expandedFolders: expanded },
+        });
+        const childItem = wrapper.findAll('.folder-item')[1];
+        await childItem.trigger('click');
+        expect(wrapper.emitted('selectFolder')?.at(-1)).toEqual(['/vault/docs/sub']);
+
+        await wrapper.findAll('.chevron-button')[1].trigger('click');
+        expect(wrapper.emitted('toggleFolder')?.at(-1)).toEqual(['/vault/docs/sub']);
+
+        await childItem.trigger('contextmenu');
+        expect(wrapper.emitted('contextMenu')?.at(-1)?.slice(0, 2)).toEqual(['folder', '/vault/docs/sub']);
+        wrapper.unmount();
+    });
+
+    it('re-emits moveFile/moveFolder from a child folder drop', async () => {
+        const wrapper = mountWithI18n(FolderNode, {
+            props: { ...baseProps, node: parent, expandedFolders: expanded },
+        });
+        const childItem = wrapper.findAll('.folder-item')[1];
+        await childItem.trigger('drop', { dataTransfer: makeDataTransfer('file:/vault/x.md') });
+        expect(wrapper.emitted('moveFile')?.at(-1)).toEqual(['/vault/x.md', '/vault/docs/sub']);
+        await childItem.trigger('drop', { dataTransfer: makeDataTransfer('folder:/vault/y') });
+        expect(wrapper.emitted('moveFolder')?.at(-1)).toEqual(['/vault/y', '/vault/docs/sub']);
+        wrapper.unmount();
+    });
+
+    it('re-emits selectFile bubbled from a deeply nested file', async () => {
+        const wrapper = mountWithI18n(FolderNode, {
+            props: { ...baseProps, node: parent, expandedFolders: expanded },
+        });
+        await wrapper.find('.file-item').trigger('click');
+        expect(wrapper.emitted('selectFile')?.at(-1)?.[0]).toEqual(grandchildFile);
+        wrapper.unmount();
+    });
+
+    it('re-emits rename/cancelRename/updateRenameValue from a renaming child folder', async () => {
+        const wrapper = mountWithI18n(FolderNode, {
+            props: { ...baseProps, node: parent, expandedFolders: expanded, renamingFolder: '/vault/docs/sub' },
+        });
+        await wrapper.vm.$nextTick();
+        const input = wrapper.find('.folder-name-input');
+        expect(input.exists()).toBe(true);
+        await input.setValue('renamed');
+        expect(wrapper.emitted('updateRenameValue')?.at(-1)).toEqual(['renamed']);
+        await input.trigger('keydown', { key: 'Escape' });
+        expect(wrapper.emitted('cancelRename')).toBeTruthy();
+        await input.trigger('blur');
+        expect(wrapper.emitted('rename')).toBeTruthy();
         wrapper.unmount();
     });
 });

@@ -3,6 +3,10 @@ import { ref, shallowRef } from 'vue';
 import { shallowMount } from '@vue/test-utils';
 import { i18n } from '@/renderer/i18n';
 import NoteEditor from '@/renderer/components/NoteEditor.vue';
+import { useDictation } from '@/renderer/composables/editor/useDictation';
+import { useNotePersistence } from '@/renderer/composables/editor/useNotePersistence';
+import { useEmbedResolver } from '@/renderer/composables/editor/useEmbedResolver';
+import { useEditorDrop } from '@/renderer/composables/editor/useEditorDrop';
 import type { FileInfo } from '@/schemas/vault';
 
 // ── CodeMirror utilities ────────────────────────────────────────────────────
@@ -373,6 +377,145 @@ describe('NoteEditor', () => {
             const wrapper = mountEditor(makeFile());
             wrapper.unmount();
             expect(mockRemoveSpeechStatusListener).toHaveBeenCalled();
+        });
+
+        it('stops dictation on unmount when actively dictating', () => {
+            const stop = vi.fn();
+            vi.mocked(useDictation).mockReturnValueOnce({
+                isDictating: ref(true),
+                isDictationLoading: ref(false),
+                toggleDictation: vi.fn(),
+                stopDictation: stop,
+            });
+            const wrapper = mountEditor(makeFile({ extension: '.md', path: '/v/n.md' }));
+            wrapper.unmount();
+            expect(stop).toHaveBeenCalled();
+        });
+    });
+
+    describe('code file (.js)', () => {
+        it('renders the code editor container and hides the dictation button', () => {
+            const wrapper = mountEditor(makeFile({ name: 'script.js', extension: '.js', path: '/v/script.js' }));
+            expect(wrapper.find('.code-editor-container').exists()).toBe(true);
+            expect(wrapper.find('.dictation-btn').exists()).toBe(false);
+            wrapper.unmount();
+        });
+    });
+
+    describe('dictation button states', () => {
+        it('shows the loading state and disables the button while the model loads', () => {
+            vi.mocked(useDictation).mockReturnValueOnce({
+                isDictating: ref(false),
+                isDictationLoading: ref(true),
+                toggleDictation: vi.fn(),
+                stopDictation: vi.fn(),
+            });
+            const wrapper = mountEditor(makeFile({ extension: '.md', path: '/v/n.md' }));
+            const btn = wrapper.find('.dictation-btn');
+            expect(btn.classes()).toContain('loading');
+            expect(btn.attributes('disabled')).toBeDefined();
+            wrapper.unmount();
+        });
+
+        it('shows the active state while dictating', () => {
+            vi.mocked(useDictation).mockReturnValueOnce({
+                isDictating: ref(true),
+                isDictationLoading: ref(false),
+                toggleDictation: vi.fn(),
+                stopDictation: vi.fn(),
+            });
+            const wrapper = mountEditor(makeFile({ extension: '.md', path: '/v/n.md' }));
+            expect(wrapper.find('.dictation-btn').classes()).toContain('active');
+            wrapper.unmount();
+        });
+    });
+
+    describe('drawing canvas integration', () => {
+        it('forwards drawing save to handleDrawingSave', () => {
+            const wrapper = mountEditor(
+                makeFile({ name: 'art.drawing', extension: '.drawing', path: '/v/art.drawing' }),
+            );
+            wrapper.findComponent({ name: 'DrawingCanvas' }).vm.$emit('save', 'drawing-data');
+            expect(mockHandleDrawingSave).toHaveBeenCalledWith('drawing-data');
+            wrapper.unmount();
+        });
+
+        it('updates unsaved state when the drawing canvas reports changes', async () => {
+            const wrapper = mountEditor(
+                makeFile({ name: 'art.drawing', extension: '.drawing', path: '/v/art.drawing' }),
+            );
+            wrapper.findComponent({ name: 'DrawingCanvas' }).vm.$emit('content-changed', true);
+            await wrapper.vm.$nextTick();
+            expect(mockHasUnsavedChanges.value).toBe(true);
+            wrapper.unmount();
+        });
+    });
+
+    describe('global drop prevention', () => {
+        it('prevents default on document drop and dragover events', () => {
+            const wrapper = mountEditor(makeFile());
+            const dropEvt = new Event('drop', { bubbles: true, cancelable: true });
+            const dragEvt = new Event('dragover', { bubbles: true, cancelable: true });
+            document.dispatchEvent(dropEvt);
+            document.dispatchEvent(dragEvt);
+            expect(dropEvt.defaultPrevented).toBe(true);
+            expect(dragEvt.defaultPrevented).toBe(true);
+            wrapper.unmount();
+        });
+    });
+
+    describe('plain textarea input', () => {
+        it('calls onContentChange when typing in the textarea', async () => {
+            const wrapper = mountEditor(makeFile({ name: 'notes.txt', extension: '.txt', path: '/v/notes.txt' }));
+            await wrapper.find('textarea').trigger('input');
+            expect(mockOnContentChange).toHaveBeenCalled();
+            wrapper.unmount();
+        });
+    });
+
+    describe('composable wiring', () => {
+        it('wires persistence callbacks to component emits', () => {
+            vi.useFakeTimers();
+            const file = makeFile({ extension: '.md', path: '/v/n.md' });
+            const wrapper = mountEditor(file);
+            const args = vi.mocked(useNotePersistence).mock.calls.at(-1) as unknown[];
+            const getFile = args[0] as () => FileInfo | null;
+            const isMd = args[1] as () => boolean;
+            const onLoad = args[2] as (s: string) => void;
+            const onSave = args[3] as (c: string) => void;
+            const onChanged = args[4] as (v: boolean) => void;
+
+            expect(getFile()).toEqual(file);
+            expect(isMd()).toBe(true);
+            onLoad('body'); // resolveEmbeds wiring
+
+            onSave('saved');
+            expect(wrapper.emitted('save')?.at(-1)).toEqual(['saved']);
+
+            onChanged(true);
+            vi.advanceTimersByTime(200);
+            expect(wrapper.emitted('contentChanged')?.at(-1)).toEqual([true]);
+
+            vi.useRealTimers();
+            wrapper.unmount();
+        });
+
+        it('wires the embed resolver file/workspace getters', () => {
+            const file = makeFile({ extension: '.md', path: '/v/n.md' });
+            const wrapper = mountEditor(file, '/ws');
+            const args = vi.mocked(useEmbedResolver).mock.calls.at(-1) as unknown[];
+            expect((args[0] as () => FileInfo | null)()).toEqual(file);
+            expect((args[1] as () => string | null)()).toBe('/ws');
+            wrapper.unmount();
+        });
+
+        it('wires the editor-drop file/workspace getters', () => {
+            const file = makeFile({ extension: '.md', path: '/v/n.md' });
+            const wrapper = mountEditor(file, '/ws');
+            const args = vi.mocked(useEditorDrop).mock.calls.at(-1) as unknown[];
+            expect((args[1] as () => FileInfo | null)()).toEqual(file);
+            expect((args[2] as () => string | null)()).toBe('/ws');
+            wrapper.unmount();
         });
     });
 });

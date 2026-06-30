@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ref } from 'vue';
+import { ref, createApp, defineComponent, h } from 'vue';
 import { useAIChat, MAX_CONTEXT_FILES } from '@/renderer/composables/ai/useAIChat';
 import type { ChatMessage } from '@/schemas/chat';
 import type { AiStatus } from '@/schemas/ai';
@@ -14,6 +14,8 @@ const mockConversationAddMessage = vi.fn().mockResolvedValue({ success: true });
 const mockAiStopChat = vi.fn().mockResolvedValue({ success: true });
 const mockReadFile = vi.fn().mockResolvedValue({ success: false });
 const mockAgentReadFile = vi.fn().mockResolvedValue({ success: true, content: 'file content' });
+const mockOnAiToken = vi.fn();
+const mockOnAiThinkingToken = vi.fn();
 
 Object.defineProperty(globalThis, 'window', {
     value: {
@@ -27,9 +29,9 @@ Object.defineProperty(globalThis, 'window', {
             readFile: mockReadFile,
             agentReadFile: mockAgentReadFile,
             writeClipboard: vi.fn().mockResolvedValue(undefined),
-            onAiToken: vi.fn(),
+            onAiToken: mockOnAiToken,
             removeAiTokenListener: vi.fn(),
-            onAiThinkingToken: vi.fn(),
+            onAiThinkingToken: mockOnAiThinkingToken,
             removeAiThinkingTokenListener: vi.fn(),
             log: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
         },
@@ -765,6 +767,98 @@ describe('useAIChat', () => {
             await chat.sendMessage();
 
             expect(mockAiChat.mock.calls[0][1]).toBeNull();
+        });
+    });
+
+    // ── streaming and stop ───────────────────────────────────────────────────
+    describe('streaming and stop', () => {
+        function mountChat() {
+            const messages = ref<ChatMessage[]>([]);
+            const status = ref<AiStatus>(makeStatus());
+            const conversationTokenCount = ref(0);
+            const currentConversationId = ref<string | null>('conv-1');
+            const agentMode = ref(false);
+            const actions = {
+                createNewConversation: vi.fn().mockResolvedValue(undefined),
+                saveCurrentConversation: vi.fn().mockResolvedValue(undefined),
+                saveTokenCountToConversation: vi.fn().mockResolvedValue(undefined),
+                refreshConversationList: vi.fn().mockResolvedValue(undefined),
+                refreshStatus: vi.fn().mockResolvedValue(undefined),
+                parseAgentEdits: vi.fn().mockReturnValue({ cleanContent: '', edits: [] }),
+                processAgentEdits: vi.fn().mockResolvedValue(undefined),
+            };
+            let api!: ReturnType<typeof useAIChat>;
+            const Comp = defineComponent({
+                setup() {
+                    api = useAIChat(
+                        {
+                            messages,
+                            status,
+                            conversationTokenCount,
+                            currentConversationId,
+                            agentMode,
+                            activeFile: { value: null },
+                            workspacePath: { value: null },
+                        },
+                        actions,
+                    );
+                    return () => h('div');
+                },
+            });
+            const app = createApp(Comp);
+            app.mount(document.createElement('div'));
+            return { api, messages, app };
+        }
+
+        it('appends streamed tokens to the active assistant message', () => {
+            const { api, messages } = mountChat();
+            messages.value.push({ role: 'assistant', content: '' });
+
+            const handler = mockOnAiToken.mock.calls.at(-1)?.[0] as (t: string) => void;
+            handler('Hel');
+            handler('lo');
+
+            expect(messages.value.at(-1)?.content).toBe('Hello');
+            expect(api.isStreaming.value).toBe(false);
+        });
+
+        it('appends thinking tokens to the active assistant message', () => {
+            const { messages } = mountChat();
+            messages.value.push({ role: 'assistant', content: '' });
+
+            const handler = mockOnAiThinkingToken.mock.calls.at(-1)?.[0] as (t: string) => void;
+            handler('think');
+
+            expect(messages.value.at(-1)?.thinking).toBe('think');
+        });
+
+        it('ignores streamed tokens when the last message is not an assistant', () => {
+            const { messages } = mountChat();
+            messages.value.push({ role: 'user', content: 'q' });
+
+            const handler = mockOnAiToken.mock.calls.at(-1)?.[0] as (t: string) => void;
+            handler('ignored');
+
+            expect(messages.value.at(-1)?.content).toBe('q');
+        });
+
+        it('stopGeneration calls aiStopChat and clears streaming', async () => {
+            const { chat } = makeChat();
+
+            await chat.stopGeneration();
+
+            expect(mockAiStopChat).toHaveBeenCalled();
+            expect(chat.isStreaming.value).toBe(false);
+        });
+
+        it('stopGeneration logs when aiStopChat throws', async () => {
+            const { chat } = makeChat();
+            mockAiStopChat.mockRejectedValueOnce(new Error('stop failed'));
+
+            await chat.stopGeneration();
+
+            expect(window.electronAPI.log.error).toHaveBeenCalled();
+            expect(chat.isStreaming.value).toBe(false);
         });
     });
 });
