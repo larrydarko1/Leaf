@@ -562,8 +562,8 @@ if (typeof window !== 'undefined') {
     align-items: center;
     justify-content: center;
     background: color-mix(in srgb, $base1 85%, transparent);
-    backdrop-filter: blur(4px);
-    border: 2px dashed $accent-color;
+    backdrop-filter: blur($backdrop-blur-xs);
+    border: $border-width-md $accent-color;
     border-radius: $border-radius-lg;
     margin: $space-2;
     pointer-events: none;
@@ -577,7 +577,7 @@ if (typeof window !== 'undefined') {
     color: $accent-color;
 
     svg {
-        opacity: 0.8;
+        opacity: $opacity-higher;
     }
 
     p {
@@ -591,7 +591,7 @@ if (typeof window !== 'undefined') {
 
 .editor-textarea {
     flex: 1;
-    padding: $space-8;
+    padding: $space-7;
     background: transparent;
     color: $text1;
     border: none;
@@ -620,12 +620,12 @@ if (typeof window !== 'undefined') {
 
 .dictation-btn {
     position: absolute;
-    bottom: 20px;
-    right: 20px;
-    width: 40px;
-    height: 40px;
+    bottom: $space-5;
+    right: $space-5;
+    width: $size-14;
+    height: $size-14;
     border-radius: $border-radius-xl;
-    border: 1px solid $text3;
+    border: $border-width-thin $text3;
     background: $base1;
     color: $text2;
     display: flex;
@@ -634,7 +634,7 @@ if (typeof window !== 'undefined') {
     cursor: pointer;
     transition: all $transition-base;
     z-index: $z-mid;
-    box-shadow: 0 2px 8px rgb(0 0 0 / 15%);
+    box-shadow: $shadow-sm;
 
     &:hover {
         background: $bg-hover;
@@ -646,11 +646,11 @@ if (typeof window !== 'undefined') {
         background: $danger-color;
         color: $text1;
         border-color: $danger-color;
-        box-shadow: 0 2px 12px rgb(229 62 62 / 40%);
+        box-shadow: $red-shadow;
     }
 
     &.loading {
-        opacity: 0.6;
+        opacity: $opacity-mid;
         cursor: wait;
     }
 
@@ -663,44 +663,19 @@ if (typeof window !== 'undefined') {
     }
 
     .spin {
-        animation: spin 1.2s linear infinite;
+        animation: spin $transition-fast linear infinite;
     }
 }
 
 .dictation-pulse {
     position: absolute;
-    top: -3px;
-    right: -3px;
-    width: 10px;
-    height: 10px;
+    top: -$size-1;
+    right: -$size-1;
+    width: $size-5;
+    height: $size-5;
     border-radius: $border-radius-xl;
     background: $danger-color;
     animation: pulse 1.5s ease-in-out infinite;
-}
-
-/* ––– Animations ––– */
-
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-@keyframes pulse {
-    0%,
-    100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-
-    50% {
-        opacity: 0.5;
-        transform: scale(1.3);
-    }
 }
 
 /* ––– Empty State ––– */
@@ -724,8 +699,8 @@ if (typeof window !== 'undefined') {
     }
 
     .empty-logo-icon {
-        width: 100px;
-        height: 100px;
+        width: $size-20;
+        height: $size-20;
         object-fit: contain;
     }
 
@@ -734,7 +709,7 @@ if (typeof window !== 'undefined') {
         font-size: 4rem;
         font-weight: $font-weight-semibold;
         color: $text1;
-        letter-spacing: -0.02em;
+        letter-spacing: $letter-spacing-tight;
         cursor: default;
     }
 

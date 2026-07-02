@@ -196,7 +196,7 @@ function removeBookmark(file: FileInfo) {
 
 .bookmarks-header {
     padding: $space-2 $space-3;
-    border-bottom: 1px solid $text3;
+    border-bottom: $border-width-thin $text3;
 }
 
 .header-title {
@@ -211,7 +211,7 @@ function removeBookmark(file: FileInfo) {
         font-weight: $font-weight-semibold;
         color: $text-primary;
         text-transform: uppercase;
-        letter-spacing: 0.04em;
+        letter-spacing: $letter-spacing-wider;
     }
 
     .star-icon {
@@ -238,12 +238,12 @@ function removeBookmark(file: FileInfo) {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: $space-11 $space-6;
+    padding: $space-9 $space-6;
     text-align: center;
     color: $text-muted;
 
     .empty-icon {
-        opacity: 0.3;
+        opacity: $opacity-lowest;
         margin-bottom: $space-4;
     }
 
@@ -296,7 +296,7 @@ function removeBookmark(file: FileInfo) {
 
         .unbookmark-btn {
             color: $text1;
-            opacity: 0.7;
+            opacity: $opacity-mid-high;
 
             &:hover {
                 opacity: 1;
@@ -364,20 +364,7 @@ function removeBookmark(file: FileInfo) {
 
 /* ––– Scrollbar ––– */
 
-.bookmarks-results::-webkit-scrollbar {
-    width: 6px;
-}
-
-.bookmarks-results::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.bookmarks-results::-webkit-scrollbar-thumb {
-    background: $scrollbar-thumb;
-    border-radius: $border-radius-xs;
-
-    &:hover {
-        background: $scrollbar-thumb-hover;
-    }
+.bookmarks-results {
+    @include scrollbar;
 }
 </style>

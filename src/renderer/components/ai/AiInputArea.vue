@@ -399,7 +399,7 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 12px;
+    height: $size-6;
     margin-top: $space-1;
     cursor: ns-resize;
     transition: background-color $transition-base;
@@ -423,11 +423,11 @@ onMounted(() => {
 }
 
 .ai-resize-grip {
-    width: 40px;
-    height: 3px;
+    width: $size-14;
+    height: $size-1;
     background-color: $text3;
     border-radius: $border-radius-xs;
-    opacity: 0.4;
+    opacity: $opacity-low;
     transition:
         opacity $transition-base,
         background-color $transition-base;
@@ -461,7 +461,7 @@ onMounted(() => {
     align-items: flex-start;
     gap: 0;
     background: $bg-primary;
-    border: 1px solid $text3;
+    border: $border-width-thin $text3;
     border-radius: $border-radius-xl;
     padding: $space-1 $space-1 $space-1 $space-2;
     transition: border-color $transition-base;
@@ -495,21 +495,11 @@ onMounted(() => {
         &::after {
             content: '';
             position: absolute;
-            inset: 2px;
+            inset: $size-0;
             background: $bg-primary;
             border-radius: $border-radius-xl;
-            z-index: -1;
+            z-index: $z-negative;
         }
-    }
-}
-
-@keyframes ai-border-spin {
-    from {
-        transform: rotate(0deg);
-    }
-
-    to {
-        transform: rotate(360deg);
     }
 }
 
@@ -572,7 +562,7 @@ onMounted(() => {
     max-width: 100%;
     padding: $space-0 $space-1 $space-0 $space-2;
     background: $bg-hover;
-    border: 1px solid $text3;
+    border: $border-width-thin $text3;
     border-radius: $border-radius;
     font-size: $font-size-xs;
     color: $text1;
@@ -587,7 +577,7 @@ onMounted(() => {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 140px;
+    max-width: $size-22;
 }
 
 .ai-context-chip-remove {
@@ -625,7 +615,7 @@ onMounted(() => {
     border: none;
 
     &:disabled {
-        opacity: 0.4;
+        opacity: $opacity-low;
         cursor: not-allowed;
 
         &:hover {
@@ -646,14 +636,14 @@ onMounted(() => {
     bottom: calc(100% + #{$space-1});
     left: 0;
     z-index: $z-overlay;
-    width: 280px;
+    width: $size-27;
     max-width: 80vw;
     display: flex;
     flex-direction: column;
     background: $bg-primary;
-    border: 1px solid $text3;
+    border: $border-width-thin $text3;
     border-radius: $border-radius-lg;
-    box-shadow: 0 4px 16px rgb(0 0 0 / 25%);
+    box-shadow: $shadow-md;
     overflow: hidden;
 }
 
@@ -661,7 +651,7 @@ onMounted(() => {
     padding: $space-2;
     background: transparent;
     border: none;
-    border-bottom: 1px solid $text3;
+    border-bottom: $border-width-thin $text3;
     color: $text1;
     font-size: $font-size-sm;
     font-family: inherit;
@@ -679,7 +669,7 @@ onMounted(() => {
     list-style: none;
     margin: 0;
     padding: $space-1;
-    max-height: 220px;
+    max-height: $size-25;
     overflow-y: auto;
 }
 
@@ -748,7 +738,7 @@ onMounted(() => {
     }
 
     &:disabled {
-        opacity: 0.5;
+        opacity: $opacity-mid-low;
         cursor: not-allowed;
     }
 }
@@ -760,8 +750,8 @@ onMounted(() => {
     color: $text1;
     border: none;
     border-radius: $border-radius-lg;
-    width: 40px;
-    height: 40px;
+    width: $size-14;
+    height: $size-14;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -773,12 +763,12 @@ onMounted(() => {
         color $transition-fast;
 
     &:hover:not(:disabled) {
-        opacity: 0.85;
-        transform: scale(1.05);
+        opacity: $opacity-highest;
+        transform: scale($scale-hover);
     }
 
     &:disabled {
-        opacity: 0.3;
+        opacity: $opacity-lowest;
         cursor: not-allowed;
     }
 
@@ -786,8 +776,8 @@ onMounted(() => {
         background: $danger-color;
 
         &:hover {
-            opacity: 0.85;
-            transform: scale(1.05);
+            opacity: $opacity-highest;
+            transform: scale($scale-hover);
         }
     }
 }

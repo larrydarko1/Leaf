@@ -162,9 +162,9 @@ async function handleRefresh() {
     flex-direction: column;
     height: 100%;
     background: $base1;
-    border-left: 1px solid $text3;
-    width: 340px;
-    min-width: 280px;
+    border-left: $border-width-thin $text3;
+    width: $size-28;
+    min-width: $size-27;
 }
 
 /* ––– Header ––– */
@@ -174,7 +174,7 @@ async function handleRefresh() {
     align-items: center;
     justify-content: space-between;
     padding: $space-3 $space-4;
-    border-bottom: 1px solid $text3;
+    border-bottom: $border-width-thin $text3;
     flex-shrink: 0;
 }
 
@@ -221,7 +221,7 @@ async function handleRefresh() {
     gap: $space-3;
     padding: $space-2 $space-3;
     background: none;
-    border: 1px solid transparent;
+    border: $border-width-thin transparent;
     border-radius: $border-radius-lg;
     color: $text1;
     text-align: left;
@@ -246,12 +246,12 @@ async function handleRefresh() {
     flex-shrink: 0;
     border-radius: $border-radius;
     overflow: hidden;
-    border: 1px solid $border-color;
+    border: $border-width-thin $border-color;
 }
 
 .swatch {
-    width: 10px;
-    height: 24px;
+    width: $size-5;
+    height: $size-11;
     display: block;
 }
 
@@ -297,7 +297,7 @@ async function handleRefresh() {
 /* ––– Footer ––– */
 
 .theme-footer {
-    border-top: 1px solid $text3;
+    border-top: $border-width-thin $text3;
     padding: $space-2 $space-4 $space-3;
     flex-shrink: 0;
 }
@@ -305,7 +305,7 @@ async function handleRefresh() {
 .footer-btn {
     width: 100%;
     background: none;
-    border: 1px solid $border-color;
+    border: $border-width-thin $border-color;
     border-radius: $border-radius;
     padding: $border-radius $border-radius-lg;
     font-size: $space-3;
@@ -335,20 +335,7 @@ async function handleRefresh() {
 
 /* ––– Scrollbar Styling ––– */
 
-.theme-list::-webkit-scrollbar {
-    width: 6px;
-}
-
-.theme-list::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.theme-list::-webkit-scrollbar-thumb {
-    background: $scrollbar-thumb;
-    border-radius: $border-radius-xs;
-
-    &:hover {
-        background: $scrollbar-thumb-hover;
-    }
+.theme-list {
+    @include scrollbar;
 }
 </style>

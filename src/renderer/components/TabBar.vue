@@ -148,9 +148,9 @@ function onDragEnd() {
 .tab-bar {
     display: flex;
     align-items: stretch;
-    height: 36px;
+    height: $size-13;
     background: $base1;
-    border-bottom: 1px solid color-mix(in srgb, $text3 80%, transparent);
+    border-bottom: $border-width-thin color-mix(in srgb, $text3 80%, transparent);
     overflow: auto hidden;
     flex-shrink: 0;
     scrollbar-width: none;
@@ -168,9 +168,9 @@ function onDragEnd() {
     background: $base1;
     gap: $space-2;
     padding: 0 $space-3 0 $space-4;
-    min-width: 80px;
-    max-width: 180px;
-    border-right: 1px solid color-mix(in srgb, $text3 60%, transparent);
+    min-width: $size-19;
+    max-width: $size-23;
+    border-right: $border-width-thin color-mix(in srgb, $text3 60%, transparent);
     cursor: pointer;
     user-select: none;
     flex-shrink: 0;
@@ -189,15 +189,15 @@ function onDragEnd() {
     }
 
     &.dragging {
-        opacity: 0.4;
+        opacity: $opacity-low;
     }
 
     &.drop-left {
-        box-shadow: inset 2px 0 0 $accent-color;
+        box-shadow: inset $size-0 0 0 $accent-color;
     }
 
     &.drop-right {
-        box-shadow: inset -2px 0 0 $accent-color;
+        box-shadow: inset (-$size-0) 0 0 $accent-color;
     }
 
     &.active {
@@ -215,7 +215,7 @@ function onDragEnd() {
             bottom: 0;
             left: 0;
             right: 0;
-            height: 2px;
+            height: $size-0;
             background: $accent-color;
         }
     }
@@ -232,8 +232,8 @@ function onDragEnd() {
 }
 
 .tab-dot {
-    width: 6px;
-    height: 6px;
+    width: $size-3;
+    height: $size-3;
     border-radius: $border-radius-xl;
     background: $accent-color;
     flex-shrink: 0;
@@ -245,9 +245,9 @@ function onDragEnd() {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 16px;
-    height: 16px;
-    min-width: 16px;
+    width: $size-8;
+    height: $size-8;
+    min-width: $size-8;
     border-radius: $border-radius-xs;
     border: none;
     background: transparent;

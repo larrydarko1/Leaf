@@ -727,8 +727,8 @@ function toggleLanguagePanel() {
 
 .welcome-content {
     text-align: center;
-    max-width: 500px;
-    padding: $font-size-3xl;
+    max-width: $size-30;
+    padding: $font-size-2xl;
 }
 
 .welcome-logo {
@@ -739,22 +739,22 @@ function toggleLanguagePanel() {
 }
 
 .welcome-logo-icon {
-    width: 128px;
-    height: 128px;
+    width: $size-21;
+    height: $size-22;
     object-fit: contain;
 }
 
 .welcome-logo-text {
     font-family: $font-family;
-    font-size: $font-size-5xl;
+    font-size: $font-size-4xl;
     font-weight: $font-weight-semibold;
     color: $text1;
-    letter-spacing: -0.02em;
+    letter-spacing: $letter-spacing-tight;
     cursor: default;
 }
 
 .app-title {
-    font-size: $font-size-4xl;
+    font-size: $font-size-3xl;
     font-weight: $font-weight-semibold;
     margin: 0 0 $space-2;
     color: $text1;
@@ -763,7 +763,7 @@ function toggleLanguagePanel() {
 .app-subtitle {
     font-size: $font-size-xl;
     color: $text2;
-    margin: 0 0 $space-8;
+    margin: 0 0 $space-7;
 }
 
 /* ––– Primary Button ––– */
@@ -772,22 +772,22 @@ function toggleLanguagePanel() {
     padding: $space-3 $space-6;
     background: $bg-primary;
     color: $text1;
-    border: 1px solid $text3;
+    border: $border-width-thin $text3;
     border-radius: $border-radius-lg;
     font-size: $font-size-sm;
     font-weight: $font-weight-medium;
     cursor: pointer;
     transition: all $transition-base;
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur($backdrop-blur-sm);
 
     &:hover {
         background: $bg-hover;
         border-color: $text2;
-        transform: scale(1.03);
+        transform: scale($scale-hover);
     }
 
     &:active {
-        transform: scale(0.98);
+        transform: scale($scale-hover-sm);
     }
 }
 
@@ -826,10 +826,10 @@ function toggleLanguagePanel() {
 }
 
 .sidebar {
-    width: 260px;
+    width: $size-26;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid $text3;
+    border-right: $border-width-thin $text3;
     background: $base3;
     overflow: hidden;
 }
@@ -842,10 +842,10 @@ function toggleLanguagePanel() {
     align-items: center;
     gap: $space-0;
     background: $bg-primary;
-    border: 1px solid $text3;
+    border: $border-width-thin $text3;
     border-radius: $border-radius-xl;
     padding: $space-0;
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur($backdrop-blur-sm);
 }
 
 .menu-spacer {
@@ -853,11 +853,11 @@ function toggleLanguagePanel() {
 }
 
 .menu-divider {
-    height: 1px;
-    width: 14px;
+    height: $size-0;
+    width: $size-7;
     background: $text2;
     margin: $space-1 0;
-    opacity: 0.25;
+    opacity: $opacity-lowest;
     border-radius: $border-radius-xs;
 }
 
@@ -878,7 +878,7 @@ function toggleLanguagePanel() {
         color: $text1;
 
         & svg {
-            transform: scale(1.1) rotate(-2deg);
+            transform: scale($scale-hover) rotate(-2deg);
         }
     }
 
@@ -888,7 +888,7 @@ function toggleLanguagePanel() {
     }
 
     &:disabled {
-        opacity: 0.3;
+        opacity: $opacity-lowest;
         cursor: not-allowed;
     }
 

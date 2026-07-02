@@ -362,39 +362,19 @@ function handleRootDrop(event: DragEvent) {
     overflow-y: auto;
     padding: $space-1 0;
 
-    &::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    &::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    &::-webkit-scrollbar-thumb {
-        background: transparent;
-        border-radius: $border-radius-xs;
-        transition: background $transition-base;
-    }
-
-    &:hover::-webkit-scrollbar-thumb {
-        background: $scrollbar-thumb;
-    }
-
-    &:hover::-webkit-scrollbar-thumb:hover {
-        background: $scrollbar-thumb-hover;
-    }
+    @include scrollbar($show-on-hover: true);
 
     &.drag-over-root {
         background: $bg-hover;
-        outline: 2px dashed $text2;
-        outline-offset: -4px;
+        outline: $border-width-md $text2;
+        outline-offset: -$space-1;
     }
 }
 
 /* ––– Empty State ––– */
 
 .empty-state {
-    padding: $space-8 $space-4;
+    padding: $space-7 $space-4;
     text-align: center;
     color: $text2;
 

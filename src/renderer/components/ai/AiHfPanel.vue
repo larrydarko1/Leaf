@@ -502,7 +502,7 @@ function formatNumber(n: number): string {
     max-height: 50%;
     display: flex;
     flex-direction: column;
-    border-bottom: 1px solid $text3;
+    border-bottom: $border-width-thin $text3;
 }
 
 /* ––– Header Section ––– */
@@ -520,7 +520,7 @@ function formatNumber(n: number): string {
     font-weight: $font-weight-semibold;
     color: $text2;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: $letter-spacing-wider;
 }
 
 /* ––– Search Bar ––– */
@@ -531,7 +531,7 @@ function formatNumber(n: number): string {
     gap: $space-1;
     margin: 0 $space-2 $space-2;
     background: $bg-primary;
-    border: 1px solid $text3;
+    border: $border-width-thin $text3;
     border-radius: $border-radius-lg;
     padding: $space-0 $space-2 $space-0 $space-2;
 
@@ -590,8 +590,8 @@ function formatNumber(n: number): string {
     }
 
     &:focus-visible {
-        outline: 2px solid $accent-color;
-        outline-offset: 2px;
+        outline: $border-width-thick $accent-color;
+        outline-offset: $size-0;
     }
 
     &[aria-pressed='true'] {
@@ -623,8 +623,8 @@ function formatNumber(n: number): string {
     }
 
     &:focus-visible {
-        outline: 2px solid $accent-color;
-        outline-offset: 2px;
+        outline: $border-width-thick $accent-color;
+        outline-offset: $size-0;
     }
 }
 
@@ -643,7 +643,7 @@ function formatNumber(n: number): string {
     color: $danger-color;
     background: $danger-color-alpha;
     border-radius: $border-radius;
-    border: 1px solid $danger-color-alpha;
+    border: $border-width-thin $danger-color-alpha;
 }
 
 .ai-hf-loading,
@@ -687,8 +687,8 @@ function formatNumber(n: number): string {
     text-align: left;
 
     &:focus-visible {
-        outline: 2px solid $accent-color;
-        outline-offset: 2px;
+        outline: $border-width-thick $accent-color;
+        outline-offset: $size-0;
         border-radius: $border-radius-lg;
     }
 }
@@ -714,7 +714,7 @@ function formatNumber(n: number): string {
     gap: $space-1;
     font-size: $font-size-xxs;
     color: $text2;
-    opacity: 0.7;
+    opacity: $opacity-mid-high;
     align-items: center;
 }
 
@@ -732,7 +732,7 @@ function formatNumber(n: number): string {
     padding: $space-2;
     margin-top: $space-1;
     background: none;
-    border: 1px dashed $text3;
+    border: $border-width-thin $text3;
     color: $text2;
     font-size: $font-size-xs;
     font-family: inherit;
@@ -747,12 +747,12 @@ function formatNumber(n: number): string {
     }
 
     &:focus-visible {
-        outline: 2px solid $accent-color;
-        outline-offset: 2px;
+        outline: $border-width-thick $accent-color;
+        outline-offset: $size-0;
     }
 
     &:disabled {
-        opacity: 0.5;
+        opacity: $opacity-mid-low;
         cursor: not-allowed;
     }
 }
@@ -789,7 +789,7 @@ function formatNumber(n: number): string {
 
             svg {
                 flex-shrink: 0;
-                opacity: 0.7;
+                opacity: $opacity-mid-high;
             }
         }
     }
@@ -848,19 +848,19 @@ function formatNumber(n: number): string {
     color: $text1;
 
     &.ai-hf-tier-green {
-        background: rgb(40 167 69 / 15%);
+        background: $tier-small;
     }
 
     &.ai-hf-tier-blue {
-        background: rgb(0 123 255 / 15%);
+        background: $tier-medium;
     }
 
     &.ai-hf-tier-orange {
-        background: rgb(255 165 0 / 15%);
+        background: $tier-large;
     }
 
     &.ai-hf-tier-red {
-        background: rgb(220 53 69 / 15%);
+        background: $tier-extreme;
     }
 }
 
@@ -891,13 +891,13 @@ function formatNumber(n: number): string {
 .ai-hf-ram-estimate {
     font-size: $font-size-xxs;
     color: $text2;
-    opacity: 0.85;
+    opacity: $opacity-highest;
 }
 
 .ai-hf-shard-info {
     font-size: $font-size-xxs;
     color: $text2;
-    opacity: 0.7;
+    opacity: $opacity-mid-high;
     font-style: italic;
 }
 
@@ -913,7 +913,7 @@ function formatNumber(n: number): string {
 
 .ai-hf-download-btn {
     background: none;
-    border: 1px solid $accent-color;
+    border: $border-width-thin $accent-color;
     color: $accent-color;
     cursor: pointer;
     padding: $space-1;
@@ -931,12 +931,12 @@ function formatNumber(n: number): string {
     }
 
     &:focus-visible {
-        outline: 2px solid $accent-color;
-        outline-offset: 2px;
+        outline: $border-width-thick $accent-color;
+        outline-offset: $size-0;
     }
 
     &:disabled {
-        opacity: 0.5;
+        opacity: $opacity-mid-low;
         cursor: not-allowed;
     }
 
@@ -956,12 +956,12 @@ function formatNumber(n: number): string {
     display: flex;
     align-items: center;
     gap: $space-1;
-    min-width: 60px;
+    min-width: $size-18;
 }
 
 .ai-hf-progress-bar {
     flex: 1;
-    height: 3px;
+    height: $size-1;
     background: $text3;
     border-radius: $border-radius-xs;
     overflow: hidden;
@@ -1003,12 +1003,12 @@ function formatNumber(n: number): string {
     }
 
     &:focus-visible {
-        outline: 2px solid $accent-color;
-        outline-offset: 2px;
+        outline: $border-width-thick $accent-color;
+        outline-offset: $size-0;
     }
 
     &:disabled {
-        opacity: 0.3;
+        opacity: $opacity-lowest;
         cursor: not-allowed;
     }
 }

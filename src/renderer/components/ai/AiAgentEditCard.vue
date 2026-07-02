@@ -158,7 +158,7 @@ defineEmits<{
 
 .ai-agent-edit-card {
     background: $bg-primary;
-    border: 1px solid $text3;
+    border: $border-width-thin $text3;
     border-radius: $border-radius-xl;
     overflow: hidden;
     transition: border-color $transition-base;
@@ -174,7 +174,7 @@ defineEmits<{
 
     &.rejected {
         border-color: $danger-color;
-        opacity: 0.7;
+        opacity: $opacity-mid-high;
     }
 
     &.error {
@@ -189,8 +189,8 @@ defineEmits<{
     align-items: center;
     justify-content: space-between;
     padding: $space-2 $space-3;
-    border-bottom: 1px solid $text3;
-    background: rgb(0 0 0 / 5%);
+    border-bottom: $border-width-thin $text3;
+    background: color-mix(in srgb, $bg-primary 5%, transparent);
 }
 
 .ai-agent-edit-file {
@@ -216,7 +216,7 @@ defineEmits<{
     padding: $space-0 $space-1;
     border-radius: $border-radius-sm;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: $letter-spacing-wider;
     flex-shrink: 0;
 
     &.new {
@@ -250,7 +250,7 @@ defineEmits<{
 /* ––– Diff Section ––– */
 
 .ai-agent-diff-details {
-    border-bottom: 1px solid $text3;
+    border-bottom: $border-width-thin $text3;
 }
 
 .ai-agent-diff-summary {
@@ -266,13 +266,13 @@ defineEmits<{
     }
 
     &:focus-visible {
-        outline: 2px solid $accent-color;
-        outline-offset: -2px;
+        outline: $border-width-thick $accent-color;
+        outline-offset: $size-0;
     }
 }
 
 .ai-agent-diff {
-    max-height: 300px;
+    max-height: $size-27;
     overflow-y: auto;
 }
 
@@ -291,9 +291,9 @@ defineEmits<{
     font-size: $font-size-xxs;
     font-weight: $font-weight-semibold;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: $letter-spacing-wider;
     color: $text2;
-    border-bottom: 1px solid $text3;
+    border-bottom: $border-width-thin $text3;
 }
 
 .ai-agent-diff-code {
@@ -305,7 +305,7 @@ defineEmits<{
     white-space: pre-wrap;
     overflow-wrap: break-all;
     color: $text1;
-    max-height: 140px;
+    max-height: $size-21;
     overflow-y: auto;
 }
 
@@ -315,7 +315,7 @@ defineEmits<{
     padding: $space-2 $space-3;
     font-size: $font-size-xs;
     color: $danger-color;
-    border-bottom: 1px solid $text3;
+    border-bottom: $border-width-thin $text3;
 }
 
 /* ––– Action Buttons ––– */
@@ -343,17 +343,17 @@ defineEmits<{
     justify-content: center;
 
     &:hover:not(:disabled) {
-        opacity: 0.85;
-        transform: scale(1.02);
+        opacity: $opacity-highest;
+        transform: scale($scale-hover);
     }
 
     &:focus-visible {
-        outline: 2px solid currentcolor;
-        outline-offset: 2px;
+        outline: $border-width-thick currentcolor;
+        outline-offset: $size-0;
     }
 
     &:disabled {
-        opacity: 0.5;
+        opacity: $opacity-mid-low;
         cursor: not-allowed;
     }
 

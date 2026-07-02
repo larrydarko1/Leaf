@@ -313,7 +313,7 @@ function splitHighlightedText(text: string): HighlightPart[] {
 
 .search-header {
     padding: $space-3 $space-4;
-    border-bottom: 1px solid $text3;
+    border-bottom: $border-width-thin $text3;
 }
 
 /* ––– Search Input Wrapper ––– */
@@ -323,7 +323,7 @@ function splitHighlightedText(text: string): HighlightPart[] {
     display: flex;
     align-items: center;
     background: $bg-primary;
-    border: 1px solid $text3;
+    border: $border-width-thin $text3;
     border-radius: $border-radius-lg;
     padding: $space-2 $space-3;
     transition: border-color $transition-base;
@@ -389,7 +389,7 @@ function splitHighlightedText(text: string): HighlightPart[] {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: $space-11 $space-6;
+    padding: $space-9 $space-6;
     text-align: center;
     color: $text-muted;
     font-size: $font-size-sm;
@@ -473,20 +473,7 @@ function splitHighlightedText(text: string): HighlightPart[] {
 
 /* ––– Scrollbar Styling ––– */
 
-.search-results::-webkit-scrollbar {
-    width: 6px;
-}
-
-.search-results::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.search-results::-webkit-scrollbar-thumb {
-    background: $scrollbar-thumb;
-    border-radius: $border-radius-xs;
-
-    &:hover {
-        background: $scrollbar-thumb-hover;
-    }
+.search-results {
+    @include scrollbar;
 }
 </style>

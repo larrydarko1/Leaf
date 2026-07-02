@@ -67,14 +67,14 @@ function handleItemClick(item: ContextMenuItem) {
 .context-menu {
     position: fixed;
     background: $bg-secondary;
-    border: 1px solid $border-color;
+    border: $border-width-thin $border-color;
     color: $text-primary;
     border-radius: $border-radius;
-    box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
+    box-shadow: $shadow-sm;
     padding: $space-1 0;
-    min-width: 160px;
+    min-width: $size-22;
     z-index: $z-extreme;
-    backdrop-filter: blur(20px);
+    backdrop-filter: blur($backdrop-blur-md);
 }
 
 .context-menu-item {
@@ -97,7 +97,7 @@ function handleItemClick(item: ContextMenuItem) {
     }
 
     &.disabled {
-        opacity: 0.4;
+        opacity: $opacity-low;
         cursor: not-allowed;
     }
 }
@@ -109,6 +109,6 @@ function handleItemClick(item: ContextMenuItem) {
 .menu-shortcut {
     color: $text2;
     font-size: $font-size-xs;
-    opacity: 0.7;
+    opacity: $opacity-mid-high;
 }
 </style>

@@ -400,15 +400,13 @@ const borderRadiusOptions = [
 
 .properties-panel {
     position: absolute;
-    top: 64px;
-    left: 12px;
-    width: 192px;
+    top: $space-10;
+    left: $space-3;
+    width: $size-24;
     background: $bg-primary;
-    border: 1px solid $border-color;
+    border: $border-width-thin $border-color;
     border-radius: $border-radius-xl;
-    box-shadow:
-        0 1px 5px rgb(0 0 0 / 8%),
-        0 4px 16px rgb(0 0 0 / 4%);
+    box-shadow: $shadow-float;
     padding: $space-3;
     z-index: $z-mid;
 }
@@ -425,7 +423,7 @@ const borderRadiusOptions = [
 .panel-fade-enter-from,
 .panel-fade-leave-to {
     opacity: 0;
-    transform: translateX(-8px);
+    transform: translateX(-$space-2);
 }
 
 /* ––– Section Layout & Labels ––– */
@@ -443,7 +441,7 @@ const borderRadiusOptions = [
     font-weight: $font-weight-semibold;
     color: $text-muted;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: $letter-spacing-wider;
     margin-bottom: $space-2;
 }
 
@@ -492,9 +490,9 @@ const borderRadiusOptions = [
 }
 
 .color-swatch {
-    width: 22px;
-    height: 22px;
-    border: 2px solid transparent;
+    width: $size-10;
+    height: $size-10;
+    border: $border-width-thin transparent;
     border-radius: $border-radius-sm;
     cursor: pointer;
     transition:
@@ -506,12 +504,12 @@ const borderRadiusOptions = [
     padding: 0;
 
     &:hover {
-        transform: scale(1.15);
+        transform: scale($scale-hover-mid);
     }
 
     &.active {
         border-color: $accent-color;
-        transform: scale(1.15);
+        transform: scale($scale-hover-mid);
     }
 
     &.transparent-swatch {
@@ -541,8 +539,8 @@ const borderRadiusOptions = [
 
 .stroke-width-btn {
     flex: 1;
-    height: 32px;
-    border: 1px solid $border-color;
+    height: $size-12;
+    border: $border-width-thin $border-color;
     border-radius: $border-radius;
     background: transparent;
     cursor: pointer;
@@ -566,7 +564,7 @@ const borderRadiusOptions = [
         width: 60%;
         background: $text1;
         border-radius: $border-radius-sm;
-        min-height: 1px;
+        min-height: $size-0;
     }
 }
 
@@ -579,8 +577,8 @@ const borderRadiusOptions = [
 
 .stroke-style-btn {
     flex: 1;
-    height: 32px;
-    border: 1px solid $border-color;
+    height: $size-12;
+    border: $border-width-thin $border-color;
     border-radius: $border-radius;
     background: transparent;
     cursor: pointer;
@@ -611,8 +609,8 @@ const borderRadiusOptions = [
 
 .roundness-btn {
     flex: 1;
-    height: 32px;
-    border: 1px solid $border-color;
+    height: $size-12;
+    border: $border-width-thin $border-color;
     border-radius: $border-radius;
     background: transparent;
     cursor: pointer;
@@ -643,8 +641,8 @@ const borderRadiusOptions = [
 
 .font-size-btn {
     flex: 1;
-    height: 32px;
-    border: 1px solid $border-color;
+    height: $size-12;
+    border: $border-width-thin $border-color;
     border-radius: $border-radius;
     background: transparent;
     cursor: pointer;
@@ -670,7 +668,7 @@ const borderRadiusOptions = [
 
 .font-size-value {
     font-weight: $font-weight-normal;
-    opacity: 0.6;
+    opacity: $opacity-mid;
     margin-left: $space-1;
 }
 </style>

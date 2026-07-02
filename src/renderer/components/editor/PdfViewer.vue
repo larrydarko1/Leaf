@@ -92,7 +92,7 @@ watch(
 
     .pdf-error-hint {
         font-size: $font-size-sm;
-        opacity: 0.7;
+        opacity: $opacity-mid-high;
     }
 }
 </style>

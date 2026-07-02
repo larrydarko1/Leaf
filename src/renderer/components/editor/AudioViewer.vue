@@ -283,7 +283,7 @@ function onKeydown(e: KeyboardEvent) {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: $space-8;
+    padding: $space-7;
     overflow: auto;
     background: $base1;
     position: relative;
@@ -306,8 +306,8 @@ function onKeydown(e: KeyboardEvent) {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: $space-8;
-    max-width: 500px;
+    gap: $space-7;
+    max-width: $size-29;
     width: 100%;
     position: relative;
     z-index: $z-normal;
@@ -315,7 +315,7 @@ function onKeydown(e: KeyboardEvent) {
 
 .audio-icon {
     color: $text2;
-    opacity: 0.6;
+    opacity: $opacity-mid;
 }
 
 /* ––– Loading State ––– */
@@ -344,18 +344,18 @@ function onKeydown(e: KeyboardEvent) {
     width: 100%;
     padding: $space-3 $space-4;
     background: $bg-primary;
-    border: 1px solid $text3;
+    border: $border-width-thin solid $text3;
     border-radius: $border-radius-xl;
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur($backdrop-blur-sm);
 }
 
 .audio-play-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
+    width: $size-13;
+    height: $size-13;
+    min-width: $size-13;
     border-radius: $border-radius-round;
     border: none;
     background: $accent-color;
@@ -364,12 +364,12 @@ function onKeydown(e: KeyboardEvent) {
     transition: all $transition-fast;
 
     &:hover {
-        transform: scale(1.08);
+        transform: scale($scale-hover);
         filter: brightness(1.1);
     }
 
     &:active {
-        transform: scale(0.95);
+        transform: scale($scale-hover-sm);
     }
 }
 
@@ -377,7 +377,7 @@ function onKeydown(e: KeyboardEvent) {
     font-size: $font-size-xs;
     color: $text2;
     font-variant-numeric: tabular-nums;
-    min-width: 40px;
+    min-width: $size-14;
     text-align: center;
     user-select: none;
 }
@@ -401,7 +401,7 @@ function onKeydown(e: KeyboardEvent) {
 
 .audio-progress-track {
     width: 100%;
-    height: 4px;
+    height: $size-2;
     background: $bg-hover;
     border-radius: $border-radius-xs;
     overflow: hidden;
@@ -412,7 +412,7 @@ function onKeydown(e: KeyboardEvent) {
     height: 100%;
     background: $accent-color;
     border-radius: $border-radius-xs;
-    transition: width 0.05s linear;
+    transition: width $transition-instant;
 }
 
 /* ––– Volume Controls ––– */
@@ -440,15 +440,15 @@ function onKeydown(e: KeyboardEvent) {
     }
 
     &:focus-visible {
-        outline: 2px solid $accent-color;
-        outline-offset: 2px;
+        outline: $border-width-thin $accent-color;
+        outline-offset: $size-0;
     }
 }
 
 .audio-volume-slider {
     appearance: none;
-    width: 60px;
-    height: 4px;
+    width: $size-18;
+    height: $size-2;
     background: $bg-hover;
     border-radius: $border-radius-sm;
     outline: none;
@@ -457,8 +457,8 @@ function onKeydown(e: KeyboardEvent) {
     transition: outline $transition-fast;
 
     &:focus-visible {
-        outline: 2px solid $accent-color;
-        outline-offset: 2px;
+        outline: $border-width-thin solid $accent-color;
+        outline-offset: $size-0;
     }
 
     &::after {
@@ -469,16 +469,16 @@ function onKeydown(e: KeyboardEvent) {
         background: $accent-color;
         /* stylelint-disable-next-line no-unknown-custom-properties */
         width: calc(var(--volume) * 100%);
-        max-width: 60px;
-        height: 4px;
+        max-width: $size-18;
+        height: $size-2;
         border-radius: $border-radius-sm;
         pointer-events: none;
     }
 
     &::-webkit-slider-thumb {
         appearance: none;
-        width: 12px;
-        height: 12px;
+        width: $size-6;
+        height: $size-6;
         border-radius: $border-radius-round;
         background: $accent-color;
         cursor: pointer;
@@ -486,7 +486,7 @@ function onKeydown(e: KeyboardEvent) {
     }
 
     &::-webkit-slider-thumb:hover {
-        transform: scale(1.2);
+        transform: scale($scale-hover-lg);
     }
 }
 
@@ -508,7 +508,7 @@ function onKeydown(e: KeyboardEvent) {
 
     .audio-error-hint {
         font-size: $font-size-sm;
-        opacity: 0.7;
+        opacity: $opacity-mid-high;
     }
 }
 </style>

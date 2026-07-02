@@ -389,8 +389,8 @@ defineEmits<{
     gap: $space-1;
     padding: $border-radius $border-radius-xl;
     background: color-mix(in srgb, $base1 60%, transparent);
-    backdrop-filter: blur(20px) saturate(1.4);
-    border-bottom: 1px solid color-mix(in srgb, $text2 12%, transparent);
+    backdrop-filter: blur($backdrop-blur-md) saturate(1.4);
+    border-bottom: $border-width-thin color-mix(in srgb, $text2 12%, transparent);
     flex-shrink: 0;
     flex-wrap: wrap;
 }
@@ -401,8 +401,8 @@ defineEmits<{
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 28px;
+    width: $size-12;
+    height: $size-11;
     border: none;
     border-radius: $border-radius-lg;
     background: transparent;
@@ -418,20 +418,20 @@ defineEmits<{
     &:active {
         background: $accent-color;
         color: $text1;
-        transform: scale(0.92);
+        transform: scale($scale-hover-sm);
     }
 
     svg {
-        width: 14px;
-        height: 14px;
+        width: $size-7;
+        height: $size-7;
     }
 }
 
 /* ––– Separator Dividers ––– */
 
 .md-toolbar-separator {
-    width: 1px;
-    height: 16px;
+    width: $size-0;
+    height: $size-8;
     background: color-mix(in srgb, $text2 20%, transparent);
     margin: 0 $space-1;
     flex-shrink: 0;
@@ -441,9 +441,9 @@ defineEmits<{
 /* ––– Heading Level Selector ––– */
 
 .md-toolbar-select {
-    height: 26px;
+    height: $size-11;
     padding: 0 $space-2;
-    border: 1px solid color-mix(in srgb, $text2 15%, transparent);
+    border: $border-width-thin color-mix(in srgb, $text2 15%, transparent);
     border-radius: $border-radius-lg;
     background: color-mix(in srgb, $text2 8%, transparent);
     color: $text1;
@@ -459,7 +459,7 @@ defineEmits<{
 
     &:focus {
         border-color: $accent-color;
-        box-shadow: 0 0 0 2px color-mix(in srgb, $accent-color 20%, transparent);
+        box-shadow: $accent-shadow;
     }
 }
 </style>

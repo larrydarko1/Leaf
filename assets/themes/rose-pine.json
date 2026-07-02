@@ -1,5 +1,5 @@
 {
-    "name": "Ros\u00e9 Pine",
+    "name": "Rose Pine",
     "description": "All natural pine, faux fur and a bit of soho vibes.",
     "colors": {
         "text1": "#e0def4",
@@ -26,6 +26,10 @@
         "danger-color-alpha": "rgb(235 111 146 / 15%)",
         "scrollbar-thumb": "#393552",
         "scrollbar-thumb-hover": "#4b4762",
-        "grid-color": "rgb(255 255 255 / 6%)"
+        "grid-color": "rgb(255 255 255 / 6%)",
+        "tier-small": "rgb(40 167 69 / 15%)",
+        "tier-medium": "rgb(0 123 255 / 15%)",
+        "tier-large": "rgb(255 165 0 / 15%)",
+        "tier-extreme": "rgb(220 53 69 / 15%)"
     }
 }

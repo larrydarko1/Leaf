@@ -248,7 +248,7 @@ function seekVideoBySeconds(seconds: number): void {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: $space-8;
+    padding: $space-7;
     overflow: auto;
     background: $base1;
     position: relative;
@@ -280,7 +280,7 @@ function seekVideoBySeconds(seconds: number): void {
 
 .video-preview {
     max-width: 100%;
-    max-height: calc(100% - 52px);
+    max-height: calc(100% - $size-16);
     border-radius: $border-radius-xl $border-radius-xl 0 0;
     display: block;
     background: $base1;
@@ -296,7 +296,7 @@ function seekVideoBySeconds(seconds: number): void {
     width: 100%;
     padding: $space-2 $space-4;
     background: $bg-primary;
-    border: 1px solid $text3;
+    border: $border-width-thin $text3;
     border-top: none;
     border-radius: 0 0 $border-radius-xl $border-radius-xl;
 }
@@ -305,9 +305,9 @@ function seekVideoBySeconds(seconds: number): void {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
-    min-width: 30px;
+    width: $size-12;
+    height: $size-12;
+    min-width: $size-12;
     border-radius: $border-radius-round;
     border: none;
     background: $accent-color;
@@ -317,12 +317,12 @@ function seekVideoBySeconds(seconds: number): void {
     padding: 0;
 
     &:hover {
-        transform: scale(1.08);
+        transform: scale($scale-hover);
         filter: brightness(1.1);
     }
 
     &:active {
-        transform: scale(0.95);
+        transform: scale($scale-hover-sm);
     }
 }
 
@@ -332,7 +332,7 @@ function seekVideoBySeconds(seconds: number): void {
     font-size: $font-size-xs;
     color: $text2;
     font-variant-numeric: tabular-nums;
-    min-width: 40px;
+    min-width: $size-14;
     text-align: center;
     user-select: none;
 }
@@ -347,7 +347,7 @@ function seekVideoBySeconds(seconds: number): void {
 
 .video-progress-track {
     width: 100%;
-    height: 4px;
+    height: $size-2;
     background: $bg-hover;
     border-radius: $border-radius-xs;
     overflow: hidden;
@@ -357,7 +357,7 @@ function seekVideoBySeconds(seconds: number): void {
     height: 100%;
     background: $accent-color;
     border-radius: $border-radius-xs;
-    transition: width 0.05s linear;
+    transition: width $transition-instant;
 }
 
 /* ––– Volume Control ––– */
@@ -370,8 +370,8 @@ function seekVideoBySeconds(seconds: number): void {
 
 .video-volume-slider {
     appearance: none;
-    width: 55px;
-    height: 4px;
+    width: $size-17;
+    height: $size-2;
     background: $bg-hover;
     border-radius: $border-radius-xs;
     outline: none;
@@ -386,26 +386,26 @@ function seekVideoBySeconds(seconds: number): void {
         background: $accent-color;
         /* stylelint-disable-next-line no-unknown-custom-properties */
         width: calc(var(--volume) * 100%);
-        max-width: 55px;
-        height: 4px;
+        max-width: $size-17;
+        height: $size-2;
         border-radius: $border-radius-xs;
         pointer-events: none;
     }
 
     &::-webkit-slider-thumb {
         appearance: none;
-        width: 12px;
-        height: 12px;
+        width: $size-6;
+        height: $size-6;
         border-radius: $border-radius-round;
         background: $accent-color;
         cursor: pointer;
-        transition: transform 0.1s;
+        transition: transform $transition-fast;
         position: relative;
         z-index: $z-normal;
     }
 
     &::-webkit-slider-thumb:hover {
-        transform: scale(1.2);
+        transform: scale($scale-hover-lg);
     }
 }
 
@@ -427,7 +427,7 @@ function seekVideoBySeconds(seconds: number): void {
 
     .video-error-hint {
         font-size: $font-size-sm;
-        opacity: 0.7;
+        opacity: $opacity-mid-high;
     }
 }
 

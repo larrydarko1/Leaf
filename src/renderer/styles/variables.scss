@@ -35,12 +35,17 @@
     --warning-color-alpha: rgb(255 193 7 / 15%);
     --danger-color: #dc3545;
     --danger-color-alpha: rgb(220 53 69 / 15%);
+    --tier-small: rgb(40 167 69 / 15%);
+    --tier-medium: rgb(0 123 255 / 15%);
+    --tier-large: rgb(255 165 0 / 15%);
+    --tier-extreme: rgb(220 53 69 / 15%);
     --scrollbar-thumb: #444;
     --scrollbar-thumb-hover: #555;
     --grid-color: rgb(255 255 255 / 6%);
 }
 
 /* ––––– Typography ––––– */
+
 $font-family: 'Helvetica', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
 $font-family-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Menlo', 'Consolas', 'DejaVu Sans Mono', monospace;
 $line-height: 1.6;
@@ -48,18 +53,27 @@ $font-weight-normal: 400;
 $font-weight-medium: 500;
 $font-weight-semibold: 600;
 $font-weight-bold: 700;
+
+/* –––––– Letter spacing scale –––––– */
+
+$letter-spacing-tight: -0.02em;
+$letter-spacing-wide: 0.02em;
+$letter-spacing-wider: 0.04em;
+
+/* –––––– Font size scale –––––– */
+
 $font-size-xxs: 0.625rem;
 $font-size-xs: 0.75rem;
 $font-size-sm: 0.875rem;
 $font-size-base: 1rem;
 $font-size-lg: 1.125rem;
 $font-size-xl: 1.25rem;
-$font-size-2xl: 1.5rem;
-$font-size-3xl: 2rem;
-$font-size-4xl: 3rem;
-$font-size-5xl: 5rem;
+$font-size-2xl: 2rem;
+$font-size-3xl: 3rem;
+$font-size-4xl: 5rem;
 
 /* ––––– Spacing ––––– */
+
 $space-0: 0.125em;
 $space-1: 0.25em;
 $space-2: 0.5em;
@@ -67,12 +81,92 @@ $space-3: 0.75em;
 $space-4: 1em;
 $space-5: 1.25em;
 $space-6: 1.5em;
-$space-8: 2em;
-$space-9: 2.25em;
-$space-10: 2.5em;
-$space-11: 3em;
+$space-7: 2em;
+$space-8: 2.5em;
+$space-9: 3em;
+$space-10: 4em;
+
+/* –––––– Border widths –––––– */
+
+$border-width-thin: 1px solid;
+$border-width-md: 2px dashed;
+$border-width-thick: 3px solid;
+
+/* –––––– Backdrop effects –––––– */
+
+$backdrop-blur-xs: 4px;
+$backdrop-blur-sm: 8px;
+$backdrop-blur-md: 20px;
+
+/* –––––– Component sizes –––––– */
+
+$size-0: 2px;
+$size-1: 3px;
+$size-2: 4px;
+$size-3: 6px;
+$size-4: 8px;
+$size-5: 10px;
+$size-6: 12px;
+$size-7: 14px;
+$size-8: 16px;
+$size-9: 18px;
+$size-10: 20px;
+$size-11: 24px;
+$size-12: 32px;
+$size-13: 36px;
+$size-14: 40px;
+$size-15: 46px;
+$size-16: 50px;
+$size-17: 56px;
+$size-18: 60px;
+$size-19: 80px;
+$size-20: 100px;
+$size-21: 120px;
+$size-22: 160px;
+$size-23: 180px;
+$size-24: 200px;
+$size-25: 240px;
+$size-26: 260px;
+$size-27: 280px;
+$size-28: 340px;
+$size-29: 480px;
+$size-30: 560px;
+$size-31: 720px;
+
+/* –––––– Opacity scale –––––– */
+
+$opacity-lowest: 0.3;
+$opacity-low: 0.4;
+$opacity-mid-low: 0.5;
+$opacity-mid: 0.6;
+$opacity-mid-high: 0.7;
+$opacity-higher: 0.8;
+$opacity-highest: 0.85;
+$opacity-almost-opaque: 0.9;
+
+/* –––––– Transform values –––––– */
+
+$scale-hover-sm: 0.95;
+$scale-hover: 1.08;
+$scale-hover-mid: 1.12;
+$scale-hover-lg: 1.2;
+
+/* –––––– Shadows –––––– */
+
+$shadow-sm: 0 2px 8px rgb(0 0 0 / 15%);
+$shadow-md: 0 6px 20px rgb(0 0 0 / 20%);
+$shadow-lg: 0 20px 60px rgb(0 0 0 / 30%);
+$shadow-float:
+    0 1px 5px rgb(0 0 0 / 8%),
+    0 4px 16px rgb(0 0 0 / 4%);
+$shadow-dropdown:
+    0 4px 20px rgb(0 0 0 / 12%),
+    0 1px 6px rgb(0 0 0 / 6%);
+$red-shadow: 0 2px 12px rgb(229 62 62 / 40%);
+$accent-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-color) 10%, transparent);
 
 /* ––––– Layout ––––– */
+
 $border-radius-xs: 0.1875em;
 $border-radius-sm: 0.25em;
 $border-radius: 0.375em;
@@ -81,24 +175,27 @@ $border-radius-xl: 0.75em;
 $border-radius-round: 9999em;
 
 /* ––––– Motion ––––– */
+
+$transition-instant: 0.05s linear;
 $transition-fast: 0.12s ease;
 $transition-base: 0.2s ease;
 $transition-slow: 0.35s ease;
 
 /* ––––– Z-index scale ––––– */
-$z-base: 0;
+
+$z-negative: -1;
 $z-normal: 1;
 $z-raised: 10;
 $z-mid: 20;
 $z-dropdown: 50;
 $z-overlay: 100;
-$z-modal: 200;
 $z-max: 1000;
 $z-extreme: 10000;
 
 /* –––––––––– SCSS ALIASES –––––––––– */
 
 /* ––– Maps CSS custom properties to SCSS variables for use in components. ––– */
+
 $text1: var(--text1);
 $text2: var(--text2);
 $text3: var(--text3);
@@ -121,6 +218,10 @@ $warning-color: var(--warning-color);
 $warning-color-alpha: var(--warning-color-alpha);
 $danger-color: var(--danger-color);
 $danger-color-alpha: var(--danger-color-alpha);
+$tier-small: var(--tier-small);
+$tier-medium: var(--tier-medium);
+$tier-large: var(--tier-large);
+$tier-extreme: var(--tier-extreme);
 $scrollbar-thumb: var(--scrollbar-thumb);
 $scrollbar-thumb-hover: var(--scrollbar-thumb-hover);
 $grid-color: var(--grid-color);

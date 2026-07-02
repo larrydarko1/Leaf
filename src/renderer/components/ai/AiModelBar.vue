@@ -483,7 +483,7 @@ function truncate(str: string, len: number): string {
     flex: 1;
     min-width: 0;
     background: $bg-primary;
-    border: 1px solid $text3;
+    border: $border-width-thin $text3;
     border-radius: $border-radius-lg;
     padding: $space-1 $space-2;
     display: flex;
@@ -524,7 +524,7 @@ function truncate(str: string, len: number): string {
     }
 
     &:disabled {
-        opacity: 0.5;
+        opacity: $opacity-mid-low;
         cursor: not-allowed;
     }
 }
@@ -551,14 +551,14 @@ function truncate(str: string, len: number): string {
 .ai-dropdown-menu {
     position: fixed;
     background: var(--bg-secondary, $bg-primary);
-    border: 1px solid $text3;
+    border: $border-width-thin $text3;
     border-radius: $border-radius-lg;
-    box-shadow: 0 6px 20px rgb(0 0 0 / 20%);
+    box-shadow: $shadow-md;
     padding: $space-2;
     z-index: $z-extreme;
-    backdrop-filter: blur(20px);
-    max-height: 200px;
-    max-width: calc(100vw - 24px);
+    backdrop-filter: blur($backdrop-blur-md);
+    max-height: $size-24;
+    max-width: calc(100vw - $size-11);
     overflow: hidden auto;
     display: flex;
     flex-direction: column;
@@ -605,7 +605,7 @@ function truncate(str: string, len: number): string {
     flex-shrink: 0;
     font-size: $font-size-xs;
     color: $text2;
-    opacity: 0.7;
+    opacity: $opacity-mid-high;
 }
 
 .ai-model-status {
@@ -618,12 +618,12 @@ function truncate(str: string, len: number): string {
 }
 
 .ai-model-indicator {
-    width: 7px;
-    height: 7px;
+    width: $size-4;
+    height: $size-4;
     background: $accent-color;
     border-radius: $border-radius-round;
     flex-shrink: 0;
-    box-shadow: 0 0 4px $accent-color;
+    box-shadow: $accent-shadow;
 }
 
 .ai-model-name {
@@ -642,7 +642,7 @@ function truncate(str: string, len: number): string {
     gap: $space-0;
     flex-shrink: 0;
     background: $bg-primary;
-    border: 1px solid $text3;
+    border: $border-width-thin $text3;
     border-radius: $border-radius-xl;
     padding: $space-0 $space-1;
 }
@@ -666,7 +666,7 @@ function truncate(str: string, len: number): string {
     }
 
     &:disabled {
-        opacity: 0.3;
+        opacity: $opacity-lowest;
         cursor: not-allowed;
     }
 }
@@ -698,12 +698,12 @@ function truncate(str: string, len: number): string {
         transform $transition-fast;
 
     &:hover:not(:disabled) {
-        opacity: 0.85;
-        transform: scale(1.03);
+        opacity: $opacity-highest;
+        transform: scale($scale-hover);
     }
 
     &:disabled {
-        opacity: 0.4;
+        opacity: $opacity-low;
         cursor: not-allowed;
     }
 }
@@ -718,7 +718,7 @@ function truncate(str: string, len: number): string {
 
 .ai-prompt-menu {
     padding: $space-2;
-    min-height: 250px;
+    min-height: $size-26;
 }
 
 .ai-prompt-menu-header {
@@ -726,7 +726,7 @@ function truncate(str: string, len: number): string {
     font-size: $font-size-xs;
     font-weight: $font-weight-medium;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: $letter-spacing-wider;
     color: $text2;
 }
 

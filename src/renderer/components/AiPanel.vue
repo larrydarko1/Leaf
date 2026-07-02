@@ -403,7 +403,7 @@ function increaseWidth() {
     flex-direction: column;
     height: 100%;
     background: $base1;
-    border-left: 1px solid $text3;
+    border-left: $border-width-thin $text3;
     position: relative;
     flex-shrink: 0;
 }
@@ -413,15 +413,15 @@ function increaseWidth() {
     left: 0;
     top: 0;
     bottom: 0;
-    width: 4px;
+    width: $size-2;
     cursor: col-resize;
-    z-index: 10;
+    z-index: $z-raised;
     transition: background $transition-fast;
 
     &:hover,
     &:active {
         background: $accent-color;
-        opacity: 0.5;
+        opacity: $opacity-mid-low;
     }
 }
 </style>

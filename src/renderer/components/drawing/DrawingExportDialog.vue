@@ -310,7 +310,7 @@ async function copyClipboard() {
 .export-overlay {
     position: fixed;
     inset: 0;
-    background: rgb(0 0 0 / 50%);
+    background: color-mix(in srgb, $bg-primary 50%, transparent);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -321,9 +321,9 @@ async function copyClipboard() {
     display: flex;
     background: $bg-primary;
     border-radius: $border-radius-xl;
-    box-shadow: 0 20px 60px rgb(0 0 0 / 30%);
+    box-shadow: $shadow-lg;
     overflow: hidden;
-    max-width: 720px;
+    max-width: $size-31;
     max-height: 80vh;
     width: 90vw;
 }
@@ -357,7 +357,7 @@ async function copyClipboard() {
 }
 
 .export-empty {
-    padding: $space-10;
+    padding: $space-8;
     color: $text-muted;
     font-size: $font-size-sm;
 }
@@ -365,13 +365,13 @@ async function copyClipboard() {
 /* ––– Settings Panel ––– */
 
 .export-settings {
-    width: 220px;
+    width: $size-25;
     padding: $space-6 $space-5;
     display: flex;
     flex-direction: column;
     gap: $space-4;
     position: relative;
-    border-left: 1px solid $border-color;
+    border-left: $border-width-thin $border-color;
 }
 
 .export-title {
@@ -397,8 +397,8 @@ async function copyClipboard() {
     }
 
     .toggle-track {
-        width: 36px;
-        height: 20px;
+        width: $size-13;
+        height: $size-10;
         border-radius: $border-radius-xl;
         background: $border-color;
         position: relative;
@@ -407,21 +407,21 @@ async function copyClipboard() {
 
     .toggle-thumb {
         position: absolute;
-        top: 2px;
-        left: 2px;
-        width: 16px;
-        height: 16px;
+        top: $space-0;
+        left: $space-0;
+        width: $size-8;
+        height: $size-8;
         border-radius: $border-radius-lg;
         background: $base2;
         transition: transform $transition-base;
-        box-shadow: 0 1px 3px rgb(0 0 0 / 20%);
+        box-shadow: $shadow-sm;
     }
 
     .export-checkbox:checked + .toggle-track {
         background: $accent-color;
 
         .toggle-thumb {
-            transform: translateX(16px);
+            transform: translateX($space-4);
         }
     }
 }
@@ -442,7 +442,7 @@ async function copyClipboard() {
 .export-scale-btns {
     display: flex;
     gap: 0;
-    border: 1px solid $border-color;
+    border: $border-width-thin $border-color;
     border-radius: $border-radius;
     overflow: hidden;
 }
@@ -461,7 +461,7 @@ async function copyClipboard() {
         color $transition-base;
 
     &:not(:last-child) {
-        border-right: 1px solid $border-color;
+        border-right: $border-width-thin $border-color;
     }
 
     &:hover {
@@ -495,7 +495,7 @@ async function copyClipboard() {
     justify-content: center;
     gap: $space-2;
     padding: $space-2 $space-3;
-    border: 1px solid $border-color;
+    border: $border-width-thin $border-color;
     border-radius: $border-radius-lg;
     background: $base3;
     color: $text1;
@@ -511,7 +511,7 @@ async function copyClipboard() {
     }
 
     &:disabled {
-        opacity: 0.5;
+        opacity: $opacity-mid-low;
         cursor: not-allowed;
     }
 
@@ -531,10 +531,10 @@ async function copyClipboard() {
 
 .export-close-btn {
     position: absolute;
-    top: 12px;
-    right: 12px;
-    width: 24px;
-    height: 24px;
+    top: $space-3;
+    right: $space-3;
+    width: $size-11;
+    height: $size-11;
     display: flex;
     align-items: center;
     justify-content: center;

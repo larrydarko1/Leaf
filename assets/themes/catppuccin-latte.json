@@ -26,6 +26,10 @@
         "danger-color-alpha": "rgb(210 15 57 / 12%)",
         "scrollbar-thumb": "#bcc0cc",
         "scrollbar-thumb-hover": "#acb0be",
-        "grid-color": "rgb(0 0 0 / 6%)"
+        "grid-color": "rgb(0 0 0 / 6%)",
+        "tier-small": "rgb(40 167 69 / 15%)",
+        "tier-medium": "rgb(0 123 255 / 15%)",
+        "tier-large": "rgb(255 165 0 / 15%)",
+        "tier-extreme": "rgb(220 53 69 / 15%)"
     }
 }

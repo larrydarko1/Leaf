@@ -3,15 +3,17 @@
  *
  * Barrel file that imports all style partials.
  * Variables are auto-injected into every Vue SFC via
- * vite.config.ts (css.preprocessorOptions.scss.additionalData).
+ * electron.vite.config.ts (css.preprocessorOptions.scss.additionalData).
  *
  * ── Style Architecture ────────────────────────────────────────────────────────
- * variables.scss  → Design tokens, theme maps, SCSS aliases 
- * base.scss       → Resets, global styles, animations 
+ * variables.scss  → Design tokens, theme maps, SCSS aliases
+ * base.scss       → Resets, global styles, animations
+ * components.scss → Shared mixins/patterns reused across 2+ unrelated components
  */
 
-/* Re-export variables so they're available to SFCs via @use '@/styles' */
+/* Re-export variables and mixins so they're available to SFCs via @use '@/renderer/styles' */
 @forward '@/renderer/styles/variables';
+@forward '@/renderer/styles/components';
 
 /* Import and output styles */
 @use '@/renderer/styles/base' as *;

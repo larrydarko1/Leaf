@@ -437,7 +437,7 @@ defineExpose({ handleClickOutside });
 
 .floating-toolbar {
     position: absolute;
-    top: 12px;
+    top: $space-3;
     left: 50%;
     transform: translateX(-50%);
     z-index: $z-mid;
@@ -449,11 +449,9 @@ defineExpose({ handleClickOutside });
     gap: $space-0;
     padding: $space-1;
     background: $bg-primary;
-    border: 1px solid $border-color;
+    border: $border-width-thin solid $border-color;
     border-radius: $border-radius-xl;
-    box-shadow:
-        0 1px 5px rgb(0 0 0 / 8%),
-        0 4px 16px rgb(0 0 0 / 4%);
+    box-shadow: $shadow-float;
 }
 
 /* ––– Toolbar Buttons & Controls ––– */
@@ -462,8 +460,8 @@ defineExpose({ handleClickOutside });
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: $size-13;
+    height: $size-13;
     border: none;
     border-radius: $border-radius-lg;
     background: transparent;
@@ -486,8 +484,8 @@ defineExpose({ handleClickOutside });
 }
 
 .toolbar-sep {
-    width: 1px;
-    height: 24px;
+    width: $size-0;
+    height: $size-11;
     background: $border-color;
     margin: 0 $space-0;
     flex-shrink: 0;
@@ -501,7 +499,7 @@ defineExpose({ handleClickOutside });
 
 .arch-dropdown-menu {
     position: absolute;
-    top: calc(100% + 8px);
+    top: calc(100% + $space-2);
     left: 50%;
     transform: translateX(-50%);
     display: grid;
@@ -509,13 +507,11 @@ defineExpose({ handleClickOutside });
     gap: $space-0;
     padding: $space-2;
     background: $bg-primary;
-    border: 1px solid $border-color;
+    border: $border-width-thin solid $border-color;
     border-radius: $border-radius-xl;
-    box-shadow:
-        0 4px 20px rgb(0 0 0 / 12%),
-        0 1px 6px rgb(0 0 0 / 6%);
+    box-shadow: $shadow-dropdown;
     z-index: $z-mid;
-    min-width: 200px;
+    min-width: $size-24;
 }
 
 .arch-shape-btn {
@@ -549,13 +545,13 @@ defineExpose({ handleClickOutside });
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 20px;
-    height: 20px;
+    width: $size-10;
+    height: $size-10;
     flex-shrink: 0;
 
     svg {
-        width: 18px;
-        height: 18px;
+        width: $size-9;
+        height: $size-9;
     }
 }
 
@@ -575,6 +571,6 @@ defineExpose({ handleClickOutside });
 .panel-fade-enter-from,
 .panel-fade-leave-to {
     opacity: 0;
-    transform: translateX(-8px);
+    transform: translateX(-$space-2);
 }
 </style>

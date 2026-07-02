@@ -83,7 +83,7 @@ watch(
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: $space-8;
+    padding: $space-7;
     overflow: auto;
     background: $base1;
     position: relative;

@@ -182,7 +182,7 @@ function formatRelativeDate(dateStr: string): string {
     max-height: 45%;
     display: flex;
     flex-direction: column;
-    border-bottom: 1px solid $text3;
+    border-bottom: $border-width-thin $text3;
 }
 
 /* ––– Header Section ––– */
@@ -199,7 +199,7 @@ function formatRelativeDate(dateStr: string): string {
     font-weight: $font-weight-semibold;
     color: $text2;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: $letter-spacing-wider;
     margin: 0;
 }
 
@@ -267,8 +267,8 @@ function formatRelativeDate(dateStr: string): string {
     gap: $space-1;
 
     &:focus-visible {
-        outline: 2px solid $accent-color;
-        outline-offset: 2px;
+        outline: $border-width-thick $accent-color;
+        outline-offset: $size-0;
         border-radius: $border-radius-sm;
     }
 }
@@ -295,14 +295,14 @@ function formatRelativeDate(dateStr: string): string {
 .ai-history-item-meta {
     font-size: $font-size-xxs;
     color: $text2;
-    opacity: 0.7;
+    opacity: $opacity-mid-high;
 }
 
 .ai-history-rename-input {
     width: 100%;
     background: $bg-primary;
     color: $text1;
-    border: 1px solid $accent-color;
+    border: $border-width-thin $accent-color;
     border-radius: $border-radius-sm;
     padding: $space-0 $space-1;
     font-size: $font-size-xs;
@@ -310,7 +310,7 @@ function formatRelativeDate(dateStr: string): string {
     outline: none;
 
     &:focus {
-        box-shadow: 0 0 0 2px rgb($accent-color / 10%);
+        box-shadow: $accent-shadow;
     }
 }
 
@@ -344,12 +344,12 @@ function formatRelativeDate(dateStr: string): string {
     }
 
     &:focus-visible {
-        outline: 2px solid $accent-color;
-        outline-offset: 2px;
+        outline: $border-width-thick $accent-color;
+        outline-offset: $size-0;
     }
 
     &:disabled {
-        opacity: 0.3;
+        opacity: $opacity-lowest;
         cursor: not-allowed;
     }
 }

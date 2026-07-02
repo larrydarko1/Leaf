@@ -593,7 +593,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
     padding: $space-2 $space-4;
     background: transparent;
     color: $text2;
-    border: 1px solid $text3;
+    border: $border-width-thin $text3;
     border-radius: $border-radius;
     font-size: $font-size-sm;
     cursor: pointer;
@@ -606,8 +606,8 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
     }
 
     &:focus-visible {
-        outline: 2px solid $accent-color;
-        outline-offset: 2px;
+        outline: $border-width-thick $accent-color;
+        outline-offset: $size-0;
     }
 }
 
@@ -684,7 +684,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
     align-items: center;
     gap: $space-2;
     background: $bg-secondary;
-    border: 1px solid $border-color;
+    border: $border-width-thin $border-color;
     border-radius: $border-radius-lg;
     padding: $space-2 $space-3;
     font-size: $font-size-xs;
@@ -694,7 +694,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
 
     svg {
         flex-shrink: 0;
-        opacity: 0.6;
+        opacity: $opacity-mid;
     }
 }
 
@@ -747,7 +747,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
     }
 
     :deep(code) {
-        background: rgb(0 0 0 / 15%);
+        background: color-mix(in srgb, $bg-primary 15%, transparent);
         padding: $space-0 $space-1;
         border-radius: $border-radius-xs;
         font-size: $font-size-sm;
@@ -755,7 +755,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
     }
 
     :deep(pre) {
-        background: rgb(0 0 0 / 20%);
+        background: color-mix(in srgb, $bg-primary 20%, transparent);
         padding: $space-2 $space-3;
         border-radius: $border-radius;
         overflow-x: auto;
@@ -770,7 +770,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
     }
 
     :deep(blockquote) {
-        border-left: 3px solid $accent-color;
+        border-left: $border-width-thick $accent-color;
         margin: $space-2 0;
         padding: $space-1 $space-2;
         color: $text2;
@@ -784,19 +784,19 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
 
         th,
         td {
-            border: 1px solid $text3;
+            border: $border-width-thin $text3;
             padding: $space-1 $space-2;
             text-align: left;
         }
 
         th {
-            background: rgb(0 0 0 / 10%);
+            background: color-mix(in srgb, $bg-primary 10%, transparent);
         }
     }
 
     :deep(hr) {
         border: none;
-        border-top: 1px solid $text3;
+        border-top: $border-width-thin $text3;
         margin: $space-2 0;
     }
 
@@ -805,8 +805,8 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
         text-decoration: underline;
 
         &:focus-visible {
-            outline: 2px solid $accent-color;
-            outline-offset: 2px;
+            outline: $border-width-thick $accent-color;
+            outline-offset: $size-0;
         }
     }
 
@@ -826,9 +826,9 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
 
 .ai-markdown :deep(.ai-code-copy-btn) {
     position: absolute;
-    top: 5.6px;
-    right: 5.6px;
-    background: rgb(0 0 0 / 35%);
+    top: $space-2;
+    right: $space-2;
+    background: color-mix(in srgb, $bg-primary 35%, transparent);
     border: none;
     border-radius: $border-radius-sm;
     color: $text2;
@@ -842,18 +842,18 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
         opacity $transition-fast,
         color $transition-fast,
         background $transition-fast;
-    z-index: 1;
+    z-index: $z-normal;
 
     &:hover {
         color: $text1;
-        background: rgb(0 0 0 / 55%);
+        background: color-mix(in srgb, $bg-primary 55%, transparent);
         opacity: 1;
     }
 
     &:focus-visible {
         opacity: 1;
-        outline: 2px solid $accent-color;
-        outline-offset: 2px;
+        outline: $border-width-thick $accent-color;
+        outline-offset: $size-0;
     }
 }
 
@@ -868,12 +868,12 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
 
 .ai-edit-input {
     width: 100%;
-    min-height: 40px;
-    max-height: 128px;
+    min-height: $size-14;
+    max-height: $size-21;
     padding: $space-2 $space-3;
     background: $bg-primary;
     color: $text1;
-    border: 1px solid $accent-color;
+    border: $border-width-thin $accent-color;
     border-radius: $border-radius-lg;
     font-size: $font-size-sm;
     font-family: inherit;
@@ -883,7 +883,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
 
     &:focus {
         border-color: $accent-color;
-        box-shadow: 0 0 0 1px $accent-color;
+        box-shadow: $accent-shadow;
     }
 }
 
@@ -899,12 +899,6 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
     animation: blink 0.8s step-end infinite;
     color: $accent-color;
     font-size: $font-size-sm;
-}
-
-@keyframes blink {
-    50% {
-        opacity: 0;
-    }
 }
 
 /* ––– Message Actions ––– */
@@ -939,8 +933,8 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
     }
 
     &:focus-visible {
-        outline: 2px solid $accent-color;
-        outline-offset: 2px;
+        outline: $border-width-thick $accent-color;
+        outline-offset: $size-0;
     }
 
     &.ai-btn-action-danger:hover {
@@ -967,8 +961,8 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
     }
 
     &:focus-visible {
-        outline: 2px solid $accent-color;
-        outline-offset: 2px;
+        outline: $border-width-thick $accent-color;
+        outline-offset: $size-0;
     }
 }
 
@@ -980,7 +974,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
 
 .ai-thinking-block {
     background: $bg-secondary;
-    border: 1px solid $text3;
+    border: $border-width-thin $text3;
     border-radius: $border-radius;
     padding: $space-2 $space-3;
     margin-bottom: $space-2;
@@ -989,39 +983,25 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
     font-style: italic;
     white-space: pre-wrap;
     overflow-wrap: break-word;
-    max-height: 200px;
+    max-height: $size-24;
     overflow-y: auto;
 }
 
 .ai-thinking-label {
     position: absolute;
-    top: 10px;
-    right: 10px;
+    top: $space-3;
+    right: $space-3;
     font-size: $font-size-xs;
     font-weight: $font-weight-semibold;
     color: $text-muted;
-    opacity: 0.7;
+    opacity: $opacity-mid-high;
     font-style: normal;
     margin-bottom: $space-1;
     cursor: default;
 }
 
 .thinking-progress {
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% {
-        opacity: 0.2;
-    }
-
-    50% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 0.2;
-    }
+    animation: thinking-pulse 1.5s infinite;
 }
 
 /* ––– Agent Edit Cards ––– */
@@ -1043,7 +1023,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
     gap: $space-2;
     padding: $space-2 $space-3;
     background: $bg-primary;
-    border-top: 1px solid $text3;
+    border-top: $border-width-thin $text3;
     flex-shrink: 0;
 }
 
@@ -1056,7 +1036,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
 
     svg {
         flex-shrink: 0;
-        opacity: 0.7;
+        opacity: $opacity-mid-high;
     }
 }
 
@@ -1079,17 +1059,17 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
     flex-shrink: 0;
 
     &:hover:not(:disabled) {
-        opacity: 0.85;
-        transform: scale(1.02);
+        opacity: $opacity-highest;
+        transform: scale($scale-hover);
     }
 
     &:focus-visible {
-        outline: 2px solid $base1;
-        outline-offset: 2px;
+        outline: $border-width-thick $base1;
+        outline-offset: $size-0;
     }
 
     &:disabled {
-        opacity: 0.5;
+        opacity: $opacity-mid-low;
         cursor: not-allowed;
     }
 
@@ -1110,7 +1090,7 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
 
 .ai-token-bar-track {
     flex: 1;
-    height: 3px;
+    height: $size-1;
     background: $text3;
     border-radius: $border-radius-xs;
     overflow: hidden;

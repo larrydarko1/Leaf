@@ -134,11 +134,11 @@ async function handleRefresh() {
     display: flex;
     flex-direction: column;
     background: $base1;
-    border-left: 1px solid $text3;
+    border-left: $border-width-thin $text3;
     overflow: hidden;
     color: $text1;
-    width: 340px;
-    min-width: 280px;
+    width: $size-28;
+    min-width: $size-27;
 }
 
 /* ––– Header ––– */
@@ -148,14 +148,14 @@ async function handleRefresh() {
     align-items: center;
     justify-content: space-between;
     padding: $space-3;
-    border-bottom: 1px solid $text3;
+    border-bottom: $border-width-thin $text3;
     flex-shrink: 0;
 }
 
 .language-title {
     font-size: $font-size-sm;
     font-weight: $font-weight-medium;
-    letter-spacing: 0.02em;
+    letter-spacing: $letter-spacing-wide;
 }
 
 .header-actions {
@@ -198,7 +198,7 @@ async function handleRefresh() {
     scrollbar-color: $text3 transparent;
 
     &::-webkit-scrollbar {
-        width: 8px;
+        width: $size-4;
     }
 
     &::-webkit-scrollbar-track {
@@ -222,7 +222,7 @@ async function handleRefresh() {
     gap: $space-3;
     padding: $space-2 $space-3;
     background: none;
-    border: 1px solid transparent;
+    border: $border-width-thin transparent;
     border-radius: $border-radius-lg;
     color: $text1;
     text-align: left;
@@ -262,7 +262,7 @@ async function handleRefresh() {
 /* ––– Footer ––– */
 
 .language-footer {
-    border-top: 1px solid $text3;
+    border-top: $border-width-thin $text3;
     padding: $space-2 $space-4 $space-3;
     flex-shrink: 0;
 }
@@ -270,7 +270,7 @@ async function handleRefresh() {
 .footer-btn {
     width: 100%;
     background: none;
-    border: 1px solid $border-color;
+    border: $border-width-thin $border-color;
     border-radius: $border-radius;
     padding: $border-radius $border-radius-lg;
     font-size: $space-3;

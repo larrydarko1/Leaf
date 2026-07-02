@@ -470,8 +470,8 @@ canvas {
     background: color-mix(in srgb, $bg-primary 85%, transparent);
     outline: none;
     resize: none;
-    min-width: 60px;
-    min-height: 22.5px;
+    min-width: $size-18;
+    min-height: $size-11;
     font-family: $font-family;
     padding: $space-1 $space-2;
     overflow: hidden;

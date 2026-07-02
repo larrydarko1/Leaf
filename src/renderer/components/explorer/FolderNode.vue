@@ -593,13 +593,13 @@ const getFileTypeLabel = (): string => {
     }
 
     &.is-dragging {
-        opacity: 0.5;
+        opacity: $opacity-mid-low;
         cursor: move;
     }
 
     &.drag-over {
         background: $accent-color-alpha;
-        border: 2px dashed $accent-color;
+        border: $border-width-md $accent-color;
         margin: $space-0 $space-2 $space-0 $space-2;
     }
 
@@ -626,7 +626,7 @@ const getFileTypeLabel = (): string => {
     .folder-icon {
         flex-shrink: 0;
         color: $text2;
-        opacity: 0.8;
+        opacity: $opacity-higher;
     }
 
     .folder-name {
@@ -640,7 +640,7 @@ const getFileTypeLabel = (): string => {
         font-size: $font-size-sm;
         color: $text1;
         background: $bg-primary;
-        border: 1px solid $border-color;
+        border: $border-width-thin $border-color;
         border-radius: $border-radius;
         padding: $space-0 $space-1;
         outline: none;
@@ -687,20 +687,20 @@ const getFileTypeLabel = (): string => {
     }
 
     &.is-dragging {
-        opacity: 0.5;
+        opacity: $opacity-mid-low;
         cursor: move;
     }
 
     .file-icon {
         flex-shrink: 0;
         color: $text2;
-        opacity: 0.7;
+        opacity: $opacity-mid-high;
         margin: $space-0 $space-2 $space-0 $space-2;
     }
 
     &.media-drawing .drawing-icon {
         color: $text2;
-        opacity: 0.9;
+        opacity: $opacity-almost-opaque;
     }
 }
 
@@ -733,22 +733,6 @@ const getFileTypeLabel = (): string => {
     }
 }
 
-@keyframes name-scroll {
-    0%,
-    12% {
-        transform: translateX(0);
-    }
-
-    50%,
-    62% {
-        transform: translateX(var(--scroll-distance, 0));
-    }
-
-    100% {
-        transform: translateX(0);
-    }
-}
-
 @media (prefers-reduced-motion: reduce) {
     .name-text.scrolling {
         animation: none;
@@ -759,7 +743,7 @@ const getFileTypeLabel = (): string => {
     flex-shrink: 0;
     color: $accent-color;
     margin-left: $space-1;
-    opacity: 0.8;
+    opacity: $opacity-higher;
 }
 
 .file-item.active .bookmark-star {
@@ -774,7 +758,7 @@ const getFileTypeLabel = (): string => {
     font-size: $font-size-sm;
     color: $text1;
     background: $bg-primary;
-    border: 1px solid $border-color;
+    border: $border-width-thin $border-color;
     border-radius: $border-radius;
     padding: $space-0 $space-1;
     outline: none;

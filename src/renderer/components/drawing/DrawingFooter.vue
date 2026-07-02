@@ -199,14 +199,14 @@ const emit = defineEmits<{
     bottom: 0;
     left: 0;
     right: 0;
-    height: 40px;
+    height: $size-14;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 $space-3;
     background: $bg-primary;
-    backdrop-filter: blur(8px);
-    border-top: 1px solid $border-color;
+    backdrop-filter: blur($backdrop-blur-sm);
+    border-top: $border-width-thin $border-color;
     z-index: $z-mid;
 }
 
@@ -221,11 +221,11 @@ const emit = defineEmits<{
 }
 
 .footer-left {
-    min-width: 140px;
+    min-width: $size-22;
 }
 
 .footer-right {
-    min-width: 140px;
+    min-width: $size-22;
     justify-content: flex-end;
 }
 
@@ -235,7 +235,7 @@ const emit = defineEmits<{
     display: flex;
     align-items: center;
     gap: 0;
-    border: 1px solid $border-color;
+    border: $border-width-thin $border-color;
     border-radius: $border-radius;
     overflow: hidden;
 }
@@ -245,7 +245,7 @@ const emit = defineEmits<{
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 28px;
+    height: $size-12;
     border: none;
     background: transparent;
     color: $text2;
@@ -259,7 +259,7 @@ const emit = defineEmits<{
 }
 
 .zoom-btn {
-    width: 28px;
+    width: $size-12;
     padding: 0;
 }
 
@@ -267,9 +267,9 @@ const emit = defineEmits<{
     padding: 0 $space-2;
     font-size: $font-size-xs;
     font-weight: $font-weight-medium;
-    min-width: 46px;
-    border-left: 1px solid $border-color;
-    border-right: 1px solid $border-color;
+    min-width: $size-15;
+    border-left: $border-width-thin $border-color;
+    border-right: $border-width-thin $border-color;
 }
 
 /* ––– Footer Buttons ––– */
@@ -278,8 +278,8 @@ const emit = defineEmits<{
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
+    width: $size-12;
+    height: $size-12;
     border: none;
     border-radius: $border-radius;
     background: transparent;
@@ -295,7 +295,7 @@ const emit = defineEmits<{
     }
 
     &:disabled {
-        opacity: 0.3;
+        opacity: $opacity-lowest;
         cursor: not-allowed;
     }
 }
