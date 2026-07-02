@@ -1,0 +1,107 @@
+/**
+ * Global reset and base styles
+ *
+ * Resets, universal styles, animations, and element defaults
+ */
+
+@use '@/renderer/styles/variables' as *;
+
+/* ––––– Universal box-sizing ––––– */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* ––––– Root ––––– */
+
+:root {
+    font-family: $font-family;
+    line-height: $line-height;
+    font-weight: $font-weight-normal;
+    color: $text1;
+    background-color: $bg-primary;
+    font-synthesis: none;
+    text-rendering: optimizelegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ––––– Html, Body, App ––––– */
+
+html {
+    scroll-behavior: smooth;
+
+    @media (prefers-reduced-motion: reduce) {
+        scroll-behavior: auto;
+    }
+}
+
+body,
+html,
+#app {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+/* ––––– Interactive elements ––––– */
+
+button,
+input,
+textarea,
+select,
+a,
+[role='button'],
+.clickable {
+    cursor: pointer;
+}
+
+/* ––––– Scrollbar ––––– */
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: $scrollbar-thumb;
+    border-radius: 0.1875em;
+    transition: background $transition-base;
+
+    &:hover {
+        background: $scrollbar-thumb-hover;
+    }
+}
+
+/* ––––– Focus & Selection ––––– */
+
+:focus-visible {
+    outline: 1.5px solid $accent-color;
+    outline-offset: -1.5px;
+    border-radius: $border-radius-sm;
+}
+
+::selection {
+    background: $accent-color-alpha;
+    color: $text1;
+}
+
+/* ––––– Accessibility related ––––– */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: 0.0625em;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border-width: 0;
+}

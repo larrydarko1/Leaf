@@ -47,9 +47,11 @@ export default defineConfig({
         css: {
             preprocessorOptions: {
                 scss: {
-                    loadPaths: [fileURLToPath(new URL('./src/renderer', import.meta.url))],
+                    loadPaths: [fileURLToPath(new URL('./src/renderer/styles', import.meta.url))],
                     additionalData: (source: string, filename: string) =>
-                        filename.endsWith('style.scss') ? source : `@use 'sass:color';\n@use 'style' as *;\n${source}`,
+                        filename.endsWith('index.scss')
+                            ? source
+                            : `@use 'sass:color';\n@use '@/renderer/styles' as *;\n${source}`,
                 },
             },
         },

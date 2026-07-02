@@ -77,6 +77,8 @@ export default {
       true,
       {
         'ignoreAtRules': [
+          'use',
+          'forward',
           'mixin', 
           'include', 
           'extend', 

@@ -1,0 +1,17 @@
+/**
+ * Global stylesheet — imported once in main.ts.
+ *
+ * Barrel file that imports all style partials.
+ * Variables are auto-injected into every Vue SFC via
+ * vite.config.ts (css.preprocessorOptions.scss.additionalData).
+ *
+ * ── Style Architecture ────────────────────────────────────────────────────────
+ * variables.scss  → Design tokens, theme maps, SCSS aliases 
+ * base.scss       → Resets, global styles, animations 
+ */
+
+/* Re-export variables so they're available to SFCs via @use '@/styles' */
+@forward '@/renderer/styles/variables';
+
+/* Import and output styles */
+@use '@/renderer/styles/base' as *;
