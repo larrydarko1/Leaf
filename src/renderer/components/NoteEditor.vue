@@ -508,6 +508,7 @@ if (typeof window !== 'undefined') {
                         src="@/renderer/assets/icons/icon.png"
                         :alt="t('editor.leaf_logo')"
                         class="empty-logo-icon" />
+                    <!-- eslint-disable-next-line @intlify/vue-i18n/no-raw-text -- brand name, not translated -->
                     <span class="empty-logo-text">leaf.</span>
                 </div>
                 <h2>{{ t('editor.select_note_to_start_editing') }}</h2>

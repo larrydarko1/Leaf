@@ -146,7 +146,7 @@ async function handleRefresh() {
             <p class="footer-hint">
                 {{ t('theme.footer_hint_intro') }}
                 <code>{{ t('theme.footer_hint_file_type') }}</code>
-                files in
+                {{ t('theme.footer_hint_files_in') }}
                 <code>{{ t('theme.footer_hint_path') }}</code>
                 {{ t('theme.footer_hint_action') }}
             </p>

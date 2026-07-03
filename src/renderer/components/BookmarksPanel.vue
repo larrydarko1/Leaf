@@ -154,7 +154,9 @@ function removeBookmark(file: FileInfo) {
                         </svg>
                         <div class="file-details">
                             <div class="file-name">{{ file.name }}</div>
-                            <div class="file-path">{{ file.folder === '.' ? 'Root' : file.folder }}</div>
+                            <div class="file-path">{{
+                                file.folder === '.' ? t('bookmarks.root_folder') : file.folder
+                            }}</div>
                         </div>
                         <button
                             class="unbookmark-btn"

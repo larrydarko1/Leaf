@@ -6,6 +6,8 @@ import prettier from 'eslint-config-prettier';
 import globals from 'globals';
 import importX from 'eslint-plugin-import-x';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
+import vueI18n from '@intlify/eslint-plugin-vue-i18n';
+import * as jsoncParser from 'jsonc-eslint-parser';
 
 export default [
     // ── Global ignores ───────────────────────────────────────────────────────
@@ -242,6 +244,48 @@ export default [
             // Disallow file extensions on TS/JS imports; .vue/.json must keep theirs.
             // ignorePackages skips deep package imports (e.g. 'electron-log/main.js')
             'import-x/extensions': ['error', 'never', { ignorePackages: true, pattern: { vue: 'always', json: 'always' } }],
+        },
+    },
+
+     // ── i18n enforcement (@intlify/vue-i18n) ─────────────────────────────────
+    // Placed after the project-wide overrides so the JSON block below can turn
+    // off the type-aware naming-convention rule for locale files (last match wins).
+    // Shared config: where the locale files live + the vue-i18n message syntax.
+    {
+        settings: {
+            'vue-i18n': {
+                localeDir: 'assets/locales/*.json',
+                messageSyntaxVersion: '^11.0.0',
+            },
+        },
+    },
+    // Templates: forbid raw user-facing text — every string must go through t().
+    // Brand name and pure punctuation/number/symbol runs are exempt.
+    {
+        files: ['src/renderer/**/*.vue'],
+        plugins: { '@intlify/vue-i18n': vueI18n },
+        rules: {
+            '@intlify/vue-i18n/no-raw-text': [
+                'error',
+                {
+                    // Ignore pure whitespace/number/punctuation/symbol runs and
+                    // empty-string ternary branches (e.g. `cond ? t('k') : ''`).
+                    ignorePattern: '^[\\s\\d\\p{P}\\p{S}]*$',
+                    ignoreText: ['Lotus'],
+                },
+            ],
+        },
+    },
+    // Locale JSON: enforce key parity across locales and forbid duplicate keys.
+    {
+        files: ['assets/locales/*.json'],
+        plugins: { '@intlify/vue-i18n': vueI18n },
+        languageOptions: { parser: jsoncParser },
+        rules: {
+            // Type-aware TS rule can't run under the JSON parser — off for locale files.
+            '@typescript-eslint/naming-convention': 'off',
+            '@intlify/vue-i18n/no-missing-keys-in-other-locales': 'error',
+            '@intlify/vue-i18n/no-duplicate-keys-in-locale': 'error',
         },
     },
 

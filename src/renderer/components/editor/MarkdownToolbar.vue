@@ -146,10 +146,10 @@ defineEmits<{
                 disabled
                 >{{ t('editor.heading') }}</option
             >
-            <option value="1">H1</option>
-            <option value="2">H2</option>
-            <option value="3">H3</option>
-            <option value="4">H4</option>
+            <option value="1">{{ t('editor.heading_1') }}</option>
+            <option value="2">{{ t('editor.heading_2') }}</option>
+            <option value="3">{{ t('editor.heading_3') }}</option>
+            <option value="4">{{ t('editor.heading_4') }}</option>
         </select>
 
         <div

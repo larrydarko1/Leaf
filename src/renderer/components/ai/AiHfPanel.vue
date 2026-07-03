@@ -244,7 +244,7 @@ function formatNumber(n: number): string {
                                     x2="12"
                                     y2="20" />
                             </svg>
-                            {{ formatNumber(hfModelInfo.contextLength) }} tokens
+                            {{ t('ai.context_length_tokens', { count: formatNumber(hfModelInfo.contextLength) }) }}
                         </span>
                         <span
                             v-if="hfModelInfo.totalParamSize"
@@ -263,7 +263,7 @@ function formatNumber(n: number): string {
                                 <path
                                     d="M21 16V8a2 2 0 0 0-1-1.73L13 2.27a2 2 0 0 0-2 0L4 6.27A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
                             </svg>
-                            {{ hfModelInfo.totalParamSizeFormatted }} params
+                            {{ t('ai.total_param_size_value', { size: hfModelInfo.totalParamSizeFormatted }) }}
                         </span>
                     </div>
                 </div>
@@ -299,13 +299,13 @@ function formatNumber(n: number): string {
                                     v-if="file.estimatedRamFormatted"
                                     class="ai-hf-ram-estimate"
                                     :title="t('ai.estimated_ram')">
-                                    RAM: ~{{ file.estimatedRamFormatted }}
+                                    {{ t('ai.estimated_ram_value', { size: file.estimatedRamFormatted }) }}
                                 </span>
                                 <span
                                     v-if="file.isSharded"
                                     class="ai-hf-shard-info"
                                     :title="t('ai.model_sharded')">
-                                    {{ file.shardCount }} parts
+                                    {{ t('ai.shard_parts_count', { count: file.shardCount }) }}
                                 </span>
                             </div>
                         </div>

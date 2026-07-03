@@ -340,6 +340,7 @@ function toggleLanguagePanel() {
                             src="./assets/icons/icon.png"
                             alt="Leaf logo"
                             class="welcome-logo-icon" />
+                        <!-- eslint-disable-next-line @intlify/vue-i18n/no-raw-text -- brand name, not translated -->
                         <span class="welcome-logo-text">leaf.</span>
                     </div>
 

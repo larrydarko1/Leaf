@@ -116,7 +116,12 @@ function formatRelativeDate(dateStr: string): string {
                             <span
                                 class="ai-history-item-meta"
                                 :aria-label="t('ai.conversation_metadata')">
-                                {{ conv.messageCount }} msgs · {{ formatRelativeDate(conv.updatedAt) }}
+                                {{
+                                    t('ai.history_item_meta', {
+                                        count: conv.messageCount,
+                                        date: formatRelativeDate(conv.updatedAt),
+                                    })
+                                }}
                             </span>
                         </div>
                     </button>

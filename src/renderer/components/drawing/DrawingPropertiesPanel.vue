@@ -285,7 +285,7 @@ const borderRadiusOptions = [
                     <span
                         class="font-size-value"
                         aria-live="polite"
-                        >{{ activeFontSize }}px</span
+                        >{{ t('drawing.font_size_value', { size: activeFontSize }) }}</span
                     >
                 </h3>
                 <div
