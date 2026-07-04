@@ -1,6 +1,6 @@
 export default {
   extends: ['stylelint-config-standard-scss'],
-  plugins: ['stylelint-scss'],
+  plugins: ['stylelint-scss', 'stylelint-declaration-strict-value'],
   rules: {
     // –– COLOR FUNCTIONS –––––––––––––––––––––––––––––––––––––––––––––––
     'color-function-notation': 'modern',
@@ -61,6 +61,13 @@ export default {
 
     // –– DESIGN TOKENS –––––––––––––––––––––––––––––––––––––––––––––––
     'no-unknown-custom-properties': true,
+    'scale-unlimited/declaration-strict-value': [
+      ['/color$/', 'fill', 'stroke'],
+      {
+        ignoreValues: ['transparent', 'currentColor', 'inherit', 'initial', 'unset', 'revert', 'none'],
+        disableFix: true,
+      },
+    ],
 
     // –– SCOPED STYLES –––––––––––––––––––––––––––––––––––––––––––––––
     'selector-max-specificity': ['1,4,1'],
@@ -73,25 +80,7 @@ export default {
     'no-descending-specificity': null,
     'selector-pseudo-element-no-unknown': true,
     'media-feature-name-no-unknown': true,
-    'at-rule-no-unknown': [
-      true,
-      {
-        'ignoreAtRules': [
-          'use',
-          'forward',
-          'mixin', 
-          'include', 
-          'extend', 
-          'if', 
-          'else', 
-          'for', 
-          'each', 
-          'while', 
-          'function', 
-          'return'
-        ]
-      }
-    ],
+    'at-rule-no-unknown': null,
 
     // –– IGNORE SCOPED STYLES SPECIFICITY FOR VUE –––––––––––––––––––––––––––––––––––––––––––
     'selector-pseudo-class-no-unknown': [

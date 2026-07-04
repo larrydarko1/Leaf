@@ -28,13 +28,17 @@ export function useLanguage() {
             const result = await window.electronAPI.languageList();
             if (result.success && result.languages !== undefined) {
                 languages.value = result.languages;
-                activeId.value = result.activeId ?? 'en';
-                locale.value = result.activeId ?? 'en';
-                // Load and apply messages for active language
-                const messages = await loadLanguageMessages(result.activeId ?? 'en');
-                if (messages !== null) {
-                    i18n.global.setLocaleMessage(result.activeId ?? 'en', messages as MessageSchema);
+                const id = result.activeId ?? 'en';
+
+                if (id !== 'en') {
+                    const fallback = await loadLanguageMessages('en');
+                    if (fallback !== null) i18n.global.setLocaleMessage('en', fallback as MessageSchema);
                 }
+                const messages = await loadLanguageMessages(id);
+                if (messages !== null) i18n.global.setLocaleMessage(id, messages as MessageSchema);
+
+                activeId.value = id;
+                locale.value = id;
             }
         } catch (err) {
             window.electronAPI.log.error('Failed to list languages:', err);

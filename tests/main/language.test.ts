@@ -88,16 +88,18 @@ describe('language service', () => {
         expect(fs.existsSync(path.join(LOCALES_DIR, 'it.json'))).toBe(true);
     });
 
-    it('does not overwrite existing locale files when seeding', async () => {
+    it('preserves existing values but backfills missing keys when seeding', async () => {
         writeBundledLocale('en', { common: { save: 'Save' } });
-        // Write existing locale with different content
+        // Pre-manifest file the user already has, with their own content.
         fs.mkdirSync(LOCALES_DIR, { recursive: true });
         fs.writeFileSync(path.join(LOCALES_DIR, 'en.json'), JSON.stringify({ custom: true }));
         const { ensureSeeded } = await import('@/main/services/language');
         await ensureSeeded();
         const content = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, 'en.json'), 'utf-8'));
+        // Existing content is never overwritten...
         expect(content.custom).toBe(true);
-        expect(content.common).toBeUndefined();
+        // ...but keys the bundle has and the file lacks are added.
+        expect(content.common.save).toBe('Save');
     });
 
     it('is idempotent — calling ensureSeeded twice only copies once', async () => {

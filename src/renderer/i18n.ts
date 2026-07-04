@@ -1,19 +1,21 @@
 import { createI18n } from 'vue-i18n';
-import type en from '../../assets/locales/en.json';
+import en from '../../assets/locales/en.json';
 
 export type MessageSchema = typeof en;
 const DEFAULT_LOCALE = 'en';
 
 /**
- * Locales are loaded at runtime from ~/.leaf/locales/ via IPC.
- * This i18n instance is initialized with empty messages and populated
- * dynamically by useLanguage() via i18n.global.setLocaleMessage().
+ * Locales are loaded at runtime from ~/.leaf/locales/ via IPC and applied by
+ * useLanguage() with i18n.global.setLocaleMessage(). the bundled `en` is seeded
+ * so the very first paint has real strings (before that load resolves), and it
+ * doubles as the fallback locale for any key a translation is missing.
  */
-const defaultMessages = {};
+const defaultMessages = { en };
 
 export const i18n = createI18n({
     legacy: false,
     escapeParameter: true,
     locale: DEFAULT_LOCALE,
+    fallbackLocale: DEFAULT_LOCALE,
     messages: defaultMessages,
 });

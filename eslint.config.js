@@ -228,6 +228,8 @@ export default [
             // v-html is used intentionally for rendered content
             'vue/no-v-html': 'off',
 
+            // Every v-for must have a key. 
+            'vue/require-v-for-key': 'error',
         },
     },
 
