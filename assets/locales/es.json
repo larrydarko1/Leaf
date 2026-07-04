@@ -1,4 +1,7 @@
 {
+  "meta": {
+    "name": "Español"
+  },
   "app": {
     "select_folder_description": "Selecciona una carpeta para usar como tu almacén de notas. Puedes cambiarla más tarde en los ajustes.",
     "select_folder": "Seleccionar carpeta",

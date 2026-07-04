@@ -275,10 +275,11 @@ async function listLanguagesArray(): Promise<LanguageInfo[]> {
             if (entry.isFile() && entry.name.endsWith('.json')) {
                 const id = entry.name.replace(/\.json$/, '');
                 if (isValidLanguageId(id)) {
+                    const filePath = path.join(LOCALES_DIR, entry.name);
                     languages.push({
                         id,
-                        name: id.toUpperCase(),
-                        path: path.join(LOCALES_DIR, entry.name),
+                        name: await resolveLanguageName(id, filePath),
+                        path: filePath,
                     });
                 }
             }
@@ -287,7 +288,41 @@ async function listLanguagesArray(): Promise<LanguageInfo[]> {
         log.warn('[language] listLanguages failed:', err);
     }
 
-    // Sort alphabetically
-    languages.sort((a, b) => a.id.localeCompare(b.id));
+    // Sort alphabetically by display name so the picker reads naturally.
+    languages.sort((a, b) => a.name.localeCompare(b.name));
     return languages;
+}
+
+/**
+ * The label shown in the language picker. Preference order:
+ *   1. `meta.name` self-declared in the locale file (endonym, e.g. "Français").
+ *   2. Intl.DisplayNames for standard BCP-47 ids (fallback for files that
+ *      predate the field, or that a user forgot to annotate).
+ *   3. The uppercased id (e.g. "MYLANG") — last resort for custom locales.
+ */
+async function resolveLanguageName(id: string, filePath: string): Promise<string> {
+    try {
+        const parsed: unknown = JSON.parse(await fs.readFile(filePath, 'utf-8'));
+        if (isPlainObject(parsed) && isPlainObject(parsed.meta)) {
+            const name = parsed.meta.name;
+            if (typeof name === 'string' && name.trim() !== '') return name.trim();
+        }
+    } catch (err) {
+        log.warn(`[language] could not read name for ${id}:`, err);
+    }
+    return intlDisplayName(id) ?? id.toUpperCase();
+}
+
+/** Endonym for a BCP-47 id via Intl, or null if the id isn't recognised. */
+function intlDisplayName(id: string): string | null {
+    try {
+        const name = new Intl.DisplayNames([id], { type: 'language' }).of(id);
+        // Unknown codes echo the id back — treat that as "no name".
+        if (typeof name === 'string' && name.toLowerCase() !== id.toLowerCase()) {
+            return name.charAt(0).toUpperCase() + name.slice(1);
+        }
+    } catch {
+        // Intl throws RangeError on non-BCP-47 ids (e.g. user-invented locales).
+    }
+    return null;
 }

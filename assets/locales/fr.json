@@ -1,4 +1,7 @@
 {
+  "meta": {
+    "name": "Français"
+  },
   "app": {
     "select_folder_description": "Sélectionnez un dossier à utiliser comme coffre de notes. Vous pourrez le modifier plus tard dans les paramètres.",
     "select_folder": "Sélectionner un dossier",
