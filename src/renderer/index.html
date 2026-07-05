@@ -4,6 +4,31 @@
 <head>
   <meta charset="UTF-8" />
   <!-- Desktop-only app - not designed for web browsers -->
+  <!--
+    Content Security Policy (also silences Electron's "Insecure Content-Security-Policy" warning).
+    Allowances beyond 'self':
+      - script-src blob:            → dictation AudioWorklet module loaded from a Blob URL
+      - style-src 'unsafe-inline'   → Vue :style bindings + Vite dev style injection
+      - img-src/media-src leaf: blob: data: → vault embeds via leaf://, drawing/export previews,
+        inline data URIs, and AudioViewer playback (readAudio IPC returns a data: URL)
+      - frame-src leaf:             → PDF preview iframe
+      - connect-src ws://localhost:3000 ws://127.0.0.1:3000 → Vite HMR websocket (dev only; unused in production)
+    No 'unsafe-eval': Vue SFCs are precompiled and vue-i18n v10+ uses the CSP-safe JIT message compiler.
+  -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' blob:;
+    style-src 'self' 'unsafe-inline';
+    img-src 'self' leaf: blob: data:;
+    media-src 'self' leaf: blob: data:;
+    frame-src 'self' leaf:;
+    connect-src 'self' leaf: ws://localhost:3000 ws://127.0.0.1:3000;
+    font-src 'self' data:;
+    worker-src 'self' blob:;
+    object-src 'none';
+    base-uri 'none';
+    form-action 'none'
+  " />
 </head>
 
 <body>
