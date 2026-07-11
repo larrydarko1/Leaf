@@ -147,4 +147,63 @@ describe('useBookmarks', () => {
             expect(Array.isArray(arg)).toBe(true);
         });
     });
+
+    // ── relocateBookmark ─────────────────────────────────────────────────────
+
+    describe('relocateBookmark', () => {
+        it('follows a bookmarked file to its new folder', () => {
+            bm.bookmarkedFiles.value = ['/vault/a.md'];
+            bm.relocateBookmark('/vault/a.md', '/vault/docs/a.md');
+            expect(bm.bookmarkedFiles.value).toEqual(['/vault/docs/a.md']);
+        });
+
+        it('follows a bookmarked file through a rename', () => {
+            bm.bookmarkedFiles.value = ['/vault/a.md'];
+            bm.relocateBookmark('/vault/a.md', '/vault/renamed.md');
+            expect(bm.bookmarkedFiles.value).toEqual(['/vault/renamed.md']);
+        });
+
+        it('persists the rewritten list', () => {
+            bm.bookmarkedFiles.value = ['/vault/a.md'];
+            bm.relocateBookmark('/vault/a.md', '/vault/docs/a.md');
+            expect(mockAPI.bookmarksSave).toHaveBeenCalledWith(['/vault/docs/a.md']);
+        });
+
+        it('rewrites bookmarks nested under a moved folder', () => {
+            bm.bookmarkedFiles.value = ['/vault/docs/a.md', '/vault/docs/deep/b.md'];
+            bm.relocateBookmark('/vault/docs', '/vault/archive/docs');
+            expect(bm.bookmarkedFiles.value).toEqual(['/vault/archive/docs/a.md', '/vault/archive/docs/deep/b.md']);
+        });
+
+        it('leaves bookmarks outside the moved folder untouched', () => {
+            bm.bookmarkedFiles.value = ['/vault/docs/a.md', '/vault/other.md'];
+            bm.relocateBookmark('/vault/docs', '/vault/archive/docs');
+            expect(bm.bookmarkedFiles.value).toEqual(['/vault/archive/docs/a.md', '/vault/other.md']);
+        });
+
+        it('does not match a sibling folder that shares a name prefix', () => {
+            bm.bookmarkedFiles.value = ['/vault/docs-old/a.md'];
+            bm.relocateBookmark('/vault/docs', '/vault/archive/docs');
+            expect(bm.bookmarkedFiles.value).toEqual(['/vault/docs-old/a.md']);
+        });
+
+        it('matches across separator styles and keeps the bookmark native (Windows paths)', () => {
+            bm.bookmarkedFiles.value = ['C:\\vault\\docs\\a.md'];
+            bm.relocateBookmark('C:/vault/docs', 'C:/vault/archive/docs');
+            expect(bm.bookmarkedFiles.value).toEqual(['C:\\vault\\archive\\docs\\a.md']);
+        });
+
+        it('does not duplicate when the destination is already bookmarked', () => {
+            bm.bookmarkedFiles.value = ['/vault/a.md', '/vault/docs/a.md'];
+            bm.relocateBookmark('/vault/a.md', '/vault/docs/a.md');
+            expect(bm.bookmarkedFiles.value).toEqual(['/vault/docs/a.md']);
+        });
+
+        it('is a no-op when nothing bookmarked matches the moved path', () => {
+            bm.bookmarkedFiles.value = ['/vault/a.md'];
+            bm.relocateBookmark('/vault/b.md', '/vault/docs/b.md');
+            expect(bm.bookmarkedFiles.value).toEqual(['/vault/a.md']);
+            expect(mockAPI.bookmarksSave).not.toHaveBeenCalled();
+        });
+    });
 });

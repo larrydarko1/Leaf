@@ -287,11 +287,11 @@ describe('useVault', () => {
             expect(result).toHaveLength(0);
         });
 
-        it('returns moved paths on success', async () => {
+        it('returns from/to pairs on success', async () => {
             mockAPI.moveFile.mockResolvedValue({ success: true, newPath: '/vault/docs/note.md' });
             mockAPI.scanFolder.mockResolvedValue({ success: true, files: [], folders: [] });
             const result = await vault.moveFiles([file.path], 'docs');
-            expect(result).toContain('/vault/docs/note.md');
+            expect(result).toEqual([{ from: file.path, to: '/vault/docs/note.md' }]);
         });
 
         it('does not throw when the IPC call rejects', async () => {
@@ -465,7 +465,7 @@ describe('useVault', () => {
             mockAPI.scanFolder.mockResolvedValue({ success: true, files: [], folders: [] });
             const result = await vault.moveFiles([file.path], '.');
             expect(mockAPI.moveFile).toHaveBeenCalledWith(file.path, '/vault');
-            expect(result).toContain('/vault/note.md');
+            expect(result).toEqual([{ from: file.path, to: '/vault/note.md' }]);
         });
 
         it('skips ENOENT errors silently', async () => {
@@ -490,17 +490,24 @@ describe('useVault', () => {
             await vault.loadFolder('/vault');
         });
 
-        it('returns false when no vault is open', async () => {
+        it('returns null when no vault is open', async () => {
             vault.closeVault();
             const result = await vault.moveFolder('docs', 'archive');
-            expect(result).toBe(false);
+            expect(result).toBeNull();
         });
 
-        it('returns true on success', async () => {
+        it('returns the new relative path on success', async () => {
             mockAPI.moveFolder.mockResolvedValue({ success: true });
             mockAPI.scanFolder.mockResolvedValue({ success: true, files: [], folders: [] });
             const result = await vault.moveFolder('docs', 'archive');
-            expect(result).toBe(true);
+            expect(result).toBe('archive/docs');
+        });
+
+        it('returns the bare folder name when moved to the vault root', async () => {
+            mockAPI.moveFolder.mockResolvedValue({ success: true });
+            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [], folders: [] });
+            const result = await vault.moveFolder('archive/docs', '.');
+            expect(result).toBe('docs');
         });
 
         it('uses currentFolder as target when targetRelativePath is "."', async () => {
@@ -510,17 +517,17 @@ describe('useVault', () => {
             expect(mockAPI.moveFolder).toHaveBeenCalledWith('/vault/docs', '/vault');
         });
 
-        it('shows an alert and returns false on failure', async () => {
+        it('shows an alert and returns null on failure', async () => {
             mockAPI.moveFolder.mockResolvedValue({ success: false, error: 'no space' });
             const result = await vault.moveFolder('docs', 'archive');
-            expect(result).toBe(false);
+            expect(result).toBeNull();
             expect(globalThis.alert).toHaveBeenCalled();
         });
 
-        it('returns false on IPC rejection', async () => {
+        it('returns null on IPC rejection', async () => {
             mockAPI.moveFolder.mockRejectedValue(new Error('IPC error'));
             const result = await vault.moveFolder('docs', 'archive');
-            expect(result).toBe(false);
+            expect(result).toBeNull();
         });
     });
 
