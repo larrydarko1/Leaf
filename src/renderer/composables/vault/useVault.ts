@@ -6,6 +6,8 @@
 import { ref, shallowRef } from 'vue';
 import type { FileInfo, FolderInfo } from '@/schemas/vault';
 
+export type MovedFile = { from: string; to: string };
+
 export function useVault() {
     const currentFolder = ref<string | null>(null);
     const files = shallowRef<FileInfo[]>([]);
@@ -235,13 +237,13 @@ export function useVault() {
         }
     }
 
-    async function moveFiles(filePaths: string[], targetRelativePath: string): Promise<string[]> {
+    async function moveFiles(filePaths: string[], targetRelativePath: string): Promise<MovedFile[]> {
         if (currentFolder.value === null || currentFolder.value === '') return [];
         const absoluteTarget =
             targetRelativePath === '.' || targetRelativePath === ''
                 ? currentFolder.value
                 : currentFolder.value + '/' + targetRelativePath;
-        const movedPaths: string[] = [];
+        const movedFiles: MovedFile[] = [];
         for (const path of filePaths) {
             try {
                 const result = await window.electronAPI.moveFile(path, absoluteTarget);
@@ -251,7 +253,7 @@ export function useVault() {
                     result.newPath !== undefined &&
                     result.newPath !== ''
                 ) {
-                    movedPaths.push(result.newPath);
+                    movedFiles.push({ from: path, to: result.newPath });
                 } else if (
                     result.error !== null &&
                     result.error !== undefined &&
@@ -265,28 +267,28 @@ export function useVault() {
                 window.electronAPI.log.error('Error moving file:', error);
             }
         }
-        if (movedPaths.length > 0) await refreshFiles();
-        return movedPaths;
+        if (movedFiles.length > 0) await refreshFiles();
+        return movedFiles;
     }
 
-    async function moveFolder(relativePath: string, targetRelativePath: string): Promise<boolean> {
-        if (currentFolder.value === null || currentFolder.value === '') return false;
+    /** Returns the folder's new vault-relative path, or null if the move failed. */
+    async function moveFolder(relativePath: string, targetRelativePath: string): Promise<string | null> {
+        if (currentFolder.value === null || currentFolder.value === '') return null;
         const absolutePath = currentFolder.value + '/' + relativePath;
-        const absoluteTarget =
-            targetRelativePath === '.' || targetRelativePath === ''
-                ? currentFolder.value
-                : currentFolder.value + '/' + targetRelativePath;
+        const isVaultRoot = targetRelativePath === '.' || targetRelativePath === '';
+        const absoluteTarget = isVaultRoot ? currentFolder.value : currentFolder.value + '/' + targetRelativePath;
         try {
             const result = await window.electronAPI.moveFolder(absolutePath, absoluteTarget);
             if (result.success) {
                 await refreshFiles();
-                return true;
+                const folderName = relativePath.substring(relativePath.lastIndexOf('/') + 1);
+                return isVaultRoot ? folderName : targetRelativePath + '/' + folderName;
             }
             alert('Failed to move folder: ' + result.error);
-            return false;
+            return null;
         } catch (error) {
             window.electronAPI.log.error('Error moving folder:', error);
-            return false;
+            return null;
         }
     }
 

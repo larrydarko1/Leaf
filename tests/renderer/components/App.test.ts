@@ -74,6 +74,7 @@ vi.mock('@/renderer/composables/vault/useFileSelection', () => ({
 const mockBookmarkedFiles = ref<FileInfo[]>([]);
 const mockToggleBookmark = vi.fn();
 const mockRemoveBookmark = vi.fn();
+const mockRelocateBookmark = vi.fn();
 const mockLoadBookmarks = vi.fn().mockResolvedValue(undefined);
 
 vi.mock('@/renderer/composables/vault/useBookmarks', () => ({
@@ -81,6 +82,7 @@ vi.mock('@/renderer/composables/vault/useBookmarks', () => ({
         bookmarkedFiles: mockBookmarkedFiles,
         toggleBookmark: mockToggleBookmark,
         removeBookmark: mockRemoveBookmark,
+        relocateBookmark: mockRelocateBookmark,
         loadBookmarks: mockLoadBookmarks,
     })),
 }));

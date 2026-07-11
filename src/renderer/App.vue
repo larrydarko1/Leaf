@@ -30,7 +30,7 @@ const language = useLanguage();
 const { currentFolder, files, folders } = vault;
 const { selectedFiles, selectedFolder } = selection;
 const activeFile = editorTabs.activeFile;
-const { bookmarkedFiles, toggleBookmark, removeBookmark } = bookmarks;
+const { bookmarkedFiles, toggleBookmark, removeBookmark, relocateBookmark } = bookmarks;
 const renamingFile = ref<FileInfo | null>(null);
 const renamingFolder = ref<string | null>(null);
 const showSearchPanel = ref(false);
@@ -220,13 +220,17 @@ async function handleFileRename(file: FileInfo, newName: string) {
     if (renamed !== null) {
         editorTabs.renameTabFile(file.path, renamed);
         selection.openFile(renamed);
+        relocateBookmark(file.path, renamed.path);
     }
 }
 
 async function handleFolderRename(folderPath: string, newName: string) {
     const newRelativePath = await vault.renameFolder(folderPath, newName);
     renamingFolder.value = null;
-    if (newRelativePath !== null && newRelativePath !== '') selectedFolder.value = newRelativePath;
+    if (newRelativePath !== null && newRelativePath !== '') {
+        relocateFolderBookmarks(folderPath, newRelativePath);
+        selectedFolder.value = newRelativePath;
+    }
 }
 
 async function handleFolderDelete(folderPath: string) {
@@ -254,7 +258,9 @@ async function handleFileDelete(file: FileInfo) {
 
 async function handleFileMove(filePath: string, targetFolderPath: string) {
     const filePaths = selectedFiles.value.length > 1 ? selectedFiles.value.map((f: FileInfo) => f.path) : [filePath];
-    const movedPaths = await vault.moveFiles(filePaths, targetFolderPath);
+    const moves = await vault.moveFiles(filePaths, targetFolderPath);
+    moves.forEach((move) => relocateBookmark(move.from, move.to));
+    const movedPaths = moves.map((move) => move.to);
     const movedFiles = vault.files.value.filter((f: FileInfo) => movedPaths.includes(f.path));
     if (movedFiles.length > 0) {
         selectedFiles.value = movedFiles;
@@ -264,8 +270,18 @@ async function handleFileMove(filePath: string, targetFolderPath: string) {
 }
 
 async function handleFolderMove(folderPath: string, targetFolderPath: string) {
-    const moved = await vault.moveFolder(folderPath, targetFolderPath);
-    if (moved) selectedFolder.value = null;
+    const newRelativePath = await vault.moveFolder(folderPath, targetFolderPath);
+    if (newRelativePath !== null) {
+        relocateFolderBookmarks(folderPath, newRelativePath);
+        selectedFolder.value = null;
+    }
+}
+
+/** Folder paths are vault-relative; bookmarks are absolute, so anchor both to the vault root. */
+function relocateFolderBookmarks(oldRelativePath: string, newRelativePath: string) {
+    const vaultRoot = vault.currentFolder.value;
+    if (vaultRoot === null || vaultRoot === '') return;
+    relocateBookmark(vaultRoot + '/' + oldRelativePath, vaultRoot + '/' + newRelativePath);
 }
 
 function toggleSearch() {
