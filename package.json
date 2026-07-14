@@ -178,9 +178,17 @@
         },
         "linux": {
             "target": [
-                "AppImage"
+                "AppImage",
+                "deb",
+                "rpm",
+                "pacman",
+                "tar.gz"
             ],
-            "category": "Utility"
+            "category": "Utility",
+            "maintainer": "Lorenzo Mazzola",
+            "vendor": "Lorenzo Mazzola",
+            "icon": "build/icon.png",
+            "synopsis": "A local-first, privacy-focused note-taking app with on-device AI"
         }
     },
     "lint-staged": {
