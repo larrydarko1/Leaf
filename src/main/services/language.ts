@@ -26,7 +26,8 @@ import path from 'path';
 import fs from 'fs/promises';
 import { existsSync } from 'fs';
 import { createHash } from 'crypto';
-import { LEAF_HOME, LOCALES_DIR, STATE_FILE, getBundledLocalesDir } from '@/main/lib/paths';
+import { LOCALES_DIR, getBundledLocalesDir } from '@/main/lib/paths';
+import { readState as readRawState, updateState } from '@/main/lib/appState';
 import { log } from '@/main/lib/logger';
 import { type LanguageInfo, type LanguageState, LanguageStateSchema } from '@/schemas/vault';
 
@@ -36,7 +37,7 @@ type LocaleManifest = Record<string, string>;
 const DEFAULT_LANGUAGE_ID = 'en';
 const LANGUAGE_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
 const MANIFEST_FILE = path.join(LOCALES_DIR, '.manifest.json');
-let seeded = false;
+let seedPromise: Promise<void> | null = null;
 
 export function register(ipc: IpcMain): void {
     ipc.handle('language:list', listLanguages);
@@ -61,73 +62,22 @@ export function register(ipc: IpcMain): void {
         }
     });
 }
-
-/** Idempotent: reconcile bundled language files into ~/.leaf/locales/. */
-export async function ensureSeeded(): Promise<void> {
-    if (seeded) return;
-    try {
-        await fs.mkdir(LOCALES_DIR, { recursive: true });
-
-        const bundled = getBundledLocalesDir();
-        if (existsSync(bundled)) {
-            const manifest = await readManifest();
-            let manifestChanged = false;
-
-            const entries = await fs.readdir(bundled, { withFileTypes: true });
-            for (const entry of entries) {
-                if (!entry.isFile() || !entry.name.toLowerCase().endsWith('.json')) continue;
-
-                const id = entry.name.replace(/\.json$/, '');
-                const src = path.join(bundled, entry.name);
-                const dest = path.join(LOCALES_DIR, entry.name);
-                const bundledContent = await fs.readFile(src);
-                const bundledHash = hashContent(bundledContent);
-
-                if (!existsSync(dest)) {
-                    await fs.writeFile(dest, bundledContent);
-                    manifest[id] = bundledHash;
-                    manifestChanged = true;
-                    log.info(`[language] Seeded ${entry.name}`);
-                    continue;
-                }
-
-                const destRaw = await fs.readFile(dest);
-                const destHash = hashContent(destRaw);
-                const lastSyncedHash = manifest[id];
-
-                if (lastSyncedHash !== undefined && destHash === lastSyncedHash) {
-                    if (bundledHash !== lastSyncedHash) {
-                        await fs.writeFile(dest, bundledContent);
-                        manifest[id] = bundledHash;
-                        manifestChanged = true;
-                        log.info(`[language] Re-synced ${entry.name} to bundled version`);
-                    }
-                    continue;
-                }
-
-                try {
-                    const destJson: unknown = JSON.parse(destRaw.toString('utf-8'));
-                    const bundledJson: unknown = JSON.parse(bundledContent.toString('utf-8'));
-                    if (
-                        isPlainObject(destJson) &&
-                        isPlainObject(bundledJson) &&
-                        fillMissingKeys(destJson, bundledJson)
-                    ) {
-                        await fs.writeFile(dest, JSON.stringify(destJson, null, 2) + '\n');
-                        log.info(`[language] Backfilled missing keys in ${entry.name}`);
-                    }
-                } catch (err) {
-                    log.warn(`[language] could not merge ${entry.name}, leaving as-is:`, err);
-                }
-            }
-
-            if (manifestChanged) await writeManifest(manifest);
-        }
-
-        seeded = true;
-    } catch (err) {
-        log.error('[language] seeding failed:', err);
+/**
+ * Idempotent: reconcile bundled language files into ~/.leaf/locales/.
+ *
+ * Memoised on the in-flight promise (not a boolean flag) so concurrent callers
+ * all await the same reconciliation instead of racing through the manifest
+ * read-modify-write. The "start it once" decision happens synchronously,
+ * before any await. Resets to null on failure so a later call can retry.
+ */
+export function ensureSeeded(): Promise<void> {
+    if (seedPromise === null) {
+        seedPromise = doSeed().catch((err) => {
+            seedPromise = null;
+            log.error('[language] seeding failed:', err);
+        });
     }
+    return seedPromise;
 }
 
 export async function listLanguages(): Promise<{
@@ -168,8 +118,7 @@ export async function setActiveLanguage(id: string): Promise<{
     const file = path.join(LOCALES_DIR, `${id}.json`);
     if (!existsSync(file)) return { success: false, error: 'Language not found' };
     try {
-        const state = await readState();
-        await writeState({ ...state, activeLanguage: id });
+        await updateState((s) => ({ ...s, activeLanguage: id }));
         return { success: true };
     } catch (err) {
         return { success: false, error: (err as Error).message };
@@ -202,24 +151,69 @@ export function isValidLanguageId(id: string): boolean {
     return typeof id === 'string' && LANGUAGE_ID_PATTERN.test(id);
 }
 
-async function readState(): Promise<LanguageState> {
-    try {
-        const data = await fs.readFile(STATE_FILE, 'utf-8');
-        const result = LanguageStateSchema.safeParse(JSON.parse(data));
-        if (result.success) {
-            return result.data;
-        } else {
-            log.warn('[language] state validation failed:', result.error);
-            return {};
+async function doSeed(): Promise<void> {
+    await fs.mkdir(LOCALES_DIR, { recursive: true });
+
+    const bundled = getBundledLocalesDir();
+    if (existsSync(bundled)) {
+        const manifest = await readManifest();
+        let manifestChanged = false;
+
+        const entries = await fs.readdir(bundled, { withFileTypes: true });
+        for (const entry of entries) {
+            if (!entry.isFile() || !entry.name.toLowerCase().endsWith('.json')) continue;
+
+            const id = entry.name.replace(/\.json$/, '');
+            const src = path.join(bundled, entry.name);
+            const dest = path.join(LOCALES_DIR, entry.name);
+            const bundledContent = await fs.readFile(src);
+            const bundledHash = hashContent(bundledContent);
+
+            if (!existsSync(dest)) {
+                await fs.writeFile(dest, bundledContent);
+                manifest[id] = bundledHash;
+                manifestChanged = true;
+                log.info(`[language] Seeded ${entry.name}`);
+                continue;
+            }
+
+            const destRaw = await fs.readFile(dest);
+            const destHash = hashContent(destRaw);
+            const lastSyncedHash = manifest[id];
+
+            if (lastSyncedHash !== undefined && destHash === lastSyncedHash) {
+                if (bundledHash !== lastSyncedHash) {
+                    await fs.writeFile(dest, bundledContent);
+                    manifest[id] = bundledHash;
+                    manifestChanged = true;
+                    log.info(`[language] Re-synced ${entry.name} to bundled version`);
+                }
+                continue;
+            }
+
+            try {
+                const destJson: unknown = JSON.parse(destRaw.toString('utf-8'));
+                const bundledJson: unknown = JSON.parse(bundledContent.toString('utf-8'));
+                if (isPlainObject(destJson) && isPlainObject(bundledJson) && fillMissingKeys(destJson, bundledJson)) {
+                    await fs.writeFile(dest, JSON.stringify(destJson, null, 2) + '\n');
+                    log.info(`[language] Backfilled missing keys in ${entry.name}`);
+                }
+            } catch (err) {
+                log.warn(`[language] could not merge ${entry.name}, leaving as-is:`, err);
+            }
         }
-    } catch {
-        return {};
+
+        if (manifestChanged) await writeManifest(manifest);
     }
 }
 
-async function writeState(state: LanguageState): Promise<void> {
-    await fs.mkdir(LEAF_HOME, { recursive: true });
-    await fs.writeFile(STATE_FILE, JSON.stringify(state, null, 2));
+/** Read the shared state file and validate the language-relevant view of it. */
+async function readState(): Promise<LanguageState> {
+    const raw = await readRawState();
+    const result = LanguageStateSchema.safeParse(raw);
+    if (result.success) return result.data;
+    log.warn('[language] state validation failed:', result.error);
+    return {};
 }
 
 function hashContent(content: Buffer): string {

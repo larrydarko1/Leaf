@@ -27,14 +27,14 @@ import { type IpcMain, shell } from 'electron';
 import path from 'path';
 import fs from 'fs/promises';
 import { existsSync } from 'fs';
-import { LEAF_HOME, THEMES_DIR, STATE_FILE, getBundledThemesDir } from '@/main/lib/paths';
+import { THEMES_DIR, getBundledThemesDir } from '@/main/lib/paths';
+import { readState as readRawState, updateState } from '@/main/lib/appState';
 import { log } from '@/main/lib/logger';
 import { type ThemeInfo, type ThemeState, ThemeStateSchema } from '@/schemas/vault';
 
 const DEFAULT_THEME_ID = 'dark';
 const THEME_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
-
-let seeded = false;
+let seedPromise: Promise<void> | null = null;
 
 export function register(ipc: IpcMain): void {
     ipc.handle('theme:list', async () => {
@@ -66,8 +66,7 @@ export function register(ipc: IpcMain): void {
         const file = path.join(THEMES_DIR, `${id}.json`);
         if (!existsSync(file)) return { success: false, error: 'Theme not found' };
         try {
-            const state = await readState();
-            await writeState({ ...state, activeTheme: id });
+            await updateState((s) => ({ ...s, activeTheme: id }));
             return { success: true };
         } catch (err) {
             return { success: false, error: (err as Error).message };
@@ -85,27 +84,37 @@ export function register(ipc: IpcMain): void {
     });
 }
 
-/** Idempotent: copy bundled theme files into ~/.leaf/themes/ if absent. */
-export async function ensureSeeded(): Promise<void> {
-    if (seeded) return;
-    try {
-        await fs.mkdir(THEMES_DIR, { recursive: true });
+/**
+ * Idempotent: copy bundled theme files into ~/.leaf/themes/ if absent.
+ *
+ * Memoised on the in-flight promise (not a boolean flag) so concurrent callers
+ * all await the same run instead of racing through the copy loop. The "start
+ * it once" decision happens synchronously, before any await. Resets to null on
+ * failure so a later call can retry.
+ */
+export function ensureSeeded(): Promise<void> {
+    if (seedPromise === null) {
+        seedPromise = doSeed().catch((err) => {
+            seedPromise = null;
+            log.error('[theme] seeding failed:', err);
+        });
+    }
+    return seedPromise;
+}
 
-        const bundled = getBundledThemesDir();
-        if (existsSync(bundled)) {
-            const entries = await fs.readdir(bundled, { withFileTypes: true });
-            for (const entry of entries) {
-                if (!entry.isFile() || !entry.name.toLowerCase().endsWith('.json')) continue;
-                const dest = path.join(THEMES_DIR, entry.name);
-                if (existsSync(dest)) continue;
-                await fs.copyFile(path.join(bundled, entry.name), dest);
-                log.info(`[theme] Seeded ${entry.name}`);
-            }
+async function doSeed(): Promise<void> {
+    await fs.mkdir(THEMES_DIR, { recursive: true });
+
+    const bundled = getBundledThemesDir();
+    if (existsSync(bundled)) {
+        const entries = await fs.readdir(bundled, { withFileTypes: true });
+        for (const entry of entries) {
+            if (!entry.isFile() || !entry.name.toLowerCase().endsWith('.json')) continue;
+            const dest = path.join(THEMES_DIR, entry.name);
+            if (existsSync(dest)) continue;
+            await fs.copyFile(path.join(bundled, entry.name), dest);
+            log.info(`[theme] Seeded ${entry.name}`);
         }
-
-        seeded = true;
-    } catch (err) {
-        log.error('[theme] seeding failed:', err);
     }
 }
 
@@ -165,26 +174,13 @@ function normalizeTheme(id: string, filePath: string, raw: unknown): ThemeInfo |
     return { id, name, description, colors, path: filePath };
 }
 
+/** Read the shared state file and validate the theme-relevant view of it. */
 async function readState(): Promise<ThemeState> {
-    try {
-        if (!existsSync(STATE_FILE)) return {};
-        const raw = await fs.readFile(STATE_FILE, 'utf-8');
-        const result = ThemeStateSchema.safeParse(JSON.parse(raw));
-        if (result.success) {
-            return result.data;
-        } else {
-            log.warn('[theme] state validation failed:', result.error);
-            return {};
-        }
-    } catch (err) {
-        log.warn('[theme] state read failed:', err);
-        return {};
-    }
-}
-
-async function writeState(state: ThemeState): Promise<void> {
-    await fs.mkdir(LEAF_HOME, { recursive: true });
-    await fs.writeFile(STATE_FILE, JSON.stringify(state, null, 2), 'utf-8');
+    const raw = await readRawState();
+    const result = ThemeStateSchema.safeParse(raw);
+    if (result.success) return result.data;
+    log.warn('[theme] state validation failed:', result.error);
+    return {};
 }
 
 function isValidThemeId(id: string): boolean {
