@@ -60,8 +60,8 @@ afterEach(() => {
 });
 
 // Static import for parseFrontmatter only — getActiveSystemPrompt and
-// ensureSeeded are imported fresh per-test (because the service caches the
-// `seeded` flag at module scope).
+// ensureSeeded are imported fresh per-test (because the service memoises the
+// in-flight seed promise at module scope).
 import { parseFrontmatter } from '@/main/services/systemPrompt';
 
 describe('parseFrontmatter', () => {
@@ -138,6 +138,24 @@ describe('ensureSeeded + getActiveSystemPrompt', () => {
 
         const state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf-8'));
         expect(state.activePrompt).toBe('default');
+    });
+
+    it('seeds exactly once under concurrent calls (memoised in-flight promise)', async () => {
+        fs.writeFileSync(path.join(BUNDLED_DIR, 'default.md'), 'body');
+
+        const mod = await import('@/main/services/systemPrompt');
+        // Fire many concurrent seeds before the first resolves. The boolean-flag
+        // version would race all of them through copyFile; the memoised promise
+        // funnels them into a single run, so copyFile is called at most once.
+        const copySpy = vi.spyOn(fs.promises, 'copyFile');
+        await Promise.all(Array.from({ length: 10 }, () => mod.ensureSeeded()));
+
+        expect(copySpy).toHaveBeenCalledTimes(1);
+        expect(copySpy).toHaveBeenCalledWith(
+            path.join(BUNDLED_DIR, 'default.md'),
+            path.join(PROMPTS_DIR, 'default.md'),
+        );
+        copySpy.mockRestore();
     });
 
     it('does not overwrite existing user-edited prompt files', async () => {
