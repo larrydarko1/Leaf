@@ -1,6 +1,5 @@
 import { defineConfig } from 'vitest/config';
 import vue from '@vitejs/plugin-vue';
-import { configDefaults } from 'vitest/config';
 import { fileURLToPath } from 'url';
 
 export default defineConfig({
@@ -18,7 +17,6 @@ export default defineConfig({
     test: {
         globals: true,
         environment: 'jsdom',
-        exclude: [...configDefaults.exclude, 'e2e/**'],
         setupFiles: ['./vitest.setup.ts'],
         coverage: {
             provider: 'v8',

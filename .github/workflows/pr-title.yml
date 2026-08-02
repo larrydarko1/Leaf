@@ -1,0 +1,41 @@
+# Validates PR titles as conventional commits to ensure `main` history stays clean after squash-merges.
+# The commit-msg hook in .husky covers local commits, but a squash-merge throws those subjects away and
+# uses the PR title instead — so the title is the only thing that reaches main, and it needs its own gate.
+# Uses the repo's local `commitlint.config.js` to enforce custom rules while avoiding external supply-chain risks.
+
+name: PR Title
+
+on:
+    pull_request:
+        types: [opened, edited, reopened, synchronize]
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+    cancel-in-progress: true
+
+permissions:
+    contents: read
+
+jobs:
+    lint-title:
+        name: Conventional commit format
+        runs-on: ubuntu-24.04
+        timeout-minutes: 5
+
+        steps:
+            - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+              with:
+                  persist-credentials: false
+
+            - uses: ./.github/actions/node-setup
+              with:
+                  ignore-scripts: 'true'
+
+            # The title goes through an env var, never interpolated into the
+            # shell: `${{ ... }}` would splice an attacker-chosen PR title
+            # straight into the script as code.
+            - name: Lint PR title
+              env:
+                  PR_TITLE: ${{ github.event.pull_request.title }}
+              run: |
+                  echo "$PR_TITLE" | npx commitlint --verbose

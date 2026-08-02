@@ -1,0 +1,44 @@
+name: Bug report
+description: Something behaves differently than it should
+labels: ['bug']
+body:
+    - type: markdown
+      attributes:
+          value: '**Security vulnerability? Stop** — use [private reporting](https://github.com/larrydarko1/leaf/security/advisories/new) instead. A public issue is a disclosure before there is a fix.'
+
+    - type: textarea
+      id: what
+      attributes:
+          label: What happened
+          description: What you expected, and what happened instead.
+      validations:
+          required: true
+
+    - type: textarea
+      id: reproduce
+      attributes:
+          label: Steps to reproduce
+          description: The smallest sequence that shows it. If it only happens with a particular file or state, say so — that is usually the actual bug.
+      validations:
+          required: true
+
+    - type: input
+      id: version
+      attributes:
+          label: Leaf version
+          description: The version of the installer you downloaded, or the release you are running.
+          placeholder: 2.6.6
+      validations:
+          required: true
+
+    - type: dropdown
+      id: os
+      attributes:
+          label: Operating system
+          options:
+              - macOS (Apple Silicon)
+              - macOS (Intel)
+              - Windows
+              - Linux
+      validations:
+          required: true

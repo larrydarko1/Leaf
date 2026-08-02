@@ -543,7 +543,9 @@ leaf/
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for guidelines. Security issues go through
+[private reporting](https://github.com/larrydarko1/leaf/security/advisories/new), never a public
+issue — see [SECURITY.md](.github/SECURITY.md).
 
 ## License
 

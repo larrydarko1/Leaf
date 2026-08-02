@@ -1,215 +1,161 @@
+# Releasing is driven by package.json, not by pushing a tag by hand: land a `bump: version x.y.z`
+# commit on main, and once CI goes green this workflow tags it, builds the three installers and
+# publishes the release. The tag check makes the whole thing idempotent — every other push to main
+# reaches the version job, finds its tag already exists, and stops there.
+#
+# It hangs off `workflow_run` rather than `push` so a red CI can never produce a release.
+
 name: Release
 
 on:
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
-    branches: [main]
+    workflow_run:
+        workflows: [CI]
+        types: [completed]
+        branches: [main]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_sha }}
-  cancel-in-progress: true
+    group: ${{ github.workflow }}-${{ github.event.workflow_run.head_sha }}
+    cancel-in-progress: true
 
 permissions:
-  contents: read
+    contents: read
 
 jobs:
-  # ── Read version and create tag ────────────────────────
-  version:
-    # Only run if CI passed and was triggered by a push (not a PR)
-    if: >
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'push'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    outputs:
-      version: ${{ steps.pkg.outputs.version }}
-      tag: ${{ steps.pkg.outputs.tag }}
-      exists: ${{ steps.check.outputs.exists }}
-    steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+    # ── Read version and decide whether there is anything to release ──
+    version:
+        name: Resolve version
+        # Only run if CI passed and was triggered by a push (not a PR)
+        if: >
+            github.event.workflow_run.conclusion == 'success' &&
+            github.event.workflow_run.event == 'push'
+        runs-on: ubuntu-24.04
+        timeout-minutes: 5
+        outputs:
+            version: ${{ steps.pkg.outputs.version }}
+            tag: ${{ steps.pkg.outputs.tag }}
+            exists: ${{ steps.check.outputs.exists }}
+        steps:
+            - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha }}
+                  persist-credentials: false
 
-      - name: Read version from package.json
-        id: pkg
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Version: $VERSION"
+            - name: Read version from package.json
+              id: pkg
+              run: |
+                  VERSION=$(node -p "require('./package.json').version")
+                  echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+                  echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+                  echo "Version: $VERSION"
 
-      - name: Check if tag already exists
-        id: check
-        run: |
-          if git ls-remote --tags origin "refs/tags/v${{ steps.pkg.outputs.version }}" | grep -q .; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "Tag v${{ steps.pkg.outputs.version }} already exists, skipping release"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-            echo "New version v${{ steps.pkg.outputs.version }}, will create release"
-          fi
+            - name: Check if tag already exists
+              id: check
+              env:
+                  TAG: ${{ steps.pkg.outputs.tag }}
+              run: |
+                  if git ls-remote --tags origin "refs/tags/$TAG" | grep -q .; then
+                      echo "exists=true" >> "$GITHUB_OUTPUT"
+                      echo "Tag $TAG already exists, skipping release"
+                  else
+                      echo "exists=false" >> "$GITHUB_OUTPUT"
+                      echo "New version $TAG, will create release"
+                  fi
 
-  # ── macOS (unsigned) ───────────────────────────────────
-  build-mac:
-    needs: version
-    if: needs.version.outputs.exists == 'false'
-    runs-on: macos-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+    # ── Installers, one job per platform ──────────────────
+    # electron-builder cannot cross-compile these, so the matrix is three real runners rather than
+    # a convenience. fail-fast is off so one platform breaking still tells you about the other two.
+    build:
+        name: Build ${{ matrix.name }}
+        needs: version
+        if: needs.version.outputs.exists == 'false'
+        runs-on: ${{ matrix.os }}
+        timeout-minutes: 30
 
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
-        with:
-          node-version: 24
-          cache: npm
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - name: macOS DMG (ad-hoc signed)
+                      os: macos-latest
+                      script: build:mac
+                      artifact: mac-dmg
+                      path: dist-electron/*.dmg
 
-      - name: Install dependencies
-        run: npm ci
+                    - name: Windows EXE (unsigned)
+                      os: windows-latest
+                      script: build:win
+                      artifact: win-exe
+                      path: dist-electron/*.exe
 
-      - name: Download Whisper model
-        run: |
-          mkdir -p models/whisper/Xenova/whisper-base/onnx
-          BASE=https://huggingface.co/Xenova/whisper-base/resolve/64da57285918e20ea79ea5c88eed7197933abaa8
-          DEST=models/whisper/Xenova/whisper-base
-          curl -fL -o $DEST/config.json                              $BASE/config.json
-          curl -fL -o $DEST/generation_config.json                   $BASE/generation_config.json
-          curl -fL -o $DEST/preprocessor_config.json                 $BASE/preprocessor_config.json
-          curl -fL -o $DEST/tokenizer.json                           $BASE/tokenizer.json
-          curl -fL -o $DEST/tokenizer_config.json                    $BASE/tokenizer_config.json
-          curl -fL -o $DEST/onnx/encoder_model_quantized.onnx        $BASE/onnx/encoder_model_quantized.onnx
-          curl -fL -o $DEST/onnx/decoder_model_merged_quantized.onnx $BASE/onnx/decoder_model_merged_quantized.onnx
+                    - name: Linux AppImage
+                      os: ubuntu-24.04
+                      script: build:linux
+                      artifact: linux-appimage
+                      path: dist-electron/*.AppImage
 
-      - name: Build macOS DMG (ad-hoc signed)
-        run: npm run build:mac
+        steps:
+            - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha }}
+                  persist-credentials: false
 
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: mac-dmg
-          path: dist-electron/*.dmg
+            - uses: ./.github/actions/node-setup
 
-  # ── Windows (unsigned) ────────────────────────────────
-  build-win:
-    needs: version
-    if: needs.version.outputs.exists == 'false'
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+            - uses: ./.github/actions/whisper-model
 
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
-        with:
-          node-version: 24
-          cache: npm
+            - name: Build installer
+              run: npm run ${{ matrix.script }}
 
-      - name: Install dependencies
-        run: npm ci
+            - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+              with:
+                  name: ${{ matrix.artifact }}
+                  path: ${{ matrix.path }}
+                  if-no-files-found: error
 
-      - name: Download Whisper model
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force -Path models/whisper/Xenova/whisper-base/onnx
-          $base = "https://huggingface.co/Xenova/whisper-base/resolve/64da57285918e20ea79ea5c88eed7197933abaa8"
-          $dest = "models/whisper/Xenova/whisper-base"
-          Invoke-WebRequest -Uri "$base/config.json"                              -OutFile "$dest/config.json"
-          Invoke-WebRequest -Uri "$base/generation_config.json"                   -OutFile "$dest/generation_config.json"
-          Invoke-WebRequest -Uri "$base/preprocessor_config.json"                 -OutFile "$dest/preprocessor_config.json"
-          Invoke-WebRequest -Uri "$base/tokenizer.json"                           -OutFile "$dest/tokenizer.json"
-          Invoke-WebRequest -Uri "$base/tokenizer_config.json"                    -OutFile "$dest/tokenizer_config.json"
-          Invoke-WebRequest -Uri "$base/onnx/encoder_model_quantized.onnx"        -OutFile "$dest/onnx/encoder_model_quantized.onnx"
-          Invoke-WebRequest -Uri "$base/onnx/decoder_model_merged_quantized.onnx" -OutFile "$dest/onnx/decoder_model_merged_quantized.onnx"
+    # ── Create tag & GitHub Release ────────────────────────
+    release:
+        name: Tag and publish
+        needs: [version, build]
+        if: needs.version.outputs.exists == 'false'
+        runs-on: ubuntu-24.04
+        timeout-minutes: 10
+        permissions:
+            contents: write
+        steps:
+            # This job pushes the tag, so it is the one checkout that keeps its credentials.
+            - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha }}
 
-      - name: Build Windows EXE (unsigned)
-        run: npm run build:win
+            - name: Create tag
+              env:
+                  TAG: ${{ needs.version.outputs.tag }}
+              run: |
+                  git config user.name "github-actions"
+                  git config user.email "github-actions@github.com"
+                  git tag -a "$TAG" -m "Release $TAG"
+                  git push origin "$TAG"
 
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: win-exe
-          path: dist-electron/*.exe
+            - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+              with:
+                  path: artifacts
+                  merge-multiple: true
 
-  # ── Linux ──────────────────────────────────────────────
-  build-linux:
-    needs: version
-    if: needs.version.outputs.exists == 'false'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
-
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
-        with:
-          node-version: 24
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Download Whisper model
-        run: |
-          mkdir -p models/whisper/Xenova/whisper-base/onnx
-          BASE=https://huggingface.co/Xenova/whisper-base/resolve/64da57285918e20ea79ea5c88eed7197933abaa8
-          DEST=models/whisper/Xenova/whisper-base
-          curl -fL -o $DEST/config.json                              $BASE/config.json
-          curl -fL -o $DEST/generation_config.json                   $BASE/generation_config.json
-          curl -fL -o $DEST/preprocessor_config.json                 $BASE/preprocessor_config.json
-          curl -fL -o $DEST/tokenizer.json                           $BASE/tokenizer.json
-          curl -fL -o $DEST/tokenizer_config.json                    $BASE/tokenizer_config.json
-          curl -fL -o $DEST/onnx/encoder_model_quantized.onnx        $BASE/onnx/encoder_model_quantized.onnx
-          curl -fL -o $DEST/onnx/decoder_model_merged_quantized.onnx $BASE/onnx/decoder_model_merged_quantized.onnx
-
-      - name: Build Linux AppImage
-        run: npm run build:linux
-
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: linux-appimage
-          path: dist-electron/*.AppImage
-
-  # ── Create tag & GitHub Release ────────────────────────
-  release:
-    needs: [version, build-mac, build-win, build-linux]
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
-
-      - name: Create tag
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git tag -a "${{ needs.version.outputs.tag }}" -m "Release ${{ needs.version.outputs.tag }}"
-          git push origin "${{ needs.version.outputs.tag }}"
-
-      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
-        with:
-          path: artifacts
-          merge-multiple: true
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3
-        with:
-          tag_name: ${{ needs.version.outputs.tag }}
-          name: Leaf ${{ needs.version.outputs.tag }}
-          draft: false
-          prerelease: false
-          generate_release_notes: true
-          body: |
-            ## Installation notes
-            These builds are not signed with an official certificate, so your OS may show a security warning when installing.
-            - **macOS**: Right-click the app → Open, then click Open in the dialog. If macOS says the app is "damaged", run: `xattr -cr /Applications/Leaf.app`
-            - **Windows**: Click "More info" → "Run anyway"
-            - **Linux**: `chmod +x` the AppImage before running
-          files: |
-            artifacts/**/*.dmg
-            artifacts/**/*.exe
-            artifacts/**/*.AppImage
+            - name: Create GitHub Release
+              uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3
+              with:
+                  tag_name: ${{ needs.version.outputs.tag }}
+                  name: Leaf ${{ needs.version.outputs.tag }}
+                  draft: false
+                  prerelease: false
+                  generate_release_notes: true
+                  body: |
+                      ## Installation notes
+                      These builds are not signed with an official certificate, so your OS may show a security warning when installing.
+                      - **macOS**: Right-click the app → Open, then click Open in the dialog. If macOS says the app is "damaged", run: `xattr -cr /Applications/Leaf.app`
+                      - **Windows**: Click "More info" → "Run anyway"
+                      - **Linux**: `chmod +x` the AppImage before running
+                  files: |
+                      artifacts/**/*.dmg
+                      artifacts/**/*.exe
+                      artifacts/**/*.AppImage

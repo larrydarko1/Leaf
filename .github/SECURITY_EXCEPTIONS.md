@@ -31,7 +31,7 @@ not four independent Leaf code paths.
 - **Resolved package and dependency path:** `sharp@0.34.5` via
   `@huggingface/transformers@4.2.0`.
 - **Current reachability:** Leaf uses Transformers for local Whisper
-  automatic-speech-recognition in [src/main/services/speech.ts](src/main/services/speech.ts).
+  automatic-speech-recognition in [src/main/services/speech.ts](../src/main/services/speech.ts).
   It does not import Sharp, call Transformers image APIs, or pass vault images
   to Transformers.
 - **Residual risk and required action:** The vulnerable Sharp/libvips path could

@@ -1,0 +1,31 @@
+version: 2
+
+updates:
+    - package-ecosystem: github-actions
+      directories:
+          - '/'
+          - '/.github/actions/node-setup'
+          - '/.github/actions/whisper-model'
+      schedule:
+          interval: monthly
+      labels: ['dependencies']
+      commit-message:
+          prefix: chore
+          include: scope
+      groups:
+          actions:
+              patterns: ['*']
+
+    - package-ecosystem: npm
+      directory: '/'
+      schedule:
+          interval: monthly
+      open-pull-requests-limit: 8
+      labels: ['dependencies']
+      commit-message:
+          prefix: chore
+          include: scope
+      groups:
+          minor-and-patch:
+              patterns: ['*']
+              update-types: ['minor', 'patch']

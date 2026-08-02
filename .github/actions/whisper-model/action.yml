@@ -1,0 +1,47 @@
+# The Whisper weights are gitignored (see .gitignore) but electron-builder needs them on disk to
+# pack a release, so every platform build has to fetch them. Downloading ~100 MB three times per
+# release is the reason this is cached rather than inlined per job.
+
+name: Whisper model
+description: Restore the pinned Xenova/whisper-base ONNX weights from cache, downloading them on a miss.
+
+inputs:
+    revision:
+        description: >
+            Hugging Face commit the weights are pinned to. A moving `main` here would mean release
+            builds are not reproducible, so this is a commit SHA and not a branch.
+        required: false
+        default: 64da57285918e20ea79ea5c88eed7197933abaa8
+
+runs:
+    using: composite
+
+    steps:
+        # The weights are byte-identical on every platform, so the cache is deliberately not keyed
+        # on runner.os — the first of the three build jobs to finish warms it for the rest.
+        - id: cache
+          uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+          with:
+              path: models/whisper/Xenova/whisper-base
+              key: whisper-base-${{ inputs.revision }}
+
+        # bash, not pwsh, so the Windows runner shares this step with macOS and Linux.
+        - name: Download Whisper model
+          if: steps.cache.outputs.cache-hit != 'true'
+          shell: bash
+          env:
+              REVISION: ${{ inputs.revision }}
+          run: |
+              set -euo pipefail
+
+              BASE="https://huggingface.co/Xenova/whisper-base/resolve/$REVISION"
+              DEST=models/whisper/Xenova/whisper-base
+              mkdir -p "$DEST/onnx"
+
+              for file in config.json generation_config.json preprocessor_config.json tokenizer.json tokenizer_config.json; do
+                  curl -fLsS -o "$DEST/$file" "$BASE/$file"
+              done
+
+              for file in encoder_model_quantized.onnx decoder_model_merged_quantized.onnx; do
+                  curl -fLsS -o "$DEST/onnx/$file" "$BASE/onnx/$file"
+              done
