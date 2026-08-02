@@ -523,8 +523,8 @@ leaf/
 ├── models/
 │   └── whisper/                    # Whisper ONNX model (download manually — see above)
 ├── public/                         # Static assets (demo screenshot)
-├── build/                          # App icons, DMG backgrounds & packaging hooks
-├── design/                         # Source design files (PSD)
+├── build/                          # Packaging inputs: master icon, DMG backgrounds, hooks
+├── design/                         # Source design files (PSD, SVG)
 ├── .github/
 │   ├── FUNDING.yml                 # GitHub Sponsors config
 │   └── workflows/
@@ -538,8 +538,7 @@ leaf/
 ├── package.json
 ├── tsconfig.json                   # Root TS config (project references)
 ├── tsconfig.app.json               # Renderer TS config (DOM + Vue, strict)
-├── tsconfig.node.json              # Main & preload TS config (Node, strict)
-└── generate-icons.sh               # Icon generation script
+└── tsconfig.node.json              # Main & preload TS config (Node, strict)
 ```
 
 ## Contributing

@@ -135,14 +135,9 @@
         ],
         "dmg": {
             "background": "build/dmg-background.png",
-            "icon": "build/icon.icns",
             "iconSize": 100,
             "iconTextSize": 14,
             "title": "${productName} ${version}",
-            "window": {
-                "width": 660,
-                "height": 400
-            },
             "contents": [
                 {
                     "x": 180,
@@ -167,14 +162,12 @@
                         "x64"
                     ]
                 }
-            ],
-            "icon": "build/icon.icns"
+            ]
         },
         "win": {
             "target": [
                 "nsis"
-            ],
-            "icon": "build/icon.ico"
+            ]
         },
         "linux": {
             "target": [
@@ -187,7 +180,6 @@
             "category": "Utility",
             "maintainer": "Lorenzo Mazzola",
             "vendor": "Lorenzo Mazzola",
-            "icon": "build/icon.png",
             "synopsis": "A local-first, privacy-focused note-taking app with on-device AI"
         }
     },
