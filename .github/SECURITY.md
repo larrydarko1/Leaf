@@ -27,9 +27,8 @@ Your notes (.txt, .md, .rtf files) never leave your device.
 the user downloaded until they choose to replace it. A public report is therefore a working
 disclosure against every existing install, and unlike a web app there is no way to push the fix out.
 
-Report privately through [GitHub Security Advisories](https://github.com/larrydarko1/leaf/security/advisories/new).
-That opens a channel visible only to the maintainer, and it is the same place the fix and the CVE are
-coordinated from.
+Email the maintainer at <hello@larrydarko.dev> instead. Private reporting on GitHub is not enabled,
+so email is the only private channel — reports sent any other way risk being public.
 
 Please include:
 

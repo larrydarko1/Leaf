@@ -2,5 +2,5 @@ blank_issues_enabled: true
 
 contact_links:
     - name: Report a security vulnerability
-      url: https://github.com/larrydarko1/leaf/security/advisories/new
-      about: Private disclosure. Never open a public issue for a vulnerability — see SECURITY.md.
+      url: mailto:hello@larrydarko.dev
+      about: Email the maintainer privately. Never open a public issue for a vulnerability — see SECURITY.md.

@@ -267,9 +267,8 @@ version.
 Use the [issue templates](https://github.com/larrydarko1/leaf/issues/new/choose) — they ask for the
 version, OS and log location up front, which is most of what a bug report needs. Screenshots help.
 
-**Security vulnerabilities do not go in issues.** Report them privately through
-[GitHub Security Advisories](https://github.com/larrydarko1/leaf/security/advisories/new); see
-[SECURITY.md](SECURITY.md) for scope and what to expect.
+**Security vulnerabilities do not go in issues.** Email the maintainer at <hello@larrydarko.dev>
+instead; see [SECURITY.md](SECURITY.md) for scope and what to expect.
 
 ## Code of Conduct
 

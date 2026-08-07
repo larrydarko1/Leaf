@@ -4,7 +4,7 @@ labels: ['bug']
 body:
     - type: markdown
       attributes:
-          value: '**Security vulnerability? Stop** — use [private reporting](https://github.com/larrydarko1/leaf/security/advisories/new) instead. A public issue is a disclosure before there is a fix.'
+          value: '**Security vulnerability? Stop** — email the maintainer at <hello@larrydarko.dev> instead. A public issue is a disclosure before there is a fix.'
 
     - type: textarea
       id: what

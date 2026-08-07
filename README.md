@@ -82,7 +82,7 @@ Leaf is built with privacy and security as core principles:
 
 ### Reporting Security Issues
 
-If you discover a security vulnerability, please open an issue on the [GitHub repository](https://github.com/larrydarko1/leaf/issues).
+If you discover a security vulnerability, do not open a public issue. Email the maintainer at <hello@larrydarko.dev> — see [SECURITY.md](.github/SECURITY.md) for scope and what to expect.
 
 ## Data Storage
 
@@ -543,9 +543,8 @@ leaf/
 
 ## Contributing
 
-See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for guidelines. Security issues go through
-[private reporting](https://github.com/larrydarko1/leaf/security/advisories/new), never a public
-issue — see [SECURITY.md](.github/SECURITY.md).
+See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for guidelines. Security issues go by email to
+<hello@larrydarko.dev>, never a public issue — see [SECURITY.md](.github/SECURITY.md).
 
 ## License
 
