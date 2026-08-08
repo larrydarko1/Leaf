@@ -31,8 +31,8 @@ jobs:
 
             - uses: ./.github/actions/node-setup
 
-            - name: Audit (high+ production only)
-              run: npm audit --audit-level=high --omit=dev
+            - name: Audit Check (High+ Production Vulnerabilities Only)
+              run: npm run audit:check
 
             - name: Lint
               run: npm run lint

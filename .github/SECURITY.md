@@ -51,8 +51,10 @@ Out of scope: findings that require an attacker to already have the user's files
 Notes are plain files with the user's own permissions by design, so "another local process can read
 the vault" is the threat model working as intended, not a vulnerability.
 
-Dependency advisories with no reachable path in Leaf's code are tracked in
-[SECURITY_EXCEPTIONS.md](SECURITY_EXCEPTIONS.md) rather than reported as vulnerabilities.
+Dependency advisories with no reachable path in Leaf's code are tracked in the audit gate's
+allowlist ([scripts/check/check-audit.mjs](../scripts/check/check-audit.mjs)) rather than reported
+as vulnerabilities. Each entry carries the reason it cannot be fixed here, and CI fails once the
+advisory stops being reported — upstream shipped a fix, so the waiver has to go.
 
 ## Supported Versions
 
