@@ -20,7 +20,7 @@ runs:
         # The weights are byte-identical on every platform, so the cache is deliberately not keyed
         # on runner.os — the first of the three build jobs to finish warms it for the rest.
         - id: cache
-          uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+          uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
           with:
               path: models/whisper/Xenova/whisper-base
               key: whisper-base-${{ inputs.revision }}

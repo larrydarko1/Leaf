@@ -519,6 +519,9 @@ leaf/
 ├── public/                         # Static assets (demo screenshot)
 ├── build/                          # Packaging inputs: master icon, DMG backgrounds, hooks
 ├── design/                         # Source design files (PSD, SVG)
+├── scripts/
+│   └── check/                      # CI gate scripts
+│       └── check-audit.mjs         # npm audit gate with a reviewed advisory allowlist
 ├── .github/
 │   ├── CONTRIBUTING.md             # Contributor guide (setup, testing, releases)
 │   ├── SECURITY.md                 # Vulnerability reporting policy

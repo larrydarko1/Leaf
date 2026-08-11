@@ -6,23 +6,6 @@ Thank you for considering contributing to Leaf! This is a desktop note-taking ap
 
 Leaf targets **macOS and Linux only**, and it is developed on those two as well.
 
-The reason is honesty about testing: the maintainer has no Windows machine, and a platform nobody
-can run is a platform whose bugs get found by users instead of by CI. Shipping an installer implies
-a promise to test it. Windows path semantics were also the source of the only separator-handling
-code in the vault layer — code that was subtly wrong on Linux, where a backslash is a legal filename
-character rather than a separator.
-
-Practically, this means:
-
-- `package.json` declares `"os": ["darwin", "linux"]`, so `npm install` on Windows fails fast with a
-  clear message rather than part-way through a build
-- There is no `build:win` script and no Windows entry in the release matrix
-- Treat path separators as `/`. Don't reintroduce `\` handling
-- Releases before this change still have a Windows `.exe` attached; those downloads stay up, they
-  just won't get new versions
-
-WSL is not tested either, but it is Linux — if it works there, it works.
-
 ## Development Setup
 
 1. **Fork the repository**

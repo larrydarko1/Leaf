@@ -79,14 +79,10 @@ describe('validation', () => {
             expect(() => assertSafeFileName('sub/file.md')).toThrow('Invalid name');
         });
 
-        it('blocks backslash on Windows (platform-dependent)', () => {
-            // path.basename treats \ as separator only on Windows.
-            // On POSIX, backslash is a valid filename char, so this only throws on Windows.
-            if (path.sep === '\\') {
-                expect(() => assertSafeFileName('sub\\file.md')).toThrow('Invalid name');
-            } else {
-                expect(() => assertSafeFileName('sub\\file.md')).not.toThrow();
-            }
+        it('treats a backslash as a literal filename character, not a separator', () => {
+            // Leaf targets macOS and Linux, where path.basename never splits on a
+            // backslash — so it is a legal (if unusual) character in a note name.
+            expect(() => assertSafeFileName('sub\\file.md')).not.toThrow();
         });
 
         it('blocks parent directory reference', () => {
