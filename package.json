@@ -122,6 +122,7 @@
         },
         "files": [
             "package.json",
+            "build/icon.png",
             {
                 "from": "out",
                 "to": "out",

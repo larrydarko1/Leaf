@@ -1,10 +1,10 @@
 /**
- * Ad-hoc code sign macOS app bundles after packing. 
- * Without this, unsigned apps downloaded from the internet are rejected 
+ * Ad-hoc code sign macOS app bundles after packing.
+ * Without this, unsigned apps downloaded from the internet are rejected
  * as "corrupted" by Gatekeeper on macOS Ventura+ (13+).
  * Ad-hoc signing makes macOS show "unidentified developer" instead,
  * which users can bypass with right-click → Open.
- * */ 
+ */
 
 const { execSync } = require('child_process');
 const path = require('path');

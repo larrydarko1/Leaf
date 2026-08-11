@@ -67,8 +67,7 @@ function getMainWindow(): BrowserWindow | null {
 }
 
 function createWindow(): void {
-    // After electron-vite bundles to out/main/index.js, __dirname = out/main/
-    const iconPath = path.join(__dirname, '../../build/icon.icns');
+    const iconPath = path.join(__dirname, '../../build/icon.png');
 
     const { width: sw, height: sh } = screen.getPrimaryDisplay().workAreaSize;
 

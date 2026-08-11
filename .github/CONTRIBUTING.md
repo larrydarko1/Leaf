@@ -119,8 +119,9 @@ One command runs the exact gate list CI runs:
 npm run ci:check
 ```
 
-That is `npm audit` (production deps, high and above) → lint → format check → stylelint → tests with
-coverage → build. Running it locally first is the difference between one push and six.
+That is the audit gate (production deps, high and above, via `scripts/check/check-audit.mjs` and its
+reviewed allowlist) → lint → format check → stylelint → tests with coverage → build. Running it
+locally first is the difference between one push and six.
 
 If lint or formatting fails, auto-fix with:
 
@@ -166,7 +167,7 @@ src/schemas/                     →  tests/schemas/
 ```
 
 - The `.test.ts` suffix is what Vitest actually discovers — the folder is convention, the suffix is the mechanism
-- Shared helpers live in `tests/renderer/test-utils`, importable as `@test-utils` (aliased in `vitest.config.ts` alongside `@/main`, `@/renderer`, `@/schemas`, `@/preload`)
+- Shared helpers live in `tests/renderer/test-utils.ts`, importable as `@test-utils` (aliased in `vitest.config.ts` alongside `@/main`, `@/renderer`, `@/schemas`, `@/preload`)
 - **Every test file ends in `.test.ts`.** Not `.spec.ts` — Vitest is configured to match `.test.ts`, so a `.spec.ts` is picked up by no runner at all. It stops running while still looking like a test, which is the worst of both
 
 ### What to test, in priority order

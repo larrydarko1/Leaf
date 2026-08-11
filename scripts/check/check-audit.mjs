@@ -76,7 +76,16 @@ function findings(report) {
 }
 
 const report = JSON.parse(runAudit());
-const rows = findings(report).filter((r) => FAIL_SEVERITIES.has(r.severity));
+
+if (report.error !== undefined) {
+    const { code, summary } = report.error;
+    console.error(`\n✘ npm audit could not complete: ${summary ?? code ?? 'unknown error'}`);
+    console.error('    → This is an audit failure, not an audit finding. Nothing has been verified.\n');
+    process.exit(1);
+}
+
+const all = findings(report);
+const rows = all.filter((r) => FAIL_SEVERITIES.has(r.severity));
 
 const allowed = new Map(ALLOWLIST.map((e) => [e.id, e]));
 const blocking = [];
@@ -91,7 +100,7 @@ for (const row of rows) {
     }
 }
 
-const seen = new Set(rows.map((r) => r.id));
+const seen = new Set(all.map((r) => r.id));
 const unused = ALLOWLIST.filter((e) => !seen.has(e.id));
 
 for (const { entry } of waived) {

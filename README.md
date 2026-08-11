@@ -520,10 +520,18 @@ leaf/
 ├── build/                          # Packaging inputs: master icon, DMG backgrounds, hooks
 ├── design/                         # Source design files (PSD, SVG)
 ├── .github/
+│   ├── CONTRIBUTING.md             # Contributor guide (setup, testing, releases)
+│   ├── SECURITY.md                 # Vulnerability reporting policy
+│   ├── CODE_OF_CONDUCT.md
+│   ├── PULL_REQUEST_TEMPLATE.md
+│   ├── ISSUE_TEMPLATE/             # Bug report & feature request forms
 │   ├── FUNDING.yml                 # GitHub Sponsors config
+│   ├── dependabot.yml              # Monthly npm & Actions update PRs
+│   ├── actions/                    # Composite actions (node setup, Whisper model)
 │   └── workflows/
-│       ├── ci.yml                  # Type-check, build, test on every push/PR
-│       └── release.yml             # Multi-platform build & GitHub Release
+│       ├── ci.yml                  # Audit, lint, type-check, build, test on every push/PR
+│       ├── pr-title.yml            # Conventional-commit check on PR titles
+│       └── release.yml             # macOS & Linux build & GitHub Release
 ├── electron.vite.config.ts         # electron-vite config (main, preload, renderer)
 ├── vitest.config.ts                # Test runner config (jsdom environment)
 ├── eslint.config.js                # ESLint flat config (TypeScript + Vue + Prettier)
