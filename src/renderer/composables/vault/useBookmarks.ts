@@ -48,21 +48,16 @@ export function useBookmarks(_getCurrentFolder: () => string | null) {
      * carries the bookmarks of the files it contains).
      */
     function relocate(oldPath: string, newPath: string): void {
-        const normalize = (p: string): string => p.replace(/\\/g, '/');
-        const oldNormalized = normalize(oldPath);
-        const descendantPrefix = oldNormalized + '/';
+        const descendantPrefix = oldPath + '/';
 
         let changed = false;
         const updated: string[] = [];
         for (const bookmark of bookmarkedFiles.value) {
-            const normalized = normalize(bookmark);
             let next = bookmark;
-            if (normalized === oldNormalized) {
+            if (bookmark === oldPath) {
                 next = newPath;
-            } else if (normalized.startsWith(descendantPrefix)) {
-                const separator = bookmark.includes('\\') ? '\\' : '/';
-                const tail = normalized.slice(oldNormalized.length);
-                next = (normalize(newPath) + tail).replace(/\//g, separator);
+            } else if (bookmark.startsWith(descendantPrefix)) {
+                next = newPath + bookmark.slice(oldPath.length);
             }
             if (next !== bookmark) changed = true;
             if (!updated.includes(next)) updated.push(next);

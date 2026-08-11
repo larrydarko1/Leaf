@@ -62,8 +62,9 @@ jobs:
                   fi
 
     # ── Installers, one job per platform ──────────────────
-    # electron-builder cannot cross-compile these, so the matrix is three real runners rather than
-    # a convenience. fail-fast is off so one platform breaking still tells you about the other two.
+    # electron-builder cannot cross-compile these, so the matrix is two real runners rather than
+    # a convenience. fail-fast is off so one platform breaking still tells you about the other.
+    # Leaf ships macOS and Linux only — see the Platform support section in CONTRIBUTING.md.
     build:
         name: Build ${{ matrix.name }}
         needs: version
@@ -80,12 +81,6 @@ jobs:
                       script: build:mac
                       artifact: mac-dmg
                       path: dist-electron/*.dmg
-
-                    - name: Windows EXE (unsigned)
-                      os: windows-latest
-                      script: build:win
-                      artifact: win-exe
-                      path: dist-electron/*.exe
 
                     - name: Linux AppImage
                       os: ubuntu-24.04
@@ -153,9 +148,7 @@ jobs:
                       ## Installation notes
                       These builds are not signed with an official certificate, so your OS may show a security warning when installing.
                       - **macOS**: Right-click the app → Open, then click Open in the dialog. If macOS says the app is "damaged", run: `xattr -cr /Applications/Leaf.app`
-                      - **Windows**: Click "More info" → "Run anyway"
                       - **Linux**: `chmod +x` the AppImage before running
                   files: |
                       artifacts/**/*.dmg
-                      artifacts/**/*.exe
                       artifacts/**/*.AppImage

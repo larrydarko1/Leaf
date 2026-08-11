@@ -32,7 +32,6 @@
         "build": "vue-tsc -b && electron-vite build",
         "build:electron": "npm run build && electron-builder",
         "build:mac": "npm run build && electron-builder --mac --publish never",
-        "build:win": "npm run build && electron-builder --win --publish never",
         "build:linux": "npm run build && electron-builder --linux --publish never",
         "lint": "eslint src/",
         "lint:fix": "eslint src/ --fix",
@@ -109,6 +108,10 @@
         "node": ">=20",
         "npm": ">=10"
     },
+    "os": [
+        "darwin",
+        "linux"
+    ],
     "private": true,
     "packageManager": "npm@11.11.0",
     "build": {
@@ -165,11 +168,6 @@
                         "x64"
                     ]
                 }
-            ]
-        },
-        "win": {
-            "target": [
-                "nsis"
             ]
         },
         "linux": {

@@ -16,7 +16,6 @@ Leaf is a **desktop-only application** with local-first architecture, which prov
 Your notes are stored in the vault folder you choose. App settings are stored locally at:
 
 - **macOS:** `~/Library/Application Support/leaf/`
-- **Windows:** `%APPDATA%/leaf/`
 - **Linux:** `~/.config/leaf/`
 
 Your notes (.txt, .md, .rtf files) never leave your device.

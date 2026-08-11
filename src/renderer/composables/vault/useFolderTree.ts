@@ -42,7 +42,7 @@ export function useFolderTree(
         // Second pass: create folder nodes from file paths (backwards compatibility)
         files.forEach((file) => {
             if (file.folder === '.') return;
-            const parts = file.folder.split(/[/\\]/);
+            const parts = file.folder.split('/');
             let currentPath = '';
             parts.forEach((part) => {
                 currentPath = currentPath !== '' ? `${currentPath}/${part}` : part;

@@ -7,7 +7,7 @@ If you find Leaf useful, consider [giving it a star ⭐](https://github.com/larr
 
 Leaf is a **local-first, privacy-focused note-taking app** for desktop built with **Electron**, **Vue 3**, and TypeScript. Inspired by [Obsidian](https://obsidian.md) and [LM Studio](https://lmstudio.ai), Leaf provides a clean, distraction-free environment for managing your notes with local AI capabilities. All your data stays on your device - no cloud, no database, no tracking.
 
-> **IMPORTANT:** This app runs natively on **Desktop** (macOS, Windows, Linux). All notes are stored in your local vault folder and never leave your device.
+> **IMPORTANT:** This app runs natively on **macOS and Linux**. All notes are stored in your local vault folder and never leave your device.
 
 # Demo
 
@@ -91,7 +91,6 @@ If you discover a security vulnerability, do not open a public issue. Email the 
 Your notes are stored exactly where you choose - simply select any folder on your system as your vault. Common locations:
 
 - **macOS:** `~/Documents/Notes/`, `~/Desktop/MyVault/`
-- **Windows:** `C:\Users\YourName\Documents\Notes\`, `D:\MyVault\`
 - **Linux:** `~/Documents/Notes/`, `~/notes/`
 
 > **Note:** Your vault folder can be anywhere on your system. Use it with other apps, back it up to external drives, sync with git - it's just plain text files!
@@ -275,7 +274,6 @@ Leaf stores minimal app preferences (like your last opened folder path) automati
 AI conversations are automatically saved as JSON files in Electron's standard `userData` directory:
 
 - **macOS:** `~/Library/Application Support/Leaf/conversations/`
-- **Windows:** `%APPDATA%\Leaf\conversations\`
 - **Linux:** `~/.config/Leaf/conversations/`
 
 Each conversation is stored as a separate `.json` file containing the model used, timestamps, and the full message history. Conversations are auto-titled from the first message and can be renamed or deleted from the history panel.
@@ -343,9 +341,6 @@ npm run build:electron
 # Build specifically for macOS
 npm run build:mac
 
-# Build for Windows (requires Windows or cross-compilation setup)
-npm run build:win
-
 # Build for Linux
 npm run build:linux
 ```
@@ -353,7 +348,6 @@ npm run build:linux
 The built installers will be in the `dist-electron/` directory:
 
 - **macOS:** `.dmg` installer
-- **Windows:** `.exe` installer (NSIS)
 - **Linux:** `.AppImage` file
 
 ### Installing the App
@@ -367,7 +361,7 @@ After building:
 
 ## Tech Stack
 
-- **Desktop:** [Electron](https://www.electronjs.org) (Native macOS, Windows, Linux app)
+- **Desktop:** [Electron](https://www.electronjs.org) (Native macOS and Linux app)
 - **Frontend:** [Vue 3](https://vuejs.org), TypeScript, SCSS
 - **Editor:** [CodeMirror 6](https://codemirror.net) with [Lezer](https://lezer.codemirror.net) markdown grammar (live preview, inline widgets, keyboard shortcuts)
 - **AI:** [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) + [llama.cpp](https://github.com/ggml-org/llama.cpp) (local LLM inference)

@@ -25,7 +25,6 @@ runs:
               path: models/whisper/Xenova/whisper-base
               key: whisper-base-${{ inputs.revision }}
 
-        # bash, not pwsh, so the Windows runner shares this step with macOS and Linux.
         - name: Download Whisper model
           if: steps.cache.outputs.cache-hit != 'true'
           shell: bash

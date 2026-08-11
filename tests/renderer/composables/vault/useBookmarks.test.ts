@@ -187,10 +187,10 @@ describe('useBookmarks', () => {
             expect(bm.bookmarkedFiles.value).toEqual(['/vault/docs-old/a.md']);
         });
 
-        it('matches across separator styles and keeps the bookmark native (Windows paths)', () => {
-            bm.bookmarkedFiles.value = ['C:\\vault\\docs\\a.md'];
-            bm.relocateBookmark('C:/vault/docs', 'C:/vault/archive/docs');
-            expect(bm.bookmarkedFiles.value).toEqual(['C:\\vault\\archive\\docs\\a.md']);
+        it('treats a backslash in a filename as a literal, not a separator', () => {
+            bm.bookmarkedFiles.value = ['/vault/docs\\a.md'];
+            bm.relocateBookmark('/vault/docs', '/vault/archive/docs');
+            expect(bm.bookmarkedFiles.value).toEqual(['/vault/docs\\a.md']);
         });
 
         it('does not duplicate when the destination is already bookmarked', () => {
