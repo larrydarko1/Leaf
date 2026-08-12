@@ -20,7 +20,6 @@ import {
     SaveDialogOptionsSchema,
     FileWriteBufferArgsSchema,
     ResolveEmbedArgsSchema,
-    FileCopyToVaultArgsSchema,
     FileWriteArgsSchema,
     FileCreateArgsSchema,
     FolderCreateArgsSchema,
@@ -179,37 +178,6 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
             }
         },
     );
-
-    // Copy external file into vault
-    ipc.handle('file:copyToVault', async (_event, rawSourcePath: unknown, rawTargetDir: unknown) => {
-        const parsed = FileCopyToVaultArgsSchema.safeParse({ sourcePath: rawSourcePath, targetDir: rawTargetDir });
-        if (!parsed.success) return { success: false, error: 'Invalid arguments' };
-        const { sourcePath, targetDir } = parsed.data;
-        try {
-            // Source can be anywhere (user dragged from Finder), but target must be inside vault
-            assertInsideVault(targetDir);
-            await fs.mkdir(targetDir, { recursive: true });
-            let baseName = path.basename(sourcePath);
-            let targetPath = path.join(targetDir, baseName);
-            let counter = 1;
-            const ext = path.extname(baseName);
-            const stem = baseName.slice(0, baseName.length - ext.length);
-            while (true) {
-                try {
-                    await fs.access(targetPath);
-                    targetPath = path.join(targetDir, `${stem} (${counter})${ext}`);
-                    baseName = path.basename(targetPath);
-                    counter++;
-                } catch {
-                    break;
-                }
-            }
-            await fs.copyFile(sourcePath, targetPath);
-            return { success: true, fileName: baseName, path: targetPath };
-        } catch (error) {
-            return { success: false, error: (error as Error).message };
-        }
-    });
 
     // Read text file
     ipc.handle('file:read', async (_event, rawFilePath: unknown) => {

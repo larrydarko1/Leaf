@@ -416,56 +416,6 @@ describe('folder:move', () => {
     });
 });
 
-// ── file:copyToVault ──────────────────────────────────────────────────────────
-
-describe('file:copyToVault', () => {
-    it('copies an external file into the vault', async () => {
-        const srcFile = path.join(os.tmpdir(), `leaf-copy-src-${Date.now()}.png`);
-        fs.writeFileSync(srcFile, 'imgdata');
-        const targetDir = path.join(tmpVault, 'attachments');
-        fs.mkdirSync(targetDir);
-
-        const result = (await ipc.invoke('file:copyToVault', srcFile, targetDir)) as {
-            success: boolean;
-            fileName: string;
-            path: string;
-        };
-        expect(result.success).toBe(true);
-        expect(fs.existsSync(result.path)).toBe(true);
-        fs.unlinkSync(srcFile);
-    });
-
-    it('avoids collision by appending a counter', async () => {
-        const srcFile = path.join(os.tmpdir(), `leaf-copy-src2-${Date.now()}.png`);
-        fs.writeFileSync(srcFile, 'imgdata');
-        const targetDir = tmpVault;
-        const baseName = path.basename(srcFile);
-        // Pre-create the file to cause a collision
-        fs.writeFileSync(path.join(targetDir, baseName), 'existing');
-
-        const result = (await ipc.invoke('file:copyToVault', srcFile, targetDir)) as {
-            success: boolean;
-            fileName: string;
-        };
-        expect(result.success).toBe(true);
-        expect(result.fileName).toContain('(1)');
-        fs.unlinkSync(srcFile);
-    });
-
-    it('returns failure for invalid arguments', async () => {
-        const result = (await ipc.invoke('file:copyToVault', 42, 'x')) as { success: boolean };
-        expect(result.success).toBe(false);
-    });
-
-    it('returns failure when target dir is outside vault', async () => {
-        const srcFile = path.join(os.tmpdir(), 'src.png');
-        fs.writeFileSync(srcFile, 'x');
-        const result = (await ipc.invoke('file:copyToVault', srcFile, '/tmp')) as { success: boolean };
-        expect(result.success).toBe(false);
-        fs.unlinkSync(srcFile);
-    });
-});
-
 // ── file:readImage ────────────────────────────────────────────────────────────
 
 describe('file:readImage', () => {

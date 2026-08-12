@@ -6,7 +6,6 @@ import {
     SaveDialogOptionsSchema,
     FileWriteBufferArgsSchema,
     ResolveEmbedArgsSchema,
-    FileCopyToVaultArgsSchema,
     FileWriteArgsSchema,
     FileCreateArgsSchema,
     FolderCreateArgsSchema,
@@ -135,16 +134,6 @@ describe('ResolveEmbedArgsSchema', () => {
 
     it('rejects missing noteDir', () => {
         expect(ResolveEmbedArgsSchema.safeParse({ fileName: 'f', embedVaultRoot: '/v' }).success).toBe(false);
-    });
-});
-
-describe('FileCopyToVaultArgsSchema', () => {
-    it('parses valid args', () => {
-        const result = FileCopyToVaultArgsSchema.parse({
-            sourcePath: '/downloads/image.png',
-            targetDir: '/vault/assets',
-        });
-        expect(result.targetDir).toBe('/vault/assets');
     });
 });
 

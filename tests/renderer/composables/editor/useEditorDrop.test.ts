@@ -3,13 +3,11 @@ import { ref, shallowRef } from 'vue';
 import { useEditorDrop } from '@/renderer/composables/editor/useEditorDrop';
 
 const mockElectronAPI = {
-    copyFileToVault: vi.fn(),
     log: { error: vi.fn() },
 };
 
 beforeEach(() => {
     vi.clearAllMocks();
-    mockElectronAPI.copyFileToVault.mockResolvedValue({ success: true, fileName: 'copied.png' });
     (globalThis as Record<string, unknown>).electronAPI = mockElectronAPI;
 });
 
@@ -17,7 +15,6 @@ function makeComposable(
     opts: {
         isMarkdown?: boolean;
         filePath?: string;
-        workspacePath?: string;
         initialContent?: string;
     } = {},
 ) {
@@ -27,12 +24,10 @@ function makeComposable(
     const content = ref(opts.initialContent ?? '');
     const onContentChange = vi.fn();
     const file = opts.filePath != null ? { path: opts.filePath } : null;
-    const workspacePath = opts.workspacePath ?? '/vault';
 
     const composable = useEditorDrop(
         isMarkdownFile,
         () => file,
-        () => workspacePath,
         textareaRef as never,
         showPreview,
         content,
@@ -87,6 +82,12 @@ describe('onEditorDragEnter', () => {
     it('does nothing when the dataTransfer has no embeddable data', () => {
         const { isDragOverEditor, onEditorDragEnter } = makeComposable({ isMarkdown: true });
         onEditorDragEnter(makeDragEvent({ types: [] }));
+        expect(isDragOverEditor.value).toBe(false);
+    });
+
+    it('shows no drop affordance for a native OS file drag', () => {
+        const { isDragOverEditor, onEditorDragEnter } = makeComposable({ isMarkdown: true });
+        onEditorDragEnter(makeDragEvent({ types: ['Files'], files: [{ name: 'a.png', path: '/Downloads/a.png' }] }));
         expect(isDragOverEditor.value).toBe(false);
     });
 });
@@ -145,7 +146,6 @@ describe('onFileDrop', () => {
         const { content, onFileDrop, onContentChange } = makeComposable({
             isMarkdown: true,
             filePath: '/vault/note.md',
-            workspacePath: '/vault',
         });
         await onFileDrop(makeDragEvent({ textPlain: 'file:/vault/image.png', types: ['text/plain'] }));
         expect(content.value).toContain('![[image.png]]');
@@ -172,46 +172,28 @@ describe('onFileDrop', () => {
         expect(onContentChange).not.toHaveBeenCalled();
     });
 
-    it('inserts embed for a native OS drop of an image inside the workspace', async () => {
+    it('ignores a native OS file drop of an embeddable file inside the vault', async () => {
         const { content, onFileDrop, onContentChange } = makeComposable({
             isMarkdown: true,
             filePath: '/vault/note.md',
-            workspacePath: '/vault',
         });
         const event = makeDragEvent({
             types: ['Files'],
             files: [{ name: 'photo.jpg', path: '/vault/photo.jpg' }],
         });
         await onFileDrop(event);
-        expect(content.value).toContain('![[photo.jpg]]');
-        expect(onContentChange).toHaveBeenCalled();
+        expect(content.value).toBe('');
+        expect(onContentChange).not.toHaveBeenCalled();
     });
 
-    it('calls copyFileToVault for a native drop of a file outside the workspace', async () => {
+    it('ignores a native OS file drop of a file outside the vault', async () => {
         const { content, onFileDrop, onContentChange } = makeComposable({
             isMarkdown: true,
             filePath: '/vault/note.md',
-            workspacePath: '/vault',
         });
         const event = makeDragEvent({
             types: ['Files'],
             files: [{ name: 'external.png', path: '/Downloads/external.png' }],
-        });
-        await onFileDrop(event);
-        expect(mockElectronAPI.copyFileToVault).toHaveBeenCalledWith('/Downloads/external.png', '/vault');
-        expect(content.value).toContain('![[copied.png]]');
-        expect(onContentChange).toHaveBeenCalled();
-    });
-
-    it('skips a native-drop file with a non-embeddable extension', async () => {
-        const { content, onFileDrop, onContentChange } = makeComposable({
-            isMarkdown: true,
-            filePath: '/vault/note.md',
-            workspacePath: '/vault',
-        });
-        const event = makeDragEvent({
-            types: ['Files'],
-            files: [{ name: 'report.docx', path: '/vault/report.docx' }],
         });
         await onFileDrop(event);
         expect(content.value).toBe('');
@@ -222,7 +204,6 @@ describe('onFileDrop', () => {
         makeComposable({
             isMarkdown: true,
             filePath: '/vault/note.md',
-            workspacePath: '/vault',
             initialContent: 'existing text',
         });
         const textareaRef = ref<HTMLTextAreaElement | null>(null);
@@ -232,7 +213,6 @@ describe('onFileDrop', () => {
         const { onFileDrop: drop } = useEditorDrop(
             isMarkdownFile,
             () => ({ path: '/vault/note.md' }),
-            () => '/vault',
             textareaRef as never,
             showPreview,
             c,
@@ -261,7 +241,6 @@ describe('onFileDrop', () => {
         const { onFileDrop } = useEditorDrop(
             isMarkdownFile,
             () => ({ path: '/vault/note.md' }),
-            () => '/vault',
             ref(null) as never,
             showPreview,
             content,

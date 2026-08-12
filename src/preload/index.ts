@@ -32,8 +32,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     readFile: (filePath: string) => ipcRenderer.invoke('file:read', filePath),
     resolveEmbedPath: (fileName: string, noteDir: string, vaultRoot: string) =>
         ipcRenderer.invoke('file:resolveEmbedPath', fileName, noteDir, vaultRoot),
-    copyFileToVault: (sourcePath: string, targetDir: string) =>
-        ipcRenderer.invoke('file:copyToVault', sourcePath, targetDir),
     readImage: (filePath: string) => ipcRenderer.invoke('file:readImage', filePath),
     readAudio: (filePath: string) => ipcRenderer.invoke('file:readAudio', filePath),
     writeFile: (filePath: string, content: string) => ipcRenderer.invoke('file:write', filePath, content),

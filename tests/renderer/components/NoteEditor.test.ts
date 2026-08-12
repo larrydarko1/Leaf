@@ -509,12 +509,12 @@ describe('NoteEditor', () => {
             wrapper.unmount();
         });
 
-        it('wires the editor-drop file/workspace getters', () => {
+        it('wires the editor-drop file getter', () => {
             const file = makeFile({ extension: '.md', path: '/v/n.md' });
             const wrapper = mountEditor(file, '/ws');
             const args = vi.mocked(useEditorDrop).mock.calls.at(-1) as unknown[];
             expect((args[1] as () => FileInfo | null)()).toEqual(file);
-            expect((args[2] as () => string | null)()).toBe('/ws');
+            expect(args[2]).not.toBeInstanceOf(Function);
             wrapper.unmount();
         });
     });

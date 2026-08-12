@@ -70,7 +70,6 @@ describe('preload / electronAPI', () => {
             ['scanFolder', 'files:scan', ['/vault']],
             ['readFile', 'file:read', ['/vault/note.md']],
             ['resolveEmbedPath', 'file:resolveEmbedPath', ['img.png', '/dir', '/root']],
-            ['copyFileToVault', 'file:copyToVault', ['/src/img.png', '/vault']],
             ['readImage', 'file:readImage', ['/vault/img.png']],
             ['readAudio', 'file:readAudio', ['/vault/audio.mp3']],
             ['writeFile', 'file:write', ['/vault/note.md', 'content']],

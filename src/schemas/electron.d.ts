@@ -22,7 +22,6 @@ import type {
     ImageReadResult,
     AudioReadResult,
     EmbedResolveResult,
-    CopyToVaultResult,
     FileWriteResult,
     FileCreateResult,
     FolderCreateResult,
@@ -55,7 +54,6 @@ export type ElectronAPI = {
     readImage: (filePath: string) => Promise<ImageReadResult>;
     readAudio: (filePath: string) => Promise<AudioReadResult>;
     resolveEmbedPath: (fileName: string, noteDir: string, vaultRoot: string) => Promise<EmbedResolveResult>;
-    copyFileToVault: (sourcePath: string, targetDir: string) => Promise<CopyToVaultResult>;
     createFolder: (parentPath: string, folderName: string) => Promise<FolderCreateResult>;
     writeFile: (filePath: string, content: string) => Promise<FileWriteResult>;
     createFile: (folderPath: string, fileName: string) => Promise<FileCreateResult>;

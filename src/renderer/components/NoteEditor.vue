@@ -141,8 +141,7 @@ const cmExtensions = [
             },
         },
     ]),
-    // Prevent CM6 from inserting raw text when files are dropped
-    // (the actual embed insertion is handled by useEditorDrop on the parent container)
+    // Prevent CM6 from inserting raw text when files are dropped. In-vault drags ("file:" payload) are turned into embeds by useEditorDrop
     EditorView.domEventHandlers({
         drop(event) {
             const dt = event.dataTransfer;
@@ -256,7 +255,6 @@ const showPreview = ref(false); // kept for useEditorDrop API compat, always fal
 const { isDragOverEditor, onEditorDragEnter, onEditorDragOver, onEditorDragLeave, onFileDrop } = useEditorDrop(
     isMarkdownFile,
     () => props.file,
-    () => props.workspacePath,
     textareaRef,
     showPreview,
     content,
