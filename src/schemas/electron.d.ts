@@ -22,7 +22,6 @@ import type {
     ImageReadResult,
     AudioReadResult,
     EmbedResolveResult,
-    CopyToVaultResult,
     FileWriteResult,
     FileCreateResult,
     FolderCreateResult,
@@ -50,12 +49,12 @@ export type ElectronAPI = {
         filters?: { name: string; extensions: string[] }[];
     }) => Promise<string | null>;
     writeBuffer: (filePath: string, base64Data: string) => Promise<FileWriteResult>;
-    scanFolder: (folderPath: string) => Promise<ScanResult>;
+    scanFolder: () => Promise<ScanResult>;
+    closeVault: () => Promise<FileWriteResult>;
     readFile: (filePath: string) => Promise<FileReadResult>;
     readImage: (filePath: string) => Promise<ImageReadResult>;
     readAudio: (filePath: string) => Promise<AudioReadResult>;
     resolveEmbedPath: (fileName: string, noteDir: string, vaultRoot: string) => Promise<EmbedResolveResult>;
-    copyFileToVault: (sourcePath: string, targetDir: string) => Promise<CopyToVaultResult>;
     createFolder: (parentPath: string, folderName: string) => Promise<FolderCreateResult>;
     writeFile: (filePath: string, content: string) => Promise<FileWriteResult>;
     createFile: (folderPath: string, fileName: string) => Promise<FileCreateResult>;
@@ -151,7 +150,7 @@ export type ElectronAPI = {
     agentGetPendingEdits: () => Promise<AgentPendingEditsResult>;
 
     // File system watcher
-    watchFolder: (folderPath: string) => Promise<AiSimpleResult>;
+    watchFolder: () => Promise<AiSimpleResult>;
     unwatchFolder: () => Promise<AiSimpleResult>;
     onFsChanged: (callback: (data: { eventType: string; filename: string }) => void) => void;
     removeFsChangedListener: () => void;

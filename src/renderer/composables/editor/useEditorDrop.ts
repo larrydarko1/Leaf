@@ -1,6 +1,6 @@
 /**
- * useEditorDrop — handles file drag-and-drop onto the editor, inserting
- * markdown embed syntax for images, audio, video, and PDFs.
+ * useEditorDrop — handles drag-and-drop of vault files onto the editor,
+ * inserting markdown embed syntax for images, audio, video, and PDFs.
  */
 
 import { ref } from 'vue';
@@ -13,7 +13,6 @@ const embeddableExtensions = [...IMAGE_EXTENSIONS, ...VIDEO_EXTENSIONS, ...AUDIO
 export function useEditorDrop(
     isMarkdownFile: Ref<boolean>,
     getFile: () => { path: string } | null,
-    getWorkspacePath: () => string | null,
     textareaRef: Ref<HTMLTextAreaElement | null>,
     showPreview: Ref<boolean>,
     content: Ref<string>,
@@ -35,13 +34,7 @@ export function useEditorDrop(
         if (!hasEmbeddableData(event.dataTransfer)) return;
 
         const dataTransfer = event.dataTransfer;
-        if (dataTransfer !== null) {
-            if (dataTransfer.types.includes('Files')) {
-                dataTransfer.dropEffect = 'copy';
-            } else {
-                dataTransfer.dropEffect = 'move';
-            }
-        }
+        if (dataTransfer !== null) dataTransfer.dropEffect = 'move';
     }
 
     function onEditorDragLeave(_event: DragEvent): void {
@@ -57,51 +50,18 @@ export function useEditorDrop(
         isDragOverEditor.value = false;
 
         const file = getFile();
-        const workspacePath = getWorkspacePath();
-        if (!isMarkdownFile.value || file === null || workspacePath === null) return;
+        if (!isMarkdownFile.value || file === null) return;
 
         const embedTexts: string[] = [];
 
-        // 1. Internal drag from FileExplorer (text/plain with "file:" prefix)
+        // Internal drag from FileExplorer (text/plain with "file:" prefix).
+        // Native OS file drops carry no usable path and are ignored.
         const plainData = event.dataTransfer?.getData('text/plain');
         if (plainData !== null && plainData !== undefined && plainData.length > 0 && plainData.startsWith('file:')) {
             const filePath = plainData.substring(5);
             const fileName = filePath.split('/').pop();
             if (fileName !== null && fileName !== undefined && fileName.length > 0 && isEmbeddableFile(fileName)) {
                 embedTexts.push(`![[${fileName}]]`);
-            }
-        }
-
-        // 2. Native file drop from OS (e.g. Finder)
-        const droppedFiles = event.dataTransfer?.files;
-        if (embedTexts.length === 0 && droppedFiles !== null && droppedFiles !== undefined && droppedFiles.length > 0) {
-            const files = Array.from(droppedFiles);
-            const noteDir = file.path.substring(0, file.path.lastIndexOf('/'));
-
-            for (const droppedFile of files) {
-                const filePath = (droppedFile as unknown as { path?: string }).path;
-                if (filePath === null || filePath === undefined || filePath.length === 0) continue;
-                if (!isEmbeddableFile(droppedFile.name)) continue;
-
-                if (filePath.startsWith(workspacePath)) {
-                    embedTexts.push(`![[${droppedFile.name}]]`);
-                } else {
-                    try {
-                        const result = await window.electronAPI.copyFileToVault(filePath, noteDir);
-                        if (
-                            result.success &&
-                            result.fileName !== null &&
-                            result.fileName !== undefined &&
-                            result.fileName.length > 0
-                        ) {
-                            embedTexts.push(`![[${result.fileName}]]`);
-                        } else {
-                            window.electronAPI.log.error('Failed to copy file to vault:', result.error);
-                        }
-                    } catch (err) {
-                        window.electronAPI.log.error('Error copying file to vault:', err);
-                    }
-                }
             }
         }
 
@@ -170,7 +130,5 @@ function isEmbeddableFile(fileName: string): boolean {
 
 function hasEmbeddableData(dt: DataTransfer | null): boolean {
     if (dt === null) return false;
-    if (dt.types.includes('Files')) return true;
-    if (dt.types.includes('text/plain')) return true;
-    return false;
+    return dt.types.includes('text/plain');
 }

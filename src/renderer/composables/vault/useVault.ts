@@ -22,7 +22,7 @@ export function useVault() {
         onExternalChange = cb;
     }
 
-    async function startFolderWatcher(folderPath: string) {
+    async function startFolderWatcher() {
         try {
             window.electronAPI.removeFsChangedListener();
             window.electronAPI.onFsChanged(() => {
@@ -31,7 +31,7 @@ export function useVault() {
                     onExternalChange?.();
                 }, 500);
             });
-            await window.electronAPI.watchFolder(folderPath);
+            await window.electronAPI.watchFolder();
         } catch (err) {
             window.electronAPI.log.error('Failed to start folder watcher:', err);
         }
@@ -47,32 +47,32 @@ export function useVault() {
     }
 
     // --- Core folder operations ---
-    async function scanFolder(folderPath: string): Promise<{ files: FileInfo[]; folders: FolderInfo[] } | null> {
-        const result = await window.electronAPI.scanFolder(folderPath);
-        if (result.success != null && result.files != null) {
-            return { files: result.files, folders: result.folders ?? [] };
+    async function scanFolder(): Promise<{ root: string; files: FileInfo[]; folders: FolderInfo[] } | null> {
+        const result = await window.electronAPI.scanFolder();
+        if (result.success && result.files != null && result.root != null && result.root !== '') {
+            return { root: result.root, files: result.files, folders: result.folders ?? [] };
         }
-        window.electronAPI.log.error('Failed to scan folder:', result.error);
         return null;
     }
 
-    async function loadFolder(folderPath: string): Promise<{ files: FileInfo[]; folders: FolderInfo[] } | null> {
-        const scanned = await scanFolder(folderPath);
+    async function loadVault(): Promise<{ files: FileInfo[]; folders: FolderInfo[] } | null> {
+        const scanned = await scanFolder();
         if (scanned === null) {
-            alert('Failed to load folder.');
+            currentFolder.value = null;
+            files.value = [];
+            folders.value = [];
             return null;
         }
-        currentFolder.value = folderPath;
+        currentFolder.value = scanned.root;
         files.value = scanned.files;
         folders.value = scanned.folders;
-        localStorage.setItem('leaf-folder-path', folderPath);
-        void startFolderWatcher(folderPath);
-        return scanned;
+        void startFolderWatcher();
+        return { files: scanned.files, folders: scanned.folders };
     }
 
     async function refreshFiles(): Promise<void> {
         if (currentFolder.value === null || currentFolder.value === '') return;
-        const scanned = await scanFolder(currentFolder.value);
+        const scanned = await scanFolder();
         if (scanned !== null) {
             files.value = scanned.files;
             folders.value = scanned.folders;
@@ -83,8 +83,8 @@ export function useVault() {
         try {
             const folderPath = await window.electronAPI.openFolderDialog();
             if (folderPath !== null && folderPath !== '') {
-                await loadFolder(folderPath);
-                return folderPath;
+                await loadVault();
+                return currentFolder.value;
             }
             return null;
         } catch (error) {
@@ -95,10 +95,10 @@ export function useVault() {
 
     function closeVault() {
         void stopFolderWatcher();
+        void window.electronAPI.closeVault();
         currentFolder.value = null;
         files.value = [];
         folders.value = [];
-        localStorage.removeItem('leaf-folder-path');
         localStorage.removeItem('leaf-last-selected-file');
     }
 
@@ -299,7 +299,7 @@ export function useVault() {
         folders,
         // Folder lifecycle
         openFolderDialog,
-        loadFolder,
+        loadVault,
         refreshFiles,
         closeVault,
         // FS watcher callback

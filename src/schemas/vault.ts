@@ -34,6 +34,7 @@ export type FolderInfo = z.infer<typeof FolderInfoSchema>;
 
 export const ScanResultSchema = z.object({
     success: z.boolean(),
+    root: z.string().optional(),
     files: z.array(FileInfoSchema),
     folders: z.array(FolderInfoSchema),
     error: z.string().optional(),
@@ -72,15 +73,6 @@ export const EmbedResolveResultSchema = z.object({
 });
 
 export type EmbedResolveResult = z.infer<typeof EmbedResolveResultSchema>;
-
-export const CopyToVaultResultSchema = z.object({
-    success: z.boolean(),
-    fileName: z.string().optional(),
-    path: z.string().optional(),
-    error: z.string().optional(),
-});
-
-export type CopyToVaultResult = z.infer<typeof CopyToVaultResultSchema>;
 
 export const FileWriteResultSchema = z.object({
     success: z.boolean(),
@@ -278,11 +270,6 @@ export const ResolveEmbedArgsSchema = z.object({
     fileName: z.string(),
     noteDir: z.string(),
     embedVaultRoot: z.string(),
-});
-
-export const FileCopyToVaultArgsSchema = z.object({
-    sourcePath: z.string(),
-    targetDir: z.string(),
 });
 
 export const FileWriteArgsSchema = z.object({

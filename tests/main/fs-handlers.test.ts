@@ -12,6 +12,7 @@ import fs from 'fs';
 const mockTrashItem = vi.fn().mockResolvedValue(undefined);
 const mockShowSaveDialog = vi.fn();
 const mockShowOpenDialog = vi.fn();
+const { mockState } = vi.hoisted(() => ({ mockState: { current: {} as Record<string, unknown> } }));
 
 vi.mock('electron', () => ({
     dialog: { showOpenDialog: mockShowOpenDialog, showSaveDialog: mockShowSaveDialog },
@@ -20,6 +21,14 @@ vi.mock('electron', () => ({
 
 vi.mock('@/main/lib/logger', () => ({
     log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+}));
+
+vi.mock('@/main/lib/appState', () => ({
+    readState: vi.fn(() => Promise.resolve({ ...mockState.current })),
+    updateState: vi.fn((mutate: (s: Record<string, unknown>) => Record<string, unknown>) => {
+        mockState.current = mutate({ ...mockState.current });
+        return Promise.resolve();
+    }),
 }));
 
 // ── IPC helper ────────────────────────────────────────────────────────────────
@@ -51,15 +60,20 @@ function newTmpVault(): string {
 let tmpVault: string;
 let ipc: ReturnType<typeof makeMockIpc>;
 
+// A stand-in BrowserWindow — the handlers only pass it through to the dialog.
+const fakeWindow = {} as never;
+
 beforeEach(async () => {
     vi.resetModules();
     vi.clearAllMocks();
+    mockState.current = {};
     tmpVault = newTmpVault();
     ipc = makeMockIpc();
     const { register } = await import('@/main/services/fs');
-    register(ipc as never, () => null);
-    // Set the vault root via files:scan
-    await ipc.invoke('files:scan', tmpVault);
+    register(ipc as never, () => fakeWindow);
+    // Set the vault root the only way it can be set: the native folder dialog.
+    mockShowOpenDialog.mockResolvedValue({ canceled: false, filePaths: [tmpVault] });
+    await ipc.invoke('dialog:openFolder');
 });
 
 afterEach(() => {
@@ -69,8 +83,87 @@ afterEach(() => {
 // ── getVaultRoot / cleanup exports ────────────────────────────────────────────
 
 describe('getVaultRoot', () => {
-    it('returns the vault root after scanning', async () => {
+    it('returns the vault root after the folder dialog', async () => {
         const { getVaultRoot } = await import('@/main/services/fs');
+        expect(getVaultRoot()).toBe(path.resolve(tmpVault));
+    });
+});
+
+describe('vault root ownership', () => {
+    it('is not settable by passing a path to files:scan', async () => {
+        const { getVaultRoot } = await import('@/main/services/fs');
+        const outside = newTmpVault();
+        try {
+            await ipc.invoke('files:scan', outside);
+            expect(getVaultRoot()).toBe(path.resolve(tmpVault));
+        } finally {
+            fs.rmSync(outside, { recursive: true, force: true });
+        }
+    });
+
+    it('still confines file reads after a scan is attempted elsewhere', async () => {
+        const outside = newTmpVault();
+        const secret = path.join(outside, 'secret.md');
+        fs.writeFileSync(secret, 'classified');
+        try {
+            await ipc.invoke('files:scan', outside);
+            const result = (await ipc.invoke('file:read', secret)) as { success: boolean };
+            expect(result.success).toBe(false);
+        } finally {
+            fs.rmSync(outside, { recursive: true, force: true });
+        }
+    });
+
+    it('persists the root so it survives a restart', async () => {
+        vi.resetModules();
+        const freshIpc = makeMockIpc();
+        const { register, initVaultRoot, getVaultRoot } = await import('@/main/services/fs');
+        register(freshIpc as never, () => fakeWindow);
+        await initVaultRoot();
+        expect(getVaultRoot()).toBe(path.resolve(tmpVault));
+    });
+
+    it('discards a persisted root that no longer exists', async () => {
+        fs.rmSync(tmpVault, { recursive: true, force: true });
+        vi.resetModules();
+        const { initVaultRoot, getVaultRoot } = await import('@/main/services/fs');
+        await initVaultRoot();
+        expect(getVaultRoot()).toBeNull();
+    });
+
+    it('files:scan reports the root it scanned', async () => {
+        fs.writeFileSync(path.join(tmpVault, 'note.md'), '# hi');
+        const result = (await ipc.invoke('files:scan')) as { success: boolean; root: string };
+        expect(result.success).toBe(true);
+        expect(result.root).toBe(path.resolve(tmpVault));
+    });
+
+    it('files:scan fails when no vault is open', async () => {
+        vi.resetModules();
+        const freshIpc = makeMockIpc();
+        const { register } = await import('@/main/services/fs');
+        register(freshIpc as never, () => fakeWindow);
+        const result = (await freshIpc.invoke('files:scan')) as { success: boolean };
+        expect(result.success).toBe(false);
+    });
+
+    it('vault:close clears the root and forgets it across restarts', async () => {
+        const { getVaultRoot } = await import('@/main/services/fs');
+        const result = (await ipc.invoke('vault:close')) as { success: boolean };
+        expect(result.success).toBe(true);
+        expect(getVaultRoot()).toBeNull();
+
+        vi.resetModules();
+        const { initVaultRoot, getVaultRoot: freshGetRoot } = await import('@/main/services/fs');
+        await initVaultRoot();
+        expect(freshGetRoot()).toBeNull();
+    });
+
+    it('a cancelled folder dialog leaves the root unchanged', async () => {
+        const { getVaultRoot } = await import('@/main/services/fs');
+        mockShowOpenDialog.mockResolvedValue({ canceled: true, filePaths: [] });
+        const result = await ipc.invoke('dialog:openFolder');
+        expect(result).toBeNull();
         expect(getVaultRoot()).toBe(path.resolve(tmpVault));
     });
 });
@@ -416,56 +509,6 @@ describe('folder:move', () => {
     });
 });
 
-// ── file:copyToVault ──────────────────────────────────────────────────────────
-
-describe('file:copyToVault', () => {
-    it('copies an external file into the vault', async () => {
-        const srcFile = path.join(os.tmpdir(), `leaf-copy-src-${Date.now()}.png`);
-        fs.writeFileSync(srcFile, 'imgdata');
-        const targetDir = path.join(tmpVault, 'attachments');
-        fs.mkdirSync(targetDir);
-
-        const result = (await ipc.invoke('file:copyToVault', srcFile, targetDir)) as {
-            success: boolean;
-            fileName: string;
-            path: string;
-        };
-        expect(result.success).toBe(true);
-        expect(fs.existsSync(result.path)).toBe(true);
-        fs.unlinkSync(srcFile);
-    });
-
-    it('avoids collision by appending a counter', async () => {
-        const srcFile = path.join(os.tmpdir(), `leaf-copy-src2-${Date.now()}.png`);
-        fs.writeFileSync(srcFile, 'imgdata');
-        const targetDir = tmpVault;
-        const baseName = path.basename(srcFile);
-        // Pre-create the file to cause a collision
-        fs.writeFileSync(path.join(targetDir, baseName), 'existing');
-
-        const result = (await ipc.invoke('file:copyToVault', srcFile, targetDir)) as {
-            success: boolean;
-            fileName: string;
-        };
-        expect(result.success).toBe(true);
-        expect(result.fileName).toContain('(1)');
-        fs.unlinkSync(srcFile);
-    });
-
-    it('returns failure for invalid arguments', async () => {
-        const result = (await ipc.invoke('file:copyToVault', 42, 'x')) as { success: boolean };
-        expect(result.success).toBe(false);
-    });
-
-    it('returns failure when target dir is outside vault', async () => {
-        const srcFile = path.join(os.tmpdir(), 'src.png');
-        fs.writeFileSync(srcFile, 'x');
-        const result = (await ipc.invoke('file:copyToVault', srcFile, '/tmp')) as { success: boolean };
-        expect(result.success).toBe(false);
-        fs.unlinkSync(srcFile);
-    });
-});
-
 // ── file:readImage ────────────────────────────────────────────────────────────
 
 describe('file:readImage', () => {
@@ -534,12 +577,63 @@ describe('file:readAudio', () => {
 // ── file:writeBuffer ──────────────────────────────────────────────────────────
 
 describe('file:writeBuffer', () => {
-    it('writes a base64-encoded binary file', async () => {
+    async function authorize(target: string): Promise<void> {
+        mockShowSaveDialog.mockResolvedValue({ canceled: false, filePath: target });
+        await ipc.invoke('dialog:showSaveDialog', { defaultPath: target });
+    }
+
+    it('writes a base64-encoded binary file to a dialog-authorised path', async () => {
         const filePath = path.join(tmpVault, 'export.png');
+        await authorize(filePath);
         const base64 = Buffer.from('hello binary').toString('base64');
         const result = (await ipc.invoke('file:writeBuffer', filePath, base64)) as { success: boolean };
         expect(result.success).toBe(true);
         expect(fs.readFileSync(filePath, 'utf-8')).toBe('hello binary');
+    });
+
+    it('allows an authorised path outside the vault (exports go anywhere)', async () => {
+        const outside = path.join(os.tmpdir(), `leaf-export-${Date.now()}.png`);
+        await authorize(outside);
+        const result = (await ipc.invoke('file:writeBuffer', outside, Buffer.from('x').toString('base64'))) as {
+            success: boolean;
+        };
+        expect(result.success).toBe(true);
+        fs.rmSync(outside, { force: true });
+    });
+
+    it('refuses a path the user never chose in a save dialog', async () => {
+        const filePath = path.join(tmpVault, 'unauthorised.png');
+        const result = (await ipc.invoke('file:writeBuffer', filePath, Buffer.from('x').toString('base64'))) as {
+            success: boolean;
+            error: string;
+        };
+        expect(result.success).toBe(false);
+        expect(result.error).toContain('not authorised');
+        expect(fs.existsSync(filePath)).toBe(false);
+    });
+
+    it('consumes the authorisation, so a path cannot be written twice', async () => {
+        const filePath = path.join(tmpVault, 'once.png');
+        await authorize(filePath);
+        const first = (await ipc.invoke('file:writeBuffer', filePath, Buffer.from('x').toString('base64'))) as {
+            success: boolean;
+        };
+        const second = (await ipc.invoke('file:writeBuffer', filePath, Buffer.from('y').toString('base64'))) as {
+            success: boolean;
+        };
+        expect(first.success).toBe(true);
+        expect(second.success).toBe(false);
+    });
+
+    it('does not authorise anything when the save dialog is cancelled', async () => {
+        const filePath = path.join(tmpVault, 'cancelled.png');
+        mockShowSaveDialog.mockResolvedValue({ canceled: true, filePath: undefined });
+        const dialogResult = await ipc.invoke('dialog:showSaveDialog', { defaultPath: filePath });
+        expect(dialogResult).toBeNull();
+        const result = (await ipc.invoke('file:writeBuffer', filePath, Buffer.from('x').toString('base64'))) as {
+            success: boolean;
+        };
+        expect(result.success).toBe(false);
     });
 
     it('returns failure for invalid arguments', async () => {
@@ -547,12 +641,12 @@ describe('file:writeBuffer', () => {
         expect(result.success).toBe(false);
     });
 
-    it('returns failure when path is not writable', async () => {
-        const result = (await ipc.invoke(
-            'file:writeBuffer',
-            path.join(tmpVault, 'a', 'b', 'c.png'),
-            Buffer.from('x').toString('base64'),
-        )) as { success: boolean };
+    it('returns failure when an authorised path is not writable', async () => {
+        const filePath = path.join(tmpVault, 'a', 'b', 'c.png');
+        await authorize(filePath);
+        const result = (await ipc.invoke('file:writeBuffer', filePath, Buffer.from('x').toString('base64'))) as {
+            success: boolean;
+        };
         expect(result.success).toBe(false);
     });
 });
@@ -720,7 +814,6 @@ describe('file:updateEmbedRefs', () => {
         const freshIpc = makeMockIpc();
         const { register } = await import('@/main/services/fs');
         register(freshIpc as never, () => null);
-        // No files:scan, so no vault root
         const result = (await freshIpc.invoke('file:updateEmbedRefs', 'a.png', 'b.png')) as {
             success: boolean;
         };
@@ -737,25 +830,36 @@ describe('file:updateEmbedRefs', () => {
 
 describe('fs:watchFolder', () => {
     it('returns success and sets up a watcher', async () => {
-        const result = (await ipc.invoke('fs:watchFolder', tmpVault)) as { success: boolean };
+        const result = (await ipc.invoke('fs:watchFolder')) as { success: boolean };
         expect(result.success).toBe(true);
         // Clean up by unwatching
         await ipc.invoke('fs:unwatchFolder');
     });
 
-    it('returns failure for non-string path', async () => {
-        const result = (await ipc.invoke('fs:watchFolder', 42)) as { success: boolean };
+    it('ignores any path argument and watches the vault root', async () => {
+        const result = (await ipc.invoke('fs:watchFolder', '/etc')) as { success: boolean };
+        expect(result.success).toBe(true);
+        await ipc.invoke('fs:unwatchFolder');
+    });
+
+    it('returns failure when no vault is open', async () => {
+        vi.resetModules();
+        const freshIpc = makeMockIpc();
+        const { register } = await import('@/main/services/fs');
+        register(freshIpc as never, () => fakeWindow);
+        const result = (await freshIpc.invoke('fs:watchFolder')) as { success: boolean };
         expect(result.success).toBe(false);
     });
 
-    it('returns failure for a non-existent folder', async () => {
-        const result = (await ipc.invoke('fs:watchFolder', path.join(tmpVault, 'no-such'))) as { success: boolean };
+    it('returns failure when the vault root no longer exists', async () => {
+        fs.rmSync(tmpVault, { recursive: true, force: true });
+        const result = (await ipc.invoke('fs:watchFolder')) as { success: boolean };
         expect(result.success).toBe(false);
     });
 
     it('replaces the previous watcher on second call', async () => {
-        await ipc.invoke('fs:watchFolder', tmpVault);
-        const result = (await ipc.invoke('fs:watchFolder', tmpVault)) as { success: boolean };
+        await ipc.invoke('fs:watchFolder');
+        const result = (await ipc.invoke('fs:watchFolder')) as { success: boolean };
         expect(result.success).toBe(true);
         await ipc.invoke('fs:unwatchFolder');
     });
@@ -768,7 +872,7 @@ describe('fs:unwatchFolder', () => {
     });
 
     it('closes an active watcher and returns success', async () => {
-        await ipc.invoke('fs:watchFolder', tmpVault);
+        await ipc.invoke('fs:watchFolder');
         const result = (await ipc.invoke('fs:unwatchFolder')) as { success: boolean };
         expect(result.success).toBe(true);
     });
@@ -779,7 +883,7 @@ describe('fs:unwatchFolder', () => {
 describe('cleanup (with active watcher)', () => {
     it('closes active watcher during cleanup', async () => {
         const { cleanup } = await import('@/main/services/fs');
-        await ipc.invoke('fs:watchFolder', tmpVault);
+        await ipc.invoke('fs:watchFolder');
         expect(() => cleanup()).not.toThrow();
     });
 });

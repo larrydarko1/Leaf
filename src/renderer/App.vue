@@ -43,8 +43,7 @@ onMounted(() => {
     void theme.refresh();
     void language.refresh();
 
-    const savedFolder = localStorage.getItem('leaf-folder-path');
-    if (savedFolder !== null && savedFolder !== '') void loadFolderPath(savedFolder);
+    void restoreVault();
 
     vault.setExternalChangeCallback(() => {
         void refreshFiles();
@@ -95,8 +94,10 @@ async function selectFolder() {
     }
 }
 
-async function loadFolderPath(folderPath: string) {
-    await vault.loadFolder(folderPath);
+async function restoreVault() {
+    const loaded = await vault.loadVault();
+    const folderPath = vault.currentFolder.value;
+    if (loaded === null || folderPath === null) return;
     const restored = editorTabs.restoreTabs(folderPath, vault.files.value);
     if (!restored) {
         selection.restoreFromStorage(vault.files.value);

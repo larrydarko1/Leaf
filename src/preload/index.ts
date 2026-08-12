@@ -27,13 +27,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // Binary file write
     writeBuffer: (filePath: string, base64Data: string) => ipcRenderer.invoke('file:writeBuffer', filePath, base64Data),
 
-    // File system operations
-    scanFolder: (folderPath: string) => ipcRenderer.invoke('files:scan', folderPath),
+    // File system operations.
+    scanFolder: () => ipcRenderer.invoke('files:scan'),
+    closeVault: () => ipcRenderer.invoke('vault:close'),
     readFile: (filePath: string) => ipcRenderer.invoke('file:read', filePath),
     resolveEmbedPath: (fileName: string, noteDir: string, vaultRoot: string) =>
         ipcRenderer.invoke('file:resolveEmbedPath', fileName, noteDir, vaultRoot),
-    copyFileToVault: (sourcePath: string, targetDir: string) =>
-        ipcRenderer.invoke('file:copyToVault', sourcePath, targetDir),
     readImage: (filePath: string) => ipcRenderer.invoke('file:readImage', filePath),
     readAudio: (filePath: string) => ipcRenderer.invoke('file:readAudio', filePath),
     writeFile: (filePath: string, content: string) => ipcRenderer.invoke('file:write', filePath, content),
@@ -122,7 +121,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     agentGetPendingEdits: () => ipcRenderer.invoke('agent:getPendingEdits'),
 
     // File system watcher
-    watchFolder: (folderPath: string) => ipcRenderer.invoke('fs:watchFolder', folderPath),
+    watchFolder: () => ipcRenderer.invoke('fs:watchFolder'),
     unwatchFolder: () => ipcRenderer.invoke('fs:unwatchFolder'),
     onFsChanged: (callback: (data: object) => void) => {
         ipcRenderer.on('fs:changed', (_event, data: object) => callback(data));

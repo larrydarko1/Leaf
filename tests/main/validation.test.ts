@@ -1,8 +1,36 @@
 import { describe, it, expect } from 'vitest';
 import path from 'path';
-import { assertInsideBoundary, assertSafeFileName } from '@/main/lib/validation';
+import { assertInsideBoundary, assertSafeFileName, isInsideBoundary } from '@/main/lib/validation';
 
 describe('validation', () => {
+    describe('isInsideBoundary', () => {
+        const root = '/home/user/vault';
+
+        it('accepts the root itself', () => {
+            expect(isInsideBoundary('/home/user/vault', root)).toBe(true);
+        });
+
+        it('accepts a nested file', () => {
+            expect(isInsideBoundary('/home/user/vault/sub/note.md', root)).toBe(true);
+        });
+
+        it('rejects a sibling directory sharing the root prefix', () => {
+            expect(isInsideBoundary('/home/user/vault-backup/note.md', root)).toBe(false);
+        });
+
+        it('rejects traversal that escapes the root', () => {
+            expect(isInsideBoundary('/home/user/vault/../../etc/passwd', root)).toBe(false);
+        });
+
+        it('accepts traversal that stays within the root', () => {
+            expect(isInsideBoundary('/home/user/vault/sub/../note.md', root)).toBe(true);
+        });
+
+        it('rejects an unrelated absolute path', () => {
+            expect(isInsideBoundary('/etc/passwd', root)).toBe(false);
+        });
+    });
+
     describe('assertInsideBoundary', () => {
         const root = '/home/user/vault';
 

@@ -14,13 +14,13 @@ import { z } from 'zod';
 import { ALLOWED_EXTENSIONS } from '@/main/lib/extensions';
 import { IMAGE_MIMETYPES, AUDIO_MIMETYPES } from '@/main/lib/mime';
 import { assertInsideBoundary } from '@/main/lib/validation';
+import { readState, updateState } from '@/main/lib/appState';
 import { log } from '@/main/lib/logger';
 import type { FileInfo, FolderInfo, ScanResult } from '@/schemas/vault';
 import {
     SaveDialogOptionsSchema,
     FileWriteBufferArgsSchema,
     ResolveEmbedArgsSchema,
-    FileCopyToVaultArgsSchema,
     FileWriteArgsSchema,
     FileCreateArgsSchema,
     FolderCreateArgsSchema,
@@ -33,13 +33,46 @@ import {
 
 let folderWatcher: FSWatcher | null = null;
 
-// The vault root is set when the user opens a folder (via files:scan).
-// All subsequent file operations are validated against this root.
 let vaultRoot: string | null = null;
+const authorizedWritePaths: Set<string> = new Set<string>();
 
 /** Returns the active vault root, or null if no vault is open. */
 export function getVaultRoot(): string | null {
     return vaultRoot;
+}
+
+export async function initVaultRoot(): Promise<void> {
+    try {
+        const state = await readState();
+        const saved: unknown = state.vaultRoot;
+        if (typeof saved !== 'string' || saved === '') return;
+        const resolved = path.resolve(saved);
+        if (!existsSync(resolved)) {
+            log.info('[fs-service] Persisted vault root no longer exists, ignoring:', resolved);
+            return;
+        }
+        vaultRoot = resolved;
+    } catch (err) {
+        log.error('[fs-service] Failed to restore vault root:', err);
+    }
+}
+
+/** Set and persist the vault root. Only reachable from the folder dialog. */
+async function setVaultRoot(dir: string): Promise<string> {
+    const resolved = path.resolve(dir);
+    vaultRoot = resolved;
+    await updateState((s) => ({ ...s, vaultRoot: resolved }));
+    return resolved;
+}
+
+/** Clear the vault root and forget it across restarts. */
+async function clearVaultRoot(): Promise<void> {
+    vaultRoot = null;
+    await updateState((s) => {
+        const next = { ...s };
+        delete next.vaultRoot;
+        return next;
+    });
 }
 
 /** Close the folder watcher if active. Called during app shutdown. */
@@ -51,7 +84,7 @@ export function cleanup(): void {
 }
 
 export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null): void {
-    // Open folder dialog
+    // Open folder dialog — the ONLY way the vault root changes.
     ipc.handle('dialog:openFolder', async () => {
         const win = getMainWindow();
         if (win === null) return { success: false, error: 'No window available' };
@@ -60,10 +93,23 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
             title: 'Select Your Notes Folder',
             buttonLabel: 'Select Folder',
         });
-        return result.canceled ? null : result.filePaths[0];
+        if (result.canceled) return null;
+        return await setVaultRoot(result.filePaths[0]);
     });
 
-    // Save-file dialog (for exporting images, etc.)
+    // Close the current vault, so it is not reopened on next launch.
+    ipc.handle('vault:close', async () => {
+        try {
+            await clearVaultRoot();
+            return { success: true };
+        } catch (error) {
+            return { success: false, error: (error as Error).message };
+        }
+    });
+
+    // Save-file dialog (for exporting images, etc.).
+    // The chosen path is recorded as a one-shot write authorisation — see
+    // `file:writeBuffer` below.
     ipc.handle('dialog:showSaveDialog', async (_event, rawOptions: unknown) => {
         const parsed = SaveDialogOptionsSchema.safeParse(rawOptions);
         if (!parsed.success) return { success: false, error: 'Invalid arguments' };
@@ -73,48 +119,55 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
             defaultPath: parsed.data.defaultPath,
             filters: parsed.data.filters,
         });
-        return result.canceled ? null : result.filePath;
+        if (result.canceled || result.filePath === undefined || result.filePath === '') return null;
+        authorizedWritePaths.add(path.resolve(result.filePath));
+        return result.filePath;
     });
 
-    // Write binary file from base64 data
+    /**
+     * Write binary file from base64 data.
+     */
     ipc.handle('file:writeBuffer', async (_event, rawFilePath: unknown, rawBase64Data: unknown) => {
         const parsed = FileWriteBufferArgsSchema.safeParse({ filePath: rawFilePath, base64Data: rawBase64Data });
         if (!parsed.success) return { success: false, error: 'Invalid arguments' };
         const { filePath, base64Data } = parsed.data;
+        const resolved = path.resolve(filePath);
+        if (!authorizedWritePaths.delete(resolved)) {
+            return { success: false, error: 'Access denied: path was not authorised by a save dialog.' };
+        }
         try {
-            await fs.writeFile(filePath, Buffer.from(base64Data, 'base64'));
+            await fs.writeFile(resolved, Buffer.from(base64Data, 'base64'));
             return { success: true };
         } catch (error) {
             return { success: false, error: (error as Error).message };
         }
     });
 
-    // Scan vault — this also sets the active vault root for boundary checks
-    ipc.handle('files:scan', async (_event, rawFolderPath: unknown) => {
-        const parsed = z.string().safeParse(rawFolderPath);
-        if (!parsed.success) return { success: false, error: 'Invalid path' };
-        const folderPath = parsed.data;
+    ipc.handle('files:scan', async () => {
         try {
-            vaultRoot = path.resolve(folderPath);
-            const result = await scanFolder(folderPath);
-            return { success: true, files: result.files, folders: result.folders };
+            const root = requireVaultRoot();
+            const result = await scanFolder(root);
+            return { success: true, root, files: result.files, folders: result.folders };
         } catch (error) {
             return { success: false, error: (error as Error).message };
         }
     });
 
-    // Watch vault for external changes
-    ipc.handle('fs:watchFolder', (_event, rawFolderPath: unknown) => {
-        const parsed = z.string().safeParse(rawFolderPath);
-        if (!parsed.success) return { success: false, error: 'Invalid path' };
-        const folderPath = parsed.data;
-        if (!existsSync(folderPath)) return { success: false, error: `Folder does not exist: ${folderPath}` };
+    // Watch the active vault for external changes. Also takes no path.
+    ipc.handle('fs:watchFolder', () => {
+        let root: string;
+        try {
+            root = requireVaultRoot();
+        } catch (error) {
+            return { success: false, error: (error as Error).message };
+        }
+        if (!existsSync(root)) return { success: false, error: `Folder does not exist: ${root}` };
         try {
             if (folderWatcher !== null && folderWatcher !== undefined) {
                 folderWatcher.close();
                 folderWatcher = null;
             }
-            folderWatcher = watch(folderPath, { recursive: true }, (eventType, filename) => {
+            folderWatcher = watch(root, { recursive: true }, (eventType, filename) => {
                 const win = getMainWindow();
                 if (win !== null && !win.isDestroyed()) win.webContents.send('fs:changed', { eventType, filename });
             });
@@ -179,37 +232,6 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
             }
         },
     );
-
-    // Copy external file into vault
-    ipc.handle('file:copyToVault', async (_event, rawSourcePath: unknown, rawTargetDir: unknown) => {
-        const parsed = FileCopyToVaultArgsSchema.safeParse({ sourcePath: rawSourcePath, targetDir: rawTargetDir });
-        if (!parsed.success) return { success: false, error: 'Invalid arguments' };
-        const { sourcePath, targetDir } = parsed.data;
-        try {
-            // Source can be anywhere (user dragged from Finder), but target must be inside vault
-            assertInsideVault(targetDir);
-            await fs.mkdir(targetDir, { recursive: true });
-            let baseName = path.basename(sourcePath);
-            let targetPath = path.join(targetDir, baseName);
-            let counter = 1;
-            const ext = path.extname(baseName);
-            const stem = baseName.slice(0, baseName.length - ext.length);
-            while (true) {
-                try {
-                    await fs.access(targetPath);
-                    targetPath = path.join(targetDir, `${stem} (${counter})${ext}`);
-                    baseName = path.basename(targetPath);
-                    counter++;
-                } catch {
-                    break;
-                }
-            }
-            await fs.copyFile(sourcePath, targetPath);
-            return { success: true, fileName: baseName, path: targetPath };
-        } catch (error) {
-            return { success: false, error: (error as Error).message };
-        }
-    });
 
     // Read text file
     ipc.handle('file:read', async (_event, rawFilePath: unknown) => {

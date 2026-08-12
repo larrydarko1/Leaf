@@ -9,7 +9,7 @@
  *   4. Register IPC handlers by delegating to each service module
  *
  * IPC handler ownership:
- *   fs-service           → file:*, folder:*, files:scan, fs:*, dialog:openFolder, dialog:showSaveDialog, file:resolveEmbedPath, file:copyToVault
+ *   fs-service           → file:*, folder:*, files:scan, fs:*, dialog:openFolder, dialog:showSaveDialog, file:resolveEmbedPath
  *   media-service        → audio:saveRecording, spellcheck:getSuggestions
  *   ai-service           → ai:*
  *   conversation-service → conversations:*
@@ -37,6 +37,7 @@ import * as systemPromptService from '@/main/services/systemPrompt';
 import * as themeService from '@/main/services/theme';
 import * as languageService from '@/main/services/language';
 import { migrateLegacyPaths } from '@/main/lib/paths';
+import { isInsideBoundary } from '@/main/lib/validation';
 import { log } from '@/main/lib/logger';
 
 /**
@@ -157,17 +158,25 @@ function createWindow(): void {
 
 /**
  * ─── Custom protocol: leaf:// ─────────────────────────────────────────────────
- * Serves local files (images, audio, video) to the renderer process with
- * correct MIME types, replacing the need for webSecurity:false.
- * Usage from renderer: <img src="leaf://localhost/absolute/path/to/file.png">
  */
 function registerLeafProtocol(ses: Electron.Session): void {
     ses.protocol.handle('leaf', (request) => {
         // leaf://localhost/path/to/file  →  /path/to/file
         const filePath = decodeURIComponent(new URL(request.url).pathname);
+
+        const root = fsService.getVaultRoot();
+        if (root === null) {
+            log.warn('[leaf://] Denied — no vault is open:', filePath);
+            return new Response('No vault is open', { status: 403 });
+        }
+        if (!isInsideBoundary(filePath, root)) {
+            log.warn('[leaf://] Denied — path is outside the vault:', filePath);
+            return new Response('Forbidden', { status: 403 });
+        }
+
         // Forward the original request headers (including Range for video seeking)
         // to net.fetch so that streaming/range responses work correctly.
-        return net.fetch(pathToFileURL(filePath).toString(), {
+        return net.fetch(pathToFileURL(path.resolve(filePath)).toString(), {
             method: request.method,
             headers: request.headers,
         });
@@ -176,8 +185,9 @@ function registerLeafProtocol(ses: Electron.Session): void {
 
 // ─── App lifecycle ────────────────────────────────────────────────────────────
 
-void app.whenReady().then(() => {
+void app.whenReady().then(async () => {
     const leafSession = session.fromPartition('persist:leaf');
+    await fsService.initVaultRoot();
 
     registerLeafProtocol(leafSession);
     createWindow();
