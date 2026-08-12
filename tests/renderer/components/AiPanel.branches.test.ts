@@ -111,20 +111,6 @@ vi.mock('@/renderer/composables/ai/useConversationHistory', () => ({
     })),
 }));
 
-// ── useAgentMode mock ─────────────────────────────────────────────────────────
-
-const mockAgentMode = ref(false);
-vi.mock('@/renderer/composables/ai/useAgentMode', () => ({
-    useAgentMode: vi.fn(() => ({
-        agentMode: mockAgentMode,
-        toggleAgentMode: vi.fn(),
-        parseAgentEdits: vi.fn(),
-        processAgentEdits: vi.fn(),
-        approveAgentEdit: vi.fn(),
-        rejectAgentEdit: vi.fn(),
-    })),
-}));
-
 // ── useHfDownload mock ────────────────────────────────────────────────────────
 
 const mockShowHfPanel = ref(false);

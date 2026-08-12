@@ -5,7 +5,6 @@ import type { FileInfo } from '@/schemas/vault';
 import type { ChatMessage } from '@/schemas/chat';
 import { useAIModel } from '@/renderer/composables/ai/useAIModel';
 import { useConversationHistory } from '@/renderer/composables/ai/useConversationHistory';
-import { useAgentMode } from '@/renderer/composables/ai/useAgentMode';
 import { useHfDownload } from '@/renderer/composables/ai/useHfDownload';
 import { useAIChat } from '@/renderer/composables/ai/useAIChat';
 import { MAX_CONTEXT_FILES } from '@/renderer/composables/ai/useAIChat';
@@ -19,8 +18,6 @@ import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 
 type Props = {
-    activeFile: FileInfo | null;
-    workspacePath: string | null;
     files?: FileInfo[];
 };
 
@@ -28,9 +25,8 @@ const props = withDefaults(defineProps<Props>(), {
     files: () => [],
 });
 
-const emit = defineEmits<{
-    'close': [];
-    'file-changed': [path: string];
+defineEmits<{
+    close: [];
 }>();
 
 const model = useAIModel();
@@ -76,13 +72,6 @@ const {
     cancelRename,
 } = conversation;
 
-const agent = useAgentMode(
-    messages,
-    computed(() => props.workspacePath),
-    (path) => emit('file-changed', path),
-);
-const { agentMode, toggleAgentMode, parseAgentEdits, processAgentEdits, approveAgentEdit, rejectAgentEdit } = agent;
-
 const hf = useHfDownload(refreshModels);
 const {
     showHfPanel,
@@ -114,9 +103,6 @@ const chat = useAIChat(
         status,
         conversationTokenCount,
         currentConversationId,
-        agentMode,
-        activeFile: computed(() => props.activeFile),
-        workspacePath: computed(() => props.workspacePath),
     },
     {
         createNewConversation,
@@ -124,8 +110,6 @@ const chat = useAIChat(
         saveTokenCountToConversation,
         refreshConversationList,
         refreshStatus,
-        parseAgentEdits,
-        processAgentEdits,
     },
 );
 const {
@@ -279,7 +263,6 @@ function increaseWidth() {
             :selected-model-label="selectedModelLabel"
             :show-hf-panel="showHfPanel"
             :show-history="showHistory"
-            :agent-mode="agentMode"
             :is-any-generating="isAnyGenerating"
             :aria-label="t('ai.model_selection_and_controls')"
             @select-model="selectModel"
@@ -289,7 +272,6 @@ function increaseWidth() {
             @refresh-models="refreshModels"
             @toggle-hf-panel="toggleHfPanel"
             @toggle-history="toggleHistory"
-            @toggle-agent-mode="toggleAgentMode"
             @new-conversation="startNewConversation"
             @close="$emit('close')" />
 
@@ -349,7 +331,6 @@ function increaseWidth() {
             :editing-index="editingIndex"
             :edit-content="editContent"
             :copied-index="copiedIndex"
-            :agent-mode="agentMode"
             :previous-model-match="previousModelMatch"
             :is-loading="isLoading"
             :token-usage-percent="tokenUsagePercent"
@@ -369,16 +350,12 @@ function increaseWidth() {
             @resend="resendMessage"
             @regenerate="regenerateLastResponse"
             @delete-last-pair="deleteLastMessagePair"
-            @approve-agent-edit="approveAgentEdit"
-            @reject-agent-edit="rejectAgentEdit"
             @open-models-folder="openModelsFolder"
             @open-history="openHistory"
             @load-previous-model="loadPreviousModel" />
 
         <AiInputArea
-            :agent-mode="agentMode"
             :show-thinking="showThinking"
-            :active-file="activeFile"
             :input-message="inputMessage"
             :is-ready="isReady"
             :is-any-generating="isAnyGenerating"

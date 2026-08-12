@@ -10,8 +10,7 @@ import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import type { FileInfo } from '@/schemas/vault';
 import type { AiStatus } from '@/schemas/ai';
-import type { ChatMessage, AgentFileEdit } from '@/schemas/chat';
-import { AGENT_SYSTEM_PROMPT } from '@/renderer/composables/ai/useAgentMode';
+import type { ChatMessage } from '@/schemas/chat';
 
 // Configure marked once at module level
 marked.setOptions({ breaks: true, gfm: true });
@@ -21,9 +20,6 @@ type AiChatDeps = {
     status: Ref<AiStatus>;
     conversationTokenCount: Ref<number>;
     currentConversationId: Ref<string | null>;
-    agentMode: Ref<boolean>;
-    activeFile: { readonly value: FileInfo | null };
-    workspacePath: { readonly value: string | null };
 };
 
 type AiChatActions = {
@@ -32,24 +28,19 @@ type AiChatActions = {
     saveTokenCountToConversation: () => Promise<void>;
     refreshConversationList: () => Promise<void>;
     refreshStatus: () => Promise<void>;
-    parseAgentEdits: (response: string) => { cleanContent: string; edits: AgentFileEdit[] };
-    processAgentEdits: (msgIndex: number, edits: AgentFileEdit[]) => Promise<void>;
 };
 
 // Maximum number of files a user can attach as additional context
 export const MAX_CONTEXT_FILES = 10;
 
 export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
-    const { messages, status, conversationTokenCount, currentConversationId, agentMode, activeFile, workspacePath } =
-        deps;
+    const { messages, status, conversationTokenCount, currentConversationId } = deps;
     const {
         createNewConversation,
         saveCurrentConversation,
         saveTokenCountToConversation,
         refreshConversationList,
         refreshStatus,
-        parseAgentEdits,
-        processAgentEdits,
     } = actions;
 
     // DOM refs (bound via template ref="...")
@@ -94,18 +85,10 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         return null;
     }
 
-    /**
-     * Collects the files to send as context, de-duplicated by path. In agent
-     * mode the active file is always included so the agent can edit it; any
-     * files the user attached via the context picker are always included.
-     */
-    function collectContextFiles(includeActive: boolean): FileInfo[] {
+    /** Collects the files the user attached as context, de-duplicated by path. */
+    function collectContextFiles(): FileInfo[] {
         const files: FileInfo[] = [];
         const seen = new Set<string>();
-        if (includeActive && activeFile.value !== null) {
-            files.push(activeFile.value);
-            seen.add(activeFile.value.path);
-        }
         for (const file of contextFiles.value) {
             if (!seen.has(file.path)) {
                 files.push(file);
@@ -120,27 +103,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
      * attached files. Returns null when there is nothing to include.
      */
     async function buildNoteContext(): Promise<string | null> {
-        // Agent mode: always include the active file plus any attached files,
-        // wrapped with the agent system prompt and the agent-aware reader.
-        if (agentMode.value && workspacePath.value !== null) {
-            const files = collectContextFiles(true);
-            if (files.length === 0) return null;
-            let agentContext = AGENT_SYSTEM_PROMPT + '\n\n';
-            for (const file of files) {
-                try {
-                    const fileResult = await window.electronAPI.agentReadFile(file.path, workspacePath.value);
-                    if (fileResult.success && fileResult.content !== null && fileResult.content !== undefined) {
-                        agentContext += `Current content of "${file.name}" (${file.relativePath}):\n\`\`\`\n${fileResult.content}\n\`\`\`\n\n`;
-                    }
-                } catch (err) {
-                    agentContext += `Note: Could not read "${file.name}": ${(err as Error).message}\n\n`;
-                }
-            }
-            return agentContext;
-        }
-
-        // Normal mode: include only the files the user attached as context.
-        const files = collectContextFiles(false);
+        const files = collectContextFiles();
         if (files.length === 0) return null;
 
         // Single file: pass raw content.
@@ -384,19 +347,6 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
                 if (lastMsg !== undefined && lastMsg.role === 'assistant') lastMsg.content = `Error: ${result.error}`;
             }
             const assistantMsg = messages.value[messages.value.length - 1];
-            if (
-                agentMode.value &&
-                assistantMsg !== undefined &&
-                assistantMsg.role === 'assistant' &&
-                assistantMsg.content.length > 0
-            ) {
-                const { cleanContent, edits } = parseAgentEdits(assistantMsg.content);
-                if (edits.length > 0) {
-                    assistantMsg.content = cleanContent;
-                    assistantMsg.agentEdits = edits;
-                    await processAgentEdits(messages.value.length - 1, edits);
-                }
-            }
             if (
                 currentConversationId.value !== null &&
                 assistantMsg !== undefined &&

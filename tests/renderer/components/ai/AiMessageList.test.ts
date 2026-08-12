@@ -51,7 +51,6 @@ const baseProps = {
     editingIndex: null as number | null,
     editContent: '',
     copiedIndex: null as number | null,
-    agentMode: false,
     previousModelMatch: null as AiModelInfo | null,
     isLoading: false,
     tokenUsagePercent: 0,
@@ -182,20 +181,6 @@ describe('AiMessageList', () => {
             expect(wrapper.find('.ai-edit-input').exists()).toBe(true);
             wrapper.unmount();
         });
-
-        it('renders agent edit cards when agentEdits is set', () => {
-            const msg: ChatMessage = {
-                role: 'assistant',
-                content: 'I edited your file',
-                agentEdits: [{ filePath: '/vault/notes.md', newContent: 'new', status: 'pending' }],
-            };
-            const wrapper = mountWithI18n(AiMessageList, {
-                props: { ...baseProps, messages: [msg] },
-            });
-            expect(wrapper.find('.ai-agent-edits').exists()).toBe(true);
-            expect(wrapper.find('.ai-agent-edit-card').exists()).toBe(true);
-            wrapper.unmount();
-        });
     });
 
     describe('message actions', () => {
@@ -293,20 +278,6 @@ describe('AiMessageList', () => {
             });
             await wrapper.findAll('.ai-btn-icon.ai-btn-tiny')[1].trigger('click');
             expect(wrapper.emitted('confirm-edit')?.[0]).toEqual([0]);
-            wrapper.unmount();
-        });
-
-        it('emits "approve-agent-edit" when approve is clicked on agent edit card', async () => {
-            const msg: ChatMessage = {
-                role: 'assistant',
-                content: 'I edited',
-                agentEdits: [{ filePath: '/vault/x.md', newContent: 'x', status: 'pending' }],
-            };
-            const wrapper = mountWithI18n(AiMessageList, {
-                props: { ...baseProps, messages: [msg] },
-            });
-            await wrapper.find('.ai-agent-btn.approve').trigger('click');
-            expect(wrapper.emitted('approve-agent-edit')?.[0]).toEqual([0, 0]);
             wrapper.unmount();
         });
     });
@@ -561,18 +532,6 @@ describe('AiMessageList', () => {
                 .find((b) => (b.attributes('aria-label') ?? '').toLowerCase().includes('resend'));
             await resendBtn?.trigger('click');
             expect(wrapper.emitted('resend')?.[0]).toEqual([0]);
-            wrapper.unmount();
-        });
-
-        it('emits "reject-agent-edit" when reject is clicked on an agent edit card', async () => {
-            const msg: ChatMessage = {
-                role: 'assistant',
-                content: 'I edited',
-                agentEdits: [{ filePath: '/vault/x.md', newContent: 'x', status: 'pending' }],
-            };
-            const wrapper = mountWithI18n(AiMessageList, { props: { ...baseProps, messages: [msg] } });
-            await wrapper.find('.ai-agent-btn.reject').trigger('click');
-            expect(wrapper.emitted('reject-agent-edit')?.[0]).toEqual([0, 0]);
             wrapper.unmount();
         });
 

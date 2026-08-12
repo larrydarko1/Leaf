@@ -7,9 +7,7 @@ import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 
 type Props = {
-    agentMode: boolean;
     showThinking: boolean;
-    activeFile: FileInfo | null;
     inputMessage: string;
     isReady: boolean;
     isAnyGenerating: boolean;
@@ -127,37 +125,6 @@ onMounted(() => {
             :title="t('ai.drag_to_resize_input_area')"
             @mousedown="startResize">
             <div class="ai-resize-grip" />
-        </div>
-
-        <!-- Agent mode indicator -->
-        <div
-            v-if="agentMode"
-            class="ai-agent-indicator">
-            <svg
-                width="10"
-                height="10"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true">
-                <polyline points="16 18 22 12 16 6" />
-                <polyline points="8 6 2 12 8 18" />
-            </svg>
-            <span
-                v-if="activeFile"
-                class="ai-agent-file-name"
-                :aria-label="t('ai.agent_mode_active_with_file', { file: activeFile.name })"
-                >{{ t('ai.agent_mode_active_with_file', { file: activeFile.name }) }}</span
-            >
-            <span
-                v-else
-                class="ai-agent-no-file"
-                :aria-label="t('ai.agent_mode_active_no_file')"
-                >{{ t('ai.agent_mode_active_no_file') }}</span
-            >
         </div>
 
         <!-- Attached context files -->
@@ -431,27 +398,6 @@ onMounted(() => {
     transition:
         opacity $transition-base,
         background-color $transition-base;
-}
-
-/* ––– Agent Mode Indicator ––– */
-
-.ai-agent-indicator {
-    display: flex;
-    align-items: center;
-    gap: $space-1;
-    font-size: $font-size-xs;
-    color: $accent-color;
-    padding: 0 $space-1 $space-2;
-    flex-wrap: wrap;
-
-    svg {
-        flex-shrink: 0;
-    }
-
-    span {
-        font-weight: $font-weight-semibold;
-        white-space: nowrap;
-    }
 }
 
 /* ––– Input Row ––– */

@@ -43,7 +43,6 @@ const baseProps = {
     selectedModelLabel: 'Select a model',
     showHfPanel: false,
     showHistory: false,
-    agentMode: false,
     isAnyGenerating: false,
 };
 
@@ -163,13 +162,6 @@ describe('AiModelBar', () => {
             wrapper.unmount();
         });
 
-        it('shows the agent mode button', () => {
-            const wrapper = mountWithI18n(AiModelBar, { props: loadedProps });
-            const buttons = wrapper.findAll('.ai-btn-icon');
-            expect(buttons.length).toBeGreaterThan(4);
-            wrapper.unmount();
-        });
-
         it('emits "unload-model" when unload button is clicked', async () => {
             const wrapper = mountWithI18n(AiModelBar, { props: loadedProps });
             await wrapper.find('.ai-btn-danger').trigger('click');
@@ -185,19 +177,6 @@ describe('AiModelBar', () => {
                 },
             });
             expect(wrapper.find('.ai-btn-danger').attributes('disabled')).toBeDefined();
-            wrapper.unmount();
-        });
-
-        it('emits "toggle-agent-mode" on agent mode button click', async () => {
-            const wrapper = mountWithI18n(AiModelBar, { props: loadedProps });
-            const allBtns = wrapper.findAll('button');
-            const agentModeBtn = allBtns.find((b) =>
-                (b.attributes('aria-label') ?? '').toLowerCase().includes('agent'),
-            );
-            if (agentModeBtn) {
-                await agentModeBtn.trigger('click');
-                expect(wrapper.emitted('toggle-agent-mode')).toBeTruthy();
-            }
             wrapper.unmount();
         });
     });

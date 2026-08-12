@@ -570,17 +570,6 @@ describe('App', () => {
         });
     });
 
-    describe('handleAiFileChanged', () => {
-        it('calls refreshFiles', async () => {
-            const wrapper = mountApp();
-            await (wrapper.vm as unknown as { handleAiFileChanged: (p: string) => void }).handleAiFileChanged?.(
-                '/vault/note.md',
-            );
-            expect(mockRefreshFiles).toHaveBeenCalled();
-            wrapper.unmount();
-        });
-    });
-
     describe('external change callback', () => {
         it('calls refreshFiles and syncAfterRefresh when external change fires', async () => {
             const wrapper = mountApp();

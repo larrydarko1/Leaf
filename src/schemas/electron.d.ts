@@ -9,10 +9,6 @@ import type {
     ConversationListResult,
     ConversationCreateResult,
     ConversationLoadResult,
-    AgentReadFileResult,
-    AgentProposeEditResult,
-    AgentEditResult,
-    AgentPendingEditsResult,
 } from '@/schemas/ai';
 import type { HfSearchResponse, HfListFilesResponse, HfDownloadProgress, HfDownloadResult } from '@/schemas/hf';
 import type { SpeechInitResult, SpeechTranscribeResult, SpeechStatus, SpeechStatusEvent } from '@/schemas/speech';
@@ -141,13 +137,6 @@ export type ElectronAPI = {
     conversationUpdateLastMessage: (conversationId: string, content: string) => Promise<AiSimpleResult>;
     conversationDelete: (id: string) => Promise<AiSimpleResult>;
     conversationRename: (id: string, newTitle: string) => Promise<AiSimpleResult>;
-
-    // Agent mode operations
-    agentReadFile: (filePath: string, workspacePath: string) => Promise<AgentReadFileResult>;
-    agentProposeEdit: (filePath: string, newContent: string, workspacePath: string) => Promise<AgentProposeEditResult>;
-    agentApproveEdit: (editId: string) => Promise<AgentEditResult>;
-    agentRejectEdit: (editId: string) => Promise<AgentEditResult>;
-    agentGetPendingEdits: () => Promise<AgentPendingEditsResult>;
 
     // File system watcher
     watchFolder: () => Promise<AiSimpleResult>;

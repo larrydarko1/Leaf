@@ -42,7 +42,6 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 - **Auto context compaction** - When token memory reaches 90%, the AI automatically summarizes the conversation and frees context space — no data is lost, all messages stay visible
 - **Note-aware context** - Toggle to include the current note as context for AI queries
 - **Editable system prompts** - Pick from bundled templates or hand-edit Markdown files in `~/.leaf/prompts/` to customise the AI’s personality and behaviour
-- **Agent mode** - Let the AI read and edit your currently open file directly, with built-in version control (approve or revert every change)
 - **Model management** - Load and unload GGUF models from a dedicated models folder (`~/.leaf/models/`)
 - **GPU accelerated** - Automatically uses Metal (macOS), CUDA (NVIDIA), or Vulkan for fast inference
 - **Powered by llama.cpp** - Uses [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) bindings to [llama.cpp](https://github.com/ggml-org/llama.cpp) (both MIT licensed)
@@ -181,19 +180,6 @@ Language file format:
 ```
 
 For a complete list of translation keys, check `~/.leaf/locales/en.json`.
-
-### Using Agent Mode
-
-Agent mode lets the AI edit your files directly with a safety net:
-
-1. Open a file in the editor
-2. Open the AI panel and load a model
-3. Click the **Agent mode** button (code brackets icon) in the toolbar — the indicator shows the current file name
-4. Ask the AI to make changes (e.g. "add a table of contents" or "refactor the second paragraph")
-5. The AI proposes edits shown as inline diff cards with **Approve** and **Reject** buttons
-6. **Approve** keeps the change permanently; **Reject** reverts the file to its original content
-
-> Agent mode only operates on the currently open file and is scoped to your vault folder for security.
 
 ### Customising the System Prompt
 
@@ -387,7 +373,6 @@ leaf/
 │   │   │   ├── paths.ts            # App path constants: LEAF_HOME, models, prompts, themes, locales
 │   │   │   └── validation.ts       # Path-traversal & filename safety checks for IPC
 │   │   └── services/
-│   │       ├── agent.ts            # AI file editing with backup/restore version control
 │   │       ├── ai.ts               # Local LLM inference via node-llama-cpp with streaming
 │   │       ├── conversation.ts     # Chat conversation persistence as JSON in userData
 │   │       ├── fs.ts               # Vault file/folder IPC handlers and FS watcher
@@ -418,10 +403,9 @@ leaf/
 │       │   ├── TabBar.vue          # Editor tab bar
 │       │   ├── ThemePicker.vue     # Theme preset picker modal
 │       │   ├── ai/                 # AI sub-components
-│       │   │   ├── AiAgentEditCard.vue  # Agent edit diff card with approve/reject
 │       │   │   ├── AiHfPanel.vue       # Hugging Face model browser & download
 │       │   │   ├── AiHistoryPanel.vue  # Conversation history sidebar
-│       │   │   ├── AiInputArea.vue     # Chat input with agent mode toggle
+│       │   │   ├── AiInputArea.vue     # Chat input with attached context files
 │       │   │   ├── AiMessageList.vue   # Message rendering with streaming
 │       │   │   └── AiModelBar.vue      # Model selector and status bar
 │       │   ├── drawing/            # Drawing canvas sub-components
@@ -440,10 +424,9 @@ leaf/
 │       │       └── FolderNode.vue      # Recursive tree node for folder/file rendering
 │       ├── composables/            # Vue composables (grouped by domain)
 │       │   ├── useAudioRecorder.ts # Microphone capture and WAV encoding
-│       │   ├── ai/                 # AI chat, model, agent, history, system prompts, downloads
+│       │   ├── ai/                 # AI chat, model, history, system prompts, downloads
 │       │   │   ├── useAIChat.ts        # Streaming inference, message management
 │       │   │   ├── useAIModel.ts       # Model loading, unloading, and listing
-│       │   │   ├── useAgentMode.ts     # Agent mode file editing workflow
 │       │   │   ├── useConversationHistory.ts  # Conversation persistence and navigation
 │       │   │   ├── useHfDownload.ts    # Hugging Face model search and download
 │       │   │   └── useSystemPrompt.ts  # System prompt template listing and switching
@@ -488,7 +471,7 @@ leaf/
 │           └── fileTypes.ts        # File extension classification constants and predicates
 ├── src/schemas/                    # Zod validation schemas (centralized types)
 │   ├── ai.ts                       # AI model info, load result, and status schemas
-│   ├── chat.ts                     # Chat message and agent file edit schemas
+│   ├── chat.ts                     # Chat message schema
 │   ├── drawing.ts                  # Drawing element, tool, and canvas schemas
 │   ├── electron.d.ts               # Electron IPC & preload API type declarations
 │   ├── hf.ts                       # Hugging Face search, repo file, and download schemas
