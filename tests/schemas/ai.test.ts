@@ -12,12 +12,6 @@ import {
     ConversationListResultSchema,
     ConversationCreateResultSchema,
     ConversationLoadResultSchema,
-    AgentReadFileResultSchema,
-    AgentProposeEditResultSchema,
-    EditRecordSchema,
-    AgentEditResultSchema,
-    AgentPendingEditSchema,
-    AgentPendingEditsResultSchema,
     PromptInfoSchema,
     PromptStateSchema,
 } from '@/schemas/ai';
@@ -265,106 +259,6 @@ describe('ConversationLoadResultSchema', () => {
             conversation: validConversation,
         });
         expect(result.conversation?.title).toBe('Test chat');
-    });
-});
-
-describe('AgentReadFileResultSchema', () => {
-    it('parses success', () => {
-        const result = AgentReadFileResultSchema.parse({
-            success: true,
-            content: 'file contents',
-            filePath: '/src/foo.ts',
-        });
-        expect(result.content).toBe('file contents');
-    });
-
-    it('parses failure', () => {
-        const result = AgentReadFileResultSchema.parse({ success: false, error: 'not found' });
-        expect(result.error).toBe('not found');
-    });
-});
-
-describe('AgentProposeEditResultSchema', () => {
-    it('parses full result', () => {
-        const result = AgentProposeEditResultSchema.parse({
-            success: true,
-            editId: 'e1',
-            filePath: '/src/foo.ts',
-            relativePath: 'src/foo.ts',
-            originalContent: 'old',
-            newContent: 'new',
-            isNewFile: false,
-        });
-        expect(result.editId).toBe('e1');
-    });
-
-    it('parses minimal failure', () => {
-        expect(() => AgentProposeEditResultSchema.parse({ success: false, error: 'err' })).not.toThrow();
-    });
-});
-
-describe('EditRecordSchema', () => {
-    it('parses a complete edit record', () => {
-        const result = EditRecordSchema.parse({
-            editId: 'e1',
-            filePath: '/src/foo.ts',
-            relativePath: 'src/foo.ts',
-            backupPath: '/tmp/foo.ts.bak',
-            originalContent: 'old',
-            newContent: 'new',
-            isNewFile: false,
-            timestamp: '2024-01-01T00:00:00Z',
-        });
-        expect(result.backupPath).toBe('/tmp/foo.ts.bak');
-    });
-
-    it('rejects missing backupPath', () => {
-        expect(
-            EditRecordSchema.safeParse({
-                editId: 'e1',
-                filePath: '/f',
-                relativePath: 'f',
-                originalContent: '',
-                newContent: '',
-                isNewFile: false,
-                timestamp: '',
-            }).success,
-        ).toBe(false);
-    });
-});
-
-describe('AgentEditResultSchema', () => {
-    it('parses success', () => {
-        expect(AgentEditResultSchema.parse({ success: true }).success).toBe(true);
-    });
-
-    it('parses failure with error', () => {
-        const result = AgentEditResultSchema.parse({ success: false, error: 'conflict' });
-        expect(result.error).toBe('conflict');
-    });
-});
-
-describe('AgentPendingEditSchema', () => {
-    it('parses valid pending edit', () => {
-        const result = AgentPendingEditSchema.parse({
-            editId: 'e1',
-            filePath: '/src/foo.ts',
-            relativePath: 'src/foo.ts',
-            isNewFile: true,
-            timestamp: '2024-01-01T00:00:00Z',
-        });
-        expect(result.isNewFile).toBe(true);
-    });
-});
-
-describe('AgentPendingEditsResultSchema', () => {
-    it('parses with empty edits', () => {
-        const result = AgentPendingEditsResultSchema.parse({ success: true, edits: [] });
-        expect(result.edits).toHaveLength(0);
-    });
-
-    it('rejects missing edits array', () => {
-        expect(AgentPendingEditsResultSchema.safeParse({ success: true }).success).toBe(false);
     });
 });
 

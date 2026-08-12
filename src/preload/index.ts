@@ -111,15 +111,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     conversationDelete: (id: string) => ipcRenderer.invoke('conversations:delete', id),
     conversationRename: (id: string, newTitle: string) => ipcRenderer.invoke('conversations:rename', id, newTitle),
 
-    // Agent mode operations
-    agentReadFile: (filePath: string, workspacePath: string) =>
-        ipcRenderer.invoke('agent:readFile', filePath, workspacePath),
-    agentProposeEdit: (filePath: string, newContent: string, workspacePath: string) =>
-        ipcRenderer.invoke('agent:proposeEdit', filePath, newContent, workspacePath),
-    agentApproveEdit: (editId: string) => ipcRenderer.invoke('agent:approveEdit', editId),
-    agentRejectEdit: (editId: string) => ipcRenderer.invoke('agent:rejectEdit', editId),
-    agentGetPendingEdits: () => ipcRenderer.invoke('agent:getPendingEdits'),
-
     // File system watcher
     watchFolder: () => ipcRenderer.invoke('fs:watchFolder'),
     unwatchFolder: () => ipcRenderer.invoke('fs:unwatchFolder'),

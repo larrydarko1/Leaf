@@ -64,7 +64,6 @@ describe('AiInputArea', () => {
         it('renders with default height', () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     includeNoteContext: false,
                     activeFile: null,
                     inputMessage: '',
@@ -82,7 +81,6 @@ describe('AiInputArea', () => {
         it('renders resize handle', () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     includeNoteContext: false,
                     activeFile: null,
                     inputMessage: '',
@@ -100,7 +98,6 @@ describe('AiInputArea', () => {
         it('shows send button when not streaming', () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     includeNoteContext: false,
                     activeFile: null,
                     inputMessage: 'test',
@@ -118,7 +115,6 @@ describe('AiInputArea', () => {
         it('shows stop button when streaming', () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     includeNoteContext: false,
                     activeFile: null,
                     inputMessage: '',
@@ -140,7 +136,6 @@ describe('AiInputArea', () => {
         it('increases height on upward drag', async () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     includeNoteContext: false,
                     activeFile: null,
                     inputMessage: '',
@@ -173,7 +168,6 @@ describe('AiInputArea', () => {
         it('decreases height on downward drag', async () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     includeNoteContext: false,
                     activeFile: null,
                     inputMessage: '',
@@ -202,7 +196,6 @@ describe('AiInputArea', () => {
         it('clamps height to minimum (40px)', async () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     includeNoteContext: false,
                     activeFile: null,
                     inputMessage: '',
@@ -231,7 +224,6 @@ describe('AiInputArea', () => {
         it('clamps height to maximum (150px)', async () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     includeNoteContext: false,
                     activeFile: null,
                     inputMessage: '',
@@ -260,7 +252,6 @@ describe('AiInputArea', () => {
         it('sets resize-active class during drag', async () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     includeNoteContext: false,
                     activeFile: null,
                     inputMessage: '',
@@ -292,7 +283,6 @@ describe('AiInputArea', () => {
         it('saves height on mouseup', async () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     includeNoteContext: false,
                     activeFile: null,
                     inputMessage: '',
@@ -325,7 +315,6 @@ describe('AiInputArea', () => {
 
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     includeNoteContext: false,
                     activeFile: null,
                     inputMessage: '',
@@ -347,7 +336,6 @@ describe('AiInputArea', () => {
 
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     includeNoteContext: false,
                     activeFile: null,
                     inputMessage: '',
@@ -369,7 +357,6 @@ describe('AiInputArea', () => {
 
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     includeNoteContext: false,
                     activeFile: null,
                     inputMessage: '',
@@ -392,7 +379,6 @@ describe('AiInputArea', () => {
         it('emits send when Enter is pressed', async () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     includeNoteContext: false,
                     activeFile: null,
                     inputMessage: 'hello',
@@ -413,7 +399,6 @@ describe('AiInputArea', () => {
         it('does not emit send on Shift+Enter', async () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     includeNoteContext: false,
                     activeFile: null,
                     inputMessage: 'hello',
@@ -436,7 +421,6 @@ describe('AiInputArea', () => {
         it('emits send when send button is clicked', async () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     includeNoteContext: false,
                     activeFile: null,
                     inputMessage: 'hello',
@@ -457,7 +441,6 @@ describe('AiInputArea', () => {
         it('emits stop when stop button is clicked', async () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     includeNoteContext: false,
                     activeFile: null,
                     inputMessage: '',
@@ -478,7 +461,6 @@ describe('AiInputArea', () => {
         it('emits update:inputMessage on textarea input', async () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     includeNoteContext: false,
                     activeFile: null,
                     inputMessage: '',
@@ -505,7 +487,6 @@ describe('AiInputArea', () => {
         it('disables textarea when not ready', () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     includeNoteContext: false,
                     activeFile: null,
                     inputMessage: '',
@@ -524,7 +505,6 @@ describe('AiInputArea', () => {
         it('disables textarea when generating', () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     includeNoteContext: false,
                     activeFile: null,
                     inputMessage: '',
@@ -543,7 +523,6 @@ describe('AiInputArea', () => {
         it('disables send button when message is empty', () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     includeNoteContext: false,
                     activeFile: null,
                     inputMessage: '',
@@ -562,7 +541,6 @@ describe('AiInputArea', () => {
         it('disables send button when only whitespace', () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     includeNoteContext: false,
                     activeFile: null,
                     inputMessage: '   ',
@@ -581,7 +559,6 @@ describe('AiInputArea', () => {
         it('enables send button when message has content', () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     includeNoteContext: false,
                     activeFile: null,
                     inputMessage: 'hello',
@@ -598,94 +575,12 @@ describe('AiInputArea', () => {
         });
     });
 
-    // ── agent mode ───────────────────────────────────────────────────────────
-
-    describe('agent mode', () => {
-        it('shows agent indicator when agentMode is true', () => {
-            const wrapper = mountWithI18n(AiInputArea, {
-                props: {
-                    agentMode: true,
-                    includeNoteContext: false,
-                    activeFile: null,
-                    inputMessage: '',
-                    isReady: true,
-                    isAnyGenerating: false,
-                    isStreaming: false,
-                    inputField: null,
-                    showThinking: false,
-                },
-            });
-
-            const indicator = wrapper.find('.ai-agent-indicator');
-            expect(indicator.exists()).toBe(true);
-        });
-
-        it('displays agent indicator with file name', () => {
-            const activeFile = makeFile('test.md');
-            const wrapper = mountWithI18n(AiInputArea, {
-                props: {
-                    agentMode: true,
-                    includeNoteContext: false,
-                    activeFile,
-                    inputMessage: '',
-                    isReady: true,
-                    isAnyGenerating: false,
-                    isStreaming: false,
-                    inputField: null,
-                    showThinking: false,
-                },
-            });
-
-            const fileName = wrapper.find('.ai-agent-file-name');
-            expect(fileName.text()).toContain('test.md');
-        });
-
-        it('displays agent indicator with "No file open" when no activeFile', () => {
-            const wrapper = mountWithI18n(AiInputArea, {
-                props: {
-                    agentMode: true,
-                    includeNoteContext: false,
-                    activeFile: null,
-                    inputMessage: '',
-                    isReady: true,
-                    isAnyGenerating: false,
-                    isStreaming: false,
-                    inputField: null,
-                    showThinking: false,
-                },
-            });
-
-            const noFile = wrapper.find('.ai-agent-no-file');
-            expect(noFile.text()).toContain('Agent mode active with no file');
-        });
-
-        it('hides agent indicator when agentMode is false', () => {
-            const wrapper = mountWithI18n(AiInputArea, {
-                props: {
-                    agentMode: false,
-                    includeNoteContext: false,
-                    activeFile: null,
-                    inputMessage: '',
-                    isReady: true,
-                    isAnyGenerating: false,
-                    isStreaming: false,
-                    inputField: null,
-                    showThinking: false,
-                },
-            });
-
-            const indicator = wrapper.find('.ai-agent-indicator');
-            expect(indicator.exists()).toBe(false);
-        });
-    });
-
     // ── context files ────────────────────────────────────────────────────────
 
     describe('context files', () => {
         it('renders a chip for each attached context file', () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     activeFile: null,
                     inputMessage: '',
                     isReady: true,
@@ -707,7 +602,6 @@ describe('AiInputArea', () => {
         it('does not render the context files area when none are attached', () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     activeFile: null,
                     inputMessage: '',
                     isReady: true,
@@ -727,7 +621,6 @@ describe('AiInputArea', () => {
         it('emits remove-context-file when a chip remove button is clicked', async () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     activeFile: null,
                     inputMessage: '',
                     isReady: true,
@@ -751,7 +644,6 @@ describe('AiInputArea', () => {
         it('opens the picker and emits add-context-file on selection', async () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     activeFile: null,
                     inputMessage: '',
                     isReady: true,
@@ -779,7 +671,6 @@ describe('AiInputArea', () => {
             const contextFiles = Array.from({ length: 10 }, (_, i) => makeFile(`f${i}.md`, `/f${i}.md`));
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     activeFile: null,
                     inputMessage: '',
                     isReady: true,
@@ -799,7 +690,6 @@ describe('AiInputArea', () => {
         it('filters the picker list by the search query', async () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     activeFile: null,
                     inputMessage: '',
                     isReady: true,
@@ -824,7 +714,6 @@ describe('AiInputArea', () => {
         it('shows an empty message when the search matches nothing', async () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     activeFile: null,
                     inputMessage: '',
                     isReady: true,
@@ -848,7 +737,6 @@ describe('AiInputArea', () => {
         it('closes the picker when the add button is clicked again', async () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     activeFile: null,
                     inputMessage: '',
                     isReady: true,
@@ -872,7 +760,6 @@ describe('AiInputArea', () => {
         it('closes the picker when the overlay is clicked', async () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     activeFile: null,
                     inputMessage: '',
                     isReady: true,
@@ -895,7 +782,6 @@ describe('AiInputArea', () => {
         it('emits update:showThinking when the thinking toggle is clicked', async () => {
             const wrapper = mountWithI18n(AiInputArea, {
                 props: {
-                    agentMode: false,
                     activeFile: null,
                     inputMessage: '',
                     isReady: true,

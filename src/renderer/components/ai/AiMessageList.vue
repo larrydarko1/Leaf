@@ -2,7 +2,6 @@
 import { ref, watch, nextTick } from 'vue';
 import type { ChatMessage } from '@/schemas/chat';
 import type { AiModelInfo, AiStatus } from '@/schemas/ai';
-import AiAgentEditCard from './AiAgentEditCard.vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -16,7 +15,6 @@ type Props = {
     editingIndex: number | null;
     editContent: string;
     copiedIndex: number | null;
-    agentMode: boolean;
     previousModelMatch: AiModelInfo | null;
     isLoading: boolean;
     tokenUsagePercent: number;
@@ -41,8 +39,6 @@ defineEmits<{
     'start-edit': [index: number];
     'confirm-edit': [index: number];
     'resend': [index: number];
-    'approve-agent-edit': [msgIndex: number, editIndex: number];
-    'reject-agent-edit': [msgIndex: number, editIndex: number];
 }>();
 
 const editInputRef = ref<HTMLTextAreaElement[]>([]);
@@ -192,7 +188,6 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                 msg.role,
                 msg.content,
                 msg.thinking,
-                msg.agentEdits?.length,
                 index >= messages.length - 2 && isStreaming,
                 showThinking,
                 copiedIndex === index,
@@ -323,18 +318,6 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
                         <div v-html="renderWithCopyBtns(msg.content)"></div>
                     </div>
                 </template>
-
-                <!-- Agent edit cards -->
-                <div
-                    v-if="msg.agentEdits && msg.agentEdits.length > 0"
-                    class="ai-agent-edits">
-                    <AiAgentEditCard
-                        v-for="(edit, editIdx) in msg.agentEdits"
-                        :key="editIdx"
-                        :edit="edit"
-                        @approve="$emit('approve-agent-edit', index, editIdx)"
-                        @reject="$emit('reject-agent-edit', index, editIdx)" />
-                </div>
 
                 <!-- Streaming cursor -->
                 <span
@@ -1002,16 +985,6 @@ async function onMarkdownClick(content: string, event: MouseEvent) {
 
 .thinking-progress {
     animation: thinking-pulse 1.5s infinite;
-}
-
-/* ––– Agent Edit Cards ––– */
-
-.ai-agent-edits {
-    display: flex;
-    flex-direction: column;
-    gap: $space-2;
-    margin-top: $space-2;
-    width: 100%;
 }
 
 /* ––– Load Model Banner ––– */

@@ -14,7 +14,6 @@ type Props = {
     selectedModelLabel: string;
     showHfPanel: boolean;
     showHistory: boolean;
-    agentMode: boolean;
     isAnyGenerating: boolean;
 };
 
@@ -29,7 +28,6 @@ const emit = defineEmits<{
     'refresh-models': [];
     'toggle-hf-panel': [];
     'toggle-history': [];
-    'toggle-agent-mode': [];
     'new-conversation': [];
     'close': [];
 }>();
@@ -377,31 +375,6 @@ function truncate(str: string, len: number): string {
                         cy="12"
                         r="10" />
                     <polyline points="12 6 12 12 16 14" />
-                </svg>
-            </button>
-
-            <!-- Agent mode toggle -->
-            <button
-                v-if="status.isModelLoaded"
-                class="ai-btn-icon"
-                :class="{ 'ai-btn-active': agentMode }"
-                :title="t('ai.agent_mode')"
-                :aria-label="t('ai.agent_mode')"
-                :aria-pressed="agentMode"
-                @click="$emit('toggle-agent-mode')">
-                <svg
-                    width="11"
-                    height="11"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true">
-                    <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                    <path d="M2 17l10 5 10-5" />
-                    <path d="M2 12l10 5 10-5" />
                 </svg>
             </button>
 

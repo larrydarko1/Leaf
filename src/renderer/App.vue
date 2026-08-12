@@ -163,13 +163,6 @@ function handleContentChanged(hasChanges: boolean) {
     }
 }
 
-function handleAiFileChanged(changedPath: string) {
-    if (activeFile.value?.path === changedPath) {
-        noteEditorRef.value?.reloadContent();
-    }
-    void refreshFiles();
-}
-
 async function handleRecordingSaved(filePath: string) {
     await refreshFiles();
     const recordingFile = vault.files.value.find((f: FileInfo) => f.path === filePath);
@@ -694,12 +687,9 @@ function toggleLanguagePanel() {
                 </main>
                 <AiPanel
                     v-if="showAiPanel"
-                    :active-file="activeFile"
-                    :workspace-path="currentFolder"
                     :files="files"
                     :aria-label="t('app.ai_assistant_panel')"
-                    @close="showAiPanel = false"
-                    @file-changed="handleAiFileChanged" />
+                    @close="showAiPanel = false" />
                 <ThemePicker
                     v-if="showThemePanel"
                     :aria-label="t('app.theme_picker')"

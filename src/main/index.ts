@@ -13,7 +13,6 @@
  *   media-service        → audio:saveRecording, spellcheck:getSuggestions
  *   ai-service           → ai:*
  *   conversation-service → conversations:*
- *   agent-service        → agent:*
  *   hf-download-service  → hf:*
  *   speech-service       → speech:*
  *   systemPrompt-service → systemPrompt:*
@@ -30,7 +29,6 @@ import * as fsService from '@/main/services/fs';
 import * as mediaService from '@/main/services/media';
 import * as aiService from '@/main/services/ai';
 import * as conversationService from '@/main/services/conversation';
-import * as agentService from '@/main/services/agent';
 import * as hfDownloadService from '@/main/services/hf-download';
 import * as speechService from '@/main/services/speech';
 import * as systemPromptService from '@/main/services/systemPrompt';
@@ -216,7 +214,6 @@ void app.whenReady().then(async () => {
     mediaService.register(ipcMain, fsService.getVaultRoot);
     aiService.register(ipcMain, getMainWindow);
     conversationService.register(ipcMain);
-    agentService.register(ipcMain);
     hfDownloadService.register(ipcMain, getMainWindow);
     speechService.register(ipcMain, getMainWindow);
     systemPromptService.register(ipcMain);
@@ -266,7 +263,6 @@ app.on('window-all-closed', () => {
 app.on('before-quit', () => {
     void (async () => {
         fsService.cleanup();
-        await agentService.cleanupAllPendingEdits();
         await aiService.cleanup();
         speechService.cleanup();
     })();

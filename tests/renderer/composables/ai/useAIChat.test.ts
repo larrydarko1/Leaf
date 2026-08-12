@@ -13,7 +13,6 @@ const mockAiGetStatus = vi.fn().mockResolvedValue({ contextTokens: 10, contextSi
 const mockConversationAddMessage = vi.fn().mockResolvedValue({ success: true });
 const mockAiStopChat = vi.fn().mockResolvedValue({ success: true });
 const mockReadFile = vi.fn().mockResolvedValue({ success: false });
-const mockAgentReadFile = vi.fn().mockResolvedValue({ success: true, content: 'file content' });
 const mockOnAiToken = vi.fn();
 const mockOnAiThinkingToken = vi.fn();
 
@@ -27,7 +26,6 @@ Object.defineProperty(globalThis, 'window', {
             aiStopChat: mockAiStopChat,
             conversationAddMessage: mockConversationAddMessage,
             readFile: mockReadFile,
-            agentReadFile: mockAgentReadFile,
             writeClipboard: vi.fn().mockResolvedValue(undefined),
             onAiToken: mockOnAiToken,
             removeAiTokenListener: vi.fn(),
@@ -63,7 +61,6 @@ function makeChat(initialMessages: ChatMessage[] = []) {
     const status = ref<AiStatus>(makeStatus());
     const conversationTokenCount = ref(0);
     const currentConversationId = ref<string | null>('conv-1');
-    const agentMode = ref(false);
 
     const actions = {
         createNewConversation: vi.fn().mockResolvedValue(undefined),
@@ -73,8 +70,6 @@ function makeChat(initialMessages: ChatMessage[] = []) {
         refreshStatus: vi.fn().mockImplementation(async () => {
             status.value = makeStatus({ contextTokens: 10 });
         }),
-        parseAgentEdits: vi.fn().mockReturnValue({ cleanContent: '', edits: [] }),
-        processAgentEdits: vi.fn().mockResolvedValue(undefined),
     };
 
     const chat = useAIChat(
@@ -83,9 +78,6 @@ function makeChat(initialMessages: ChatMessage[] = []) {
             status,
             conversationTokenCount,
             currentConversationId,
-            agentMode,
-            activeFile: { value: null },
-            workspacePath: { value: null },
         },
         actions,
     );
@@ -538,7 +530,6 @@ describe('useAIChat', () => {
             const status = ref(makeStatus());
             const conversationTokenCount = ref(0);
             const currentConversationId = ref<string | null>('conv-1');
-            const agentMode = ref(false);
             const actions = {
                 createNewConversation: vi.fn().mockResolvedValue(undefined),
                 saveCurrentConversation: vi.fn().mockResolvedValue(undefined),
@@ -547,8 +538,6 @@ describe('useAIChat', () => {
                 refreshStatus: vi.fn().mockImplementation(async () => {
                     status.value = makeStatus({ contextTokens: 10 });
                 }),
-                parseAgentEdits: vi.fn().mockReturnValue({ cleanContent: '', edits: [] }),
-                processAgentEdits: vi.fn().mockResolvedValue(undefined),
             };
             const fakeFile = {
                 name: 'note.md',
@@ -565,9 +554,6 @@ describe('useAIChat', () => {
                     status,
                     conversationTokenCount,
                     currentConversationId,
-                    agentMode,
-                    activeFile: { value: null },
-                    workspacePath: { value: null },
                 },
                 actions,
             );
@@ -620,36 +606,6 @@ describe('useAIChat', () => {
             modified: '',
             folder: '.',
         };
-
-        function makeAgentChat(activeFile: typeof fileA | null) {
-            const messages = ref<ChatMessage[]>([]);
-            const status = ref<AiStatus>(makeStatus());
-            const conversationTokenCount = ref(0);
-            const currentConversationId = ref<string | null>('conv-1');
-            const agentMode = ref(true);
-            const actions = {
-                createNewConversation: vi.fn().mockResolvedValue(undefined),
-                saveCurrentConversation: vi.fn().mockResolvedValue(undefined),
-                saveTokenCountToConversation: vi.fn().mockResolvedValue(undefined),
-                refreshConversationList: vi.fn().mockResolvedValue(undefined),
-                refreshStatus: vi.fn().mockResolvedValue(undefined),
-                parseAgentEdits: vi.fn().mockReturnValue({ cleanContent: '', edits: [] }),
-                processAgentEdits: vi.fn().mockResolvedValue(undefined),
-            };
-            const chat = useAIChat(
-                {
-                    messages,
-                    status,
-                    conversationTokenCount,
-                    currentConversationId,
-                    agentMode,
-                    activeFile: { value: activeFile },
-                    workspacePath: { value: '/vault' },
-                },
-                actions,
-            );
-            return { chat, messages };
-        }
 
         it('addContextFile adds a file', () => {
             const { chat } = makeChat();
@@ -734,40 +690,6 @@ describe('useAIChat', () => {
             expect(window.electronAPI.log.error).toHaveBeenCalled();
             expect(mockAiChat.mock.calls[0][1]).toBeNull();
         });
-
-        it('agent mode wraps the active file and attached files via agentReadFile', async () => {
-            mockAgentReadFile.mockResolvedValue({ success: true, content: 'AGENT CONTENT' });
-            const { chat } = makeAgentChat(fileA);
-            chat.addContextFile(fileB);
-            chat.inputMessage.value = 'Hi';
-
-            await chat.sendMessage();
-
-            const ctx = mockAiChat.mock.calls[0][1] as string;
-            expect(ctx).toContain('Current content of "a.md"');
-            expect(ctx).toContain('Current content of "b.md"');
-            expect(ctx).toContain('AGENT CONTENT');
-        });
-
-        it('agent mode notes files that cannot be read', async () => {
-            mockAgentReadFile.mockRejectedValueOnce(new Error('nope'));
-            const { chat } = makeAgentChat(fileA);
-            chat.inputMessage.value = 'Hi';
-
-            await chat.sendMessage();
-
-            const ctx = mockAiChat.mock.calls[0][1] as string;
-            expect(ctx).toContain('Could not read "a.md"');
-        });
-
-        it('agent mode passes null context when there are no files', async () => {
-            const { chat } = makeAgentChat(null);
-            chat.inputMessage.value = 'Hi';
-
-            await chat.sendMessage();
-
-            expect(mockAiChat.mock.calls[0][1]).toBeNull();
-        });
     });
 
     // ── streaming and stop ───────────────────────────────────────────────────
@@ -777,15 +699,12 @@ describe('useAIChat', () => {
             const status = ref<AiStatus>(makeStatus());
             const conversationTokenCount = ref(0);
             const currentConversationId = ref<string | null>('conv-1');
-            const agentMode = ref(false);
             const actions = {
                 createNewConversation: vi.fn().mockResolvedValue(undefined),
                 saveCurrentConversation: vi.fn().mockResolvedValue(undefined),
                 saveTokenCountToConversation: vi.fn().mockResolvedValue(undefined),
                 refreshConversationList: vi.fn().mockResolvedValue(undefined),
                 refreshStatus: vi.fn().mockResolvedValue(undefined),
-                parseAgentEdits: vi.fn().mockReturnValue({ cleanContent: '', edits: [] }),
-                processAgentEdits: vi.fn().mockResolvedValue(undefined),
             };
             let api!: ReturnType<typeof useAIChat>;
             const Comp = defineComponent({
@@ -796,9 +715,6 @@ describe('useAIChat', () => {
                             status,
                             conversationTokenCount,
                             currentConversationId,
-                            agentMode,
-                            activeFile: { value: null },
-                            workspacePath: { value: null },
                         },
                         actions,
                     );
