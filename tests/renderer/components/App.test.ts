@@ -10,7 +10,7 @@ import type { FileInfo } from '@/schemas/vault';
 const mockCurrentFolder = ref<string | null>(null);
 const mockFiles = ref<FileInfo[]>([]);
 const mockFolders = ref<string[]>([]);
-const mockLoadFolder = vi.fn().mockResolvedValue(undefined);
+const mockLoadVault = vi.fn().mockResolvedValue({ files: [], folders: [] });
 const mockRefreshFiles = vi.fn().mockResolvedValue(undefined);
 const mockOpenFolderDialog = vi.fn().mockResolvedValue(null);
 const mockCreateFile = vi.fn().mockResolvedValue(null);
@@ -30,7 +30,7 @@ vi.mock('@/renderer/composables/vault/useVault', () => ({
         currentFolder: mockCurrentFolder,
         files: mockFiles,
         folders: mockFolders,
-        loadFolder: mockLoadFolder,
+        loadVault: mockLoadVault,
         refreshFiles: mockRefreshFiles,
         openFolderDialog: mockOpenFolderDialog,
         createFile: mockCreateFile,
@@ -218,20 +218,22 @@ describe('App', () => {
             wrapper.unmount();
         });
 
-        it('loads saved folder from localStorage if present', async () => {
-            mockLocalStorage.getItem.mockReturnValue('/saved-vault');
+        it('restores whichever vault the main process has open', async () => {
             const wrapper = mountApp();
             await wrapper.vm.$nextTick();
             await new Promise((r) => setTimeout(r, 0));
-            expect(mockLoadFolder).toHaveBeenCalledWith('/saved-vault');
+            expect(mockLoadVault).toHaveBeenCalledWith();
+            expect(mockLocalStorage.getItem).not.toHaveBeenCalledWith('leaf-folder-path');
             wrapper.unmount();
         });
 
-        it('does NOT load folder when localStorage returns empty string', async () => {
-            mockLocalStorage.getItem.mockReturnValue('');
-            mountApp();
+        it('leaves the welcome screen up when no vault is open', async () => {
+            mockLoadVault.mockResolvedValueOnce(null);
+            const wrapper = mountApp();
+            await wrapper.vm.$nextTick();
             await new Promise((r) => setTimeout(r, 0));
-            expect(mockLoadFolder).not.toHaveBeenCalled();
+            expect(mockRestoreTabs).not.toHaveBeenCalled();
+            wrapper.unmount();
         });
 
         it('registers external change callback', async () => {
@@ -486,11 +488,17 @@ describe('App', () => {
             wrapper.unmount();
         });
 
-        it('does not load folder when dialog returns null', async () => {
+        it('does not touch tabs or bookmarks when the folder dialog is cancelled', async () => {
             mockOpenFolderDialog.mockResolvedValue(null);
             const wrapper = mountApp();
+            await new Promise((r) => setTimeout(r, 0));
+            mockClearTabs.mockClear();
+            mockRestoreTabs.mockClear();
+            mockLoadBookmarks.mockClear();
             await (wrapper.vm as unknown as { selectFolder: () => Promise<void> }).selectFolder?.();
-            expect(mockLoadFolder).not.toHaveBeenCalled();
+            expect(mockClearTabs).not.toHaveBeenCalled();
+            expect(mockRestoreTabs).not.toHaveBeenCalled();
+            expect(mockLoadBookmarks).not.toHaveBeenCalled();
             wrapper.unmount();
         });
 

@@ -34,6 +34,7 @@ export type FolderInfo = z.infer<typeof FolderInfoSchema>;
 
 export const ScanResultSchema = z.object({
     success: z.boolean(),
+    root: z.string().optional(),
     files: z.array(FileInfoSchema),
     folders: z.array(FolderInfoSchema),
     error: z.string().optional(),

@@ -21,6 +21,7 @@ const mockAPI = {
     onFsChanged: vi.fn(),
     removeFsChangedListener: vi.fn(),
     openFolderDialog: vi.fn(),
+    closeVault: vi.fn(),
     createFile: vi.fn(),
     createFolder: vi.fn(),
     renameFile: vi.fn(),
@@ -91,38 +92,52 @@ describe('useVault', () => {
         });
     });
 
-    // ── loadFolder ────────────────────────────────────────────────────────────
+    // ── loadVault ─────────────────────────────────────────────────────────────
 
-    describe('loadFolder', () => {
+    describe('loadVault', () => {
         it('populates currentFolder, files, and folders on success', async () => {
             mockAPI.scanFolder.mockResolvedValue({
                 success: true,
+                root: '/vault',
                 files: [makeFile('a.md')],
                 folders: [makeFolder('docs')],
             });
-            await vault.loadFolder('/vault');
+            await vault.loadVault();
             expect(vault.currentFolder.value).toBe('/vault');
             expect(vault.files.value).toHaveLength(1);
             expect(vault.folders.value).toHaveLength(1);
         });
 
-        it('persists the folder path to localStorage', async () => {
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [], folders: [] });
-            await vault.loadFolder('/vault');
-            expect(localStorageMock.setItem).toHaveBeenCalledWith('leaf-folder-path', '/vault');
+        it('adopts the root reported by the main process, not one of its own', async () => {
+            mockAPI.scanFolder.mockResolvedValue({
+                success: true,
+                root: '/somewhere/else',
+                files: [],
+                folders: [],
+            });
+            await vault.loadVault();
+            expect(mockAPI.scanFolder).toHaveBeenCalledWith();
+            expect(vault.currentFolder.value).toBe('/somewhere/else');
         });
 
-        it('returns null and shows an alert when scanFolder fails', async () => {
-            mockAPI.scanFolder.mockResolvedValue({ success: false, error: 'Not found' });
-            const result = await vault.loadFolder('/missing');
+        it('returns null and stays closed when no vault is open', async () => {
+            mockAPI.scanFolder.mockResolvedValue({ success: false, error: 'No vault is open.' });
+            const result = await vault.loadVault();
             expect(result).toBeNull();
-            expect(globalThis.alert).toHaveBeenCalled();
+            expect(vault.currentFolder.value).toBeNull();
+            expect(vault.files.value).toHaveLength(0);
+        });
+
+        it('does not alert when there is simply no vault to restore', async () => {
+            mockAPI.scanFolder.mockResolvedValue({ success: false, error: 'No vault is open.' });
+            await vault.loadVault();
+            expect(globalThis.alert).not.toHaveBeenCalled();
         });
 
         it('starts the folder watcher after loading', async () => {
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [], folders: [] });
-            await vault.loadFolder('/vault');
-            expect(mockAPI.watchFolder).toHaveBeenCalledWith('/vault');
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [], folders: [] });
+            await vault.loadVault();
+            expect(mockAPI.watchFolder).toHaveBeenCalledWith();
         });
     });
 
@@ -136,11 +151,21 @@ describe('useVault', () => {
 
         it('re-scans and updates files/folders', async () => {
             // Open vault first
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [makeFile('a.md')], folders: [] });
-            await vault.loadFolder('/vault');
+            mockAPI.scanFolder.mockResolvedValue({
+                success: true,
+                root: '/vault',
+                files: [makeFile('a.md')],
+                folders: [],
+            });
+            await vault.loadVault();
 
             // Now refresh with a different file list
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [makeFile('b.md')], folders: [] });
+            mockAPI.scanFolder.mockResolvedValue({
+                success: true,
+                root: '/vault',
+                files: [makeFile('b.md')],
+                folders: [],
+            });
             await vault.refreshFiles();
             expect(vault.files.value[0].name).toBe('b.md');
         });
@@ -150,19 +175,31 @@ describe('useVault', () => {
 
     describe('closeVault', () => {
         it('clears all vault state', async () => {
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [makeFile('a.md')], folders: [] });
-            await vault.loadFolder('/vault');
+            mockAPI.scanFolder.mockResolvedValue({
+                success: true,
+                root: '/vault',
+                files: [makeFile('a.md')],
+                folders: [],
+            });
+            await vault.loadVault();
             vault.closeVault();
             expect(vault.currentFolder.value).toBeNull();
             expect(vault.files.value).toHaveLength(0);
             expect(vault.folders.value).toHaveLength(0);
         });
 
-        it('removes the folder path from localStorage', async () => {
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [], folders: [] });
-            await vault.loadFolder('/vault');
+        it('tells the main process to forget the vault', async () => {
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [], folders: [] });
+            await vault.loadVault();
             vault.closeVault();
-            expect(localStorageMock.removeItem).toHaveBeenCalledWith('leaf-folder-path');
+            expect(mockAPI.closeVault).toHaveBeenCalled();
+        });
+
+        it('clears the remembered file selection', async () => {
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [], folders: [] });
+            await vault.loadVault();
+            vault.closeVault();
+            expect(localStorageMock.removeItem).toHaveBeenCalledWith('leaf-last-selected-file');
         });
     });
 
@@ -171,7 +208,7 @@ describe('useVault', () => {
     describe('openFolderDialog', () => {
         it('loads the selected folder and returns the path', async () => {
             mockAPI.openFolderDialog.mockResolvedValue('/selected/vault');
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [], folders: [] });
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/selected/vault', files: [], folders: [] });
             const result = await vault.openFolderDialog();
             expect(result).toBe('/selected/vault');
             expect(vault.currentFolder.value).toBe('/selected/vault');
@@ -194,8 +231,8 @@ describe('useVault', () => {
 
     describe('createFile', () => {
         beforeEach(async () => {
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [], folders: [] });
-            await vault.loadFolder('/vault');
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [], folders: [] });
+            await vault.loadVault();
         });
 
         it('returns null when no vault is open', async () => {
@@ -214,7 +251,7 @@ describe('useVault', () => {
         it('refreshes the file list and returns the new FileInfo on success', async () => {
             const newFile = makeFile('note-2024.md');
             mockAPI.createFile.mockResolvedValue({ success: true, path: newFile.path });
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [newFile], folders: [] });
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [newFile], folders: [] });
             const result = await vault.createFile();
             expect(result?.path).toBe(newFile.path);
         });
@@ -226,14 +263,14 @@ describe('useVault', () => {
         const existingFile = makeFile('old.md');
 
         beforeEach(async () => {
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [existingFile], folders: [] });
-            await vault.loadFolder('/vault');
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [existingFile], folders: [] });
+            await vault.loadVault();
         });
 
         it('returns the renamed FileInfo on success', async () => {
             const renamedFile = makeFile('new.md');
             mockAPI.renameFile.mockResolvedValue({ success: true, newPath: renamedFile.path });
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [renamedFile], folders: [] });
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [renamedFile], folders: [] });
             const result = await vault.renameFile(existingFile, 'new');
             expect(result?.path).toBe(renamedFile.path);
         });
@@ -252,20 +289,20 @@ describe('useVault', () => {
         const file = makeFile('to-delete.md');
 
         beforeEach(async () => {
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [file], folders: [] });
-            await vault.loadFolder('/vault');
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [file], folders: [] });
+            await vault.loadVault();
         });
 
         it('calls the IPC delete handler for each file', async () => {
             mockAPI.deleteFile.mockResolvedValue({ success: true });
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [], folders: [] });
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [], folders: [] });
             await vault.deleteFile([file]);
             expect(mockAPI.deleteFile).toHaveBeenCalledWith(file.path);
         });
 
         it('shows an alert when deletion fails', async () => {
             mockAPI.deleteFile.mockResolvedValue({ success: false, error: 'permission denied' });
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [file], folders: [] });
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [file], folders: [] });
             await vault.deleteFile([file]);
             expect(globalThis.alert).toHaveBeenCalled();
         });
@@ -277,8 +314,8 @@ describe('useVault', () => {
         const file = makeFile('note.md');
 
         beforeEach(async () => {
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [file], folders: [] });
-            await vault.loadFolder('/vault');
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [file], folders: [] });
+            await vault.loadVault();
         });
 
         it('returns an empty array when no vault is open', async () => {
@@ -289,7 +326,7 @@ describe('useVault', () => {
 
         it('returns from/to pairs on success', async () => {
             mockAPI.moveFile.mockResolvedValue({ success: true, newPath: '/vault/docs/note.md' });
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [], folders: [] });
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [], folders: [] });
             const result = await vault.moveFiles([file.path], 'docs');
             expect(result).toEqual([{ from: file.path, to: '/vault/docs/note.md' }]);
         });
@@ -304,8 +341,8 @@ describe('useVault', () => {
 
     describe('createDrawing', () => {
         beforeEach(async () => {
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [], folders: [] });
-            await vault.loadFolder('/vault');
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [], folders: [] });
+            await vault.loadVault();
         });
 
         it('returns null when no vault is open', async () => {
@@ -318,7 +355,7 @@ describe('useVault', () => {
             const newFile = makeFile('drawing-2024.drawing');
             mockAPI.createFile.mockResolvedValue({ success: true, path: newFile.path });
             mockAPI.writeFile.mockResolvedValue({ success: true });
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [newFile], folders: [] });
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [newFile], folders: [] });
             const result = await vault.createDrawing();
             expect(result?.path).toBe(newFile.path);
         });
@@ -342,8 +379,8 @@ describe('useVault', () => {
 
     describe('createFolder', () => {
         beforeEach(async () => {
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [], folders: [] });
-            await vault.loadFolder('/vault');
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [], folders: [] });
+            await vault.loadVault();
         });
 
         it('returns early when no vault is open', async () => {
@@ -354,7 +391,12 @@ describe('useVault', () => {
 
         it('refreshes file list on success', async () => {
             mockAPI.createFolder.mockResolvedValue({ success: true });
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [], folders: [makeFolder('new-folder')] });
+            mockAPI.scanFolder.mockResolvedValue({
+                success: true,
+                root: '/vault',
+                files: [],
+                folders: [makeFolder('new-folder')],
+            });
             await vault.createFolder();
             expect(vault.folders.value).toHaveLength(1);
         });
@@ -375,8 +417,13 @@ describe('useVault', () => {
 
     describe('renameFolder', () => {
         beforeEach(async () => {
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [], folders: [makeFolder('docs')] });
-            await vault.loadFolder('/vault');
+            mockAPI.scanFolder.mockResolvedValue({
+                success: true,
+                root: '/vault',
+                files: [],
+                folders: [makeFolder('docs')],
+            });
+            await vault.loadVault();
         });
 
         it('returns null when no vault is open', async () => {
@@ -387,14 +434,19 @@ describe('useVault', () => {
 
         it('returns the new relative path on success (top-level folder)', async () => {
             mockAPI.renameFolder.mockResolvedValue({ success: true, newPath: '/vault/new-docs' });
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [], folders: [makeFolder('new-docs')] });
+            mockAPI.scanFolder.mockResolvedValue({
+                success: true,
+                root: '/vault',
+                files: [],
+                folders: [makeFolder('new-docs')],
+            });
             const result = await vault.renameFolder('docs', 'new-docs');
             expect(result).toBe('new-docs');
         });
 
         it('returns the new relative path on success (nested folder)', async () => {
             mockAPI.renameFolder.mockResolvedValue({ success: true, newPath: '/vault/parent/new-name' });
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [], folders: [] });
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [], folders: [] });
             const result = await vault.renameFolder('parent/child', 'new-name');
             expect(result).toBe('parent/new-name');
         });
@@ -418,8 +470,13 @@ describe('useVault', () => {
 
     describe('deleteFolder', () => {
         beforeEach(async () => {
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [], folders: [makeFolder('old')] });
-            await vault.loadFolder('/vault');
+            mockAPI.scanFolder.mockResolvedValue({
+                success: true,
+                root: '/vault',
+                files: [],
+                folders: [makeFolder('old')],
+            });
+            await vault.loadVault();
         });
 
         it('returns false when no vault is open', async () => {
@@ -430,7 +487,7 @@ describe('useVault', () => {
 
         it('returns true and refreshes on success', async () => {
             mockAPI.deleteFolder.mockResolvedValue({ success: true });
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [], folders: [] });
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [], folders: [] });
             const result = await vault.deleteFolder('old');
             expect(result).toBe(true);
             expect(vault.folders.value).toHaveLength(0);
@@ -456,13 +513,13 @@ describe('useVault', () => {
         const file = makeFile('note.md');
 
         beforeEach(async () => {
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [file], folders: [] });
-            await vault.loadFolder('/vault');
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [file], folders: [] });
+            await vault.loadVault();
         });
 
         it('uses currentFolder as target when targetRelativePath is "."', async () => {
             mockAPI.moveFile.mockResolvedValue({ success: true, newPath: '/vault/note.md' });
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [], folders: [] });
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [], folders: [] });
             const result = await vault.moveFiles([file.path], '.');
             expect(mockAPI.moveFile).toHaveBeenCalledWith(file.path, '/vault');
             expect(result).toEqual([{ from: file.path, to: '/vault/note.md' }]);
@@ -486,8 +543,13 @@ describe('useVault', () => {
 
     describe('moveFolder', () => {
         beforeEach(async () => {
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [], folders: [makeFolder('docs')] });
-            await vault.loadFolder('/vault');
+            mockAPI.scanFolder.mockResolvedValue({
+                success: true,
+                root: '/vault',
+                files: [],
+                folders: [makeFolder('docs')],
+            });
+            await vault.loadVault();
         });
 
         it('returns null when no vault is open', async () => {
@@ -498,21 +560,21 @@ describe('useVault', () => {
 
         it('returns the new relative path on success', async () => {
             mockAPI.moveFolder.mockResolvedValue({ success: true });
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [], folders: [] });
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [], folders: [] });
             const result = await vault.moveFolder('docs', 'archive');
             expect(result).toBe('archive/docs');
         });
 
         it('returns the bare folder name when moved to the vault root', async () => {
             mockAPI.moveFolder.mockResolvedValue({ success: true });
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [], folders: [] });
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [], folders: [] });
             const result = await vault.moveFolder('archive/docs', '.');
             expect(result).toBe('docs');
         });
 
         it('uses currentFolder as target when targetRelativePath is "."', async () => {
             mockAPI.moveFolder.mockResolvedValue({ success: true });
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [], folders: [] });
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [], folders: [] });
             await vault.moveFolder('docs', '.');
             expect(mockAPI.moveFolder).toHaveBeenCalledWith('/vault/docs', '/vault');
         });
@@ -537,8 +599,8 @@ describe('useVault', () => {
         const existingFile = makeFile('old.md');
 
         beforeEach(async () => {
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [existingFile], folders: [] });
-            await vault.loadFolder('/vault');
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [existingFile], folders: [] });
+            await vault.loadVault();
         });
 
         it('shows alert and returns null on IPC rejection', async () => {
@@ -555,13 +617,13 @@ describe('useVault', () => {
         const file = makeFile('to-delete.md');
 
         beforeEach(async () => {
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [file], folders: [] });
-            await vault.loadFolder('/vault');
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [file], folders: [] });
+            await vault.loadVault();
         });
 
         it('shows alert and continues on IPC rejection', async () => {
             mockAPI.deleteFile.mockRejectedValue(new Error('IPC error'));
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [], folders: [] });
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [], folders: [] });
             await vault.deleteFile([file]);
             expect(globalThis.alert).toHaveBeenCalled();
         });
@@ -571,8 +633,8 @@ describe('useVault', () => {
 
     describe('setExternalChangeCallback', () => {
         it('registers a callback that is invoked when the FS watcher fires', async () => {
-            mockAPI.scanFolder.mockResolvedValue({ success: true, files: [], folders: [] });
-            await vault.loadFolder('/vault');
+            mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [], folders: [] });
+            await vault.loadVault();
 
             const onChange = vi.fn();
             vault.setExternalChangeCallback(onChange);

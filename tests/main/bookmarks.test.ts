@@ -5,13 +5,24 @@ import fs from 'fs';
 
 // ── Mocks (must be declared before any imports that pull in the mocked modules) ──
 
+const { mockShowOpenDialog } = vi.hoisted(() => ({ mockShowOpenDialog: vi.fn() }));
+const { mockState } = vi.hoisted(() => ({ mockState: { current: {} as Record<string, unknown> } }));
+
 vi.mock('electron', () => ({
-    dialog: { showOpenDialog: vi.fn(), showSaveDialog: vi.fn() },
+    dialog: { showOpenDialog: mockShowOpenDialog, showSaveDialog: vi.fn() },
     shell: { openExternal: vi.fn() },
 }));
 
 vi.mock('@/main/lib/logger', () => ({
     log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+}));
+
+vi.mock('@/main/lib/appState', () => ({
+    readState: vi.fn(() => Promise.resolve({ ...mockState.current })),
+    updateState: vi.fn((mutate: (s: Record<string, unknown>) => Record<string, unknown>) => {
+        mockState.current = mutate({ ...mockState.current });
+        return Promise.resolve();
+    }),
 }));
 
 // ── Mock IPC helper ──────────────────────────────────────────────────────────
@@ -57,9 +68,10 @@ describe('bookmarks IPC handlers', () => {
         tmpVault = newTmpVault();
         ipc = makeMockIpc();
         const { register } = await import('@/main/services/fs');
-        register(ipc as never, () => null);
-        // Scan the vault to set the module-level vaultRoot
-        await ipc.invoke('files:scan', tmpVault);
+        register(ipc as never, () => ({}) as never);
+        mockState.current = {};
+        mockShowOpenDialog.mockResolvedValue({ canceled: false, filePaths: [tmpVault] });
+        await ipc.invoke('dialog:openFolder');
     });
 
     afterEach(() => {
@@ -215,7 +227,6 @@ describe('bookmarks IPC handlers', () => {
             ipc = makeMockIpc();
             const { register } = await import('@/main/services/fs');
             register(ipc as never, () => null);
-            // Intentionally skip files:scan — vaultRoot stays null
         });
 
         it('bookmarks:load returns failure', async () => {
