@@ -82,11 +82,15 @@ jobs:
                       artifact: mac-dmg
                       path: dist-electron/*.dmg
 
-                    - name: Linux AppImage
+                    - name: Linux packages
                       os: ubuntu-24.04
                       script: build:linux
-                      artifact: linux-appimage
-                      path: dist-electron/*.AppImage
+                      artifact: linux-packages
+                      path: |
+                          dist-electron/*.AppImage
+                          dist-electron/*.deb
+                          dist-electron/*.rpm
+                          dist-electron/*.tar.gz
 
         steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -97,6 +101,10 @@ jobs:
             - uses: ./.github/actions/node-setup
 
             - uses: ./.github/actions/whisper-model
+
+            - name: Install rpm tooling
+              if: runner.os == 'Linux'
+              run: sudo apt-get update && sudo apt-get install -y rpm
 
             - name: Build installer
               run: npm run ${{ matrix.script }}
@@ -145,10 +153,25 @@ jobs:
                   prerelease: false
                   generate_release_notes: true
                   body: |
-                      ## Installation notes
-                      These builds are not signed with an official certificate, so your OS may show a security warning when installing.
-                      - **macOS**: Right-click the app → Open, then click Open in the dialog. If macOS says the app is "damaged", run: `xattr -cr /Applications/Leaf.app`
-                      - **Linux**: `chmod +x` the AppImage before running
+                      ## Leaf does not update itself
+
+                      Nothing phones home and nothing installs behind your back — which also means Leaf
+                      will never tell you a new version exists. To upgrade, download from this page and
+                      replace your copy. Watch this repository if you want to hear about new releases.
+
+                      ## Installing
+
+                      These builds are not signed with a paid developer certificate, so your OS will warn
+                      you the first time you open the app.
+
+                      - **macOS** — right-click the app → **Open**, then click **Open** in the dialog.
+                        If macOS calls the app "damaged", run: `xattr -cr /Applications/Leaf.app`
+                      - **Linux, AppImage** — `chmod +x` the file, then run it.
+                      - **Linux, deb / rpm** — install with your package manager.
+                      - **Linux, tar.gz** — extract anywhere and run the `leaf` binary inside.
                   files: |
                       artifacts/**/*.dmg
                       artifacts/**/*.AppImage
+                      artifacts/**/*.deb
+                      artifacts/**/*.rpm
+                      artifacts/**/*.tar.gz

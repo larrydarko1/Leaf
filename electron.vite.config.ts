@@ -33,6 +33,12 @@ export default defineConfig({
                 input: {
                     index: resolve(__dirname, 'src/preload/index.ts'),
                 },
+                // CommonJS + .cjs: a sandboxed preload cannot be ESM, and "type": "module" would
+                // make a plain .js one.
+                output: {
+                    format: 'cjs',
+                    entryFileNames: 'index.cjs',
+                },
             },
         },
     },

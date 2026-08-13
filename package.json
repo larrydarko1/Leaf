@@ -176,7 +176,6 @@
                 "AppImage",
                 "deb",
                 "rpm",
-                "pacman",
                 "tar.gz"
             ],
             "category": "Utility",

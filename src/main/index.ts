@@ -52,7 +52,6 @@ protocol.registerSchemesAsPrivileged([
             secure: true,
             supportFetchAPI: true,
             stream: true,
-            bypassCSP: true,
         },
     },
 ]);
@@ -77,11 +76,11 @@ function createWindow(): void {
         minHeight: Math.round(sh * 0.5),
         icon: iconPath,
         webPreferences: {
-            // out/main/__dirname → ../../ → root → out/preload/index.mjs
-            preload: path.join(__dirname, '../preload/index.mjs'),
+            // out/main/__dirname → ../../ → root → out/preload/index.cjs
+            preload: path.join(__dirname, '../preload/index.cjs'),
             nodeIntegration: false, // never expose Node to the renderer
             contextIsolation: true, // keep renderer and preload worlds isolated
-            sandbox: false, // required for preload to use require()
+            sandbox: true, // requires the CommonJS preload built by electron.vite.config.ts
             // webSecurity stays at its default (true).
             // Local files (images, audio, video) are served through the
             // leaf:// custom protocol registered below — no need to disable
@@ -195,13 +194,25 @@ void app.whenReady().then(async () => {
      * In production (file:// origin) Electron denies all permission requests
      * by default, so we need an explicit handler.
      * Must target the partition session used by the BrowserWindow.
+     * 'media' covers the camera too, so both handlers grant audio only.
      */
-    leafSession.setPermissionRequestHandler((_webContents, permission, callback) => {
-        // 'media' covers microphone and camera access in Electron
-        callback(permission === 'media');
+    leafSession.setPermissionRequestHandler((_webContents, permission, callback, details) => {
+        if (permission !== 'media') {
+            callback(false);
+            return;
+        }
+        // An absent list means Chromium did not say what is being requested — deny.
+        if (!('mediaTypes' in details)) {
+            callback(false);
+            return;
+        }
+        const mediaTypes = details.mediaTypes ?? [];
+        callback(mediaTypes.length > 0 && mediaTypes.every((type) => type === 'audio'));
     });
-    leafSession.setPermissionCheckHandler((_webContents, permission) => {
-        return permission === 'media';
+    leafSession.setPermissionCheckHandler((_webContents, permission, _origin, details) => {
+        if (permission !== 'media') return false;
+        // 'unknown' is what a generic navigator.permissions query reports, so it stays allowed.
+        return details.mediaType !== 'video';
     });
 
     // ── One-time path migration (legacy ~/leaf-models → ~/.leaf/models) ────
