@@ -33,8 +33,6 @@ export const HfModelTierSchema = z.object({
     description: z.string(),
 });
 
-export type HfModelTier = z.infer<typeof HfModelTierSchema>;
-
 export const HfShardFileSchema = z.object({
     name: z.string(),
     path: z.string(),
@@ -42,8 +40,6 @@ export const HfShardFileSchema = z.object({
     sizeFormatted: z.string(),
     downloadUrl: z.string(),
 });
-
-export type HfShardFile = z.infer<typeof HfShardFileSchema>;
 
 export const HfRepoFileSchema = z.object({
     name: z.string(),
@@ -167,13 +163,9 @@ export const HfTreeEntryLfsSchema = z.object({
     size: z.number().optional(),
 });
 
-export type HfTreeEntryLfs = z.infer<typeof HfTreeEntryLfsSchema>;
-
 export const HfTreeEntrySchema = z.object({
     type: z.enum(['file', 'directory']),
     path: z.string(),
     size: z.number().optional(),
     lfs: HfTreeEntryLfsSchema.optional(),
 });
-
-export type HfTreeEntry = z.infer<typeof HfTreeEntrySchema>;
