@@ -1,7 +1,9 @@
 # Releasing is driven by package.json, not by pushing a tag by hand: land a `bump: version x.y.z`
-# commit on main, and once CI goes green this workflow tags it, builds the three installers and
-# publishes the release. The tag check makes the whole thing idempotent — every other push to main
-# reaches the version job, finds its tag already exists, and stops there.
+# commit on main, and once CI goes green this workflow tags it, builds the installers and publishes
+# the release.
+# The idempotency check keys on a *published* release, not on the tag: the tag is created before the
+# builds run, so keying on the tag would make every failed run unresumable — a re-run would find the
+# tag, decide there was nothing to do, and quietly skip.
 #
 # It hangs off `workflow_run` rather than `push` so a red CI can never produce a release.
 
@@ -24,10 +26,10 @@ jobs:
     # ── Read version and decide whether there is anything to release ──
     version:
         name: Resolve version
-        # Only run if CI passed and was triggered by a push (not a PR)
         if: >
             github.event.workflow_run.conclusion == 'success' &&
-            github.event.workflow_run.event == 'push'
+            github.event.workflow_run.event == 'push' &&
+            github.event.workflow_run.head_repository.full_name == github.repository
         runs-on: ubuntu-24.04
         timeout-minutes: 5
         outputs:
@@ -48,77 +50,26 @@ jobs:
                   echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
                   echo "Version: $VERSION"
 
-            - name: Check if tag already exists
+            - name: Check if release already published
               id: check
               env:
+                  GH_TOKEN: ${{ github.token }}
+                  GH_REPO: ${{ github.repository }}
                   TAG: ${{ steps.pkg.outputs.tag }}
               run: |
-                  if git ls-remote --tags origin "refs/tags/$TAG" | grep -q .; then
+                  DRAFT=$(gh release view "$TAG" --json isDraft --jq .isDraft 2>/dev/null || echo "missing")
+                  if [ "$DRAFT" = "false" ]; then
                       echo "exists=true" >> "$GITHUB_OUTPUT"
-                      echo "Tag $TAG already exists, skipping release"
+                      echo "Release $TAG is already published, skipping"
                   else
                       echo "exists=false" >> "$GITHUB_OUTPUT"
-                      echo "New version $TAG, will create release"
+                      echo "No published release for $TAG (state: $DRAFT), will release"
                   fi
 
-    # ── Installers, one job per platform ──────────────────
-    # electron-builder cannot cross-compile these, so the matrix is two real runners rather than
-    # a convenience. fail-fast is off so one platform breaking still tells you about the other.
-    # Leaf ships macOS and Linux only — see the Platform support section in CONTRIBUTING.md.
-    build:
-        name: Build ${{ matrix.name }}
+    # ── Tag the commit and open a draft release for the builds to upload into ──
+    prepare:
+        name: Tag and open draft
         needs: version
-        if: needs.version.outputs.exists == 'false'
-        runs-on: ${{ matrix.os }}
-        timeout-minutes: 30
-
-        strategy:
-            fail-fast: false
-            matrix:
-                include:
-                    - name: macOS DMG (ad-hoc signed)
-                      os: macos-latest
-                      script: build:mac
-                      artifact: mac-dmg
-                      path: dist-electron/*.dmg
-
-                    - name: Linux packages
-                      os: ubuntu-24.04
-                      script: build:linux
-                      artifact: linux-packages
-                      path: |
-                          dist-electron/*.AppImage
-                          dist-electron/*.deb
-                          dist-electron/*.rpm
-                          dist-electron/*.tar.gz
-
-        steps:
-            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-              with:
-                  ref: ${{ github.event.workflow_run.head_sha }}
-                  persist-credentials: false
-
-            - uses: ./.github/actions/node-setup
-
-            - uses: ./.github/actions/whisper-model
-
-            - name: Install rpm tooling
-              if: runner.os == 'Linux'
-              run: sudo apt-get update && sudo apt-get install -y rpm
-
-            - name: Build installer
-              run: npm run ${{ matrix.script }}
-
-            - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-              with:
-                  name: ${{ matrix.artifact }}
-                  path: ${{ matrix.path }}
-                  if-no-files-found: error
-
-    # ── Create tag & GitHub Release ────────────────────────
-    release:
-        name: Tag and publish
-        needs: [version, build]
         if: needs.version.outputs.exists == 'false'
         runs-on: ubuntu-24.04
         timeout-minutes: 10
@@ -130,26 +81,26 @@ jobs:
               with:
                   ref: ${{ github.event.workflow_run.head_sha }}
 
+            # A retry of a failed release re-enters this job with the tag already pushed.
             - name: Create tag
               env:
                   TAG: ${{ needs.version.outputs.tag }}
               run: |
+                  if git ls-remote --tags origin "refs/tags/$TAG" | grep -q .; then
+                      echo "Tag $TAG already exists, reusing it"
+                      exit 0
+                  fi
                   git config user.name "github-actions"
                   git config user.email "github-actions@github.com"
                   git tag -a "$TAG" -m "Release $TAG"
                   git push origin "$TAG"
 
-            - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-              with:
-                  path: artifacts
-                  merge-multiple: true
-
-            - name: Create GitHub Release
+            - name: Create draft release
               uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
               with:
                   tag_name: ${{ needs.version.outputs.tag }}
                   name: Leaf ${{ needs.version.outputs.tag }}
-                  draft: false
+                  draft: true
                   prerelease: false
                   generate_release_notes: true
                   body: |
@@ -169,9 +120,72 @@ jobs:
                       - **Linux, AppImage** — `chmod +x` the file, then run it.
                       - **Linux, deb / rpm** — install with your package manager.
                       - **Linux, tar.gz** — extract anywhere and run the `leaf` binary inside.
-                  files: |
-                      artifacts/**/*.dmg
-                      artifacts/**/*.AppImage
-                      artifacts/**/*.deb
-                      artifacts/**/*.rpm
-                      artifacts/**/*.tar.gz
+
+    # ── Installers, one job per platform ──────────────────
+    build:
+        name: Build ${{ matrix.name }}
+        needs: [version, prepare]
+        runs-on: ${{ matrix.os }}
+        timeout-minutes: 40
+        permissions:
+            contents: write
+
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - name: macOS DMG (ad-hoc signed)
+                      os: macos-latest
+                      script: build:mac
+                      assets: dist-electron/*.dmg
+
+                    - name: Linux packages
+                      os: ubuntu-24.04
+                      script: build:linux
+                      assets: dist-electron/*.AppImage dist-electron/*.deb dist-electron/*.rpm dist-electron/*.tar.gz
+
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha }}
+                  persist-credentials: false
+
+            - uses: ./.github/actions/node-setup
+
+            - uses: ./.github/actions/whisper-model
+
+            - name: Install rpm tooling
+              if: runner.os == 'Linux'
+              run: sudo apt-get update && sudo apt-get install -y rpm
+
+            - name: Build installer
+              run: npm run ${{ matrix.script }}
+
+            - name: Upload to draft release
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  GH_REPO: ${{ github.repository }}
+                  TAG: ${{ needs.version.outputs.tag }}
+                  ASSETS: ${{ matrix.assets }}
+              run: |
+                  set -euo pipefail
+                  # shellcheck disable=SC2086
+                  ls -lh $ASSETS
+                  # shellcheck disable=SC2086
+                  gh release upload "$TAG" $ASSETS --clobber
+
+    # ── Publish ────────────────────────────────────────────
+    publish:
+        name: Publish release
+        needs: [version, build]
+        runs-on: ubuntu-24.04
+        timeout-minutes: 10
+        permissions:
+            contents: write
+        steps:
+            - name: Flip draft to published
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  GH_REPO: ${{ github.repository }}
+                  TAG: ${{ needs.version.outputs.tag }}
+              run: gh release edit "$TAG" --draft=false

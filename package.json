@@ -21,6 +21,7 @@
     },
     "type": "module",
     "main": "out/main/index.js",
+    "desktopName": "leaf.desktop",
     "repository": {
         "type": "git",
         "url": "https://github.com/larrydarko1/leaf.git"
@@ -161,6 +162,7 @@
         "mac": {
             "category": "public.app-category.productivity",
             "identity": null,
+            "artifactName": "${productName}-${version}-${arch}.${ext}",
             "target": [
                 {
                     "target": "dmg",
@@ -181,7 +183,8 @@
             "category": "Utility",
             "maintainer": "Lorenzo Mazzola",
             "vendor": "Lorenzo Mazzola",
-            "synopsis": "A local-first, privacy-focused note-taking app with on-device AI"
+            "synopsis": "A local-first, privacy-focused note-taking app with on-device AI",
+            "syncDesktopName": true
         }
     },
     "lint-staged": {
