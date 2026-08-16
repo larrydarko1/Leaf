@@ -43,6 +43,9 @@ jobs:
             - name: Style check
               run: npm run stylelint
 
+            - name: Dead code check
+              run: npm run dead:check
+
             - name: Type check
               run: npx vue-tsc -b
 
