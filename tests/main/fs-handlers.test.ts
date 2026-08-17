@@ -15,6 +15,7 @@ const mockShowOpenDialog = vi.fn();
 const { mockState } = vi.hoisted(() => ({ mockState: { current: {} as Record<string, unknown> } }));
 
 vi.mock('electron', () => ({
+    app: { getPath: vi.fn(() => '/home/test') },
     dialog: { showOpenDialog: mockShowOpenDialog, showSaveDialog: mockShowSaveDialog },
     shell: { trashItem: mockTrashItem, openExternal: vi.fn() },
 }));

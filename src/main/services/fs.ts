@@ -5,7 +5,7 @@
  */
 
 import type { IpcMain, BrowserWindow } from 'electron';
-import { dialog, shell } from 'electron';
+import { app, dialog, shell } from 'electron';
 import path from 'path';
 import fs from 'fs/promises';
 import { watch, existsSync } from 'fs';
@@ -92,6 +92,7 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
             properties: ['openDirectory'],
             title: 'Select Your Notes Folder',
             buttonLabel: 'Select Folder',
+            defaultPath: vaultRoot ?? app.getPath('home'), // Electron 43+ falls back to Downloads when this is unset.
         });
         if (result.canceled) return null;
         return await setVaultRoot(result.filePaths[0]);
@@ -115,8 +116,13 @@ export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null
         if (!parsed.success) return { success: false, error: 'Invalid arguments' };
         const win = getMainWindow();
         if (win === null) return { success: false, error: 'No window available' };
+        // Electron 43+ resolves a bare filename against Downloads, so anchor it to the vault.
+        const requested = parsed.data.defaultPath;
         const result = await dialog.showSaveDialog(win, {
-            defaultPath: parsed.data.defaultPath,
+            defaultPath:
+                requested === undefined || path.isAbsolute(requested)
+                    ? requested
+                    : path.join(vaultRoot ?? app.getPath('home'), requested),
             filters: parsed.data.filters,
         });
         if (result.canceled || result.filePath === undefined || result.filePath === '') return null;
