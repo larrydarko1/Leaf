@@ -1,7 +1,8 @@
 /**
  * 1. Drop onnxruntime-node's prebuilt binaries for platforms we are not building. The npm package
  *    ships darwin + linux + win32 (~259 MB) and the loader only ever touches one of them, so the
- *    rest is dead weight in every installer.
+ *    rest is dead weight in every installer. Every copy in the tree is walked, not just the root
+ *    one — v3.0.1 shipped ~210 MB of unpruned binaries because a nested duplicate was missed.
  * 2. Drop the @node-llama-cpp backend packages we are not building. npm resolves these by `cpu`
  *    field, and on linux-x64 that pulls six of them (~696 MB) — including 593 MB of CUDA runtime —
  *    when getLlama() only ever loads one. See LLAMA_KEEP for what each platform keeps.
@@ -23,18 +24,36 @@ const LLAMA_KEEP = {
     'linux-x64': ['linux-x64', 'linux-x64-vulkan'],
 };
 
+// @huggingface/transformers pins onnxruntime-node exactly, so npm nests a second copy beside the
+// root one. Both ship every platform; pruning only the root leaves ~210 MB of the other in place.
+function onnxBinDirs(dir, depth = 0) {
+    if (depth > 8) return [];
+    const found = [];
+
+    for (const entry of dirsIn(dir)) {
+        const full = path.join(dir, entry);
+        if (entry === 'onnxruntime-node') {
+            if (fs.existsSync(path.join(full, 'bin'))) found.push(path.join(full, 'bin'));
+            continue;
+        }
+        found.push(...onnxBinDirs(full, depth + 1));
+    }
+
+    return found;
+}
+
 function pruneOnnxRuntime(context) {
     const resourcesDir = context.packager.getResourcesDir(context.appOutDir);
-    const binDir = path.join(
-        resourcesDir,
-        'app.asar.unpacked',
-        'node_modules',
-        'onnxruntime-node',
-        'bin',
-    );
+    const modulesDir = path.join(resourcesDir, 'app.asar.unpacked', 'node_modules');
 
-    if (!fs.existsSync(binDir)) {
-        console.warn(`[afterPack] onnxruntime bin dir not found, skipping prune: ${binDir}`);
+    if (!fs.existsSync(modulesDir)) {
+        console.warn(`[afterPack] unpacked node_modules not found, skipping prune: ${modulesDir}`);
+        return;
+    }
+
+    const binDirs = onnxBinDirs(modulesDir);
+    if (binDirs.length === 0) {
+        console.warn('[afterPack] no onnxruntime-node copies found, skipping prune');
         return;
     }
 
@@ -42,6 +61,17 @@ function pruneOnnxRuntime(context) {
     const arch = ARCH_NAMES[context.arch];
     const keepArches = arch === 'universal' ? ['x64', 'arm64'] : [arch];
 
+    let removed = 0;
+    for (const binDir of binDirs) {
+        removed += pruneOnnxCopy(binDir, keepPlatform, keepArches);
+    }
+
+    console.log(
+        `[afterPack] onnxruntime prune freed ${(removed / 1024 / 1024).toFixed(0)} MB across ${binDirs.length} cop${binDirs.length === 1 ? 'y' : 'ies'} (kept ${keepPlatform}/${keepArches.join(',')})`,
+    );
+}
+
+function pruneOnnxCopy(binDir, keepPlatform, keepArches) {
     let removed = 0;
     let kept = 0;
     // bin/<napi-vN>/<platform>/<arch>. Directory entries are read with withFileTypes so a symlink
@@ -73,14 +103,12 @@ function pruneOnnxRuntime(context) {
 
     if (kept === 0) {
         throw new Error(
-            `[afterPack] onnxruntime has no build for ${keepPlatform}/${keepArches.join(',')} — ` +
+            `[afterPack] ${binDir} has no build for ${keepPlatform}/${keepArches.join(',')} — ` +
                 `refusing to ship an app with no ONNX runtime. Drop this target or pin a version that provides it.`,
         );
     }
 
-    console.log(
-        `[afterPack] onnxruntime prune freed ${(removed / 1024 / 1024).toFixed(0)} MB (kept ${keepPlatform}/${keepArches.join(',')})`,
-    );
+    return removed;
 }
 
 function pruneLlamaBackends(context) {

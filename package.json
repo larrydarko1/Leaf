@@ -39,11 +39,12 @@
         "format": "prettier --write \"src/**/*.{ts,vue,scss,json}\"",
         "format:check": "prettier --check \"src/**/*.{ts,vue,scss,json}\"",
         "audit:check": "node scripts/check/check-audit.mjs",
+        "dead:check": "node scripts/check/check-dead-code.mjs",
         "stylelint": "stylelint \"src/**/*.{scss,vue}\"",
         "stylelint:fix": "stylelint \"src/**/*.{scss,vue}\" --fix",
         "prepare": "husky",
         "test:coverage": "npx vitest run --coverage",
-        "ci:check": "npm run audit:check && npm run lint && npm run format:check && npm run stylelint && npm run test:coverage && npm run build"
+        "ci:check": "npm run audit:check && npm run lint && npm run format:check && npm run stylelint && npm run dead:check && npm run test:coverage && npm run build"
     },
     "dependencies": {
         "@codemirror/autocomplete": "^6.20.1",
@@ -56,7 +57,6 @@
         "@codemirror/view": "^6.41.0",
         "@huggingface/transformers": "^4.2.0",
         "@lezer/highlight": "^1.2.3",
-        "@lezer/markdown": "^1.6.3",
         "@vueuse/core": "^14.3.0",
         "dompurify": "^3.4.11",
         "electron-log": "~5.4.3",
@@ -72,7 +72,6 @@
         "@commitlint/config-conventional": "^20.5.0",
         "@eslint/js": "^10.0.1",
         "@intlify/eslint-plugin-vue-i18n": "^4.5.1",
-        "@testing-library/vue": "^8.1.0",
         "@types/node": "^24.0.13",
         "@vitejs/plugin-vue": "^6.0.6",
         "@vitest/coverage-v8": "^4.1.0",
@@ -91,6 +90,7 @@
         "husky": "^9.1.7",
         "jsdom": "^26.1.0",
         "jsonc-eslint-parser": "^3.1.0",
+        "knip": "^6.32.2",
         "lint-staged": "^16.4.0",
         "postcss-html": "^1.8.1",
         "prettier": "^3.8.1",

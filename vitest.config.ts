@@ -21,7 +21,7 @@ export default defineConfig({
         setupFiles: ['./vitest.setup.ts'],
         coverage: {
             provider: 'v8',
-            include: ['src/**'],
+            include: ['src/**/*.{ts,vue}'],
             exclude: ['src/renderer/main.ts', 'src/main/index.ts', 'src/**/*.d.ts', 'src/**/*.html'],
             reporter: ['text', 'text-summary', 'html'],
             thresholds: {
