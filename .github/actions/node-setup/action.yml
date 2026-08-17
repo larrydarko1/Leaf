@@ -7,9 +7,11 @@ inputs:
     ignore-scripts:
         description: >
             Skip lifecycle scripts during install. Set this for jobs that only need JavaScript on disk
-            (linting a PR title, for example) — it avoids the Electron and onnxruntime postinstall
-            downloads, which are the bulk of a cold `npm ci`. Never set it for build or test jobs:
-            those need the native binaries the postinstalls fetch.
+            (linting a PR title, for example) — it avoids the onnxruntime postinstall download, which
+            is the bulk of a cold `npm ci`. Never set it for build or test jobs: those need the native
+            binaries the postinstalls fetch. Electron is no longer part of that trade-off — since
+            Electron 42 the binary is fetched on first run rather than by a postinstall, and
+            electron-builder downloads its own copy when packaging.
         required: false
         default: 'false'
 
