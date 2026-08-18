@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted, computed, shallowRef } from 'vue';
-import { useDebounceFn } from '@vueuse/core';
+import { useDebounceFn } from '@/renderer/composables/useDebounce';
 import {
     isImageFile as checkImage,
     isVideoFile as checkVideo,
@@ -69,16 +69,12 @@ const {
     () => props.workspacePath,
 );
 
-// Note persistence: content, save, load, auto-save
-// Debounce the contentChanged emission — avoid firing on every keystroke
-type DebouncedEmitFn = ((hasChanges: boolean) => void) & { cancel?: () => void };
 const debouncedEmitContentChanged = useDebounceFn(
     (hasChanges: boolean) => {
         emit('contentChanged', hasChanges);
     },
-    150,
-    { maxWait: 500 },
-) as unknown as DebouncedEmitFn;
+    { ms: 150, maxWait: 500 },
+);
 
 const {
     content,
@@ -270,7 +266,7 @@ onMounted(() => {
 // Cleanup
 onUnmounted(() => {
     clearAutoSaveTimeout();
-    debouncedEmitContentChanged.cancel?.();
+    debouncedEmitContentChanged.cancel();
     if (isDictating.value === true) {
         stopDictation();
     }

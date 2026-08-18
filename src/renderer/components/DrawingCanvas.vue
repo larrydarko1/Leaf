@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
-import { useThrottleFn, useEventListener } from '@vueuse/core';
+import { useThrottleFn } from '@/renderer/composables/useThrottle';
 import type { ToolType, StrokeStyle, DefaultStyle, StyleKey } from '@/schemas/drawing';
 import { useDrawingElements, genId } from '@/renderer/composables/drawing/useDrawingElements';
 import { useCanvasRenderer } from '@/renderer/composables/drawing/useCanvasRenderer';
@@ -262,19 +262,23 @@ const canvasCursor = computed(() => {
 const showExportDialog = ref(false);
 const hasSelection = computed(() => selectedIds.value.size > 0);
 
+const throttledResize = useThrottleFn(handleResize, 100);
+
 onMounted(() => {
     setupCanvas();
     loadDrawing();
-    useEventListener(window, 'resize', useThrottleFn(handleResize, 100) as unknown as () => void);
+    window.addEventListener('resize', throttledResize);
     document.addEventListener('mousedown', handleClickOutside);
     void nextTick(() => containerEl.value?.focus());
 });
 
 onUnmounted(() => {
+    window.removeEventListener('resize', throttledResize);
     document.removeEventListener('mousedown', handleClickOutside);
     cleanupAutoSave();
-    onPointerMove.cancel?.();
-    onWheel.cancel?.();
+    throttledResize.cancel();
+    onPointerMove.cancel();
+    onWheel.cancel();
 });
 
 watch(() => props.filePath, loadDrawing);

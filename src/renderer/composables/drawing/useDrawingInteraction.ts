@@ -4,7 +4,7 @@
  */
 
 import { ref, computed } from 'vue';
-import { useThrottleFn } from '@vueuse/core';
+import { useThrottleFn } from '@/renderer/composables/useThrottle';
 import type { Ref, ComputedRef } from 'vue';
 import type { ToolType, ElementType, DragAction, CanvasElement, DefaultStyle } from '@/schemas/drawing';
 
@@ -688,12 +688,10 @@ export function useDrawingInteraction(
     }
 
     // Create and store throttled onPointerMove so it can be properly cancelled on cleanup
-    type ThrottledPointerMoveFn = ((e: PointerEvent) => void) & { cancel?: () => void };
-    const throttledPointerMove = useThrottleFn(onPointerMove, 16) as unknown as ThrottledPointerMoveFn;
+    const throttledPointerMove = useThrottleFn(onPointerMove, 16);
 
     // Throttle wheel event — fires at most every 16ms to prevent excessive zoom/scroll updates
-    type ThrottledWheelFn = ((e: WheelEvent) => void) & { cancel?: () => void };
-    const throttledOnWheel = useThrottleFn(onWheel, 16) as unknown as ThrottledWheelFn;
+    const throttledOnWheel = useThrottleFn(onWheel, 16);
 
     return {
         isDragging,

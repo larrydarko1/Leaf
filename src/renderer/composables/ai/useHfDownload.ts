@@ -3,7 +3,7 @@
  */
 
 import { ref, shallowRef, onMounted, onUnmounted } from 'vue';
-import { watchDebounced } from '@vueuse/core';
+import { watchDebounced } from '@/renderer/composables/useDebounce';
 import type { HfSearchResult, HfRepoFile, HfModelInfo, HfDownloadProgress, HfSortOption } from '@/schemas/hf';
 
 export function useHfDownload(onModelsRefresh: () => Promise<void>) {
