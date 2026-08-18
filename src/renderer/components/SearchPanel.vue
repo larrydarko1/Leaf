@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
-import { watchDebounced } from '@vueuse/core';
+import { watchDebounced } from '@/renderer/composables/useDebounce';
 import { useListKeyboardNavigation } from '@/renderer/composables/ui/useListKeyboardNavigation';
 import type { FileInfo, HighlightPart } from '@/schemas/vault';
 import { useI18n } from 'vue-i18n';

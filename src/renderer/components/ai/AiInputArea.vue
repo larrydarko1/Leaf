@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, nextTick } from 'vue';
-import { useThrottleFn } from '@vueuse/core';
+import { useThrottleFn } from '@/renderer/composables/useThrottle';
 import type { FileInfo } from '@/schemas/vault';
 import { useI18n } from 'vue-i18n';
 
@@ -81,12 +81,11 @@ function startResize(e: MouseEvent) {
     const originalUserSelect = document.body.style.userSelect;
     document.body.style.userSelect = 'none';
 
-    type ThrottledMouseMoveFn = ((moveEvent: MouseEvent) => void) & { cancel?: () => void };
     const handleMouseMove = useThrottleFn((moveEvent: MouseEvent) => {
         const delta = startY - moveEvent.clientY;
         const newHeight = Math.max(minHeight, Math.min(maxHeight, startHeight + delta));
         maxHeightPx.value = newHeight;
-    }, 16) as unknown as ThrottledMouseMoveFn;
+    }, 16);
 
     const handleMouseUp = () => {
         isResizing.value = false;
@@ -95,7 +94,7 @@ function startResize(e: MouseEvent) {
         localStorage.setItem('ai-input-max-height', maxHeightPx.value.toString());
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
-        handleMouseMove.cancel?.();
+        handleMouseMove.cancel();
     };
 
     document.addEventListener('mousemove', handleMouseMove);

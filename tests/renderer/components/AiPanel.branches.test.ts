@@ -175,9 +175,9 @@ vi.mock('@/renderer/composables/ai/useAIChat', () => ({
     })),
 }));
 
-// ── @vueuse/core mock (bypass throttle) ───────────────────────────────────────
+// ── throttle mock (bypass throttle) ───────────────────────────────────────────
 
-vi.mock('@vueuse/core', () => ({
+vi.mock('@/renderer/composables/useThrottle', () => ({
     useThrottleFn: (fn: (...a: unknown[]) => unknown) => Object.assign(fn, { cancel: vi.fn() }),
 }));
 
