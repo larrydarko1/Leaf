@@ -32,7 +32,7 @@ export function readState(): Promise<State> {
  * object unchanged is fine (it just rewrites identical content).
  */
 export function updateState(mutate: (current: State) => State): Promise<void> {
-    return enqueue(async () => {
+    return enqueue(async (): Promise<void> => {
         const current = await readRaw();
         const next = mutate(current);
         await writeRaw(next);
@@ -42,8 +42,8 @@ export function updateState(mutate: (current: State) => State): Promise<void> {
 function enqueue<T>(task: () => Promise<T>): Promise<T> {
     const run = queue.then(task, task);
     queue = run.then(
-        () => undefined,
-        () => undefined,
+        (): undefined => undefined,
+        (): undefined => undefined,
     );
     return run;
 }

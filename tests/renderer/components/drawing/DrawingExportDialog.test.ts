@@ -124,13 +124,18 @@ describe('DrawingExportDialog', () => {
         wrapper.unmount();
     });
 
-    it('emits "close" when the Escape key is pressed', async () => {
+    it('emits "close" and revokes the preview URL when the close button is clicked', async () => {
         const wrapper = await openDialog();
         await wrapper.vm.$nextTick();
-        // ESC closes the dialog
-        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+        // The dialog is teleported to <body>, so it is not inside the wrapper's tree.
+        const closeBtn = document.querySelector<HTMLButtonElement>('[aria-label="Close export dialog"]');
+        expect(closeBtn).not.toBeNull();
+
+        closeBtn?.click();
         await wrapper.vm.$nextTick();
-        // The component may use an @keydown.esc or an overlay click
+        expect(wrapper.emitted('close')).toHaveLength(1);
+        expect(revokeObjectURLSpy).toHaveBeenCalled();
         wrapper.unmount();
     });
 

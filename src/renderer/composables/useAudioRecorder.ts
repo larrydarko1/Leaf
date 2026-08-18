@@ -4,10 +4,18 @@
  * Does NOT own: audio encoding (utils/audio.ts), UI rendering (AudioRecorder.vue).
  */
 
-import { ref, computed, onUnmounted } from 'vue';
+import { ref, computed, onUnmounted, type ComputedRef, type Ref } from 'vue';
 import { convertWebMToWav, arrayBufferToBase64 } from '@/renderer/utils/audio';
 
-export function useAudioRecorder(getCurrentFolder: () => string | null, onSaved: (filePath: string) => void) {
+export function useAudioRecorder(
+    getCurrentFolder: () => string | null,
+    onSaved: (filePath: string) => void,
+): {
+    isRecording: Ref<boolean>;
+    hasPermission: Ref<boolean>;
+    formattedDuration: ComputedRef<string>;
+    toggle: () => Promise<void>;
+} {
     const isRecording = ref(false);
     const hasPermission = ref(true);
     const duration = ref(0);
@@ -17,15 +25,15 @@ export function useAudioRecorder(getCurrentFolder: () => string | null, onSaved:
     let stream: MediaStream | null = null;
     let durationInterval: number | null = null;
 
-    const formattedDuration = computed(() => {
-        const m = Math.floor(duration.value / 60)
+    const formattedDuration = computed((): string => {
+        const minutes = Math.floor(duration.value / 60)
             .toString()
             .padStart(2, '0');
-        const s = (duration.value % 60).toString().padStart(2, '0');
-        return `${m}:${s}`;
+        const seconds = (duration.value % 60).toString().padStart(2, '0');
+        return `${minutes}:${seconds}`;
     });
 
-    async function start() {
+    async function start(): Promise<void> {
         try {
             stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             hasPermission.value = true;
@@ -33,24 +41,24 @@ export function useAudioRecorder(getCurrentFolder: () => string | null, onSaved:
             mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
             audioChunks = [];
 
-            mediaRecorder.ondataavailable = (e) => {
+            mediaRecorder.ondataavailable = (e): void => {
                 if (e.data.size > 0) audioChunks.push(e.data);
             };
-            mediaRecorder.onstop = () => save();
+            mediaRecorder.onstop = (): Promise<void> => save();
 
             mediaRecorder.start(100);
             isRecording.value = true;
             duration.value = 0;
-            durationInterval = window.setInterval(() => duration.value++, 1000);
+            durationInterval = window.setInterval((): number => duration.value++, 1000);
         } catch {
             hasPermission.value = false;
         }
     }
 
-    function stop() {
+    function stop(): void {
         if (mediaRecorder?.state !== 'inactive') mediaRecorder?.stop();
 
-        stream?.getTracks().forEach((t) => t.stop());
+        stream?.getTracks().forEach((t): void => t.stop());
         stream = null;
 
         if (durationInterval !== null) {
@@ -60,7 +68,7 @@ export function useAudioRecorder(getCurrentFolder: () => string | null, onSaved:
         isRecording.value = false;
     }
 
-    async function toggle() {
+    async function toggle(): Promise<void> {
         if (isRecording.value) {
             stop();
         } else {
@@ -68,7 +76,7 @@ export function useAudioRecorder(getCurrentFolder: () => string | null, onSaved:
         }
     }
 
-    async function save() {
+    async function save(): Promise<void> {
         const folder = getCurrentFolder();
         if (folder === null || audioChunks.length === 0) return;
 
@@ -87,7 +95,7 @@ export function useAudioRecorder(getCurrentFolder: () => string | null, onSaved:
     }
 
     // Release the microphone if the component unmounts mid-recording
-    onUnmounted(() => {
+    onUnmounted((): void => {
         if (isRecording.value) stop();
     });
 

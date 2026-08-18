@@ -33,7 +33,35 @@ type AiChatActions = {
 // Maximum number of files a user can attach as additional context
 export const MAX_CONTEXT_FILES = 10;
 
-export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
+export type UseAIChatReturn = {
+    messagesContainer: Ref<HTMLElement | null>;
+    inputField: Ref<HTMLTextAreaElement | null>;
+    inputMessage: Ref<string>;
+    isStreaming: Ref<boolean>;
+    showThinking: Ref<boolean>;
+    contextFiles: Ref<FileInfo[]>;
+    addContextFile: (file: FileInfo) => void;
+    removeContextFile: (path: string) => void;
+    copiedIndex: Ref<number | null>;
+    editingIndex: Ref<number | null>;
+    editContent: Ref<string>;
+    editInputRef: Ref<HTMLTextAreaElement[] | null>;
+    scrollToBottom: (force?: boolean) => void;
+    onMessagesScroll: (() => void) & { cancel: () => void };
+    renderMarkdown: (content: string) => string;
+    copyMessage: (content: string, index: number) => Promise<void>;
+    startEditMessage: (index: number) => void;
+    cancelEditMessage: () => void;
+    confirmEditMessage: (index: number) => Promise<void>;
+    resendMessage: (index: number) => Promise<void>;
+    deleteLastMessagePair: () => Promise<void>;
+    regenerateLastResponse: () => Promise<void>;
+    sendMessage: () => Promise<void>;
+    stopGeneration: () => Promise<void>;
+    formatTokenCount: (n: number) => string;
+};
+
+export function useAIChat(deps: AiChatDeps, actions: AiChatActions): UseAIChatReturn {
     const { messages, status, conversationTokenCount, currentConversationId } = deps;
     const {
         createNewConversation,
@@ -60,19 +88,19 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
     const editContent = ref('');
     const editInputRef = ref<HTMLTextAreaElement[] | null>(null);
 
-    const isReady = computed(() => status.value.isModelLoaded);
-    const isAnyGenerating = computed(() => status.value.isGenerating);
+    const isReady = computed((): boolean => status.value.isModelLoaded);
+    const isAnyGenerating = computed((): boolean => status.value.isGenerating);
 
     // Context file management
 
-    function addContextFile(file: FileInfo) {
+    function addContextFile(file: FileInfo): void {
         if (contextFiles.value.length >= MAX_CONTEXT_FILES) return;
-        if (contextFiles.value.some((f) => f.path === file.path)) return;
+        if (contextFiles.value.some((f): boolean => f.path === file.path)) return;
         contextFiles.value.push(file);
     }
 
-    function removeContextFile(path: string) {
-        contextFiles.value = contextFiles.value.filter((f) => f.path !== path);
+    function removeContextFile(path: string): void {
+        contextFiles.value = contextFiles.value.filter((f): boolean => f.path !== path);
     }
 
     async function readFileForContext(file: FileInfo): Promise<string | null> {
@@ -102,7 +130,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
      * Builds the note-context string passed to the model, supporting multiple
      * attached files. Returns null when there is nothing to include.
      */
-    async function buildNoteContext(): Promise<string | null> {
+    async function collectNoteContext(): Promise<string | null> {
         const files = collectContextFiles();
         if (files.length === 0) return null;
 
@@ -120,16 +148,16 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
 
     // Scroll helpers
 
-    function scrollToBottom(force = false) {
+    function scrollToBottom(force = false): void {
         if (!force && userScrolledUp.value) return;
-        void nextTick(() => {
+        void nextTick((): void => {
             if (messagesContainer.value !== null) {
                 messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
             }
         });
     }
 
-    function onMessagesScroll() {
+    function onMessagesScroll(): void {
         if (messagesContainer.value === null || !isStreaming.value) return;
         const el = messagesContainer.value;
         userScrolledUp.value = el.scrollHeight - el.scrollTop - el.clientHeight >= 40;
@@ -180,11 +208,11 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         });
     }
 
-    async function copyMessage(content: string, index: number) {
+    async function copyMessage(content: string, index: number): Promise<void> {
         try {
             await window.electronAPI.writeClipboard(content);
             copiedIndex.value = index;
-            void setTimeout(() => {
+            void setTimeout((): void => {
                 if (copiedIndex.value !== null && copiedIndex.value === index) copiedIndex.value = null;
             }, 2000);
         } catch (err) {
@@ -194,21 +222,21 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
 
     // Message editing
 
-    function startEditMessage(index: number) {
+    function startEditMessage(index: number): void {
         if (messages.value[index]?.role !== 'user') return;
         editingIndex.value = index;
         editContent.value = messages.value[index].content;
-        void nextTick(() => {
+        void nextTick((): void => {
             if (editInputRef.value !== null && editInputRef.value.length > 0) editInputRef.value[0].focus();
         });
     }
 
-    function cancelEditMessage() {
+    function cancelEditMessage(): void {
         editingIndex.value = null;
         editContent.value = '';
     }
 
-    async function confirmEditMessage(index: number) {
+    async function confirmEditMessage(index: number): Promise<void> {
         const newContent = editContent.value.trim();
         if (newContent.length === 0) {
             cancelEditMessage();
@@ -220,10 +248,13 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         conversationTokenCount.value = 0;
         // Restore context of messages before the edited one so subsequent
         // sends have conversation history available.
-        const priorMessages = messages.value.slice(0, index).filter((m) => m.role !== 'system');
+        const priorMessages = messages.value.slice(0, index).filter((m): boolean => m.role !== 'system');
         if (priorMessages.length > 0) {
             await window.electronAPI.aiRestoreChatHistory(
-                priorMessages.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+                priorMessages.map((m): { role: 'user' | 'assistant'; content: string } => ({
+                    role: m.role as 'user' | 'assistant',
+                    content: m.content,
+                })),
             );
         }
         await saveCurrentConversation();
@@ -236,24 +267,27 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
 
     // Resend, delete, and regenerate
 
-    async function resendMessage(index: number) {
+    async function resendMessage(index: number): Promise<void> {
         const msg = messages.value[index];
         if (msg.role !== 'user' || !status.value.isModelLoaded || status.value.isGenerating) return;
         await window.electronAPI.aiResetChat();
         conversationTokenCount.value = 0;
         // Restore context of messages that preceded this one so the AI
         // doesn't lose conversation history on regenerate/resend.
-        const priorMessages = messages.value.slice(0, index).filter((m) => m.role !== 'system');
+        const priorMessages = messages.value.slice(0, index).filter((m): boolean => m.role !== 'system');
         if (priorMessages.length > 0) {
             await window.electronAPI.aiRestoreChatHistory(
-                priorMessages.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+                priorMessages.map((m): { role: 'user' | 'assistant'; content: string } => ({
+                    role: m.role as 'user' | 'assistant',
+                    content: m.content,
+                })),
             );
         }
         messages.value.push({ role: 'assistant', content: '' });
         isStreaming.value = true;
         userScrolledUp.value = false;
         scrollToBottom(true);
-        const noteContext = await buildNoteContext();
+        const noteContext = await collectNoteContext();
         try {
             const result = await window.electronAPI.aiChat(msg.content, noteContext);
             if (result.success === false) {
@@ -286,17 +320,20 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         }
     }
 
-    async function deleteLastMessagePair() {
+    async function deleteLastMessagePair(): Promise<void> {
         if (messages.value.length === 0 || isStreaming.value) return;
         messages.value.pop();
         await window.electronAPI.aiResetChat();
         conversationTokenCount.value = 0;
         // Restore context of remaining messages so the AI retains
         // conversation history after the deletion.
-        const remainingMessages = messages.value.filter((m) => m.role !== 'system');
+        const remainingMessages = messages.value.filter((m): boolean => m.role !== 'system');
         if (remainingMessages.length > 0) {
             await window.electronAPI.aiRestoreChatHistory(
-                remainingMessages.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+                remainingMessages.map((m): { role: 'user' | 'assistant'; content: string } => ({
+                    role: m.role as 'user' | 'assistant',
+                    content: m.content,
+                })),
             );
         }
         await saveCurrentConversation();
@@ -305,7 +342,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         scrollToBottom();
     }
 
-    async function regenerateLastResponse() {
+    async function regenerateLastResponse(): Promise<void> {
         if (messages.value.length < 2 || isStreaming.value) return;
         const lastMsg = messages.value[messages.value.length - 1];
         if (lastMsg.role !== 'assistant') return;
@@ -319,7 +356,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
 
     // Send and stop
 
-    async function sendMessage() {
+    async function sendMessage(): Promise<void> {
         const text = inputMessage.value.trim();
         if (text.length === 0 || isReady.value === false || isAnyGenerating.value === true) return;
         if (currentConversationId.value === null) await createNewConversation();
@@ -337,7 +374,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         userScrolledUp.value = false;
         scrollToBottom(true);
 
-        const noteContext = await buildNoteContext();
+        const noteContext = await collectNoteContext();
 
         try {
             const result = await window.electronAPI.aiChat(text, noteContext);
@@ -378,7 +415,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         }
     }
 
-    async function stopGeneration() {
+    async function stopGeneration(): Promise<void> {
         try {
             await window.electronAPI.aiStopChat();
         } catch (error) {
@@ -394,7 +431,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
 
     // Token streaming and utilities
 
-    function handleToken(token: string) {
+    function handleToken(token: string): void {
         const lastMsg = messages.value[messages.value.length - 1];
         if (lastMsg !== undefined && lastMsg.role === 'assistant') {
             lastMsg.content += token;
@@ -402,7 +439,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
         }
     }
 
-    function handleThinkingToken(token: string) {
+    function handleThinkingToken(token: string): void {
         const lastMsg = messages.value[messages.value.length - 1];
         if (lastMsg !== undefined && lastMsg.role === 'assistant') {
             lastMsg.thinking = (lastMsg.thinking ?? '') + token;
@@ -416,17 +453,17 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions) {
     }
 
     void watch(
-        () => messages.value.length,
-        () => {
+        (): number => messages.value.length,
+        (): void => {
             scrollToBottom();
         },
     );
 
-    onMounted(() => {
+    onMounted((): void => {
         window.electronAPI.onAiToken(handleToken);
         window.electronAPI.onAiThinkingToken(handleThinkingToken);
     });
-    onUnmounted(() => {
+    onUnmounted((): void => {
         throttledMessagesScroll.cancel();
         window.electronAPI.removeAiTokenListener();
         window.electronAPI.removeAiThinkingTokenListener();

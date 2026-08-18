@@ -2,12 +2,20 @@
  * useBookmarks — persists per-vault file bookmarks in <vault>/.leaf/bookmarks.json.
  */
 
-import { ref } from 'vue';
+import { ref, type Ref } from 'vue';
 
-export function useBookmarks(_getCurrentFolder: () => string | null) {
+export type UseBookmarksReturn = {
+    bookmarkedFiles: Ref<string[]>;
+    loadBookmarks: () => Promise<void>;
+    toggleBookmark: (filePath: string) => void;
+    removeBookmark: (filePath: string) => void;
+    relocateBookmark: (oldPath: string, newPath: string) => void;
+};
+
+export function useBookmarks(_getCurrentFolder: () => string | null): UseBookmarksReturn {
     const bookmarkedFiles = ref<string[]>([]);
 
-    async function load() {
+    async function load(): Promise<void> {
         try {
             const result = await window.electronAPI.bookmarksLoad();
             bookmarkedFiles.value = result.success === true && result.bookmarks !== undefined ? result.bookmarks : [];
@@ -16,7 +24,7 @@ export function useBookmarks(_getCurrentFolder: () => string | null) {
         }
     }
 
-    async function save() {
+    async function save(): Promise<void> {
         try {
             await window.electronAPI.bookmarksSave([...bookmarkedFiles.value]);
         } catch {

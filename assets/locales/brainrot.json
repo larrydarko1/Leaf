@@ -26,7 +26,8 @@
     "ai_assistant_panel": "Skibidi Homie Sigma",
     "theme_picker": "Drip Rizzler Sigma",
     "language_picker": "Yap Rizzler Sigma",
-    "tab_close_button": "Yeet Tab Button"
+    "tab_close_button": "Yeet Tab Button",
+    "tab_unsaved_indicator": "Unsaved Fr Fr"
   },
   "file": {
     "image": "Rizz Pic",
@@ -85,8 +86,6 @@
     "load_model_to_continue": "Rizz a model to keep yapping",
     "load_model": "Rizz Up {model}",
     "drag_to_resize_input_area": "Drag to stretch yap box",
-    "current_note_included_as_context": "This note is in the lore: {file}",
-    "include_current_note_as_context": "Add note to the lore",
     "add_files_to_context": "Add files to lore",
     "context_files": "Lore Files",
     "search_files": "Rizz up files...",
@@ -142,20 +141,7 @@
     "parameters": "Gyatts",
     "load_more_results": "Rizz more results",
     "load_more": "Rizz more",
-    "search_for_gguf_models": "Rizz up GGUF sigmas on Huggy Face",
-    "new_file": "Fresh File",
-    "new": "Fresh",
-    "approved": "Dub (W)",
-    "reverted": "Ratio'd (L)",
-    "error": "Ohio 💀",
-    "view_changes": "Peep the glow up",
-    "original": "OG",
-    "modified": "Glowed Up",
-    "edit_actions": "Sigmas for this edit",
-    "approve_this_file_edit": "Bless this edit (W)",
-    "approve": "Bless",
-    "reject_this_file_edit": "Ratio this edit (L)",
-    "reject": "Ratio"
+    "search_for_gguf_models": "Rizz up GGUF sigmas on Huggy Face"
   },
   "theme": {
     "selection_panel": "Drip Rizzler Sigma",

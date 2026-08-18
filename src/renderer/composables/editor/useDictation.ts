@@ -18,7 +18,15 @@ class DictationProcessor extends AudioWorkletProcessor {
 registerProcessor('dictation-processor', DictationProcessor);
 `;
 
-export function useDictation(content: Ref<string>, onContentChange: () => void) {
+export function useDictation(
+    content: Ref<string>,
+    onContentChange: () => void,
+): {
+    isDictating: Ref<boolean>;
+    isDictationLoading: Ref<boolean>;
+    toggleDictation: () => Promise<void>;
+    stopDictation: () => void;
+} {
     const isDictating = ref(false);
     const isDictationLoading = ref(false);
 
@@ -40,13 +48,11 @@ export function useDictation(content: Ref<string>, onContentChange: () => void) 
             isDictationLoading.value = true;
             try {
                 const status = await window.electronAPI.speechGetStatus();
-                if (!status.isModelLoaded) {
-                    const result = await window.electronAPI.speechInit();
-                    if (!result.success) {
-                        window.electronAPI.log.error('Failed to init Whisper:', result.error);
-                        isDictationLoading.value = false;
-                        return;
-                    }
+                const init = status.isModelLoaded ? null : await window.electronAPI.speechInit();
+                if (init !== null && !init.success) {
+                    window.electronAPI.log.error('Failed to init Whisper:', init.error);
+                    isDictationLoading.value = false;
+                    return;
                 }
                 whisperModelReady = true;
             } catch (err) {
@@ -103,7 +109,7 @@ export function useDictation(content: Ref<string>, onContentChange: () => void) 
         const chunks = dictationRawSamples.slice();
         dictationRawSamples = [];
 
-        const totalLength = chunks.reduce((sum, c) => sum + c.length, 0);
+        const totalLength = chunks.reduce((sum, c): number => sum + c.length, 0);
         const fullAudio = new Float32Array(totalLength);
         let offset = 0;
         for (const chunk of chunks) {
@@ -142,7 +148,7 @@ export function useDictation(content: Ref<string>, onContentChange: () => void) 
         if (dictationRawSamples.length > 0 && dictationAudioContext !== null) {
             const chunks = dictationRawSamples.slice();
             dictationRawSamples = [];
-            const totalLength = chunks.reduce((sum, c) => sum + c.length, 0);
+            const totalLength = chunks.reduce((sum, c): number => sum + c.length, 0);
             const fullAudio = new Float32Array(totalLength);
             let offset = 0;
             for (const chunk of chunks) {

@@ -23,7 +23,7 @@ type Props = {
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-    selectFile: [file: FileInfo, event?: MouseEvent, visibleFiles?: FileInfo[]];
+    selectFile: [file: FileInfo, options?: { event?: MouseEvent; visibleFiles?: FileInfo[] }];
     selectFolder: [path: string];
     renameFile: [file: FileInfo, newName: string];
     renameFolder: [path: string, newName: string];
@@ -61,15 +61,15 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
             { label: t('file.rename'), action: 'rename', shortcut: 'F2' },
             { label: t('file.delete'), action: 'delete' },
         ];
-    } else {
-        // Check if file is bookmarked
-        const isBookmarked = props.bookmarkedFiles?.includes(contextMenu.value.targetPath) ?? false;
-        return [
-            { label: isBookmarked ? t('file.remove_from_bookmarks') : t('file.add_to_bookmarks'), action: 'bookmark' },
-            { label: t('file.rename'), action: 'rename', shortcut: 'F2' },
-            { label: t('file.delete'), action: 'delete' },
-        ];
     }
+
+    // Check if file is bookmarked
+    const isBookmarked = props.bookmarkedFiles?.includes(contextMenu.value.targetPath) ?? false;
+    return [
+        { label: isBookmarked ? t('file.remove_from_bookmarks') : t('file.add_to_bookmarks'), action: 'bookmark' },
+        { label: t('file.rename'), action: 'rename', shortcut: 'F2' },
+        { label: t('file.delete'), action: 'delete' },
+    ];
 });
 
 // Watch for renaming file changes
@@ -102,7 +102,7 @@ onUnmounted(() => {
 });
 
 // Keyboard navigation handler
-function handleKeyDown(e: KeyboardEvent) {
+function handleKeyDown(e: KeyboardEvent): void {
     // Don't navigate if we're renaming
     if (props.renamingFile !== null || (props.renamingFolder !== null && props.renamingFolder !== '')) return;
 
@@ -170,19 +170,19 @@ function handleKeyDown(e: KeyboardEvent) {
     }
 }
 
-function selectFile(file: FileInfo, event?: MouseEvent) {
+function selectFile(file: FileInfo, event?: MouseEvent): void {
     if (props.renamingFile === null && (props.renamingFolder === null || props.renamingFolder === '')) {
-        emit('selectFile', file, event, visibleFiles.value);
+        emit('selectFile', file, { event, visibleFiles: visibleFiles.value });
     }
 }
 
-function selectFolder(folderPath: string) {
+function selectFolder(folderPath: string): void {
     if (props.renamingFile === null && (props.renamingFolder === null || props.renamingFolder === '')) {
         emit('selectFolder', folderPath);
     }
 }
 
-function handleContextMenu(type: 'file' | 'folder', path: string, event: MouseEvent) {
+function handleContextMenu(type: 'file' | 'folder', path: string, event: MouseEvent): void {
     contextMenu.value = {
         visible: true,
         position: { x: event.clientX, y: event.clientY },
@@ -191,11 +191,11 @@ function handleContextMenu(type: 'file' | 'folder', path: string, event: MouseEv
     };
 }
 
-function closeContextMenu() {
+function closeContextMenu(): void {
     contextMenu.value.visible = false;
 }
 
-function handleContextMenuAction(action: string) {
+function handleContextMenuAction(action: string): void {
     const { type, targetPath } = contextMenu.value;
 
     if (action === 'bookmark') {
@@ -225,7 +225,7 @@ function handleContextMenuAction(action: string) {
     closeContextMenu();
 }
 
-function confirmRename() {
+function confirmRename(): void {
     if (props.renamingFile !== null && renameValue.value.trim() !== '') {
         const currentName = getFileNameWithoutExtension(props.renamingFile.name);
         if (renameValue.value.trim() !== currentName) {
@@ -245,19 +245,19 @@ function confirmRename() {
     }
 }
 
-function cancelRename() {
+function cancelRename(): void {
     emit('cancelRename');
 }
 
-function handleMoveFile(filePath: string, targetFolderPath: string) {
+function handleMoveFile(filePath: string, targetFolderPath: string): void {
     emit('moveFile', filePath, targetFolderPath);
 }
 
-function handleMoveFolder(folderPath: string, targetFolderPath: string) {
+function handleMoveFolder(folderPath: string, targetFolderPath: string): void {
     emit('moveFolder', folderPath, targetFolderPath);
 }
 
-function handleRootDragOver(event: DragEvent) {
+function handleRootDragOver(event: DragEvent): void {
     event.preventDefault();
     isDragOverRoot.value = true;
     if (event.dataTransfer !== null) {
@@ -265,7 +265,7 @@ function handleRootDragOver(event: DragEvent) {
     }
 }
 
-function handleRootDragLeave(event: DragEvent) {
+function handleRootDragLeave(event: DragEvent): void {
     // Only set to false if we're leaving the root container entirely
     const target = event.target as HTMLElement;
     const relatedTarget = event.relatedTarget as HTMLElement;
@@ -275,7 +275,7 @@ function handleRootDragLeave(event: DragEvent) {
     }
 }
 
-function handleRootDrop(event: DragEvent) {
+function handleRootDrop(event: DragEvent): void {
     isDragOverRoot.value = false;
 
     const data = event.dataTransfer?.getData('text/plain');

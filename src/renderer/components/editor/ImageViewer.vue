@@ -15,7 +15,7 @@ const imageUrl = ref('');
 const isLoading = ref(false);
 const hasError = ref(false);
 
-async function loadImage(path: string) {
+async function loadImage(path: string): Promise<void> {
     isLoading.value = true;
     hasError.value = false;
     imageUrl.value = '';

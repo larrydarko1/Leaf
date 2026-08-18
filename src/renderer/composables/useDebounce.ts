@@ -64,5 +64,5 @@ export function watchDebounced<T>(
 ): void {
     const { debounce = 200, maxWait, immediate = false } = options;
     const run = useDebounceFn(cb, { ms: debounce, maxWait });
-    watch(source, (value, oldValue) => run(value, oldValue), { immediate });
+    watch(source, (value, oldValue): void => run(value, oldValue), { immediate });
 }

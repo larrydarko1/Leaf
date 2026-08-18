@@ -30,12 +30,12 @@ const bookmarkedFiles = computed(() => {
 useListKeyboardNavigation(
     () => bookmarkedFiles.value,
     {
-        onSelect: (file) => selectFile(file),
-        onOpen: (file) => openFile(file),
+        onSelect: (file: FileInfo): void => selectFile(file),
+        onOpen: (file: FileInfo): void => openFile(file),
     },
     {
         wrap: true,
-        getExternalIndex: () => bookmarkedFiles.value.findIndex((f) => isFileSelected(f)),
+        getExternalIndex: (): number => bookmarkedFiles.value.findIndex((f) => isFileSelected(f)),
     },
 );
 
@@ -43,15 +43,15 @@ function isFileSelected(file: FileInfo): boolean {
     return props.selectedFiles.some((f) => f.path === file.path);
 }
 
-function selectFile(file: FileInfo, event?: MouseEvent | KeyboardEvent) {
+function selectFile(file: FileInfo, event?: MouseEvent | KeyboardEvent): void {
     emit('selectFile', file, event);
 }
 
-function openFile(file: FileInfo) {
+function openFile(file: FileInfo): void {
     emit('openFile', file);
 }
 
-function removeBookmark(file: FileInfo) {
+function removeBookmark(file: FileInfo): void {
     emit('removeBookmark', file.path);
 }
 </script>

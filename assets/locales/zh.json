@@ -26,7 +26,8 @@
     "ai_assistant_panel": "AI 助手面板",
     "theme_picker": "主题选择面板",
     "language_picker": "语言选择面板",
-    "tab_close_button": "关闭标签页按钮"
+    "tab_close_button": "关闭标签页按钮",
+    "tab_unsaved_indicator": "未保存的更改"
   },
   "file": {
     "image": "图片文件",
@@ -85,8 +86,6 @@
     "load_model_to_continue": "加载模型以继续聊天",
     "load_model": "加载 {model}",
     "drag_to_resize_input_area": "拖动以调整输入区域大小",
-    "current_note_included_as_context": "当前笔记已作为上下文包含：{file}",
-    "include_current_note_as_context": "将当前笔记作为上下文包含",
     "add_files_to_context": "将文件添加到上下文",
     "context_files": "上下文文件",
     "search_files": "搜索文件...",
@@ -142,20 +141,7 @@
     "parameters": "参数量",
     "load_more_results": "加载更多结果",
     "load_more": "加载更多",
-    "search_for_gguf_models": "在 Hugging Face 上搜索 GGUF 模型",
-    "new_file": "新建文件",
-    "new": "新建",
-    "approved": "已批准",
-    "reverted": "已撤销",
-    "error": "错误",
-    "view_changes": "查看更改",
-    "original": "原始内容",
-    "modified": "修改后",
-    "edit_actions": "此次编辑的操作",
-    "approve_this_file_edit": "批准此文件编辑",
-    "approve": "批准",
-    "reject_this_file_edit": "拒绝此文件编辑",
-    "reject": "拒绝"
+    "search_for_gguf_models": "在 Hugging Face 上搜索 GGUF 模型"
   },
   "theme": {
     "selection_panel": "主题选择面板",

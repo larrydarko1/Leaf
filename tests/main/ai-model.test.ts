@@ -1,6 +1,6 @@
 /**
  * Tests for ai.ts that require a loaded model — mocks node-llama-cpp and uses
- * a real temp directory so scanForModels / listModels can be exercised too.
+ * a real temp directory so scanForModels / readModels can be exercised too.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import fs from 'fs';
@@ -131,9 +131,9 @@ afterEach(async () => {
     vi.clearAllMocks();
 });
 
-// ── listModels / scanForModels / isModelFile / formatFileSize ────────────────
+// ── readModels / scanForModels / isModelFile / formatFileSize ────────────────
 
-describe('listModels (scanForModels)', () => {
+describe('readModels (scanForModels)', () => {
     it('returns an empty list when the models directory is empty', async () => {
         const result = (await handlers['ai:listModels']?.()) as { success: boolean; models: unknown[] };
         expect(result.success).toBe(true);

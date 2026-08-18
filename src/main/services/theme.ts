@@ -37,51 +37,66 @@ const THEME_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
 let seedPromise: Promise<void> | null = null;
 
 export function register(ipc: IpcMain): void {
-    ipc.handle('theme:list', async () => {
-        try {
-            const themes = await listThemes();
-            const state = await readState();
-            return {
-                success: true,
-                themes,
-                activeId: typeof state.activeTheme === 'string' ? state.activeTheme : DEFAULT_THEME_ID,
-                themesDir: THEMES_DIR,
-            };
-        } catch (err) {
-            log.error('[theme] list failed:', err);
-            return {
-                success: false,
-                error: (err as Error).message,
-                themes: [],
-                activeId: DEFAULT_THEME_ID,
-                themesDir: THEMES_DIR,
-            };
-        }
-    });
+    ipc.handle(
+        'theme:list',
+        async (): Promise<
+            | { success: boolean; themes: ThemeInfo[]; activeId: string; themesDir: string; error?: undefined }
+            | { success: boolean; error: string; themes: never[]; activeId: string; themesDir: string }
+        > => {
+            try {
+                const themes = await listThemes();
+                const state = await readState();
+                return {
+                    success: true,
+                    themes,
+                    activeId: typeof state.activeTheme === 'string' ? state.activeTheme : DEFAULT_THEME_ID,
+                    themesDir: THEMES_DIR,
+                };
+            } catch (err) {
+                log.error('[theme] list failed:', err);
+                return {
+                    success: false,
+                    error: (err as Error).message,
+                    themes: [],
+                    activeId: DEFAULT_THEME_ID,
+                    themesDir: THEMES_DIR,
+                };
+            }
+        },
+    );
 
-    ipc.handle('theme:setActive', async (_event, id: unknown) => {
-        if (typeof id !== 'string' || !isValidThemeId(id)) {
-            return { success: false, error: 'Invalid theme id' };
-        }
-        const file = path.join(THEMES_DIR, `${id}.json`);
-        if (!existsSync(file)) return { success: false, error: 'Theme not found' };
-        try {
-            await updateState((s) => ({ ...s, activeTheme: id }));
-            return { success: true };
-        } catch (err) {
-            return { success: false, error: (err as Error).message };
-        }
-    });
+    ipc.handle(
+        'theme:setActive',
+        async (
+            _event,
+            id: unknown,
+        ): Promise<{ success: boolean; error: string } | { success: boolean; error?: undefined }> => {
+            if (typeof id !== 'string' || !isValidThemeId(id)) {
+                return { success: false, error: 'Invalid theme id' };
+            }
+            const file = path.join(THEMES_DIR, `${id}.json`);
+            if (!existsSync(file)) return { success: false, error: 'Theme not found' };
+            try {
+                await updateState((s): { activeTheme: string } => ({ ...s, activeTheme: id }));
+                return { success: true };
+            } catch (err) {
+                return { success: false, error: (err as Error).message };
+            }
+        },
+    );
 
-    ipc.handle('theme:openLeafDir', async () => {
-        try {
-            await fs.mkdir(THEMES_DIR, { recursive: true });
-            await shell.openPath(THEMES_DIR);
-            return { success: true };
-        } catch (err) {
-            return { success: false, error: (err as Error).message };
-        }
-    });
+    ipc.handle(
+        'theme:openLeafDir',
+        async (): Promise<{ success: boolean; error?: undefined } | { success: boolean; error: string }> => {
+            try {
+                await fs.mkdir(THEMES_DIR, { recursive: true });
+                await shell.openPath(THEMES_DIR);
+                return { success: true };
+            } catch (err) {
+                return { success: false, error: (err as Error).message };
+            }
+        },
+    );
 }
 
 /**
@@ -94,7 +109,7 @@ export function register(ipc: IpcMain): void {
  */
 export function ensureSeeded(): Promise<void> {
     if (seedPromise === null) {
-        seedPromise = doSeed().catch((err) => {
+        seedPromise = doSeed().catch((err): void => {
             seedPromise = null;
             log.error('[theme] seeding failed:', err);
         });
@@ -113,7 +128,7 @@ async function doSeed(): Promise<void> {
             const dest = path.join(THEMES_DIR, entry.name);
             if (existsSync(dest)) continue;
             await fs.copyFile(path.join(bundled, entry.name), dest);
-            log.info(`[theme] Seeded ${entry.name}`);
+            log.info('[theme] Seeded theme file', { file: entry.name });
         }
     }
 }
@@ -140,11 +155,11 @@ async function listThemes(): Promise<ThemeInfo[]> {
             const info = normalizeTheme(id, file, parsed);
             if (info !== null) list.push(info);
         } catch (err) {
-            log.warn(`[theme] failed to parse ${entry.name}:`, err);
+            log.warn('[theme] failed to parse theme file', { file: entry.name }, err);
         }
     }
 
-    list.sort((a, b) => {
+    list.sort((a, b): number => {
         // Pin "dark" first, then alphabetical.
         if (a.id === DEFAULT_THEME_ID && b.id !== DEFAULT_THEME_ID) return -1;
         if (b.id === DEFAULT_THEME_ID && a.id !== DEFAULT_THEME_ID) return 1;

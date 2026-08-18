@@ -12,15 +12,14 @@ type Props = {
     isReady: boolean;
     isAnyGenerating: boolean;
     isStreaming: boolean;
-    inputField: HTMLTextAreaElement | null;
     contextFiles?: FileInfo[];
     availableFiles?: FileInfo[];
     maxContextFiles?: number;
 };
 
 const props = withDefaults(defineProps<Props>(), {
-    contextFiles: () => [],
-    availableFiles: () => [],
+    contextFiles: (): FileInfo[] => [],
+    availableFiles: (): FileInfo[] => [],
     maxContextFiles: 10,
 });
 
@@ -32,6 +31,10 @@ const emit = defineEmits<{
     'send': [];
     'stop': [];
 }>();
+
+// Exposed so AiPanel can focus the input after loading a model.
+const inputField = ref<HTMLTextAreaElement | null>(null);
+defineExpose({ inputField });
 
 // ––– Context file picker –––
 
@@ -49,7 +52,7 @@ const filteredAvailableFiles = computed(() => {
     );
 });
 
-function toggleFilePicker() {
+function toggleFilePicker(): void {
     if (showFilePicker.value) {
         showFilePicker.value = false;
         return;
@@ -60,7 +63,7 @@ function toggleFilePicker() {
     void nextTick(() => fileSearchInput.value?.focus());
 }
 
-function selectContextFile(file: FileInfo) {
+function selectContextFile(file: FileInfo): void {
     emit('add-context-file', file);
     showFilePicker.value = false;
 }
@@ -71,7 +74,7 @@ const maxHeightPx = ref(120);
 const minHeight = 40;
 const maxHeight = 150;
 
-function startResize(e: MouseEvent) {
+function startResize(e: MouseEvent): void {
     e.preventDefault();
     isResizing.value = true;
     const startY = e.clientY;
@@ -87,7 +90,7 @@ function startResize(e: MouseEvent) {
         maxHeightPx.value = newHeight;
     }, 16);
 
-    const handleMouseUp = () => {
+    const handleMouseUp = (): void => {
         isResizing.value = false;
         document.body.style.userSelect = originalUserSelect;
         // Save the new height preference

@@ -2,11 +2,38 @@
  * useAIModel — manages model discovery, loading/unloading, and status polling via IPC.
  */
 
-import { ref, shallowRef, computed, onMounted, onUnmounted } from 'vue';
+import { ref, shallowRef, computed, onMounted, onUnmounted, type ComputedRef, type Ref, type ShallowRef } from 'vue';
 import type { AiModelInfo, AiStatus } from '@/schemas/ai';
 import { useI18n } from 'vue-i18n';
 
-export function useAIModel() {
+export type UseAIModelReturn = {
+    status: Ref<AiStatus>;
+    availableModels: ShallowRef<AiModelInfo[]>;
+    isLoading: Ref<boolean>;
+    selectedModelPath: Ref<string>;
+    lastUsedModelName: Ref<string | null>;
+    showDropdown: Ref<boolean>;
+    dropdownRef: Ref<HTMLElement | null>;
+    dropdownPosition: Ref<{ top: string; left: string; minWidth: string }>;
+    previousModelMatch: ComputedRef<AiModelInfo | null>;
+    isReady: ComputedRef<boolean>;
+    isAnyGenerating: ComputedRef<boolean>;
+    selectedModelLabel: ComputedRef<string>;
+    truncate: (text: string, max: number) => string;
+    toggleDropdown: () => void;
+    selectModel: (model: AiModelInfo) => void;
+    refreshModels: () => Promise<void>;
+    refreshStatus: () => Promise<void>;
+    loadModel: (path?: string) => Promise<{ success: boolean; error?: string }>;
+    unloadModel: () => Promise<void>;
+    loadPreviousModel: (
+        chatHistory: { role: string; content: string }[],
+        { hasActiveConversation }: { hasActiveConversation: boolean },
+    ) => Promise<{ success: boolean; error?: string }>;
+    openModelsFolder: () => Promise<void>;
+};
+
+export function useAIModel(): UseAIModelReturn {
     const { t } = useI18n();
 
     const status = ref<AiStatus>({
@@ -32,21 +59,25 @@ export function useAIModel() {
         minWidth: '0px',
     });
 
-    const previousModelMatch = computed(() => {
-        const modelName = lastUsedModelName.value;
-        if (modelName === null || modelName === '' || status.value.isModelLoaded) {
-            return null;
-        }
-        return availableModels.value.find((m) => m.name === modelName || m.path.endsWith(modelName)) ?? null;
-    });
-    const isReady = computed(() => status.value.isModelLoaded);
-    const isAnyGenerating = computed(() => status.value.isGenerating);
+    const previousModelMatch = computed(
+        (): { name: string; path: string; size: number; sizeFormatted: string; modified: string } | null => {
+            const modelName = lastUsedModelName.value;
+            if (modelName === null || modelName === '' || status.value.isModelLoaded) {
+                return null;
+            }
+            return (
+                availableModels.value.find((m): boolean => m.name === modelName || m.path.endsWith(modelName)) ?? null
+            );
+        },
+    );
+    const isReady = computed((): boolean => status.value.isModelLoaded);
+    const isAnyGenerating = computed((): boolean => status.value.isGenerating);
 
-    const selectedModelLabel = computed(() => {
+    const selectedModelLabel = computed((): string => {
         if (selectedModelPath.value === '') {
             return t('ai.select_model');
         }
-        const model = availableModels.value.find((m) => m.path === selectedModelPath.value);
+        const model = availableModels.value.find((m): boolean => m.path === selectedModelPath.value);
         return model !== undefined ? truncate(model.name, 30) : t('ai.select_model');
     });
 
@@ -54,7 +85,7 @@ export function useAIModel() {
         return text.length > max ? text.slice(0, max) + '...' : text;
     }
 
-    function toggleDropdown() {
+    function toggleDropdown(): void {
         if (showDropdown.value) {
             showDropdown.value = false;
             return;
@@ -71,18 +102,18 @@ export function useAIModel() {
         showDropdown.value = true;
     }
 
-    function selectModel(model: AiModelInfo) {
+    function selectModel(model: AiModelInfo): void {
         selectedModelPath.value = model.path;
         showDropdown.value = false;
     }
 
-    function handleDropdownClickOutside(event: MouseEvent) {
+    function handleDropdownClickOutside(event: MouseEvent): void {
         if (dropdownRef.value !== null && !dropdownRef.value.contains(event.target as Node)) {
             showDropdown.value = false;
         }
     }
 
-    async function refreshModels() {
+    async function refreshModels(): Promise<void> {
         try {
             const result = await window.electronAPI.aiListModels();
             if (result.success) availableModels.value = result.models;
@@ -91,7 +122,7 @@ export function useAIModel() {
         }
     }
 
-    async function refreshStatus() {
+    async function refreshStatus(): Promise<void> {
         try {
             status.value = await window.electronAPI.aiGetStatus();
         } catch (error) {
@@ -120,7 +151,7 @@ export function useAIModel() {
     }
 
     /** Bare unload — caller must stop generation and save conversation before calling. */
-    async function unloadModel() {
+    async function unloadModel(): Promise<void> {
         try {
             if (status.value.currentModelName !== null && status.value.currentModelName !== '') {
                 lastUsedModelName.value = status.value.currentModelName;
@@ -141,7 +172,7 @@ export function useAIModel() {
      */
     async function loadPreviousModel(
         chatHistory: { role: string; content: string }[],
-        hasActiveConversation: boolean,
+        { hasActiveConversation }: { hasActiveConversation: boolean },
     ): Promise<{ success: boolean; error?: string }> {
         const previousPath = previousModelMatch.value !== null ? previousModelMatch.value.path : '';
         const result = await loadModel(previousPath);
@@ -149,8 +180,11 @@ export function useAIModel() {
             try {
                 await window.electronAPI.aiRestoreChatHistory(
                     chatHistory
-                        .filter((m) => m.role !== 'system')
-                        .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+                        .filter((m): boolean => m.role !== 'system')
+                        .map((m): { role: 'user' | 'assistant'; content: string } => ({
+                            role: m.role as 'user' | 'assistant',
+                            content: m.content,
+                        })),
                 );
             } catch (err) {
                 window.electronAPI.log.error('Failed to restore chat history:', err);
@@ -159,7 +193,7 @@ export function useAIModel() {
         return result;
     }
 
-    async function openModelsFolder() {
+    async function openModelsFolder(): Promise<void> {
         try {
             await window.electronAPI.aiOpenLeafDir();
         } catch (error) {
@@ -167,11 +201,11 @@ export function useAIModel() {
         }
     }
 
-    onMounted(() => {
+    onMounted((): void => {
         document.addEventListener('click', handleDropdownClickOutside);
     });
 
-    onUnmounted(() => {
+    onUnmounted((): void => {
         document.removeEventListener('click', handleDropdownClickOutside);
     });
 

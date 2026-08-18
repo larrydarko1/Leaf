@@ -6,28 +6,51 @@
 import { ref, nextTick, type Ref } from 'vue';
 import { type CanvasElement, type DrawingDataV2, type ElementType, DrawingDataV2Schema } from '@/schemas/drawing';
 
-export function useDrawingPersistence(
-    canvas: Ref<HTMLCanvasElement | null>,
-    initialContent: () => string | undefined,
-    elements: Ref<CanvasElement[]>,
-    scrollX: Ref<number>,
-    scrollY: Ref<number>,
-    zoom: Ref<number>,
-    history: Ref<string[]>,
-    historyIndex: Ref<number>,
-    genId: () => string,
-    renderScene: () => void,
-    getCtx: () => CanvasRenderingContext2D | null,
-    onSave: (content: string) => void,
-    onContentChanged: (hasChanges: boolean) => void,
-) {
+export type UseDrawingPersistenceReturn = {
+    hasUnsavedChanges: Ref<boolean>;
+    isSaving: Ref<boolean>;
+    scheduleAutoSave: () => void;
+    saveDrawing: () => void;
+    loadDrawing: () => void;
+    cleanup: () => void;
+};
+
+export function useDrawingPersistence({
+    canvas,
+    initialContent,
+    elements,
+    scrollX,
+    scrollY,
+    zoom,
+    history,
+    historyIndex,
+    genId,
+    renderScene,
+    findCtx,
+    onSave,
+    onContentChanged,
+}: {
+    canvas: Ref<HTMLCanvasElement | null>;
+    initialContent: () => string | undefined;
+    elements: Ref<CanvasElement[]>;
+    scrollX: Ref<number>;
+    scrollY: Ref<number>;
+    zoom: Ref<number>;
+    history: Ref<string[]>;
+    historyIndex: Ref<number>;
+    genId: () => string;
+    renderScene: () => void;
+    findCtx: () => CanvasRenderingContext2D | null;
+    onSave: (content: string) => void;
+    onContentChanged: (hasChanges: boolean) => void;
+}): UseDrawingPersistenceReturn {
     const hasUnsavedChanges = ref(false);
     const isSaving = ref(false);
     let autoSaveTimeout: number | null = null;
 
     // Auto-save
 
-    function scheduleAutoSave() {
+    function scheduleAutoSave(): void {
         hasUnsavedChanges.value = true;
         onContentChanged(true);
         if (autoSaveTimeout !== null) {
@@ -36,7 +59,7 @@ export function useDrawingPersistence(
         autoSaveTimeout = window.setTimeout(saveDrawing, 1000);
     }
 
-    function saveDrawing() {
+    function saveDrawing(): void {
         const data: DrawingDataV2 = {
             version: 2,
             elements: elements.value,
@@ -44,7 +67,7 @@ export function useDrawingPersistence(
         };
         isSaving.value = true;
         onSave(JSON.stringify(data, null, 2));
-        setTimeout(() => {
+        setTimeout((): void => {
             isSaving.value = false;
             hasUnsavedChanges.value = false;
             onContentChanged(false);
@@ -53,9 +76,9 @@ export function useDrawingPersistence(
 
     // Load
 
-    function loadDrawing() {
+    function loadDrawing(): void {
         const content = initialContent();
-        const ctx = getCtx();
+        const ctx = findCtx();
         const canvasEl = canvas.value;
 
         if (content === undefined || content.length === 0 || ctx === null || canvasEl === null) {
@@ -133,15 +156,14 @@ export function useDrawingPersistence(
             const shape = stroke.shape;
 
             if (shape !== undefined && shape !== null) {
-                const s = shape;
-                const isLine = s.type === 'line' || s.type === 'arrow';
+                const isLine = shape.type === 'line' || shape.type === 'arrow';
                 const el: CanvasElement = {
                     id: genId(),
-                    type: s.type as ElementType,
-                    x: isLine ? s.x1 : Math.min(s.x1, s.x2),
-                    y: isLine ? s.y1 : Math.min(s.y1, s.y2),
-                    width: isLine ? s.x2 - s.x1 : Math.abs(s.x2 - s.x1),
-                    height: isLine ? s.y2 - s.y1 : Math.abs(s.y2 - s.y1),
+                    type: shape.type as ElementType,
+                    x: isLine ? shape.x1 : Math.min(shape.x1, shape.x2),
+                    y: isLine ? shape.y1 : Math.min(shape.y1, shape.y2),
+                    width: isLine ? shape.x2 - shape.x1 : Math.abs(shape.x2 - shape.x1),
+                    height: isLine ? shape.y2 - shape.y1 : Math.abs(shape.y2 - shape.y1),
                     strokeColor: stroke.color,
                     fillColor: shape.fill === true ? stroke.color : 'transparent',
                     strokeWidth: stroke.size,
@@ -158,11 +180,11 @@ export function useDrawingPersistence(
                 let maxX = -Infinity;
                 let maxY = -Infinity;
 
-                for (const p of points) {
-                    minX = Math.min(minX, p.x);
-                    minY = Math.min(minY, p.y);
-                    maxX = Math.max(maxX, p.x);
-                    maxY = Math.max(maxY, p.y);
+                for (const point of points) {
+                    minX = Math.min(minX, point.x);
+                    minY = Math.min(minY, point.y);
+                    maxX = Math.max(maxX, point.x);
+                    maxY = Math.max(maxY, point.y);
                 }
 
                 const el: CanvasElement = {
@@ -177,7 +199,7 @@ export function useDrawingPersistence(
                     strokeWidth: stroke.size,
                     strokeStyle: 'solid',
                     opacity: 1,
-                    points: points.map((p: { x: number; y: number }) => ({
+                    points: points.map((p: { x: number; y: number }): { x: number; y: number } => ({
                         x: p.x - minX,
                         y: p.y - minY,
                     })),
@@ -194,7 +216,7 @@ export function useDrawingPersistence(
         scheduleAutoSave,
         saveDrawing,
         loadDrawing,
-        cleanup: () => {
+        cleanup: (): void => {
             if (autoSaveTimeout !== null) {
                 clearTimeout(autoSaveTimeout);
             }

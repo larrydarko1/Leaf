@@ -74,16 +74,16 @@ const archShapes = [
 
 const isArchTool = computed(() => archShapeTypes.includes(props.currentTool));
 
-function toggleArchDropdown() {
+function toggleArchDropdown(): void {
     archDropdownOpen.value = !archDropdownOpen.value;
 }
 
-function selectArchTool(tool: ToolType) {
+function selectArchTool(tool: ToolType): void {
     emit('selectTool', tool);
     archDropdownOpen.value = false;
 }
 
-function handleClickOutside(e: MouseEvent) {
+function handleClickOutside(e: MouseEvent): void {
     if (archDropdownOpen.value && archDropdownEl.value !== null && !archDropdownEl.value.contains(e.target as Node)) {
         archDropdownOpen.value = false;
     }

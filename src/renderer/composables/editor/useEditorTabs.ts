@@ -2,19 +2,68 @@
  * useEditorTabs — manages open file tabs with localStorage persistence.
  */
 
-import { ref, computed } from 'vue';
+import { ref, computed, type ComputedRef, type Ref } from 'vue';
 import { type FileInfo, type TabState, type PersistedTabState, PersistedTabStateSchema } from '@/schemas/vault';
 
 const MAX_TABS = 10;
 const STORAGE_KEY_PREFIX = 'leaf-tabs-';
 
-export function useEditorTabs() {
+export type UseEditorTabsReturn = {
+    tabs: Ref<TabState[]>;
+    activeIndex: Ref<number>;
+    activeTab: ComputedRef<TabState | null>;
+    activeFile: ComputedRef<FileInfo | null>;
+    openTab: (file: FileInfo) => number;
+    closeTab: (index: number) => void;
+    switchTab: (index: number) => void;
+    updateTabContent: (
+        filePath: string,
+        { content, hasUnsavedChanges }: { content: string; hasUnsavedChanges: boolean },
+    ) => void;
+    markTabSaved: (filePath: string, content: string) => void;
+    saveScrollPosition: (filePath: string, scrollTop: number) => void;
+    syncTabFiles: (availableFiles: FileInfo[]) => void;
+    renameTabFile: (oldPath: string, newFile: FileInfo) => void;
+    reorderTab: (from: number, to: number) => void;
+    clearTabs: () => void;
+    restoreTabs: (folderPath: string, availableFiles: FileInfo[]) => boolean;
+    setFolderPath: (folderPath: string | null) => void;
+    MAX_TABS: number;
+};
+
+export function useEditorTabs(): UseEditorTabsReturn {
     const tabs = ref<TabState[]>([]);
     const activeIndex = ref<number>(-1);
     let currentFolderPath: string | null = null;
 
-    const activeTab = computed<TabState | null>(() => tabs.value[activeIndex.value] ?? null);
-    const activeFile = computed<FileInfo | null>(() => activeTab.value?.file ?? null);
+    const activeTab = computed<TabState | null>(
+        (): {
+            file: {
+                name: string;
+                path: string;
+                relativePath: string;
+                extension: string;
+                size: number;
+                modified: string;
+                folder: string;
+            };
+            content: string | null;
+            savedContent: string | null;
+            hasUnsavedChanges: boolean;
+            scrollTop: number;
+        } => tabs.value[activeIndex.value] ?? null,
+    );
+    const activeFile = computed<FileInfo | null>(
+        (): {
+            name: string;
+            path: string;
+            relativePath: string;
+            extension: string;
+            size: number;
+            modified: string;
+            folder: string;
+        } | null => activeTab.value?.file ?? null,
+    );
 
     // --- Persistence helpers ---
 
@@ -26,7 +75,10 @@ export function useEditorTabs() {
         const key = storageKey();
         if (key === null) return;
         const data: PersistedTabState = {
-            tabs: tabs.value.map((t) => ({ path: t.file.path, scrollTop: t.scrollTop })),
+            tabs: tabs.value.map((t): { path: string; scrollTop: number } => ({
+                path: t.file.path,
+                scrollTop: t.scrollTop,
+            })),
             activeIndex: activeIndex.value,
         };
         try {
@@ -59,7 +111,24 @@ export function useEditorTabs() {
 
         if (data.tabs.length === 0) return false;
 
-        const fileMap = new Map(availableFiles.map((f) => [f.path, f]));
+        const fileMap = new Map(
+            availableFiles.map(
+                (
+                    f,
+                ): [
+                    string,
+                    {
+                        name: string;
+                        path: string;
+                        relativePath: string;
+                        extension: string;
+                        size: number;
+                        modified: string;
+                        folder: string;
+                    },
+                ] => [f.path, f],
+            ),
+        );
         const restoredTabs: TabState[] = [];
 
         for (const persisted of data.tabs) {
@@ -99,7 +168,7 @@ export function useEditorTabs() {
      * Returns the index of the (new or existing) tab.
      */
     function openTab(file: FileInfo): number {
-        const existing = tabs.value.findIndex((t) => t.file.path === file.path);
+        const existing = tabs.value.findIndex((t): boolean => t.file.path === file.path);
         if (existing !== -1) {
             activeIndex.value = existing;
             persistTabs();
@@ -160,8 +229,11 @@ export function useEditorTabs() {
     }
 
     /** Update the cached content for the active tab (called by NoteEditor on input). */
-    function updateTabContent(filePath: string, content: string, hasUnsavedChanges: boolean): void {
-        const tab = tabs.value.find((t) => t.file.path === filePath);
+    function updateTabContent(
+        filePath: string,
+        { content, hasUnsavedChanges }: { content: string; hasUnsavedChanges: boolean },
+    ): void {
+        const tab = tabs.value.find((t): boolean => t.file.path === filePath);
         if (tab !== undefined) {
             tab.content = content;
             tab.hasUnsavedChanges = hasUnsavedChanges;
@@ -170,7 +242,7 @@ export function useEditorTabs() {
 
     /** Called after a successful save — clear unsaved flag and update savedContent snapshot. */
     function markTabSaved(filePath: string, content: string): void {
-        const tab = tabs.value.find((t) => t.file.path === filePath);
+        const tab = tabs.value.find((t): boolean => t.file.path === filePath);
         if (tab !== undefined) {
             tab.savedContent = content;
             tab.content = content;
@@ -180,7 +252,7 @@ export function useEditorTabs() {
 
     /** Save scroll position when leaving a tab. */
     function saveScrollPosition(filePath: string, scrollTop: number): void {
-        const tab = tabs.value.find((t) => t.file.path === filePath);
+        const tab = tabs.value.find((t): boolean => t.file.path === filePath);
         if (tab !== undefined) {
             tab.scrollTop = scrollTop;
             persistTabs();
@@ -190,8 +262,8 @@ export function useEditorTabs() {
     /** Called after a vault refresh — update FileInfo references for existing tabs. */
     function syncTabFiles(availableFiles: FileInfo[]): void {
         const before = tabs.value.length;
-        tabs.value = tabs.value.filter((tab) => {
-            const updated = availableFiles.find((f) => f.path === tab.file.path);
+        tabs.value = tabs.value.filter((tab): boolean => {
+            const updated = availableFiles.find((f): boolean => f.path === tab.file.path);
             if (updated !== undefined) {
                 tab.file = updated;
                 return true;
@@ -208,7 +280,7 @@ export function useEditorTabs() {
 
     /** Called when a file is renamed — update the matching tab. */
     function renameTabFile(oldPath: string, newFile: FileInfo): void {
-        const tab = tabs.value.find((t) => t.file.path === oldPath);
+        const tab = tabs.value.find((t): boolean => t.file.path === oldPath);
         if (tab !== undefined) {
             tab.file = newFile;
             persistTabs();

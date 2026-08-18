@@ -67,21 +67,12 @@ describe('ThemePicker', () => {
         const wrapper = mountWithI18n(ThemePicker, { props: {} });
         await new Promise((r) => setTimeout(r, 0));
         await wrapper.vm.$nextTick();
-        const closeBtn = wrapper.find('[aria-label], .close-btn, button[class*="close"]');
-        if (closeBtn.exists()) {
-            await closeBtn.trigger('click');
-        } else {
-            // Find any button that might emit close
-            const btns = wrapper.findAll('button');
-            for (const btn of btns) {
-                const label = btn.attributes('aria-label') ?? '';
-                if (label.toLowerCase().includes('close') || btn.classes().some((c) => c.includes('close'))) {
-                    await btn.trigger('click');
-                    break;
-                }
-            }
-        }
-        // ThemePicker should be able to emit close
+
+        const closeBtn = wrapper.find('[aria-label="Close theme panel"]');
+        expect(closeBtn.exists()).toBe(true);
+
+        await closeBtn.trigger('click');
+        expect(wrapper.emitted('close')).toHaveLength(1);
         wrapper.unmount();
     });
 

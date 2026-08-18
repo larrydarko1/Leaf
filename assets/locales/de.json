@@ -26,7 +26,8 @@
     "ai_assistant_panel": "KI-Assistent-Panel",
     "theme_picker": "Themenauswahl-Panel",
     "language_picker": "Sprachauswahl-Panel",
-    "tab_close_button": "Tab schließen"
+    "tab_close_button": "Tab schließen",
+    "tab_unsaved_indicator": "Ungespeicherte Änderungen"
   },
   "file": {
     "image": "Bilddatei",
@@ -85,8 +86,6 @@
     "load_model_to_continue": "Lade ein Modell, um weiter zu chatten",
     "load_model": "{model} laden",
     "drag_to_resize_input_area": "Ziehen, um den Eingabebereich zu vergrößern",
-    "current_note_included_as_context": "Aktuelle Notiz als Kontext einbezogen: {file}",
-    "include_current_note_as_context": "Aktuelle Notiz als Kontext einbeziehen",
     "add_files_to_context": "Dateien zum Kontext hinzufügen",
     "context_files": "Kontextdateien",
     "search_files": "Dateien suchen...",
@@ -142,20 +141,7 @@
     "parameters": "Parameter",
     "load_more_results": "Weitere Ergebnisse laden",
     "load_more": "Mehr laden",
-    "search_for_gguf_models": "Nach GGUF-Modellen auf Hugging Face suchen",
-    "new_file": "Neue Datei",
-    "new": "Neu",
-    "approved": "Genehmigt",
-    "reverted": "Rückgängig gemacht",
-    "error": "Fehler",
-    "view_changes": "Änderungen anzeigen",
-    "original": "Original",
-    "modified": "Geändert",
-    "edit_actions": "Aktionen für diese Bearbeitung",
-    "approve_this_file_edit": "Diese Dateibearbeitung genehmigen",
-    "approve": "Genehmigen",
-    "reject_this_file_edit": "Diese Dateibearbeitung ablehnen",
-    "reject": "Ablehnen"
+    "search_for_gguf_models": "Nach GGUF-Modellen auf Hugging Face suchen"
   },
   "theme": {
     "selection_panel": "Themenauswahl-Panel",

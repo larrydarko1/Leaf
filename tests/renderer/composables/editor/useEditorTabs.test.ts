@@ -209,7 +209,7 @@ describe('useEditorTabs', () => {
         it('updates content and unsaved flag for matching tab', () => {
             const file = makeFile('a.md');
             tabs.openTab(file);
-            tabs.updateTabContent(file.path, 'hello', true);
+            tabs.updateTabContent(file.path, { content: 'hello', hasUnsavedChanges: true });
             const tab = tabs.tabs.value[0];
             expect(tab.content).toBe('hello');
             expect(tab.hasUnsavedChanges).toBe(true);
@@ -217,7 +217,7 @@ describe('useEditorTabs', () => {
 
         it('does nothing for an unknown file path', () => {
             tabs.openTab(makeFile('a.md'));
-            tabs.updateTabContent('/nonexistent.md', 'x', true);
+            tabs.updateTabContent('/nonexistent.md', { content: 'x', hasUnsavedChanges: true });
             expect(tabs.tabs.value[0].content).toBeNull();
         });
     });
@@ -227,7 +227,7 @@ describe('useEditorTabs', () => {
         it('clears unsaved flag and updates savedContent', () => {
             const file = makeFile('a.md');
             tabs.openTab(file);
-            tabs.updateTabContent(file.path, 'new content', true);
+            tabs.updateTabContent(file.path, { content: 'new content', hasUnsavedChanges: true });
             tabs.markTabSaved(file.path, 'new content');
             const tab = tabs.tabs.value[0];
             expect(tab.hasUnsavedChanges).toBe(false);

@@ -71,7 +71,7 @@ describe('ai:getStatus', () => {
     });
 });
 
-// ── ai:listModels ─────────────────────────────────────────────────────────────
+// ── ai:readModels ─────────────────────────────────────────────────────────────
 
 describe('ai:listModels', () => {
     it('returns an empty models list when the models directory does not exist', async () => {

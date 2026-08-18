@@ -28,51 +28,72 @@ const PROMPT_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
 let seedPromise: Promise<void> | null = null;
 
 export function register(ipc: IpcMain): void {
-    ipc.handle('systemPrompt:list', async () => {
-        try {
-            const prompts = await listPrompts();
-            const state = await readState();
-            return {
-                success: true,
-                prompts,
-                activeId: state.activePrompt ?? DEFAULT_PROMPT_ID,
-                promptsDir: PROMPTS_DIR,
-            };
-        } catch (err) {
-            log.error('[systemPrompt] list failed:', err);
-            return {
-                success: false,
-                error: (err as Error).message,
-                prompts: [],
-                activeId: DEFAULT_PROMPT_ID,
-                promptsDir: PROMPTS_DIR,
-            };
-        }
-    });
+    ipc.handle(
+        'systemPrompt:list',
+        async (): Promise<
+            | {
+                  success: boolean;
+                  prompts: { id: string; name: string; description: string; path: string }[];
+                  activeId: string;
+                  promptsDir: string;
+                  error?: undefined;
+              }
+            | { success: boolean; error: string; prompts: never[]; activeId: string; promptsDir: string }
+        > => {
+            try {
+                const prompts = await listPrompts();
+                const state = await readState();
+                return {
+                    success: true,
+                    prompts,
+                    activeId: state.activePrompt ?? DEFAULT_PROMPT_ID,
+                    promptsDir: PROMPTS_DIR,
+                };
+            } catch (err) {
+                log.error('[systemPrompt] list failed:', err);
+                return {
+                    success: false,
+                    error: (err as Error).message,
+                    prompts: [],
+                    activeId: DEFAULT_PROMPT_ID,
+                    promptsDir: PROMPTS_DIR,
+                };
+            }
+        },
+    );
 
-    ipc.handle('systemPrompt:setActive', async (_event, id: unknown) => {
-        if (typeof id !== 'string' || !isValidPromptId(id)) {
-            return { success: false, error: 'Invalid prompt id' };
-        }
-        const file = path.join(PROMPTS_DIR, `${id}.md`);
-        if (!existsSync(file)) return { success: false, error: 'Prompt not found' };
-        try {
-            await updateState((s) => ({ ...s, activePrompt: id }));
-            return { success: true };
-        } catch (err) {
-            return { success: false, error: (err as Error).message };
-        }
-    });
+    ipc.handle(
+        'systemPrompt:setActive',
+        async (
+            _event,
+            id: unknown,
+        ): Promise<{ success: boolean; error: string } | { success: boolean; error?: undefined }> => {
+            if (typeof id !== 'string' || !isValidPromptId(id)) {
+                return { success: false, error: 'Invalid prompt id' };
+            }
+            const file = path.join(PROMPTS_DIR, `${id}.md`);
+            if (!existsSync(file)) return { success: false, error: 'Prompt not found' };
+            try {
+                await updateState((s): { activePrompt: string } => ({ ...s, activePrompt: id }));
+                return { success: true };
+            } catch (err) {
+                return { success: false, error: (err as Error).message };
+            }
+        },
+    );
 
-    ipc.handle('systemPrompt:openLeafDir', async () => {
-        try {
-            await fs.mkdir(LEAF_HOME, { recursive: true });
-            await shell.openPath(LEAF_HOME);
-            return { success: true };
-        } catch (err) {
-            return { success: false, error: (err as Error).message };
-        }
-    });
+    ipc.handle(
+        'systemPrompt:openLeafDir',
+        async (): Promise<{ success: boolean; error?: undefined } | { success: boolean; error: string }> => {
+            try {
+                await fs.mkdir(LEAF_HOME, { recursive: true });
+                await shell.openPath(LEAF_HOME);
+                return { success: true };
+            } catch (err) {
+                return { success: false, error: (err as Error).message };
+            }
+        },
+    );
 }
 
 /**
@@ -110,7 +131,7 @@ export function ensureSeeded(): Promise<void> {
     if (seedPromise === null) {
         // On failure, log and reset the memo so a later call can retry, and
         // swallow so callers never see a rejection — seeding is non-fatal.
-        seedPromise = doSeed().catch((err) => {
+        seedPromise = doSeed().catch((err): void => {
             seedPromise = null;
             log.error('[systemPrompt] seeding failed:', err);
         });
@@ -157,11 +178,13 @@ async function doSeed(): Promise<void> {
             const dest = path.join(PROMPTS_DIR, entry.name);
             if (existsSync(dest)) continue;
             await fs.copyFile(path.join(bundled, entry.name), dest);
-            log.info(`[systemPrompt] Seeded ${entry.name}`);
+            log.info('[systemPrompt] Seeded prompt file', { file: entry.name });
         }
     }
 
-    await updateState((s) => (s.activePrompt === undefined ? { ...s, activePrompt: DEFAULT_PROMPT_ID } : s));
+    await updateState(
+        (s): Record<string, unknown> => (s.activePrompt === undefined ? { ...s, activePrompt: DEFAULT_PROMPT_ID } : s),
+    );
 }
 
 async function listPrompts(): Promise<PromptInfo[]> {
@@ -196,7 +219,7 @@ async function listPrompts(): Promise<PromptInfo[]> {
         });
     }
 
-    list.sort((a, b) => {
+    list.sort((a, b): number => {
         // Pin "default" first, then alphabetical.
         if (a.id === DEFAULT_PROMPT_ID && b.id !== DEFAULT_PROMPT_ID) return -1;
         if (b.id === DEFAULT_PROMPT_ID && a.id !== DEFAULT_PROMPT_ID) return 1;

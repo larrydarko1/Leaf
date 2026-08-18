@@ -58,7 +58,7 @@ onBeforeUnmount(() => {
     document.removeEventListener('click', handleExternalLinkClick, true);
 });
 
-function handleExternalLinkClick(e: MouseEvent) {
+function handleExternalLinkClick(e: MouseEvent): void {
     const closest = (e.target as HTMLElement)?.closest('a');
     const target = closest instanceof HTMLAnchorElement ? closest : null;
     if (target === null) return;
@@ -70,13 +70,13 @@ function handleExternalLinkClick(e: MouseEvent) {
     }
 }
 
-async function refreshFiles() {
+async function refreshFiles(): Promise<void> {
     await vault.refreshFiles();
     selection.syncAfterRefresh(vault.files.value);
     editorTabs.syncTabFiles(vault.files.value);
 }
 
-async function selectFolder() {
+async function selectFolder(): Promise<void> {
     const folderPath = await vault.openFolderDialog();
     if (folderPath !== null && folderPath !== '') {
         editorTabs.clearTabs();
@@ -94,7 +94,7 @@ async function selectFolder() {
     }
 }
 
-async function restoreVault() {
+async function restoreVault(): Promise<void> {
     const loaded = await vault.loadVault();
     const folderPath = vault.currentFolder.value;
     if (loaded === null || folderPath === null) return;
@@ -111,14 +111,14 @@ async function restoreVault() {
     await bookmarks.loadBookmarks();
 }
 
-function changeFolder() {
+function changeFolder(): void {
     vault.closeVault();
     selection.clearSelection();
     editorTabs.clearTabs();
     editorTabs.setFolderPath(null);
 }
 
-function handleKeydown(e: KeyboardEvent) {
+function handleKeydown(e: KeyboardEvent): void {
     if (e.key === 'F2') {
         e.preventDefault();
         if (activeFile.value !== null && renamingFile.value === null) {
@@ -133,19 +133,22 @@ function handleKeydown(e: KeyboardEvent) {
     }
 }
 
-function handleFileSelect(file: FileInfo, event?: MouseEvent, visibleFiles?: FileInfo[]) {
-    selection.selectFile(file, event, visibleFiles);
+function handleFileSelect(
+    file: FileInfo,
+    { event, visibleFiles }: { event?: MouseEvent; visibleFiles?: FileInfo[] } = {},
+): void {
+    selection.selectFile(file, { event, visibleFiles });
     // Open/activate a tab for the single active file (ignore multi-select)
     if (event?.shiftKey !== true) {
         editorTabs.openTab(file);
     }
 }
 
-function handleFolderSelect(folderPath: string) {
+function handleFolderSelect(folderPath: string): void {
     selection.selectFolder(folderPath);
 }
 
-function handleFileSave() {
+function handleFileSave(): void {
     // Mark the active tab as saved
     if (activeFile.value !== null) {
         const tab = editorTabs.tabs.value.find((t) => t.file.path === activeFile.value?.path);
@@ -156,14 +159,14 @@ function handleFileSave() {
     void refreshFiles();
 }
 
-function handleContentChanged(hasChanges: boolean) {
+function handleContentChanged(hasChanges: boolean): void {
     if (activeFile.value !== null) {
         const tab = editorTabs.tabs.value.find((t) => t.file.path === activeFile.value?.path);
         if (tab !== null && tab !== undefined) tab.hasUnsavedChanges = hasChanges;
     }
 }
 
-async function handleRecordingSaved(filePath: string) {
+async function handleRecordingSaved(filePath: string): Promise<void> {
     await refreshFiles();
     const recordingFile = vault.files.value.find((f: FileInfo) => f.path === filePath);
     if (recordingFile !== undefined) {
@@ -172,7 +175,7 @@ async function handleRecordingSaved(filePath: string) {
     }
 }
 
-async function createNewFile() {
+async function createNewFile(): Promise<void> {
     const newFile = await vault.createFile();
     if (newFile !== null) {
         selection.openFile(newFile);
@@ -180,7 +183,7 @@ async function createNewFile() {
     }
 }
 
-async function createNewDrawing() {
+async function createNewDrawing(): Promise<void> {
     const newFile = await vault.createDrawing();
     if (newFile !== null) {
         selection.openFile(newFile);
@@ -188,27 +191,27 @@ async function createNewDrawing() {
     }
 }
 
-async function createNewFolder() {
+async function createNewFolder(): Promise<void> {
     await vault.createFolder();
 }
 
-function startRenameFile(file: FileInfo) {
+function startRenameFile(file: FileInfo): void {
     selection.openFile(file);
     editorTabs.openTab(file);
     renamingFile.value = file;
 }
 
-function startRenameFolder(folderPath: string) {
+function startRenameFolder(folderPath: string): void {
     selection.selectFolder(folderPath);
     renamingFolder.value = folderPath;
 }
 
-function cancelRename() {
+function cancelRename(): void {
     renamingFile.value = null;
     renamingFolder.value = null;
 }
 
-async function handleFileRename(file: FileInfo, newName: string) {
+async function handleFileRename(file: FileInfo, newName: string): Promise<void> {
     const renamed = await vault.renameFile(file, newName);
     renamingFile.value = null;
     if (renamed !== null) {
@@ -218,7 +221,7 @@ async function handleFileRename(file: FileInfo, newName: string) {
     }
 }
 
-async function handleFolderRename(folderPath: string, newName: string) {
+async function handleFolderRename(folderPath: string, newName: string): Promise<void> {
     const newRelativePath = await vault.renameFolder(folderPath, newName);
     renamingFolder.value = null;
     if (newRelativePath !== null && newRelativePath !== '') {
@@ -227,12 +230,12 @@ async function handleFolderRename(folderPath: string, newName: string) {
     }
 }
 
-async function handleFolderDelete(folderPath: string) {
+async function handleFolderDelete(folderPath: string): Promise<void> {
     const deleted = await vault.deleteFolder(folderPath);
     if (deleted) selectedFolder.value = null;
 }
 
-async function handleFileDelete(file: FileInfo) {
+async function handleFileDelete(file: FileInfo): Promise<void> {
     const filesToDelete = selectedFiles.value.length > 1 ? selectedFiles.value : [file];
     const deletedPaths = filesToDelete.map((f) => f.path);
     await vault.deleteFile(filesToDelete);
@@ -250,7 +253,7 @@ async function handleFileDelete(file: FileInfo) {
     }
 }
 
-async function handleFileMove(filePath: string, targetFolderPath: string) {
+async function handleFileMove(filePath: string, targetFolderPath: string): Promise<void> {
     const filePaths = selectedFiles.value.length > 1 ? selectedFiles.value.map((f: FileInfo) => f.path) : [filePath];
     const moves = await vault.moveFiles(filePaths, targetFolderPath);
     moves.forEach((move) => relocateBookmark(move.from, move.to));
@@ -263,7 +266,7 @@ async function handleFileMove(filePath: string, targetFolderPath: string) {
     }
 }
 
-async function handleFolderMove(folderPath: string, targetFolderPath: string) {
+async function handleFolderMove(folderPath: string, targetFolderPath: string): Promise<void> {
     const newRelativePath = await vault.moveFolder(folderPath, targetFolderPath);
     if (newRelativePath !== null) {
         relocateFolderBookmarks(folderPath, newRelativePath);
@@ -272,33 +275,33 @@ async function handleFolderMove(folderPath: string, targetFolderPath: string) {
 }
 
 /** Folder paths are vault-relative; bookmarks are absolute, so anchor both to the vault root. */
-function relocateFolderBookmarks(oldRelativePath: string, newRelativePath: string) {
+function relocateFolderBookmarks(oldRelativePath: string, newRelativePath: string): void {
     const vaultRoot = vault.currentFolder.value;
     if (vaultRoot === null || vaultRoot === '') return;
     relocateBookmark(vaultRoot + '/' + oldRelativePath, vaultRoot + '/' + newRelativePath);
 }
 
-function toggleSearch() {
+function toggleSearch(): void {
     showSearchPanel.value = !showSearchPanel.value;
     if (showSearchPanel.value) showBookmarksPanel.value = false;
 }
 
-function closeSearch() {
+function closeSearch(): void {
     showSearchPanel.value = false;
 }
 
-function handleSearchFileSelect(file: FileInfo, event?: MouseEvent | KeyboardEvent) {
-    selection.selectFile(file, event instanceof MouseEvent ? event : undefined);
+function handleSearchFileSelect(file: FileInfo, event?: MouseEvent | KeyboardEvent): void {
+    selection.selectFile(file, { event: event instanceof MouseEvent ? event : undefined });
     editorTabs.openTab(file);
 }
 
-function handleSearchFileOpen(file: FileInfo) {
+function handleSearchFileOpen(file: FileInfo): void {
     selection.openFile(file);
     editorTabs.openTab(file);
     showSearchPanel.value = false;
 }
 
-function handleTabSwitch(index: number) {
+function handleTabSwitch(index: number): void {
     editorTabs.switchTab(index);
     const file = editorTabs.activeFile.value;
     if (file !== null) {
@@ -306,12 +309,12 @@ function handleTabSwitch(index: number) {
     }
 }
 
-function toggleBookmarks() {
+function toggleBookmarks(): void {
     showBookmarksPanel.value = !showBookmarksPanel.value;
     if (showBookmarksPanel.value) showSearchPanel.value = false;
 }
 
-function toggleAiPanel() {
+function toggleAiPanel(): void {
     showAiPanel.value = !showAiPanel.value;
     if (showAiPanel.value) {
         showThemePanel.value = false;
@@ -319,7 +322,7 @@ function toggleAiPanel() {
     }
 }
 
-function toggleThemePanel() {
+function toggleThemePanel(): void {
     showThemePanel.value = !showThemePanel.value;
     if (showThemePanel.value) {
         showAiPanel.value = false;
@@ -327,7 +330,7 @@ function toggleThemePanel() {
     }
 }
 
-function toggleLanguagePanel() {
+function toggleLanguagePanel(): void {
     showLanguagePanel.value = !showLanguagePanel.value;
     if (showLanguagePanel.value) {
         showAiPanel.value = false;

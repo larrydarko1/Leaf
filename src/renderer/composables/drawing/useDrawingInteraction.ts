@@ -5,62 +5,149 @@
 
 import { ref, computed } from 'vue';
 import { useThrottleFn } from '@/renderer/composables/useThrottle';
+import { measureTextBox } from '@/renderer/composables/drawing/textMetrics';
 import type { Ref, ComputedRef } from 'vue';
 import type { ToolType, ElementType, DragAction, CanvasElement, DefaultStyle } from '@/schemas/drawing';
 
 const MIN_ELEMENT_SIZE = 3;
 
-export function useDrawingInteraction(
+export type UseDrawingInteractionReturn = {
+    isDragging: Ref<boolean>;
+    dragAction: Ref<'none' | 'create' | 'move' | 'resize' | 'pan' | 'freedraw' | 'erase' | 'marquee'>;
+    spaceHeld: Ref<boolean>;
+    shiftHeld: Ref<boolean>;
+    effectiveTool: ComputedRef<
+        | 'freedraw'
+        | 'select'
+        | 'hand'
+        | 'rectangle'
+        | 'ellipse'
+        | 'diamond'
+        | 'triangle'
+        | 'line'
+        | 'arrow'
+        | 'text'
+        | 'eraser'
+        | 'database'
+        | 'server'
+        | 'user'
+        | 'cloud'
+        | 'document'
+        | 'hexagon'
+        | 'parallelogram'
+        | 'star'
+    >;
+    onPointerDown: (e: PointerEvent) => void;
+    onPointerMove: ((e: PointerEvent) => void) & { cancel: () => void };
+    onPointerUp: (e: PointerEvent) => void;
+    onWheel: ((e: WheelEvent) => void) & { cancel: () => void };
+    zoomAtPoint: (newZoom: number, sx: number, sy: number) => void;
+    zoomToCenter: (newZoom: number) => void;
+    handleKeydown: (e: KeyboardEvent) => void;
+    handleKeyup: (e: KeyboardEvent) => void;
+};
+
+export function useDrawingInteraction({
     // DOM refs
-    canvas: Ref<HTMLCanvasElement | null>,
-    containerEl: Ref<HTMLDivElement | null>,
+    canvas,
+    containerEl,
     // View state
-    scrollX: Ref<number>,
-    scrollY: Ref<number>,
-    zoom: Ref<number>,
+    scrollX,
+    scrollY,
+    zoom,
     // Element state
-    elements: Ref<CanvasElement[]>,
-    selectedId: Ref<string | null>,
-    selectedIds: Ref<Set<string>>,
-    creatingElement: Ref<CanvasElement | null>,
-    selectedElement: ComputedRef<CanvasElement | null>,
-    selectedElements: ComputedRef<CanvasElement[]>,
+    elements,
+    selectedId,
+    selectedIds,
+    creatingElement,
+    selectedElement,
+    selectedElements,
     // Element helpers
-    isShapeElement: (el: CanvasElement) => boolean,
-    isShapeTool: (tool: string) => boolean,
-    hitTestElement: (wx: number, wy: number, zoom: number) => CanvasElement | null,
-    hitTestHandle: (wx: number, wy: number, zoom: number) => { elementId: string; handle: string } | null,
-    getElementBounds: (el: CanvasElement) => { x: number; y: number; width: number; height: number },
-    genId: () => string,
+    isShapeElement,
+    isShapeTool,
+    hitTestElement,
+    hitTestHandle,
+    getElementBounds,
+    genId,
     // Tool & style state
-    currentTool: Ref<ToolType>,
-    defaultStyle: Ref<DefaultStyle>,
+    currentTool,
+    defaultStyle,
     // Shared marquee state
-    marqueeRect: Ref<{ x: number; y: number; width: number; height: number } | null>,
+    marqueeRect,
     // Renderer helpers
-    screenToWorld: (sx: number, sy: number) => { x: number; y: number },
-    getScreenPoint: (e: PointerEvent | Touch) => { x: number; y: number },
-    cssWidth: () => number,
-    cssHeight: () => number,
-    renderScene: () => void,
+    screenToWorld,
+    getScreenPoint,
+    cssWidth,
+    cssHeight,
+    renderScene,
     // Text editing callbacks
-    textEditing: Ref<boolean>,
-    finalizeText: () => void,
-    startNewText: (wx: number, wy: number) => void,
-    startEditText: (el: CanvasElement) => void,
-    startEditShapeText: (el: CanvasElement) => void,
+    textEditing,
+    finalizeText,
+    startNewText,
+    startEditText,
+    startEditShapeText,
     // History / persistence callbacks
-    saveToHistory: () => void,
-    scheduleAutoSave: () => void,
+    saveToHistory,
+    scheduleAutoSave,
     // Action callbacks
-    selectTool: (tool: ToolType) => void,
-    undo: () => void,
-    redo: () => void,
-    copySelected: () => void,
-    pasteClipboard: () => void,
-    duplicateSelected: () => void,
-    deleteSelected: () => void,
-) {
+    selectTool,
+    undo,
+    redo,
+    copySelected,
+    pasteClipboard,
+    duplicateSelected,
+    deleteSelected,
+}: {
+    // DOM refs
+    canvas: Ref<HTMLCanvasElement | null>;
+    containerEl: Ref<HTMLDivElement | null>;
+    // View state
+    scrollX: Ref<number>;
+    scrollY: Ref<number>;
+    zoom: Ref<number>;
+    // Element state
+    elements: Ref<CanvasElement[]>;
+    selectedId: Ref<string | null>;
+    selectedIds: Ref<Set<string>>;
+    creatingElement: Ref<CanvasElement | null>;
+    selectedElement: ComputedRef<CanvasElement | null>;
+    selectedElements: ComputedRef<CanvasElement[]>;
+    // Element helpers
+    isShapeElement: (el: CanvasElement) => boolean;
+    isShapeTool: (tool: string) => boolean;
+    hitTestElement: (wx: number, wy: number, zoom: number) => CanvasElement | null;
+    hitTestHandle: (wx: number, wy: number, zoom: number) => { elementId: string; handle: string } | null;
+    getElementBounds: (el: CanvasElement) => { x: number; y: number; width: number; height: number };
+    genId: () => string;
+    // Tool & style state
+    currentTool: Ref<ToolType>;
+    defaultStyle: Ref<DefaultStyle>;
+    // Shared marquee state
+    marqueeRect: Ref<{ x: number; y: number; width: number; height: number } | null>;
+    // Renderer helpers
+    screenToWorld: (sx: number, sy: number) => { x: number; y: number };
+    getScreenPoint: (e: PointerEvent | Touch) => { x: number; y: number };
+    cssWidth: () => number;
+    cssHeight: () => number;
+    renderScene: () => void;
+    // Text editing callbacks
+    textEditing: Ref<boolean>;
+    finalizeText: () => void;
+    startNewText: (wx: number, wy: number) => void;
+    startEditText: (el: CanvasElement) => void;
+    startEditShapeText: (el: CanvasElement) => void;
+    // History / persistence callbacks
+    saveToHistory: () => void;
+    scheduleAutoSave: () => void;
+    // Action callbacks
+    selectTool: (tool: ToolType) => void;
+    undo: () => void;
+    redo: () => void;
+    copySelected: () => void;
+    pasteClipboard: () => void;
+    duplicateSelected: () => void;
+    deleteSelected: () => void;
+}): UseDrawingInteractionReturn {
     // Drag state
     const isDragging = ref(false);
     const dragAction = ref<DragAction>('none');
@@ -76,11 +163,32 @@ export function useDrawingInteraction(
     // Keyboard modifier state
     const spaceHeld = ref(false);
     const shiftHeld = ref(false);
-    const effectiveTool = computed<ToolType>(() => (spaceHeld.value ? 'hand' : currentTool.value));
+    const effectiveTool = computed<ToolType>(
+        ():
+            | 'hand'
+            | 'select'
+            | 'rectangle'
+            | 'ellipse'
+            | 'diamond'
+            | 'triangle'
+            | 'line'
+            | 'arrow'
+            | 'freedraw'
+            | 'text'
+            | 'eraser'
+            | 'database'
+            | 'server'
+            | 'user'
+            | 'cloud'
+            | 'document'
+            | 'hexagon'
+            | 'parallelogram'
+            | 'star' => (spaceHeld.value ? 'hand' : currentTool.value),
+    );
 
     // Pointer events
 
-    function onPointerDown(e: PointerEvent) {
+    function onPointerDown(e: PointerEvent): void {
         if (textEditing.value) {
             finalizeText();
             return;
@@ -126,7 +234,7 @@ export function useDrawingInteraction(
             // Resize handle only when single selection
             const handleHit = hitTestHandle(worldPt.x, worldPt.y, zoom.value);
             if (handleHit !== null) {
-                const el = elements.value.find((e) => e.id === handleHit.elementId);
+                const el = elements.value.find((e): boolean => e.id === handleHit.elementId);
                 if (el !== undefined) {
                     dragAction.value = 'resize';
                     dragHandle.value = handleHit.handle;
@@ -182,7 +290,7 @@ export function useDrawingInteraction(
             const hit = hitTestElement(worldPt.x, worldPt.y, zoom.value);
             if (hit !== null) {
                 erasedIds.value.push(hit.id);
-                elements.value = elements.value.filter((el) => el.id !== hit.id);
+                elements.value = elements.value.filter((el): boolean => el.id !== hit.id);
                 if (selectedId.value === hit.id) {
                     selectedId.value = null;
                 }
@@ -233,7 +341,7 @@ export function useDrawingInteraction(
         }
     }
 
-    function onPointerMove(e: PointerEvent) {
+    function onPointerMove(e: PointerEvent): void {
         if (!isDragging.value) return;
 
         const screenPt = getScreenPoint(e);
@@ -253,15 +361,15 @@ export function useDrawingInteraction(
             case 'create': {
                 const creating = creatingElement.value;
                 if (creating === null) break;
-                let w = worldPt.x - creating.x;
-                let h = worldPt.y - creating.y;
+                let width = worldPt.x - creating.x;
+                let height = worldPt.y - creating.y;
                 if (shiftHeld.value) {
-                    const constrained = constrainDimensions(creating.type, w, h);
-                    w = constrained.w;
-                    h = constrained.h;
+                    const constrained = constrainDimensions(creating.type, width, height);
+                    width = constrained.w;
+                    height = constrained.h;
                 }
-                creating.width = w;
-                creating.height = h;
+                creating.width = width;
+                creating.height = height;
                 renderScene();
                 break;
             }
@@ -303,7 +411,7 @@ export function useDrawingInteraction(
                 const hit = hitTestElement(worldPt.x, worldPt.y, zoom.value);
                 if (hit !== null && !erasedIds.value.includes(hit.id)) {
                     erasedIds.value.push(hit.id);
-                    elements.value = elements.value.filter((el) => el.id !== hit.id);
+                    elements.value = elements.value.filter((el): boolean => el.id !== hit.id);
                     if (selectedIds.value.has(hit.id)) {
                         const newSet = new Set(selectedIds.value);
                         newSet.delete(hit.id);
@@ -326,8 +434,13 @@ export function useDrawingInteraction(
                 const mh = Math.abs(marquee.height);
                 const newSet = shiftHeld.value ? new Set(selectedIds.value) : new Set<string>();
                 for (const el of elements.value) {
-                    const b = getElementBounds(el);
-                    if (b.x >= mx && b.y >= my && b.x + b.width <= mx + mw && b.y + b.height <= my + mh) {
+                    const bounds = getElementBounds(el);
+                    if (
+                        bounds.x >= mx &&
+                        bounds.y >= my &&
+                        bounds.x + bounds.width <= mx + mw &&
+                        bounds.y + bounds.height <= my + mh
+                    ) {
                         newSet.add(el.id);
                     }
                 }
@@ -338,7 +451,7 @@ export function useDrawingInteraction(
         }
     }
 
-    function onPointerUp(e: PointerEvent) {
+    function onPointerUp(e: PointerEvent): void {
         if (!isDragging.value) return;
         const canvasEl = canvas.value;
         if (canvasEl !== null) {
@@ -394,11 +507,11 @@ export function useDrawingInteraction(
                 let minY = Infinity;
                 let maxX = -Infinity;
                 let maxY = -Infinity;
-                for (const p of pts) {
-                    minX = Math.min(minX, p.x);
-                    minY = Math.min(minY, p.y);
-                    maxX = Math.max(maxX, p.x);
-                    maxY = Math.max(maxY, p.y);
+                for (const point of pts) {
+                    minX = Math.min(minX, point.x);
+                    minY = Math.min(minY, point.y);
+                    maxX = Math.max(maxX, point.x);
+                    maxY = Math.max(maxY, point.y);
                 }
                 creating.width = maxX - minX;
                 creating.height = maxY - minY;
@@ -440,7 +553,7 @@ export function useDrawingInteraction(
         wx: number,
         wy: number,
         orig: { x: number; y: number; width: number; height: number; fontSize?: number },
-    ) {
+    ): void {
         if (el.type === 'line' || el.type === 'arrow') {
             if (handle === 'start') {
                 const endX = orig.x + orig.width;
@@ -494,28 +607,17 @@ export function useDrawingInteraction(
 
             // Recalculate text bounds to match the new font size
             if (el.type === 'text' && el.text !== undefined && el.text.length > 0) {
-                const canvasEl = canvas.value;
-                if (canvasEl !== null) {
-                    const ctx = canvasEl.getContext('2d');
-                    if (ctx !== null) {
-                        ctx.save();
-                        ctx.font = `${newFs}px "Helvetica", "Segoe UI", sans-serif`;
-                        const lines = el.text.split('\n');
-                        const lh = newFs * 1.3;
-                        let maxW = 0;
-                        for (const line of lines) {
-                            maxW = Math.max(maxW, ctx.measureText(line).width);
-                        }
-                        ctx.restore();
-                        el.width = maxW;
-                        el.height = lines.length * lh;
-                    }
+                const ctx = canvas.value?.getContext('2d') ?? null;
+                if (ctx !== null) {
+                    const box = measureTextBox(ctx, el.text, newFs);
+                    el.width = box.width;
+                    el.height = box.height;
                 }
             }
         }
     }
 
-    function constrainDimensions(type: ElementType, w: number, h: number) {
+    function constrainDimensions(type: ElementType, w: number, h: number): { w: number; h: number } {
         const squareTypes = ['rectangle', 'ellipse', 'diamond', 'triangle', 'hexagon', 'star'];
         if (squareTypes.includes(type)) {
             const max = Math.max(Math.abs(w), Math.abs(h));
@@ -532,7 +634,7 @@ export function useDrawingInteraction(
 
     // Wheel and zoom
 
-    function onWheel(e: WheelEvent) {
+    function onWheel(e: WheelEvent): void {
         const screenPt = getScreenPoint(e as unknown as PointerEvent);
         if (e.ctrlKey || e.metaKey) {
             const delta = -e.deltaY * 0.01;
@@ -544,7 +646,7 @@ export function useDrawingInteraction(
         renderScene();
     }
 
-    function zoomAtPoint(newZoom: number, sx: number, sy: number) {
+    function zoomAtPoint(newZoom: number, sx: number, sy: number): void {
         newZoom = Math.max(0.1, Math.min(5, newZoom));
         const oldZoom = zoom.value;
         scrollX.value = sx - (sx - scrollX.value) * (newZoom / oldZoom);
@@ -552,14 +654,14 @@ export function useDrawingInteraction(
         zoom.value = newZoom;
     }
 
-    function zoomToCenter(newZoom: number) {
+    function zoomToCenter(newZoom: number): void {
         zoomAtPoint(newZoom, cssWidth() / 2, cssHeight() / 2);
         renderScene();
     }
 
     // Keyboard events
 
-    function handleKeydown(e: KeyboardEvent) {
+    function handleKeydown(e: KeyboardEvent): void {
         if (textEditing.value) return;
 
         if (e.code === 'Space' && !isDragging.value) {
@@ -601,7 +703,7 @@ export function useDrawingInteraction(
 
         if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
             e.preventDefault();
-            selectedIds.value = new Set(elements.value.map((el) => el.id));
+            selectedIds.value = new Set(elements.value.map((el): string => el.id));
             renderScene();
             return;
         }
@@ -682,7 +784,7 @@ export function useDrawingInteraction(
         }
     }
 
-    function handleKeyup(e: KeyboardEvent) {
+    function handleKeyup(e: KeyboardEvent): void {
         if (e.code === 'Space') spaceHeld.value = false;
         if (e.key === 'Shift') shiftHeld.value = false;
     }

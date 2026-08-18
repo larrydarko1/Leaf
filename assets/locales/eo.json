@@ -26,7 +26,8 @@
     "ai_assistant_panel": "Panelo de AI-Asistanto",
     "theme_picker": "Panelo de Etosa Elekto",
     "language_picker": "Panelo de Lingva Elekto",
-    "tab_close_button": "Butono por Fermi Langeton"
+    "tab_close_button": "Butono por Fermi Langeton",
+    "tab_unsaved_indicator": "Nekonservitaj ŝanĝoj"
   },
   "file": {
     "image": "Bilddosiero",
@@ -85,8 +86,6 @@
     "load_model_to_continue": "Ŝargu modelon por daŭrigi babiladon",
     "load_model": "Ŝargi {model}",
     "drag_to_resize_input_area": "Trenu por Regrandigi Enigan Areon",
-    "current_note_included_as_context": "Nuna noto inkluzivita kiel kunteksto: {file}",
-    "include_current_note_as_context": "Inkluzivi Nunan Noton kiel Kuntekston",
     "add_files_to_context": "Aldoni dosierojn al kunteksto",
     "context_files": "Kuntekstaj dosieroj",
     "search_files": "Serĉi dosierojn...",
@@ -142,20 +141,7 @@
     "parameters": "Parametroj",
     "load_more_results": "Ŝargi Pliajn Rezultojn",
     "load_more": "Ŝargi Pli",
-    "search_for_gguf_models": "Serĉi GGUF-Modelojn en Hugging Face",
-    "new_file": "Nova Dosiero",
-    "new": "Nova",
-    "approved": "Aprobita",
-    "reverted": "Malfarita",
-    "error": "Eraro",
-    "view_changes": "Vidi Ŝanĝojn",
-    "original": "Originalo",
-    "modified": "Modifita",
-    "edit_actions": "Agoj por Ĉi Tiu Redakto",
-    "approve_this_file_edit": "Aprobi Ĉi Tiun Dosieran Redakton",
-    "approve": "Aprobi",
-    "reject_this_file_edit": "Malaprobi Ĉi Tiun Dosieran Redakton",
-    "reject": "Malaprobi"
+    "search_for_gguf_models": "Serĉi GGUF-Modelojn en Hugging Face"
   },
   "theme": {
     "selection_panel": "Panelo de Etosa Elekto",

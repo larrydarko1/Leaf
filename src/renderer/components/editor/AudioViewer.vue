@@ -46,12 +46,12 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 
 function formatTime(seconds: number): string {
     if (seconds === 0 || !isFinite(seconds)) return '0:00';
-    const m = Math.floor(seconds / 60);
-    const s = Math.floor(seconds % 60);
-    return `${m}:${s.toString().padStart(2, '0')}`;
+    const minutes = Math.floor(seconds / 60);
+    const wholeSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${wholeSeconds.toString().padStart(2, '0')}`;
 }
 
-function onKeydown(e: KeyboardEvent) {
+function onKeydown(e: KeyboardEvent): void {
     if (e.key !== ' ') return;
     const target = e.target as HTMLElement;
     if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;

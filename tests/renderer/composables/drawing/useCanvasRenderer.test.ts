@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { useCanvasRenderer } from '@/renderer/composables/drawing/useCanvasRenderer';
 import type { CanvasElement } from '@/schemas/drawing';
 
@@ -141,11 +141,6 @@ function makeRenderer(
     const creatingElementRef = ref<CanvasElement | null>(options.creatingElement ?? null);
     const selectedIdsRef = ref<Set<string>>(new Set(options.selectedIds ?? []));
 
-    const selectedElement = computed(() => {
-        if (selectedIdsRef.value.size !== 1) return null;
-        const [id] = selectedIdsRef.value;
-        return elementsRef.value.find((e) => e.id === id) ?? null;
-    });
     const marqueeRect = ref<{ x: number; y: number; width: number; height: number } | null>(null);
 
     function getElementBounds(el: CanvasElement) {
@@ -162,20 +157,19 @@ function makeRenderer(
         };
     }
 
-    const renderer = useCanvasRenderer(
-        canvasRef,
-        containerRef,
-        scrollXRef,
-        scrollYRef,
-        zoomRef,
-        elementsRef,
-        creatingElementRef,
-        selectedIdsRef,
-        selectedElement,
+    const renderer = useCanvasRenderer({
+        canvas: canvasRef,
+        containerEl: containerRef,
+        scrollX: scrollXRef,
+        scrollY: scrollYRef,
+        zoom: zoomRef,
+        elements: elementsRef,
+        creatingElement: creatingElementRef,
+        selectedIds: selectedIdsRef,
         marqueeRect,
         getElementBounds,
         getHandlePositions,
-    );
+    });
 
     renderer.setupCanvas();
 
@@ -202,9 +196,9 @@ describe('useCanvasRenderer', () => {
             expect(HTMLCanvasElement.prototype.getContext).toHaveBeenCalledWith('2d');
         });
 
-        it('returns ctx via getCtx() after setup', () => {
+        it('returns ctx via findCtx() after setup', () => {
             const { renderer } = makeRenderer();
-            expect(renderer.getCtx()).toBe(mockCtx);
+            expect(renderer.findCtx()).toBe(mockCtx);
         });
 
         it('returns zero dimensions when canvas is null', () => {
@@ -277,20 +271,19 @@ describe('useCanvasRenderer', () => {
         it('does nothing when ctx is null (canvas not set up)', () => {
             const canvasRef = ref<HTMLCanvasElement | null>(null);
             const containerRef = ref<HTMLDivElement | null>(null);
-            const renderer = useCanvasRenderer(
-                canvasRef,
-                containerRef,
-                ref(0),
-                ref(0),
-                ref(1),
-                ref([]),
-                ref(null),
-                ref(new Set()),
-                computed(() => null),
-                ref(null),
-                (el) => ({ x: el.x, y: el.y, width: 0, height: 0 }),
-                () => ({}),
-            );
+            const renderer = useCanvasRenderer({
+                canvas: canvasRef,
+                containerEl: containerRef,
+                scrollX: ref(0),
+                scrollY: ref(0),
+                zoom: ref(1),
+                elements: ref([]),
+                creatingElement: ref(null),
+                selectedIds: ref(new Set()),
+                marqueeRect: ref(null),
+                getElementBounds: (el) => ({ x: el.x, y: el.y, width: 0, height: 0 }),
+                getHandlePositions: () => ({}),
+            });
             // Should not throw
             renderer.renderScene();
             expect(mockCtx.setTransform).not.toHaveBeenCalled();

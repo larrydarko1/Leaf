@@ -4,8 +4,12 @@
  */
 
 import { contextBridge, ipcRenderer } from 'electron';
+import type { ElectronAPI } from '@/schemas/electron';
+import type { HfDownloadProgress } from '@/schemas/hf';
+import type { SpeechStatusEvent } from '@/schemas/speech';
 
-contextBridge.exposeInMainWorld('electronAPI', {
+// Typed against the contract the renderer consumes, so the two cannot drift.
+const api: ElectronAPI = {
     // Logging (routed to electron-log in the main process)
     log: {
         error: (...args: unknown[]) => ipcRenderer.send('log:error', ...args),
@@ -56,13 +60,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.invoke('audio:saveRecording', folderPath, fileName, base64Data),
 
     // Spellcheck
-    getSpellingSuggestions: (word: string) => ipcRenderer.invoke('spellcheck:getSuggestions', word),
 
     // AI / LLM operations
     aiListModels: () => ipcRenderer.invoke('ai:listModels'),
     aiLoadModel: (modelPath: string) => ipcRenderer.invoke('ai:loadModel', modelPath),
     aiUnloadModel: () => ipcRenderer.invoke('ai:unloadModel'),
-    aiChat: (userMessage: string, noteContext: string) => ipcRenderer.invoke('ai:chat', userMessage, noteContext),
+    aiChat: (userMessage: string, noteContext?: string | null) =>
+        ipcRenderer.invoke('ai:chat', userMessage, noteContext),
     aiStopChat: () => ipcRenderer.invoke('ai:stopChat'),
     aiResetChat: () => ipcRenderer.invoke('ai:resetChat'),
     aiRestoreChatHistory: (messages: object[]) => ipcRenderer.invoke('ai:restoreChatHistory', messages),
@@ -114,21 +118,22 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // File system watcher
     watchFolder: () => ipcRenderer.invoke('fs:watchFolder'),
     unwatchFolder: () => ipcRenderer.invoke('fs:unwatchFolder'),
-    onFsChanged: (callback: (data: object) => void) => {
-        ipcRenderer.on('fs:changed', (_event, data: object) => callback(data));
+    onFsChanged: (callback: (data: { eventType: string; filename: string }) => void) => {
+        ipcRenderer.on('fs:changed', (_event, data: { eventType: string; filename: string }) => callback(data));
     },
     removeFsChangedListener: () => {
         ipcRenderer.removeAllListeners('fs:changed');
     },
 
     // Hugging Face model download operations
-    hfSearch: (query: string, sort?: string, offset?: number) => ipcRenderer.invoke('hf:search', query, sort, offset),
+    hfSearch: (query: string, options?: { sort?: string; offset?: number }) =>
+        ipcRenderer.invoke('hf:search', query, options?.sort, options?.offset),
     hfListFiles: (repoId: string) => ipcRenderer.invoke('hf:listFiles', repoId),
     hfDownload: (url: string, fileName: string) => ipcRenderer.invoke('hf:download', url, fileName),
     hfCancelDownload: (fileName: string) => ipcRenderer.invoke('hf:cancelDownload', fileName),
     hfGetActiveDownloads: () => ipcRenderer.invoke('hf:getActiveDownloads'),
-    onHfDownloadProgress: (callback: (progress: object) => void) => {
-        ipcRenderer.on('hf:downloadProgress', (_event, progress: object) => callback(progress));
+    onHfDownloadProgress: (callback: (progress: HfDownloadProgress) => void) => {
+        ipcRenderer.on('hf:downloadProgress', (_event, progress: HfDownloadProgress) => callback(progress));
     },
     removeHfDownloadProgressListener: () => {
         ipcRenderer.removeAllListeners('hf:downloadProgress');
@@ -145,10 +150,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     speechInit: () => ipcRenderer.invoke('speech:init'),
     speechTranscribe: (audioData: number[]) => ipcRenderer.invoke('speech:transcribe', audioData),
     speechGetStatus: () => ipcRenderer.invoke('speech:getStatus'),
-    onSpeechStatus: (callback: (status: object) => void) => {
-        ipcRenderer.on('speech:status', (_event, status: object) => callback(status));
+    onSpeechStatus: (callback: (status: SpeechStatusEvent) => void) => {
+        ipcRenderer.on('speech:status', (_event, status: SpeechStatusEvent) => callback(status));
     },
     removeSpeechStatusListener: () => {
         ipcRenderer.removeAllListeners('speech:status');
     },
-});
+};
+
+contextBridge.exposeInMainWorld('electronAPI', api);

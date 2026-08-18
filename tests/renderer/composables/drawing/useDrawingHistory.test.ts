@@ -34,23 +34,18 @@ function makeHistory() {
     const scheduleAutoSave = vi.fn();
     const renderScene = vi.fn();
 
-    const selectedElement = computed(() =>
-        selectedId.value ? (elements.value.find((el) => el.id === selectedId.value) ?? null) : null,
-    );
     const selectedElements = computed(() => elements.value.filter((el) => selectedIds.value.has(el.id)));
 
-    const hist = useDrawingHistory(
+    const hist = useDrawingHistory({
         elements,
-        selectedId,
         selectedIds,
-        selectedElement,
         selectedElements,
         clipboard,
         history,
         historyIndex,
         scheduleAutoSave,
         renderScene,
-    );
+    });
 
     return { elements, selectedId, selectedIds, clipboard, history, historyIndex, scheduleAutoSave, renderScene, hist };
 }

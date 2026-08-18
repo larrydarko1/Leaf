@@ -71,10 +71,10 @@ export const CODE_EXTENSIONS: string[] = [
     '.nvmrc',
 ];
 
-export const isImageFile = (ext: string) => IMAGE_EXTENSIONS.includes(ext.toLowerCase());
-export const isVideoFile = (ext: string) => VIDEO_EXTENSIONS.includes(ext.toLowerCase());
-export const isAudioFile = (ext: string) => AUDIO_EXTENSIONS.includes(ext.toLowerCase());
-export const isPdfFile = (ext: string) => PDF_EXTENSIONS.includes(ext.toLowerCase());
-export const isDrawingFile = (ext: string) => DRAWING_EXTENSIONS.includes(ext.toLowerCase());
-export const isCodeFile = (ext: string) => CODE_EXTENSIONS.includes(ext.toLowerCase());
-export const isMarkdownFile = (ext: string) => ext.toLowerCase() === '.md';
+export const isImageFile = (ext: string): boolean => IMAGE_EXTENSIONS.includes(ext.toLowerCase());
+export const isVideoFile = (ext: string): boolean => VIDEO_EXTENSIONS.includes(ext.toLowerCase());
+export const isAudioFile = (ext: string): boolean => AUDIO_EXTENSIONS.includes(ext.toLowerCase());
+export const isPdfFile = (ext: string): boolean => PDF_EXTENSIONS.includes(ext.toLowerCase());
+export const isDrawingFile = (ext: string): boolean => DRAWING_EXTENSIONS.includes(ext.toLowerCase());
+export const isCodeFile = (ext: string): boolean => CODE_EXTENSIONS.includes(ext.toLowerCase());
+export const isMarkdownFile = (ext: string): boolean => ext.toLowerCase() === '.md';

@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useThrottleFn } from '@/renderer/composables/useThrottle';
 import type { ToolType, StrokeStyle, DefaultStyle, StyleKey } from '@/schemas/drawing';
 import { useDrawingElements, genId } from '@/renderer/composables/drawing/useDrawingElements';
+import { measureTextBox } from '@/renderer/composables/drawing/textMetrics';
 import { useCanvasRenderer } from '@/renderer/composables/drawing/useCanvasRenderer';
 import { useDrawingInteraction } from '@/renderer/composables/drawing/useDrawingInteraction';
 import { useTextEditing } from '@/renderer/composables/drawing/useTextEditing';
@@ -75,9 +76,9 @@ const {
     getScreenPoint,
     cssWidth,
     cssHeight,
-    getCtx,
+    findCtx,
     exportToBlob,
-} = useCanvasRenderer(
+} = useCanvasRenderer({
     canvas,
     containerEl,
     scrollX,
@@ -86,11 +87,10 @@ const {
     elements,
     creatingElement,
     selectedIds,
-    selectedElement,
     marqueeRect,
     getElementBounds,
     getHandlePositions,
-);
+});
 
 const {
     hasUnsavedChanges,
@@ -98,9 +98,9 @@ const {
     scheduleAutoSave,
     loadDrawing,
     cleanup: cleanupAutoSave,
-} = useDrawingPersistence(
+} = useDrawingPersistence({
     canvas,
-    () => props.initialContent,
+    initialContent: (): string | undefined => props.initialContent,
     elements,
     scrollX,
     scrollY,
@@ -109,24 +109,22 @@ const {
     historyIndex,
     genId,
     renderScene,
-    getCtx,
-    (content) => emit('save', content),
-    (hasChanges) => emit('contentChanged', hasChanges),
-);
+    findCtx,
+    onSave: (content: string): void => emit('save', content),
+    onContentChanged: (hasChanges: boolean): void => emit('contentChanged', hasChanges),
+});
 
 const { saveToHistory, undo, redo, clearAll, copySelected, pasteClipboard, duplicateSelected, deleteSelected } =
-    useDrawingHistory(
+    useDrawingHistory({
         elements,
-        selectedId,
         selectedIds,
-        selectedElement,
         selectedElements,
         clipboard,
         history,
         historyIndex,
         scheduleAutoSave,
         renderScene,
-    );
+    });
 
 const {
     textEditing,
@@ -139,7 +137,7 @@ const {
     onTextEnter,
     finalizeText,
     onDoubleClick,
-} = useTextEditing(
+} = useTextEditing({
     canvas,
     textInputEl,
     zoom,
@@ -152,11 +150,11 @@ const {
     defaultStyle,
     worldToScreen,
     screenToWorld,
-    getCtx,
+    findCtx,
     renderScene,
     saveToHistory,
     scheduleAutoSave,
-);
+});
 
 const {
     isDragging,
@@ -168,7 +166,7 @@ const {
     zoomToCenter,
     handleKeydown,
     handleKeyup,
-} = useDrawingInteraction(
+} = useDrawingInteraction({
     canvas,
     containerEl,
     scrollX,
@@ -208,7 +206,7 @@ const {
     pasteClipboard,
     duplicateSelected,
     deleteSelected,
-);
+});
 
 const zoomPercent = computed(() => Math.round(zoom.value * 100));
 
@@ -284,45 +282,35 @@ onUnmounted(() => {
 watch(() => props.filePath, loadDrawing);
 watch(() => props.initialContent, loadDrawing);
 
-function selectTool(tool: ToolType) {
+function selectTool(tool: ToolType): void {
     currentTool.value = tool;
     if (tool !== 'select') selectedIds.value = new Set();
     renderScene();
 }
 
-function handleClickOutside(e: MouseEvent) {
+function handleClickOutside(e: MouseEvent): void {
     toolbarRef.value?.handleClickOutside(e);
 }
 
-function setProperty(prop: StyleKey, value: string | number) {
+function setProperty(prop: StyleKey, value: string | number): void {
     // Update all selected elements
     if (selectedElements.value.length > 0) {
         for (const el of selectedElements.value) {
             el[prop] = value as never;
 
             // When fontSize changes on a text element, recalculate bounds to fit
-            if (
+            const resizesText =
                 prop === 'fontSize' &&
                 typeof value === 'number' &&
                 el.type === 'text' &&
                 el.text !== null &&
                 el.text !== undefined &&
-                el.text !== ''
-            ) {
-                const ctx = getCtx();
-                if (ctx !== null) {
-                    ctx.save();
-                    ctx.font = `${value}px "Helvetica", "Segoe UI", sans-serif`;
-                    const lines = el.text.split('\n');
-                    const lh = value * 1.3;
-                    let maxW = 0;
-                    for (const line of lines) {
-                        maxW = Math.max(maxW, ctx.measureText(line).width);
-                    }
-                    ctx.restore();
-                    el.width = maxW;
-                    el.height = lines.length * lh;
-                }
+                el.text !== '';
+            const ctx = resizesText ? findCtx() : null;
+            if (ctx !== null && typeof value === 'number' && el.text !== undefined && el.text !== null) {
+                const box = measureTextBox(ctx, el.text, value);
+                el.width = box.width;
+                el.height = box.height;
             }
         }
 
@@ -336,11 +324,11 @@ function setProperty(prop: StyleKey, value: string | number) {
     }
 }
 
-function openExportDialog() {
+function openExportDialog(): void {
     showExportDialog.value = true;
 }
 
-function closeExportDialog() {
+function closeExportDialog(): void {
     showExportDialog.value = false;
 }
 </script>

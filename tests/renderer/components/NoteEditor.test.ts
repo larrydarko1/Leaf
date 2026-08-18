@@ -479,13 +479,13 @@ describe('NoteEditor', () => {
             const file = makeFile({ extension: '.md', path: '/v/n.md' });
             const wrapper = mountEditor(file);
             const args = vi.mocked(useNotePersistence).mock.calls.at(-1) as unknown[];
-            const getFile = args[0] as () => FileInfo | null;
+            const findFile = args[0] as () => FileInfo | null;
             const isMd = args[1] as () => boolean;
             const onLoad = args[2] as (s: string) => void;
             const onSave = args[3] as (c: string) => void;
             const onChanged = args[4] as (v: boolean) => void;
 
-            expect(getFile()).toEqual(file);
+            expect(findFile()).toEqual(file);
             expect(isMd()).toBe(true);
             onLoad('body'); // resolveEmbeds wiring
 
@@ -512,9 +512,9 @@ describe('NoteEditor', () => {
         it('wires the editor-drop file getter', () => {
             const file = makeFile({ extension: '.md', path: '/v/n.md' });
             const wrapper = mountEditor(file, '/ws');
-            const args = vi.mocked(useEditorDrop).mock.calls.at(-1) as unknown[];
-            expect((args[1] as () => FileInfo | null)()).toEqual(file);
-            expect(args[2]).not.toBeInstanceOf(Function);
+            const options = vi.mocked(useEditorDrop).mock.calls.at(-1)?.[0];
+            expect(options?.findFile()).toEqual(file);
+            expect(options?.textareaRef).not.toBeInstanceOf(Function);
             wrapper.unmount();
         });
     });

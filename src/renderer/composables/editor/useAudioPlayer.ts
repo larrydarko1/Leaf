@@ -2,9 +2,30 @@
  * useAudioPlayer — reactive audio playback state, seeking, and volume control.
  */
 
-import { ref, computed } from 'vue';
+import { ref, computed, type ComputedRef, type Ref } from 'vue';
 
-export function useAudioPlayer() {
+export type UseAudioPlayerReturn = {
+    audioUrl: Ref<string>;
+    audioRef: Ref<HTMLAudioElement | null>;
+    audioError: Ref<boolean>;
+    isLoadingAudio: Ref<boolean>;
+    audioPlaying: Ref<boolean>;
+    audioDuration: Ref<number>;
+    audioCurrentTime: Ref<number>;
+    audioVolume: Ref<number>;
+    audioProgressPercent: ComputedRef<number>;
+    onAudioError: () => void;
+    onAudioLoaded: () => void;
+    onAudioEnded: () => void;
+    toggleAudioPlayback: () => void;
+    seekAudio: (event: MouseEvent) => void;
+    onVolumeChange: (event: Event) => void;
+    toggleMute: () => void;
+    loadAudio: (filePath: string) => Promise<void>;
+    reset: () => void;
+};
+
+export function useAudioPlayer(): UseAudioPlayerReturn {
     const audioUrl = ref('');
     const audioRef = ref<HTMLAudioElement | null>(null);
     const audioError = ref(false);
@@ -15,17 +36,17 @@ export function useAudioPlayer() {
     const audioVolume = ref(1);
     let audioRafId: number | null = null;
 
-    function onAudioError() {
+    function onAudioError(): void {
         audioError.value = true;
     }
 
-    function onAudioLoaded() {
+    function onAudioLoaded(): void {
         if (audioRef.value !== null) {
             audioDuration.value = audioRef.value.duration;
         }
     }
 
-    function onAudioEnded() {
+    function onAudioEnded(): void {
         audioPlaying.value = false;
         if (audioRafId !== null) {
             cancelAnimationFrame(audioRafId);
@@ -33,7 +54,7 @@ export function useAudioPlayer() {
         }
     }
 
-    function updateAudioProgress() {
+    function updateAudioProgress(): void {
         if (audioRef.value !== null) {
             audioCurrentTime.value = audioRef.value.currentTime;
         }
@@ -42,7 +63,7 @@ export function useAudioPlayer() {
         }
     }
 
-    function toggleAudioPlayback() {
+    function toggleAudioPlayback(): void {
         if (audioRef.value === null) return;
         if (audioPlaying.value) {
             audioRef.value.pause();
@@ -58,12 +79,12 @@ export function useAudioPlayer() {
         }
     }
 
-    const audioProgressPercent = computed(() => {
+    const audioProgressPercent = computed((): number => {
         if (audioDuration.value === 0) return 0;
         return (audioCurrentTime.value / audioDuration.value) * 100;
     });
 
-    function seekAudio(event: MouseEvent) {
+    function seekAudio(event: MouseEvent): void {
         if (audioRef.value === null || !(audioDuration.value > 0)) return;
         const wrapper = event.currentTarget as HTMLElement;
         const rect = wrapper.getBoundingClientRect();
@@ -72,7 +93,7 @@ export function useAudioPlayer() {
         audioCurrentTime.value = audioRef.value.currentTime;
     }
 
-    function onVolumeChange(event: Event) {
+    function onVolumeChange(event: Event): void {
         const value = parseFloat((event.target as HTMLInputElement).value);
         audioVolume.value = value;
         if (audioRef.value !== null) {
@@ -80,7 +101,7 @@ export function useAudioPlayer() {
         }
     }
 
-    function toggleMute() {
+    function toggleMute(): void {
         if (audioVolume.value > 0) {
             audioVolume.value = 0;
         } else {
@@ -91,7 +112,7 @@ export function useAudioPlayer() {
         }
     }
 
-    async function loadAudio(filePath: string) {
+    async function loadAudio(filePath: string): Promise<void> {
         isLoadingAudio.value = true;
         audioError.value = false;
         audioUrl.value = '';
@@ -112,7 +133,7 @@ export function useAudioPlayer() {
         }
     }
 
-    function reset() {
+    function reset(): void {
         if (audioRafId !== null) {
             cancelAnimationFrame(audioRafId);
             audioRafId = null;

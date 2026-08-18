@@ -54,7 +54,7 @@ function getExportElements(): CanvasElement[] {
         : props.elements;
 }
 
-async function updateExportPreview() {
+async function updateExportPreview(): Promise<void> {
     if (exportPreviewUrl.value !== null) {
         URL.revokeObjectURL(exportPreviewUrl.value);
         exportPreviewUrl.value = null;
@@ -72,7 +72,7 @@ async function updateExportPreview() {
     if (blob !== null) {
         exportPreviewUrl.value = URL.createObjectURL(blob);
         const img = new Image();
-        img.onload = () => {
+        img.onload = (): void => {
             exportPreviewWidth.value = img.naturalWidth;
             exportPreviewHeight.value = img.naturalHeight;
         };
@@ -80,7 +80,7 @@ async function updateExportPreview() {
     }
 }
 
-function close() {
+function close(): void {
     if (exportPreviewUrl.value !== null) {
         URL.revokeObjectURL(exportPreviewUrl.value);
         exportPreviewUrl.value = null;
@@ -88,7 +88,7 @@ function close() {
     emit('close');
 }
 
-async function savePng() {
+async function savePng(): Promise<void> {
     isExporting.value = true;
     try {
         const blob = await props.exportToBlob({
@@ -119,7 +119,7 @@ async function savePng() {
     }
 }
 
-async function copyClipboard() {
+async function copyClipboard(): Promise<void> {
     isExporting.value = true;
     try {
         const blob = await props.exportToBlob({

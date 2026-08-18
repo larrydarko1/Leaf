@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import type { CanvasElement } from '@/schemas/drawing';
 import { useCanvasRenderer } from '@/renderer/composables/drawing/useCanvasRenderer';
 
@@ -146,23 +146,21 @@ function setupRenderer(elementList: CanvasElement[] = []) {
     const elements = ref<CanvasElement[]>(elementList);
     const creatingElement = ref<CanvasElement | null>(null);
     const selectedIds = ref<Set<string>>(new Set());
-    const selectedElement = computed(() => null);
     const marqueeRect = ref<{ x: number; y: number; width: number; height: number } | null>(null);
 
-    const renderer = useCanvasRenderer(
-        canvasRef,
-        containerRef,
+    const renderer = useCanvasRenderer({
+        canvas: canvasRef,
+        containerEl: containerRef,
         scrollX,
         scrollY,
         zoom,
         elements,
         creatingElement,
         selectedIds,
-        selectedElement,
         marqueeRect,
         getElementBounds,
         getHandlePositions,
-    );
+    });
 
     // Need to call setupCanvas to initialise the internal ctx
     renderer.setupCanvas();

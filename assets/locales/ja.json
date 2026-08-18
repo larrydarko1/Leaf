@@ -26,7 +26,8 @@
     "ai_assistant_panel": "AIアシスタントパネル",
     "theme_picker": "テーマ選択パネル",
     "language_picker": "言語選択パネル",
-    "tab_close_button": "タブを閉じるボタン"
+    "tab_close_button": "タブを閉じるボタン",
+    "tab_unsaved_indicator": "未保存の変更"
   },
   "file": {
     "image": "画像ファイル",
@@ -85,8 +86,6 @@
     "load_model_to_continue": "チャットを続けるにはモデルを読み込んでください",
     "load_model": "{model}を読み込む",
     "drag_to_resize_input_area": "ドラッグして入力エリアのサイズを変更",
-    "current_note_included_as_context": "現在のノートをコンテキストとして含める: {file}",
-    "include_current_note_as_context": "現在のノートをコンテキストとして含める",
     "add_files_to_context": "コンテキストにファイルを追加",
     "context_files": "コンテキストファイル",
     "search_files": "ファイルを検索...",
@@ -142,20 +141,7 @@
     "parameters": "パラメータ",
     "load_more_results": "さらに結果を読み込む",
     "load_more": "もっと読み込む",
-    "search_for_gguf_models": "Hugging FaceでGGUFモデルを検索",
-    "new_file": "新規ファイル",
-    "new": "新規",
-    "approved": "承認済み",
-    "reverted": "取り消し済み",
-    "error": "エラー",
-    "view_changes": "変更内容を表示",
-    "original": "変更前",
-    "modified": "変更後",
-    "edit_actions": "この編集の操作",
-    "approve_this_file_edit": "このファイル編集を承認",
-    "approve": "承認",
-    "reject_this_file_edit": "このファイル編集を却下",
-    "reject": "却下"
+    "search_for_gguf_models": "Hugging FaceでGGUFモデルを検索"
   },
   "theme": {
     "selection_panel": "テーマ選択パネル",

@@ -2,7 +2,7 @@
  * useCodeEditor — creates a read-only CodeMirror 6 instance for code file viewing.
  */
 
-import { onUnmounted, watch, type Ref, shallowRef, nextTick } from 'vue';
+import { onUnmounted, watch, type Ref, shallowRef, nextTick, type ShallowRef } from 'vue';
 import { EditorState, type Extension } from '@codemirror/state';
 import {
     EditorView,
@@ -82,7 +82,7 @@ export function useCodeEditor(
     onContentChange: () => void,
     fileExtension: Ref<string>,
     fileId?: Ref<string | null>,
-) {
+): { view: ShallowRef<EditorView | null> } {
     const view = shallowRef<EditorView | null>(null);
     let updatingFromExternal = false;
 
@@ -164,13 +164,13 @@ export function useCodeEditor(
     // When a different file is loaded, recreate the editor with the new language
     if (fileId !== undefined) {
         watch(fileId, async (): Promise<void> => {
-            const v = view.value;
-            if (v === null) return;
+            const editorView = view.value;
+            if (editorView === null) return;
 
             const langExt = await languageForExtension(fileExtension.value);
 
             updatingFromExternal = true;
-            v.setState(
+            editorView.setState(
                 EditorState.create({
                     doc: content.value,
                     extensions: buildExtensions(langExt),
@@ -182,14 +182,14 @@ export function useCodeEditor(
 
     // Push external content changes into the editor
     watch(content, (newVal): void => {
-        const v = view.value;
-        if (v === null) return;
+        const editorView = view.value;
+        if (editorView === null) return;
 
-        const current = v.state.doc.toString();
+        const current = editorView.state.doc.toString();
         if (current === newVal) return;
 
         updatingFromExternal = true;
-        v.dispatch({
+        editorView.dispatch({
             changes: { from: 0, to: current.length, insert: newVal },
         });
         updatingFromExternal = false;

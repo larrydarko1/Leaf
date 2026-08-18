@@ -131,7 +131,7 @@ const cmExtensions = [
     keymap.of([
         {
             key: 'Mod-s',
-            run: () => {
+            run: (): boolean => {
                 void saveFile();
                 return true;
             },
@@ -139,7 +139,7 @@ const cmExtensions = [
     ]),
     // Prevent CM6 from inserting raw text when files are dropped. In-vault drags ("file:" payload) are turned into embeds by useEditorDrop
     EditorView.domEventHandlers({
-        drop(event) {
+        drop(event: DragEvent): boolean {
             const dt = event.dataTransfer;
             if (dt === null) return false;
             const plain = dt.getData('text/plain');
@@ -156,14 +156,11 @@ const cmExtensions = [
 const cmFileId = computed(() => props.file?.path ?? null);
 
 // Create CodeMirror instance (will mount/unmount reactively via v-if)
-const { view: cmView } = useCodemirror(
-    cmContainerRef,
-    content,
-    onContentChange,
-    cmExtensions,
-    'Start writing...',
-    cmFileId,
-);
+const { view: cmView } = useCodemirror(cmContainerRef, content, onContentChange, {
+    extraExtensions: cmExtensions,
+    placeholderText: 'Start writing...',
+    fileId: cmFileId,
+});
 
 // Keep the shared ref in sync
 watch(
@@ -181,10 +178,10 @@ useCodeEditor(codeContainerRef, content, onContentChange, codeFileExtension, cmF
 // When embed cache updates (async resolution), poke CodeMirror so the
 // widget plugin re-evaluates and renders the newly resolved embeds.
 watch(embedCacheVersion, () => {
-    const v = cmViewRef.value;
-    if (v === null) return;
+    const editorView = cmViewRef.value;
+    if (editorView === null) return;
     // Dispatch a no-op transaction to trigger plugin update() calls
-    v.dispatch({});
+    editorView.dispatch({});
 });
 
 // Toolbar commands backed by CodeMirror
@@ -248,15 +245,15 @@ watch(
 
 // Editor drag-and-drop (showPreview no longer needed — always in live-preview mode)
 const showPreview = ref(false); // kept for useEditorDrop API compat, always false now
-const { isDragOverEditor, onEditorDragEnter, onEditorDragOver, onEditorDragLeave, onFileDrop } = useEditorDrop(
+const { isDragOverEditor, onEditorDragEnter, onEditorDragOver, onEditorDragLeave, onFileDrop } = useEditorDrop({
     isMarkdownFile,
-    () => props.file,
+    findFile: (): FileInfo | null => props.file,
     textareaRef,
     showPreview,
     content,
     onContentChange,
     cmViewRef,
-);
+});
 
 onMounted(() => {
     document.addEventListener('drop', preventGlobalDrop as EventListener, true);
@@ -277,14 +274,14 @@ onUnmounted(() => {
 });
 
 /** Reload the current file's content from disk */
-async function reloadContent() {
+async function reloadContent(): Promise<void> {
     if (props.file !== null) {
         await loadFile(props.file);
     }
 }
 
 // Keyboard shortcuts
-function handleKeyboard(e: KeyboardEvent) {
+function handleKeyboard(e: KeyboardEvent): void {
     if ((e.metaKey === true || e.ctrlKey === true) && e.key === 's') {
         e.preventDefault();
         void saveFile();
@@ -292,10 +289,10 @@ function handleKeyboard(e: KeyboardEvent) {
 }
 
 // Prevent Electron from navigating when files are dropped anywhere on the window
-function preventGlobalDrop(event: DragEvent) {
+function preventGlobalDrop(event: DragEvent): void {
     event.preventDefault();
 }
-function preventGlobalDragOver(event: DragEvent) {
+function preventGlobalDragOver(event: DragEvent): void {
     event.preventDefault();
 }
 

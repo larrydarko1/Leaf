@@ -81,10 +81,11 @@ describe('VideoViewer', () => {
             props: { filePath: '/vault/clip.mp4' },
         });
         await wrapper.vm.$nextTick();
-        const playBtn = wrapper.find('[aria-label*="lay"], [aria-label*="ause"], button[class*="play"]');
-        if (playBtn.exists()) {
-            await playBtn.trigger('click');
-        }
+        const playBtn = wrapper.find('[aria-label="Play video"]');
+        expect(playBtn.exists()).toBe(true);
+
+        await playBtn.trigger('click');
+        expect(wrapper.find('[aria-label="Pause video"]').exists()).toBe(true);
         wrapper.unmount();
     });
 

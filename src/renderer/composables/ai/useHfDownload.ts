@@ -2,11 +2,36 @@
  * useHfDownload – searches Hugging Face for GGUF models and manages downloads via IPC.
  */
 
-import { ref, shallowRef, onMounted, onUnmounted } from 'vue';
+import { ref, shallowRef, onMounted, onUnmounted, type Ref, type ShallowRef } from 'vue';
 import { watchDebounced } from '@/renderer/composables/useDebounce';
 import type { HfSearchResult, HfRepoFile, HfModelInfo, HfDownloadProgress, HfSortOption } from '@/schemas/hf';
 
-export function useHfDownload(onModelsRefresh: () => Promise<void>) {
+export type UseHfDownloadReturn = {
+    showHfPanel: Ref<boolean>;
+    hfSearchQuery: Ref<string>;
+    hfSearchResults: ShallowRef<HfSearchResult[]>;
+    hfIsSearching: Ref<boolean>;
+    hfSelectedRepo: Ref<string | null>;
+    hfRepoFiles: Ref<HfRepoFile[]>;
+    hfModelInfo: Ref<HfModelInfo | null>;
+    hfIsLoadingFiles: Ref<boolean>;
+    hfDownloadProgress: Ref<HfDownloadProgress | null>;
+    hfActiveDownloads: Ref<Set<string>>;
+    hfDownloadError: Ref<string | null>;
+    hfSortBy: Ref<'downloads' | 'likes' | 'lastModified' | 'trending'>;
+    hfHasMore: Ref<boolean>;
+    hfIsLoadingMore: Ref<boolean>;
+    toggleHfPanel: () => void;
+    searchHfModels: () => Promise<void>;
+    loadMoreResults: () => Promise<void>;
+    changeSortBy: (sort: HfSortOption) => void;
+    selectHfRepo: (repoId: string) => Promise<void>;
+    downloadHfModel: (file: HfRepoFile) => Promise<void>;
+    cancelHfDownload: (fileName: string) => Promise<void>;
+    formatNumber: (n: number) => string;
+};
+
+export function useHfDownload(onModelsRefresh: () => Promise<void>): UseHfDownloadReturn {
     const showHfPanel = ref(false);
     const hfSearchQuery = ref('');
     const hfSearchResults = shallowRef<HfSearchResult[]>([]);
@@ -39,7 +64,7 @@ export function useHfDownload(onModelsRefresh: () => Promise<void>) {
         hfRepoFiles.value = [];
         hfHasMore.value = false;
         try {
-            const result = await window.electronAPI.hfSearch(hfSearchQuery.value, hfSortBy.value, 0);
+            const result = await window.electronAPI.hfSearch(hfSearchQuery.value, { sort: hfSortBy.value, offset: 0 });
             hfSearchResults.value =
                 result.success && result.results !== null && result.results !== undefined ? result.results : [];
             hfHasMore.value = result.hasMore ?? false;
@@ -58,7 +83,7 @@ export function useHfDownload(onModelsRefresh: () => Promise<void>) {
         hfIsLoadingMore.value = true;
         try {
             const offset = hfSearchResults.value.length;
-            const result = await window.electronAPI.hfSearch(hfSearchQuery.value, hfSortBy.value, offset);
+            const result = await window.electronAPI.hfSearch(hfSearchQuery.value, { sort: hfSortBy.value, offset });
             if (result.success && result.results !== null && result.results !== undefined) {
                 hfSearchResults.value = [...hfSearchResults.value, ...result.results];
                 hfHasMore.value = result.hasMore ?? false;
@@ -141,12 +166,12 @@ export function useHfDownload(onModelsRefresh: () => Promise<void>) {
     }
 
     // Debounce sort-change searches — rapid sort button clicks collapse into one call
-    watchDebounced(hfSortBy, () => void searchHfModels(), { debounce: 300, immediate: false });
+    watchDebounced(hfSortBy, (): undefined => void searchHfModels(), { debounce: 300, immediate: false });
 
     // Debounce search query changes — wait until user stops typing, then search
     watchDebounced(
         hfSearchQuery,
-        () => {
+        (): void => {
             // Reset to first page when query changes
             if (hfSearchQuery.value.trim().length > 0) {
                 void searchHfModels();

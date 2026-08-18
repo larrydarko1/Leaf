@@ -11,7 +11,7 @@ import {
     type ViewUpdate,
     WidgetType,
 } from '@codemirror/view';
-import { type EditorState, type Range } from '@codemirror/state';
+import { type EditorState, type Range, type Extension, type StateEffect } from '@codemirror/state';
 import { codeFolding, foldEffect, unfoldEffect, foldedRanges, foldService } from '@codemirror/language';
 
 // ── Fold range detection ──────────────────────────────────────────────────────
@@ -20,7 +20,7 @@ const taskLineRegex = /^(\s*)- \[[ x/]\] /i;
 
 // ── Fold service ──────────────────────────────────────────────────────────────
 
-const taskFold = foldService.of((state, lineStart, _lineEnd) => {
+const taskFold = foldService.of((state, lineStart, _lineEnd): { from: number; to: number } | null => {
     return taskFoldRange(state, lineStart);
 });
 
@@ -73,7 +73,7 @@ const taskFoldTogglePlugin = ViewPlugin.fromClass(
 
                     if (range != null) {
                         let isFolded = false;
-                        folded.between(range.from, range.from + 1, () => {
+                        folded.between(range.from, range.from + 1, (): void => {
                             isFolded = true;
                         });
 
@@ -92,21 +92,25 @@ const taskFoldTogglePlugin = ViewPlugin.fromClass(
             return Decoration.set(decos, true);
         }
 
-        update(update: ViewUpdate) {
+        update(update: ViewUpdate): void {
             if (
                 update.docChanged ||
                 update.viewportChanged ||
                 update.selectionSet ||
-                update.transactions.some((tr) => tr.effects.some((e) => e.is(foldEffect) || e.is(unfoldEffect)))
+                update.transactions.some((tr): boolean =>
+                    tr.effects.some(
+                        (e): e is StateEffect<{ from: number; to: number }> => e.is(foldEffect) || e.is(unfoldEffect),
+                    ),
+                )
             ) {
                 this.decorations = this.build(update.view);
             }
         }
     },
     {
-        decorations: (v) => v.decorations,
+        decorations: (v): DecorationSet => v.decorations,
         eventHandlers: {
-            mousedown(event: MouseEvent, view: EditorView) {
+            mousedown(event: MouseEvent, view: EditorView): boolean {
                 const target = event.target as HTMLElement;
                 if (!target.classList.contains('cm-task-fold-toggle')) return false;
 
@@ -120,14 +124,14 @@ const taskFoldTogglePlugin = ViewPlugin.fromClass(
 
                 const folded = foldedRanges(view.state);
                 let isFolded = false;
-                folded.between(range.from, range.from + 1, () => {
+                folded.between(range.from, range.from + 1, (): void => {
                     isFolded = true;
                 });
 
                 if (isFolded) {
                     // Unfold: find the exact fold effect to reverse
                     const effects: ReturnType<typeof unfoldEffect.of>[] = [];
-                    folded.between(range.from, range.from + 1, (from, to) => {
+                    folded.between(range.from, range.from + 1, (from, to): void => {
                         effects.push(unfoldEffect.of({ from, to }));
                     });
                     if (effects.length > 0) view.dispatch({ effects });
@@ -150,11 +154,11 @@ const taskFoldTogglePlugin = ViewPlugin.fromClass(
  * Parent task items that have nested children get a fold toggle (▶/▼).
  * Clicking the toggle collapses/expands all nested content.
  */
-export function taskFoldExtension() {
+export function taskFoldExtension(): Extension[] {
     return [
         taskFold,
         codeFolding({
-            placeholderDOM(_view, onclick) {
+            placeholderDOM(_view, onclick): HTMLSpanElement {
                 const span = document.createElement('span');
                 span.className = 'cm-task-fold-placeholder';
                 span.textContent = '⋯';
@@ -185,8 +189,8 @@ function taskFoldRange(state: EditorState, lineStart: number): { from: number; t
     const parentIndent = match[1].length;
     let lastNonEmptyChildLine = line.number;
 
-    for (let n = line.number + 1; n <= state.doc.lines; n++) {
-        const nextLine = state.doc.line(n);
+    for (let lineNo = line.number + 1; lineNo <= state.doc.lines; lineNo++) {
+        const nextLine = state.doc.line(lineNo);
         const trimmed = nextLine.text.trim();
 
         if (trimmed === '') {
@@ -196,7 +200,7 @@ function taskFoldRange(state: EditorState, lineStart: number): { from: number; t
 
         const nextIndent = nextLine.text.match(/^(\s*)/)?.[1].length ?? 0;
         if (nextIndent > parentIndent) {
-            lastNonEmptyChildLine = n;
+            lastNonEmptyChildLine = lineNo;
         } else {
             break;
         }

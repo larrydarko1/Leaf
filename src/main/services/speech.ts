@@ -42,13 +42,19 @@ export function cleanup(): void {
     detectedLanguage = undefined;
 }
 
-export function register(ipc: IpcMain, getMainWindow: () => BrowserWindow | null): void {
-    ipc.handle('speech:init', async () => initModel(getMainWindow()));
-    ipc.handle('speech:transcribe', async (_event, audioData: number[]) => {
-        if (!Array.isArray(audioData) || audioData.length === 0) return { success: false, error: 'No audio data' };
-        return transcribe(audioData);
-    });
-    ipc.handle('speech:getStatus', () => getStatus());
+export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | null): void {
+    ipc.handle(
+        'speech:init',
+        async (): Promise<{ success: boolean; message?: string; error?: string }> => initModel(findMainWindow()),
+    );
+    ipc.handle(
+        'speech:transcribe',
+        async (_event, audioData: number[]): Promise<{ success: boolean; text?: string; error?: string }> => {
+            if (!Array.isArray(audioData) || audioData.length === 0) return { success: false, error: 'No audio data' };
+            return transcribe(audioData);
+        },
+    );
+    ipc.handle('speech:getStatus', (): { isModelLoaded: boolean; isModelLoading: boolean } => getStatus());
 }
 
 /**
@@ -74,10 +80,10 @@ async function getTransformers(): Promise<typeof PipelineFn> {
         path.join(onnxDir, 'encoder_model_quantized.onnx'),
         path.join(onnxDir, 'decoder_model_merged_quantized.onnx'),
     ];
-    for (const f of requiredFiles) {
-        if (!existsSync(f)) {
-            log.error('[Speech] Missing required model file:', f);
-            throw new Error(`Missing model file: ${path.basename(f)}`);
+    for (const requiredFile of requiredFiles) {
+        if (!existsSync(requiredFile)) {
+            log.error('[Speech] Missing required model file:', requiredFile);
+            throw new Error(`Missing model file: ${path.basename(requiredFile)}`);
         }
     }
     log.info('[Speech] All model files verified at:', modelDir);
@@ -147,7 +153,7 @@ async function initModel(
  * Called once per model session; result is cached in `detectedLanguage`.
  *
  * v3.8.1 of @huggingface/transformers does not implement automatic language detection
- * (the relevant code path has a TODO comment and defaults to English), so we do it
+ * (the relevant code path is unimplemented upstream and defaults to English), so we do it
  * manually here via the model's internal generate API.
  */
 async function detectLanguage(float32Audio: Float32Array): Promise<string | null> {
@@ -172,13 +178,11 @@ async function detectLanguage(float32Audio: Float32Array): Promise<string | null
 
         const langToId = pipe.model.generation_config.lang_to_id;
         for (const [langKey, tokenId] of Object.entries(langToId)) {
-            if (Number(tokenId) === langToken) {
-                const match = /\|(.+)\|/.exec(langKey);
-                if (match !== null) {
-                    log.info('[Speech] Language detected:', match[1]);
-                    return match[1];
-                }
-            }
+            if (Number(tokenId) !== langToken) continue;
+            const match = /\|(.+)\|/.exec(langKey);
+            if (match === null) continue;
+            log.info('[Speech] Language detected:', match[1]);
+            return match[1];
         }
         return null;
     } catch (err) {

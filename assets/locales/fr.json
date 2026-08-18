@@ -26,7 +26,8 @@
     "ai_assistant_panel": "Panneau de l'assistant IA",
     "theme_picker": "Panneau de sélection de thème",
     "language_picker": "Panneau de sélection de langue",
-    "tab_close_button": "Bouton pour fermer l'onglet"
+    "tab_close_button": "Bouton pour fermer l'onglet",
+    "tab_unsaved_indicator": "Modifications non enregistrées"
   },
   "file": {
     "image": "Fichier image",
@@ -85,8 +86,6 @@
     "load_model_to_continue": "Chargez un modèle pour continuer à discuter",
     "load_model": "Charger {model}",
     "drag_to_resize_input_area": "Faites glisser pour redimensionner la zone de saisie",
-    "current_note_included_as_context": "Note actuelle incluse comme contexte : {file}",
-    "include_current_note_as_context": "Inclure la note actuelle comme contexte",
     "add_files_to_context": "Ajouter des fichiers au contexte",
     "context_files": "Fichiers de contexte",
     "search_files": "Rechercher des fichiers...",
@@ -142,20 +141,7 @@
     "parameters": "Paramètres",
     "load_more_results": "Charger plus de résultats",
     "load_more": "Charger plus",
-    "search_for_gguf_models": "Rechercher des modèles GGUF sur Hugging Face",
-    "new_file": "Nouveau fichier",
-    "new": "Nouveau",
-    "approved": "Approuvé",
-    "reverted": "Annulé",
-    "error": "Erreur",
-    "view_changes": "Afficher les modifications",
-    "original": "Original",
-    "modified": "Modifié",
-    "edit_actions": "Actions pour cette modification",
-    "approve_this_file_edit": "Approuver cette modification de fichier",
-    "approve": "Approuver",
-    "reject_this_file_edit": "Rejeter cette modification de fichier",
-    "reject": "Rejeter"
+    "search_for_gguf_models": "Rechercher des modèles GGUF sur Hugging Face"
   },
   "theme": {
     "selection_panel": "Panneau de sélection de thème",

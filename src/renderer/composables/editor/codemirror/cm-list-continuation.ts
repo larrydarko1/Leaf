@@ -9,7 +9,7 @@ import { EditorSelection } from '@codemirror/state';
 export const listContinuationKeymap = keymap.of([
     {
         key: 'Enter',
-        run: listContinuation,
+        run: continueMarkdownList,
     },
 ]);
 
@@ -45,7 +45,26 @@ function renumberOrderedList(text: string, fromPos: number, indent: string, star
  * - Continue ordered lists with the next number
  * - Empty list items: remove the prefix and leave a blank line
  */
-function listContinuation(view: EditorView): boolean {
+/** Per-line replacements turning `original` into `updated`, starting at `fromPos`. */
+function buildLineChanges(
+    original: string,
+    updated: string,
+    fromPos: number,
+): { from: number; to: number; insert: string }[] {
+    const changes: { from: number; to: number; insert: string }[] = [];
+    const origLines = original.substring(fromPos).split('\n');
+    const updLines = updated.substring(fromPos).split('\n');
+    let pos = fromPos;
+    for (let i = 0; i < origLines.length; i++) {
+        if (origLines[i] !== updLines[i]) {
+            changes.push({ from: pos, to: pos + origLines[i].length, insert: updLines[i] });
+        }
+        pos += origLines[i].length + 1;
+    }
+    return changes;
+}
+
+function continueMarkdownList(view: EditorView): boolean {
     const { state } = view;
     const { from: cursorPos } = state.selection.main;
     const line = state.doc.lineAt(cursorPos);
@@ -110,15 +129,7 @@ function listContinuation(view: EditorView): boolean {
             const origText = state.doc.toString();
             const updated = renumberOrderedList(origText, nextLineFrom, indent, num + 2);
             if (updated !== origText) {
-                let pos = nextLineFrom;
-                const origLines = origText.substring(nextLineFrom).split('\n');
-                const updLines = updated.substring(nextLineFrom).split('\n');
-                for (let i = 0; i < origLines.length; i++) {
-                    if (origLines[i] !== updLines[i]) {
-                        renumberChanges.push({ from: pos, to: pos + origLines[i].length, insert: updLines[i] });
-                    }
-                    pos += origLines[i].length + 1;
-                }
+                renumberChanges.push(...buildLineChanges(origText, updated, nextLineFrom));
             }
         }
 

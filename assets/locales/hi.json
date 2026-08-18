@@ -26,7 +26,8 @@
     "ai_assistant_panel": "AI सहायक पैनल",
     "theme_picker": "थीम चयन पैनल",
     "language_picker": "भाषा चयन पैनल",
-    "tab_close_button": "टैब बंद करने का बटन"
+    "tab_close_button": "टैब बंद करने का बटन",
+    "tab_unsaved_indicator": "सहेजे नहीं गए परिवर्तन"
   },
   "file": {
     "image": "इमेज फ़ाइल",
@@ -85,8 +86,6 @@
     "load_model_to_continue": "चैट जारी रखने के लिए एक मॉडल लोड करें",
     "load_model": "{model} लोड करें",
     "drag_to_resize_input_area": "इनपुट क्षेत्र का आकार बदलने के लिए खींचें",
-    "current_note_included_as_context": "मौजूदा नोट को संदर्भ के रूप में शामिल किया गया: {file}",
-    "include_current_note_as_context": "मौजूदा नोट को संदर्भ के रूप में शामिल करें",
     "add_files_to_context": "संदर्भ में फ़ाइलें जोड़ें",
     "context_files": "संदर्भ फ़ाइलें",
     "search_files": "फ़ाइलें खोजें...",
@@ -142,20 +141,7 @@
     "parameters": "पैरामीटर",
     "load_more_results": "और परिणाम लोड करें",
     "load_more": "और लोड करें",
-    "search_for_gguf_models": "Hugging Face पर GGUF मॉडल खोजें",
-    "new_file": "नई फ़ाइल",
-    "new": "नया",
-    "approved": "स्वीकृत",
-    "reverted": "वापस लाया गया",
-    "error": "त्रुटि",
-    "view_changes": "बदलाव देखें",
-    "original": "मूल",
-    "modified": "संशोधित",
-    "edit_actions": "इस संपादन के लिए कार्रवाइयां",
-    "approve_this_file_edit": "इस फ़ाइल संपादन को स्वीकृत करें",
-    "approve": "स्वीकृत करें",
-    "reject_this_file_edit": "इस फ़ाइल संपादन को अस्वीकृत करें",
-    "reject": "अस्वीकृत करें"
+    "search_for_gguf_models": "Hugging Face पर GGUF मॉडल खोजें"
   },
   "theme": {
     "selection_panel": "थीम चयन पैनल",

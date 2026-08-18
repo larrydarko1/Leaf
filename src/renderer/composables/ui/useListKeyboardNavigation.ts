@@ -3,7 +3,7 @@
  * to a filterable list panel.
  */
 
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, type Ref } from 'vue';
 
 export function useListKeyboardNavigation<T>(
     getList: () => T[],
@@ -29,18 +29,18 @@ export function useListKeyboardNavigation<T>(
          */
         ignoreWhen?: (target: HTMLElement) => boolean;
     } = {},
-) {
+): { selectedIndex: Ref<number>; resetIndex: () => void } {
     const {
         wrap = true,
         getExternalIndex,
         scrollSelector,
-        ignoreWhen = (target) =>
+        ignoreWhen = (target): boolean =>
             target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable,
     } = options;
 
     const selectedIndex = ref(-1);
 
-    function resetIndex() {
+    function resetIndex(): void {
         selectedIndex.value = -1;
     }
 
@@ -48,7 +48,7 @@ export function useListKeyboardNavigation<T>(
         return getExternalIndex !== undefined ? getExternalIndex() : selectedIndex.value;
     }
 
-    function navigate(direction: 1 | -1) {
+    function navigate(direction: 1 | -1): void {
         const list = getList();
         if (list.length === 0) return;
         const current = getCurrentIndex();
@@ -69,13 +69,13 @@ export function useListKeyboardNavigation<T>(
         if (getExternalIndex === undefined) selectedIndex.value = next;
         callbacks.onSelect(list[next], next);
         if (scrollSelector !== undefined) {
-            setTimeout(() => {
+            setTimeout((): void => {
                 document.querySelector(scrollSelector)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }, 0);
         }
     }
 
-    function handleKeyDown(e: KeyboardEvent) {
+    function handleKeyDown(e: KeyboardEvent): void {
         const target = e.target as HTMLElement;
         if (ignoreWhen(target)) return;
 
@@ -97,8 +97,8 @@ export function useListKeyboardNavigation<T>(
         }
     }
 
-    onMounted(() => window.addEventListener('keydown', handleKeyDown));
-    onUnmounted(() => window.removeEventListener('keydown', handleKeyDown));
+    onMounted((): void => window.addEventListener('keydown', handleKeyDown));
+    onUnmounted((): void => window.removeEventListener('keydown', handleKeyDown));
 
     return { selectedIndex, resetIndex };
 }
