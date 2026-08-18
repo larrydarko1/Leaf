@@ -23,7 +23,7 @@ export default defineConfig({
             provider: 'v8',
             include: ['src/**/*.{ts,vue}'],
             exclude: ['src/renderer/main.ts', 'src/main/index.ts', 'src/**/*.d.ts', 'src/**/*.html'],
-            reporter: ['text', 'text-summary', 'html'],
+            reporter: ['text', 'text-summary', 'html', 'json-summary'],
             thresholds: {
                 statements: 80,
                 branches: 80,

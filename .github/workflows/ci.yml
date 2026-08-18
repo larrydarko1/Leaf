@@ -54,3 +54,6 @@ jobs:
 
             - name: Tests (with 80% coverage enforcement)
               run: npm run test:coverage
+
+            - name: Testing standards check
+              run: npm run test:check
