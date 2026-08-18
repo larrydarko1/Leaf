@@ -25,7 +25,7 @@ const { menuRef, adjustedPosition } = useContextMenu(
 );
 void menuRef; // used as template ref via ref="menuRef"
 
-function handleItemClick(item: ContextMenuItem) {
+function handleItemClick(item: ContextMenuItem): void {
     if (item.disabled !== true) {
         emit('action', item.action);
         emit('close');

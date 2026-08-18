@@ -4,7 +4,7 @@
  */
 
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
-import { type EditorState, type Range } from '@codemirror/state';
+import { type EditorState, type Extension, type Range } from '@codemirror/state';
 import { syntaxTree } from '@codemirror/language';
 import type { Ref } from 'vue';
 import {
@@ -23,8 +23,29 @@ import {
  * Runs as domEventHandlers — fires BEFORE CM6's internal handlers,
  * so returning true prevents CM6 from moving the cursor / rebuilding widgets.
  */
+/** Walk out from `pos` looking for an http(s) link the click should open externally. */
+function findExternalUrlAt(view: EditorView, pos: number): string | null {
+    let node = syntaxTree(view.state).resolveInner(pos, 1);
+    for (let depth = 0; depth < 10 && node != null; depth++) {
+        if (node.name === 'Link') {
+            const text = view.state.doc.sliceString(node.from, node.to);
+            const linkMatch = text.match(/\]\(([^)]+)\)$/);
+            const url = linkMatch?.[1];
+            if (url != null && (url.startsWith('http://') || url.startsWith('https://'))) return url;
+            return null;
+        }
+        if (node.name === 'URL') {
+            const url = view.state.doc.sliceString(node.from, node.to);
+            return url.startsWith('http://') || url.startsWith('https://') ? url : null;
+        }
+        if (node.parent == null) break;
+        node = node.parent;
+    }
+    return null;
+}
+
 export const interactiveExtension = EditorView.domEventHandlers({
-    mousedown(event: MouseEvent, view: EditorView) {
+    mousedown(event: MouseEvent, view: EditorView): boolean {
         const target = event.target as HTMLElement;
 
         // ── Block CM6 from processing clicks inside embed media controls ────
@@ -40,30 +61,11 @@ export const interactiveExtension = EditorView.domEventHandlers({
         // ── Link click via syntax tree ──────────────────────────────────────
         const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
         if (pos != null) {
-            const tree = syntaxTree(view.state);
-            let node = tree.resolveInner(pos, 1);
-            for (let depth = 0; depth < 10 && node != null; depth++) {
-                if (node.name === 'Link') {
-                    const text = view.state.doc.sliceString(node.from, node.to);
-                    const m = text.match(/\]\(([^)]+)\)$/);
-                    if (m != null && (m[1].startsWith('http://') || m[1].startsWith('https://'))) {
-                        event.preventDefault();
-                        void window.electronAPI.openExternal(m[1]);
-                        return true;
-                    }
-                    break;
-                }
-                if (node.name === 'URL') {
-                    const url = view.state.doc.sliceString(node.from, node.to);
-                    if (url.startsWith('http://') || url.startsWith('https://')) {
-                        event.preventDefault();
-                        void window.electronAPI.openExternal(url);
-                        return true;
-                    }
-                    break;
-                }
-                if (node.parent == null) break;
-                node = node.parent;
+            const url = findExternalUrlAt(view, pos);
+            if (url !== null) {
+                event.preventDefault();
+                void window.electronAPI.openExternal(url);
+                return true;
             }
         }
         return false;
@@ -82,7 +84,7 @@ export function createMarkdownWidgetsPlugin(
     embedCache: Ref<Map<string, string>>,
     embedCacheVersion: Ref<number>,
     getEmbedMediaType: (fileName: string) => string,
-) {
+): Extension {
     let lastCacheVersion = embedCacheVersion.value;
 
     return ViewPlugin.fromClass(
@@ -122,11 +124,11 @@ export function createMarkdownWidgetsPlugin(
                     // Deduplicate: same from+to with same decoration type can crash RangeSetBuilder
                     const seen = new Set<string>();
                     const uniqueDecos: Range<Decoration>[] = [];
-                    for (const d of allDecos) {
-                        const key = `${d.from}:${d.to}:${d.value.startSide}`;
+                    for (const deco of allDecos) {
+                        const key = `${deco.from}:${deco.to}:${deco.value.startSide}`;
                         if (!seen.has(key)) {
                             seen.add(key);
-                            uniqueDecos.push(d);
+                            uniqueDecos.push(deco);
                         }
                     }
 
@@ -137,7 +139,7 @@ export function createMarkdownWidgetsPlugin(
                 }
             }
 
-            update(update: ViewUpdate) {
+            update(update: ViewUpdate): void {
                 const cacheChanged = embedCacheVersion.value !== lastCacheVersion;
                 if (update.docChanged || update.selectionSet || update.viewportChanged || cacheChanged) {
                     lastCacheVersion = embedCacheVersion.value;
@@ -146,9 +148,9 @@ export function createMarkdownWidgetsPlugin(
             }
         },
         {
-            decorations: (v) => v.decorations,
+            decorations: (v): DecorationSet => v.decorations,
             eventHandlers: {
-                mousedown(event: MouseEvent, view: EditorView) {
+                mousedown(event: MouseEvent, view: EditorView): void {
                     const target = event.target as HTMLElement;
 
                     // ── Task checkbox toggle ──

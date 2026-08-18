@@ -19,10 +19,19 @@ const languages: Ref<LanguageInfo[]> = ref<LanguageInfo[]>([]);
 const activeId: Ref<string> = ref<string>('en');
 const isLoading: Ref<boolean> = ref<boolean>(false);
 
-export function useLanguage() {
+export type UseLanguageReturn = {
+    languages: Ref<LanguageInfo[]>;
+    activeId: Ref<string>;
+    isLoading: Ref<boolean>;
+    refresh: () => Promise<void>;
+    setActive: (id: string) => Promise<boolean>;
+    openLocalesFolder: () => Promise<void>;
+};
+
+export function useLanguage(): UseLanguageReturn {
     const { locale } = useI18n();
 
-    async function refresh() {
+    async function refresh(): Promise<void> {
         isLoading.value = true;
         try {
             const result = await window.electronAPI.languageList();
@@ -30,10 +39,9 @@ export function useLanguage() {
                 languages.value = result.languages;
                 const id = result.activeId ?? 'en';
 
-                if (id !== 'en') {
-                    const fallback = await loadLanguageMessages('en');
-                    if (fallback !== null) i18n.global.setLocaleMessage('en', fallback as MessageSchema);
-                }
+                // Always keep English loaded as the fallback locale.
+                const fallback = id !== 'en' ? await loadLanguageMessages('en') : null;
+                if (fallback !== null) i18n.global.setLocaleMessage('en', fallback as MessageSchema);
                 const messages = await loadLanguageMessages(id);
                 if (messages !== null) i18n.global.setLocaleMessage(id, messages as MessageSchema);
 
@@ -53,7 +61,7 @@ export function useLanguage() {
             return true;
         }
 
-        const language = languages.value.find((l) => l.id === id);
+        const language = languages.value.find((l): boolean => l.id === id);
         if (language === undefined) return false;
         try {
             const result = await window.electronAPI.languageSetActive(id);
@@ -102,9 +110,9 @@ async function loadLanguageMessages(id: string): Promise<Record<string, unknown>
         if (result.success && result.content !== undefined) {
             return result.content;
         }
-        window.electronAPI.log.warn(`Failed to load language ${id}:`, result.error);
+        window.electronAPI.log.warn('Failed to load language', { id, error: result.error });
     } catch (err) {
-        window.electronAPI.log.error(`Error loading language ${id}:`, err);
+        window.electronAPI.log.error('Error loading language', { id }, err);
     }
     return null;
 }

@@ -32,14 +32,14 @@ function getFileNameWithoutExtension(name: string): string {
     return last > 0 ? name.substring(0, last) : name;
 }
 
-function handleMiddleClick(e: MouseEvent, index: number) {
+function handleMiddleClick(e: MouseEvent, index: number): void {
     if (e.button === 1) {
         e.preventDefault();
         emit('close', index);
     }
 }
 
-function onDragStart(e: DragEvent, index: number) {
+function onDragStart(e: DragEvent, index: number): void {
     dragStartIndex.value = index;
     if (e.dataTransfer !== null) {
         e.dataTransfer.effectAllowed = 'move';
@@ -48,13 +48,13 @@ function onDragStart(e: DragEvent, index: number) {
     }
 }
 
-function onDragOver(e: DragEvent, index: number) {
+function onDragOver(e: DragEvent, index: number): void {
     e.preventDefault();
     if (e.dataTransfer !== null) e.dataTransfer.dropEffect = 'move';
     dragOverIndex.value = index;
 }
 
-function onDrop(e: DragEvent, index: number) {
+function onDrop(e: DragEvent, index: number): void {
     e.preventDefault();
     if (dragStartIndex.value !== -1 && dragStartIndex.value !== index) {
         emit('reorder', dragStartIndex.value, index);
@@ -63,7 +63,7 @@ function onDrop(e: DragEvent, index: number) {
     dragOverIndex.value = -1;
 }
 
-function onDragEnd() {
+function onDragEnd(): void {
     dragStartIndex.value = -1;
     dragOverIndex.value = -1;
 }

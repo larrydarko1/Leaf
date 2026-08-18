@@ -3,19 +3,29 @@
  * within the vault tree.
  */
 
-import { ref } from 'vue';
+import { ref, type Ref } from 'vue';
 import type { TreeNode, FileInfo } from '@/schemas/vault';
+
+export type UseTreeNodeDragReturn = {
+    isDragging: Ref<boolean>;
+    isDragOver: Ref<boolean>;
+    handleDragStart: (event: DragEvent) => void;
+    handleDragEnd: () => void;
+    handleDragOver: (event: DragEvent) => void;
+    handleDragLeave: () => void;
+    handleDrop: (event: DragEvent) => void;
+};
 
 export function useTreeNodeDrag(
     getNode: () => TreeNode,
     getActiveFile: () => FileInfo | null,
     onMoveFile: (filePath: string, targetFolderPath: string) => void,
     onMoveFolder: (folderPath: string, targetFolderPath: string) => void,
-) {
+): UseTreeNodeDragReturn {
     const isDragging = ref(false);
     const isDragOver = ref(false);
 
-    function handleDragStart(event: DragEvent) {
+    function handleDragStart(event: DragEvent): void {
         const node = getNode();
         const dataTransfer = event.dataTransfer;
 
@@ -34,11 +44,11 @@ export function useTreeNodeDrag(
         }
     }
 
-    function handleDragEnd() {
+    function handleDragEnd(): void {
         isDragging.value = false;
     }
 
-    function handleDragOver(event: DragEvent) {
+    function handleDragOver(event: DragEvent): void {
         const node = getNode();
 
         if (node.type === 'folder') {
@@ -52,11 +62,11 @@ export function useTreeNodeDrag(
         }
     }
 
-    function handleDragLeave() {
+    function handleDragLeave(): void {
         isDragOver.value = false;
     }
 
-    function handleDrop(event: DragEvent) {
+    function handleDrop(event: DragEvent): void {
         isDragOver.value = false;
         const node = getNode();
         const dataTransfer = event.dataTransfer;

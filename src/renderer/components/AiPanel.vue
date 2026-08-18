@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useThrottleFn } from '@/renderer/composables/useThrottle';
 import type { FileInfo } from '@/schemas/vault';
 import type { ChatMessage } from '@/schemas/chat';
@@ -22,7 +22,7 @@ type Props = {
 };
 
 const props = withDefaults(defineProps<Props>(), {
-    files: () => [],
+    files: (): FileInfo[] => [],
 });
 
 defineEmits<{
@@ -155,7 +155,24 @@ const tokenUsagePercent = computed(() => {
     return Math.min(100, Math.round((conversationTokenCount.value / status.value.contextSize) * 100));
 });
 
+// The two children own their DOM nodes; mirror them into the chat composable's refs.
+const messageList = ref<{ messagesContainer: HTMLElement | null } | null>(null);
+const inputArea = ref<{ inputField: HTMLTextAreaElement | null } | null>(null);
+
+// `undefined` means the child never exposed the element (a stub in tests) — leave the ref alone.
+function syncChildElements(): void {
+    if (messageList.value?.messagesContainer !== undefined) {
+        messagesContainer.value = messageList.value.messagesContainer;
+    }
+    if (inputArea.value?.inputField !== undefined) {
+        inputField.value = inputArea.value.inputField;
+    }
+}
+
+watch([messageList, inputArea], syncChildElements);
+
 onMounted(async () => {
+    syncChildElements();
     await refreshStatus();
     await refreshModels();
     await refreshConversationList();
@@ -168,7 +185,7 @@ onBeforeUnmount(() => {
     isResizing.value = false;
 });
 
-async function loadSelectedModel() {
+async function loadSelectedModel(): Promise<void> {
     const result = await model.loadModel();
     if (result.success) {
         await startNewConversation();
@@ -177,27 +194,27 @@ async function loadSelectedModel() {
     }
 }
 
-async function unloadModel() {
+async function unloadModel(): Promise<void> {
     if (status.value.isGenerating) await stopGeneration();
     await saveCurrentConversation();
     await model.unloadModel();
     conversationTokenCount.value = 0;
 }
 
-async function startNewConversation() {
+async function startNewConversation(): Promise<void> {
     await conversation.startNewConversation();
     inputField.value?.focus();
 }
 
-async function loadConversation(id: string) {
+async function loadConversation(id: string): Promise<void> {
     await conversation.loadConversation(id);
     scrollToBottom();
 }
 
-async function loadPreviousModel() {
+async function loadPreviousModel(): Promise<void> {
     const hasConversation = currentConversationId.value !== null && currentConversationId.value !== '';
     const history = messages.value.map((m) => ({ role: m.role, content: m.content }));
-    const result = await model.loadPreviousModel(history, hasConversation);
+    const result = await model.loadPreviousModel(history, { hasActiveConversation: hasConversation });
     if (result.success) {
         if (!hasConversation) await startNewConversation();
         inputField.value?.focus();
@@ -206,7 +223,7 @@ async function loadPreviousModel() {
     }
 }
 
-function startResize(e: MouseEvent) {
+function startResize(e: MouseEvent): void {
     isResizing.value = true;
     const startX = e.clientX;
     const startWidth = panelWidth.value;
@@ -216,7 +233,7 @@ function startResize(e: MouseEvent) {
         panelWidth.value = Math.min(maxWidth, Math.max(minWidth, startWidth + delta));
     }, 16);
 
-    function onMouseUp() {
+    function onMouseUp(): void {
         isResizing.value = false;
         window.removeEventListener('mousemove', onMouseMove);
         window.removeEventListener('mouseup', onMouseUp);
@@ -227,11 +244,11 @@ function startResize(e: MouseEvent) {
     window.addEventListener('mouseup', onMouseUp);
 }
 
-function decreaseWidth() {
+function decreaseWidth(): void {
     panelWidth.value = Math.max(minWidth, panelWidth.value - 50);
 }
 
-function increaseWidth() {
+function increaseWidth(): void {
     panelWidth.value = Math.min(maxWidth, panelWidth.value + 50);
 }
 </script>
@@ -321,7 +338,7 @@ function increaseWidth() {
             @update:rename-value="renameValue = $event" />
 
         <AiMessageList
-            ref="messagesContainer"
+            ref="messageList"
             :messages="messages"
             :status="status"
             :available-models="availableModels"
@@ -354,12 +371,12 @@ function increaseWidth() {
             @load-previous-model="loadPreviousModel" />
 
         <AiInputArea
+            ref="inputArea"
             :show-thinking="showThinking"
             :input-message="inputMessage"
             :is-ready="isReady"
             :is-any-generating="isAnyGenerating"
             :is-streaming="isStreaming"
-            :input-field="inputField"
             :context-files="contextFiles"
             :available-files="availableContextFiles"
             :max-context-files="MAX_CONTEXT_FILES"

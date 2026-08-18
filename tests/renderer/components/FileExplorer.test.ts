@@ -16,7 +16,7 @@ function makeFile(name: string, folder = '.'): FileInfo {
 }
 
 function makeFolder(path: string, name: string): FolderInfo {
-    return { path, name, relativePath: path, folderPath: path, folderName: name };
+    return { name: name, path: path, relativePath: path, type: 'folder', folder: name };
 }
 
 const noteFile = makeFile('notes.md', '.');
@@ -99,23 +99,23 @@ describe('FileExplorer', () => {
         document.querySelector('.context-menu')?.remove();
     });
 
-    it('emits "renameFile" when rename action is chosen from context menu', async () => {
+    it('emits "startRenameFile" when rename action is chosen from context menu', async () => {
         const wrapper = mountWithI18n(FileExplorer, { props: baseProps, attachTo: document.body });
         await wrapper.vm.$nextTick();
         const fileItems = wrapper.findAll('.file-item');
-        if (fileItems.length > 0) {
-            await fileItems[0].trigger('contextmenu');
-            await wrapper.vm.$nextTick();
-            // Find rename option in context menu
-            const menuItems = document.querySelectorAll<HTMLButtonElement>('.context-menu-item');
-            for (const item of menuItems) {
-                if (item.textContent?.toLowerCase().includes('rename')) {
-                    item.click();
-                    await wrapper.vm.$nextTick();
-                    break;
-                }
-            }
-        }
+        expect(fileItems.length).toBeGreaterThan(0);
+
+        await fileItems[0].trigger('contextmenu');
+        await wrapper.vm.$nextTick();
+        const renameItem = [...document.querySelectorAll<HTMLButtonElement>('.context-menu-item')].find((item) =>
+            item.textContent?.toLowerCase().includes('rename'),
+        );
+        expect(renameItem).toBeDefined();
+
+        renameItem?.click();
+        await wrapper.vm.$nextTick();
+        expect(wrapper.emitted('startRenameFile')?.[0]).toEqual([noteFile]);
+
         wrapper.unmount();
         document.querySelector('.context-menu')?.remove();
     });
@@ -124,18 +124,19 @@ describe('FileExplorer', () => {
         const wrapper = mountWithI18n(FileExplorer, { props: baseProps, attachTo: document.body });
         await wrapper.vm.$nextTick();
         const fileItems = wrapper.findAll('.file-item');
-        if (fileItems.length > 0) {
-            await fileItems[0].trigger('contextmenu');
-            await wrapper.vm.$nextTick();
-            const menuItems = document.querySelectorAll<HTMLButtonElement>('.context-menu-item');
-            for (const item of menuItems) {
-                if (item.textContent?.toLowerCase().includes('delete')) {
-                    item.click();
-                    await wrapper.vm.$nextTick();
-                    break;
-                }
-            }
-        }
+        expect(fileItems.length).toBeGreaterThan(0);
+
+        await fileItems[0].trigger('contextmenu');
+        await wrapper.vm.$nextTick();
+        const deleteItem = [...document.querySelectorAll<HTMLButtonElement>('.context-menu-item')].find((item) =>
+            item.textContent?.toLowerCase().includes('delete'),
+        );
+        expect(deleteItem).toBeDefined();
+
+        deleteItem?.click();
+        await wrapper.vm.$nextTick();
+        expect(wrapper.emitted('deleteFile')?.[0]).toEqual([noteFile]);
+
         wrapper.unmount();
         document.querySelector('.context-menu')?.remove();
     });
@@ -155,21 +156,27 @@ describe('FileExplorer', () => {
             attachTo: document.body,
         });
         await wrapper.vm.$nextTick();
-        // Trigger ArrowDown on window
         window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
         await wrapper.vm.$nextTick();
-        // Should have emitted selectFile or selectFolder
+
+        // ArrowDown moves the selection to the next visible item, whichever kind it is.
+        const moved = wrapper.emitted('selectFile') ?? wrapper.emitted('selectFolder');
+        expect(moved).toBeDefined();
         wrapper.unmount();
     });
 
     it('expands a folder when ArrowRight is pressed on selected folder', async () => {
+        // The tree keys folders by relativePath, which is what `selectedFolder` carries.
         const wrapper = mountWithI18n(FileExplorer, {
-            props: { ...baseProps, selectedFolder: '/vault/work' },
+            props: { ...baseProps, selectedFolder: 'work' },
             attachTo: document.body,
         });
         await wrapper.vm.$nextTick();
+        expect(wrapper.find('[aria-expanded="false"]').exists()).toBe(true);
+
         window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
         await wrapper.vm.$nextTick();
+        expect(wrapper.find('[aria-expanded="true"]').exists()).toBe(true);
         wrapper.unmount();
     });
 

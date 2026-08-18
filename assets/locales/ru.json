@@ -26,7 +26,8 @@
     "ai_assistant_panel": "Панель ИИ-ассистента",
     "theme_picker": "Панель выбора темы",
     "language_picker": "Панель выбора языка",
-    "tab_close_button": "Кнопка закрытия вкладки"
+    "tab_close_button": "Кнопка закрытия вкладки",
+    "tab_unsaved_indicator": "Несохранённые изменения"
   },
   "file": {
     "image": "Файл изображения",
@@ -85,8 +86,6 @@
     "load_model_to_continue": "Загрузите модель, чтобы продолжить общение",
     "load_model": "Загрузить {model}",
     "drag_to_resize_input_area": "Перетащите, чтобы изменить размер поля ввода",
-    "current_note_included_as_context": "Текущая заметка включена как контекст: {file}",
-    "include_current_note_as_context": "Включить текущую заметку как контекст",
     "add_files_to_context": "Добавить файлы в контекст",
     "context_files": "Файлы контекста",
     "search_files": "Поиск файлов...",
@@ -142,20 +141,7 @@
     "parameters": "Параметры",
     "load_more_results": "Загрузить больше результатов",
     "load_more": "Загрузить ещё",
-    "search_for_gguf_models": "Поиск моделей GGUF на Hugging Face",
-    "new_file": "Новый файл",
-    "new": "Новый",
-    "approved": "Одобрено",
-    "reverted": "Отменено",
-    "error": "Ошибка",
-    "view_changes": "Просмотреть изменения",
-    "original": "Исходный вариант",
-    "modified": "Изменённый вариант",
-    "edit_actions": "Действия для этого изменения",
-    "approve_this_file_edit": "Одобрить это изменение файла",
-    "approve": "Одобрить",
-    "reject_this_file_edit": "Отклонить это изменение файла",
-    "reject": "Отклонить"
+    "search_for_gguf_models": "Поиск моделей GGUF на Hugging Face"
   },
   "theme": {
     "selection_panel": "Панель выбора темы",

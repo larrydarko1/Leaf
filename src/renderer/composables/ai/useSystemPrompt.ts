@@ -6,15 +6,23 @@
  * listing them, displaying the active one, and switching active.
  */
 
-import { ref } from 'vue';
+import { ref, type Ref } from 'vue';
 import type { PromptInfo } from '@/schemas/ai';
 
-export function useSystemPrompt() {
+export type UseSystemPromptReturn = {
+    prompts: Ref<PromptInfo[]>;
+    activeId: Ref<string>;
+    isLoading: Ref<boolean>;
+    refresh: () => Promise<void>;
+    setActive: (id: string) => Promise<boolean>;
+};
+
+export function useSystemPrompt(): UseSystemPromptReturn {
     const prompts = ref<PromptInfo[]>([]);
     const activeId = ref<string>('default');
     const isLoading = ref(false);
 
-    async function refresh() {
+    async function refresh(): Promise<void> {
         isLoading.value = true;
         try {
             const result = await window.electronAPI.systemPromptList();

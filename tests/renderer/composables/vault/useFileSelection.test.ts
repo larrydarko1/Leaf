@@ -90,7 +90,7 @@ describe('useFileSelection', () => {
     describe('selectFile (meta/ctrl click)', () => {
         it('adds the file to an existing selection', () => {
             sel.selectFile(fileA);
-            sel.selectFile(fileB, { metaKey: true } as MouseEvent);
+            sel.selectFile(fileB, { event: { metaKey: true } as MouseEvent });
             const paths = sel.selectedFiles.value.map((f) => f.path);
             expect(paths).toContain(fileA.path);
             expect(paths).toContain(fileB.path);
@@ -98,21 +98,21 @@ describe('useFileSelection', () => {
 
         it('removes the file from the selection when it is already selected', () => {
             sel.selectFile(fileA);
-            sel.selectFile(fileA, { metaKey: true } as MouseEvent);
+            sel.selectFile(fileA, { event: { metaKey: true } as MouseEvent });
             expect(sel.selectedFiles.value).not.toContain(fileA);
         });
 
         it('updates activeFile to the first remaining file after deselection', () => {
             sel.selectFile(fileA);
-            sel.selectFile(fileB, { metaKey: true } as MouseEvent);
+            sel.selectFile(fileB, { event: { metaKey: true } as MouseEvent });
             // Deselect active file → activeFile should shift to fileB
-            sel.selectFile(fileA, { metaKey: true } as MouseEvent);
+            sel.selectFile(fileA, { event: { metaKey: true } as MouseEvent });
             expect(sel.activeFile.value?.path).toBe(fileB.path);
         });
 
         it('works with ctrlKey as well as metaKey', () => {
             sel.selectFile(fileA);
-            sel.selectFile(fileB, { ctrlKey: true } as MouseEvent);
+            sel.selectFile(fileB, { event: { ctrlKey: true } as MouseEvent });
             expect(sel.selectedFiles.value).toHaveLength(2);
         });
     });
@@ -122,21 +122,21 @@ describe('useFileSelection', () => {
     describe('selectFile (shift click)', () => {
         it('selects a contiguous range between the anchor and the clicked file', () => {
             const visibleFiles = [fileA, fileB, fileC];
-            sel.selectFile(fileA, undefined, visibleFiles);
-            sel.selectFile(fileC, { shiftKey: true } as MouseEvent, visibleFiles);
+            sel.selectFile(fileA, { visibleFiles: visibleFiles });
+            sel.selectFile(fileC, { event: { shiftKey: true } as MouseEvent, visibleFiles: visibleFiles });
             expect(sel.selectedFiles.value).toHaveLength(3);
         });
 
         it('works when the range is reversed (click on an earlier item)', () => {
             const visibleFiles = [fileA, fileB, fileC];
-            sel.selectFile(fileC, undefined, visibleFiles);
-            sel.selectFile(fileA, { shiftKey: true } as MouseEvent, visibleFiles);
+            sel.selectFile(fileC, { visibleFiles: visibleFiles });
+            sel.selectFile(fileA, { event: { shiftKey: true } as MouseEvent, visibleFiles: visibleFiles });
             expect(sel.selectedFiles.value).toHaveLength(3);
         });
 
         it('falls back to plain selection when lastSelectedIndex is -1', () => {
             // No prior selection → shiftKey is treated like a plain click
-            sel.selectFile(fileB, { shiftKey: true } as MouseEvent, [fileA, fileB, fileC]);
+            sel.selectFile(fileB, { event: { shiftKey: true } as MouseEvent, visibleFiles: [fileA, fileB, fileC] });
             expect(sel.selectedFiles.value).toEqual([fileB]);
         });
     });
@@ -189,10 +189,10 @@ describe('useFileSelection', () => {
 
         it('resets the shift-click anchor so subsequent shift clicks work from scratch', () => {
             const files = [fileA, fileB, fileC];
-            sel.selectFile(fileA, undefined, files);
+            sel.selectFile(fileA, { visibleFiles: files });
             sel.clearSelection();
             // After clearSelection, shift-click should not extend from fileA
-            sel.selectFile(fileC, { shiftKey: true } as MouseEvent, files);
+            sel.selectFile(fileC, { event: { shiftKey: true } as MouseEvent, visibleFiles: files });
             // lastSelectedIndex is -1, so shiftKey falls back to plain selection
             expect(sel.selectedFiles.value).toEqual([fileC]);
         });

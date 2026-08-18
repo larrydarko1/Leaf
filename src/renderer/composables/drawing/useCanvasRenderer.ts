@@ -3,36 +3,65 @@
  * grid/element rendering, and bitmap export.
  */
 
-import { computed, type Ref, type ComputedRef } from 'vue';
+import { computed, type Ref } from 'vue';
 import type { CanvasElement } from '@/schemas/drawing';
 
 const GRID_SIZE = 20;
 const HANDLE_SIZE = 8;
 const SELECTION_COLOR = '#4a90d9';
 
-export function useCanvasRenderer(
-    canvas: Ref<HTMLCanvasElement | null>,
-    containerEl: Ref<HTMLDivElement | null>,
-    scrollX: Ref<number>,
-    scrollY: Ref<number>,
-    zoom: Ref<number>,
-    elements: Ref<CanvasElement[]>,
-    creatingElement: Ref<CanvasElement | null>,
-    selectedIds: Ref<Set<string>>,
-    selectedElement: ComputedRef<CanvasElement | null>,
-    marqueeRect: Ref<{ x: number; y: number; width: number; height: number } | null>,
-    getElementBounds: (el: CanvasElement) => { x: number; y: number; width: number; height: number },
-    getHandlePositions: (el: CanvasElement) => Record<string, { x: number; y: number }>,
-) {
+export type UseCanvasRendererReturn = {
+    setupCanvas: () => void;
+    handleResize: () => void;
+    renderScene: () => void;
+    screenToWorld: (sx: number, sy: number) => { x: number; y: number };
+    worldToScreen: (wx: number, wy: number) => { x: number; y: number };
+    getScreenPoint: (e: PointerEvent | Touch) => { x: number; y: number };
+    cssWidth: () => number;
+    cssHeight: () => number;
+    findCtx: () => CanvasRenderingContext2D | null;
+    exportToBlob: (opts: {
+        elements: CanvasElement[];
+        withBackground: boolean;
+        scale: number;
+        padding?: number;
+    }) => Promise<Blob | null>;
+};
+
+export function useCanvasRenderer({
+    canvas,
+    containerEl,
+    scrollX,
+    scrollY,
+    zoom,
+    elements,
+    creatingElement,
+    selectedIds,
+    marqueeRect,
+    getElementBounds,
+    getHandlePositions,
+}: {
+    canvas: Ref<HTMLCanvasElement | null>;
+    containerEl: Ref<HTMLDivElement | null>;
+    scrollX: Ref<number>;
+    scrollY: Ref<number>;
+    zoom: Ref<number>;
+    elements: Ref<CanvasElement[]>;
+    creatingElement: Ref<CanvasElement | null>;
+    selectedIds: Ref<Set<string>>;
+    marqueeRect: Ref<{ x: number; y: number; width: number; height: number } | null>;
+    getElementBounds: (el: CanvasElement) => { x: number; y: number; width: number; height: number };
+    getHandlePositions: (el: CanvasElement) => Record<string, { x: number; y: number }>;
+}): UseCanvasRendererReturn {
     let ctx: CanvasRenderingContext2D | null = null;
     let dpr = 1;
 
-    const canvasBg = computed(() => getCSSVariable('--base1'));
-    const gridColor = computed(() => getCSSVariable('--grid-color'));
+    const canvasBg = computed((): string => getCSSVariable('--base1'));
+    const gridColor = computed((): string => getCSSVariable('--grid-color'));
 
     // Canvas setup
 
-    function setupCanvas() {
+    function setupCanvas(): void {
         if (canvas.value === null || containerEl.value === null) return;
         dpr = window.devicePixelRatio ?? 1;
         const rect = containerEl.value.getBoundingClientRect();
@@ -44,35 +73,35 @@ export function useCanvasRenderer(
         if (ctx2d !== null) ctx = ctx2d;
     }
 
-    function handleResize() {
+    function handleResize(): void {
         setupCanvas();
         renderScene();
     }
 
-    function cssWidth() {
+    function cssWidth(): number {
         return canvas.value !== null ? canvas.value.width / dpr : 0;
     }
-    function cssHeight() {
+    function cssHeight(): number {
         return canvas.value !== null ? canvas.value.height / dpr : 0;
     }
 
     // Coordinate transforms
 
-    function screenToWorld(sx: number, sy: number) {
+    function screenToWorld(sx: number, sy: number): { x: number; y: number } {
         return {
             x: (sx - scrollX.value) / zoom.value,
             y: (sy - scrollY.value) / zoom.value,
         };
     }
 
-    function worldToScreen(wx: number, wy: number) {
+    function worldToScreen(wx: number, wy: number): { x: number; y: number } {
         return {
             x: wx * zoom.value + scrollX.value,
             y: wy * zoom.value + scrollY.value,
         };
     }
 
-    function getScreenPoint(e: PointerEvent | Touch) {
+    function getScreenPoint(e: PointerEvent | Touch): { x: number; y: number } {
         if (canvas.value === null) return { x: 0, y: 0 };
         const rect = canvas.value.getBoundingClientRect();
         return { x: e.clientX - rect.left, y: e.clientY - rect.top };
@@ -80,18 +109,18 @@ export function useCanvasRenderer(
 
     // Rendering
 
-    function renderScene() {
+    function renderScene(): void {
         if (ctx === null || canvas.value === null) return;
-        const w = cssWidth();
-        const h = cssHeight();
+        const width = cssWidth();
+        const height = cssHeight();
 
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.scale(dpr, dpr);
 
         ctx.fillStyle = canvasBg.value;
-        ctx.fillRect(0, 0, w, h);
+        ctx.fillRect(0, 0, width, height);
 
-        drawGrid(w, h);
+        drawGrid(width, height);
 
         ctx.save();
         ctx.translate(scrollX.value, scrollY.value);
@@ -109,7 +138,7 @@ export function useCanvasRenderer(
         for (const el of elements.value) {
             if (selectedIds.value.has(el.id)) {
                 // Only show resize handles when single selection
-                drawSelectionOutline(el, selectedIds.value.size === 1);
+                drawSelectionOutline(el, { showHandles: selectedIds.value.size === 1 });
             }
         }
 
@@ -121,22 +150,22 @@ export function useCanvasRenderer(
         ctx.restore();
     }
 
-    function drawGrid(w: number, h: number) {
+    function drawGrid(width: number, height: number): void {
         if (ctx === null) return;
-        const g = GRID_SIZE;
-        const zg = g * zoom.value;
-        if (zg < 4) return;
+        const gridSize = GRID_SIZE;
+        const zoomedGrid = gridSize * zoom.value;
+        if (zoomedGrid < 4) return;
 
         ctx.fillStyle = gridColor.value;
         const dotSize = Math.max(1, zoom.value);
 
-        const startWorldX = Math.floor(-scrollX.value / zoom.value / g) * g;
-        const startWorldY = Math.floor(-scrollY.value / zoom.value / g) * g;
-        const endWorldX = (-scrollX.value + w) / zoom.value;
-        const endWorldY = (-scrollY.value + h) / zoom.value;
+        const startWorldX = Math.floor(-scrollX.value / zoom.value / gridSize) * gridSize;
+        const startWorldY = Math.floor(-scrollY.value / zoom.value / gridSize) * gridSize;
+        const endWorldX = (-scrollX.value + width) / zoom.value;
+        const endWorldY = (-scrollY.value + height) / zoom.value;
 
-        for (let wx = startWorldX; wx <= endWorldX; wx += g) {
-            for (let wy = startWorldY; wy <= endWorldY; wy += g) {
+        for (let wx = startWorldX; wx <= endWorldX; wx += gridSize) {
+            for (let wy = startWorldY; wy <= endWorldY; wy += gridSize) {
                 const sx = wx * zoom.value + scrollX.value;
                 const sy = wy * zoom.value + scrollY.value;
                 ctx.fillRect(sx - dotSize / 2, sy - dotSize / 2, dotSize, dotSize);
@@ -144,7 +173,7 @@ export function useCanvasRenderer(
         }
     }
 
-    function drawElement(el: CanvasElement) {
+    function drawElement(el: CanvasElement): void {
         if (ctx === null) return;
 
         ctx.save();
@@ -177,9 +206,9 @@ export function useCanvasRenderer(
                 const rw = Math.abs(el.width);
                 const rh = Math.abs(el.height);
                 const maxR = Math.min(rw, rh) / 2;
-                const r = Math.min(br, maxR);
+                const cornerRadius = Math.min(br, maxR);
                 ctx.beginPath();
-                ctx.roundRect(rx, ry, rw, rh, r);
+                ctx.roundRect(rx, ry, rw, rh, cornerRadius);
                 if (hasFill === true) ctx.fill();
                 ctx.stroke();
                 break;
@@ -479,22 +508,26 @@ export function useCanvasRenderer(
         ctx.restore();
     }
 
-    function drawRoundedPolygon(ctx: CanvasRenderingContext2D, points: { x: number; y: number }[], radius: number) {
-        const n = points.length;
-        if (n < 3) return;
-        for (let i = 0; i < n; i++) {
-            const prev = points[(i - 1 + n) % n];
+    function drawRoundedPolygon(
+        ctx: CanvasRenderingContext2D,
+        points: { x: number; y: number }[],
+        radius: number,
+    ): void {
+        const pointCount = points.length;
+        if (pointCount < 3) return;
+        for (let i = 0; i < pointCount; i++) {
+            const prev = points[(i - 1 + pointCount) % pointCount];
             const curr = points[i];
-            const next = points[(i + 1) % n];
+            const next = points[(i + 1) % pointCount];
             const toPrev = { x: prev.x - curr.x, y: prev.y - curr.y };
             const toNext = { x: next.x - curr.x, y: next.y - curr.y };
             const distPrev = Math.sqrt(toPrev.x * toPrev.x + toPrev.y * toPrev.y);
             const distNext = Math.sqrt(toNext.x * toNext.x + toNext.y * toNext.y);
-            const r = Math.min(radius, distPrev / 2, distNext / 2);
-            const startX = curr.x + (toPrev.x / distPrev) * r;
-            const startY = curr.y + (toPrev.y / distPrev) * r;
-            const endX = curr.x + (toNext.x / distNext) * r;
-            const endY = curr.y + (toNext.y / distNext) * r;
+            const cornerRadius = Math.min(radius, distPrev / 2, distNext / 2);
+            const startX = curr.x + (toPrev.x / distPrev) * cornerRadius;
+            const startY = curr.y + (toPrev.y / distPrev) * cornerRadius;
+            const endX = curr.x + (toNext.x / distNext) * cornerRadius;
+            const endY = curr.y + (toNext.y / distNext) * cornerRadius;
             if (i === 0) {
                 ctx.moveTo(startX, startY);
             } else {
@@ -505,7 +538,7 @@ export function useCanvasRenderer(
         ctx.closePath();
     }
 
-    function drawEmbeddedText(el: CanvasElement) {
+    function drawEmbeddedText(el: CanvasElement): void {
         if (ctx === null || el.text === null || el.text === undefined || el.text === '') return;
         const bounds = getElementBounds(el);
         const fs = el.fontSize ?? 16;
@@ -528,7 +561,7 @@ export function useCanvasRenderer(
         ctx.restore();
     }
 
-    function drawSelectionOutline(el: CanvasElement, showHandles: boolean) {
+    function drawSelectionOutline(el: CanvasElement, { showHandles }: { showHandles: boolean }): void {
         if (ctx === null) return;
         ctx.save();
         const bounds = getElementBounds(el);
@@ -553,19 +586,19 @@ export function useCanvasRenderer(
         ctx.restore();
     }
 
-    function drawMarquee(rect: { x: number; y: number; width: number; height: number }) {
+    function drawMarquee(rect: { x: number; y: number; width: number; height: number }): void {
         if (ctx === null) return;
         ctx.save();
         ctx.fillStyle = 'rgba(74, 144, 217, 0.08)';
         ctx.strokeStyle = SELECTION_COLOR;
         ctx.lineWidth = 1 / zoom.value;
         ctx.setLineDash([4 / zoom.value, 4 / zoom.value]);
-        const x = Math.min(rect.x, rect.x + rect.width);
-        const y = Math.min(rect.y, rect.y + rect.height);
-        const w = Math.abs(rect.width);
-        const h = Math.abs(rect.height);
-        ctx.fillRect(x, y, w, h);
-        ctx.strokeRect(x, y, w, h);
+        const left = Math.min(rect.x, rect.x + rect.width);
+        const top = Math.min(rect.y, rect.y + rect.height);
+        const width = Math.abs(rect.width);
+        const height = Math.abs(rect.height);
+        ctx.fillRect(left, top, width, height);
+        ctx.strokeRect(left, top, width, height);
         ctx.setLineDash([]);
         ctx.restore();
     }
@@ -627,8 +660,8 @@ export function useCanvasRenderer(
         // Restore original context
         ctx = savedCtx;
 
-        return new Promise((resolve) => {
-            offscreen.toBlob((blob) => resolve(blob), 'image/png');
+        return new Promise((resolve): void => {
+            offscreen.toBlob((blob): void => resolve(blob), 'image/png');
         });
     }
 
@@ -641,7 +674,7 @@ export function useCanvasRenderer(
         getScreenPoint,
         cssWidth,
         cssHeight,
-        getCtx: () => ctx,
+        findCtx: (): CanvasRenderingContext2D | null => ctx,
         exportToBlob,
     };
 }

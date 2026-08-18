@@ -114,13 +114,13 @@ describe('language service', () => {
         expect(stats1.mtimeMs).toBe(stats2.mtimeMs);
     });
 
-    describe('listLanguages', () => {
+    describe('readLanguages', () => {
         it('returns all language files from ~/.leaf/locales/', async () => {
             fs.mkdirSync(LOCALES_DIR, { recursive: true });
             fs.writeFileSync(path.join(LOCALES_DIR, 'en.json'), JSON.stringify({ common: {} }));
             fs.writeFileSync(path.join(LOCALES_DIR, 'it.json'), JSON.stringify({ common: {} }));
-            const { listLanguages } = await import('@/main/services/language');
-            const result = await listLanguages();
+            const { readLanguages } = await import('@/main/services/language');
+            const result = await readLanguages();
             expect(result.success).toBe(true);
             expect(result.languages).toHaveLength(2);
             const ids = result.languages?.map((l) => l.id).sort();
@@ -131,8 +131,8 @@ describe('language service', () => {
             fs.mkdirSync(LOCALES_DIR, { recursive: true });
             fs.writeFileSync(path.join(LOCALES_DIR, 'en.json'), JSON.stringify({ common: {} }));
             writeState({ activeLanguage: 'en' });
-            const { listLanguages } = await import('@/main/services/language');
-            const result = await listLanguages();
+            const { readLanguages } = await import('@/main/services/language');
+            const result = await readLanguages();
             expect(result.activeId).toBe('en');
         });
 
@@ -140,14 +140,14 @@ describe('language service', () => {
             fs.mkdirSync(LOCALES_DIR, { recursive: true });
             fs.writeFileSync(path.join(LOCALES_DIR, 'en.json'), JSON.stringify({ common: {} }));
             writeState({});
-            const { listLanguages } = await import('@/main/services/language');
-            const result = await listLanguages();
+            const { readLanguages } = await import('@/main/services/language');
+            const result = await readLanguages();
             expect(result.activeId).toBe('en');
         });
 
         it('returns empty list when locales directory does not exist', async () => {
-            const { listLanguages } = await import('@/main/services/language');
-            const result = await listLanguages();
+            const { readLanguages } = await import('@/main/services/language');
+            const result = await readLanguages();
             expect(result.success).toBe(true);
             expect(result.languages).toEqual([]);
         });
@@ -156,16 +156,16 @@ describe('language service', () => {
             fs.mkdirSync(LOCALES_DIR, { recursive: true });
             fs.writeFileSync(path.join(LOCALES_DIR, 'en.json'), JSON.stringify({ common: {} }));
             fs.writeFileSync(path.join(LOCALES_DIR, 'README.md'), '# Locales');
-            const { listLanguages } = await import('@/main/services/language');
-            const result = await listLanguages();
+            const { readLanguages } = await import('@/main/services/language');
+            const result = await readLanguages();
             expect(result.languages).toHaveLength(1);
             expect(result.languages?.[0].id).toBe('en');
         });
 
         it('returns localesDir path in response', async () => {
             fs.mkdirSync(LOCALES_DIR, { recursive: true });
-            const { listLanguages } = await import('@/main/services/language');
-            const result = await listLanguages();
+            const { readLanguages } = await import('@/main/services/language');
+            const result = await readLanguages();
             expect(result.localesDir).toBe(LOCALES_DIR);
         });
     });

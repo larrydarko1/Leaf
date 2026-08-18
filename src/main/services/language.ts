@@ -40,27 +40,36 @@ const MANIFEST_FILE = path.join(LOCALES_DIR, '.manifest.json');
 let seedPromise: Promise<void> | null = null;
 
 export function register(ipc: IpcMain): void {
-    ipc.handle('language:list', listLanguages);
+    ipc.handle('language:list', readLanguages);
 
-    ipc.handle('language:setActive', async (_event, id: unknown) => {
+    ipc.handle('language:setActive', async (_event, id: unknown): Promise<{ success: boolean; error?: string }> => {
         if (typeof id !== 'string') return { success: false, error: 'Invalid language id' };
         return setActiveLanguage(id);
     });
 
-    ipc.handle('language:load', async (_event, id: unknown) => {
-        if (typeof id !== 'string') return { success: false, error: 'Invalid language id' };
-        return loadLanguageContent(id);
-    });
+    ipc.handle(
+        'language:load',
+        async (
+            _event,
+            id: unknown,
+        ): Promise<{ success: boolean; content?: Record<string, unknown>; error?: string }> => {
+            if (typeof id !== 'string') return { success: false, error: 'Invalid language id' };
+            return loadLanguageContent(id);
+        },
+    );
 
-    ipc.handle('language:openLeafDir', async () => {
-        try {
-            await fs.mkdir(LOCALES_DIR, { recursive: true });
-            await shell.openPath(LOCALES_DIR);
-            return { success: true };
-        } catch (err) {
-            return { success: false, error: (err as Error).message };
-        }
-    });
+    ipc.handle(
+        'language:openLeafDir',
+        async (): Promise<{ success: boolean; error?: undefined } | { success: boolean; error: string }> => {
+            try {
+                await fs.mkdir(LOCALES_DIR, { recursive: true });
+                await shell.openPath(LOCALES_DIR);
+                return { success: true };
+            } catch (err) {
+                return { success: false, error: (err as Error).message };
+            }
+        },
+    );
 }
 /**
  * Idempotent: reconcile bundled language files into ~/.leaf/locales/.
@@ -72,7 +81,7 @@ export function register(ipc: IpcMain): void {
  */
 export function ensureSeeded(): Promise<void> {
     if (seedPromise === null) {
-        seedPromise = doSeed().catch((err) => {
+        seedPromise = doSeed().catch((err): void => {
             seedPromise = null;
             log.error('[language] seeding failed:', err);
         });
@@ -80,7 +89,7 @@ export function ensureSeeded(): Promise<void> {
     return seedPromise;
 }
 
-export async function listLanguages(): Promise<{
+export async function readLanguages(): Promise<{
     success: boolean;
     languages?: LanguageInfo[];
     activeId: string;
@@ -118,7 +127,7 @@ export async function setActiveLanguage(id: string): Promise<{
     const file = path.join(LOCALES_DIR, `${id}.json`);
     if (!existsSync(file)) return { success: false, error: 'Language not found' };
     try {
-        await updateState((s) => ({ ...s, activeLanguage: id }));
+        await updateState((s): { activeLanguage: string } => ({ ...s, activeLanguage: id }));
         return { success: true };
     } catch (err) {
         return { success: false, error: (err as Error).message };
@@ -142,7 +151,7 @@ export async function loadLanguageContent(id: string): Promise<{
         const content = JSON.parse(data) as Record<string, unknown>;
         return { success: true, content };
     } catch (err) {
-        log.error(`[language] failed to load ${id}:`, err);
+        log.error('[language] failed to load language', { id }, err);
         return { success: false, error: (err as Error).message };
     }
 }
@@ -173,7 +182,7 @@ async function doSeed(): Promise<void> {
                 await fs.writeFile(dest, bundledContent);
                 manifest[id] = bundledHash;
                 manifestChanged = true;
-                log.info(`[language] Seeded ${entry.name}`);
+                log.info('[language] Seeded language file', { file: entry.name });
                 continue;
             }
 
@@ -181,26 +190,16 @@ async function doSeed(): Promise<void> {
             const destHash = hashContent(destRaw);
             const lastSyncedHash = manifest[id];
 
-            if (lastSyncedHash !== undefined && destHash === lastSyncedHash) {
-                if (bundledHash !== lastSyncedHash) {
-                    await fs.writeFile(dest, bundledContent);
-                    manifest[id] = bundledHash;
-                    manifestChanged = true;
-                    log.info(`[language] Re-synced ${entry.name} to bundled version`);
-                }
-                continue;
+            const isUntouchedByUser = lastSyncedHash !== undefined && destHash === lastSyncedHash;
+            if (isUntouchedByUser && bundledHash !== lastSyncedHash) {
+                await fs.writeFile(dest, bundledContent);
+                manifest[id] = bundledHash;
+                manifestChanged = true;
+                log.info('[language] Re-synced language file to bundled version', { file: entry.name });
             }
+            if (isUntouchedByUser) continue;
 
-            try {
-                const destJson: unknown = JSON.parse(destRaw.toString('utf-8'));
-                const bundledJson: unknown = JSON.parse(bundledContent.toString('utf-8'));
-                if (isPlainObject(destJson) && isPlainObject(bundledJson) && fillMissingKeys(destJson, bundledJson)) {
-                    await fs.writeFile(dest, JSON.stringify(destJson, null, 2) + '\n');
-                    log.info(`[language] Backfilled missing keys in ${entry.name}`);
-                }
-            } catch (err) {
-                log.warn(`[language] could not merge ${entry.name}, leaving as-is:`, err);
-            }
+            await backfillMissingKeys(dest, destRaw, bundledContent, entry.name);
         }
 
         if (manifestChanged) await writeManifest(manifest);
@@ -244,6 +243,25 @@ function fillMissingKeys(target: Record<string, unknown>, source: Record<string,
     return changed;
 }
 
+/** Copy keys the bundled locale has and the user's copy lacks; leaves the file alone on any error. */
+async function backfillMissingKeys(
+    dest: string,
+    destRaw: Buffer,
+    bundledContent: Buffer,
+    fileName: string,
+): Promise<void> {
+    try {
+        const destJson: unknown = JSON.parse(destRaw.toString('utf-8'));
+        const bundledJson: unknown = JSON.parse(bundledContent.toString('utf-8'));
+        if (isPlainObject(destJson) && isPlainObject(bundledJson) && fillMissingKeys(destJson, bundledJson)) {
+            await fs.writeFile(dest, JSON.stringify(destJson, null, 2) + '\n');
+            log.info('[language] Backfilled missing keys', { file: fileName });
+        }
+    } catch (err) {
+        log.warn('[language] could not merge language file, leaving as-is', { file: fileName }, err);
+    }
+}
+
 async function readManifest(): Promise<LocaleManifest> {
     try {
         const data: string = await fs.readFile(MANIFEST_FILE, 'utf-8');
@@ -266,24 +284,22 @@ async function listLanguagesArray(): Promise<LanguageInfo[]> {
     try {
         const entries = await fs.readdir(LOCALES_DIR, { withFileTypes: true });
         for (const entry of entries) {
-            if (entry.isFile() && entry.name.endsWith('.json')) {
-                const id = entry.name.replace(/\.json$/, '');
-                if (isValidLanguageId(id)) {
-                    const filePath = path.join(LOCALES_DIR, entry.name);
-                    languages.push({
-                        id,
-                        name: await resolveLanguageName(id, filePath),
-                        path: filePath,
-                    });
-                }
-            }
+            if (!entry.isFile() || !entry.name.endsWith('.json')) continue;
+            const id = entry.name.replace(/\.json$/, '');
+            if (!isValidLanguageId(id)) continue;
+            const filePath = path.join(LOCALES_DIR, entry.name);
+            languages.push({
+                id,
+                name: await resolveLanguageName(id, filePath),
+                path: filePath,
+            });
         }
     } catch (err) {
-        log.warn('[language] listLanguages failed:', err);
+        log.warn('[language] readLanguages failed:', err);
     }
 
     // Sort alphabetically by display name so the picker reads naturally.
-    languages.sort((a, b) => a.name.localeCompare(b.name));
+    languages.sort((a, b): number => a.name.localeCompare(b.name));
     return languages;
 }
 
@@ -302,7 +318,7 @@ async function resolveLanguageName(id: string, filePath: string): Promise<string
             if (typeof name === 'string' && name.trim() !== '') return name.trim();
         }
     } catch (err) {
-        log.warn(`[language] could not read name for ${id}:`, err);
+        log.warn('[language] could not read language name', { id }, err);
     }
     return intlDisplayName(id) ?? id.toUpperCase();
 }

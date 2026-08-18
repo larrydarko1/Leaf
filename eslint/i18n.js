@@ -1,8 +1,12 @@
 import vueI18n from '@intlify/eslint-plugin-vue-i18n';
 import * as jsoncParser from 'jsonc-eslint-parser';
 
-// Namespaces addressed by a computed key, which `no-unused-keys` cannot follow.
-const DYNAMICALLY_ADDRESSED_KEYS = [];
+/**
+ * Keys the usage scan cannot see: it only follows `t()` calls under `src/renderer`.
+ * `meta.name` is the locale's endonym, read as a plain property by the main process
+ * (src/main/services/language.ts) to label the language picker.
+ */
+const UNSCANNED_KEYS = ['meta.name'];
 
 export default [
     {
@@ -60,7 +64,7 @@ export default [
                 {
                     src: 'src/renderer',
                     extensions: ['.ts', '.vue'],
-                    ignores: DYNAMICALLY_ADDRESSED_KEYS,
+                    ignores: UNSCANNED_KEYS,
                 },
             ],
         },

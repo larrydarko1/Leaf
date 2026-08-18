@@ -3,19 +3,31 @@
  * with in-memory caching.
  */
 
-import { ref } from 'vue';
+import { ref, type Ref } from 'vue';
 import {
     isImageFile as checkImage,
     isVideoFile as checkVideo,
     isAudioFile as checkAudio,
 } from '@/renderer/utils/fileTypes';
+import type { EmbedResolveResult } from '@/schemas/vault';
 
-export function useEmbedResolver(getFile: () => { path: string } | null, getWorkspacePath: () => string | null) {
+export type UseEmbedResolverReturn = {
+    embedCache: Ref<Map<string, string>>;
+    embedCacheVersion: Ref<number>;
+    resolveEmbeds: (text: string) => Promise<void>;
+    getEmbedMediaType: (fileName: string) => 'image' | 'video' | 'audio' | 'pdf' | 'note' | 'unknown';
+    clearCache: () => void;
+};
+
+export function useEmbedResolver(
+    findFile: () => { path: string } | null,
+    getWorkspacePath: () => string | null,
+): UseEmbedResolverReturn {
     const embedCache = ref<Map<string, string>>(new Map());
     const embedCacheVersion = ref(0);
 
-    async function resolveEmbeds(text: string) {
-        const file = getFile();
+    async function resolveEmbeds(text: string): Promise<void> {
+        const file = findFile();
         const workspacePath = getWorkspacePath();
         if (file === null || workspacePath === null) return;
 
@@ -38,7 +50,7 @@ export function useEmbedResolver(getFile: () => { path: string } | null, getWork
 
         // Resolve all embeds in parallel — single cache version bump at the end
         const results = await Promise.all(
-            [...fileNames].map(async (fileName) => {
+            [...fileNames].map(async (fileName): Promise<{ fileName: string; result: EmbedResolveResult } | null> => {
                 try {
                     const result = await window.electronAPI.resolveEmbedPath(fileName, noteDir, workspacePath);
                     return { fileName, result };
@@ -82,7 +94,7 @@ export function useEmbedResolver(getFile: () => { path: string } | null, getWork
         return 'unknown';
     }
 
-    function clearCache() {
+    function clearCache(): void {
         embedCache.value.clear();
         embedCacheVersion.value++;
     }

@@ -25,7 +25,7 @@ const searchInput = ref<HTMLInputElement | null>(null);
 const searchQuery = ref('');
 const searchResults = ref<FileInfo[]>([]);
 
-function runSearch() {
+function runSearch(): void {
     if (searchQuery.value.trim() === '') {
         searchResults.value = [];
         return;
@@ -74,9 +74,9 @@ watchDebounced(searchQuery, runSearch, { debounce: 150, maxWait: 600 });
 const { selectedIndex, resetIndex } = useListKeyboardNavigation<FileInfo>(
     () => searchResults.value,
     {
-        onSelect: (file) => emit('selectFile', file),
+        onSelect: (file: FileInfo): void => emit('selectFile', file),
         onOpen: openSelectedResult,
-        onEscape: () => {
+        onEscape: (): void => {
             if (searchQuery.value.trim() !== '') {
                 clearSearch();
             } else {
@@ -87,7 +87,7 @@ const { selectedIndex, resetIndex } = useListKeyboardNavigation<FileInfo>(
     {
         wrap: false,
         scrollSelector: '.search-result-item.keyboard-selected',
-        ignoreWhen: (target) =>
+        ignoreWhen: (target: HTMLElement): boolean =>
             (target.tagName === 'TEXTAREA' || target.isContentEditable) &&
             target !== (searchInput.value as HTMLElement | null),
     },
@@ -102,24 +102,24 @@ function isFileSelected(file: FileInfo): boolean {
     return props.selectedFiles.some((f) => f.path === file.path);
 }
 
-function selectFile(file: FileInfo, event?: MouseEvent) {
+function selectFile(file: FileInfo, event?: MouseEvent): void {
     const index = searchResults.value.findIndex((f) => f.path === file.path);
     if (index >= 0) selectedIndex.value = index;
     emit('selectFile', file, event);
 }
 
-function openFile(file: FileInfo) {
+function openFile(file: FileInfo): void {
     emit('openFile', file);
 }
 
-function clearSearch() {
+function clearSearch(): void {
     searchQuery.value = '';
     searchResults.value = [];
     resetIndex();
     searchInput.value?.focus();
 }
 
-function openSelectedResult() {
+function openSelectedResult(): void {
     // Flush any pending debounce so results are current before opening
     runSearch();
     const idx = selectedIndex.value;

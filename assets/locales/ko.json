@@ -26,7 +26,8 @@
     "ai_assistant_panel": "AI 어시스턴트 패널",
     "theme_picker": "테마 선택 패널",
     "language_picker": "언어 선택 패널",
-    "tab_close_button": "탭 닫기 버튼"
+    "tab_close_button": "탭 닫기 버튼",
+    "tab_unsaved_indicator": "저장되지 않은 변경 사항"
   },
   "file": {
     "image": "이미지 파일",
@@ -85,8 +86,6 @@
     "load_model_to_continue": "계속 대화하려면 모델을 불러오세요",
     "load_model": "{model} 불러오기",
     "drag_to_resize_input_area": "드래그하여 입력 영역 크기 조절",
-    "current_note_included_as_context": "현재 노트가 컨텍스트로 포함됨: {file}",
-    "include_current_note_as_context": "현재 노트를 컨텍스트로 포함",
     "add_files_to_context": "컨텍스트에 파일 추가",
     "context_files": "컨텍스트 파일",
     "search_files": "파일 검색...",
@@ -142,20 +141,7 @@
     "parameters": "파라미터",
     "load_more_results": "결과 더 불러오기",
     "load_more": "더 불러오기",
-    "search_for_gguf_models": "Hugging Face에서 GGUF 모델 검색",
-    "new_file": "새 파일",
-    "new": "새로 만들기",
-    "approved": "승인됨",
-    "reverted": "되돌려짐",
-    "error": "오류",
-    "view_changes": "변경 사항 보기",
-    "original": "원본",
-    "modified": "수정됨",
-    "edit_actions": "이 편집에 대한 작업",
-    "approve_this_file_edit": "이 파일 편집 승인",
-    "approve": "승인",
-    "reject_this_file_edit": "이 파일 편집 거부",
-    "reject": "거부"
+    "search_for_gguf_models": "Hugging Face에서 GGUF 모델 검색"
   },
   "theme": {
     "selection_panel": "테마 선택 패널",

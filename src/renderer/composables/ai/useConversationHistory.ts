@@ -2,16 +2,39 @@
  * useConversationHistory — persists and navigates LLM conversation sessions via IPC.
  */
 
-import { ref, shallowRef, nextTick } from 'vue';
+import { ref, shallowRef, nextTick, type ShallowRef } from 'vue';
 import type { Ref } from 'vue';
 import type { AiStatus, ConversationMeta } from '@/schemas/ai';
 import type { ChatMessage } from '@/schemas/chat';
+
+export type UseConversationHistoryReturn = {
+    showHistory: Ref<boolean>;
+    conversationList: ShallowRef<ConversationMeta[]>;
+    currentConversationId: Ref<string | null>;
+    conversationTokenCount: Ref<number>;
+    renamingConversationId: Ref<string | null>;
+    renameValue: Ref<string>;
+    renameInputRef: Ref<HTMLInputElement[] | null>;
+    toggleHistory: () => void;
+    openHistory: () => void;
+    refreshConversationList: () => Promise<void>;
+    createNewConversation: () => Promise<void>;
+    startNewConversation: () => Promise<void>;
+    saveCurrentConversation: () => Promise<void>;
+    saveTokenCountToConversation: () => Promise<void>;
+    loadConversation: (id: string) => Promise<void>;
+    deleteConversation: (id: string) => Promise<void>;
+    startRename: (conv: ConversationMeta) => Promise<void>;
+    confirmRename: (id: string) => Promise<void>;
+    cancelRename: () => void;
+    formatRelativeDate: (dateStr: string) => string;
+};
 
 export function useConversationHistory(
     status: Ref<AiStatus>,
     lastUsedModelName: Ref<string | null>,
     messages: Ref<ChatMessage[]>,
-) {
+): UseConversationHistoryReturn {
     const showHistory = ref(false);
     const conversationList = shallowRef<ConversationMeta[]>([]);
     const currentConversationId = ref<string | null>(null);
@@ -22,17 +45,17 @@ export function useConversationHistory(
     const renameValue = ref('');
     const renameInputRef = ref<HTMLInputElement[] | null>(null);
 
-    function toggleHistory() {
+    function toggleHistory(): void {
         showHistory.value = !showHistory.value;
         if (showHistory.value) void refreshConversationList();
     }
 
-    function openHistory() {
+    function openHistory(): void {
         showHistory.value = true;
         void refreshConversationList();
     }
 
-    async function refreshConversationList() {
+    async function refreshConversationList(): Promise<void> {
         try {
             const result = await window.electronAPI.conversationList();
             if (result.success) conversationList.value = result.conversations;
@@ -42,7 +65,7 @@ export function useConversationHistory(
     }
 
     /** Create a new conversation record (internal, called before the first message). */
-    async function createNewConversation() {
+    async function createNewConversation(): Promise<void> {
         try {
             const modelName = status.value.currentModelName ?? 'unknown';
             const result = await window.electronAPI.conversationCreate(modelName);
@@ -58,7 +81,7 @@ export function useConversationHistory(
      * Reset to a blank conversation. Saves the current one first.
      * Caller is responsible for focusing the input after this returns.
      */
-    async function startNewConversation() {
+    async function startNewConversation(): Promise<void> {
         await saveCurrentConversation();
         try {
             await window.electronAPI.aiResetChat();
@@ -71,19 +94,28 @@ export function useConversationHistory(
         showHistory.value = false;
     }
 
-    async function saveCurrentConversation() {
+    async function saveCurrentConversation(): Promise<void> {
         if (currentConversationId.value === null || currentConversationId.value === '') return;
         try {
             const result = await window.electronAPI.conversationLoad(currentConversationId.value);
             if (result.success && result.conversation != null) {
                 result.conversation.messages = messages.value
-                    .filter((m) => m.role !== 'system')
-                    .map((m) => ({
-                        role: m.role as 'user' | 'assistant',
-                        content: m.content,
-                        thinking: m.thinking,
-                        timestamp: new Date().toISOString(),
-                    }));
+                    .filter((m): boolean => m.role !== 'system')
+                    .map(
+                        (
+                            m,
+                        ): {
+                            role: 'user' | 'assistant';
+                            content: string;
+                            thinking: string | undefined;
+                            timestamp: string;
+                        } => ({
+                            role: m.role as 'user' | 'assistant',
+                            content: m.content,
+                            thinking: m.thinking,
+                            timestamp: new Date().toISOString(),
+                        }),
+                    );
                 result.conversation.tokenCount = conversationTokenCount.value;
                 await window.electronAPI.conversationSave(result.conversation);
             }
@@ -92,7 +124,7 @@ export function useConversationHistory(
         }
     }
 
-    async function saveTokenCountToConversation() {
+    async function saveTokenCountToConversation(): Promise<void> {
         if (currentConversationId.value === null || currentConversationId.value === '') return;
         try {
             const result = await window.electronAPI.conversationLoad(currentConversationId.value);
@@ -109,7 +141,7 @@ export function useConversationHistory(
      * Load a conversation from history. Saves the current one first.
      * Caller is responsible for scrolling to bottom after this returns.
      */
-    async function loadConversation(id: string) {
+    async function loadConversation(id: string): Promise<void> {
         try {
             await saveCurrentConversation();
             const result = await window.electronAPI.conversationLoad(id);
@@ -118,11 +150,13 @@ export function useConversationHistory(
                     await window.electronAPI.aiResetChat();
                 }
                 currentConversationId.value = result.conversation.id;
-                messages.value = result.conversation.messages.map((m) => ({
-                    role: m.role,
-                    content: m.content,
-                    thinking: m.thinking,
-                }));
+                messages.value = result.conversation.messages.map(
+                    (m): { role: 'user' | 'assistant'; content: string; thinking: string | undefined } => ({
+                        role: m.role,
+                        content: m.content,
+                        thinking: m.thinking,
+                    }),
+                );
                 if (result.conversation.model !== null && result.conversation.model !== '') {
                     lastUsedModelName.value = result.conversation.model;
                 }
@@ -130,8 +164,11 @@ export function useConversationHistory(
                 if (status.value.isModelLoaded && messages.value.length > 0) {
                     await window.electronAPI.aiRestoreChatHistory(
                         messages.value
-                            .filter((m) => m.role !== 'system')
-                            .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+                            .filter((m): boolean => m.role !== 'system')
+                            .map((m): { role: 'user' | 'assistant'; content: string } => ({
+                                role: m.role as 'user' | 'assistant',
+                                content: m.content,
+                            })),
                     );
                 }
                 showHistory.value = false;
@@ -141,7 +178,7 @@ export function useConversationHistory(
         }
     }
 
-    async function deleteConversation(id: string) {
+    async function deleteConversation(id: string): Promise<void> {
         try {
             await window.electronAPI.conversationDelete(id);
             if (currentConversationId.value === id) {
@@ -156,10 +193,10 @@ export function useConversationHistory(
         }
     }
 
-    async function startRename(conv: ConversationMeta) {
+    async function startRename(conv: ConversationMeta): Promise<void> {
         renamingConversationId.value = conv.id;
         renameValue.value = conv.title;
-        await nextTick(() => {
+        await nextTick((): void => {
             if (renameInputRef.value !== null && renameInputRef.value.length > 0) {
                 renameInputRef.value[0].focus();
                 renameInputRef.value[0].select();
@@ -167,7 +204,7 @@ export function useConversationHistory(
         });
     }
 
-    async function confirmRename(id: string) {
+    async function confirmRename(id: string): Promise<void> {
         if (renameValue.value.trim() === '') {
             cancelRename();
             return;
@@ -182,7 +219,7 @@ export function useConversationHistory(
         renameValue.value = '';
     }
 
-    function cancelRename() {
+    function cancelRename(): void {
         renamingConversationId.value = null;
         renameValue.value = '';
     }

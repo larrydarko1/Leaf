@@ -12,16 +12,16 @@ onMounted(() => {
     void refresh();
 });
 
-async function handleSelect(id: string) {
+async function handleSelect(id: string): Promise<void> {
     if (id === activeId.value) return;
     await setActive(id);
 }
 
-async function handleOpenFolder() {
+async function handleOpenFolder(): Promise<void> {
     await openLocalesFolder();
 }
 
-async function handleRefresh() {
+async function handleRefresh(): Promise<void> {
     await refresh();
 }
 </script>

@@ -37,6 +37,7 @@ import * as languageService from '@/main/services/language';
 import { migrateLegacyPaths } from '@/main/lib/paths';
 import { isInsideBoundary } from '@/main/lib/validation';
 import { log } from '@/main/lib/logger';
+import { config } from '@/main/lib/config';
 
 /**
  * ─── Scheme privileges ───────────────────────────────────────────────────────
@@ -60,12 +61,12 @@ protocol.registerSchemesAsPrivileged([
 
 let mainWindow: BrowserWindow | null = null;
 
-function getMainWindow(): BrowserWindow | null {
+function findMainWindow(): BrowserWindow | null {
     return mainWindow;
 }
 
 function createWindow(): void {
-    const iconPath = path.join(__dirname, '../../build/icon.png');
+    const iconPath = path.join(import.meta.dirname, '../../build/icon.png');
 
     const { width: sw, height: sh } = screen.getPrimaryDisplay().workAreaSize;
 
@@ -76,8 +77,8 @@ function createWindow(): void {
         minHeight: Math.round(sh * 0.5),
         icon: iconPath,
         webPreferences: {
-            // out/main/__dirname → ../../ → root → out/preload/index.cjs
-            preload: path.join(__dirname, '../preload/index.cjs'),
+            // out/main/ → ../ → out/preload/index.cjs
+            preload: path.join(import.meta.dirname, '../preload/index.cjs'),
             nodeIntegration: false, // never expose Node to the renderer
             contextIsolation: true, // keep renderer and preload worlds isolated
             sandbox: true, // requires the CommonJS preload built by electron.vite.config.ts
@@ -94,21 +95,22 @@ function createWindow(): void {
     });
 
     // Context menu: spellcheck suggestions + standard editing actions
-    mainWindow.webContents.on('context-menu', (_event, params) => {
+    mainWindow.webContents.on('context-menu', (_event, params): void => {
         const win = mainWindow;
         if (win === null) return;
 
         const menu = Menu.buildFromTemplate([
-            ...params.dictionarySuggestions.map((s) => ({
+            ...params.dictionarySuggestions.map((s): { label: string; click: () => void } => ({
                 label: s,
-                click: () => win.webContents.replaceMisspelling(s),
+                click: (): void => win.webContents.replaceMisspelling(s),
             })),
             ...(params.dictionarySuggestions.length > 0 ? [{ type: 'separator' as const }] : []),
             ...(params.misspelledWord !== ''
                 ? [
                       {
                           label: 'Add to Dictionary',
-                          click: () => win.webContents.session.addWordToSpellCheckerDictionary(params.misspelledWord),
+                          click: (): boolean =>
+                              win.webContents.session.addWordToSpellCheckerDictionary(params.misspelledWord),
                       },
                       { type: 'separator' as const },
                   ]
@@ -122,24 +124,23 @@ function createWindow(): void {
         menu.popup();
     });
 
-    // Load the app, electron-vite sets ELECTRON_RENDERER_URL in dev mode
-    const rendererUrl = process.env['ELECTRON_RENDERER_URL'];
-    if (rendererUrl !== undefined && rendererUrl !== '') {
-        void mainWindow.loadURL(rendererUrl);
+    // Load the app, electron-vite sets the renderer URL in dev mode
+    if (config.rendererUrl !== '') {
+        void mainWindow.loadURL(config.rendererUrl);
         void mainWindow.webContents.openDevTools();
     } else {
-        void mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+        void mainWindow.loadFile(path.join(import.meta.dirname, '../renderer/index.html'));
     }
 
     // Keep external links out of the app window
-    mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    mainWindow.webContents.setWindowOpenHandler(({ url }): { action: 'deny' } => {
         if (url.startsWith('http://') || url.startsWith('https://')) void shell.openExternal(url);
         return { action: 'deny' };
     });
 
-    mainWindow.webContents.on('will-navigate', (event, url) => {
-        const isDevServer = rendererUrl !== undefined && rendererUrl !== '';
-        const appOrigin = isDevServer ? rendererUrl : 'file://';
+    mainWindow.webContents.on('will-navigate', (event, url): void => {
+        const isDevServer = config.rendererUrl !== '';
+        const appOrigin = isDevServer ? config.rendererUrl : 'file://';
         if (!url.startsWith(appOrigin) && !url.startsWith('leaf://')) {
             event.preventDefault();
             if (url.startsWith('http://') || url.startsWith('https://')) void shell.openExternal(url);
@@ -147,8 +148,8 @@ function createWindow(): void {
     });
 
     const win = mainWindow;
-    mainWindow.once('ready-to-show', () => win.show());
-    mainWindow.on('closed', () => {
+    mainWindow.once('ready-to-show', (): void => win.show());
+    mainWindow.on('closed', (): void => {
         mainWindow = null;
     });
 }
@@ -157,11 +158,11 @@ function createWindow(): void {
  * ─── Custom protocol: leaf:// ─────────────────────────────────────────────────
  */
 function registerLeafProtocol(ses: Electron.Session): void {
-    ses.protocol.handle('leaf', (request) => {
+    ses.protocol.handle('leaf', (request): Response | Promise<Response> => {
         // leaf://localhost/path/to/file  →  /path/to/file
         const filePath = decodeURIComponent(new URL(request.url).pathname);
 
-        const root = fsService.getVaultRoot();
+        const root = fsService.findVaultRoot();
         if (root === null) {
             log.warn('[leaf://] Denied — no vault is open:', filePath);
             return new Response('No vault is open', { status: 403 });
@@ -182,7 +183,7 @@ function registerLeafProtocol(ses: Electron.Session): void {
 
 // ─── App lifecycle ────────────────────────────────────────────────────────────
 
-void app.whenReady().then(async () => {
+void app.whenReady().then(async (): Promise<void> => {
     const leafSession = session.fromPartition('persist:leaf');
     await fsService.initVaultRoot();
 
@@ -196,7 +197,7 @@ void app.whenReady().then(async () => {
      * Must target the partition session used by the BrowserWindow.
      * 'media' covers the camera too, so both handlers grant audio only.
      */
-    leafSession.setPermissionRequestHandler((_webContents, permission, callback, details) => {
+    leafSession.setPermissionRequestHandler((_webContents, permission, callback, details): void => {
         if (permission !== 'media') {
             callback(false);
             return;
@@ -207,9 +208,9 @@ void app.whenReady().then(async () => {
             return;
         }
         const mediaTypes = details.mediaTypes ?? [];
-        callback(mediaTypes.length > 0 && mediaTypes.every((type) => type === 'audio'));
+        callback(mediaTypes.length > 0 && mediaTypes.every((type): type is 'audio' => type === 'audio'));
     });
-    leafSession.setPermissionCheckHandler((_webContents, permission, _origin, details) => {
+    leafSession.setPermissionCheckHandler((_webContents, permission, _origin, details): boolean => {
         if (permission !== 'media') return false;
         // 'unknown' is what a generic navigator.permissions query reports, so it stays allowed.
         return details.mediaType !== 'video';
@@ -221,24 +222,24 @@ void app.whenReady().then(async () => {
     // ── Register IPC handlers ────────────────────────────────────────────────
     conversationService.init(app.getPath('userData'));
 
-    fsService.register(ipcMain, getMainWindow);
-    mediaService.register(ipcMain, fsService.getVaultRoot);
-    aiService.register(ipcMain, getMainWindow);
+    fsService.register(ipcMain, findMainWindow);
+    mediaService.register(ipcMain, fsService.findVaultRoot);
+    aiService.register(ipcMain, findMainWindow);
     conversationService.register(ipcMain);
-    hfDownloadService.register(ipcMain, getMainWindow);
-    speechService.register(ipcMain, getMainWindow);
+    hfDownloadService.register(ipcMain, findMainWindow);
+    speechService.register(ipcMain, findMainWindow);
     systemPromptService.register(ipcMain);
     themeService.register(ipcMain);
     languageService.register(ipcMain);
 
     // Logging — route renderer log calls to electron-log
-    ipcMain.on('log:error', (_event, ...args: unknown[]) => log.error(...args));
-    ipcMain.on('log:warn', (_event, ...args: unknown[]) => log.warn(...args));
-    ipcMain.on('log:info', (_event, ...args: unknown[]) => log.info(...args));
-    ipcMain.on('log:debug', (_event, ...args: unknown[]) => log.debug(...args));
+    ipcMain.on('log:error', (_event, ...args: unknown[]): void => log.error(...args));
+    ipcMain.on('log:warn', (_event, ...args: unknown[]): void => log.warn(...args));
+    ipcMain.on('log:info', (_event, ...args: unknown[]): void => log.info(...args));
+    ipcMain.on('log:debug', (_event, ...args: unknown[]): void => log.debug(...args));
 
     // Clipboard
-    ipcMain.handle('clipboard:write', (_event, text: string) => {
+    ipcMain.handle('clipboard:write', (_event, text: string): void => {
         try {
             if (typeof text === 'string') clipboard.writeText(text);
         } catch (err) {
@@ -247,7 +248,7 @@ void app.whenReady().then(async () => {
     });
 
     // Shell — open external URLs safely (http/https only)
-    ipcMain.handle('shell:openExternal', async (_event, url: string) => {
+    ipcMain.handle('shell:openExternal', async (_event, url: string): Promise<boolean> => {
         if (typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://'))) {
             try {
                 await shell.openExternal(url);
@@ -260,25 +261,25 @@ void app.whenReady().then(async () => {
         return false;
     });
 
-    app.on('activate', () => {
+    app.on('activate', (): void => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });
 });
 
-app.on('window-all-closed', () => {
+app.on('window-all-closed', (): void => {
     if (process.platform !== 'darwin') app.quit();
 });
 
 // ─── Graceful shutdown ────────────────────────────────────────────────────────
 // Clean up resources held by services before the process exits.
-app.on('before-quit', () => {
-    void (async () => {
+app.on('before-quit', (): void => {
+    void (async (): Promise<void> => {
         fsService.cleanup();
         await aiService.cleanup();
         speechService.cleanup();
     })();
 });
 
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', (error): void => {
     log.error('[main] Uncaught exception:', error);
 });

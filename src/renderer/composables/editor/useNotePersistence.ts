@@ -3,16 +3,30 @@
  * and auto-save scheduling.
  */
 
-import { ref } from 'vue';
+import { ref, type Ref } from 'vue';
 import type { FileInfo } from '@/schemas/vault';
 
+export type UseNotePersistenceReturn = {
+    content: Ref<string>;
+    originalContent: Ref<string>;
+    hasUnsavedChanges: Ref<boolean>;
+    isSaving: Ref<boolean>;
+    lastLoadedPath: Ref<string | null>;
+    justSaved: Ref<boolean>;
+    onContentChange: () => void;
+    saveFile: () => Promise<void>;
+    loadFile: (file: FileInfo) => Promise<void>;
+    handleDrawingSave: (drawingContent: string) => Promise<void>;
+    clearAutoSaveTimeout: () => void;
+};
+
 export function useNotePersistence(
-    getFile: () => FileInfo | null,
+    findFile: () => FileInfo | null,
     isMarkdownFile: () => boolean,
     resolveEmbeds: (content: string) => void,
     onSave: (content: string) => void,
     onContentChanged: (hasChanges: boolean) => void,
-) {
+): UseNotePersistenceReturn {
     const content = ref('');
     const originalContent = ref('');
     const hasUnsavedChanges = ref(false);
@@ -25,7 +39,7 @@ export function useNotePersistence(
     let autoSaveTimeout: number | null = null;
     let embedResolveTimeout: number | null = null;
 
-    async function loadFile(file: FileInfo) {
+    async function loadFile(file: FileInfo): Promise<void> {
         if (autoSaveTimeout !== null) {
             clearTimeout(autoSaveTimeout);
             autoSaveTimeout = null;
@@ -51,7 +65,7 @@ export function useNotePersistence(
         }
     }
 
-    function onContentChange() {
+    function onContentChange(): void {
         hasUnsavedChanges.value = content.value !== originalContent.value;
         onContentChanged(hasUnsavedChanges.value);
 
@@ -60,20 +74,20 @@ export function useNotePersistence(
         // Debounce embed resolution — avoid IPC storms on every keystroke
         if (isMarkdownFile() && content.value.includes('![[')) {
             if (embedResolveTimeout !== null) clearTimeout(embedResolveTimeout);
-            embedResolveTimeout = window.setTimeout(() => {
+            embedResolveTimeout = window.setTimeout((): void => {
                 resolveEmbeds(content.value);
             }, 500);
         }
 
         if (hasUnsavedChanges.value) {
-            autoSaveTimeout = window.setTimeout(() => {
+            autoSaveTimeout = window.setTimeout((): void => {
                 void saveFile();
             }, 3000);
         }
     }
 
-    async function saveFile() {
-        const file = getFile();
+    async function saveFile(): Promise<void> {
+        const file = findFile();
         if (file === null || !hasUnsavedChanges.value || isSaving.value) return;
 
         isSaving.value = true;
@@ -97,8 +111,8 @@ export function useNotePersistence(
         }
     }
 
-    async function handleDrawingSave(drawingContent: string) {
-        const file = getFile();
+    async function handleDrawingSave(drawingContent: string): Promise<void> {
+        const file = findFile();
         if (file === null) return;
         try {
             const result = await window.electronAPI.writeFile(file.path, drawingContent);
@@ -116,7 +130,7 @@ export function useNotePersistence(
         }
     }
 
-    function clearAutoSaveTimeout() {
+    function clearAutoSaveTimeout(): void {
         if (autoSaveTimeout !== null) {
             clearTimeout(autoSaveTimeout);
             autoSaveTimeout = null;

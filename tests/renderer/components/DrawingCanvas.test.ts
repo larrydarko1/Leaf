@@ -49,7 +49,7 @@ vi.mock('@/renderer/composables/drawing/useCanvasRenderer', () => ({
         getScreenPoint: vi.fn(),
         cssWidth: ref(800),
         cssHeight: ref(600),
-        getCtx: mockGetCtx,
+        findCtx: mockGetCtx,
         exportToBlob: mockExportToBlob,
     })),
 }));

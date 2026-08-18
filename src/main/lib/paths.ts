@@ -50,7 +50,7 @@ export function migrateLegacyPaths(): void {
         }
         fs.mkdirSync(LEAF_HOME, { recursive: true });
         fs.renameSync(LEGACY_MODELS_DIR, DEFAULT_MODELS_DIR);
-        log.info(`[paths] Migrated ${LEGACY_MODELS_DIR} → ${DEFAULT_MODELS_DIR}`);
+        log.info('[paths] Migrated legacy models directory', { from: LEGACY_MODELS_DIR, to: DEFAULT_MODELS_DIR });
     } catch (err) {
         log.error('[paths] Legacy path migration failed:', err);
     }
@@ -62,7 +62,7 @@ export function migrateLegacyPaths(): void {
  * In production   →  <app>/Contents/Resources/assets/prompts/
  */
 export function getBundledPromptsDir(): string {
-    const devPath = path.join(__dirname, '../../assets/prompts');
+    const devPath = path.join(import.meta.dirname, '../../assets/prompts');
 
     if (process.resourcesPath != null) {
         const prodPath = path.join(process.resourcesPath, 'assets/prompts');
@@ -78,7 +78,7 @@ export function getBundledPromptsDir(): string {
  * In production   →  <app>/Contents/Resources/assets/themes/
  */
 export function getBundledThemesDir(): string {
-    const devPath = path.join(__dirname, '../../assets/themes');
+    const devPath = path.join(import.meta.dirname, '../../assets/themes');
 
     if (process.resourcesPath != null) {
         const prodPath = path.join(process.resourcesPath, 'assets/themes');
@@ -94,7 +94,7 @@ export function getBundledThemesDir(): string {
  * In production   →  <app>/Contents/Resources/assets/locales/
  */
 export function getBundledLocalesDir(): string {
-    const devPath = path.join(__dirname, '../../assets/locales');
+    const devPath = path.join(import.meta.dirname, '../../assets/locales');
 
     if (process.resourcesPath != null) {
         const prodPath = path.join(process.resourcesPath, 'assets/locales');
@@ -110,10 +110,10 @@ export function getBundledLocalesDir(): string {
  * In production   →  <app>/Contents/Resources/models/whisper/
  *
  * After electron-vite bundles everything to out/main/index.js,
- * __dirname points to out/main/, so ../../ reaches the repo root.
+ * import.meta.dirname points to out/main/, so ../../ reaches the repo root.
  */
 export function getWhisperModelDir(): string {
-    const devPath = path.join(__dirname, '../../models/whisper');
+    const devPath = path.join(import.meta.dirname, '../../models/whisper');
 
     if (process.resourcesPath != null) {
         const prodPath = path.join(process.resourcesPath, 'models/whisper');

@@ -81,22 +81,22 @@ afterEach(() => {
     fs.rmSync(tmpVault, { recursive: true, force: true });
 });
 
-// ── getVaultRoot / cleanup exports ────────────────────────────────────────────
+// ── findVaultRoot / cleanup exports ────────────────────────────────────────────
 
-describe('getVaultRoot', () => {
+describe('findVaultRoot', () => {
     it('returns the vault root after the folder dialog', async () => {
-        const { getVaultRoot } = await import('@/main/services/fs');
-        expect(getVaultRoot()).toBe(path.resolve(tmpVault));
+        const { findVaultRoot } = await import('@/main/services/fs');
+        expect(findVaultRoot()).toBe(path.resolve(tmpVault));
     });
 });
 
 describe('vault root ownership', () => {
     it('is not settable by passing a path to files:scan', async () => {
-        const { getVaultRoot } = await import('@/main/services/fs');
+        const { findVaultRoot } = await import('@/main/services/fs');
         const outside = newTmpVault();
         try {
             await ipc.invoke('files:scan', outside);
-            expect(getVaultRoot()).toBe(path.resolve(tmpVault));
+            expect(findVaultRoot()).toBe(path.resolve(tmpVault));
         } finally {
             fs.rmSync(outside, { recursive: true, force: true });
         }
@@ -118,18 +118,18 @@ describe('vault root ownership', () => {
     it('persists the root so it survives a restart', async () => {
         vi.resetModules();
         const freshIpc = makeMockIpc();
-        const { register, initVaultRoot, getVaultRoot } = await import('@/main/services/fs');
+        const { register, initVaultRoot, findVaultRoot } = await import('@/main/services/fs');
         register(freshIpc as never, () => fakeWindow);
         await initVaultRoot();
-        expect(getVaultRoot()).toBe(path.resolve(tmpVault));
+        expect(findVaultRoot()).toBe(path.resolve(tmpVault));
     });
 
     it('discards a persisted root that no longer exists', async () => {
         fs.rmSync(tmpVault, { recursive: true, force: true });
         vi.resetModules();
-        const { initVaultRoot, getVaultRoot } = await import('@/main/services/fs');
+        const { initVaultRoot, findVaultRoot } = await import('@/main/services/fs');
         await initVaultRoot();
-        expect(getVaultRoot()).toBeNull();
+        expect(findVaultRoot()).toBeNull();
     });
 
     it('files:scan reports the root it scanned', async () => {
@@ -149,23 +149,23 @@ describe('vault root ownership', () => {
     });
 
     it('vault:close clears the root and forgets it across restarts', async () => {
-        const { getVaultRoot } = await import('@/main/services/fs');
+        const { findVaultRoot } = await import('@/main/services/fs');
         const result = (await ipc.invoke('vault:close')) as { success: boolean };
         expect(result.success).toBe(true);
-        expect(getVaultRoot()).toBeNull();
+        expect(findVaultRoot()).toBeNull();
 
         vi.resetModules();
-        const { initVaultRoot, getVaultRoot: freshGetRoot } = await import('@/main/services/fs');
+        const { initVaultRoot, findVaultRoot: freshGetRoot } = await import('@/main/services/fs');
         await initVaultRoot();
         expect(freshGetRoot()).toBeNull();
     });
 
     it('a cancelled folder dialog leaves the root unchanged', async () => {
-        const { getVaultRoot } = await import('@/main/services/fs');
+        const { findVaultRoot } = await import('@/main/services/fs');
         mockShowOpenDialog.mockResolvedValue({ canceled: true, filePaths: [] });
         const result = await ipc.invoke('dialog:openFolder');
         expect(result).toBeNull();
-        expect(getVaultRoot()).toBe(path.resolve(tmpVault));
+        expect(findVaultRoot()).toBe(path.resolve(tmpVault));
     });
 });
 

@@ -1,3 +1,18 @@
+export const configModuleSelectors = [
+    {
+        selector: "MemberExpression[object.object.name='process'][object.property.name='env']",
+        message: 'Do not read process.env.X in config. Add the key to the Zod schema and read it from `parsed`.',
+    },
+    {
+        selector: "CallExpression[callee.name='parseInt']",
+        message: 'Use z.coerce.number() in the schema instead of parseInt().',
+    },
+    {
+        selector: "CallExpression[callee.name='parseFloat']",
+        message: 'Use z.coerce.number() in the schema instead of parseFloat().',
+    },
+];
+
 export const noImportMetaEnv = {
     selector: "MemberExpression[object.type='MetaProperty'][property.name='env']",
     message:
@@ -9,7 +24,7 @@ export default [
         rules: { 'no-process-env': 'error' },
     },
     {
-        files: ['tests/**/*.ts', 'vitest.setup.ts', 'scripts/**/*.mjs', 'build/**/*.cjs'],
+        files: ['**/lib/config.ts', 'tests/**/*.ts', 'vitest.setup.ts', 'scripts/**/*.mjs', 'build/**/*.cjs'],
         rules: { 'no-process-env': 'off' },
     },
 ];

@@ -97,7 +97,7 @@ function makeInteraction(
     const duplicateSelected = vi.fn();
     const deleteSelected = vi.fn();
 
-    const interaction = useDrawingInteraction(
+    const interaction = useDrawingInteraction({
         canvas,
         containerEl,
         scrollX,
@@ -137,7 +137,7 @@ function makeInteraction(
         pasteClipboard,
         duplicateSelected,
         deleteSelected,
-    );
+    });
 
     return {
         canvas,

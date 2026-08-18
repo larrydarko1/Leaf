@@ -61,14 +61,14 @@ export class TableWidget extends WidgetType {
         const trimmed = line.trim();
         const inner = trimmed.startsWith('|') ? trimmed.slice(1) : trimmed;
         const stripped = inner.endsWith('|') ? inner.slice(0, -1) : inner;
-        return stripped.split('|').map((c) => c.trim());
+        return stripped.split('|').map((c): string => c.trim());
     }
 
     /** Derive CSS text-align from a GFM delimiter cell (e.g. `:---:`, `---:`). */
     private parseAlignment(cell: string): string {
-        const t = cell.trim();
-        const left = t.startsWith(':');
-        const right = t.endsWith(':');
+        const trimmed = cell.trim();
+        const left = trimmed.startsWith(':');
+        const right = trimmed.endsWith(':');
         if (left && right) return 'center';
         if (right) return 'right';
         if (left) return 'left';
@@ -78,7 +78,7 @@ export class TableWidget extends WidgetType {
     toDOM(): HTMLElement {
         const lines = this.rawText
             .split('\n')
-            .map((l) => l.trim())
+            .map((l): string => l.trim())
             .filter(Boolean);
 
         const wrapper = document.createElement('div');
@@ -96,12 +96,12 @@ export class TableWidget extends WidgetType {
 
         const headerCells = this.parseCells(lines[0]);
         const delimCells = this.parseCells(lines[1]);
-        const aligns = delimCells.map((c) => this.parseAlignment(c));
+        const aligns = delimCells.map((c): string => this.parseAlignment(c));
 
         // <thead>
         const thead = document.createElement('thead');
         const headerRow = document.createElement('tr');
-        headerCells.forEach((cell, i) => {
+        headerCells.forEach((cell, i): void => {
             const th = document.createElement('th');
             if (aligns[i] !== '') th.style.textAlign = aligns[i];
             th.innerHTML = this.renderInline(cell);
@@ -113,10 +113,10 @@ export class TableWidget extends WidgetType {
         // <tbody>
         if (lines.length > 2) {
             const tbody = document.createElement('tbody');
-            for (let r = 2; r < lines.length; r++) {
-                const cells = this.parseCells(lines[r]);
+            for (let row = 2; row < lines.length; row++) {
+                const cells = this.parseCells(lines[row]);
                 const tr = document.createElement('tr');
-                cells.forEach((cell, i) => {
+                cells.forEach((cell, i): void => {
                     const td = document.createElement('td');
                     if (aligns[i] !== '') td.style.textAlign = aligns[i];
                     td.innerHTML = this.renderInline(cell);
@@ -174,12 +174,10 @@ export class EmbedWidget extends WidgetType {
                 img.alt = this.fileName;
                 img.className = 'cm-embed-image';
                 img.loading = 'lazy';
-                if (this.displayOptions !== '') {
-                    const dimMatch = this.displayOptions.match(/^(\d+)(?:x(\d+))?$/);
-                    if (dimMatch !== null) {
-                        img.width = parseInt(dimMatch[1]);
-                        if (dimMatch[2] !== undefined) img.height = parseInt(dimMatch[2]);
-                    }
+                const dimMatch = this.displayOptions !== '' ? this.displayOptions.match(/^(\d+)(?:x(\d+))?$/) : null;
+                if (dimMatch !== null) {
+                    img.width = parseInt(dimMatch[1]);
+                    if (dimMatch[2] !== undefined) img.height = parseInt(dimMatch[2]);
                 }
                 wrapper.appendChild(img);
                 return wrapper;
@@ -246,10 +244,10 @@ export class EmbedWidget extends WidgetType {
                 volTrack.appendChild(volFill);
                 volWrap.appendChild(volTrack);
 
-                const fmt = (s: number) => {
-                    if (!isFinite(s) || isNaN(s) || s <= 0) return '0:00';
-                    const m = Math.floor(s / 60);
-                    return `${m}:${Math.floor(s % 60)
+                const fmt = (totalSeconds: number): string => {
+                    if (!isFinite(totalSeconds) || isNaN(totalSeconds) || totalSeconds <= 0) return '0:00';
+                    const minutes = Math.floor(totalSeconds / 60);
+                    return `${minutes}:${Math.floor(totalSeconds % 60)
                         .toString()
                         .padStart(2, '0')}`;
                 };
@@ -260,7 +258,7 @@ export class EmbedWidget extends WidgetType {
                 let realDuration = 0;
                 let probing = false;
 
-                const captureDuration = () => {
+                const captureDuration = (): void => {
                     if (isFinite(media.duration) && media.duration > 0) {
                         realDuration = media.duration;
                         durEl.textContent = fmt(realDuration);
@@ -268,7 +266,7 @@ export class EmbedWidget extends WidgetType {
                     }
                 };
 
-                media.addEventListener('loadedmetadata', () => {
+                media.addEventListener('loadedmetadata', (): void => {
                     captureDuration();
                     if (realDuration === 0) {
                         probing = true;
@@ -278,7 +276,7 @@ export class EmbedWidget extends WidgetType {
 
                 media.addEventListener('durationchange', captureDuration);
 
-                media.addEventListener('seeked', () => {
+                media.addEventListener('seeked', (): void => {
                     if (probing) {
                         probing = false;
                         captureDuration();
@@ -286,7 +284,7 @@ export class EmbedWidget extends WidgetType {
                     }
                 });
 
-                media.addEventListener('timeupdate', () => {
+                media.addEventListener('timeupdate', (): void => {
                     if (probing) return;
                     timeEl.textContent = fmt(media.currentTime);
                     if (realDuration !== 0) {
@@ -294,31 +292,32 @@ export class EmbedWidget extends WidgetType {
                     }
                 });
 
-                media.addEventListener('play', () => {
+                media.addEventListener('play', (): void => {
                     playBtn.innerHTML = pauseSvg;
                 });
-                media.addEventListener('pause', () => {
+                media.addEventListener('pause', (): void => {
                     playBtn.innerHTML = playSvg;
                 });
-                media.addEventListener('ended', () => {
+                media.addEventListener('ended', (): void => {
                     playBtn.innerHTML = playSvg;
                 });
 
-                playBtn.onclick = (e) => {
+                playBtn.onclick = (e): void => {
                     e.stopPropagation();
                     if (media.paused) void media.play();
                     else void media.pause();
                 };
                 if (isVideo)
-                    (media as HTMLVideoElement).onclick = () => {
+                    (media as HTMLVideoElement).onclick = (): void => {
                         if (media.paused) void media.play();
                         else void media.pause();
                     };
 
                 // Seek handler — uses realDuration from closure (set by probe)
-                progressWrap.onclick = (e) => {
+                progressWrap.onclick = (e): void => {
                     e.stopPropagation();
-                    const dur = realDuration !== 0 ? realDuration : isFinite(media.duration) ? media.duration : 0;
+                    const probedDuration = isFinite(media.duration) ? media.duration : 0;
+                    const dur = realDuration !== 0 ? realDuration : probedDuration;
                     if (dur === 0) return;
                     const rect = progressTrack.getBoundingClientRect();
                     const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
@@ -326,7 +325,7 @@ export class EmbedWidget extends WidgetType {
                 };
 
                 let savedVol = 1;
-                volBtn.onclick = (e) => {
+                volBtn.onclick = (e): void => {
                     e.stopPropagation();
                     if (media.volume > 0) {
                         savedVol = media.volume;
@@ -339,13 +338,13 @@ export class EmbedWidget extends WidgetType {
                         volBtn.innerHTML = volSvg;
                     }
                 };
-                volWrap.onclick = (e) => {
+                volWrap.onclick = (e): void => {
                     e.stopPropagation();
                     const rect = volTrack.getBoundingClientRect();
-                    const v = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-                    media.volume = v;
-                    volFill.style.width = `${v * 100}%`;
-                    volBtn.innerHTML = v === 0 ? muteSvg : volSvg;
+                    const volume = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                    media.volume = volume;
+                    volFill.style.width = `${volume * 100}%`;
+                    volBtn.innerHTML = volume === 0 ? muteSvg : volSvg;
                 };
 
                 ctrlBar.append(playBtn, timeEl, progressWrap, durEl, volBtn, volWrap);

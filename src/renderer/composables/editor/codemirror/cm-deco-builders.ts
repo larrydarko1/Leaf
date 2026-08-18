@@ -14,12 +14,42 @@ import {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+/** Collapse table rows `from`..`to` so only the rendered widget shows. */
+function pushHiddenRows(decos: Range<Decoration>[], state: EditorState, from: number, to: number): void {
+    for (let ln = from; ln <= to; ln++) {
+        const line = state.doc.line(ln);
+        decos.push(Decoration.line({ class: 'cm-table-hidden-row' }).range(line.from));
+        if (line.from < line.to) {
+            decos.push(Decoration.replace({}).range(line.from, line.to));
+        }
+    }
+}
+
+/** Style blockquote lines `from`..`to`, hiding the `>` marker on the inactive ones. */
+function pushBlockquoteLines(
+    decos: Range<Decoration>[],
+    state: EditorState,
+    from: number,
+    to: number,
+    activeLines: Set<number>,
+): void {
+    for (let ln = from; ln <= to; ln++) {
+        if (activeLines.has(ln)) continue;
+        const line = state.doc.line(ln);
+        decos.push(Decoration.line({ class: 'cm-blockquote' }).range(line.from));
+        const markerMatch = line.text.match(/^(\s*>\s?)/);
+        if (markerMatch !== null) {
+            decos.push(Decoration.replace({}).range(line.from, line.from + markerMatch[0].length));
+        }
+    }
+}
+
 export function activeLinesSet(state: EditorState): Set<number> {
     const lines = new Set<number>();
     for (const range of state.selection.ranges) {
         const startLine = state.doc.lineAt(range.from).number;
         const endLine = state.doc.lineAt(range.to).number;
-        for (let n = startLine; n <= endLine; n++) lines.add(n);
+        for (let lineNo = startLine; lineNo <= endLine; lineNo++) lines.add(lineNo);
     }
     return lines;
 }
@@ -192,7 +222,7 @@ export function buildSyntaxDecos(
         syntaxTree(state).iterate({
             from: rangeFrom,
             to: rangeTo,
-            enter(node) {
+            enter(node): false | undefined {
                 const { from, to } = node;
                 const name = node.name;
 
@@ -236,13 +266,7 @@ export function buildSyntaxDecos(
 
                         // Collapse subsequent table rows to zero height (same pattern as
                         // cm-code-fence) so only the rendered widget is visible.
-                        for (let ln = lineFrom + 1; ln <= lineTo; ln++) {
-                            const line = state.doc.line(ln);
-                            decos.push(Decoration.line({ class: 'cm-table-hidden-row' }).range(line.from));
-                            if (line.from < line.to) {
-                                decos.push(Decoration.replace({}).range(line.from, line.to));
-                            }
-                        }
+                        pushHiddenRows(decos, state, lineFrom + 1, lineTo);
                     }
                     return false; // Never descend into table children
                 }
@@ -320,17 +344,7 @@ export function buildSyntaxDecos(
 
                 // ── Blockquote ────────────────────────────────────────
                 if (name === 'Blockquote') {
-                    for (let ln = lineFrom; ln <= lineTo; ln++) {
-                        if (!activeLines.has(ln)) {
-                            const line = state.doc.line(ln);
-                            decos.push(Decoration.line({ class: 'cm-blockquote' }).range(line.from));
-                            const lineText = line.text;
-                            const markerMatch = lineText.match(/^(\s*>\s?)/);
-                            if (markerMatch !== null) {
-                                decos.push(Decoration.replace({}).range(line.from, line.from + markerMatch[0].length));
-                            }
-                        }
-                    }
+                    pushBlockquoteLines(decos, state, lineFrom, lineTo, activeLines);
                 }
 
                 // ── Links ─────────────────────────────────────────────
@@ -390,11 +404,11 @@ export function mergeVisibleRanges(
     visibleRanges: readonly { from: number; to: number }[],
 ): { from: number; to: number }[] {
     if (visibleRanges.length === 0) return [];
-    const expanded = visibleRanges.map(({ from, to }) => {
+    const expanded = visibleRanges.map(({ from, to }): { from: number; to: number } => {
         const [lf, lt] = expandToLines(state, from, to);
         return { from: lf, to: lt };
     });
-    expanded.sort((a, b) => a.from - b.from);
+    expanded.sort((a, b): number => a.from - b.from);
     const merged: { from: number; to: number }[] = [{ ...expanded[0] }];
     for (let i = 1; i < expanded.length; i++) {
         const last = merged[merged.length - 1];

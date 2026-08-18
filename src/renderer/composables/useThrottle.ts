@@ -28,7 +28,7 @@ export function useThrottleFn<TArgs extends unknown[]>(
             last = Date.now();
             fn(...args);
         } else if (timer === undefined) {
-            timer = setTimeout(() => {
+            timer = setTimeout((): void => {
                 last = Date.now();
                 timer = undefined;
                 const pending = lastArgs;

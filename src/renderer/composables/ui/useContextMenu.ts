@@ -3,38 +3,41 @@
  * and manages click-outside dismissal.
  */
 
-import { ref, watch, nextTick, onUnmounted } from 'vue';
+import { ref, watch, nextTick, onUnmounted, type Ref } from 'vue';
 
 export function useContextMenu(
     getVisible: () => boolean,
     getPosition: () => { x: number; y: number },
     onClose: () => void,
-) {
+): {
+    menuRef: Ref<HTMLElement | null>;
+    adjustedPosition: Ref<{ x: number; y: number }>;
+} {
     const menuRef = ref<HTMLElement | null>(null);
     const adjustedPosition = ref({ x: 0, y: 0 });
 
-    function handleClickOutside(event: MouseEvent) {
+    function handleClickOutside(event: MouseEvent): void {
         if (menuRef.value !== null && !menuRef.value.contains(event.target as Node)) {
             onClose();
         }
     }
 
-    function handleEscape(event: KeyboardEvent) {
+    function handleEscape(event: KeyboardEvent): void {
         if (event.key === 'Escape') {
             onClose();
         }
     }
 
-    function removeListeners() {
+    function removeListeners(): void {
         document.removeEventListener('click', handleClickOutside);
         document.removeEventListener('contextmenu', handleClickOutside);
         document.removeEventListener('keydown', handleEscape);
     }
 
-    watch(getVisible, (visible) => {
+    watch(getVisible, (visible): void => {
         if (visible) {
             adjustedPosition.value = { ...getPosition() };
-            void nextTick(() => {
+            void nextTick((): void => {
                 if (menuRef.value !== null) {
                     const rect = menuRef.value.getBoundingClientRect();
                     let { x, y } = getPosition();
@@ -47,7 +50,7 @@ export function useContextMenu(
                     adjustedPosition.value = { x, y };
                 }
             });
-            setTimeout(() => {
+            setTimeout((): void => {
                 document.addEventListener('click', handleClickOutside);
                 document.addEventListener('contextmenu', handleClickOutside);
                 document.addEventListener('keydown', handleEscape);

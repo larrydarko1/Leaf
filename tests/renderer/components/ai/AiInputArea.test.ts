@@ -70,7 +70,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                 },
             });
@@ -87,7 +86,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                 },
             });
@@ -104,7 +102,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                 },
             });
@@ -121,7 +118,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: true,
-                    inputField: null,
                     showThinking: false,
                 },
             });
@@ -142,7 +138,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                 },
                 attachTo: document.body,
@@ -174,7 +169,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                 },
                 attachTo: document.body,
@@ -202,7 +196,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                 },
                 attachTo: document.body,
@@ -230,7 +223,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                 },
                 attachTo: document.body,
@@ -258,7 +250,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                 },
                 attachTo: document.body,
@@ -289,7 +280,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                 },
                 attachTo: document.body,
@@ -321,7 +311,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                 },
             });
@@ -342,7 +331,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                 },
             });
@@ -363,7 +351,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                 },
             });
@@ -385,7 +372,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                 },
             });
@@ -405,7 +391,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                 },
             });
@@ -413,9 +398,8 @@ describe('AiInputArea', () => {
             const textarea = wrapper.find('textarea');
             await textarea.trigger('keydown.enter.shift');
 
-            // Note: the component has @keydown.enter.exact, so shift+enter should not trigger
-            // but Vue Test Utils keydown trigger doesn't fully support exact modifier testing
-            // This is a known limitation of Vue's keydown modifiers in tests
+            // The handler is @keydown.enter.exact, so a modified Enter must not send.
+            expect(wrapper.emitted('send')).toBeUndefined();
         });
 
         it('emits send when send button is clicked', async () => {
@@ -427,7 +411,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                 },
             });
@@ -447,7 +430,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: true,
-                    inputField: null,
                     showThinking: false,
                 },
             });
@@ -467,7 +449,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                 },
             });
@@ -493,7 +474,6 @@ describe('AiInputArea', () => {
                     isReady: false,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                 },
             });
@@ -511,7 +491,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: true,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                 },
             });
@@ -529,7 +508,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                 },
             });
@@ -547,7 +525,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                 },
             });
@@ -565,7 +542,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                 },
             });
@@ -586,7 +562,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                     contextFiles: [makeFile('a.md'), makeFile('b.md')],
                     availableFiles: [],
@@ -607,7 +582,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                     contextFiles: [],
                     availableFiles: [],
@@ -626,7 +600,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                     contextFiles: [makeFile('a.md', '/a.md')],
                     availableFiles: [],
@@ -649,7 +622,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                     contextFiles: [],
                     availableFiles: [makeFile('pick-me.md', '/pick-me.md')],
@@ -676,7 +648,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                     contextFiles,
                     availableFiles: [],
@@ -695,7 +666,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                     contextFiles: [],
                     availableFiles: [makeFile('alpha.md', '/alpha.md'), makeFile('beta.md', '/beta.md')],
@@ -719,7 +689,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                     contextFiles: [],
                     availableFiles: [makeFile('alpha.md', '/alpha.md')],
@@ -742,7 +711,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                     contextFiles: [],
                     availableFiles: [makeFile('alpha.md', '/alpha.md')],
@@ -765,7 +733,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                     contextFiles: [],
                     availableFiles: [makeFile('alpha.md', '/alpha.md')],
@@ -787,7 +754,6 @@ describe('AiInputArea', () => {
                     isReady: true,
                     isAnyGenerating: false,
                     isStreaming: false,
-                    inputField: null,
                     showThinking: false,
                     contextFiles: [],
                     availableFiles: [],

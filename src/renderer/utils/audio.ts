@@ -86,7 +86,7 @@ export function arrayBufferToBase64(buffer: ArrayBuffer): string {
 
 // ─── Internal helper ─────────────────────────────────────────────────────────
 
-function writeString(view: DataView, offset: number, str: string) {
+function writeString(view: DataView, offset: number, str: string): void {
     for (let i = 0; i < str.length; i++) {
         view.setUint8(offset + i, str.charCodeAt(i));
     }

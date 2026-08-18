@@ -3,35 +3,72 @@
  * including overlay positioning and commit logic.
  */
 
-import { ref, computed, nextTick } from 'vue';
+import { ref, computed, nextTick, type ComputedRef } from 'vue';
 import type { Ref } from 'vue';
 import type { CanvasElement, DefaultStyle } from '@/schemas/drawing';
 
-export function useTextEditing(
+export type UseTextEditingReturn = {
+    textEditing: Ref<boolean>;
+    textValue: Ref<string>;
+    textOverlayStyle: ComputedRef<Record<string, string>>;
+    startNewText: (wx: number, wy: number) => void;
+    startEditText: (el: CanvasElement) => void;
+    startEditShapeText: (el: CanvasElement) => void;
+    cancelText: () => void;
+    onTextEnter: (e: KeyboardEvent) => void;
+    finalizeText: () => void;
+    onDoubleClick: (e: MouseEvent) => void;
+};
+
+export function useTextEditing({
     // DOM refs
-    canvas: Ref<HTMLCanvasElement | null>,
-    textInputEl: Ref<HTMLTextAreaElement | null>,
+    canvas,
+    textInputEl,
     // View state
-    zoom: Ref<number>,
+    zoom,
     // Element state
-    elements: Ref<CanvasElement[]>,
-    selectedId: Ref<string | null>,
+    elements,
+    selectedId,
     // Element helpers
-    getElementBounds: (el: CanvasElement) => { x: number; y: number; width: number; height: number },
-    hitTestElement: (wx: number, wy: number, zoom: number) => CanvasElement | null,
-    isShapeElement: (el: CanvasElement) => boolean,
-    genId: () => string,
+    getElementBounds,
+    hitTestElement,
+    isShapeElement,
+    genId,
     // Style state
-    defaultStyle: Ref<DefaultStyle>,
+    defaultStyle,
     // Renderer helpers
-    worldToScreen: (wx: number, wy: number) => { x: number; y: number },
-    screenToWorld: (sx: number, sy: number) => { x: number; y: number },
-    getCtx: () => CanvasRenderingContext2D | null,
-    renderScene: () => void,
+    worldToScreen,
+    screenToWorld,
+    findCtx,
+    renderScene,
     // History / persistence callbacks
-    saveToHistory: () => void,
-    scheduleAutoSave: () => void,
-) {
+    saveToHistory,
+    scheduleAutoSave,
+}: {
+    // DOM refs
+    canvas: Ref<HTMLCanvasElement | null>;
+    textInputEl: Ref<HTMLTextAreaElement | null>;
+    // View state
+    zoom: Ref<number>;
+    // Element state
+    elements: Ref<CanvasElement[]>;
+    selectedId: Ref<string | null>;
+    // Element helpers
+    getElementBounds: (el: CanvasElement) => { x: number; y: number; width: number; height: number };
+    hitTestElement: (wx: number, wy: number, zoom: number) => CanvasElement | null;
+    isShapeElement: (el: CanvasElement) => boolean;
+    genId: () => string;
+    // Style state
+    defaultStyle: Ref<DefaultStyle>;
+    // Renderer helpers
+    worldToScreen: (wx: number, wy: number) => { x: number; y: number };
+    screenToWorld: (sx: number, sy: number) => { x: number; y: number };
+    findCtx: () => CanvasRenderingContext2D | null;
+    renderScene: () => void;
+    // History / persistence callbacks
+    saveToHistory: () => void;
+    scheduleAutoSave: () => void;
+}): UseTextEditingReturn {
     // State
     const textEditing = ref(false);
     const textValue = ref('');
@@ -43,7 +80,7 @@ export function useTextEditing(
     const textEditColor = ref('');
 
     // Computed
-    const textOverlayStyle = computed(() => {
+    const textOverlayStyle = computed((): Record<string, string> => {
         const screen = worldToScreen(textWorldPos.value.x, textWorldPos.value.y);
         const fontSize = textEditFontSize.value !== 0 ? textEditFontSize.value : defaultStyle.value.fontSize;
         const style: Record<string, string> = {
@@ -72,7 +109,7 @@ export function useTextEditing(
     });
 
     // Entry points
-    function startNewText(wx: number, wy: number) {
+    function startNewText(wx: number, wy: number): void {
         selectedId.value = null;
         textEditing.value = true;
         textValue.value = '';
@@ -82,12 +119,12 @@ export function useTextEditing(
         textEditBounds.value = null;
         textEditFontSize.value = defaultStyle.value.fontSize;
         textEditColor.value = defaultStyle.value.strokeColor;
-        void nextTick(() => {
+        void nextTick((): void => {
             textInputEl.value?.focus();
         });
     }
 
-    function startEditText(el: CanvasElement) {
+    function startEditText(el: CanvasElement): void {
         selectedId.value = null;
         textEditing.value = true;
         textValue.value = el.text ?? '';
@@ -97,12 +134,12 @@ export function useTextEditing(
         textEditBounds.value = null;
         textEditFontSize.value = el.fontSize ?? defaultStyle.value.fontSize;
         textEditColor.value = el.strokeColor;
-        void nextTick(() => {
+        void nextTick((): void => {
             textInputEl.value?.focus();
         });
     }
 
-    function startEditShapeText(el: CanvasElement) {
+    function startEditShapeText(el: CanvasElement): void {
         selectedId.value = el.id;
         textEditing.value = true;
         textValue.value = el.text ?? '';
@@ -113,12 +150,12 @@ export function useTextEditing(
         textEditBounds.value = { ...bounds };
         textEditFontSize.value = el.fontSize ?? 16;
         textEditColor.value = el.strokeColor;
-        void nextTick(() => {
+        void nextTick((): void => {
             textInputEl.value?.focus();
         });
     }
 
-    function cancelText() {
+    function cancelText(): void {
         textEditing.value = false;
         editingElementId.value = null;
         textEditCentered.value = false;
@@ -126,14 +163,14 @@ export function useTextEditing(
         renderScene();
     }
 
-    function onTextEnter(e: KeyboardEvent) {
+    function onTextEnter(e: KeyboardEvent): void {
         if (!e.shiftKey) {
             e.preventDefault();
             finalizeText();
         }
     }
 
-    function finalizeText() {
+    function finalizeText(): void {
         if (!textEditing.value) return;
 
         const txt = textValue.value.trim();
@@ -141,22 +178,17 @@ export function useTextEditing(
         textEditing.value = false;
 
         if (txt.length === 0) {
-            if (editingElementId.value !== null && !wasCentered) {
-                const el = elements.value.find((e) => e.id === editingElementId.value);
-                if (el !== undefined && el.type === 'text') {
-                    elements.value = elements.value.filter((el) => el.id !== editingElementId.value);
-                    if (selectedId.value === editingElementId.value) {
-                        selectedId.value = null;
-                    }
-                }
+            const editedId = editingElementId.value;
+            const edited = editedId !== null ? elements.value.find((el): boolean => el.id === editedId) : undefined;
+
+            if (editedId !== null && !wasCentered && edited?.type === 'text') {
+                elements.value = elements.value.filter((el): boolean => el.id !== editedId);
+                if (selectedId.value === editedId) selectedId.value = null;
             }
 
-            if (editingElementId.value !== null && wasCentered) {
-                const el = elements.value.find((e) => e.id === editingElementId.value);
-                if (el !== undefined) {
-                    el.text = undefined;
-                    el.fontSize = undefined;
-                }
+            if (editedId !== null && wasCentered && edited !== undefined) {
+                edited.text = undefined;
+                edited.fontSize = undefined;
             }
 
             editingElementId.value = null;
@@ -169,7 +201,7 @@ export function useTextEditing(
         }
 
         // Measure text dimensions using the canvas context
-        const ctx = getCtx();
+        const ctx = findCtx();
         if (ctx === null) return;
 
         const fs = textEditFontSize.value ?? defaultStyle.value.fontSize;
@@ -185,7 +217,7 @@ export function useTextEditing(
         ctx.restore();
 
         if (editingElementId.value !== null) {
-            const el = elements.value.find((e) => e.id === editingElementId.value);
+            const el = elements.value.find((e): boolean => e.id === editingElementId.value);
             if (el !== undefined) {
                 el.text = txt;
                 el.fontSize = fs;
@@ -223,7 +255,7 @@ export function useTextEditing(
     }
 
     // Double-click handler
-    function onDoubleClick(e: MouseEvent) {
+    function onDoubleClick(e: MouseEvent): void {
         const canvasEl = canvas.value;
         if (canvasEl === null) return;
 

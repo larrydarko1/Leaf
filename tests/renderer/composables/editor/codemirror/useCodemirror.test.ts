@@ -32,7 +32,10 @@ function mountComposable(options: {
 
     const TestComponent = defineComponent({
         setup() {
-            composableResult = useCodemirror(containerRef, content, onContentChange, [], 'Type here...', fileId);
+            composableResult = useCodemirror(containerRef, content, onContentChange, {
+                placeholderText: 'Type here...',
+                fileId,
+            });
             return () =>
                 h('div', {
                     ref: (el) => {
@@ -308,7 +311,7 @@ describe('useCodemirror', () => {
 
         const TestComponent = defineComponent({
             setup() {
-                useCodemirror(containerRef, content, vi.fn(), [], 'Write here...');
+                useCodemirror(containerRef, content, vi.fn(), { placeholderText: 'Write here...' });
                 return () =>
                     h('div', {
                         ref: (el) => {

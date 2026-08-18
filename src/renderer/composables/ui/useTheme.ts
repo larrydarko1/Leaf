@@ -8,7 +8,7 @@
  * Architecture mirrors useSystemPrompt.
  */
 
-import { ref } from 'vue';
+import { ref, type Ref } from 'vue';
 import type { ThemeInfo } from '@/schemas/vault';
 
 const ACTIVE_ID_LS_KEY = 'leaf-theme-id';
@@ -18,15 +18,24 @@ const themes = ref<ThemeInfo[]>([]);
 const activeId = ref<string>('dark');
 const isLoading = ref(false);
 
-export function useTheme() {
-    async function refresh() {
+export type UseThemeReturn = {
+    themes: Ref<ThemeInfo[]>;
+    activeId: Ref<string>;
+    isLoading: Ref<boolean>;
+    refresh: () => Promise<void>;
+    setActive: (id: string) => Promise<boolean>;
+    openThemesFolder: () => Promise<void>;
+};
+
+export function useTheme(): UseThemeReturn {
+    async function refresh(): Promise<void> {
         isLoading.value = true;
         try {
             const result = await window.electronAPI.themeList();
             if (result.success) {
                 themes.value = result.themes;
                 activeId.value = result.activeId;
-                const active = result.themes.find((t) => t.id === result.activeId) ?? result.themes[0];
+                const active = result.themes.find((t): boolean => t.id === result.activeId) ?? result.themes[0];
                 if (active !== undefined) applyTheme(active);
             }
         } catch (err) {
@@ -37,7 +46,7 @@ export function useTheme() {
     }
 
     async function setActive(id: string): Promise<boolean> {
-        const theme = themes.value.find((t) => t.id === id);
+        const theme = themes.value.find((t): boolean => t.id === id);
         if (theme === undefined) return false;
         try {
             const result = await window.electronAPI.themeSetActive(id);

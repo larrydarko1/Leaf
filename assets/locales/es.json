@@ -26,7 +26,8 @@
     "ai_assistant_panel": "Panel del asistente de IA",
     "theme_picker": "Panel selector de tema",
     "language_picker": "Panel selector de idioma",
-    "tab_close_button": "Botón para cerrar pestaña"
+    "tab_close_button": "Botón para cerrar pestaña",
+    "tab_unsaved_indicator": "Cambios sin guardar"
   },
   "file": {
     "image": "Archivo de imagen",
@@ -85,8 +86,6 @@
     "load_model_to_continue": "Carga un modelo para continuar chateando",
     "load_model": "Cargar {model}",
     "drag_to_resize_input_area": "Arrastra para redimensionar el área de entrada",
-    "current_note_included_as_context": "Nota actual incluida como contexto: {file}",
-    "include_current_note_as_context": "Incluir la nota actual como contexto",
     "add_files_to_context": "Agregar archivos al contexto",
     "context_files": "Archivos de contexto",
     "search_files": "Buscar archivos...",
@@ -142,20 +141,7 @@
     "parameters": "Parámetros",
     "load_more_results": "Cargar más resultados",
     "load_more": "Cargar más",
-    "search_for_gguf_models": "Buscar modelos GGUF en Hugging Face",
-    "new_file": "Nuevo archivo",
-    "new": "Nuevo",
-    "approved": "Aprobado",
-    "reverted": "Revertido",
-    "error": "Error",
-    "view_changes": "Ver cambios",
-    "original": "Original",
-    "modified": "Modificado",
-    "edit_actions": "Acciones para esta edición",
-    "approve_this_file_edit": "Aprobar esta edición de archivo",
-    "approve": "Aprobar",
-    "reject_this_file_edit": "Rechazar esta edición de archivo",
-    "reject": "Rechazar"
+    "search_for_gguf_models": "Buscar modelos GGUF en Hugging Face"
   },
   "theme": {
     "selection_panel": "Panel de selección de tema",

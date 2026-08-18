@@ -167,6 +167,11 @@ function mountApp() {
     return shallowMount(App, { global: { plugins: [i18n] } });
 }
 
+/** The sidebar toggle buttons are the only ones carrying `aria-pressed`. */
+function findToggle(wrapper: ReturnType<typeof mountApp>, label: string) {
+    return wrapper.findAll('button').find((btn) => btn.attributes('aria-label') === label);
+}
+
 beforeEach(() => {
     vi.clearAllMocks();
     mockCurrentFolder.value = null;
@@ -256,31 +261,47 @@ describe('App', () => {
         it('toggleSearch flips showSearchPanel and hides bookmarks panel', async () => {
             mockCurrentFolder.value = '/vault';
             const wrapper = mountApp();
-            const searchBtn = wrapper
-                .findAll('button')
-                .find((b) => (b.attributes('aria-label') ?? '').toLowerCase().includes('search'));
+            const searchBtn = findToggle(wrapper, 'Search files');
+            const bookmarkBtn = findToggle(wrapper, 'View bookmarks');
+            expect(searchBtn?.attributes('aria-pressed')).toBe('false');
+
+            await bookmarkBtn?.trigger('click');
+            expect(bookmarkBtn?.attributes('aria-pressed')).toBe('true');
+
             await searchBtn?.trigger('click');
-            await searchBtn?.trigger('click'); // toggle off
+            expect(searchBtn?.attributes('aria-pressed')).toBe('true');
+            expect(bookmarkBtn?.attributes('aria-pressed')).toBe('false');
+
+            await searchBtn?.trigger('click');
+            expect(searchBtn?.attributes('aria-pressed')).toBe('false');
             wrapper.unmount();
         });
 
         it('toggleBookmarks flips showBookmarksPanel', async () => {
             mockCurrentFolder.value = '/vault';
             const wrapper = mountApp();
-            const bookmarkBtn = wrapper
-                .findAll('button')
-                .find((b) => (b.attributes('aria-label') ?? '').toLowerCase().includes('bookmark'));
+            const bookmarkBtn = findToggle(wrapper, 'View bookmarks');
+            expect(bookmarkBtn?.attributes('aria-pressed')).toBe('false');
+
             await bookmarkBtn?.trigger('click');
+            expect(bookmarkBtn?.attributes('aria-pressed')).toBe('true');
+
+            await bookmarkBtn?.trigger('click');
+            expect(bookmarkBtn?.attributes('aria-pressed')).toBe('false');
             wrapper.unmount();
         });
 
         it('toggleAiPanel flips showAiPanel', async () => {
             mockCurrentFolder.value = '/vault';
             const wrapper = mountApp();
-            const aiBtn = wrapper
-                .findAll('button')
-                .find((b) => (b.attributes('aria-label') ?? '').toLowerCase().includes('ai'));
+            const aiBtn = findToggle(wrapper, 'AI assistant');
+            expect(aiBtn?.attributes('aria-pressed')).toBe('false');
+
             await aiBtn?.trigger('click');
+            expect(aiBtn?.attributes('aria-pressed')).toBe('true');
+
+            await aiBtn?.trigger('click');
+            expect(aiBtn?.attributes('aria-pressed')).toBe('false');
             wrapper.unmount();
         });
     });
@@ -515,32 +536,38 @@ describe('App', () => {
     });
 
     describe('toggleSearch / toggleBookmarks mutual exclusion', () => {
-        it('toggleSearch hides bookmarks panel', async () => {
+        it('toggleBookmarks hides the search panel', async () => {
+            mockCurrentFolder.value = '/vault';
             const wrapper = mountApp();
-            const vm = wrapper.vm as unknown as {
-                toggleBookmarks: () => void;
-                toggleSearch: () => void;
-                showBookmarksPanel: { value: boolean };
-                showSearchPanel: { value: boolean };
-            };
-            vm.toggleBookmarks?.();
-            vm.toggleSearch?.();
-            // If bookmarks was open, search opening should close it (but we can only check no throw)
+            const searchBtn = findToggle(wrapper, 'Search files');
+            const bookmarkBtn = findToggle(wrapper, 'View bookmarks');
+
+            await searchBtn?.trigger('click');
+            expect(searchBtn?.attributes('aria-pressed')).toBe('true');
+
+            await bookmarkBtn?.trigger('click');
+            expect(bookmarkBtn?.attributes('aria-pressed')).toBe('true');
+            expect(searchBtn?.attributes('aria-pressed')).toBe('false');
             wrapper.unmount();
         });
     });
 
     describe('toggleAiPanel / toggleThemePanel / toggleLanguagePanel mutual exclusion', () => {
-        it('toggleThemePanel hides AI and language panels', () => {
+        it('toggleThemePanel hides AI and language panels', async () => {
+            mockCurrentFolder.value = '/vault';
             const wrapper = mountApp();
-            const vm = wrapper.vm as unknown as {
-                toggleAiPanel: () => void;
-                toggleThemePanel: () => void;
-                toggleLanguagePanel: () => void;
-            };
-            vm.toggleAiPanel?.();
-            vm.toggleThemePanel?.();
-            vm.toggleLanguagePanel?.();
+            const aiBtn = findToggle(wrapper, 'AI assistant');
+            const themeBtn = findToggle(wrapper, 'Theme selector');
+            const languageBtn = findToggle(wrapper, 'Language selector');
+
+            await aiBtn?.trigger('click');
+            await languageBtn?.trigger('click');
+            expect(languageBtn?.attributes('aria-pressed')).toBe('true');
+
+            await themeBtn?.trigger('click');
+            expect(themeBtn?.attributes('aria-pressed')).toBe('true');
+            expect(aiBtn?.attributes('aria-pressed')).toBe('false');
+            expect(languageBtn?.attributes('aria-pressed')).toBe('false');
             wrapper.unmount();
         });
     });

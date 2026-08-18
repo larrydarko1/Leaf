@@ -11,9 +11,9 @@
  *   Linux  — ~/.config/Leaf/logs/main.log
  */
 
-import log from 'electron-log/main.js';
+import baseLog from 'electron-log/main.js';
 
 // Keep log files small — 1 MB max, 1 rotated backup
-log.transports.file.maxSize = 1024 * 1024;
+baseLog.transports.file.maxSize = 1024 * 1024;
 
-export { log };
+export const log = baseLog;

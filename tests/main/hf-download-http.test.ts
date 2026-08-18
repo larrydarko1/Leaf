@@ -1,6 +1,6 @@
 /**
  * Extended hf-download tests that mock https to cover the HTTP call paths:
- * searchModels, listRepoFiles, downloadModel, and cancelDownload.
+ * searchModels, fetchRepoFiles, downloadModel, and cancelDownload.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { EventEmitter } from 'events';
@@ -58,7 +58,7 @@ function makeResponse(statusCode: number, body: string, headers: Record<string, 
 type ResCb = (res: ReturnType<typeof makeResponse>) => void;
 
 // Each call to setupHttpMock captures its own callback via mockImplementationOnce,
-// so parallel requests (e.g. Promise.all in listRepoFiles) each get the right cb.
+// so parallel requests (e.g. Promise.all in fetchRepoFiles) each get the right cb.
 function setupHttpMock(statusCode: number, body: string, headers: Record<string, string> = {}) {
     const res = makeResponse(statusCode, body, headers);
     mockHttps.request.mockImplementationOnce((_opts: unknown, cb: ResCb) => {

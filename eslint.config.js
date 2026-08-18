@@ -16,7 +16,7 @@ import typescriptStandards, {
 import htmlStandards from './eslint/html.js';
 import i18nStandards from './eslint/i18n.js';
 import vueStandards, { noStoreLibraryPatterns, aliasOnlyImportPatterns } from './eslint/vue.js';
-import envStandards, { noImportMetaEnv } from './eslint/env.js';
+import envStandards, { configModuleSelectors, noImportMetaEnv } from './eslint/env.js';
 import { noSingleLetterDeclaration, utilsBannedImportPatterns, libBannedImportPatterns } from './eslint/code-style.js';
 import { errorHandlingSelectors } from './eslint/error-handling.js';
 import refactoringStandards from './eslint/refactoring.js';
@@ -195,6 +195,18 @@ export default [
             ],
         },
     },
+    {
+        // The preload bridge is one object literal typed as `ElectronAPI`, so TypeScript
+        // already checks every member against the contract the renderer consumes.
+        // Re-annotating each arrow would duplicate src/schemas/electron.d.ts by hand.
+        files: ['src/preload/**/*.ts'],
+        rules: {
+            '@typescript-eslint/explicit-function-return-type': [
+                'error',
+                { allowTypedFunctionExpressions: true, allowIIFEs: true },
+            ],
+        },
+    },
 
     // ── Import extension rule — strip extensions from TS/JS, require for .vue ─
     {
@@ -256,6 +268,12 @@ export default [
         files: ['src/schemas/**/*.ts'],
         rules: {
             'no-restricted-syntax': ['error', ...tsSourceSelectors, noSingleLetterDeclaration],
+        },
+    },
+    {
+        files: ['**/lib/config.ts'],
+        rules: {
+            'no-restricted-syntax': ['error', ...configModuleSelectors, ...tsSourceSelectors, noSingleLetterDeclaration],
         },
     },
 

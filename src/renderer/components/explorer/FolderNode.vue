@@ -73,7 +73,8 @@ const isExpanded = computed(() => {
 const isRenaming = computed(() => {
     if (props.node.type === 'file') {
         return props.renamingFile?.path === props.node.file?.path;
-    } else if (props.node.type === 'folder') {
+    }
+    if (props.node.type === 'folder') {
         return props.renamingFolder === props.node.path;
     }
     return false;
@@ -81,8 +82,9 @@ const isRenaming = computed(() => {
 
 const isSelected = computed(() => {
     if (props.node.type === 'file') {
-        return props.selectedFiles.some((f) => f.path === props.node.file?.path);
-    } else if (props.node.type === 'folder') {
+        return props.selectedFiles.some((file) => file.path === props.node.file?.path);
+    }
+    if (props.node.type === 'folder') {
         return props.selectedFolder === props.node.path;
     }
     return false;
@@ -106,11 +108,11 @@ watch(isRenaming, (renaming) => {
     }
 });
 
-function handleFolderClick() {
+function handleFolderClick(): void {
     emit('selectFolder', props.node.path);
 }
 
-function handleFileClick(event: MouseEvent) {
+function handleFileClick(event: MouseEvent): void {
     if (props.node.file !== undefined) {
         emit('selectFile', props.node.file, event, undefined);
     }
@@ -125,25 +127,25 @@ function scrollStyle(distance: number): Record<string, string> {
     };
 }
 
-function onFolderNameEnter() {
+function onFolderNameEnter(): void {
     const el = folderNameTextEl.value;
     if (el === null) return;
     const overflow = el.scrollWidth - el.clientWidth;
     if (overflow > 0) folderScrollDistance.value = overflow + 6;
 }
 
-function onFolderNameLeave() {
+function onFolderNameLeave(): void {
     folderScrollDistance.value = 0;
 }
 
-function onFileNameEnter() {
+function onFileNameEnter(): void {
     const el = fileNameTextEl.value;
     if (el === null) return;
     const overflow = el.scrollWidth - el.clientWidth;
     if (overflow > 0) fileScrollDistance.value = overflow + 6;
 }
 
-function onFileNameLeave() {
+function onFileNameLeave(): void {
     fileScrollDistance.value = 0;
 }
 

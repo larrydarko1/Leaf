@@ -26,7 +26,8 @@
     "ai_assistant_panel": "Tabula Adiutoris Artificialis",
     "theme_picker": "Tabula Lectionis Themae",
     "language_picker": "Tabula Lectionis Linguae",
-    "tab_close_button": "Pessulus Linguellae Claudendae"
+    "tab_close_button": "Pessulus Linguellae Claudendae",
+    "tab_unsaved_indicator": "Mutationes Non Servatae"
   },
   "file": {
     "image": "Scapus Imaginis",
@@ -85,8 +86,6 @@
     "load_model_to_continue": "Exemplar onera ut colloquium pergas",
     "load_model": "{model} Onerare",
     "drag_to_resize_input_area": "Trahe ut magnitudinem areae scribendae mutes",
-    "current_note_included_as_context": "Nota praesens ut contextus inclusa: {file}",
-    "include_current_note_as_context": "Notam Praesentem ut Contextum Includere",
     "add_files_to_context": "Adde fasciculos ad contextum",
     "context_files": "Fasciculi contextus",
     "search_files": "Quaere fasciculos...",
@@ -142,20 +141,7 @@
     "parameters": "Parametra",
     "load_more_results": "Plura Inventa Onerare",
     "load_more": "Plura Onerare",
-    "search_for_gguf_models": "Exemplaria GGUF in Hugging Face Quaerere",
-    "new_file": "Novus Scapus",
-    "new": "Novum",
-    "approved": "Probatum",
-    "reverted": "Revocatum",
-    "error": "Error",
-    "view_changes": "Mutationes Videre",
-    "original": "Primigenium",
-    "modified": "Mutatum",
-    "edit_actions": "Actiones pro hac Mutatione",
-    "approve_this_file_edit": "Hanc Scapi Mutationem Probare",
-    "approve": "Probare",
-    "reject_this_file_edit": "Hanc Scapi Mutationem Reicere",
-    "reject": "Reicere"
+    "search_for_gguf_models": "Exemplaria GGUF in Hugging Face Quaerere"
   },
   "theme": {
     "selection_panel": "Tabula Lectionis Themae",

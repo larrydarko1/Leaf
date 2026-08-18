@@ -271,7 +271,7 @@ describe('useAIModel', () => {
         it('returns error when there is no previous model match', async () => {
             const m = useAIModel();
             // no lastUsedModelName → previousModelMatch is null → path is ''
-            const result = await m.loadPreviousModel([], false);
+            const result = await m.loadPreviousModel([], { hasActiveConversation: false });
             expect(result.success).toBe(false);
         });
 
@@ -286,7 +286,7 @@ describe('useAIModel', () => {
                 { role: 'user', content: 'Hello' },
                 { role: 'assistant', content: 'Hi' },
             ];
-            await m.loadPreviousModel(history, true);
+            await m.loadPreviousModel(history, { hasActiveConversation: true });
 
             expect(mockAiRestoreChatHistory).toHaveBeenCalledWith([
                 { role: 'user', content: 'Hello' },
@@ -300,7 +300,7 @@ describe('useAIModel', () => {
             m.availableModels.value = [model];
             m.lastUsedModelName.value = 'prev.gguf';
 
-            await m.loadPreviousModel([{ role: 'user', content: 'Hi' }], false);
+            await m.loadPreviousModel([{ role: 'user', content: 'Hi' }], { hasActiveConversation: false });
             expect(mockAiRestoreChatHistory).not.toHaveBeenCalled();
         });
 
@@ -310,7 +310,7 @@ describe('useAIModel', () => {
             m.availableModels.value = [model];
             m.lastUsedModelName.value = 'prev.gguf';
 
-            await m.loadPreviousModel([], true);
+            await m.loadPreviousModel([], { hasActiveConversation: true });
             expect(mockAiRestoreChatHistory).not.toHaveBeenCalled();
         });
 
@@ -325,7 +325,7 @@ describe('useAIModel', () => {
                 { role: 'system', content: 'Compacted.' },
                 { role: 'assistant', content: 'Hi' },
             ];
-            await m.loadPreviousModel(history, true);
+            await m.loadPreviousModel(history, { hasActiveConversation: true });
 
             const restored = mockAiRestoreChatHistory.mock.calls[0][0] as { role: string }[];
             expect(restored.every((m) => m.role !== 'system')).toBe(true);
@@ -389,7 +389,9 @@ describe('useAIModel', () => {
             m.lastUsedModelName.value = 'prev.gguf';
             mockAiRestoreChatHistory.mockRejectedValueOnce(new Error('restore failed'));
 
-            await expect(m.loadPreviousModel([{ role: 'user', content: 'Hi' }], true)).resolves.not.toThrow();
+            await expect(
+                m.loadPreviousModel([{ role: 'user', content: 'Hi' }], { hasActiveConversation: true }),
+            ).resolves.not.toThrow();
             expect(window.electronAPI.log.error).toHaveBeenCalled();
         });
     });

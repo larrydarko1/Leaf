@@ -14,8 +14,8 @@ import {
     saveConversation,
     addMessage,
     updateLastMessage,
-    getConversation,
-    listConversations,
+    findConversation,
+    readConversations,
     loadConversation,
     deleteConversation,
     renameConversation,
@@ -71,28 +71,28 @@ describe('createConversation', () => {
     });
 });
 
-describe('getConversation', () => {
+describe('findConversation', () => {
     it('returns the conversation by id', async () => {
         const { conversation } = await createConversation('llama');
-        const loaded = await getConversation(conversation!.id);
+        const loaded = await findConversation(conversation!.id);
         expect(loaded?.id).toBe(conversation!.id);
         expect(loaded?.model).toBe('llama');
     });
 
     it('returns null for a non-existent id', async () => {
-        const result = await getConversation('00000000-0000-0000-0000-000000000000');
+        const result = await findConversation('00000000-0000-0000-0000-000000000000');
         expect(result).toBeNull();
     });
 
     it('returns null for a path-traversal attempt', async () => {
-        const result = await getConversation('../../etc/passwd');
+        const result = await findConversation('../../etc/passwd');
         expect(result).toBeNull();
     });
 
     it('returns null for a corrupt JSON file', async () => {
         const id = '11111111-1111-1111-1111-111111111111';
         fs.writeFileSync(path.join(tmpDir, `${id}.json`), 'not valid json');
-        const result = await getConversation(id);
+        const result = await findConversation(id);
         expect(result).toBeNull();
     });
 });
@@ -102,7 +102,7 @@ describe('saveConversation', () => {
         const { conversation } = await createConversation('llama');
         conversation!.title = 'Updated Title';
         await saveConversation(conversation!);
-        const reloaded = await getConversation(conversation!.id);
+        const reloaded = await findConversation(conversation!.id);
         expect(reloaded?.title).toBe('Updated Title');
     });
 
@@ -110,7 +110,7 @@ describe('saveConversation', () => {
         const { conversation } = await createConversation('llama');
         conversation!.messages = [{ role: 'user', content: 'What is AI?' }];
         await saveConversation(conversation!);
-        const reloaded = await getConversation(conversation!.id);
+        const reloaded = await findConversation(conversation!.id);
         expect(reloaded?.title).toBe('What is AI?');
     });
 
@@ -119,7 +119,7 @@ describe('saveConversation', () => {
         const longContent = 'A'.repeat(80);
         conversation!.messages = [{ role: 'user', content: longContent }];
         await saveConversation(conversation!);
-        const reloaded = await getConversation(conversation!.id);
+        const reloaded = await findConversation(conversation!.id);
         expect(reloaded?.title).toHaveLength(60);
         expect(reloaded?.title).toMatch(/\.\.\.$/);
     });
@@ -128,7 +128,7 @@ describe('saveConversation', () => {
         const { conversation } = await createConversation('llama');
         conversation!.messages = [{ role: 'assistant', content: 'Hello' }];
         await saveConversation(conversation!);
-        const reloaded = await getConversation(conversation!.id);
+        const reloaded = await findConversation(conversation!.id);
         expect(reloaded?.title).toBe('New Conversation');
     });
 });
@@ -138,7 +138,7 @@ describe('addMessage', () => {
         const { conversation } = await createConversation('llama');
         const result = await addMessage(conversation!.id, { role: 'user', content: 'Hello' });
         expect(result.success).toBe(true);
-        const reloaded = await getConversation(conversation!.id);
+        const reloaded = await findConversation(conversation!.id);
         expect(reloaded?.messages).toHaveLength(1);
         expect(reloaded?.messages[0].content).toBe('Hello');
     });
@@ -146,7 +146,7 @@ describe('addMessage', () => {
     it('sets a timestamp on the added message', async () => {
         const { conversation } = await createConversation('llama');
         await addMessage(conversation!.id, { role: 'user', content: 'Hi' });
-        const reloaded = await getConversation(conversation!.id);
+        const reloaded = await findConversation(conversation!.id);
         expect(reloaded?.messages[0].timestamp).toBeTruthy();
     });
 
@@ -165,7 +165,7 @@ describe('updateLastMessage', () => {
         const { conversation } = await createConversation('llama');
         await addMessage(conversation!.id, { role: 'user', content: 'Original' });
         await updateLastMessage(conversation!.id, 'Updated');
-        const reloaded = await getConversation(conversation!.id);
+        const reloaded = await findConversation(conversation!.id);
         expect(reloaded?.messages[0].content).toBe('Updated');
     });
 
@@ -182,9 +182,9 @@ describe('updateLastMessage', () => {
     });
 });
 
-describe('listConversations', () => {
+describe('readConversations', () => {
     it('returns an empty list when no conversations exist', async () => {
-        const result = await listConversations();
+        const result = await readConversations();
         expect(result.success).toBe(true);
         expect(result.conversations).toHaveLength(0);
     });
@@ -192,7 +192,7 @@ describe('listConversations', () => {
     it('returns all created conversations', async () => {
         await createConversation('llama');
         await createConversation('mistral');
-        const result = await listConversations();
+        const result = await readConversations();
         expect(result.conversations).toHaveLength(2);
     });
 
@@ -200,7 +200,7 @@ describe('listConversations', () => {
         const first = await createConversation('llama');
         await new Promise((r) => setTimeout(r, 10));
         const second = await createConversation('mistral');
-        const result = await listConversations();
+        const result = await readConversations();
         const ids = result.conversations.map((c) => (c as { id: string }).id);
         expect(ids[0]).toBe(second.conversation!.id);
         expect(ids[1]).toBe(first.conversation!.id);
@@ -209,7 +209,7 @@ describe('listConversations', () => {
     it('skips corrupt JSON files', async () => {
         await createConversation('llama');
         fs.writeFileSync(path.join(tmpDir, 'corrupt.json'), 'bad json');
-        const result = await listConversations();
+        const result = await readConversations();
         expect(result.conversations).toHaveLength(1);
     });
 
@@ -217,9 +217,9 @@ describe('listConversations', () => {
         const convsDir = path.join(tmpDir, 'conversations');
         fs.rmSync(convsDir, { recursive: true, force: true });
         // Re-init pointing to a non-existent parent so conversationsDir ends up valid
-        // but the listConversations call hits an error path.
+        // but the readConversations call hits an error path.
         // Directly testing the directory-missing case covers the same error branch.
-        const result = await listConversations();
+        const result = await readConversations();
         // readdir on a missing dir rejects — service should handle it gracefully
         expect(result).toBeDefined();
     });
@@ -258,7 +258,7 @@ describe('renameConversation', () => {
         const { conversation } = await createConversation('llama');
         const result = await renameConversation(conversation!.id, 'Renamed');
         expect(result.success).toBe(true);
-        const reloaded = await getConversation(conversation!.id);
+        const reloaded = await findConversation(conversation!.id);
         expect(reloaded?.title).toBe('Renamed');
     });
 

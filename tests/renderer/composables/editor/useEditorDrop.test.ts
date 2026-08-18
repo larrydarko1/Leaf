@@ -25,14 +25,14 @@ function makeComposable(
     const onContentChange = vi.fn();
     const file = opts.filePath != null ? { path: opts.filePath } : null;
 
-    const composable = useEditorDrop(
+    const composable = useEditorDrop({
         isMarkdownFile,
-        () => file,
-        textareaRef as never,
+        findFile: () => file,
+        textareaRef: textareaRef as never,
         showPreview,
         content,
         onContentChange,
-    );
+    });
 
     return { ...composable, content, onContentChange };
 }
@@ -210,14 +210,14 @@ describe('onFileDrop', () => {
         const isMarkdownFile = ref(true);
         const showPreview = ref(false);
         const c = ref('existing text');
-        const { onFileDrop: drop } = useEditorDrop(
+        const { onFileDrop: drop } = useEditorDrop({
             isMarkdownFile,
-            () => ({ path: '/vault/note.md' }),
-            textareaRef as never,
+            findFile: () => ({ path: '/vault/note.md' }),
+            textareaRef: textareaRef as never,
             showPreview,
-            c,
-            vi.fn(),
-        );
+            content: c,
+            onContentChange: vi.fn(),
+        });
         await drop(makeDragEvent({ textPlain: 'file:/vault/photo.png', types: ['text/plain'] }));
         expect(c.value).toMatch(/existing text\n!\[\[photo\.png\]\]/);
     });
@@ -238,15 +238,15 @@ describe('onFileDrop', () => {
         };
         const cmViewRef = shallowRef(cmView as never);
 
-        const { onFileDrop } = useEditorDrop(
+        const { onFileDrop } = useEditorDrop({
             isMarkdownFile,
-            () => ({ path: '/vault/note.md' }),
-            ref(null) as never,
+            findFile: () => ({ path: '/vault/note.md' }),
+            textareaRef: ref(null) as never,
             showPreview,
             content,
             onContentChange,
             cmViewRef,
-        );
+        });
 
         await onFileDrop(makeDragEvent({ textPlain: 'file:/vault/image.png', types: ['text/plain'] }));
         expect(dispatch).toHaveBeenCalled();

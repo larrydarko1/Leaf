@@ -53,7 +53,7 @@ onMounted(() => {
 });
 onUnmounted(() => document.removeEventListener('click', handleClickOutside));
 
-function toggleDropdown() {
+function toggleDropdown(): void {
     if (showDropdown.value) {
         showDropdown.value = false;
         return;
@@ -70,12 +70,12 @@ function toggleDropdown() {
     showDropdown.value = true;
 }
 
-function handleSelectModel(model: AiModelInfo) {
+function handleSelectModel(model: AiModelInfo): void {
     showDropdown.value = false;
     emit('select-model', model);
 }
 
-function handleClickOutside(event: MouseEvent) {
+function handleClickOutside(event: MouseEvent): void {
     const target = event.target as Node;
     if (dropdownRef.value !== null && !dropdownRef.value.contains(target)) {
         showDropdown.value = false;
@@ -85,7 +85,7 @@ function handleClickOutside(event: MouseEvent) {
     }
 }
 
-function togglePromptDropdown() {
+function togglePromptDropdown(): void {
     if (showPromptDropdown.value) {
         showPromptDropdown.value = false;
         return;
@@ -102,12 +102,12 @@ function togglePromptDropdown() {
     showPromptDropdown.value = true;
 }
 
-async function handleSelectPrompt(id: string) {
+async function handleSelectPrompt(id: string): Promise<void> {
     showPromptDropdown.value = false;
     await setActive(id);
 }
 
-function handleRefresh() {
+function handleRefresh(): void {
     emit('refresh-models');
     void refreshPrompts();
 }

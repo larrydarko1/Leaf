@@ -10,15 +10,31 @@ import type { EditorView } from '@codemirror/view';
 
 const embeddableExtensions = [...IMAGE_EXTENSIONS, ...VIDEO_EXTENSIONS, ...AUDIO_EXTENSIONS, ...PDF_EXTENSIONS];
 
-export function useEditorDrop(
-    isMarkdownFile: Ref<boolean>,
-    getFile: () => { path: string } | null,
-    textareaRef: Ref<HTMLTextAreaElement | null>,
-    showPreview: Ref<boolean>,
-    content: Ref<string>,
-    onContentChange: () => void,
-    cmViewRef?: ShallowRef<EditorView | null>,
-) {
+export type UseEditorDropReturn = {
+    isDragOverEditor: Ref<boolean>;
+    onEditorDragEnter: (event: DragEvent) => void;
+    onEditorDragOver: (event: DragEvent) => void;
+    onEditorDragLeave: (_event: DragEvent) => void;
+    onFileDrop: (event: DragEvent) => Promise<void>;
+};
+
+export function useEditorDrop({
+    isMarkdownFile,
+    findFile,
+    textareaRef,
+    showPreview,
+    content,
+    onContentChange,
+    cmViewRef,
+}: {
+    isMarkdownFile: Ref<boolean>;
+    findFile: () => { path: string } | null;
+    textareaRef: Ref<HTMLTextAreaElement | null>;
+    showPreview: Ref<boolean>;
+    content: Ref<string>;
+    onContentChange: () => void;
+    cmViewRef?: ShallowRef<EditorView | null>;
+}): UseEditorDropReturn {
     const isDragOverEditor = ref(false);
     let dragCounter = 0;
 
@@ -49,7 +65,7 @@ export function useEditorDrop(
         dragCounter = 0;
         isDragOverEditor.value = false;
 
-        const file = getFile();
+        const file = findFile();
         if (!isMarkdownFile.value || file === null) return;
 
         const embedTexts: string[] = [];

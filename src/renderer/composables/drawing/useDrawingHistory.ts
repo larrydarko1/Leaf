@@ -6,21 +6,39 @@ import type { Ref, ComputedRef } from 'vue';
 import { z } from 'zod';
 import { type CanvasElement, CanvasElementSchema } from '@/schemas/drawing';
 
-export function useDrawingHistory(
-    elements: Ref<CanvasElement[]>,
-    selectedId: Ref<string | null>,
-    selectedIds: Ref<Set<string>>,
-    selectedElement: ComputedRef<CanvasElement | null>,
-    selectedElements: ComputedRef<CanvasElement[]>,
-    clipboard: Ref<CanvasElement[]>,
-    history: Ref<string[]>,
-    historyIndex: Ref<number>,
-    scheduleAutoSave: () => void,
-    renderScene: () => void,
-) {
+export type UseDrawingHistoryReturn = {
+    saveToHistory: () => void;
+    undo: () => void;
+    redo: () => void;
+    clearAll: () => void;
+    copySelected: () => void;
+    pasteClipboard: () => void;
+    duplicateSelected: () => void;
+    deleteSelected: () => void;
+};
+
+export function useDrawingHistory({
+    elements,
+    selectedIds,
+    selectedElements,
+    clipboard,
+    history,
+    historyIndex,
+    scheduleAutoSave,
+    renderScene,
+}: {
+    elements: Ref<CanvasElement[]>;
+    selectedIds: Ref<Set<string>>;
+    selectedElements: ComputedRef<CanvasElement[]>;
+    clipboard: Ref<CanvasElement[]>;
+    history: Ref<string[]>;
+    historyIndex: Ref<number>;
+    scheduleAutoSave: () => void;
+    renderScene: () => void;
+}): UseDrawingHistoryReturn {
     // History
 
-    function saveToHistory() {
+    function saveToHistory(): void {
         const snapshot = JSON.stringify(elements.value);
         if (historyIndex.value < history.value.length - 1) {
             history.value = history.value.slice(0, historyIndex.value + 1);
@@ -33,7 +51,7 @@ export function useDrawingHistory(
         }
     }
 
-    function undo() {
+    function undo(): void {
         if (historyIndex.value <= 0) return;
         historyIndex.value--;
         const historyEntry = history.value[historyIndex.value];
@@ -54,7 +72,7 @@ export function useDrawingHistory(
         }
     }
 
-    function redo() {
+    function redo(): void {
         if (historyIndex.value >= history.value.length - 1) return;
         historyIndex.value++;
         const historyEntry = history.value[historyIndex.value];
@@ -75,7 +93,7 @@ export function useDrawingHistory(
         }
     }
 
-    function clearAll() {
+    function clearAll(): void {
         elements.value = [];
         selectedIds.value = new Set();
         saveToHistory();
@@ -85,7 +103,7 @@ export function useDrawingHistory(
 
     // Clipboard
 
-    function copySelected() {
+    function copySelected(): void {
         if (selectedElements.value.length === 0) return;
         const result = z.array(CanvasElementSchema).safeParse(JSON.parse(JSON.stringify(selectedElements.value)));
         if (result.success) {
@@ -93,7 +111,7 @@ export function useDrawingHistory(
         }
     }
 
-    function pasteClipboard() {
+    function pasteClipboard(): void {
         if (clipboard.value.length === 0) return;
         const newIds = new Set<string>();
         for (const src of clipboard.value) {
@@ -110,26 +128,62 @@ export function useDrawingHistory(
         }
         selectedIds.value = newIds;
         // Offset clipboard for subsequent pastes
-        clipboard.value = clipboard.value.map((el) => ({
-            ...el,
-            x: el.x + 20,
-            y: el.y + 20,
-        }));
+        clipboard.value = clipboard.value.map(
+            (
+                el,
+            ): {
+                x: number;
+                y: number;
+                id: string;
+                type:
+                    | 'rectangle'
+                    | 'ellipse'
+                    | 'diamond'
+                    | 'triangle'
+                    | 'line'
+                    | 'arrow'
+                    | 'freedraw'
+                    | 'text'
+                    | 'database'
+                    | 'server'
+                    | 'user'
+                    | 'cloud'
+                    | 'document'
+                    | 'hexagon'
+                    | 'parallelogram'
+                    | 'star';
+                width: number;
+                height: number;
+                strokeColor: string;
+                fillColor: string;
+                strokeWidth: number;
+                strokeStyle: 'solid' | 'dashed' | 'dotted';
+                opacity: number;
+                points?: { x: number; y: number }[] | undefined;
+                text?: string | undefined;
+                fontSize?: number | undefined;
+                borderRadius?: number | undefined;
+            } => ({
+                ...el,
+                x: el.x + 20,
+                y: el.y + 20,
+            }),
+        );
         saveToHistory();
         scheduleAutoSave();
         renderScene();
     }
 
-    function duplicateSelected() {
+    function duplicateSelected(): void {
         if (selectedElements.value.length === 0) return;
         copySelected();
         pasteClipboard();
     }
 
-    function deleteSelected() {
+    function deleteSelected(): void {
         if (selectedIds.value.size === 0) return;
         const idsToDelete = selectedIds.value;
-        elements.value = elements.value.filter((el) => !idsToDelete.has(el.id));
+        elements.value = elements.value.filter((el): boolean => !idsToDelete.has(el.id));
         selectedIds.value = new Set();
         saveToHistory();
         scheduleAutoSave();

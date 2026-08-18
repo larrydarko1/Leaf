@@ -91,12 +91,12 @@ function makeEditing(opts: { hasCanvas?: boolean; hasInput?: boolean; ctxReturns
         font: '',
         measureText: fakeMeasure,
     } as unknown as CanvasRenderingContext2D;
-    const getCtx = vi.fn().mockReturnValue(ctxReturnsNull ? null : fakeCtx);
+    const findCtx = vi.fn().mockReturnValue(ctxReturnsNull ? null : fakeCtx);
     const renderScene = vi.fn();
     const saveToHistory = vi.fn();
     const scheduleAutoSave = vi.fn();
 
-    const te = useTextEditing(
+    const te = useTextEditing({
         canvas,
         textInputEl,
         zoom,
@@ -109,11 +109,11 @@ function makeEditing(opts: { hasCanvas?: boolean; hasInput?: boolean; ctxReturns
         defaultStyle,
         worldToScreen,
         screenToWorld,
-        getCtx,
+        findCtx,
         renderScene,
         saveToHistory,
         scheduleAutoSave,
-    );
+    });
 
     return {
         canvas,
@@ -127,7 +127,7 @@ function makeEditing(opts: { hasCanvas?: boolean; hasInput?: boolean; ctxReturns
         isShapeElement,
         worldToScreen,
         screenToWorld,
-        getCtx,
+        findCtx,
         renderScene,
         saveToHistory,
         scheduleAutoSave,
@@ -524,24 +524,24 @@ describe('onDoubleClick', () => {
         const { canvas } = makeEditing({ hasCanvas: true });
         canvas.value = fakeCanvas as unknown as HTMLCanvasElement;
 
-        const { onDoubleClick: dblClick, textEditing: editing } = useTextEditing(
+        const { onDoubleClick: dblClick, textEditing: editing } = useTextEditing({
             canvas,
-            ref(null),
-            ref(1),
-            ref([]),
-            ref(null),
-            vi.fn().mockReturnValue({ x: 0, y: 0, width: 0, height: 0 }),
-            vi.fn().mockReturnValue(null),
-            vi.fn().mockReturnValue(false),
+            textInputEl: ref(null),
+            zoom: ref(1),
+            elements: ref([]),
+            selectedId: ref(null),
+            getElementBounds: vi.fn().mockReturnValue({ x: 0, y: 0, width: 0, height: 0 }),
+            hitTestElement: vi.fn().mockReturnValue(null),
+            isShapeElement: vi.fn().mockReturnValue(false),
             genId,
-            ref({ ...defaultDefaultStyle }),
-            vi.fn().mockImplementation((x: number, y: number) => ({ x, y })),
-            vi.fn().mockImplementation((x: number, y: number) => ({ x, y })),
-            vi.fn().mockReturnValue(null),
-            vi.fn(),
-            vi.fn(),
-            vi.fn(),
-        );
+            defaultStyle: ref({ ...defaultDefaultStyle }),
+            worldToScreen: vi.fn().mockImplementation((x: number, y: number) => ({ x, y })),
+            screenToWorld: vi.fn().mockImplementation((x: number, y: number) => ({ x, y })),
+            findCtx: vi.fn().mockReturnValue(null),
+            renderScene: vi.fn(),
+            saveToHistory: vi.fn(),
+            scheduleAutoSave: vi.fn(),
+        });
         const e = { clientX: 50, clientY: 50 } as MouseEvent;
         dblClick(e);
         expect(editing.value).toBe(true);
@@ -554,24 +554,26 @@ describe('onDoubleClick', () => {
         const elements = ref([textEl]);
         const selectedId = ref<string | null>(null);
 
-        const { onDoubleClick, textEditing, textValue } = useTextEditing(
+        const { onDoubleClick, textEditing, textValue } = useTextEditing({
             canvas,
-            ref(null),
-            ref(1),
+            textInputEl: ref(null),
+            zoom: ref(1),
             elements,
             selectedId,
-            vi.fn().mockReturnValue({ x: textEl.x, y: textEl.y, width: textEl.width, height: textEl.height }),
-            vi.fn().mockReturnValue(textEl),
-            vi.fn().mockReturnValue(false),
+            getElementBounds: vi
+                .fn()
+                .mockReturnValue({ x: textEl.x, y: textEl.y, width: textEl.width, height: textEl.height }),
+            hitTestElement: vi.fn().mockReturnValue(textEl),
+            isShapeElement: vi.fn().mockReturnValue(false),
             genId,
-            ref({ ...defaultDefaultStyle }),
-            vi.fn().mockImplementation((x: number, y: number) => ({ x, y })),
-            vi.fn().mockImplementation((x: number, y: number) => ({ x, y })),
-            vi.fn().mockReturnValue(null),
-            vi.fn(),
-            vi.fn(),
-            vi.fn(),
-        );
+            defaultStyle: ref({ ...defaultDefaultStyle }),
+            worldToScreen: vi.fn().mockImplementation((x: number, y: number) => ({ x, y })),
+            screenToWorld: vi.fn().mockImplementation((x: number, y: number) => ({ x, y })),
+            findCtx: vi.fn().mockReturnValue(null),
+            renderScene: vi.fn(),
+            saveToHistory: vi.fn(),
+            scheduleAutoSave: vi.fn(),
+        });
         const e = { clientX: 15, clientY: 25 } as MouseEvent;
         onDoubleClick(e);
         expect(textEditing.value).toBe(true);
@@ -584,24 +586,27 @@ describe('onDoubleClick', () => {
         const canvas = ref(fakeCanvas as unknown as HTMLCanvasElement);
         const elements = ref([shapeEl]);
 
-        const { onDoubleClick, textEditing } = useTextEditing(
+        const { onDoubleClick, textEditing } = useTextEditing({
             canvas,
-            ref(null),
-            ref(1),
+            textInputEl: ref(null),
+            zoom: ref(1),
             elements,
-            ref(null),
-            vi.fn().mockReturnValue({ x: shapeEl.x, y: shapeEl.y, width: shapeEl.width, height: shapeEl.height }),
-            vi.fn().mockReturnValue(shapeEl),
-            vi.fn().mockReturnValue(true), // isShapeElement = true
-            genId,
-            ref({ ...defaultDefaultStyle }),
-            vi.fn().mockImplementation((x: number, y: number) => ({ x, y })),
-            vi.fn().mockImplementation((x: number, y: number) => ({ x, y })),
-            vi.fn().mockReturnValue(null),
-            vi.fn(),
-            vi.fn(),
-            vi.fn(),
-        );
+            selectedId: ref(null),
+            getElementBounds: vi
+                .fn()
+                .mockReturnValue({ x: shapeEl.x, y: shapeEl.y, width: shapeEl.width, height: shapeEl.height }),
+            hitTestElement: vi.fn().mockReturnValue(shapeEl),
+            isShapeElement: vi.fn().mockReturnValue(true),
+            // isShapeElement = true
+            genId: genId,
+            defaultStyle: ref({ ...defaultDefaultStyle }),
+            worldToScreen: vi.fn().mockImplementation((x: number, y: number) => ({ x, y })),
+            screenToWorld: vi.fn().mockImplementation((x: number, y: number) => ({ x, y })),
+            findCtx: vi.fn().mockReturnValue(null),
+            renderScene: vi.fn(),
+            saveToHistory: vi.fn(),
+            scheduleAutoSave: vi.fn(),
+        });
         const e = { clientX: 50, clientY: 60 } as MouseEvent;
         onDoubleClick(e);
         expect(textEditing.value).toBe(true);

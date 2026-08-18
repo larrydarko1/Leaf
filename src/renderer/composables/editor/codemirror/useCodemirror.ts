@@ -3,7 +3,7 @@
  * with extensions, themes, and lifecycle cleanup.
  */
 
-import { onUnmounted, watch, type Ref, shallowRef, nextTick } from 'vue';
+import { onUnmounted, watch, type Ref, shallowRef, nextTick, type ShallowRef } from 'vue';
 import { EditorState, type Extension } from '@codemirror/state';
 import { EditorView, keymap, placeholder as cmPlaceholder, drawSelection } from '@codemirror/view';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
@@ -90,10 +90,12 @@ export function useCodemirror(
     containerRef: Ref<HTMLElement | null>,
     content: Ref<string>,
     onContentChange: () => void,
-    extraExtensions: Extension[] = [],
-    placeholderText = 'Start writing...',
-    fileId?: Ref<string | null>,
-) {
+    {
+        extraExtensions = [],
+        placeholderText = 'Start writing...',
+        fileId,
+    }: { extraExtensions?: Extension[]; placeholderText?: string; fileId?: Ref<string | null> } = {},
+): { view: ShallowRef<EditorView | null> } {
     const view = shallowRef<EditorView | null>(null);
 
     // Flag to avoid infinite loops when we push content → editor
@@ -125,7 +127,7 @@ export function useCodemirror(
             keymap.of([...closeBracketsKeymap, ...defaultKeymap, ...searchKeymap, ...historyKeymap, indentWithTab]),
 
             // Listen for document changes and sync back to the Vue ref
-            EditorView.updateListener.of((update) => {
+            EditorView.updateListener.of((update): void => {
                 if (update.docChanged && !updatingFromExternal) {
                     content.value = update.state.doc.toString();
                     onContentChange();
@@ -144,7 +146,7 @@ export function useCodemirror(
     // (v-if="isMarkdownFile" toggles it), destroy when it disappears.
     watch(
         containerRef,
-        async (container, _oldContainer) => {
+        async (container, _oldContainer): Promise<void> => {
             // Destroy previous instance if container changed or disappeared
             if (view.value !== null) {
                 view.value.destroy();
@@ -168,7 +170,7 @@ export function useCodemirror(
         { flush: 'post' },
     );
 
-    onUnmounted(() => {
+    onUnmounted((): void => {
         view.value?.destroy();
         view.value = null;
     });
@@ -185,13 +187,13 @@ export function useCodemirror(
      * history entry that would let Cmd+Z bleed old note content into the new note.
      */
     if (fileId !== undefined) {
-        watch(fileId, () => {
-            const v = view.value;
-            if (v === null) return;
+        watch(fileId, (): void => {
+            const editorView = view.value;
+            if (editorView === null) return;
 
             isPendingFileSwitch = true;
             updatingFromExternal = true;
-            v.setState(
+            editorView.setState(
                 EditorState.create({
                     doc: content.value,
                     extensions: buildExtensions(),
@@ -205,11 +207,11 @@ export function useCodemirror(
      * When content ref changes externally (file load, dictation, etc.)
      * push the new content into the editor without firing our own listener.
      */
-    watch(content, (newVal) => {
-        const v = view.value;
-        if (v === null) return;
+    watch(content, (newVal): void => {
+        const editorView = view.value;
+        if (editorView === null) return;
 
-        const current = v.state.doc.toString();
+        const current = editorView.state.doc.toString();
         if (current === newVal) {
             // Content matches — clear any pending file switch flag and bail.
             isPendingFileSwitch = false;
@@ -225,14 +227,14 @@ export function useCodemirror(
              * previous note's content into the newly selected note.
              */
             isPendingFileSwitch = false;
-            v.setState(
+            editorView.setState(
                 EditorState.create({
                     doc: newVal,
                     extensions: buildExtensions(),
                 }),
             );
         } else {
-            v.dispatch({
+            editorView.dispatch({
                 changes: { from: 0, to: current.length, insert: newVal },
             });
         }

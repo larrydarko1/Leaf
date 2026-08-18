@@ -84,7 +84,6 @@ describe('preload / electronAPI', () => {
             ['moveFile', 'file:move', ['/vault/note.md', '/vault/sub']],
             ['moveFolder', 'folder:move', ['/vault/folder', '/vault/sub']],
             ['saveAudioRecording', 'audio:saveRecording', ['/vault', 'rec.wav', 'base64']],
-            ['getSpellingSuggestions', 'spellcheck:getSuggestions', ['teh']],
             ['aiListModels', 'ai:listModels', []],
             ['aiLoadModel', 'ai:loadModel', ['/models/model.gguf']],
             ['aiUnloadModel', 'ai:unloadModel', []],
@@ -114,7 +113,6 @@ describe('preload / electronAPI', () => {
             ['conversationRename', 'conversations:rename', ['conv-1', 'New Title']],
             ['watchFolder', 'fs:watchFolder', []],
             ['unwatchFolder', 'fs:unwatchFolder', []],
-            ['hfSearch', 'hf:search', ['llama', 'downloads', 0]],
             ['hfListFiles', 'hf:listFiles', ['meta-llama/llama']],
             ['hfDownload', 'hf:download', ['https://example.com/model.gguf', 'model.gguf']],
             ['hfCancelDownload', 'hf:cancelDownload', ['model.gguf']],
@@ -133,6 +131,20 @@ describe('preload / electronAPI', () => {
                 expect(mockInvoke).toHaveBeenCalledWith(channel, ...args);
             });
         }
+
+        // hfSearch takes an options object and spreads it onto the wire.
+        it('hfSearch invokes "hf:search" with the options spread', () => {
+            (capturedApi.hfSearch as (query: string, options?: { sort?: string; offset?: number }) => unknown)(
+                'llama',
+                { sort: 'downloads', offset: 0 },
+            );
+            expect(mockInvoke).toHaveBeenCalledWith('hf:search', 'llama', 'downloads', 0);
+        });
+
+        it('hfSearch invokes "hf:search" with undefined options', () => {
+            (capturedApi.hfSearch as (query: string) => unknown)('llama');
+            expect(mockInvoke).toHaveBeenCalledWith('hf:search', 'llama', undefined, undefined);
+        });
     });
 
     describe('event listener methods', () => {

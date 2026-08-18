@@ -11,7 +11,7 @@ import path from 'path';
  *
  * @returns The resolved absolute path (cleaned of `..`, symlink-safe via resolve).
  */
-export function assertInsideBoundary(targetPath: string, rootDir: string): string {
+export function resolveInsideBoundary(targetPath: string, rootDir: string): string {
     if (!isInsideBoundary(targetPath, rootDir)) {
         throw new Error('Access denied: path is outside the allowed directory.');
     }

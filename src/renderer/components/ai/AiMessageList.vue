@@ -25,6 +25,10 @@ type Props = {
 
 const props = defineProps<Props>();
 
+// Exposed so AiPanel can drive auto-scroll on the real element.
+const messagesContainer = ref<HTMLElement | null>(null);
+defineExpose({ messagesContainer });
+
 defineEmits<{
     'scroll': [];
     'cancel-edit': [];
@@ -94,7 +98,7 @@ function renderWithCopyBtns(content: string): string {
         .replace(/<\/pre>/g, '</pre></div>');
 }
 
-async function onMarkdownClick(content: string, event: MouseEvent) {
+async function onMarkdownClick(content: string, event: MouseEvent): Promise<void> {
     const target = event.target as Element;
     const closest = target.closest('.ai-code-copy-btn');
     const btn = closest instanceof HTMLButtonElement ? closest : null;

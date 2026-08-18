@@ -3,12 +3,36 @@
  * registration, and workspace path tracking via IPC.
  */
 
-import { ref, shallowRef } from 'vue';
+import { ref, shallowRef, type Ref, type ShallowRef } from 'vue';
 import type { FileInfo, FolderInfo } from '@/schemas/vault';
 
-export type MovedFile = { from: string; to: string };
+type MovedFile = { from: string; to: string };
 
-export function useVault() {
+export type UseVaultReturn = {
+    // State
+    currentFolder: Ref<string | null>;
+    files: ShallowRef<FileInfo[]>;
+    folders: ShallowRef<FolderInfo[]>;
+    // Folder lifecycle
+    openFolderDialog: () => Promise<string | null>;
+    loadVault: () => Promise<{ files: FileInfo[]; folders: FolderInfo[] } | null>;
+    refreshFiles: () => Promise<void>;
+    closeVault: () => void;
+    // FS watcher callback
+    setExternalChangeCallback: (cb: () => void) => void;
+    // File CRUD
+    createFile: () => Promise<FileInfo | null>;
+    createDrawing: () => Promise<FileInfo | null>;
+    createFolder: () => Promise<void>;
+    renameFile: (file: FileInfo, newBaseName: string) => Promise<FileInfo | null>;
+    renameFolder: (relativePath: string, newName: string) => Promise<string | null>;
+    deleteFile: (filesToDelete: FileInfo[]) => Promise<void>;
+    deleteFolder: (relativePath: string) => Promise<boolean>;
+    moveFiles: (filePaths: string[], targetRelativePath: string) => Promise<MovedFile[]>;
+    moveFolder: (relativePath: string, targetRelativePath: string) => Promise<string | null>;
+};
+
+export function useVault(): UseVaultReturn {
     const currentFolder = ref<string | null>(null);
     const files = shallowRef<FileInfo[]>([]);
     const folders = shallowRef<FolderInfo[]>([]);
@@ -18,16 +42,16 @@ export function useVault() {
     type RefreshCallback = () => void;
     let onExternalChange: RefreshCallback | null = null;
 
-    function setExternalChangeCallback(cb: RefreshCallback) {
+    function setExternalChangeCallback(cb: RefreshCallback): void {
         onExternalChange = cb;
     }
 
-    async function startFolderWatcher() {
+    async function startFolderWatcher(): Promise<void> {
         try {
             window.electronAPI.removeFsChangedListener();
-            window.electronAPI.onFsChanged(() => {
+            window.electronAPI.onFsChanged((): void => {
                 if (debounceTimer != null) clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => {
+                debounceTimer = setTimeout((): void => {
                     onExternalChange?.();
                 }, 500);
             });
@@ -37,7 +61,7 @@ export function useVault() {
         }
     }
 
-    async function stopFolderWatcher() {
+    async function stopFolderWatcher(): Promise<void> {
         if (debounceTimer != null) {
             clearTimeout(debounceTimer);
             debounceTimer = null;
@@ -93,7 +117,7 @@ export function useVault() {
         }
     }
 
-    function closeVault() {
+    function closeVault(): void {
         void stopFolderWatcher();
         void window.electronAPI.closeVault();
         currentFolder.value = null;
@@ -111,7 +135,7 @@ export function useVault() {
             const result = await window.electronAPI.createFile(currentFolder.value, fileName);
             if (result.success && result.path !== null && result.path !== undefined && result.path !== '') {
                 await refreshFiles();
-                return files.value.find((f) => f.path === result.path) ?? null;
+                return files.value.find((f): boolean => f.path === result.path) ?? null;
             }
             alert('Failed to create file: ' + result.error);
             return null;
@@ -132,7 +156,7 @@ export function useVault() {
             if (result.success && result.path !== null && result.path !== undefined && result.path !== '') {
                 await window.electronAPI.writeFile(result.path, emptyDrawing);
                 await refreshFiles();
-                return files.value.find((f) => f.path === result.path) ?? null;
+                return files.value.find((f): boolean => f.path === result.path) ?? null;
             }
             alert('Failed to create drawing: ' + result.error);
             return null;
@@ -170,10 +194,10 @@ export function useVault() {
                 if (oldFileName !== newFileName) {
                     window.electronAPI
                         .updateEmbedRefs(oldFileName, newFileName)
-                        .catch((err) => window.electronAPI.log.error('Failed to update embed references:', err));
+                        .catch((err): void => window.electronAPI.log.error('Failed to update embed references:', err));
                 }
                 await refreshFiles();
-                return files.value.find((f) => f.path === result.newPath) ?? null;
+                return files.value.find((f): boolean => f.path === result.newPath) ?? null;
             }
             alert('Failed to rename file: ' + result.error);
             return null;
@@ -206,11 +230,11 @@ export function useVault() {
     }
 
     async function deleteFile(filesToDelete: FileInfo[]): Promise<void> {
-        for (const f of filesToDelete) {
+        for (const file of filesToDelete) {
             try {
-                const result = await window.electronAPI.deleteFile(f.path);
+                const result = await window.electronAPI.deleteFile(file.path);
                 if (!result.success) {
-                    alert(`Failed to delete ${f.name}: ${result.error}`);
+                    alert(`Failed to delete ${file.name}: ${result.error}`);
                 }
             } catch (error) {
                 window.electronAPI.log.error('Error deleting file:', error);
