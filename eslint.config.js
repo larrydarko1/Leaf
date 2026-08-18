@@ -1,88 +1,56 @@
 import js from '@eslint/js';
 import ts from 'typescript-eslint';
 import vue from 'eslint-plugin-vue';
-import a11y from 'eslint-plugin-vuejs-accessibility';
 import prettier from 'eslint-config-prettier';
 import globals from 'globals';
 import importX from 'eslint-plugin-import-x';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
-import vueI18n from '@intlify/eslint-plugin-vue-i18n';
-import * as jsoncParser from 'jsonc-eslint-parser';
+import securityStandards, { bannedCryptoModules } from './eslint/security.js';
+import loggingStandards, { loggerCallSelectors } from './eslint/logging.js';
+import typescriptStandards, {
+    tsSourceSelectors,
+    schemasBannedImports,
+    rendererBannedImports,
+    mainBannedImports,
+} from './eslint/typescript.js';
+import htmlStandards from './eslint/html.js';
+import i18nStandards from './eslint/i18n.js';
+import vueStandards, { noStoreLibraryPatterns, aliasOnlyImportPatterns } from './eslint/vue.js';
+import envStandards, { noImportMetaEnv } from './eslint/env.js';
+import { noSingleLetterDeclaration, utilsBannedImportPatterns, libBannedImportPatterns } from './eslint/code-style.js';
+import { errorHandlingSelectors } from './eslint/error-handling.js';
+import refactoringStandards from './eslint/refactoring.js';
+import testingStandards from './eslint/testing.js';
+import { functionContractsPlugin } from './eslint/function-contracts.js';
+
+const SOURCE = ['src/**/*.{ts,vue}'];
+const TYPED_SOURCE = ['src/**/*.{ts,vue}', 'tests/**/*.ts', 'vitest.setup.ts'];
+const TEST_FILES = ['tests/**/*.ts', 'vitest.setup.ts'];
+
+// Type-aware presets only reach files a tsconfig covers — locale JSON and config files are not.
+const typedOnly = (preset) => preset.map((block) => ({ ...block, files: TYPED_SOURCE }));
 
 export default [
     // ── Global ignores ───────────────────────────────────────────────────────
-    { ignores: ['out/', 'dist-electron/', 'node_modules/', 'models/'] },
+    { ignores: ['out/', 'dist-electron/', 'node_modules/', 'models/', 'coverage/', 'build/'] },
 
     // ── Base JS rules ────────────────────────────────────────────────────────
     js.configs.recommended,
 
     // ── TypeScript rules ─────────────────────────────────────────────────────
     ...ts.configs.recommended,
-    ...ts.configs.recommendedTypeChecked,
-    ...ts.configs.strict,
-    ...ts.configs.stylistic,
+    ...typedOnly(ts.configs.recommendedTypeChecked),
+    ...typedOnly(ts.configs.strict),
+    ...typedOnly(ts.configs.stylistic),
 
     // ── Vue rules ────────────────────────────────────────────────────────────
     ...vue.configs['flat/recommended'],
-
-    // ── Vue Accessibility rules ──────────────────────────────────────────────
-    {
-        files: ['**/*.vue'],
-        plugins: { a11y },
-        rules: {
-            // ── Accessibility rules (WCAG 2.1 AA compliance) ──────────────────
-            // Images must have alt text (empty string OK for decorative images)
-            'a11y/alt-text': 'error',
-
-            // Form inputs must have labels
-            'a11y/form-control-has-label': 'error',
-
-            // Don't use divs/spans as buttons — use <button> or add proper role/handlers
-            'a11y/no-static-element-interactions': 'error',
-
-            // Click handlers should be on semantic interactive elements
-            'a11y/click-events-have-key-events': 'error',
-
-            // Interactive elements need proper role if not semantic
-            'a11y/interactive-supports-focus': 'error',
-
-            // Headings must be properly nested (<h1>, then <h2>-<h3>, no skipping levels)
-            'a11y/heading-has-content': 'warn',
-
-            // Media must have captions (warn, harder to automate)
-            'a11y/media-has-caption': 'warn',
-
-            // ARIA roles must be valid
-            'a11y/aria-role': 'error',
-
-            // ARIA attributes must have values
-            'a11y/aria-props': 'error',
-
-            // ARIA props must be appropriate for their role
-            'a11y/role-has-required-aria-props': 'error',
-
-            // Anchors must have content
-            'a11y/anchor-has-content': 'error',
-
-            // Don't use access-key
-            'a11y/no-access-key': 'error',
-
-            // No positive tabindex values (breaks tab order)
-            'a11y/tabindex-no-positive': 'error',
-
-            // Mouse events need keyboard equivalents
-            'a11y/mouse-events-have-key-events': 'error',
-
-            // Prevent redundant roles
-            'a11y/no-redundant-roles': 'warn',
-        },
-    },
 
     // Vue files need the TypeScript parser inside <script> blocks
     {
         files: ['**/*.vue'],
         languageOptions: {
-            parserOptions: { 
+            parserOptions: {
                 parser: ts.parser,
                 projectService: true,
                 tsconfigRootDir: import.meta.dirname,
@@ -94,14 +62,30 @@ export default [
     // Renderer code runs in the browser — expose DOM globals
     {
         files: ['src/renderer/**/*.{ts,vue}'],
-        languageOptions: {
-            globals: globals.browser,
+        languageOptions: { globals: globals.browser },
+    },
+
+    // Main and preload run in Node
+    {
+        files: ['src/main/**/*.ts', 'src/preload/**/*.ts', 'scripts/**/*.mjs'],
+        languageOptions: { globals: globals.node, sourceType: 'module' },
+    },
+
+    // ── Everywhere, typed or not ─────────────────────────────────────────────
+    {
+        rules: {
+            '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
+            '@typescript-eslint/no-empty-object-type': 'error',
+            '@typescript-eslint/no-unused-vars': [
+                'error',
+                { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+            ],
         },
     },
 
-   // ── Project-wide overrides ───────────────────────────────────────────────
+    // ── Project-wide overrides ───────────────────────────────────────────────
     {
-        files: ['**/*.{ts,tsx,vue}'],
+        files: SOURCE,
         languageOptions: {
             parserOptions: {
                 projectService: true,
@@ -119,30 +103,25 @@ export default [
             '@typescript-eslint/no-floating-promises': 'error',
             '@typescript-eslint/await-thenable': 'error',
             '@typescript-eslint/no-misused-promises': 'error',
-            '@typescript-eslint/strict-boolean-expressions': ['error', {
-                allowString: false,
-                allowNumber: false,
-                allowNullableObject: false,
-            }],
-            
+            '@typescript-eslint/strict-boolean-expressions': [
+                'error',
+                { allowString: false, allowNumber: false, allowNullableObject: false },
+            ],
 
             // Only allow types, not interfaces
             '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
-            '@typescript-eslint/consistent-type-imports': ['error', {
-                prefer: 'type-imports',
-                fixStyle: 'inline-type-imports',
-            }],
+            '@typescript-eslint/consistent-type-imports': [
+                'error',
+                { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
+            ],
             '@typescript-eslint/no-empty-object-type': 'error',
-            
-            // never allow console logs in production code — use a proper logger instead
-            "no-console": "error",
+            '@typescript-eslint/no-empty-function': ['error', { allow: ['arrowFunctions'] }],
 
             // Allow unused vars when prefixed with _
-            '@typescript-eslint/no-unused-vars': ['error', { 
-                argsIgnorePattern: '^_', 
-                varsIgnorePattern: '^_',
-                caughtErrorsIgnorePattern: '^_',
-            }],
+            '@typescript-eslint/no-unused-vars': [
+                'error',
+                { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+            ],
 
             // naming convention
             '@typescript-eslint/naming-convention': [
@@ -162,15 +141,9 @@ export default [
                     trailingUnderscore: 'forbid',
                 },
                 // Import bindings: PascalCase for Vue SFCs and class constructors
-                {
-                    selector: 'import',
-                    format: ['camelCase', 'PascalCase'],
-                },
+                { selector: 'import', format: ['camelCase', 'PascalCase'] },
                 // Functions: camelCase; PascalCase allowed for Vue SFCs
-                {
-                    selector: 'function',
-                    format: ['camelCase', 'PascalCase'],
-                },
+                { selector: 'function', format: ['camelCase', 'PascalCase'] },
                 // Parameters: leading _ for intentionally unused params only
                 {
                     selector: 'parameter',
@@ -186,11 +159,7 @@ export default [
                     trailingUnderscore: 'forbid',
                 },
                 // Escape hatch for class/type quoted properties
-                {
-                    selector: 'property',
-                    modifiers: ['requiresQuotes'],
-                    format: null,
-                },
+                { selector: 'property', modifiers: ['requiresQuotes'], format: null },
                 // Object literal properties
                 {
                     selector: 'objectLiteralProperty',
@@ -199,37 +168,31 @@ export default [
                     trailingUnderscore: 'forbid',
                 },
                 // Escape hatch for object literals with quoted keys
-                {
-                    selector: 'objectLiteralProperty',
-                    modifiers: ['requiresQuotes'],
-                    format: null,
-                },
+                { selector: 'objectLiteralProperty', modifiers: ['requiresQuotes'], format: null },
                 // Classes, interfaces, type aliases, enums: PascalCase
-                {
-                    selector: 'typeLike',
-                    format: ['PascalCase'],
-                },
+                { selector: 'typeLike', format: ['PascalCase'] },
                 // Enum members: UPPER_CASE
-                {
-                    selector: 'enumMember',
-                    format: ['UPPER_CASE'],
-                },
+                { selector: 'enumMember', format: ['UPPER_CASE'] },
                 // Generic type parameters: T-prefixed PascalCase
-                {
-                    selector: 'typeParameter',
-                    format: ['PascalCase'],
-                    prefix: ['T'],
-                },
+                { selector: 'typeParameter', format: ['PascalCase'], prefix: ['T'] },
             ],
 
             // Vue component naming
             'vue/multi-word-component-names': 'off',
 
-            // v-html is used intentionally for rendered content
-            'vue/no-v-html': 'off',
-
-            // Every v-for must have a key. 
+            // Every v-for must have a key
             'vue/require-v-for-key': 'error',
+        },
+    },
+
+    // Every exported function states its return type — the signature is the contract
+    {
+        files: SOURCE,
+        rules: {
+            '@typescript-eslint/explicit-function-return-type': [
+                'error',
+                { allowTypedFunctionExpressions: false, allowIIFEs: true },
+            ],
         },
     },
 
@@ -238,68 +201,163 @@ export default [
         files: ['**/*.{ts,tsx,vue}'],
         plugins: { 'import-x': importX },
         settings: {
-            'import-x/resolver-next': [
-                createTypeScriptImportResolver({ alwaysTryTypes: true }),
-            ],
+            'import-x/resolver-next': [createTypeScriptImportResolver({ alwaysTryTypes: true })],
         },
         rules: {
             // Disallow file extensions on TS/JS imports; .vue/.json must keep theirs.
             // ignorePackages skips deep package imports (e.g. 'electron-log/main.js')
-            'import-x/extensions': ['error', 'never', { ignorePackages: true, pattern: { vue: 'always', json: 'always' } }],
+            'import-x/extensions': [
+                'error',
+                'never',
+                { ignorePackages: true, pattern: { vue: 'always', json: 'always' } },
+            ],
         },
     },
 
-     // ── i18n enforcement (@intlify/vue-i18n) ─────────────────────────────────
-    // Placed after the project-wide overrides so the JSON block below can turn
-    // off the type-aware naming-convention rule for locale files (last match wins).
-    // Shared config: where the locale files live + the vue-i18n message syntax.
+    // ── Standards modules ────────────────────────────────────────────────────
+    ...securityStandards,
+    ...loggingStandards,
+    ...typescriptStandards,
+    ...envStandards,
+    ...htmlStandards,
+    ...vueStandards,
+    ...i18nStandards,
+    ...refactoringStandards,
+    ...testingStandards,
+
+    // ── Restricted syntax, composed per process ──────────────────────────────
+    // One block per area: `no-restricted-syntax` is last-match-wins, not additive.
     {
-        settings: {
-            'vue-i18n': {
-                localeDir: 'assets/locales/*.json',
-                messageSyntaxVersion: '^11.0.0',
-            },
+        files: ['src/main/**/*.ts', 'src/preload/**/*.ts'],
+        rules: {
+            'no-restricted-syntax': [
+                'error',
+                ...loggerCallSelectors,
+                ...errorHandlingSelectors,
+                ...tsSourceSelectors,
+                noSingleLetterDeclaration,
+            ],
         },
     },
-    // Templates: forbid raw user-facing text — every string must go through t().
-    // Brand name and pure punctuation/number/symbol runs are exempt.
     {
-        files: ['src/renderer/**/*.vue'],
-        plugins: { '@intlify/vue-i18n': vueI18n },
+        files: ['src/renderer/**/*.{ts,vue}'],
         rules: {
-            '@intlify/vue-i18n/no-raw-text': [
+            'no-restricted-syntax': [
+                'error',
+                ...loggerCallSelectors,
+                ...errorHandlingSelectors,
+                noImportMetaEnv,
+                ...tsSourceSelectors,
+                noSingleLetterDeclaration,
+            ],
+        },
+    },
+    {
+        files: ['src/schemas/**/*.ts'],
+        rules: {
+            'no-restricted-syntax': ['error', ...tsSourceSelectors, noSingleLetterDeclaration],
+        },
+    },
+
+    // ── Restricted imports, composed per process ─────────────────────────────
+    {
+        files: ['src/main/**/*.ts'],
+        rules: {
+            'no-restricted-imports': [
                 'error',
                 {
-                    // Ignore pure whitespace/number/punctuation/symbol runs and
-                    // empty-string ternary branches (e.g. `cond ? t('k') : ''`).
-                    ignorePattern: '^[\\s\\d\\p{P}\\p{S}]*$',
-                    ignoreText: ['Lotus'],
+                    paths: bannedCryptoModules,
+                    patterns: [...mainBannedImports.patterns, ...aliasOnlyImportPatterns],
                 },
             ],
         },
     },
-    // Locale JSON: enforce key parity across locales and forbid duplicate keys.
     {
-        files: ['assets/locales/*.json'],
-        plugins: { '@intlify/vue-i18n': vueI18n },
-        languageOptions: { parser: jsoncParser },
+        files: ['src/main/lib/**/*.ts'],
         rules: {
-            // Type-aware TS rule can't run under the JSON parser — off for locale files.
-            '@typescript-eslint/naming-convention': 'off',
-            '@intlify/vue-i18n/no-missing-keys-in-other-locales': 'error',
-            '@intlify/vue-i18n/no-duplicate-keys-in-locale': 'error',
+            'no-restricted-imports': [
+                'error',
+                {
+                    paths: bannedCryptoModules,
+                    patterns: [...mainBannedImports.patterns, ...aliasOnlyImportPatterns, ...libBannedImportPatterns],
+                },
+            ],
+        },
+    },
+    {
+        files: ['src/preload/**/*.ts'],
+        rules: {
+            'no-restricted-imports': ['error', { paths: bannedCryptoModules, patterns: aliasOnlyImportPatterns }],
+        },
+    },
+    {
+        files: ['src/schemas/**/*.ts'],
+        rules: {
+            'no-restricted-imports': [
+                'error',
+                {
+                    paths: bannedCryptoModules,
+                    patterns: [...schemasBannedImports.patterns, ...aliasOnlyImportPatterns],
+                },
+            ],
+        },
+    },
+    {
+        files: ['src/renderer/**/*.{ts,vue}'],
+        // i18n.ts loads the locale JSON that lives outside src/ — no alias reaches it.
+        ignores: ['src/renderer/i18n.ts'],
+        rules: {
+            'no-restricted-imports': [
+                'error',
+                {
+                    paths: bannedCryptoModules,
+                    patterns: [
+                        ...rendererBannedImports.patterns,
+                        ...noStoreLibraryPatterns,
+                        ...aliasOnlyImportPatterns,
+                    ],
+                },
+            ],
+        },
+    },
+    {
+        files: ['src/renderer/utils/**/*.ts'],
+        rules: {
+            'no-restricted-imports': [
+                'error',
+                {
+                    paths: bannedCryptoModules,
+                    patterns: [
+                        ...rendererBannedImports.patterns,
+                        ...noStoreLibraryPatterns,
+                        ...aliasOnlyImportPatterns,
+                        ...utilsBannedImportPatterns,
+                    ],
+                },
+            ],
         },
     },
 
-    // ── Prettier last — disables formatting rules that conflict ──────────────
-    prettier,
+    // ── Function contracts — the name must match what the signature promises ─
+    {
+        files: SOURCE,
+        plugins: { contracts: functionContractsPlugin },
+        rules: {
+            'contracts/name-contract': 'error',
+            'contracts/one-failure-channel': 'error',
+            'contracts/no-undefined-hole': 'error',
+            'contracts/no-boolean-flag': 'error',
+            'no-nested-ternary': 'error',
+        },
+    },
 
     // Test files — use a dedicated tsconfig.test.json so the project service
-    // can find them without allowDefaultProject hacks
+    // can find them without allowDefaultProject hacks.
     // Strict type rules are relaxed here since test/mock code routinely uses `any`
     {
-        files: ['tests/**/*.ts', 'vitest.setup.ts'],
+        files: TEST_FILES,
         languageOptions: {
+            globals: globals.node,
             parserOptions: {
                 projectService: false,
                 project: ['./tsconfig.test.json'],
@@ -319,8 +377,18 @@ export default [
             '@typescript-eslint/no-empty-function': 'off',
             '@typescript-eslint/no-dynamic-delete': 'off',
             '@typescript-eslint/no-non-null-assertion': 'off',
+            '@typescript-eslint/no-unnecessary-type-assertion': 'off',
             '@typescript-eslint/require-await': 'off',
             '@typescript-eslint/await-thenable': 'off',
+            '@typescript-eslint/explicit-module-boundary-types': 'off',
         },
     },
+
+    // The rule modules quote their own trigger patterns
+    {
+        files: ['eslint/**/*.js', 'eslint.config.js'],
+        rules: { '@typescript-eslint/naming-convention': 'off' },
+    },
+
+    prettier, // Prettier last — disables formatting rules that conflict
 ];

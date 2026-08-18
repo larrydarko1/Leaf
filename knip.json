@@ -1,7 +1,7 @@
 {
     "$schema": "./node_modules/knip/schema.json",
     "entry": ["src/**/*.d.ts!", "scripts/**/*.mjs!"],
-    "project": ["src/**/*.{ts,vue}!", "scripts/**/*.mjs!", "tests/**/*.ts", "*.{ts,mts,js}"],
+    "project": ["src/**/*.{ts,vue}!", "scripts/**/*.mjs!", "tests/**/*.ts", "eslint/*.js", "*.{ts,mts,js}"],
     "tags": ["-public"],
     "ignoreDependencies": ["onnxruntime-node"]
 }
