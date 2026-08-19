@@ -57,24 +57,6 @@ export async function initVaultRoot(): Promise<void> {
     }
 }
 
-/** Set and persist the vault root. Only reachable from the folder dialog. */
-async function setVaultRoot(dir: string): Promise<string> {
-    const resolved = path.resolve(dir);
-    vaultRoot = resolved;
-    await updateState((s): { vaultRoot: string } => ({ ...s, vaultRoot: resolved }));
-    return resolved;
-}
-
-/** Clear the vault root and forget it across restarts. */
-async function clearVaultRoot(): Promise<void> {
-    vaultRoot = null;
-    await updateState((s): Record<string, unknown> => {
-        const next = { ...s };
-        delete next.vaultRoot;
-        return next;
-    });
-}
-
 /** Close the folder watcher if active. Called during app shutdown. */
 export function cleanup(): void {
     if (folderWatcher !== null) {
@@ -792,4 +774,22 @@ async function findFileRecursive(dir: string, targetName: string): Promise<strin
         }
     }
     return null;
+}
+
+/** Set and persist the vault root. Only reachable from the folder dialog. */
+async function setVaultRoot(dir: string): Promise<string> {
+    const resolved = path.resolve(dir);
+    vaultRoot = resolved;
+    await updateState((s): { vaultRoot: string } => ({ ...s, vaultRoot: resolved }));
+    return resolved;
+}
+
+/** Clear the vault root and forget it across restarts. */
+async function clearVaultRoot(): Promise<void> {
+    vaultRoot = null;
+    await updateState((s): Record<string, unknown> => {
+        const next = { ...s };
+        delete next.vaultRoot;
+        return next;
+    });
 }

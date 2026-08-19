@@ -76,19 +76,6 @@ const LENGTH_BASELINE = {
     'src/renderer/composables/editor/codemirror/cm-deco-builders.ts': 422,
 };
 
-/**
- * Files whose public API is not declared before their private helpers. Known
- * debt, listed so the rule can be enforced everywhere else — the same one-way
- * ratchet as LENGTH_BASELINE. Remove an entry when you reorder the file; never
- * add one to silence a new violation.
- */
-const ORDERING_EXEMPT = new Set([
-    'src/main/services/conversation.ts',
-    'src/main/services/fs.ts',
-    'src/renderer/composables/editor/codemirror/cm-deco-builders.ts',
-    'src/renderer/composables/editor/codemirror/cm-markdown-widgets.ts',
-]);
-
 /** Modules named by an upstream convention rather than this repo's. */
 const CASING_EXEMPT = /^cm-[a-z0-9-]+\.ts$/;
 const CODEMIRROR_DIR = 'src/renderer/composables/editor/codemirror';
@@ -154,7 +141,7 @@ for (const rel of files) {
     }
 
     // ── 4. Public before private (.ts only — an SFC has one script block) ────
-    if (base.endsWith('.ts') && !DECLARATION.test(base) && !ORDERING_EXEMPT.has(rel)) {
+    if (base.endsWith('.ts') && !DECLARATION.test(base)) {
         const declarations = [];
         for (const m of code.matchAll(/^(export\s+)?(?:async\s+)?function\s+([A-Za-z0-9_$]+)/gm)) {
             declarations.push({ exported: m[1] !== undefined, name: m[2] });
