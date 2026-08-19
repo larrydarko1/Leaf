@@ -13,7 +13,6 @@
  *   media-service        → audio:saveRecording, spellcheck:getSuggestions
  *   ai-service           → ai:*
  *   conversation-service → conversations:*
- *   hf-download-service  → hf:*
  *   speech-service       → speech:*
  *   systemPrompt-service → systemPrompt:*
  *   theme-service        → theme:*
@@ -29,7 +28,6 @@ import * as fsService from '@/main/services/fs';
 import * as mediaService from '@/main/services/media';
 import * as aiService from '@/main/services/ai';
 import * as conversationService from '@/main/services/conversation';
-import * as hfDownloadService from '@/main/services/hf-download';
 import * as speechService from '@/main/services/speech';
 import * as systemPromptService from '@/main/services/systemPrompt';
 import * as themeService from '@/main/services/theme';
@@ -226,7 +224,6 @@ void app.whenReady().then(async (): Promise<void> => {
     mediaService.register(ipcMain, fsService.findVaultRoot);
     aiService.register(ipcMain, findMainWindow);
     conversationService.register(ipcMain);
-    hfDownloadService.register(ipcMain, findMainWindow);
     speechService.register(ipcMain, findMainWindow);
     systemPromptService.register(ipcMain);
     themeService.register(ipcMain);

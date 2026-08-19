@@ -6,7 +6,7 @@ Leaf is a **desktop-only application** with local-first architecture, which prov
 
 - ✅ **No server-side code** - No backend vulnerabilities
 - ✅ **Local-only storage** - Notes stored as plain text files on user's computer
-- ⚠️ **Limited network requests** - Network is only used to download AI models from Hugging Face on demand; no note data is ever transmitted
+- ✅ **No network requests** - The app makes no outbound connections; nothing is ever transmitted
 - ✅ **No encryption needed** - Files are standard text files accessible to user
 - ✅ **No telemetry** - No tracking or analytics
 - ✅ **Open source** - Fully auditable code

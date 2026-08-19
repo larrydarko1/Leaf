@@ -111,35 +111,6 @@ vi.mock('@/renderer/composables/ai/useConversationHistory', () => ({
     })),
 }));
 
-// ── useHfDownload mock ────────────────────────────────────────────────────────
-
-const mockShowHfPanel = ref(false);
-vi.mock('@/renderer/composables/ai/useHfDownload', () => ({
-    useHfDownload: vi.fn(() => ({
-        showHfPanel: mockShowHfPanel,
-        hfSearchQuery: ref(''),
-        hfSearchResults: ref([]),
-        hfIsSearching: ref(false),
-        hfSelectedRepo: ref(null),
-        hfRepoFiles: ref([]),
-        hfModelInfo: ref(null),
-        hfIsLoadingFiles: ref(false),
-        hfDownloadProgress: ref({}),
-        hfActiveDownloads: ref([]),
-        hfDownloadError: ref(null),
-        hfSortBy: ref('downloads'),
-        hfHasMore: ref(false),
-        hfIsLoadingMore: ref(false),
-        toggleHfPanel: vi.fn(),
-        searchHfModels: vi.fn(),
-        loadMoreResults: vi.fn(),
-        changeSortBy: vi.fn(),
-        selectHfRepo: vi.fn(),
-        downloadHfModel: vi.fn(),
-        cancelHfDownload: vi.fn(),
-    })),
-}));
-
 // ── useAIChat mock ────────────────────────────────────────────────────────────
 
 const mockInputField = ref<HTMLTextAreaElement | null>(null);
@@ -208,7 +179,6 @@ beforeEach(() => {
     };
     mockConversationTokenCount.value = 0;
     mockCurrentConversationId.value = null;
-    mockShowHfPanel.value = false;
     mockShowHistory.value = false;
     mockLoadModel.mockResolvedValue({ success: true });
     mockLoadPreviousModel.mockResolvedValue({ success: false, error: null });
@@ -448,21 +418,6 @@ describe('loadPreviousModel', () => {
 // ── v-if panel branches ───────────────────────────────────────────────────────
 
 describe('v-if panel rendering', () => {
-    it('renders AiHfPanel when showHfPanel is true', async () => {
-        mockShowHfPanel.value = true;
-        const wrapper = mountPanel();
-        await wrapper.vm.$nextTick();
-        expect(wrapper.findComponent({ name: 'AiHfPanel' }).exists()).toBe(true);
-        wrapper.unmount();
-    });
-
-    it('does not render AiHfPanel when showHfPanel is false', () => {
-        mockShowHfPanel.value = false;
-        const wrapper = mountPanel();
-        expect(wrapper.findComponent({ name: 'AiHfPanel' }).exists()).toBe(false);
-        wrapper.unmount();
-    });
-
     it('renders AiHistoryPanel when showHistory is true', async () => {
         mockShowHistory.value = true;
         const wrapper = mountPanel();

@@ -10,7 +10,6 @@ import type {
     ConversationCreateResult,
     ConversationLoadResult,
 } from '@/schemas/ai';
-import type { HfSearchResponse, HfListFilesResponse, HfDownloadProgress, HfDownloadResult } from '@/schemas/hf';
 import type { SpeechInitResult, SpeechTranscribeResult, SpeechStatus, SpeechStatusEvent } from '@/schemas/speech';
 import type {
     ScanResult,
@@ -143,15 +142,6 @@ export type ElectronAPI = {
     unwatchFolder: () => Promise<AiSimpleResult>;
     onFsChanged: (callback: (data: { eventType: string; filename: string }) => void) => void;
     removeFsChangedListener: () => void;
-
-    // Hugging Face model download operations
-    hfSearch: (query: string, options?: { sort?: string; offset?: number }) => Promise<HfSearchResponse>;
-    hfListFiles: (repoId: string) => Promise<HfListFilesResponse>;
-    hfDownload: (url: string, fileName: string) => Promise<HfDownloadResult>;
-    hfCancelDownload: (fileName: string) => Promise<AiSimpleResult>;
-    hfGetActiveDownloads: () => Promise<{ success: boolean; downloads: string[] }>;
-    onHfDownloadProgress: (callback: (progress: HfDownloadProgress) => void) => void;
-    removeHfDownloadProgressListener: () => void;
 
     // Clipboard
     writeClipboard: (text: string) => Promise<void>;

@@ -5,11 +5,9 @@ import type { FileInfo } from '@/schemas/vault';
 import type { ChatMessage } from '@/schemas/chat';
 import { useAIModel } from '@/renderer/composables/ai/useAIModel';
 import { useConversationHistory } from '@/renderer/composables/ai/useConversationHistory';
-import { useHfDownload } from '@/renderer/composables/ai/useHfDownload';
 import { useAIChat } from '@/renderer/composables/ai/useAIChat';
 import { MAX_CONTEXT_FILES } from '@/renderer/composables/ai/useAIChat';
 import AiModelBar from '@/renderer/components/ai/AiModelBar.vue';
-import AiHfPanel from '@/renderer/components/ai/AiHfPanel.vue';
 import AiHistoryPanel from '@/renderer/components/ai/AiHistoryPanel.vue';
 import AiMessageList from '@/renderer/components/ai/AiMessageList.vue';
 import AiInputArea from '@/renderer/components/ai/AiInputArea.vue';
@@ -71,31 +69,6 @@ const {
     confirmRename,
     cancelRename,
 } = conversation;
-
-const hf = useHfDownload(refreshModels);
-const {
-    showHfPanel,
-    hfSearchQuery,
-    hfSearchResults,
-    hfIsSearching,
-    hfSelectedRepo,
-    hfRepoFiles,
-    hfModelInfo,
-    hfIsLoadingFiles,
-    hfDownloadProgress,
-    hfActiveDownloads,
-    hfDownloadError,
-    hfSortBy,
-    hfHasMore,
-    hfIsLoadingMore,
-    toggleHfPanel,
-    searchHfModels,
-    loadMoreResults,
-    changeSortBy,
-    selectHfRepo,
-    downloadHfModel,
-    cancelHfDownload,
-} = hf;
 
 const chat = useAIChat(
     {
@@ -277,7 +250,6 @@ function increaseWidth(): void {
             :is-loading="isLoading"
             :selected-model-path="selectedModelPath"
             :selected-model-label="selectedModelLabel"
-            :show-hf-panel="showHfPanel"
             :show-history="showHistory"
             :is-any-generating="isAnyGenerating"
             :aria-label="t('ai.model_selection_and_controls')"
@@ -286,41 +258,9 @@ function increaseWidth(): void {
             @unload-model="unloadModel"
             @open-models-folder="openModelsFolder"
             @refresh-models="refreshModels"
-            @toggle-hf-panel="toggleHfPanel"
             @toggle-history="toggleHistory"
             @new-conversation="startNewConversation"
             @close="$emit('close')" />
-
-        <AiHfPanel
-            v-if="showHfPanel"
-            :hf-search-query="hfSearchQuery"
-            :hf-search-results="hfSearchResults"
-            :hf-is-searching="hfIsSearching"
-            :hf-selected-repo="hfSelectedRepo"
-            :hf-repo-files="hfRepoFiles"
-            :hf-model-info="hfModelInfo"
-            :hf-is-loading-files="hfIsLoadingFiles"
-            :hf-download-progress="hfDownloadProgress"
-            :hf-active-downloads="hfActiveDownloads"
-            :hf-download-error="hfDownloadError"
-            :hf-sort-by="hfSortBy"
-            :hf-has-more="hfHasMore"
-            :hf-is-loading-more="hfIsLoadingMore"
-            :aria-label="t('ai.hf_model_browser')"
-            :aria-hidden="!showHfPanel"
-            @update:hf-search-query="hfSearchQuery = $event"
-            @search="searchHfModels"
-            @select-repo="selectHfRepo"
-            @download="downloadHfModel"
-            @cancel-download="cancelHfDownload"
-            @change-sort="changeSortBy"
-            @load-more="loadMoreResults"
-            @back="
-                hfSelectedRepo = null;
-                hfRepoFiles = [];
-                hfModelInfo = null;
-            "
-            @close="showHfPanel = false" />
 
         <AiHistoryPanel
             v-if="showHistory"

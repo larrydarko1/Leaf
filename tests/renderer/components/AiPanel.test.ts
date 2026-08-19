@@ -35,13 +35,6 @@ const mockElectronAPI = {
     conversationDelete: vi.fn().mockResolvedValue({ success: true }),
     conversationRename: vi.fn().mockResolvedValue({ success: true }),
     systemPromptList: vi.fn().mockResolvedValue({ success: true, prompts: [], activeId: '', promptsDir: '' }),
-    hfSearch: vi.fn().mockResolvedValue({ success: true, models: [], hasMore: false }),
-    hfListFiles: vi.fn().mockResolvedValue({ success: true, files: [] }),
-    hfDownload: vi.fn().mockResolvedValue({ success: true }),
-    hfCancelDownload: vi.fn().mockResolvedValue({ success: true }),
-    hfGetActiveDownloads: vi.fn().mockResolvedValue({ success: true, downloads: [] }),
-    onHfDownloadProgress: vi.fn(),
-    removeHfDownloadProgressListener: vi.fn(),
     writeClipboard: vi.fn().mockResolvedValue(undefined),
     log: { error: vi.fn(), info: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 };
