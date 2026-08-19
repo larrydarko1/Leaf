@@ -12,6 +12,12 @@ import {
     TaskCheckboxWidget,
 } from '@/renderer/composables/editor/codemirror/cm-widgets';
 
+// ── Regex-based decoration builders ───────────────────────────────────────────
+
+const highlightRegex = /==((?!=).+?)==/g;
+const embedRegex = /!\[\[([^\]]+)\]\]/g;
+const taskRegex = /^([ \t]*)- \[([ x/])\] /gim;
+
 export function activeLinesSet(state: EditorState): Set<number> {
     const lines = new Set<number>();
     for (const range of state.selection.ranges) {
@@ -21,12 +27,6 @@ export function activeLinesSet(state: EditorState): Set<number> {
     }
     return lines;
 }
-
-// ── Regex-based decoration builders ───────────────────────────────────────────
-
-const highlightRegex = /==((?!=).+?)==/g;
-const embedRegex = /!\[\[([^\]]+)\]\]/g;
-const taskRegex = /^([ \t]*)- \[([ x/])\] /gim;
 
 /**
  * Expand a visible range to full-line boundaries so regex patterns

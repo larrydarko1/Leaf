@@ -6,8 +6,6 @@ import ContextMenu from '@/renderer/components/explorer/ContextMenu.vue';
 import { useFolderTree } from '@/renderer/composables/vault/useFolderTree';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
-
 type Props = {
     files: FileInfo[];
     folders?: FolderInfo[];
@@ -36,6 +34,8 @@ const emit = defineEmits<{
     moveFolder: [folderPath: string, targetFolderPath: string];
     toggleBookmark: [filePath: string];
 }>();
+
+const { t } = useI18n();
 
 const renameValue = ref('');
 const isDragOverRoot = ref(false);
@@ -70,35 +70,6 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
         { label: t('file.rename'), action: 'rename', shortcut: 'F2' },
         { label: t('file.delete'), action: 'delete' },
     ];
-});
-
-// Watch for renaming file changes
-watch(
-    () => props.renamingFile,
-    (newRenamingFile) => {
-        if (newRenamingFile !== null) {
-            renameValue.value = getFileNameWithoutExtension(newRenamingFile.name);
-        }
-    },
-);
-
-// Watch for renaming folder changes
-watch(
-    () => props.renamingFolder,
-    (newRenamingFolder) => {
-        if (newRenamingFolder !== null && newRenamingFolder !== '') {
-            renameValue.value = newRenamingFolder.split('/').pop() ?? newRenamingFolder;
-        }
-    },
-);
-
-// Set up keyboard listeners
-onMounted(() => {
-    window.addEventListener('keydown', handleKeyDown);
-});
-
-onUnmounted(() => {
-    window.removeEventListener('keydown', handleKeyDown);
 });
 
 // Keyboard navigation handler
@@ -289,6 +260,35 @@ function handleRootDrop(event: DragEvent): void {
         }
     }
 }
+
+// Watch for renaming file changes
+watch(
+    () => props.renamingFile,
+    (newRenamingFile) => {
+        if (newRenamingFile !== null) {
+            renameValue.value = getFileNameWithoutExtension(newRenamingFile.name);
+        }
+    },
+);
+
+// Watch for renaming folder changes
+watch(
+    () => props.renamingFolder,
+    (newRenamingFolder) => {
+        if (newRenamingFolder !== null && newRenamingFolder !== '') {
+            renameValue.value = newRenamingFolder.split('/').pop() ?? newRenamingFolder;
+        }
+    },
+);
+
+// Set up keyboard listeners
+onMounted(() => {
+    window.addEventListener('keydown', handleKeyDown);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('keydown', handleKeyDown);
+});
 </script>
 
 <template>

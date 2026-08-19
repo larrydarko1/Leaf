@@ -3,15 +3,11 @@ import { onMounted } from 'vue';
 import { useTheme } from '@/renderer/composables/ui/useTheme';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
-
 const emit = defineEmits<{ close: [] }>();
 
-const { themes, activeId, refresh, setActive, openThemesFolder } = useTheme();
+const { t } = useI18n();
 
-onMounted(() => {
-    void refresh();
-});
+const { themes, activeId, refresh, setActive, openThemesFolder } = useTheme();
 
 async function handleSelect(id: string): Promise<void> {
     if (id === activeId.value) return;
@@ -25,6 +21,10 @@ async function handleOpenFolder(): Promise<void> {
 async function handleRefresh(): Promise<void> {
     await refresh();
 }
+
+onMounted(() => {
+    void refresh();
+});
 </script>
 
 <template>

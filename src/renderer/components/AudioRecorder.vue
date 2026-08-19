@@ -2,14 +2,14 @@
 import { useAudioRecorder } from '@/renderer/composables/useAudioRecorder';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
-
 type Props = {
     currentFolder: string | null;
 };
 
 const props = defineProps<Props>();
 const emit = defineEmits<{ recordingSaved: [filePath: string] }>();
+
+const { t } = useI18n();
 
 const { isRecording, hasPermission, formattedDuration, toggle } = useAudioRecorder(
     () => props.currentFolder,

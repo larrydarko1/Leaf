@@ -13,7 +13,7 @@
 
 import baseLog from 'electron-log/main.js';
 
+export const log = baseLog;
+
 // Keep log files small — 1 MB max, 1 rotated backup
 baseLog.transports.file.maxSize = 1024 * 1024;
-
-export const log = baseLog;

@@ -38,24 +38,6 @@ import { isInsideBoundary } from '@/main/lib/validation';
 import { log } from '@/main/lib/logger';
 import { config } from '@/main/lib/config';
 
-/**
- * ─── Scheme privileges ───────────────────────────────────────────────────────
- * Must be called before app.whenReady(). Tells Chromium the leaf:// scheme
- * supports streaming (needed for video/audio playback with range requests),
- * is secure (needed for iframe PDF viewing), and supports fetch.
- * */
-protocol.registerSchemesAsPrivileged([
-    {
-        scheme: 'leaf',
-        privileges: {
-            standard: true,
-            secure: true,
-            supportFetchAPI: true,
-            stream: true,
-        },
-    },
-]);
-
 // ─── Window ──────────────────────────────────────────────────────────────────
 
 let mainWindow: BrowserWindow | null = null;
@@ -179,6 +161,24 @@ function registerLeafProtocol(ses: Electron.Session): void {
         });
     });
 }
+
+/**
+ * ─── Scheme privileges ───────────────────────────────────────────────────────
+ * Must be called before app.whenReady(). Tells Chromium the leaf:// scheme
+ * supports streaming (needed for video/audio playback with range requests),
+ * is secure (needed for iframe PDF viewing), and supports fetch.
+ * */
+protocol.registerSchemesAsPrivileged([
+    {
+        scheme: 'leaf',
+        privileges: {
+            standard: true,
+            secure: true,
+            supportFetchAPI: true,
+            stream: true,
+        },
+    },
+]);
 
 // ─── App lifecycle ────────────────────────────────────────────────────────────
 

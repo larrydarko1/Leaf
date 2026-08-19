@@ -15,8 +15,6 @@ import DrawingFooter from '@/renderer/components/drawing/DrawingFooter.vue';
 import DrawingExportDialog from '@/renderer/components/drawing/DrawingExportDialog.vue';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
-
 type Props = {
     filePath: string;
     initialContent?: string;
@@ -28,6 +26,8 @@ const emit = defineEmits<{
     save: [content: string];
     contentChanged: [hasChanges: boolean];
 }>();
+
+const { t } = useI18n();
 
 const containerEl = ref<HTMLDivElement | null>(null);
 const canvas = ref<HTMLCanvasElement | null>(null);
@@ -262,26 +262,6 @@ const hasSelection = computed(() => selectedIds.value.size > 0);
 
 const throttledResize = useThrottleFn(handleResize, 100);
 
-onMounted(() => {
-    setupCanvas();
-    loadDrawing();
-    window.addEventListener('resize', throttledResize);
-    document.addEventListener('mousedown', handleClickOutside);
-    void nextTick(() => containerEl.value?.focus());
-});
-
-onUnmounted(() => {
-    window.removeEventListener('resize', throttledResize);
-    document.removeEventListener('mousedown', handleClickOutside);
-    cleanupAutoSave();
-    throttledResize.cancel();
-    onPointerMove.cancel();
-    onWheel.cancel();
-});
-
-watch(() => props.filePath, loadDrawing);
-watch(() => props.initialContent, loadDrawing);
-
 function selectTool(tool: ToolType): void {
     currentTool.value = tool;
     if (tool !== 'select') selectedIds.value = new Set();
@@ -331,6 +311,26 @@ function openExportDialog(): void {
 function closeExportDialog(): void {
     showExportDialog.value = false;
 }
+
+onMounted(() => {
+    setupCanvas();
+    loadDrawing();
+    window.addEventListener('resize', throttledResize);
+    document.addEventListener('mousedown', handleClickOutside);
+    void nextTick(() => containerEl.value?.focus());
+});
+
+onUnmounted(() => {
+    window.removeEventListener('resize', throttledResize);
+    document.removeEventListener('mousedown', handleClickOutside);
+    cleanupAutoSave();
+    throttledResize.cancel();
+    onPointerMove.cancel();
+    onWheel.cancel();
+});
+
+watch(() => props.filePath, loadDrawing);
+watch(() => props.initialContent, loadDrawing);
 </script>
 
 <template>

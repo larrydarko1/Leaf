@@ -12,9 +12,6 @@ import type { FileInfo } from '@/schemas/vault';
 import type { AiStatus } from '@/schemas/ai';
 import type { ChatMessage } from '@/schemas/chat';
 
-// Configure marked once at module level
-marked.setOptions({ breaks: true, gfm: true });
-
 type AiChatDeps = {
     messages: Ref<ChatMessage[]>;
     status: Ref<AiStatus>;
@@ -29,9 +26,6 @@ type AiChatActions = {
     refreshConversationList: () => Promise<void>;
     refreshStatus: () => Promise<void>;
 };
-
-// Maximum number of files a user can attach as additional context
-export const MAX_CONTEXT_FILES = 10;
 
 export type UseAIChatReturn = {
     messagesContainer: Ref<HTMLElement | null>;
@@ -60,6 +54,9 @@ export type UseAIChatReturn = {
     stopGeneration: () => Promise<void>;
     formatTokenCount: (n: number) => string;
 };
+
+// Maximum number of files a user can attach as additional context
+export const MAX_CONTEXT_FILES = 10;
 
 export function useAIChat(deps: AiChatDeps, actions: AiChatActions): UseAIChatReturn {
     const { messages, status, conversationTokenCount, currentConversationId } = deps;
@@ -497,3 +494,6 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions): UseAIChatRe
         formatTokenCount,
     };
 }
+
+// Configure marked once at module level
+marked.setOptions({ breaks: true, gfm: true });

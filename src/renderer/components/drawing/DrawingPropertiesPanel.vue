@@ -17,9 +17,6 @@ type Props = {
 };
 
 const props = defineProps<Props>();
-void props;
-
-const { t } = useI18n();
 
 const emit = defineEmits<{
     setProperty: [prop: StyleKey, value: string | number];
@@ -60,6 +57,8 @@ const fillColorPalette = [
 
 const strokeWidthOptions = [1, 2, 4];
 
+const { t } = useI18n();
+
 const strokeStyleOptions = [
     { value: 'solid' as StrokeStyle, label: t('drawing.solid'), dash: '' },
     { value: 'dashed' as StrokeStyle, label: t('drawing.dashed'), dash: '8,5' },
@@ -78,6 +77,8 @@ const borderRadiusOptions = [
     { label: t('drawing.border_radius_options.round'), value: 8, icon: 'round' },
     { label: t('drawing.border_radius_options.extra_round'), value: 16, icon: 'extra' },
 ];
+
+void props;
 </script>
 
 <template>

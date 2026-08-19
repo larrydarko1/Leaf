@@ -3,13 +3,13 @@ import { watch, onMounted, onUnmounted } from 'vue';
 import { useVideoPlayer } from '@/renderer/composables/editor/useVideoPlayer';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
-
 type Props = {
     filePath: string;
 };
 
 const props = defineProps<Props>();
+
+const { t } = useI18n();
 
 const {
     videoUrl,
@@ -31,18 +31,6 @@ const {
     reset,
 } = useVideoPlayer();
 
-watch(
-    () => props.filePath,
-    (path) => {
-        reset();
-        videoUrl.value = `leaf://localhost${path}`;
-    },
-    { immediate: true },
-);
-
-onMounted(() => window.addEventListener('keydown', onKeydown));
-onUnmounted(() => window.removeEventListener('keydown', onKeydown));
-
 function onKeydown(e: KeyboardEvent): void {
     if (e.key !== ' ' || videoRef.value === null) return;
     const target = e.target as HTMLElement;
@@ -55,6 +43,18 @@ function seekVideoBySeconds(seconds: number): void {
     if (videoRef.value === null) return;
     videoRef.value.currentTime = Math.max(0, videoRef.value.currentTime + seconds);
 }
+
+watch(
+    () => props.filePath,
+    (path) => {
+        reset();
+        videoUrl.value = `leaf://localhost${path}`;
+    },
+    { immediate: true },
+);
+
+onMounted(() => window.addEventListener('keydown', onKeydown));
+onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 </script>
 
 <template>

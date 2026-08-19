@@ -39,25 +39,6 @@ const showAiPanel = ref(false);
 const showThemePanel = ref(false);
 const showLanguagePanel = ref(false);
 
-onMounted(() => {
-    void theme.refresh();
-    void language.refresh();
-
-    void restoreVault();
-
-    vault.setExternalChangeCallback(() => {
-        void refreshFiles();
-    });
-    window.addEventListener('keydown', handleKeydown);
-    document.addEventListener('click', handleExternalLinkClick, true);
-});
-
-onBeforeUnmount(() => {
-    vault.closeVault();
-    window.removeEventListener('keydown', handleKeydown);
-    document.removeEventListener('click', handleExternalLinkClick, true);
-});
-
 function handleExternalLinkClick(e: MouseEvent): void {
     const closest = (e.target as HTMLElement)?.closest('a');
     const target = closest instanceof HTMLAnchorElement ? closest : null;
@@ -337,6 +318,25 @@ function toggleLanguagePanel(): void {
         showThemePanel.value = false;
     }
 }
+
+onMounted(() => {
+    void theme.refresh();
+    void language.refresh();
+
+    void restoreVault();
+
+    vault.setExternalChangeCallback(() => {
+        void refreshFiles();
+    });
+    window.addEventListener('keydown', handleKeydown);
+    document.addEventListener('click', handleExternalLinkClick, true);
+});
+
+onBeforeUnmount(() => {
+    vault.closeVault();
+    window.removeEventListener('keydown', handleKeydown);
+    document.removeEventListener('click', handleExternalLinkClick, true);
+});
 </script>
 
 <template>

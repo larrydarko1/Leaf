@@ -52,6 +52,9 @@ jobs:
             - name: Code style check
               run: npm run code:check
 
+            - name: Declaration order check
+              run: npm run declorder:check
+
             - name: HTML standards check
               run: npm run html:check
 

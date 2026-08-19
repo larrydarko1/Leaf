@@ -31,10 +31,11 @@ import {
     FolderMoveArgsSchema,
 } from '@/schemas/vault';
 
+const authorizedWritePaths: Set<string> = new Set<string>();
+
 let folderWatcher: FSWatcher | null = null;
 
 let vaultRoot: string | null = null;
-const authorizedWritePaths: Set<string> = new Set<string>();
 
 /** Returns the active vault root, or null if no vault is open. */
 export function findVaultRoot(): string | null {

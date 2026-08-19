@@ -3,8 +3,6 @@ import { ref, computed } from 'vue';
 import type { ToolType } from '@/schemas/drawing';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
-
 type Props = {
     currentTool: ToolType;
 };
@@ -15,8 +13,7 @@ const emit = defineEmits<{
     selectTool: [tool: ToolType];
 }>();
 
-const archDropdownEl = ref<HTMLDivElement | null>(null);
-const archDropdownOpen = ref(false);
+defineExpose({ handleClickOutside });
 
 const archShapeTypes: ToolType[] = [
     'database',
@@ -28,6 +25,11 @@ const archShapeTypes: ToolType[] = [
     'parallelogram',
     'star',
 ];
+
+const { t } = useI18n();
+
+const archDropdownEl = ref<HTMLDivElement | null>(null);
+const archDropdownOpen = ref(false);
 
 const archShapes = [
     {
@@ -88,8 +90,6 @@ function handleClickOutside(e: MouseEvent): void {
         archDropdownOpen.value = false;
     }
 }
-
-defineExpose({ handleClickOutside });
 </script>
 
 <template>

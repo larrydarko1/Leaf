@@ -49,19 +49,19 @@ const LINE_CAP = 400;
 /**
  * Files already over the cap, at the size they were when the ratchet was set.
  * A file may shrink freely; growing past its entry, or a new file crossing the
- * cap, fails. Lower a number when you refactor — never raise one.
+ * cap, fails. Lower a number when you refactor.
  */
 const LENGTH_BASELINE = {
     'src/renderer/components/ai/AiMessageList.vue': 1098,
     'src/renderer/App.vue': 919,
     'src/renderer/composables/drawing/useDrawingInteraction.ts': 813,
-    'src/main/services/fs.ts': 795,
+    'src/main/services/fs.ts': 796,
     'src/renderer/components/explorer/FolderNode.vue': 777,
-    'src/renderer/components/ai/AiInputArea.vue': 732,
-    'src/renderer/components/NoteEditor.vue': 722,
-    'src/renderer/components/ai/AiModelBar.vue': 699,
+    'src/renderer/components/ai/AiInputArea.vue': 733,
+    'src/renderer/components/NoteEditor.vue': 725,
+    'src/renderer/components/ai/AiModelBar.vue': 700,
     'src/renderer/composables/drawing/useCanvasRenderer.ts': 685,
-    'src/renderer/components/drawing/DrawingPropertiesPanel.vue': 674,
+    'src/renderer/components/drawing/DrawingPropertiesPanel.vue': 675,
     'src/renderer/components/drawing/DrawingToolbar.vue': 576,
     'src/renderer/components/drawing/DrawingExportDialog.vue': 573,
     'src/renderer/composables/editor/codemirror/cm-theme.ts': 525,

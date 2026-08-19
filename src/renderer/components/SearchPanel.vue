@@ -5,8 +5,6 @@ import { useListKeyboardNavigation } from '@/renderer/composables/ui/useListKeyb
 import type { FileInfo, HighlightPart } from '@/schemas/vault';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
-
 type Props = {
     files: FileInfo[];
     selectedFiles: FileInfo[];
@@ -21,9 +19,33 @@ const emit = defineEmits<{
     close: [];
 }>();
 
+const { t } = useI18n();
+
 const searchInput = ref<HTMLInputElement | null>(null);
 const searchQuery = ref('');
 const searchResults = ref<FileInfo[]>([]);
+
+const { selectedIndex, resetIndex } = useListKeyboardNavigation<FileInfo>(
+    () => searchResults.value,
+    {
+        onSelect: (file: FileInfo): void => emit('selectFile', file),
+        onOpen: openSelectedResult,
+        onEscape: (): void => {
+            if (searchQuery.value.trim() !== '') {
+                clearSearch();
+            } else {
+                emit('close');
+            }
+        },
+    },
+    {
+        wrap: false,
+        scrollSelector: '.search-result-item.keyboard-selected',
+        ignoreWhen: (target: HTMLElement): boolean =>
+            (target.tagName === 'TEXTAREA' || target.isContentEditable) &&
+            target !== (searchInput.value as HTMLElement | null),
+    },
+);
 
 function runSearch(): void {
     if (searchQuery.value.trim() === '') {
@@ -67,36 +89,6 @@ function runSearch(): void {
         .sort((a, b) => b.score - a.score)
         .map((result) => result.file);
 }
-
-// Debounce the search — watchDebounced auto-stops on component unmount
-watchDebounced(searchQuery, runSearch, { debounce: 150, maxWait: 600 });
-
-const { selectedIndex, resetIndex } = useListKeyboardNavigation<FileInfo>(
-    () => searchResults.value,
-    {
-        onSelect: (file: FileInfo): void => emit('selectFile', file),
-        onOpen: openSelectedResult,
-        onEscape: (): void => {
-            if (searchQuery.value.trim() !== '') {
-                clearSearch();
-            } else {
-                emit('close');
-            }
-        },
-    },
-    {
-        wrap: false,
-        scrollSelector: '.search-result-item.keyboard-selected',
-        ignoreWhen: (target: HTMLElement): boolean =>
-            (target.tagName === 'TEXTAREA' || target.isContentEditable) &&
-            target !== (searchInput.value as HTMLElement | null),
-    },
-);
-
-watch(searchResults, resetIndex);
-onMounted(() => {
-    searchInput.value?.focus();
-});
 
 function isFileSelected(file: FileInfo): boolean {
     return props.selectedFiles.some((f) => f.path === file.path);
@@ -158,6 +150,14 @@ function splitHighlightedText(text: string): HighlightPart[] {
 
     return parts.length > 0 ? parts : [{ text, highlighted: false }];
 }
+
+// Debounce the search — watchDebounced auto-stops on component unmount
+watchDebounced(searchQuery, runSearch, { debounce: 150, maxWait: 600 });
+
+watch(searchResults, resetIndex);
+onMounted(() => {
+    searchInput.value?.focus();
+});
 </script>
 
 <template>

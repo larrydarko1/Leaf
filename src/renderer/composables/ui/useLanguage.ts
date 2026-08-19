@@ -12,13 +12,6 @@ import { useI18n } from 'vue-i18n';
 import { i18n, type MessageSchema } from '@/renderer/i18n';
 import type { LanguageInfo } from '@/schemas/vault';
 
-const ACTIVE_LANGUAGE_LS_KEY = 'leaf-language-id';
-
-// Singleton state — one language applies app-wide.
-const languages: Ref<LanguageInfo[]> = ref<LanguageInfo[]>([]);
-const activeId: Ref<string> = ref<string>('en');
-const isLoading: Ref<boolean> = ref<boolean>(false);
-
 export type UseLanguageReturn = {
     languages: Ref<LanguageInfo[]>;
     activeId: Ref<string>;
@@ -27,6 +20,13 @@ export type UseLanguageReturn = {
     setActive: (id: string) => Promise<boolean>;
     openLocalesFolder: () => Promise<void>;
 };
+
+const ACTIVE_LANGUAGE_LS_KEY = 'leaf-language-id';
+
+// Singleton state — one language applies app-wide.
+const languages: Ref<LanguageInfo[]> = ref<LanguageInfo[]>([]);
+const activeId: Ref<string> = ref<string>('en');
+const isLoading: Ref<boolean> = ref<boolean>(false);
 
 export function useLanguage(): UseLanguageReturn {
     const { locale } = useI18n();
