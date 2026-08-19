@@ -1,0 +1,5 @@
+{
+    "minTokens": 50,
+    "ignore": ["**/tests/**", "**/out/**", "**/dist-electron/**", "**/node_modules/**"],
+    "format": ["vue", "typescript", "scss", "html"]
+}

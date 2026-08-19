@@ -9,9 +9,6 @@ type Props = {
 };
 
 const props = defineProps<Props>();
-void props;
-
-const { t } = useI18n();
 
 const emit = defineEmits<{
     switch: [index: number];
@@ -21,8 +18,10 @@ const emit = defineEmits<{
 
 // Pre-load a transparent 1x1 GIF so it's decoded before the first drag event
 const TRANSPARENT_GIF = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
+const { t } = useI18n();
+
 const dragGhost = new Image();
-dragGhost.src = TRANSPARENT_GIF;
 
 const dragStartIndex = ref(-1);
 const dragOverIndex = ref(-1);
@@ -67,6 +66,10 @@ function onDragEnd(): void {
     dragStartIndex.value = -1;
     dragOverIndex.value = -1;
 }
+
+void props;
+
+dragGhost.src = TRANSPARENT_GIF;
 </script>
 
 <template>

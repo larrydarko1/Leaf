@@ -3,14 +3,11 @@ import { onMounted } from 'vue';
 import { useLanguage } from '@/renderer/composables/ui/useLanguage';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
 const emit = defineEmits<{ close: [] }>();
 
-const { languages, activeId, refresh, setActive, openLocalesFolder } = useLanguage();
+const { t } = useI18n();
 
-onMounted(() => {
-    void refresh();
-});
+const { languages, activeId, refresh, setActive, openLocalesFolder } = useLanguage();
 
 async function handleSelect(id: string): Promise<void> {
     if (id === activeId.value) return;
@@ -24,6 +21,10 @@ async function handleOpenFolder(): Promise<void> {
 async function handleRefresh(): Promise<void> {
     await refresh();
 }
+
+onMounted(() => {
+    void refresh();
+});
 </script>
 
 <template>

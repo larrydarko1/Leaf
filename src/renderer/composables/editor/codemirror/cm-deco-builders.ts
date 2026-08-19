@@ -12,37 +12,11 @@ import {
     TaskCheckboxWidget,
 } from '@/renderer/composables/editor/codemirror/cm-widgets';
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Regex-based decoration builders ───────────────────────────────────────────
 
-/** Collapse table rows `from`..`to` so only the rendered widget shows. */
-function pushHiddenRows(decos: Range<Decoration>[], state: EditorState, from: number, to: number): void {
-    for (let ln = from; ln <= to; ln++) {
-        const line = state.doc.line(ln);
-        decos.push(Decoration.line({ class: 'cm-table-hidden-row' }).range(line.from));
-        if (line.from < line.to) {
-            decos.push(Decoration.replace({}).range(line.from, line.to));
-        }
-    }
-}
-
-/** Style blockquote lines `from`..`to`, hiding the `>` marker on the inactive ones. */
-function pushBlockquoteLines(
-    decos: Range<Decoration>[],
-    state: EditorState,
-    from: number,
-    to: number,
-    activeLines: Set<number>,
-): void {
-    for (let ln = from; ln <= to; ln++) {
-        if (activeLines.has(ln)) continue;
-        const line = state.doc.line(ln);
-        decos.push(Decoration.line({ class: 'cm-blockquote' }).range(line.from));
-        const markerMatch = line.text.match(/^(\s*>\s?)/);
-        if (markerMatch !== null) {
-            decos.push(Decoration.replace({}).range(line.from, line.from + markerMatch[0].length));
-        }
-    }
-}
+const highlightRegex = /==((?!=).+?)==/g;
+const embedRegex = /!\[\[([^\]]+)\]\]/g;
+const taskRegex = /^([ \t]*)- \[([ x/])\] /gim;
 
 export function activeLinesSet(state: EditorState): Set<number> {
     const lines = new Set<number>();
@@ -53,12 +27,6 @@ export function activeLinesSet(state: EditorState): Set<number> {
     }
     return lines;
 }
-
-// ── Regex-based decoration builders ───────────────────────────────────────────
-
-const highlightRegex = /==((?!=).+?)==/g;
-const embedRegex = /!\[\[([^\]]+)\]\]/g;
-const taskRegex = /^([ \t]*)- \[([ x/])\] /gim;
 
 /**
  * Expand a visible range to full-line boundaries so regex patterns
@@ -419,4 +387,34 @@ export function mergeVisibleRanges(
         }
     }
     return merged;
+}
+
+/** Collapse table rows `from`..`to` so only the rendered widget shows. */
+function pushHiddenRows(decos: Range<Decoration>[], state: EditorState, from: number, to: number): void {
+    for (let ln = from; ln <= to; ln++) {
+        const line = state.doc.line(ln);
+        decos.push(Decoration.line({ class: 'cm-table-hidden-row' }).range(line.from));
+        if (line.from < line.to) {
+            decos.push(Decoration.replace({}).range(line.from, line.to));
+        }
+    }
+}
+
+/** Style blockquote lines `from`..`to`, hiding the `>` marker on the inactive ones. */
+function pushBlockquoteLines(
+    decos: Range<Decoration>[],
+    state: EditorState,
+    from: number,
+    to: number,
+    activeLines: Set<number>,
+): void {
+    for (let ln = from; ln <= to; ln++) {
+        if (activeLines.has(ln)) continue;
+        const line = state.doc.line(ln);
+        decos.push(Decoration.line({ class: 'cm-blockquote' }).range(line.from));
+        const markerMatch = line.text.match(/^(\s*>\s?)/);
+        if (markerMatch !== null) {
+            decos.push(Decoration.replace({}).range(line.from, line.from + markerMatch[0].length));
+        }
+    }
 }

@@ -31,10 +31,11 @@ import {
     FolderMoveArgsSchema,
 } from '@/schemas/vault';
 
+const authorizedWritePaths: Set<string> = new Set<string>();
+
 let folderWatcher: FSWatcher | null = null;
 
 let vaultRoot: string | null = null;
-const authorizedWritePaths: Set<string> = new Set<string>();
 
 /** Returns the active vault root, or null if no vault is open. */
 export function findVaultRoot(): string | null {
@@ -55,24 +56,6 @@ export async function initVaultRoot(): Promise<void> {
     } catch (err) {
         log.error('[fs-service] Failed to restore vault root:', err);
     }
-}
-
-/** Set and persist the vault root. Only reachable from the folder dialog. */
-async function setVaultRoot(dir: string): Promise<string> {
-    const resolved = path.resolve(dir);
-    vaultRoot = resolved;
-    await updateState((s): { vaultRoot: string } => ({ ...s, vaultRoot: resolved }));
-    return resolved;
-}
-
-/** Clear the vault root and forget it across restarts. */
-async function clearVaultRoot(): Promise<void> {
-    vaultRoot = null;
-    await updateState((s): Record<string, unknown> => {
-        const next = { ...s };
-        delete next.vaultRoot;
-        return next;
-    });
 }
 
 /** Close the folder watcher if active. Called during app shutdown. */
@@ -792,4 +775,22 @@ async function findFileRecursive(dir: string, targetName: string): Promise<strin
         }
     }
     return null;
+}
+
+/** Set and persist the vault root. Only reachable from the folder dialog. */
+async function setVaultRoot(dir: string): Promise<string> {
+    const resolved = path.resolve(dir);
+    vaultRoot = resolved;
+    await updateState((s): { vaultRoot: string } => ({ ...s, vaultRoot: resolved }));
+    return resolved;
+}
+
+/** Clear the vault root and forget it across restarts. */
+async function clearVaultRoot(): Promise<void> {
+    vaultRoot = null;
+    await updateState((s): Record<string, unknown> => {
+        const next = { ...s };
+        delete next.vaultRoot;
+        return next;
+    });
 }

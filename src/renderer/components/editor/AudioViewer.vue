@@ -3,13 +3,13 @@ import { watch, onMounted, onUnmounted } from 'vue';
 import { useAudioPlayer } from '@/renderer/composables/editor/useAudioPlayer';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
-
 type Props = {
     filePath: string;
 };
 
 const props = defineProps<Props>();
+
+const { t } = useI18n();
 
 const {
     audioUrl,
@@ -32,18 +32,6 @@ const {
     reset,
 } = useAudioPlayer();
 
-watch(
-    () => props.filePath,
-    async (path) => {
-        reset();
-        await loadAudio(path);
-    },
-    { immediate: true },
-);
-
-onMounted(() => window.addEventListener('keydown', onKeydown));
-onUnmounted(() => window.removeEventListener('keydown', onKeydown));
-
 function formatTime(seconds: number): string {
     if (seconds === 0 || !isFinite(seconds)) return '0:00';
     const minutes = Math.floor(seconds / 60);
@@ -58,6 +46,18 @@ function onKeydown(e: KeyboardEvent): void {
     e.preventDefault();
     toggleAudioPlayback();
 }
+
+watch(
+    () => props.filePath,
+    async (path) => {
+        reset();
+        await loadAudio(path);
+    },
+    { immediate: true },
+);
+
+onMounted(() => window.addEventListener('keydown', onKeydown));
+onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 </script>
 
 <template>

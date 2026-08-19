@@ -5,9 +5,6 @@
 import { ref, computed, type ComputedRef, type Ref } from 'vue';
 import { type FileInfo, type TabState, type PersistedTabState, PersistedTabStateSchema } from '@/schemas/vault';
 
-const MAX_TABS = 10;
-const STORAGE_KEY_PREFIX = 'leaf-tabs-';
-
 export type UseEditorTabsReturn = {
     tabs: Ref<TabState[]>;
     activeIndex: Ref<number>;
@@ -30,6 +27,9 @@ export type UseEditorTabsReturn = {
     setFolderPath: (folderPath: string | null) => void;
     MAX_TABS: number;
 };
+
+const MAX_TABS = 10;
+const STORAGE_KEY_PREFIX = 'leaf-tabs-';
 
 export function useEditorTabs(): UseEditorTabsReturn {
     const tabs = ref<TabState[]>([]);

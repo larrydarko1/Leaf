@@ -34,8 +34,6 @@ import { useCodeEditor } from '@/renderer/composables/editor/codemirror/useCodeE
 import { keymap, EditorView } from '@codemirror/view';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
-
 type Props = {
     file: FileInfo | null;
     workspacePath: string | null;
@@ -49,6 +47,8 @@ const emit = defineEmits<{
 }>();
 
 defineExpose({ reloadContent });
+
+const { t } = useI18n();
 
 // CodeMirror container ref (replaces textarea + preview)
 const cmContainerRef = ref<HTMLElement | null>(null);
@@ -162,6 +162,49 @@ const { view: cmView } = useCodemirror(cmContainerRef, content, onContentChange,
     fileId: cmFileId,
 });
 
+// ── Code file editor (syntax-highlighted, non-markdown) ──────────────
+const codeFileExtension = computed(() => (props.file !== null ? props.file.extension : ''));
+
+// Toolbar commands backed by CodeMirror
+const { mdFormatText, mdInsertHeading } = useCodemirrorToolbar(cmViewRef);
+
+// Editor drag-and-drop (showPreview no longer needed — always in live-preview mode)
+const showPreview = ref(false);
+
+// kept for useEditorDrop API compat, always false now
+const { isDragOverEditor, onEditorDragEnter, onEditorDragOver, onEditorDragLeave, onFileDrop } = useEditorDrop({
+    isMarkdownFile,
+    findFile: (): FileInfo | null => props.file,
+    textareaRef,
+    showPreview,
+    content,
+    onContentChange,
+    cmViewRef,
+});
+
+/** Reload the current file's content from disk */
+async function reloadContent(): Promise<void> {
+    if (props.file !== null) {
+        await loadFile(props.file);
+    }
+}
+
+// Keyboard shortcuts
+function handleKeyboard(e: KeyboardEvent): void {
+    if ((e.metaKey === true || e.ctrlKey === true) && e.key === 's') {
+        e.preventDefault();
+        void saveFile();
+    }
+}
+
+// Prevent Electron from navigating when files are dropped anywhere on the window
+function preventGlobalDrop(event: DragEvent): void {
+    event.preventDefault();
+}
+function preventGlobalDragOver(event: DragEvent): void {
+    event.preventDefault();
+}
+
 // Keep the shared ref in sync
 watch(
     cmView,
@@ -171,8 +214,6 @@ watch(
     { immediate: true },
 );
 
-// ── Code file editor (syntax-highlighted, non-markdown) ──────────────
-const codeFileExtension = computed(() => (props.file !== null ? props.file.extension : ''));
 useCodeEditor(codeContainerRef, content, onContentChange, codeFileExtension, cmFileId);
 
 // When embed cache updates (async resolution), poke CodeMirror so the
@@ -183,9 +224,6 @@ watch(embedCacheVersion, () => {
     // Dispatch a no-op transaction to trigger plugin update() calls
     editorView.dispatch({});
 });
-
-// Toolbar commands backed by CodeMirror
-const { mdFormatText, mdInsertHeading } = useCodemirrorToolbar(cmViewRef);
 
 // Watch for file changes
 watch(
@@ -243,18 +281,6 @@ watch(
     { immediate: true },
 );
 
-// Editor drag-and-drop (showPreview no longer needed — always in live-preview mode)
-const showPreview = ref(false); // kept for useEditorDrop API compat, always false now
-const { isDragOverEditor, onEditorDragEnter, onEditorDragOver, onEditorDragLeave, onFileDrop } = useEditorDrop({
-    isMarkdownFile,
-    findFile: (): FileInfo | null => props.file,
-    textareaRef,
-    showPreview,
-    content,
-    onContentChange,
-    cmViewRef,
-});
-
 onMounted(() => {
     document.addEventListener('drop', preventGlobalDrop as EventListener, true);
     document.addEventListener('dragover', preventGlobalDragOver as EventListener, true);
@@ -272,29 +298,6 @@ onUnmounted(() => {
     document.removeEventListener('dragover', preventGlobalDragOver as EventListener, true);
     window.removeEventListener('keydown', handleKeyboard as EventListener);
 });
-
-/** Reload the current file's content from disk */
-async function reloadContent(): Promise<void> {
-    if (props.file !== null) {
-        await loadFile(props.file);
-    }
-}
-
-// Keyboard shortcuts
-function handleKeyboard(e: KeyboardEvent): void {
-    if ((e.metaKey === true || e.ctrlKey === true) && e.key === 's') {
-        e.preventDefault();
-        void saveFile();
-    }
-}
-
-// Prevent Electron from navigating when files are dropped anywhere on the window
-function preventGlobalDrop(event: DragEvent): void {
-    event.preventDefault();
-}
-function preventGlobalDragOver(event: DragEvent): void {
-    event.preventDefault();
-}
 
 // Add keyboard listener
 if (typeof window !== 'undefined') {

@@ -43,6 +43,39 @@ jobs:
             - name: Style check
               run: npm run stylelint
 
+            - name: Manifest check
+              run: npm run pkg:check
+
+            - name: Pipeline check
+              run: npm run pipeline:check
+
+            - name: Code style check
+              run: npm run code:check
+
+            - name: Declaration order check
+              run: npm run declorder:check
+
+            - name: HTML standards check
+              run: npm run html:check
+
+            - name: SCSS standards check
+              run: npm run scss:check
+
+            - name: Refactoring check
+              run: npm run refactor:check
+
+            - name: IPC standards check
+              run: npm run ipc:check
+
+            - name: Electron security check
+              run: npm run security:check
+
+            - name: Error handling check
+              run: npm run error:check
+
+            - name: Duplication check
+              run: npm run dup:check
+
             - name: Dead code check
               run: npm run dead:check
 

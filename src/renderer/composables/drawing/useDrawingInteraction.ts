@@ -9,8 +9,6 @@ import { measureTextBox } from '@/renderer/composables/drawing/textMetrics';
 import type { Ref, ComputedRef } from 'vue';
 import type { ToolType, ElementType, DragAction, CanvasElement, DefaultStyle } from '@/schemas/drawing';
 
-const MIN_ELEMENT_SIZE = 3;
-
 export type UseDrawingInteractionReturn = {
     isDragging: Ref<boolean>;
     dragAction: Ref<'none' | 'create' | 'move' | 'resize' | 'pan' | 'freedraw' | 'erase' | 'marquee'>;
@@ -46,6 +44,8 @@ export type UseDrawingInteractionReturn = {
     handleKeydown: (e: KeyboardEvent) => void;
     handleKeyup: (e: KeyboardEvent) => void;
 };
+
+const MIN_ELEMENT_SIZE = 3;
 
 export function useDrawingInteraction({
     // DOM refs

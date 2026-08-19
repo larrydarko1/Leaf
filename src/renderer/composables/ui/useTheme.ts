@@ -11,13 +11,6 @@
 import { ref, type Ref } from 'vue';
 import type { ThemeInfo } from '@/schemas/vault';
 
-const ACTIVE_ID_LS_KEY = 'leaf-theme-id';
-
-// Singleton state — one theme applies app-wide.
-const themes = ref<ThemeInfo[]>([]);
-const activeId = ref<string>('dark');
-const isLoading = ref(false);
-
 export type UseThemeReturn = {
     themes: Ref<ThemeInfo[]>;
     activeId: Ref<string>;
@@ -26,6 +19,13 @@ export type UseThemeReturn = {
     setActive: (id: string) => Promise<boolean>;
     openThemesFolder: () => Promise<void>;
 };
+
+const ACTIVE_ID_LS_KEY = 'leaf-theme-id';
+
+// Singleton state — one theme applies app-wide.
+const themes = ref<ThemeInfo[]>([]);
+const activeId = ref<string>('dark');
+const isLoading = ref(false);
 
 export function useTheme(): UseThemeReturn {
     async function refresh(): Promise<void> {

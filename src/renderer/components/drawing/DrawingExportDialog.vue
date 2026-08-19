@@ -3,8 +3,6 @@ import { ref, watch } from 'vue';
 import type { CanvasElement } from '@/schemas/drawing';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
-
 type Props = {
     visible: boolean;
     hasSelection: boolean;
@@ -20,6 +18,14 @@ const emit = defineEmits<{
     close: [];
 }>();
 
+const exportScaleOptions = [
+    { label: '1x', value: 1 },
+    { label: '2x', value: 2 },
+    { label: '3x', value: 3 },
+];
+
+const { t } = useI18n();
+
 const exportWithBackground = ref(true);
 const exportScale = ref(2);
 const exportOnlySelected = ref(false);
@@ -27,26 +33,6 @@ const exportPreviewUrl = ref<string | null>(null);
 const exportPreviewWidth = ref(0);
 const exportPreviewHeight = ref(0);
 const isExporting = ref(false);
-
-const exportScaleOptions = [
-    { label: '1x', value: 1 },
-    { label: '2x', value: 2 },
-    { label: '3x', value: 3 },
-];
-
-watch(
-    () => props.visible,
-    (v) => {
-        if (v) {
-            exportOnlySelected.value = props.hasSelection;
-            void updateExportPreview();
-        }
-    },
-);
-
-watch([exportWithBackground, exportScale, exportOnlySelected], () => {
-    if (props.visible) void updateExportPreview();
-});
 
 function getExportElements(): CanvasElement[] {
     return exportOnlySelected.value && props.hasSelection
@@ -133,6 +119,20 @@ async function copyClipboard(): Promise<void> {
         isExporting.value = false;
     }
 }
+
+watch(
+    () => props.visible,
+    (v) => {
+        if (v) {
+            exportOnlySelected.value = props.hasSelection;
+            void updateExportPreview();
+        }
+    },
+);
+
+watch([exportWithBackground, exportScale, exportOnlySelected], () => {
+    if (props.visible) void updateExportPreview();
+});
 </script>
 
 <template>

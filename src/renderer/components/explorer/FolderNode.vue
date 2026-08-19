@@ -12,8 +12,6 @@ import {
 import { useTreeNodeDrag } from '@/renderer/composables/vault/useTreeNodeDrag';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
-
 type Props = {
     node: TreeNode;
     depth: number;
@@ -40,6 +38,8 @@ const emit = defineEmits<{
     moveFile: [filePath: string, targetFolderPath: string];
     moveFolder: [folderPath: string, targetFolderPath: string];
 }>();
+
+const { t } = useI18n();
 
 const renameInput = ref<HTMLInputElement | null>(null);
 
@@ -97,17 +97,6 @@ const isActive = computed(() => {
     return false;
 });
 
-watch(isRenaming, (renaming) => {
-    if (renaming) {
-        void nextTick(() => {
-            if (renameInput.value !== null) {
-                renameInput.value.focus();
-                renameInput.value.select();
-            }
-        });
-    }
-});
-
 function handleFolderClick(): void {
     emit('selectFolder', props.node.path);
 }
@@ -158,6 +147,17 @@ const getFileTypeLabel = (): string => {
     if (isCodeFile.value) return t('file.code');
     return t('file.text');
 };
+
+watch(isRenaming, (renaming) => {
+    if (renaming) {
+        void nextTick(() => {
+            if (renameInput.value !== null) {
+                renameInput.value.focus();
+                renameInput.value.select();
+            }
+        });
+    }
+});
 </script>
 
 <template>

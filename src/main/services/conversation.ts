@@ -139,30 +139,6 @@ export async function findConversation(id: string): Promise<Conversation | null>
     }
 }
 
-async function findConversationSummary(dir: string, fileName: string): Promise<ConversationSummary | null> {
-    try {
-        const data = await fs.readFile(path.join(dir, fileName), 'utf-8');
-        const parsed = ConversationSchema.safeParse(JSON.parse(data));
-        if (!parsed.success) {
-            log.error('Skipping corrupt conversation file', { file: fileName, error: parsed.error.message });
-            return null;
-        }
-        const conv = parsed.data;
-        return {
-            id: conv.id,
-            title: conv.title,
-            model: conv.model,
-            createdAt: conv.createdAt,
-            updatedAt: conv.updatedAt,
-            messageCount: Array.isArray(conv.messages) ? conv.messages.length : 0,
-            tokenCount: conv.tokenCount !== undefined && conv.tokenCount !== 0 ? conv.tokenCount : 0,
-        };
-    } catch (err) {
-        log.error('Failed to read conversation file', { file: fileName }, err);
-        return null;
-    }
-}
-
 export async function readConversations(): Promise<{ success: boolean; conversations: object[]; error?: string }> {
     try {
         if (conversationsDir === null) {
@@ -326,4 +302,28 @@ function getConversationPath(id: string): string {
     const filePath = path.join(conversationsDir, `${id}.json`);
     resolveInsideBoundary(filePath, conversationsDir);
     return filePath;
+}
+
+async function findConversationSummary(dir: string, fileName: string): Promise<ConversationSummary | null> {
+    try {
+        const data = await fs.readFile(path.join(dir, fileName), 'utf-8');
+        const parsed = ConversationSchema.safeParse(JSON.parse(data));
+        if (!parsed.success) {
+            log.error('Skipping corrupt conversation file', { file: fileName, error: parsed.error.message });
+            return null;
+        }
+        const conv = parsed.data;
+        return {
+            id: conv.id,
+            title: conv.title,
+            model: conv.model,
+            createdAt: conv.createdAt,
+            updatedAt: conv.updatedAt,
+            messageCount: Array.isArray(conv.messages) ? conv.messages.length : 0,
+            tokenCount: conv.tokenCount !== undefined && conv.tokenCount !== 0 ? conv.tokenCount : 0,
+        };
+    } catch (err) {
+        log.error('Failed to read conversation file', { file: fileName }, err);
+        return null;
+    }
 }

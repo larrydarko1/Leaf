@@ -3,8 +3,6 @@ import { useContextMenu } from '@/renderer/composables/ui/useContextMenu';
 import { useI18n } from 'vue-i18n';
 import type { ContextMenuItem } from '@/schemas/vault';
 
-const { t } = useI18n();
-
 type Props = {
     visible: boolean;
     position: { x: number; y: number };
@@ -18,12 +16,15 @@ const emit = defineEmits<{
     action: [action: string];
 }>();
 
+const { t } = useI18n();
+
 const { menuRef, adjustedPosition } = useContextMenu(
     () => props.visible,
     () => props.position,
     () => emit('close'),
 );
-void menuRef; // used as template ref via ref="menuRef"
+
+// used as template ref via ref="menuRef"
 
 function handleItemClick(item: ContextMenuItem): void {
     if (item.disabled !== true) {
@@ -31,6 +32,8 @@ function handleItemClick(item: ContextMenuItem): void {
         emit('close');
     }
 }
+
+void menuRef;
 </script>
 
 <template>

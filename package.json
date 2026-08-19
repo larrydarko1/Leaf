@@ -37,17 +37,29 @@
         "build:linux": "npm run build && electron-builder --linux --publish never",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
+        "lint:dup": "jscpd src --config .jscpd.json --reporters console",
         "format": "prettier --write \"src/**/*.{ts,vue,scss,json}\"",
         "format:check": "prettier --check \"src/**/*.{ts,vue,scss,json}\"",
         "audit:check": "node scripts/check/check-audit.mjs",
+        "code:check": "node scripts/check/check-code-style.mjs",
         "dead:check": "node scripts/check/check-dead-code.mjs",
+        "declorder:check": "node scripts/check/check-declaration-order.mjs",
+        "dup:check": "node scripts/check/check-duplication.mjs",
+        "error:check": "node scripts/check/check-error-handling.mjs",
+        "html:check": "node scripts/check/check-html-standards.mjs",
         "i18n:check": "node scripts/check/check-i18n.mjs",
+        "ipc:check": "node scripts/check/check-ipc-standards.mjs",
+        "pipeline:check": "node scripts/check/check-pipeline.mjs",
+        "pkg:check": "node scripts/check/check-package-json.mjs",
+        "refactor:check": "node scripts/check/check-refactoring.mjs",
+        "scss:check": "node scripts/check/check-scss-standards.mjs",
+        "security:check": "node scripts/check/check-electron-security.mjs",
         "test:check": "node scripts/check/check-testing.mjs",
         "stylelint": "stylelint \"src/**/*.{scss,vue}\"",
         "stylelint:fix": "stylelint \"src/**/*.{scss,vue}\" --fix",
         "prepare": "husky",
         "test:coverage": "npx vitest run --coverage",
-        "ci:check": "npm run audit:check && npm run lint && npm run format:check && npm run stylelint && npm run dead:check && npm run i18n:check && npm run test:coverage && npm run test:check && npm run build"
+        "ci:check": "npm run audit:check && npm run lint && npm run format:check && npm run stylelint && npm run pkg:check && npm run pipeline:check && npm run code:check && npm run declorder:check && npm run html:check && npm run scss:check && npm run refactor:check && npm run ipc:check && npm run security:check && npm run error:check && npm run dup:check && npm run dead:check && npm run i18n:check && npm run test:coverage && npm run test:check && npm run build"
     },
     "dependencies": {
         "@codemirror/autocomplete": "^6.20.1",
@@ -78,6 +90,7 @@
         "@vitejs/plugin-vue": "^6.0.6",
         "@vitest/coverage-v8": "^4.1.0",
         "@vitest/eslint-plugin": "^1.6.27",
+        "@vue/compiler-sfc": "^3.5.41",
         "@vue/test-utils": "^2.4.6",
         "@vue/tsconfig": "^0.9.0",
         "electron": "^43.4.0",
@@ -91,6 +104,7 @@
         "eslint-plugin-vuejs-accessibility": "^2.5.0",
         "globals": "^17.4.0",
         "husky": "^9.1.7",
+        "jscpd": "^5.0.16",
         "jsdom": "^30.0.1",
         "jsonc-eslint-parser": "^3.1.0",
         "knip": "^6.32.2",
@@ -106,10 +120,11 @@
         "typescript-eslint": "^8.58.1",
         "vite": "^7.0.0",
         "vitest": "^4.1.4",
-        "vue-tsc": "^3.2.0"
+        "vue-tsc": "^3.2.0",
+        "yaml": "^2.9.0"
     },
     "engines": {
-        "node": ">=20",
+        "node": ">=24",
         "npm": ">=10"
     },
     "os": [

@@ -6,13 +6,6 @@
 import { ref, computed, shallowRef, type ComputedRef, type Ref, type ShallowRef, type WritableComputedRef } from 'vue';
 import type { CanvasElement, ElementType } from '@/schemas/drawing';
 
-const HANDLE_SIZE = 8;
-
-let idCounter = 0;
-export function genId(): string {
-    return `el_${Date.now()}_${idCounter++}`;
-}
-
 export type UseDrawingElementsReturn = {
     elements: ShallowRef<CanvasElement[]>;
     selectedId: WritableComputedRef<string | null>;
@@ -29,6 +22,13 @@ export type UseDrawingElementsReturn = {
     distanceToSegment: (px: number, py: number, x1: number, y1: number, x2: number, y2: number) => number;
     isShapeTool: (tool: string) => tool is ElementType;
 };
+
+const HANDLE_SIZE = 8;
+
+let idCounter = 0;
+export function genId(): string {
+    return `el_${Date.now()}_${idCounter++}`;
+}
 
 export function useDrawingElements(): UseDrawingElementsReturn {
     const elements = shallowRef<CanvasElement[]>([]);

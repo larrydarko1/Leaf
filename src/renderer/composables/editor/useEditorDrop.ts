@@ -8,8 +8,6 @@ import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS, AUDIO_EXTENSIONS, PDF_EXTENSIONS } 
 import type { Ref, ShallowRef } from 'vue';
 import type { EditorView } from '@codemirror/view';
 
-const embeddableExtensions = [...IMAGE_EXTENSIONS, ...VIDEO_EXTENSIONS, ...AUDIO_EXTENSIONS, ...PDF_EXTENSIONS];
-
 export type UseEditorDropReturn = {
     isDragOverEditor: Ref<boolean>;
     onEditorDragEnter: (event: DragEvent) => void;
@@ -17,6 +15,8 @@ export type UseEditorDropReturn = {
     onEditorDragLeave: (_event: DragEvent) => void;
     onFileDrop: (event: DragEvent) => Promise<void>;
 };
+
+const embeddableExtensions = [...IMAGE_EXTENSIONS, ...VIDEO_EXTENSIONS, ...AUDIO_EXTENSIONS, ...PDF_EXTENSIONS];
 
 export function useEditorDrop({
     isMarkdownFile,

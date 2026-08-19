@@ -6,10 +6,6 @@
 import { computed, type Ref } from 'vue';
 import type { CanvasElement } from '@/schemas/drawing';
 
-const GRID_SIZE = 20;
-const HANDLE_SIZE = 8;
-const SELECTION_COLOR = '#4a90d9';
-
 export type UseCanvasRendererReturn = {
     setupCanvas: () => void;
     handleResize: () => void;
@@ -27,6 +23,10 @@ export type UseCanvasRendererReturn = {
         padding?: number;
     }) => Promise<Blob | null>;
 };
+
+const GRID_SIZE = 20;
+const HANDLE_SIZE = 8;
+const SELECTION_COLOR = '#4a90d9';
 
 export function useCanvasRenderer({
     canvas,

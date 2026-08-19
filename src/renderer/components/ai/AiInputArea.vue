@@ -4,8 +4,6 @@ import { useThrottleFn } from '@/renderer/composables/useThrottle';
 import type { FileInfo } from '@/schemas/vault';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
-
 type Props = {
     showThinking: boolean;
     inputMessage: string;
@@ -32,6 +30,11 @@ const emit = defineEmits<{
     'stop': [];
 }>();
 
+const minHeight = 40;
+const maxHeight = 150;
+
+const { t } = useI18n();
+
 // Exposed so AiPanel can focus the input after loading a model.
 const inputField = ref<HTMLTextAreaElement | null>(null);
 defineExpose({ inputField });
@@ -52,6 +55,10 @@ const filteredAvailableFiles = computed(() => {
     );
 });
 
+const inputAreaRef = ref<HTMLDivElement | null>(null);
+const isResizing = ref(false);
+const maxHeightPx = ref(120);
+
 function toggleFilePicker(): void {
     if (showFilePicker.value) {
         showFilePicker.value = false;
@@ -67,12 +74,6 @@ function selectContextFile(file: FileInfo): void {
     emit('add-context-file', file);
     showFilePicker.value = false;
 }
-
-const inputAreaRef = ref<HTMLDivElement | null>(null);
-const isResizing = ref(false);
-const maxHeightPx = ref(120);
-const minHeight = 40;
-const maxHeight = 150;
 
 function startResize(e: MouseEvent): void {
     e.preventDefault();

@@ -9,14 +9,15 @@
  *   4. Register IPC handlers by delegating to each service module
  *
  * IPC handler ownership:
- *   fs-service           → file:*, folder:*, files:scan, fs:*, dialog:openFolder, dialog:showSaveDialog, file:resolveEmbedPath
- *   media-service        → audio:saveRecording, spellcheck:getSuggestions
+ *   fs-service           → file:*, folder:*, files:scan, fs:*, vault:close, bookmarks:*, dialog:openFolder, dialog:showSaveDialog
+ *   media-service        → audio:saveRecording
  *   ai-service           → ai:*
  *   conversation-service → conversations:*
  *   speech-service       → speech:*
  *   systemPrompt-service → systemPrompt:*
  *   theme-service        → theme:*
  *   language-service     → language:*
+ *   main (inline)        → log:*, clipboard:write, shell:openExternal
  */
 
 import { app, BrowserWindow, ipcMain, shell, Menu, screen, protocol, net, session, clipboard } from 'electron';
@@ -36,24 +37,6 @@ import { migrateLegacyPaths } from '@/main/lib/paths';
 import { isInsideBoundary } from '@/main/lib/validation';
 import { log } from '@/main/lib/logger';
 import { config } from '@/main/lib/config';
-
-/**
- * ─── Scheme privileges ───────────────────────────────────────────────────────
- * Must be called before app.whenReady(). Tells Chromium the leaf:// scheme
- * supports streaming (needed for video/audio playback with range requests),
- * is secure (needed for iframe PDF viewing), and supports fetch.
- * */
-protocol.registerSchemesAsPrivileged([
-    {
-        scheme: 'leaf',
-        privileges: {
-            standard: true,
-            secure: true,
-            supportFetchAPI: true,
-            stream: true,
-        },
-    },
-]);
 
 // ─── Window ──────────────────────────────────────────────────────────────────
 
@@ -179,6 +162,24 @@ function registerLeafProtocol(ses: Electron.Session): void {
     });
 }
 
+/**
+ * ─── Scheme privileges ───────────────────────────────────────────────────────
+ * Must be called before app.whenReady(). Tells Chromium the leaf:// scheme
+ * supports streaming (needed for video/audio playback with range requests),
+ * is secure (needed for iframe PDF viewing), and supports fetch.
+ * */
+protocol.registerSchemesAsPrivileged([
+    {
+        scheme: 'leaf',
+        privileges: {
+            standard: true,
+            secure: true,
+            supportFetchAPI: true,
+            stream: true,
+        },
+    },
+]);
+
 // ─── App lifecycle ────────────────────────────────────────────────────────────
 
 void app.whenReady().then(async (): Promise<void> => {
@@ -279,4 +280,11 @@ app.on('before-quit', (): void => {
 
 process.on('uncaughtException', (error): void => {
     log.error('[main] Uncaught exception:', error);
+});
+
+// The app's startup and shutdown paths are `void`ed promise chains, so a rejection
+// in one has nowhere to surface — without this it would take the process down with
+// an empty log.
+process.on('unhandledRejection', (reason): void => {
+    log.error('[main] Unhandled rejection:', reason);
 });

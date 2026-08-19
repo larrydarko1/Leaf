@@ -4,8 +4,6 @@ import type { AiModelInfo, AiStatus } from '@/schemas/ai';
 import { useSystemPrompt } from '@/renderer/composables/ai/useSystemPrompt';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
-
 type Props = {
     status: AiStatus;
     availableModels: AiModelInfo[];
@@ -17,7 +15,6 @@ type Props = {
 };
 
 const props = defineProps<Props>();
-void props;
 
 const emit = defineEmits<{
     'select-model': [model: AiModelInfo];
@@ -29,6 +26,8 @@ const emit = defineEmits<{
     'new-conversation': [];
     'close': [];
 }>();
+
+const { t } = useI18n();
 
 const dropdownRef = ref<HTMLElement | null>(null);
 const showDropdown = ref(false);
@@ -44,12 +43,6 @@ const activePromptName = computed(() => {
         (activeId.value !== null && activeId.value !== '' ? activeId.value : 'default')
     );
 });
-
-onMounted(() => {
-    document.addEventListener('click', handleClickOutside);
-    void refreshPrompts();
-});
-onUnmounted(() => document.removeEventListener('click', handleClickOutside));
 
 function toggleDropdown(): void {
     if (showDropdown.value) {
@@ -113,6 +106,14 @@ function handleRefresh(): void {
 function truncate(str: string, len: number): string {
     return str.length > len ? str.slice(0, len) + '…' : str;
 }
+
+void props;
+
+onMounted(() => {
+    document.addEventListener('click', handleClickOutside);
+    void refreshPrompts();
+});
+onUnmounted(() => document.removeEventListener('click', handleClickOutside));
 </script>
 
 <template>

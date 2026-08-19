@@ -4,8 +4,6 @@ import { useListKeyboardNavigation } from '@/renderer/composables/ui/useListKeyb
 import type { FileInfo } from '@/schemas/vault';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
-
 type Props = {
     files: FileInfo[];
     bookmarkedPaths: string[];
@@ -21,23 +19,13 @@ const emit = defineEmits<{
     removeBookmark: [filePath: string];
 }>();
 
+const { t } = useI18n();
+
 const bookmarkedFiles = computed(() => {
     return props.bookmarkedPaths
         .map((path) => props.files.find((f) => f.path === path))
         .filter((f): f is FileInfo => f !== undefined);
 });
-
-useListKeyboardNavigation(
-    () => bookmarkedFiles.value,
-    {
-        onSelect: (file: FileInfo): void => selectFile(file),
-        onOpen: (file: FileInfo): void => openFile(file),
-    },
-    {
-        wrap: true,
-        getExternalIndex: (): number => bookmarkedFiles.value.findIndex((f) => isFileSelected(f)),
-    },
-);
 
 function isFileSelected(file: FileInfo): boolean {
     return props.selectedFiles.some((f) => f.path === file.path);
@@ -54,6 +42,18 @@ function openFile(file: FileInfo): void {
 function removeBookmark(file: FileInfo): void {
     emit('removeBookmark', file.path);
 }
+
+useListKeyboardNavigation(
+    () => bookmarkedFiles.value,
+    {
+        onSelect: (file: FileInfo): void => selectFile(file),
+        onOpen: (file: FileInfo): void => openFile(file),
+    },
+    {
+        wrap: true,
+        getExternalIndex: (): number => bookmarkedFiles.value.findIndex((f) => isFileSelected(f)),
+    },
+);
 </script>
 
 <template>

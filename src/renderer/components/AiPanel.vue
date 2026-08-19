@@ -13,8 +13,6 @@ import AiMessageList from '@/renderer/components/ai/AiMessageList.vue';
 import AiInputArea from '@/renderer/components/ai/AiInputArea.vue';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
-
 type Props = {
     files?: FileInfo[];
 };
@@ -26,6 +24,11 @@ const props = withDefaults(defineProps<Props>(), {
 defineEmits<{
     close: [];
 }>();
+
+const minWidth = 340;
+const maxWidth = 600;
+
+const { t } = useI18n();
 
 const model = useAIModel();
 /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -112,8 +115,7 @@ const {
 } = chat;
 
 const panelWidth = ref(340);
-const minWidth = 340;
-const maxWidth = 600;
+
 const isResizing = ref(false);
 
 // Files selectable as additional context: text/markdown files not already attached
@@ -141,22 +143,6 @@ function syncChildElements(): void {
         inputField.value = inputArea.value.inputField;
     }
 }
-
-watch([messageList, inputArea], syncChildElements);
-
-onMounted(async () => {
-    syncChildElements();
-    await refreshStatus();
-    await refreshModels();
-    await refreshConversationList();
-    if (status.value.isModelLoaded && inputField.value !== null) {
-        inputField.value.focus();
-    }
-});
-
-onBeforeUnmount(() => {
-    isResizing.value = false;
-});
 
 async function loadSelectedModel(): Promise<void> {
     const result = await model.loadModel();
@@ -224,6 +210,22 @@ function decreaseWidth(): void {
 function increaseWidth(): void {
     panelWidth.value = Math.min(maxWidth, panelWidth.value + 50);
 }
+
+watch([messageList, inputArea], syncChildElements);
+
+onMounted(async () => {
+    syncChildElements();
+    await refreshStatus();
+    await refreshModels();
+    await refreshConversationList();
+    if (status.value.isModelLoaded && inputField.value !== null) {
+        inputField.value.focus();
+    }
+});
+
+onBeforeUnmount(() => {
+    isResizing.value = false;
+});
 </script>
 
 <template>

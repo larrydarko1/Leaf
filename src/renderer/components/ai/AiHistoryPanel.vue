@@ -3,8 +3,6 @@ import { ref, watch, nextTick } from 'vue';
 import type { ConversationMeta } from '@/schemas/ai';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
-
 type Props = {
     conversationList: ConversationMeta[];
     currentConversationId: string | null;
@@ -23,18 +21,9 @@ defineEmits<{
     'cancel-rename': [];
 }>();
 
-const renameInputRef = ref<HTMLInputElement[]>([]);
+const { t } = useI18n();
 
-watch(
-    () => props.renamingConversationId,
-    async (id) => {
-        if (id !== null && id !== '') {
-            await nextTick();
-            renameInputRef.value?.[0]?.focus();
-            renameInputRef.value?.[0]?.select();
-        }
-    },
-);
+const renameInputRef = ref<HTMLInputElement[]>([]);
 
 function formatRelativeDate(dateStr: string): string {
     const date = new Date(dateStr);
@@ -49,6 +38,17 @@ function formatRelativeDate(dateStr: string): string {
     if (diffDays < 7) return `${diffDays}d ago`;
     return date.toLocaleDateString();
 }
+
+watch(
+    () => props.renamingConversationId,
+    async (id) => {
+        if (id !== null && id !== '') {
+            await nextTick();
+            renameInputRef.value?.[0]?.focus();
+            renameInputRef.value?.[0]?.select();
+        }
+    },
+);
 </script>
 
 <template>

@@ -18,32 +18,6 @@ import {
 
 // ── Interactive extension (links + media controls) ───────────────────────────
 
-/**
- * Handles mousedown on markdown links and media progress bars.
- * Runs as domEventHandlers — fires BEFORE CM6's internal handlers,
- * so returning true prevents CM6 from moving the cursor / rebuilding widgets.
- */
-/** Walk out from `pos` looking for an http(s) link the click should open externally. */
-function findExternalUrlAt(view: EditorView, pos: number): string | null {
-    let node = syntaxTree(view.state).resolveInner(pos, 1);
-    for (let depth = 0; depth < 10 && node != null; depth++) {
-        if (node.name === 'Link') {
-            const text = view.state.doc.sliceString(node.from, node.to);
-            const linkMatch = text.match(/\]\(([^)]+)\)$/);
-            const url = linkMatch?.[1];
-            if (url != null && (url.startsWith('http://') || url.startsWith('https://'))) return url;
-            return null;
-        }
-        if (node.name === 'URL') {
-            const url = view.state.doc.sliceString(node.from, node.to);
-            return url.startsWith('http://') || url.startsWith('https://') ? url : null;
-        }
-        if (node.parent == null) break;
-        node = node.parent;
-    }
-    return null;
-}
-
 export const interactiveExtension = EditorView.domEventHandlers({
     mousedown(event: MouseEvent, view: EditorView): boolean {
         const target = event.target as HTMLElement;
@@ -187,4 +161,25 @@ export function createMarkdownWidgetsPlugin(
             },
         },
     );
+}
+
+/** Walk out from `pos` looking for an http(s) link the click should open externally. */
+function findExternalUrlAt(view: EditorView, pos: number): string | null {
+    let node = syntaxTree(view.state).resolveInner(pos, 1);
+    for (let depth = 0; depth < 10 && node != null; depth++) {
+        if (node.name === 'Link') {
+            const text = view.state.doc.sliceString(node.from, node.to);
+            const linkMatch = text.match(/\]\(([^)]+)\)$/);
+            const url = linkMatch?.[1];
+            if (url != null && (url.startsWith('http://') || url.startsWith('https://'))) return url;
+            return null;
+        }
+        if (node.name === 'URL') {
+            const url = view.state.doc.sliceString(node.from, node.to);
+            return url.startsWith('http://') || url.startsWith('https://') ? url : null;
+        }
+        if (node.parent == null) break;
+        node = node.parent;
+    }
+    return null;
 }

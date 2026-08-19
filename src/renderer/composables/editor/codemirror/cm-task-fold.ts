@@ -18,12 +18,6 @@ import { codeFolding, foldEffect, unfoldEffect, foldedRanges, foldService } from
 
 const taskLineRegex = /^(\s*)- \[[ x/]\] /i;
 
-// ── Fold service ──────────────────────────────────────────────────────────────
-
-const taskFold = foldService.of((state, lineStart, _lineEnd): { from: number; to: number } | null => {
-    return taskFoldRange(state, lineStart);
-});
-
 // ── Fold toggle widget ────────────────────────────────────────────────────────
 
 class TaskFoldToggleWidget extends WidgetType {
@@ -49,6 +43,12 @@ class TaskFoldToggleWidget extends WidgetType {
         return false;
     }
 }
+
+// ── Fold service ──────────────────────────────────────────────────────────────
+
+const taskFold = foldService.of((state, lineStart, _lineEnd): { from: number; to: number } | null => {
+    return taskFoldRange(state, lineStart);
+});
 
 // ── Fold toggle ViewPlugin ────────────────────────────────────────────────────
 

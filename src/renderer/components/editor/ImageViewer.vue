@@ -2,14 +2,14 @@
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
-
 type Props = {
     filePath: string;
     fileName: string;
 };
 
 const props = defineProps<Props>();
+
+const { t } = useI18n();
 
 const imageUrl = ref('');
 const isLoading = ref(false);
