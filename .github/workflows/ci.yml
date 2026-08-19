@@ -46,6 +46,9 @@ jobs:
             - name: Dead code check
               run: npm run dead:check
 
+            - name: i18n check
+              run: npm run i18n:check
+
             - name: Type check
               run: npx vue-tsc -b
 
