@@ -41,7 +41,6 @@ const baseProps = {
     isLoading: false,
     selectedModelPath: null as string | null,
     selectedModelLabel: 'Select a model',
-    showHfPanel: false,
     showHistory: false,
     isAnyGenerating: false,
 };
@@ -191,19 +190,6 @@ describe('AiModelBar', () => {
             wrapper.unmount();
         });
 
-        it('emits "toggle-hf-panel" when HF button is clicked', async () => {
-            const wrapper = mountWithI18n(AiModelBar, { props: baseProps });
-            const allBtns = wrapper.findAll('button');
-            const hfBtn = allBtns.find(
-                (b) =>
-                    (b.attributes('aria-label') ?? '').toLowerCase().includes('browser') ||
-                    (b.attributes('aria-label') ?? '').toLowerCase().includes('download'),
-            );
-            await hfBtn?.trigger('click');
-            expect(wrapper.emitted('toggle-hf-panel')).toBeTruthy();
-            wrapper.unmount();
-        });
-
         it('emits "toggle-history" when history button is clicked', async () => {
             const wrapper = mountWithI18n(AiModelBar, { props: baseProps });
             const allBtns = wrapper.findAll('button');
@@ -228,16 +214,6 @@ describe('AiModelBar', () => {
             const closeBtn = allBtns.find((b) => (b.attributes('aria-label') ?? '').toLowerCase().includes('close'));
             await closeBtn?.trigger('click');
             expect(wrapper.emitted('close')).toBeTruthy();
-            wrapper.unmount();
-        });
-
-        it('toggles HF panel active class based on showHfPanel prop', () => {
-            const wrapper = mountWithI18n(AiModelBar, { props: { ...baseProps, showHfPanel: true } });
-            // The HF toggle button has aria-pressed wired to showHfPanel
-            const allBtns = wrapper.findAll('button[aria-pressed]');
-            const hfBtn = allBtns.find((b) => b.attributes('aria-pressed') === 'true');
-            expect(hfBtn).toBeDefined();
-            expect(hfBtn?.classes()).toContain('ai-btn-active');
             wrapper.unmount();
         });
     });

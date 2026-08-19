@@ -12,7 +12,6 @@ type Props = {
     isLoading: boolean;
     selectedModelPath: string | null;
     selectedModelLabel: string;
-    showHfPanel: boolean;
     showHistory: boolean;
     isAnyGenerating: boolean;
 };
@@ -26,7 +25,6 @@ const emit = defineEmits<{
     'unload-model': [];
     'open-models-folder': [];
     'refresh-models': [];
-    'toggle-hf-panel': [];
     'toggle-history': [];
     'new-conversation': [];
     'close': [];
@@ -302,34 +300,6 @@ function truncate(str: string, len: number): string {
                     </div>
                 </Teleport>
             </div>
-
-            <!-- Download from Hugging Face -->
-            <button
-                class="ai-btn-icon"
-                :class="{ 'ai-btn-active': showHfPanel }"
-                :title="t('ai.hf_model_browser')"
-                :aria-label="t('ai.hf_model_browser')"
-                :aria-pressed="showHfPanel"
-                @click="$emit('toggle-hf-panel')">
-                <svg
-                    width="11"
-                    height="11"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line
-                        x1="12"
-                        y1="15"
-                        x2="12"
-                        y2="3" />
-                </svg>
-            </button>
 
             <!-- Refresh models folder -->
             <button

@@ -1,6 +1,6 @@
 /**
  * App path constants and resolution helpers — pure Node, no Electron imports.
- * Used by ai-service, hf-download-service, speech-service, and systemPrompt-service.
+ * Used by ai-service, speech-service, and systemPrompt-service.
  */
 
 import path from 'path';

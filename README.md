@@ -34,8 +34,6 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 ### AI Assistant (Local LLM)
 
 - **100% local inference** - Run AI models directly on your machine, no cloud or API keys needed
-- **In-app model download** - Search and download GGUF models directly from Hugging Face without leaving the app
-- **Smart model info** - See file size, quantization type, estimated RAM usage, and size tier badges before downloading
 - **Chat interface** - Built-in chat panel with streaming responses
 - **Conversation history** - All chats are automatically saved as JSON and can be browsed, loaded, renamed, or deleted
 - **Conversation restore** - Reloading a model or switching conversations automatically restores context so the AI remembers what you discussed
@@ -48,7 +46,7 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 
 ### Privacy & Storage
 
-- **Offline-first** - AI inference, dictation, and notes all run locally; internet is only used to download models on demand
+- **Fully offline** - AI inference, dictation, and notes all run locally; the app makes no network requests at all
 - **Local-only** - Notes never leave your device
 - **User-accessible files** - Direct access to your vault folder
 - **No database** - Plain text files you can open anywhere
@@ -67,7 +65,7 @@ Leaf is built with privacy and security as core principles:
 ### Privacy Guarantees
 
 - **No telemetry** - We don't collect any usage data, analytics, or crash reports
-- **Minimal network requests** - The only external connection is optional model downloads from Hugging Face; no note data or usage data is ever transmitted
+- **No network requests** - The app makes no outbound connections; no note data or usage data is ever transmitted
 - **No cloud sync** - Your notes never leave your device unless you explicitly copy them
 - **No accounts** - No sign-ups, logins, or user tracking of any kind
 - **Local AI** - AI inference runs entirely on your hardware; no data is sent to any server
@@ -98,14 +96,13 @@ Your notes are stored exactly where you choose - simply select any folder on you
 
 Leaf stores AI models in `~/.leaf/models/`. To get started with the AI assistant:
 
-1. Open the AI panel by clicking the lightbulb icon in the sidebar
-2. Click the **download** icon in the toolbar to open the Hugging Face download panel
-3. Search for a model (e.g. "llama 3.2", "phi", "qwen") and browse available GGUF files
-4. Check the **size tier badge** and **estimated RAM** to make sure it fits your machine
-5. Click the download button — the model is saved directly to `~/.leaf/models/`
-6. Select and load the model from the dropdown in the AI panel
+1. Download a `.gguf` model from wherever you like — [Hugging Face](https://huggingface.co/models?library=gguf) is the usual source, and downloading with your own account credentials is faster and works with gated repos
+2. Place the file in `~/.leaf/models/` (any `.gguf` file in that folder is picked up, including in subfolders)
+3. Open the AI panel by clicking the lightbulb icon in the sidebar
+4. Click the **folder** icon to open the models directory, or the **refresh** icon if you added a file while the app was running
+5. Select and load the model from the dropdown in the AI panel
 
-> **Tip:** You can also manually place `.gguf` files in `~/.leaf/models/` or click the folder icon to open the directory.
+> **Tip:** Pick a quantization that fits your RAM — a rough guide is that a `Q4_K_M` file needs about its own file size in free memory, plus room for the context window.
 
 > **Migrating from older versions:** If you previously stored models in `~/leaf-models/`, Leaf automatically moves them to `~/.leaf/models/` on first launch. No action required.
 
@@ -376,7 +373,6 @@ leaf/
 │   │       ├── ai.ts               # Local LLM inference via node-llama-cpp with streaming
 │   │       ├── conversation.ts     # Chat conversation persistence as JSON in userData
 │   │       ├── fs.ts               # Vault file/folder IPC handlers and FS watcher
-│   │       ├── hf-download.ts      # Hugging Face model search and GGUF download
 │   │       ├── language.ts         # Language/locale management and IPC registration
 │   │       ├── media.ts            # Audio recording saves and spellcheck suggestions
 │   │       ├── speech.ts           # Local Whisper speech-to-text via ONNX/transformers
@@ -403,7 +399,6 @@ leaf/
 │       │   ├── TabBar.vue          # Editor tab bar
 │       │   ├── ThemePicker.vue     # Theme preset picker modal
 │       │   ├── ai/                 # AI sub-components
-│       │   │   ├── AiHfPanel.vue       # Hugging Face model browser & download
 │       │   │   ├── AiHistoryPanel.vue  # Conversation history sidebar
 │       │   │   ├── AiInputArea.vue     # Chat input with attached context files
 │       │   │   ├── AiMessageList.vue   # Message rendering with streaming
@@ -424,11 +419,10 @@ leaf/
 │       │       └── FolderNode.vue      # Recursive tree node for folder/file rendering
 │       ├── composables/            # Vue composables (grouped by domain)
 │       │   ├── useAudioRecorder.ts # Microphone capture and WAV encoding
-│       │   ├── ai/                 # AI chat, model, history, system prompts, downloads
+│       │   ├── ai/                 # AI chat, model, history, system prompts
 │       │   │   ├── useAIChat.ts        # Streaming inference, message management
 │       │   │   ├── useAIModel.ts       # Model loading, unloading, and listing
 │       │   │   ├── useConversationHistory.ts  # Conversation persistence and navigation
-│       │   │   ├── useHfDownload.ts    # Hugging Face model search and download
 │       │   │   └── useSystemPrompt.ts  # System prompt template listing and switching
 │       │   ├── drawing/            # Canvas rendering, elements, interaction
 │       │   │   ├── useCanvasRenderer.ts    # Canvas 2D rendering loop and bitmap export
@@ -474,7 +468,6 @@ leaf/
 │   ├── chat.ts                     # Chat message schema
 │   ├── drawing.ts                  # Drawing element, tool, and canvas schemas
 │   ├── electron.d.ts               # Electron IPC & preload API type declarations
-│   ├── hf.ts                       # Hugging Face search, repo file, and download schemas
 │   ├── speech.ts                   # Speech-to-text result schemas
 │   └── vault.ts                    # Vault tree node, file, and folder schemas
 ├── tests/                          # Mirrors src/ structure (unit tests)

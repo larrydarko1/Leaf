@@ -113,10 +113,6 @@ describe('preload / electronAPI', () => {
             ['conversationRename', 'conversations:rename', ['conv-1', 'New Title']],
             ['watchFolder', 'fs:watchFolder', []],
             ['unwatchFolder', 'fs:unwatchFolder', []],
-            ['hfListFiles', 'hf:listFiles', ['meta-llama/llama']],
-            ['hfDownload', 'hf:download', ['https://example.com/model.gguf', 'model.gguf']],
-            ['hfCancelDownload', 'hf:cancelDownload', ['model.gguf']],
-            ['hfGetActiveDownloads', 'hf:getActiveDownloads', []],
             ['writeClipboard', 'clipboard:write', ['copied text']],
             ['bookmarksLoad', 'bookmarks:load', []],
             ['bookmarksSave', 'bookmarks:save', [['/vault/note.md']]],
@@ -131,20 +127,6 @@ describe('preload / electronAPI', () => {
                 expect(mockInvoke).toHaveBeenCalledWith(channel, ...args);
             });
         }
-
-        // hfSearch takes an options object and spreads it onto the wire.
-        it('hfSearch invokes "hf:search" with the options spread', () => {
-            (capturedApi.hfSearch as (query: string, options?: { sort?: string; offset?: number }) => unknown)(
-                'llama',
-                { sort: 'downloads', offset: 0 },
-            );
-            expect(mockInvoke).toHaveBeenCalledWith('hf:search', 'llama', 'downloads', 0);
-        });
-
-        it('hfSearch invokes "hf:search" with undefined options', () => {
-            (capturedApi.hfSearch as (query: string) => unknown)('llama');
-            expect(mockInvoke).toHaveBeenCalledWith('hf:search', 'llama', undefined, undefined);
-        });
     });
 
     describe('event listener methods', () => {
@@ -175,20 +157,6 @@ describe('preload / electronAPI', () => {
         it('removeFsChangedListener calls removeAllListeners("fs:changed")', () => {
             (capturedApi.removeFsChangedListener as () => void)();
             expect(mockRemoveAllListeners).toHaveBeenCalledWith('fs:changed');
-        });
-
-        it('onHfDownloadProgress registers handler for "hf:downloadProgress"', () => {
-            const cb = vi.fn();
-            (capturedApi.onHfDownloadProgress as (cb: (p: object) => void) => void)(cb);
-            expect(mockOn).toHaveBeenCalledWith('hf:downloadProgress', expect.any(Function));
-            const handler = mockOn.mock.calls[0][1];
-            handler({}, { percent: 50 });
-            expect(cb).toHaveBeenCalledWith({ percent: 50 });
-        });
-
-        it('removeHfDownloadProgressListener calls removeAllListeners("hf:downloadProgress")', () => {
-            (capturedApi.removeHfDownloadProgressListener as () => void)();
-            expect(mockRemoveAllListeners).toHaveBeenCalledWith('hf:downloadProgress');
         });
 
         it('onSpeechStatus registers handler for "speech:status"', () => {

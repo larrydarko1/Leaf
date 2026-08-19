@@ -5,7 +5,6 @@
 
 import { contextBridge, ipcRenderer } from 'electron';
 import type { ElectronAPI } from '@/schemas/electron';
-import type { HfDownloadProgress } from '@/schemas/hf';
 import type { SpeechStatusEvent } from '@/schemas/speech';
 
 // Typed against the contract the renderer consumes, so the two cannot drift.
@@ -123,20 +122,6 @@ const api: ElectronAPI = {
     },
     removeFsChangedListener: () => {
         ipcRenderer.removeAllListeners('fs:changed');
-    },
-
-    // Hugging Face model download operations
-    hfSearch: (query: string, options?: { sort?: string; offset?: number }) =>
-        ipcRenderer.invoke('hf:search', query, options?.sort, options?.offset),
-    hfListFiles: (repoId: string) => ipcRenderer.invoke('hf:listFiles', repoId),
-    hfDownload: (url: string, fileName: string) => ipcRenderer.invoke('hf:download', url, fileName),
-    hfCancelDownload: (fileName: string) => ipcRenderer.invoke('hf:cancelDownload', fileName),
-    hfGetActiveDownloads: () => ipcRenderer.invoke('hf:getActiveDownloads'),
-    onHfDownloadProgress: (callback: (progress: HfDownloadProgress) => void) => {
-        ipcRenderer.on('hf:downloadProgress', (_event, progress: HfDownloadProgress) => callback(progress));
-    },
-    removeHfDownloadProgressListener: () => {
-        ipcRenderer.removeAllListeners('hf:downloadProgress');
     },
 
     // Clipboard
