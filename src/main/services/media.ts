@@ -51,10 +51,4 @@ export function register(ipc: IpcMain, vaultRootFn: () => string | null): void {
             }
         },
     );
-
-    // Spellcheck suggestions — Chromium handles this natively via the context menu.
-    // This stub exists so the renderer's API call doesn't throw.
-    ipc.handle('spellcheck:getSuggestions', (): { success: boolean; suggestions: never[] } => {
-        return { success: true, suggestions: [] };
-    });
 }

@@ -135,7 +135,7 @@ jobs:
             matrix:
                 include:
                     - name: macOS DMG (ad-hoc signed)
-                      os: macos-latest
+                      os: macos-26
                       script: build:mac
                       assets: dist-electron/*.dmg
 

@@ -47,6 +47,28 @@ html,
     overflow: hidden;
 }
 
+/* ––––– Reduced motion ––––– */
+
+/**
+ * The single escape hatch for every transition and animation in the app. The
+ * SFCs declare motion freely; this is what makes all of it opt-out in one place
+ * for users who asked the OS for less of it.
+ * Kept at 0.01ms rather than `none` so animationend/transitionend still fire —
+ * anything that waits on one keeps working instead of hanging.
+ */
+@media (prefers-reduced-motion: reduce) {
+    /* stylelint-disable declaration-no-important -- a global override has to beat the scoped SFC rules it is overriding; specificity alone cannot reach them. */
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    /* stylelint-enable declaration-no-important */
+}
+
 /* ––––– Interactive elements ––––– */
 
 button,

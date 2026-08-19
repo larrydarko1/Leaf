@@ -89,14 +89,3 @@ describe('audio:saveRecording', () => {
         expect(result.success).toBe(false);
     });
 });
-
-describe('spellcheck:getSuggestions', () => {
-    it('always returns an empty suggestions array', async () => {
-        const result = (await handlers['spellcheck:getSuggestions']?.()) as {
-            success: boolean;
-            suggestions: unknown[];
-        };
-        expect(result.success).toBe(true);
-        expect(result.suggestions).toHaveLength(0);
-    });
-});

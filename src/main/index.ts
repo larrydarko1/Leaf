@@ -9,14 +9,15 @@
  *   4. Register IPC handlers by delegating to each service module
  *
  * IPC handler ownership:
- *   fs-service           → file:*, folder:*, files:scan, fs:*, dialog:openFolder, dialog:showSaveDialog, file:resolveEmbedPath
- *   media-service        → audio:saveRecording, spellcheck:getSuggestions
+ *   fs-service           → file:*, folder:*, files:scan, fs:*, vault:close, bookmarks:*, dialog:openFolder, dialog:showSaveDialog
+ *   media-service        → audio:saveRecording
  *   ai-service           → ai:*
  *   conversation-service → conversations:*
  *   speech-service       → speech:*
  *   systemPrompt-service → systemPrompt:*
  *   theme-service        → theme:*
  *   language-service     → language:*
+ *   main (inline)        → log:*, clipboard:write, shell:openExternal
  */
 
 import { app, BrowserWindow, ipcMain, shell, Menu, screen, protocol, net, session, clipboard } from 'electron';
@@ -279,4 +280,11 @@ app.on('before-quit', (): void => {
 
 process.on('uncaughtException', (error): void => {
     log.error('[main] Uncaught exception:', error);
+});
+
+// The app's startup and shutdown paths are `void`ed promise chains, so a rejection
+// in one has nowhere to surface — without this it would take the process down with
+// an empty log.
+process.on('unhandledRejection', (reason): void => {
+    log.error('[main] Unhandled rejection:', reason);
 });
