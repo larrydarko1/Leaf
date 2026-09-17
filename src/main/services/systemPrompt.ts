@@ -153,16 +153,16 @@ function parseFrontmatter(content: string): {
     if (match === null) return { meta: {}, body: content };
 
     const meta: Record<string, string> = {};
-    for (const line of match[1].split(/\r?\n/)) {
+    for (const line of (match[1] ?? '').split(/\r?\n/)) {
         const keyValue = line.match(/^([A-Za-z][A-Za-z0-9_-]*)\s*:\s*(.*)$/);
         if (keyValue === null) continue;
-        let value = keyValue[2].trim();
+        let value = (keyValue[2] ?? '').trim();
         if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
             value = value.slice(1, -1);
         }
-        meta[keyValue[1].toLowerCase()] = value;
+        meta[(keyValue[1] ?? '').toLowerCase()] = value;
     }
-    return { meta, body: match[2] };
+    return { meta, body: match[2] ?? '' };
 }
 
 async function doSeed(): Promise<void> {
@@ -181,7 +181,8 @@ async function doSeed(): Promise<void> {
     }
 
     await updateState(
-        (s): Record<string, unknown> => (s.activePrompt === undefined ? { ...s, activePrompt: DEFAULT_PROMPT_ID } : s),
+        (s): Record<string, unknown> =>
+            s['activePrompt'] === undefined ? { ...s, activePrompt: DEFAULT_PROMPT_ID } : s,
     );
 }
 

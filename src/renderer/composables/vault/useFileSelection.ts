@@ -89,13 +89,14 @@ export function useFileSelection(): UseFileSelectionReturn {
         const previousActivePath = activeFile.value?.path;
 
         const stillExist = availableFiles.filter((f): boolean => previousPaths.includes(f.path));
-        if (stillExist.length > 0) {
+        const [firstStillExist] = stillExist;
+        if (firstStillExist !== undefined) {
             selectedFiles.value = stillExist;
             if (previousActivePath !== undefined) {
                 const found = stillExist.find((f): boolean => f.path === previousActivePath);
-                activeFile.value = found !== undefined ? found : stillExist[0];
+                activeFile.value = found ?? firstStillExist;
             } else {
-                activeFile.value = stillExist[0];
+                activeFile.value = firstStillExist;
             }
         } else {
             clearSelection();
@@ -117,10 +118,11 @@ export function useFileSelection(): UseFileSelectionReturn {
                 return;
             }
         }
-        if (availableFiles.length > 0) {
-            selectedFiles.value = [availableFiles[0]];
-            activeFile.value = availableFiles[0];
-            localStorage.setItem('leaf-last-selected-file', availableFiles[0].path);
+        const [firstAvailable] = availableFiles;
+        if (firstAvailable !== undefined) {
+            selectedFiles.value = [firstAvailable];
+            activeFile.value = firstAvailable;
+            localStorage.setItem('leaf-last-selected-file', firstAvailable.path);
         }
     }
 

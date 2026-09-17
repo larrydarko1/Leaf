@@ -3,6 +3,21 @@ import { mountWithI18n } from '@test-utils';
 import FileExplorer from '@/renderer/components/FileExplorer.vue';
 import type { FileInfo, FolderInfo } from '@/schemas/vault';
 
+const noteFile = makeFile('notes.md', '.');
+const ideaFile = makeFile('ideas.md', 'work');
+
+const baseProps = {
+    files: [noteFile, ideaFile],
+    folders: [makeFolder('/vault/work', 'work')],
+    currentFolder: '/vault',
+    selectedFiles: [] as FileInfo[],
+    activeFile: null as FileInfo | null,
+    renamingFile: null as FileInfo | null,
+    selectedFolder: null as string | null,
+    renamingFolder: null as string | null,
+    bookmarkedFiles: [] as string[],
+};
+
 function makeFile(name: string, folder = '.'): FileInfo {
     return {
         name,
@@ -18,21 +33,6 @@ function makeFile(name: string, folder = '.'): FileInfo {
 function makeFolder(path: string, name: string): FolderInfo {
     return { name: name, path: path, relativePath: path, type: 'folder', folder: name };
 }
-
-const noteFile = makeFile('notes.md', '.');
-const ideaFile = makeFile('ideas.md', 'work');
-
-const baseProps = {
-    files: [noteFile, ideaFile],
-    folders: [makeFolder('/vault/work', 'work')],
-    currentFolder: '/vault',
-    selectedFiles: [] as FileInfo[],
-    activeFile: null as FileInfo | null,
-    renamingFile: null as FileInfo | null,
-    selectedFolder: null as string | null,
-    renamingFolder: null as string | null,
-    bookmarkedFiles: [] as string[],
-};
 
 beforeEach(() => {
     vi.useFakeTimers();
@@ -54,7 +54,7 @@ describe('FileExplorer', () => {
         await wrapper.vm.$nextTick();
         const fileItems = wrapper.findAll('.file-item');
         if (fileItems.length > 0) {
-            await fileItems[0].trigger('click');
+            await fileItems[0]!.trigger('click');
             expect(wrapper.emitted('selectFile')).toBeDefined();
         }
         wrapper.unmount();
@@ -65,7 +65,7 @@ describe('FileExplorer', () => {
         await wrapper.vm.$nextTick();
         const folderItems = wrapper.findAll('.folder-item');
         if (folderItems.length > 0) {
-            await folderItems[0].trigger('click');
+            await folderItems[0]!.trigger('click');
             expect(wrapper.emitted('selectFolder')).toBeDefined();
         }
         wrapper.unmount();
@@ -76,7 +76,7 @@ describe('FileExplorer', () => {
         await wrapper.vm.$nextTick();
         const fileItems = wrapper.findAll('.file-item');
         if (fileItems.length > 0) {
-            await fileItems[0].trigger('contextmenu');
+            await fileItems[0]!.trigger('contextmenu');
             await wrapper.vm.$nextTick();
             const menu = document.querySelector('.context-menu');
             expect(menu).not.toBeNull();
@@ -90,7 +90,7 @@ describe('FileExplorer', () => {
         await wrapper.vm.$nextTick();
         const folderItems = wrapper.findAll('.folder-item');
         if (folderItems.length > 0) {
-            await folderItems[0].trigger('contextmenu');
+            await folderItems[0]!.trigger('contextmenu');
             await wrapper.vm.$nextTick();
             const menu = document.querySelector('.context-menu');
             expect(menu).not.toBeNull();
@@ -105,7 +105,7 @@ describe('FileExplorer', () => {
         const fileItems = wrapper.findAll('.file-item');
         expect(fileItems.length).toBeGreaterThan(0);
 
-        await fileItems[0].trigger('contextmenu');
+        await fileItems[0]!.trigger('contextmenu');
         await wrapper.vm.$nextTick();
         const renameItem = [...document.querySelectorAll<HTMLButtonElement>('.context-menu-item')].find((item) =>
             item.textContent?.toLowerCase().includes('rename'),
@@ -126,7 +126,7 @@ describe('FileExplorer', () => {
         const fileItems = wrapper.findAll('.file-item');
         expect(fileItems.length).toBeGreaterThan(0);
 
-        await fileItems[0].trigger('contextmenu');
+        await fileItems[0]!.trigger('contextmenu');
         await wrapper.vm.$nextTick();
         const deleteItem = [...document.querySelectorAll<HTMLButtonElement>('.context-menu-item')].find((item) =>
             item.textContent?.toLowerCase().includes('delete'),
@@ -159,14 +159,12 @@ describe('FileExplorer', () => {
         window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
         await wrapper.vm.$nextTick();
 
-        // ArrowDown moves the selection to the next visible item, whichever kind it is.
         const moved = wrapper.emitted('selectFile') ?? wrapper.emitted('selectFolder');
         expect(moved).toBeDefined();
         wrapper.unmount();
     });
 
     it('expands a folder when ArrowRight is pressed on selected folder', async () => {
-        // The tree keys folders by relativePath, which is what `selectedFolder` carries.
         const wrapper = mountWithI18n(FileExplorer, {
             props: { ...baseProps, selectedFolder: 'work' },
             attachTo: document.body,
@@ -188,7 +186,7 @@ describe('FileExplorer', () => {
         await wrapper.vm.$nextTick();
         const fileItems = wrapper.findAll('.file-item');
         if (fileItems.length > 0) {
-            await fileItems[0].trigger('contextmenu');
+            await fileItems[0]!.trigger('contextmenu');
             await wrapper.vm.$nextTick();
             const menuText = document.querySelector('.context-menu')?.textContent ?? '';
             expect(menuText).toMatch(/bookmark/i);

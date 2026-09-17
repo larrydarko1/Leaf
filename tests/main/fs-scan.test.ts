@@ -3,7 +3,13 @@ import path from 'path';
 import os from 'os';
 import fs from 'fs';
 
-// ── Mocks ────────────────────────────────────────────────────────────────────
+type IpcHandler = (_event: null, ...args: unknown[]) => Promise<unknown>;
+
+type ScanResult = {
+    success: boolean;
+    files: { relativePath: string }[];
+    folders: { relativePath: string }[];
+};
 
 const { mockShowOpenDialog } = vi.hoisted(() => ({ mockShowOpenDialog: vi.fn() }));
 const { mockState } = vi.hoisted(() => ({ mockState: { current: {} as Record<string, unknown> } }));
@@ -26,9 +32,8 @@ vi.mock('@/main/lib/appState', () => ({
     }),
 }));
 
-// ── IPC helper ───────────────────────────────────────────────────────────────
-
-type IpcHandler = (_event: null, ...args: unknown[]) => Promise<unknown>;
+let tmpVault: string;
+let ipc: ReturnType<typeof makeMockIpc>;
 
 function makeMockIpc() {
     const handlers = new Map<string, IpcHandler>();
@@ -44,26 +49,11 @@ function makeMockIpc() {
     };
 }
 
-// ── Types ────────────────────────────────────────────────────────────────────
-
-type ScanResult = {
-    success: boolean;
-    files: { relativePath: string }[];
-    folders: { relativePath: string }[];
-};
-
-// ── Shared state ─────────────────────────────────────────────────────────────
-
-let tmpVault: string;
-let ipc: ReturnType<typeof makeMockIpc>;
-
 function newTmpVault(): string {
     const dir = path.join(os.tmpdir(), `leaf-scan-test-${process.pid}-${Date.now()}`);
     fs.mkdirSync(dir, { recursive: true });
     return dir;
 }
-
-// ── Tests ────────────────────────────────────────────────────────────────────
 
 describe('files:scan IPC handler', () => {
     beforeEach(async () => {
@@ -115,8 +105,6 @@ describe('files:scan IPC handler', () => {
         expect(result.files.map((f) => f.relativePath)).toContain('notes/hello.md');
     });
 
-    // ── .leaf exclusion ───────────────────────────────────────────────────────
-
     it('excludes the .leaf directory from the folders list', async () => {
         fs.mkdirSync(path.join(tmpVault, '.leaf'));
         const result = (await ipc.invoke('files:scan')) as ScanResult;
@@ -150,8 +138,6 @@ describe('files:scan IPC handler', () => {
         expect(filePaths).toContain('notes/hello.md');
     });
 
-    // ── Other dotfolders remain visible ───────────────────────────────────────
-
     it('still includes other dotfolders such as .git', async () => {
         fs.mkdirSync(path.join(tmpVault, '.git'));
         const result = (await ipc.invoke('files:scan')) as ScanResult;
@@ -161,8 +147,6 @@ describe('files:scan IPC handler', () => {
     it('still includes dotfiles that are not inside .leaf', async () => {
         fs.writeFileSync(path.join(tmpVault, '.gitignore'), '');
         const result = (await ipc.invoke('files:scan')) as ScanResult;
-        // .gitignore has no allowed extension so won't be in files — just
-        // confirm the scan itself doesn't throw and succeeds
         expect(result.success).toBe(true);
     });
 });

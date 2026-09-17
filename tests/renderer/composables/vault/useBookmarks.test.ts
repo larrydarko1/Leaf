@@ -22,8 +22,6 @@ describe('useBookmarks', () => {
         bm = useBookmarks(() => '/vault');
     });
 
-    // ── loadBookmarks ────────────────────────────────────────────────────────
-
     describe('loadBookmarks', () => {
         it('populates bookmarkedFiles on success', async () => {
             mockAPI.bookmarksLoad.mockResolvedValue({
@@ -60,8 +58,6 @@ describe('useBookmarks', () => {
             expect(bm.bookmarkedFiles.value).toEqual(['/vault/b.md']);
         });
     });
-
-    // ── toggleBookmark ───────────────────────────────────────────────────────
 
     describe('toggleBookmark', () => {
         it('adds a file not yet in the list', () => {
@@ -100,13 +96,11 @@ describe('useBookmarks', () => {
 
         it('passes a plain non-reactive array to bookmarksSave (IPC structured-clone safe)', () => {
             bm.toggleBookmark('/vault/a.md');
-            const arg = mockAPI.bookmarksSave.mock.calls[0][0];
+            const arg = mockAPI.bookmarksSave.mock.calls[0]![0];
             expect(isReactive(arg)).toBe(false);
             expect(Array.isArray(arg)).toBe(true);
         });
     });
-
-    // ── removeBookmark ───────────────────────────────────────────────────────
 
     describe('removeBookmark', () => {
         it('removes a bookmarked file', () => {
@@ -142,13 +136,11 @@ describe('useBookmarks', () => {
         it('passes a plain non-reactive array to bookmarksSave (IPC structured-clone safe)', () => {
             bm.bookmarkedFiles.value = ['/vault/a.md', '/vault/b.md'];
             bm.removeBookmark('/vault/a.md');
-            const arg = mockAPI.bookmarksSave.mock.calls[0][0];
+            const arg = mockAPI.bookmarksSave.mock.calls[0]![0];
             expect(isReactive(arg)).toBe(false);
             expect(Array.isArray(arg)).toBe(true);
         });
     });
-
-    // ── relocateBookmark ─────────────────────────────────────────────────────
 
     describe('relocateBookmark', () => {
         it('follows a bookmarked file to its new folder', () => {

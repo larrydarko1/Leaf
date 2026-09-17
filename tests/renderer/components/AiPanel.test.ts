@@ -2,8 +2,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import AiPanel from '@/renderer/components/AiPanel.vue';
 import { mountWithI18n } from '@test-utils';
 
-// ── electronAPI mock ─────────────────────────────────────────────────────────
-
 const mockElectronAPI = {
     aiListModels: vi.fn().mockResolvedValue({ success: true, models: [] }),
     aiLoadModel: vi.fn().mockResolvedValue({ success: true }),
@@ -39,21 +37,16 @@ const mockElectronAPI = {
     log: { error: vi.fn(), info: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 };
 
-// Preserve the real jsdom window but inject electronAPI into it
-Object.defineProperty(globalThis.window, 'electronAPI', {
-    value: mockElectronAPI,
-    writable: true,
-    configurable: true,
-});
-
-// ── default props ────────────────────────────────────────────────────────────
-
 const defaultProps = {
     activeFile: null,
     workspacePath: null,
 };
 
-// ── tests ────────────────────────────────────────────────────────────────────
+Object.defineProperty(globalThis.window, 'electronAPI', {
+    value: mockElectronAPI,
+    writable: true,
+    configurable: true,
+});
 
 describe('AiPanel – resize feature', () => {
     beforeEach(() => {
@@ -70,8 +63,6 @@ describe('AiPanel – resize feature', () => {
         mockElectronAPI.aiListModels.mockResolvedValue({ success: true, models: [] });
         mockElectronAPI.conversationList.mockResolvedValue({ success: true, conversations: [] });
     });
-
-    // ── initial state ────────────────────────────────────────────────────────
 
     describe('initial state', () => {
         it('renders the resize handle', () => {
@@ -111,15 +102,7 @@ describe('AiPanel – resize feature', () => {
         });
     });
 
-    // ── resize interaction ───────────────────────────────────────────────────
-
     describe('resize interaction', () => {
-        /**
-         * Helper: fire a real MouseEvent on the handle element to trigger startResize,
-         * then dispatch mousemove/mouseup on window to simulate dragging.
-         * Vue Test Utils' trigger() doesn't support MouseEvent-specific properties
-         * (clientX/clientY) in jsdom, so we use dispatchEvent directly.
-         */
         function fireMousedown(el: Element, clientX: number) {
             el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, clientX }));
         }
@@ -147,7 +130,6 @@ describe('AiPanel – resize feature', () => {
             window.dispatchEvent(new MouseEvent('mousemove', { clientX: 550 })); // delta = -50 → clamped to 340
             await wrapper.vm.$nextTick();
 
-            // 340 - 50 = 290, clamped to minWidth 340
             expect(wrapper.find('.ai-panel').attributes('style')).toContain('width: 340px');
 
             wrapper.unmount();
@@ -187,17 +169,14 @@ describe('AiPanel – resize feature', () => {
             const handle = wrapper.find('.ai-panel-resize-handle').element;
             fireMousedown(handle, 500);
 
-            // First move: grow by 100px
             window.dispatchEvent(new MouseEvent('mousemove', { clientX: 400 }));
             await wrapper.vm.$nextTick();
 
-            // Release mouse
             window.dispatchEvent(new MouseEvent('mouseup'));
             await wrapper.vm.$nextTick();
 
             const widthAfterRelease = wrapper.find('.ai-panel').attributes('style');
 
-            // Second move after mouseup: should NOT change width
             window.dispatchEvent(new MouseEvent('mousemove', { clientX: 200 }));
             await wrapper.vm.$nextTick();
 
@@ -217,15 +196,13 @@ describe('AiPanel – resize feature', () => {
 
             const style = wrapper.find('.ai-panel').attributes('style') ?? '';
             const match = style.match(/width:\s*(\d+)px/);
-            const width = match ? parseInt(match[1]) : 0;
+            const width = match?.[1] !== undefined ? parseInt(match[1]) : 0;
 
             expect(width).toBe(390); // 340 + 50
 
             wrapper.unmount();
         });
     });
-
-    // ── panel structure ──────────────────────────────────────────────────────
 
     describe('panel structure', () => {
         it('renders the main ai-panel element', () => {

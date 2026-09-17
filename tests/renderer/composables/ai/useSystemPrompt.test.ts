@@ -1,26 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useSystemPrompt } from '@/renderer/composables/ai/useSystemPrompt';
 
-// ── electronAPI mock ──────────────────────────────────────────────────────────
-
 const mockAPI = {
     systemPromptList: vi.fn(),
     systemPromptSetActive: vi.fn(),
     log: { error: vi.fn(), warn: vi.fn() },
 };
 
-Object.defineProperty(window, 'electronAPI', {
-    value: mockAPI,
-    writable: true,
-    configurable: true,
-});
-
 const samplePrompts = [
     { id: 'default', name: 'Default', description: 'The default prompt', path: '/prompts/default.md' },
     { id: 'coding', name: 'Coding', description: 'A coding assistant prompt', path: '/prompts/coding.md' },
 ];
 
-// ── tests ─────────────────────────────────────────────────────────────────────
+Object.defineProperty(window, 'electronAPI', {
+    value: mockAPI,
+    writable: true,
+    configurable: true,
+});
 
 describe('useSystemPrompt', () => {
     let sp: ReturnType<typeof useSystemPrompt>;
@@ -29,8 +25,6 @@ describe('useSystemPrompt', () => {
         vi.clearAllMocks();
         sp = useSystemPrompt();
     });
-
-    // ── initial state ─────────────────────────────────────────────────────────
 
     describe('initial state', () => {
         it('starts with an empty prompts list', () => {
@@ -46,8 +40,6 @@ describe('useSystemPrompt', () => {
         });
     });
 
-    // ── refresh ───────────────────────────────────────────────────────────────
-
     describe('refresh', () => {
         it('populates prompts from the IPC response', async () => {
             mockAPI.systemPromptList.mockResolvedValue({
@@ -57,7 +49,7 @@ describe('useSystemPrompt', () => {
             });
             await sp.refresh();
             expect(sp.prompts.value).toHaveLength(2);
-            expect(sp.prompts.value[0].id).toBe('default');
+            expect(sp.prompts.value[0]!.id).toBe('default');
         });
 
         it('updates activeId from the IPC response', async () => {
@@ -85,12 +77,9 @@ describe('useSystemPrompt', () => {
         it('does not update prompts when the IPC response indicates failure', async () => {
             mockAPI.systemPromptList.mockResolvedValue({ success: false, error: 'Not initialised' });
             await sp.refresh();
-            // Should remain whatever was set before (empty in this case)
             expect(sp.prompts.value).toHaveLength(0);
         });
     });
-
-    // ── setActive ─────────────────────────────────────────────────────────────
 
     describe('setActive', () => {
         beforeEach(async () => {

@@ -5,8 +5,6 @@ import { i18n } from '@/renderer/i18n';
 import App from '@/renderer/App.vue';
 import type { FileInfo } from '@/schemas/vault';
 
-// ── composable mocks ──────────────────────────────────────────────────────────
-
 const mockCurrentFolder = ref<string | null>(null);
 const mockFiles = ref<FileInfo[]>([]);
 const mockFolders = ref<string[]>([]);
@@ -120,35 +118,24 @@ vi.mock('@/renderer/composables/editor/useEditorTabs', () => ({
 }));
 
 const mockThemeRefresh = vi.fn().mockResolvedValue(undefined);
+
 vi.mock('@/renderer/composables/ui/useTheme', () => ({
     useTheme: vi.fn(() => ({ refresh: mockThemeRefresh })),
 }));
 
 const mockLanguageRefresh = vi.fn().mockResolvedValue(undefined);
+
 vi.mock('@/renderer/composables/ui/useLanguage', () => ({
     useLanguage: vi.fn(() => ({ refresh: mockLanguageRefresh })),
 }));
 
-// ── window.electronAPI mock ───────────────────────────────────────────────────
-
 const mockOpenExternal = vi.fn().mockResolvedValue(undefined);
-Object.assign(window, {
-    electronAPI: {
-        ...(window.electronAPI ?? {}),
-        openExternal: mockOpenExternal,
-    },
-});
-
-// ── localStorage mock ─────────────────────────────────────────────────────────
 
 const mockLocalStorage = {
     getItem: vi.fn().mockReturnValue(null),
     setItem: vi.fn(),
     removeItem: vi.fn(),
 };
-Object.defineProperty(window, 'localStorage', { value: mockLocalStorage, writable: true });
-
-// ── helper ────────────────────────────────────────────────────────────────────
 
 function makeFile(overrides: Partial<FileInfo> = {}): FileInfo {
     return {
@@ -167,10 +154,18 @@ function mountApp() {
     return shallowMount(App, { global: { plugins: [i18n] } });
 }
 
-/** The sidebar toggle buttons are the only ones carrying `aria-pressed`. */
 function findToggle(wrapper: ReturnType<typeof mountApp>, label: string) {
     return wrapper.findAll('button').find((btn) => btn.attributes('aria-label') === label);
 }
+
+Object.assign(window, {
+    electronAPI: {
+        ...(window.electronAPI ?? {}),
+        openExternal: mockOpenExternal,
+    },
+});
+
+Object.defineProperty(window, 'localStorage', { value: mockLocalStorage, writable: true });
 
 beforeEach(() => {
     vi.clearAllMocks();
@@ -452,7 +447,6 @@ describe('App', () => {
             const wrapper = mountApp();
             const e = new KeyboardEvent('keydown', { key: 'F2', bubbles: true });
             window.dispatchEvent(e);
-            // renamingFile is internal state — just verify openFile was called (startRenameFile does this)
             expect(mockOpenFile).toHaveBeenCalledWith(file);
             wrapper.unmount();
         });
@@ -601,7 +595,6 @@ describe('App', () => {
         it('calls refreshFiles and syncAfterRefresh when external change fires', async () => {
             const wrapper = mountApp();
             await wrapper.vm.$nextTick();
-            // The callback registered via setExternalChangeCallback should call refreshFiles
             const cb = mockSetExternalChangeCallback.mock.calls[0]?.[0] as (() => Promise<void>) | undefined;
             if (cb !== undefined) {
                 await cb();

@@ -211,6 +211,7 @@ export function useDrawingElements(): UseDrawingElementsReturn {
             for (let i = 1; i < el.points.length; i++) {
                 const p1 = el.points[i - 1];
                 const p2 = el.points[i];
+                if (p1 === undefined || p2 === undefined) continue;
                 if (
                     distanceToSegment(wx, wy, el.x + p1.x, el.y + p1.y, el.x + p2.x, el.y + p2.y) <=
                     threshold + el.strokeWidth / 2
@@ -232,7 +233,7 @@ export function useDrawingElements(): UseDrawingElementsReturn {
         const threshold = 8 / zoom;
         for (let i = elements.value.length - 1; i >= 0; i--) {
             const el = elements.value[i];
-            if (isPointInElement(wx, wy, el, threshold)) return el;
+            if (el !== undefined && isPointInElement(wx, wy, el, threshold)) return el;
         }
         return null;
     }

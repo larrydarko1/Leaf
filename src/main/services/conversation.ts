@@ -188,7 +188,9 @@ async function updateLastMessage(
             return { success: false, error: 'No messages to update' };
         }
 
-        conversation.messages[conversation.messages.length - 1].content = content;
+        const lastMessage = conversation.messages[conversation.messages.length - 1];
+        if (lastMessage === undefined) return { success: false, error: 'No messages to update' };
+        lastMessage.content = content;
 
         return await saveConversation(conversation);
     } catch (error) {

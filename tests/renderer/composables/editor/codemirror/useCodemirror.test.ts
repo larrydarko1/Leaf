@@ -6,15 +6,11 @@ import { EditorView } from '@codemirror/view';
 import { undo } from '@codemirror/commands';
 import { useCodemirror, leafHighlightStyle } from '@/renderer/composables/editor/codemirror/useCodemirror';
 
-// Mock ResizeObserver — not in jsdom
 class FakeResizeObserver {
     observe() {}
     unobserve() {}
     disconnect() {}
 }
-vi.stubGlobal('ResizeObserver', FakeResizeObserver);
-
-// ── Helper: mount a component that calls useCodemirror ───────────────────────
 
 function mountComposable(options: {
     initialContent?: string;
@@ -56,7 +52,7 @@ function mountComposable(options: {
     };
 }
 
-// ── leafHighlightStyle ───────────────────────────────────────────────────────
+vi.stubGlobal('ResizeObserver', FakeResizeObserver);
 
 describe('leafHighlightStyle', () => {
     it('is exported as a HighlightStyle object', () => {
@@ -65,16 +61,12 @@ describe('leafHighlightStyle', () => {
     });
 
     it('has a module property (as all HighlightStyle instances do)', () => {
-        // HighlightStyle instances have a .module property (a StyleModule)
         expect(leafHighlightStyle).toHaveProperty('module');
     });
 });
 
-// ── useCodemirror ────────────────────────────────────────────────────────────
-
 describe('useCodemirror', () => {
     afterEach(() => {
-        // Clean up any leftover DOM
         document.body.innerHTML = '';
         vi.clearAllMocks();
     });
@@ -95,7 +87,6 @@ describe('useCodemirror', () => {
         });
 
         const wrapper = mount(TestComponent, { attachTo: document.body });
-        // No container attached yet
         expect(capturedView!.value).toBeNull();
         wrapper.unmount();
     });
@@ -159,7 +150,6 @@ describe('useCodemirror', () => {
         const v = getView();
         if (v !== null) {
             onContentChange.mockClear();
-            // Push new content from Vue side (simulates file load)
             content.value = 'replaced externally';
             await nextTick();
             expect(onContentChange).not.toHaveBeenCalled();
@@ -188,7 +178,6 @@ describe('useCodemirror', () => {
         const v = getView();
         if (v !== null) {
             dispatchSpy.mockClear();
-            // Setting to the same value should not dispatch
             content.value = 'same';
             await nextTick();
             expect(dispatchSpy).not.toHaveBeenCalled();
@@ -250,8 +239,6 @@ describe('useCodemirror', () => {
         await nextTick();
         await nextTick();
 
-        // No fileId was provided; the watch block should have been skipped
-        // We verify by checking setState is not called for content changes
         const setStateSpy = vi.spyOn(EditorView.prototype, 'setState');
         content.value = 'changed';
         await nextTick();
@@ -328,14 +315,6 @@ describe('useCodemirror', () => {
         wrapper.unmount();
     });
 
-    // ── Regression: undo must not cross note boundaries ──────────────────────
-    //
-    // Bug: when switching notes, Vue's watcher ordering caused the fileId watcher
-    // to reset state with stale content, then the content watcher dispatched the
-    // new file's content as a transaction — creating an undo history entry.
-    // Pressing Cmd+Z would then restore the previous note's content into the
-    // newly selected note, potentially overwriting it.
-
     it('does not create an undo history entry for content loaded after a file switch', async () => {
         const { wrapper, content, fileId, getView } = mountComposable({
             initialContent: 'note one content',
@@ -344,8 +323,6 @@ describe('useCodemirror', () => {
         await nextTick();
         await nextTick();
 
-        // Simulate switching to a different note: fileId updates first (synchronous),
-        // then content arrives asynchronously from loadFile (next tick).
         fileId.value = 'note2.md';
         await nextTick();
         content.value = 'note two content';
@@ -354,7 +331,6 @@ describe('useCodemirror', () => {
         const v = getView()!;
         expect(v.state.doc.toString()).toBe('note two content');
 
-        // Cmd+Z must not restore "note one content" into the new note.
         undo(v);
         expect(v.state.doc.toString()).toBe('note two content');
 
@@ -369,20 +345,17 @@ describe('useCodemirror', () => {
         await nextTick();
         await nextTick();
 
-        // Switch to note 2 and load its content.
         fileId.value = 'note2.md';
         await nextTick();
         content.value = 'note two base content';
         await nextTick();
 
-        // Dictation appends transcribed text to the content ref.
         content.value = 'note two base content dictated text';
         await nextTick();
 
         const v = getView()!;
         expect(v.state.doc.toString()).toBe('note two base content dictated text');
 
-        // Undo should remove only the dictation — not cross back to note one.
         undo(v);
         expect(v.state.doc.toString()).toBe('note two base content');
 

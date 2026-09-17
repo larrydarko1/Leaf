@@ -21,7 +21,7 @@ describe('DrawingFooter', () => {
     it('emits "zoomToCenter" with zoom - 0.1 when zoom-out is clicked', async () => {
         const wrapper = mountWithI18n(DrawingFooter, { props: baseProps });
         const buttons = wrapper.findAll('.zoom-btn');
-        await buttons[0].trigger('click');
+        await buttons[0]!.trigger('click');
         expect(wrapper.emitted('zoomToCenter')?.[0]).toEqual([0.9]);
         wrapper.unmount();
     });
@@ -36,7 +36,7 @@ describe('DrawingFooter', () => {
     it('emits "zoomToCenter" with zoom + 0.1 when zoom-in is clicked', async () => {
         const wrapper = mountWithI18n(DrawingFooter, { props: baseProps });
         const buttons = wrapper.findAll('.zoom-btn');
-        await buttons[1].trigger('click');
+        await buttons[1]!.trigger('click');
         expect(wrapper.emitted('zoomToCenter')?.[0]).toEqual([1.1]);
         wrapper.unmount();
     });

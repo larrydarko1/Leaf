@@ -9,12 +9,6 @@ const mockElectronAPI = {
     log: { error: vi.fn(), warn: vi.fn(), info: vi.fn() },
 };
 
-Object.defineProperty(globalThis.window, 'electronAPI', {
-    value: mockElectronAPI,
-    writable: true,
-    configurable: true,
-});
-
 const sampleThemes = [
     {
         id: 'dark',
@@ -41,6 +35,12 @@ const sampleThemes = [
         },
     },
 ];
+
+Object.defineProperty(globalThis.window, 'electronAPI', {
+    value: mockElectronAPI,
+    writable: true,
+    configurable: true,
+});
 
 beforeEach(() => {
     vi.clearAllMocks();
@@ -80,7 +80,6 @@ describe('ThemePicker', () => {
         const wrapper = mountWithI18n(ThemePicker, { props: {} });
         await new Promise((r) => setTimeout(r, 0));
         await wrapper.vm.$nextTick();
-        // Find a theme that is not the active one
         const themeButtons = wrapper.findAll('button, [role="option"], .theme-item');
         for (const btn of themeButtons) {
             if (btn.text().includes('Light')) {
@@ -114,7 +113,6 @@ describe('ThemePicker', () => {
         const wrapper = mountWithI18n(ThemePicker, { props: {} });
         await new Promise((r) => setTimeout(r, 0));
         await wrapper.vm.$nextTick();
-        // Should not throw and should render the component
         expect(wrapper.exists()).toBe(true);
         wrapper.unmount();
     });

@@ -3,6 +3,11 @@ import { mountWithI18n } from '@test-utils';
 import BookmarksPanel from '@/renderer/components/BookmarksPanel.vue';
 import type { FileInfo } from '@/schemas/vault';
 
+const fileA = makeFile('notes.md', '/vault/notes.md');
+const fileB = makeFile('ideas.md', '/vault/ideas.md');
+const fileC = makeFile('draft.md', '/vault/draft.md');
+const allFiles = [fileA, fileB, fileC];
+
 function makeFile(name: string, path: string): FileInfo {
     return {
         name,
@@ -14,12 +19,6 @@ function makeFile(name: string, path: string): FileInfo {
         folder: '.',
     };
 }
-
-const fileA = makeFile('notes.md', '/vault/notes.md');
-const fileB = makeFile('ideas.md', '/vault/ideas.md');
-const fileC = makeFile('draft.md', '/vault/draft.md');
-
-const allFiles = [fileA, fileB, fileC];
 
 describe('BookmarksPanel', () => {
     it('renders nothing when no files are bookmarked', () => {
@@ -71,7 +70,7 @@ describe('BookmarksPanel', () => {
                 activeFile: null,
             },
         });
-        await wrapper.findAll('.bookmark-item')[1].trigger('click');
+        await wrapper.findAll('.bookmark-item')[1]!.trigger('click');
         expect(wrapper.emitted('selectFile')?.[0]?.[0]).toMatchObject({ path: fileB.path });
         wrapper.unmount();
     });
@@ -114,8 +113,8 @@ describe('BookmarksPanel', () => {
             },
         });
         const items = wrapper.findAll('.bookmark-item');
-        expect(items[0].classes()).toContain('selected');
-        expect(items[1].classes()).not.toContain('selected');
+        expect(items[0]!.classes()).toContain('selected');
+        expect(items[1]!.classes()).not.toContain('selected');
         wrapper.unmount();
     });
 

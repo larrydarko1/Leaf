@@ -55,7 +55,6 @@ const filteredAvailableFiles = computed(() => {
     );
 });
 
-const inputAreaRef = ref<HTMLDivElement | null>(null);
 const isResizing = ref(false);
 const maxHeightPx = ref(120);
 
@@ -118,9 +117,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div
-        ref="inputAreaRef"
-        class="ai-input-area">
+    <div class="ai-input-area">
         <!-- eslint-disable-next-line a11y/no-static-element-interactions -->
         <div
             class="ai-resize-handle"

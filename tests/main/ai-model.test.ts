@@ -1,12 +1,7 @@
-/**
- * Tests for ai.ts that require a loaded model — mocks node-llama-cpp and uses
- * a real temp directory so scanForModels / readModels can be exercised too.
- */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import fs from 'fs';
 import path from 'path';
-
-// ── hoisted paths so the mock factory can reference them ─────────────────────
+import { register, cleanup } from '@/main/services/ai';
 
 const PATHS = vi.hoisted(() => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -16,8 +11,6 @@ const PATHS = vi.hoisted(() => {
     const root = join(tmpdir(), `leaf-ai-model-test-${process.pid}-${Date.now()}`);
     return { root, leafHome: join(root, '.leaf') };
 });
-
-// ── node-llama-cpp mock ──────────────────────────────────────────────────────
 
 const mockPrompt = vi.hoisted(() =>
     vi.fn().mockImplementation(
@@ -46,18 +39,21 @@ const mockSequence = vi.hoisted(() => ({
 const mockGetSequence = vi.hoisted(() => vi.fn().mockReturnValue(mockSequence));
 const mockContextDispose = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
 const mockModelDispose = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
+
 const mockCreateContext = vi.hoisted(() =>
     vi.fn().mockResolvedValue({
         dispose: mockContextDispose,
         getSequence: mockGetSequence,
     }),
 );
+
 const mockLoadModel = vi.hoisted(() =>
     vi.fn().mockResolvedValue({
         dispose: mockModelDispose,
         createContext: mockCreateContext,
     }),
 );
+
 const mockGetLlama = vi.hoisted(() => vi.fn().mockResolvedValue({ loadModel: mockLoadModel }));
 const mockReadGgufFileInfo = vi.hoisted(() => vi.fn().mockResolvedValue({ metadata: {} }));
 
@@ -77,8 +73,6 @@ vi.mock('node-llama-cpp', () => {
     };
 });
 
-// ── other mocks ──────────────────────────────────────────────────────────────
-
 vi.mock('electron', () => ({
     shell: { openPath: vi.fn().mockResolvedValue('') },
 }));
@@ -96,11 +90,7 @@ vi.mock('@/main/services/systemPrompt', () => ({
     getActiveSystemPrompt: vi.fn().mockResolvedValue('You are helpful.'),
 }));
 
-// ── imports ──────────────────────────────────────────────────────────────────
-
-import { register, cleanup } from '@/main/services/ai';
-
-// ── helpers ──────────────────────────────────────────────────────────────────
+let handlers: Record<string, (...args: unknown[]) => unknown>;
 
 function makeIpc() {
     const h: Record<string, (...args: unknown[]) => unknown> = {};
@@ -111,8 +101,6 @@ function makeIpc() {
     };
     return { ipc, handlers: h };
 }
-
-let handlers: Record<string, (...args: unknown[]) => unknown>;
 
 function modelFilePath() {
     return path.join(PATHS.root, 'test-model.gguf');
@@ -131,8 +119,6 @@ afterEach(async () => {
     vi.clearAllMocks();
 });
 
-// ── readModels / scanForModels / isModelFile / formatFileSize ────────────────
-
 describe('readModels (scanForModels)', () => {
     it('returns an empty list when the models directory is empty', async () => {
         const result = (await handlers['ai:listModels']?.()) as { success: boolean; models: unknown[] };
@@ -148,8 +134,8 @@ describe('readModels (scanForModels)', () => {
         };
         expect(result.success).toBe(true);
         expect(result.models).toHaveLength(1);
-        expect(result.models[0].name).toBe('test-model.gguf');
-        expect(result.models[0].sizeFormatted).toMatch(/MB/);
+        expect(result.models[0]!.name).toBe('test-model.gguf');
+        expect(result.models[0]!.sizeFormatted).toMatch(/MB/);
     });
 
     it('ignores non-.gguf files', async () => {
@@ -174,15 +160,15 @@ describe('readModels (scanForModels)', () => {
         fs.writeFileSync(path.join(sub, 'llama-7b.gguf'), '');
         const result = (await handlers['ai:listModels']?.()) as { success: boolean; models: { name: string }[] };
         expect(result.models).toHaveLength(1);
-        expect(result.models[0].name).toContain('llama-7b.gguf');
+        expect(result.models[0]!.name).toContain('llama-7b.gguf');
     });
 
     it('sorts models alphabetically by name', async () => {
         fs.writeFileSync(path.join(PATHS.root, 'zeta.gguf'), '');
         fs.writeFileSync(path.join(PATHS.root, 'alpha.gguf'), '');
         const result = (await handlers['ai:listModels']?.()) as { success: boolean; models: { name: string }[] };
-        expect(result.models[0].name).toBe('alpha.gguf');
-        expect(result.models[1].name).toBe('zeta.gguf');
+        expect(result.models[0]!.name).toBe('alpha.gguf');
+        expect(result.models[1]!.name).toBe('zeta.gguf');
     });
 
     it('formatFileSize: returns "0 B" for empty files', async () => {
@@ -191,11 +177,9 @@ describe('readModels (scanForModels)', () => {
             success: boolean;
             models: { sizeFormatted: string }[];
         };
-        expect(result.models[0].sizeFormatted).toBe('0 B');
+        expect(result.models[0]!.sizeFormatted).toBe('0 B');
     });
 });
-
-// ── loadModel ────────────────────────────────────────────────────────────────
 
 describe('loadModel (success path)', () => {
     beforeEach(() => {
@@ -275,8 +259,6 @@ describe('loadModel (success path)', () => {
     });
 });
 
-// ── chat ─────────────────────────────────────────────────────────────────────
-
 describe('chat (with loaded model)', () => {
     beforeEach(async () => {
         fs.writeFileSync(modelFilePath(), '');
@@ -291,19 +273,18 @@ describe('chat (with loaded model)', () => {
 
     it('includes noteContext in the prompt when provided', async () => {
         await handlers['ai:chat']?.({}, 'What is this?', 'My note content here');
-        const calledWith = mockPrompt.mock.calls[0][0] as string;
+        const calledWith = mockPrompt.mock.calls[0]![0] as string;
         expect(calledWith).toContain('My note content here');
         expect(calledWith).toContain('What is this?');
     });
 
     it('injects pendingConversationHistory as a summary on the next chat', async () => {
-        // Restore history first (sets pendingConversationHistory)
         handlers['ai:restoreChatHistory']?.({}, [
             { role: 'user', content: 'Old question' },
             { role: 'assistant', content: 'Old answer' },
         ]);
         await handlers['ai:chat']?.({}, 'Follow up', '');
-        const calledWith = mockPrompt.mock.calls[0][0] as string;
+        const calledWith = mockPrompt.mock.calls[0]![0] as string;
         expect(calledWith).toContain('Old question');
         expect(calledWith).toContain('Old answer');
         expect(calledWith).toContain('Follow up');
@@ -317,7 +298,6 @@ describe('chat (with loaded model)', () => {
     });
 
     it('returns failure when already generating', async () => {
-        // Simulate in-progress generation by starting a slow chat
         const slowPrompt = new Promise<void>((resolve) => setTimeout(resolve, 500));
         mockPrompt.mockReturnValueOnce(slowPrompt);
         const firstChat = handlers['ai:chat']?.({}, 'Slow', '');
@@ -342,8 +322,6 @@ describe('chat (with loaded model)', () => {
         await chatPromise;
     });
 });
-
-// ── resetChat ────────────────────────────────────────────────────────────────
 
 describe('resetChat (with loaded model)', () => {
     beforeEach(async () => {
@@ -374,8 +352,6 @@ describe('resetChat (with loaded model)', () => {
     });
 });
 
-// ── restoreChatHistory / buildConversationSummary ────────────────────────────
-
 describe('restoreChatHistory with messages', () => {
     it('stores messages and builds summary on next chat', async () => {
         fs.writeFileSync(modelFilePath(), '');
@@ -388,8 +364,7 @@ describe('restoreChatHistory with messages', () => {
         handlers['ai:restoreChatHistory']?.({}, messages);
 
         await handlers['ai:chat']?.({}, 'Continue', '');
-        const calledWith = mockPrompt.mock.calls[0][0] as string;
-        // buildConversationSummary truncates at 50 messages and 2000 chars per message
+        const calledWith = mockPrompt.mock.calls[0]![0] as string;
         expect(calledWith).toContain('User:');
         expect(calledWith).toContain('Assistant:');
     });

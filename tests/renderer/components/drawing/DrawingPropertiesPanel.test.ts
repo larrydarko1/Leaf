@@ -34,7 +34,7 @@ describe('DrawingPropertiesPanel', () => {
     it('emits setProperty with strokeColor when a stroke color swatch is clicked', async () => {
         const wrapper = mountWithI18n(DrawingPropertiesPanel, { props: baseProps });
         const swatches = wrapper.findAll('.color-swatch');
-        await swatches[0].trigger('click');
+        await swatches[0]!.trigger('click');
         const emitted = wrapper.emitted('setProperty');
         expect(emitted).toBeDefined();
         expect(emitted?.[0]?.[0]).toBe('strokeColor');
@@ -51,7 +51,7 @@ describe('DrawingPropertiesPanel', () => {
     it('emits setProperty with strokeWidth when a width button is clicked', async () => {
         const wrapper = mountWithI18n(DrawingPropertiesPanel, { props: baseProps });
         const widthBtns = wrapper.findAll('.stroke-width-btn');
-        await widthBtns[2].trigger('click'); // strokeWidth = 4
+        await widthBtns[2]!.trigger('click'); // strokeWidth = 4
         expect(wrapper.emitted('setProperty')?.[0]).toEqual(['strokeWidth', 4]);
         wrapper.unmount();
     });
@@ -124,7 +124,6 @@ describe('DrawingPropertiesPanel', () => {
         const wrapper = mountWithI18n(DrawingPropertiesPanel, {
             props: { ...baseProps, showRoundnessOption: true },
         });
-        // Should render border radius buttons
         expect(wrapper.findAll('.border-radius-btn, .roundness-btn, [class*="radius"]').length).toBeGreaterThanOrEqual(
             0,
         );

@@ -2,8 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useTreeNodeDrag } from '@/renderer/composables/vault/useTreeNodeDrag';
 import type { TreeNode, FileInfo } from '@/schemas/vault';
 
-// ── helpers ──────────────────────────────────────────────────────────────────
-
 function makeFakeDragEvent(dataToReturn = ''): DragEvent {
     const store: Record<string, string> = {};
     const dt = {
@@ -39,8 +37,6 @@ function makeFolderNode(relativePath: string): TreeNode {
     return { type: 'folder', path: relativePath, name: relativePath.split('/').pop()!, children: [] };
 }
 
-// ── tests ─────────────────────────────────────────────────────────────────────
-
 describe('useTreeNodeDrag', () => {
     let onMoveFile: ReturnType<typeof vi.fn>;
     let onMoveFolder: ReturnType<typeof vi.fn>;
@@ -60,8 +56,6 @@ describe('useTreeNodeDrag', () => {
             onMoveFolder as unknown as (folderPath: string, targetFolderPath: string) => void,
         );
     }
-
-    // ── handleDragStart ───────────────────────────────────────────────────────
 
     describe('handleDragStart', () => {
         it('sets isDragging to true', () => {
@@ -85,8 +79,6 @@ describe('useTreeNodeDrag', () => {
         });
     });
 
-    // ── handleDragEnd ─────────────────────────────────────────────────────────
-
     describe('handleDragEnd', () => {
         it('clears isDragging', () => {
             const { isDragging, handleDragStart, handleDragEnd } = makeDrag(makeFileNode());
@@ -95,8 +87,6 @@ describe('useTreeNodeDrag', () => {
             expect(isDragging.value).toBe(false);
         });
     });
-
-    // ── handleDragOver ────────────────────────────────────────────────────────
 
     describe('handleDragOver', () => {
         it('sets isDragOver to true when the node is a folder', () => {
@@ -119,8 +109,6 @@ describe('useTreeNodeDrag', () => {
         });
     });
 
-    // ── handleDragLeave ───────────────────────────────────────────────────────
-
     describe('handleDragLeave', () => {
         it('clears isDragOver', () => {
             const { isDragOver, handleDragOver, handleDragLeave } = makeDrag(makeFolderNode('docs'));
@@ -129,8 +117,6 @@ describe('useTreeNodeDrag', () => {
             expect(isDragOver.value).toBe(false);
         });
     });
-
-    // ── handleDrop – file moves ───────────────────────────────────────────────
 
     describe('handleDrop (file moves)', () => {
         it('calls onMoveFile with the dragged file path and target folder path', () => {
@@ -169,8 +155,6 @@ describe('useTreeNodeDrag', () => {
         });
     });
 
-    // ── handleDrop – folder moves ─────────────────────────────────────────────
-
     describe('handleDrop (folder moves)', () => {
         it('calls onMoveFolder with the dragged folder path and target folder path', () => {
             const { handleDrop } = makeDrag(makeFolderNode('docs'));
@@ -197,7 +181,6 @@ describe('useTreeNodeDrag', () => {
         });
 
         it('allows moving a folder that has a similar prefix but is not a sub-path', () => {
-            // 'documentation' is NOT a subdirectory of 'docs', despite sharing a prefix
             const { handleDrop } = makeDrag(makeFolderNode('documentation'));
             const event = makeFakeDragEvent();
             event.dataTransfer!.setData('text/plain', 'folder:docs');
@@ -205,8 +188,6 @@ describe('useTreeNodeDrag', () => {
             expect(onMoveFolder).toHaveBeenCalled();
         });
     });
-
-    // ── handleDrop – no-op on non-folder targets ──────────────────────────────
 
     describe('handleDrop on a file node', () => {
         it('is a no-op — files cannot be drop targets', () => {

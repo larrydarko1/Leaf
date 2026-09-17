@@ -142,7 +142,7 @@ export function useAIModel(): UseAIModelReturn {
                 await refreshStatus();
                 return { success: true };
             }
-            return { success: false, error: result.error };
+            return { success: false, ...(result.error === undefined ? {} : { error: result.error }) };
         } catch (error) {
             return { success: false, error: (error as Error).message };
         } finally {

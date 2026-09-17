@@ -45,7 +45,7 @@ export function findVaultRoot(): string | null {
 export async function initVaultRoot(): Promise<void> {
     try {
         const state = await readState();
-        const saved: unknown = state.vaultRoot;
+        const saved: unknown = state['vaultRoot'];
         if (typeof saved !== 'string' || saved === '') return;
         const resolved = path.resolve(saved);
         if (!existsSync(resolved)) {
@@ -77,7 +77,7 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
             buttonLabel: 'Select Folder',
             defaultPath: vaultRoot ?? app.getPath('home'), // Electron 43+ falls back to Downloads when this is unset.
         });
-        if (result.canceled) return null;
+        if (result.canceled || result.filePaths[0] === undefined) return null;
         return await setVaultRoot(result.filePaths[0]);
     });
 
@@ -105,13 +105,13 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
             const win = findMainWindow();
             if (win === null) return { success: false, error: 'No window available' };
             // Electron 43+ resolves a bare filename against Downloads, so anchor it to the vault.
-            const requested = parsed.data.defaultPath;
+            const { defaultPath: requested, filters } = parsed.data;
             const result = await dialog.showSaveDialog(win, {
-                defaultPath:
-                    requested === undefined || path.isAbsolute(requested)
-                        ? requested
-                        : path.join(vaultRoot ?? app.getPath('home'), requested),
-                filters: parsed.data.filters,
+                // path.resolve leaves an absolute request untouched.
+                ...(requested === undefined
+                    ? {}
+                    : { defaultPath: path.resolve(vaultRoot ?? app.getPath('home'), requested) }),
+                ...(filters === undefined ? {} : { filters }),
             });
             if (result.canceled || result.filePath === undefined || result.filePath === '') return null;
             authorizedWritePaths.add(path.resolve(result.filePath));
@@ -790,7 +790,7 @@ async function clearVaultRoot(): Promise<void> {
     vaultRoot = null;
     await updateState((s): Record<string, unknown> => {
         const next = { ...s };
-        delete next.vaultRoot;
+        delete next['vaultRoot'];
         return next;
     });
 }

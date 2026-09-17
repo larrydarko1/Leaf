@@ -114,9 +114,9 @@ function clearSearch(): void {
 function openSelectedResult(): void {
     // Flush any pending debounce so results are current before opening
     runSearch();
-    const idx = selectedIndex.value;
-    if (idx >= 0 && idx < searchResults.value.length) {
-        openFile(searchResults.value[idx]);
+    const result = searchResults.value[selectedIndex.value];
+    if (result !== undefined) {
+        openFile(result);
     }
 }
 

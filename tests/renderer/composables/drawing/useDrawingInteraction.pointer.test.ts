@@ -1,14 +1,7 @@
-/**
- * Pointer event branch coverage for useDrawingInteraction:
- * onPointerDown (all tools), onPointerMove (all drag actions),
- * onPointerUp (all finalization paths), applyResize, constrainDimensions.
- */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref, computed } from 'vue';
 import { useDrawingInteraction } from '@/renderer/composables/drawing/useDrawingInteraction';
 import type { CanvasElement, DefaultStyle, ToolType } from '@/schemas/drawing';
-
-// ── helpers ───────────────────────────────────────────────────────────────────
 
 let idCounter = 0;
 
@@ -206,8 +199,6 @@ beforeEach(() => {
     idCounter = 0;
 });
 
-// ── onPointerDown: textEditing branch ────────────────────────────────────────
-
 describe('onPointerDown: textEditing active', () => {
     it('calls finalizeText and returns early when textEditing is true', () => {
         const { onPointerDown, finalizeText, isDragging } = makeInteraction({ textEditing: true });
@@ -216,8 +207,6 @@ describe('onPointerDown: textEditing active', () => {
         expect(isDragging.value).toBe(false);
     });
 });
-
-// ── onPointerDown: text tool ──────────────────────────────────────────────────
 
 describe('onPointerDown: text tool', () => {
     it('calls startEditText when hitting a text element', () => {
@@ -257,12 +246,9 @@ describe('onPointerDown: text tool', () => {
         ctx.hitTestElement.mockReturnValue(shapeEl);
         ctx.isShapeElement.mockReturnValue(true);
         ctx.onPointerDown(ptr());
-        // text is empty string, length is 0 → startNewText (not startEditShapeText)
         expect(ctx.startNewText).toHaveBeenCalled();
     });
 });
-
-// ── onPointerDown: hand tool ──────────────────────────────────────────────────
 
 describe('onPointerDown: hand tool', () => {
     it('sets dragAction to pan', () => {
@@ -272,8 +258,6 @@ describe('onPointerDown: hand tool', () => {
         expect(ctx.isDragging.value).toBe(true);
     });
 });
-
-// ── onPointerDown: select tool ────────────────────────────────────────────────
 
 describe('onPointerDown: select tool — resize handle', () => {
     it('starts resize when hitTestHandle returns a handle', () => {
@@ -365,8 +349,6 @@ describe('onPointerDown: select tool — marquee', () => {
     });
 });
 
-// ── onPointerDown: eraser tool ────────────────────────────────────────────────
-
 describe('onPointerDown: eraser tool', () => {
     it('sets dragAction to erase', () => {
         const ctx = makeInteraction({ initialTool: 'eraser' });
@@ -391,8 +373,6 @@ describe('onPointerDown: eraser tool', () => {
     });
 });
 
-// ── onPointerDown: freedraw tool ──────────────────────────────────────────────
-
 describe('onPointerDown: freedraw tool', () => {
     it('sets dragAction to freedraw and creates a freedraw element', () => {
         const ctx = makeInteraction({ initialTool: 'freedraw' });
@@ -402,8 +382,6 @@ describe('onPointerDown: freedraw tool', () => {
         expect(ctx.creatingElement.value?.points).toHaveLength(1);
     });
 });
-
-// ── onPointerDown: shape tool (isShapeTool) ───────────────────────────────────
 
 describe('onPointerDown: shape tool', () => {
     it('sets dragAction to create when isShapeTool returns true', () => {
@@ -421,15 +399,12 @@ describe('onPointerDown: shape tool', () => {
     });
 });
 
-// ── onPointerMove: pan ────────────────────────────────────────────────────────
-
 describe('onPointerMove: pan', () => {
     it('updates scroll and calls renderScene', () => {
         const ctx = makeInteraction({ initialTool: 'hand' });
         ctx.onPointerDown(ptr({ clientX: 100, clientY: 100 }));
         ctx.scrollX.value = 0;
         ctx.scrollY.value = 0;
-        // Move 20px right, 15px down
         const moveEvt = { ...ptr({ clientX: 120, clientY: 115 }), type: 'pointermove' } as unknown as PointerEvent;
         ctx.onPointerMove(moveEvt);
         expect(ctx.scrollX.value).toBe(20);
@@ -443,8 +418,6 @@ describe('onPointerMove: pan', () => {
         expect(ctx.renderScene).not.toHaveBeenCalled();
     });
 });
-
-// ── onPointerMove: create ─────────────────────────────────────────────────────
 
 describe('onPointerMove: create', () => {
     it('updates creating element dimensions', () => {
@@ -460,7 +433,6 @@ describe('onPointerMove: create', () => {
         ctx.onPointerDown(ptr({ clientX: 0, clientY: 0 }));
         ctx.shiftHeld.value = true;
         ctx.onPointerMove({ ...ptr({ clientX: 100, clientY: 60 }), type: 'pointermove' } as unknown as PointerEvent);
-        // constrainDimensions for rectangle: max(|w|,|h|) = 100
         expect(Math.abs(ctx.creatingElement.value?.width ?? 0)).toBe(100);
         expect(Math.abs(ctx.creatingElement.value?.height ?? 0)).toBe(100);
     });
@@ -474,8 +446,6 @@ describe('onPointerMove: create', () => {
         expect(ctx.renderScene).not.toHaveBeenCalled();
     });
 });
-
-// ── onPointerMove: move ───────────────────────────────────────────────────────
 
 describe('onPointerMove: move', () => {
     it('updates element positions', () => {
@@ -499,8 +469,6 @@ describe('onPointerMove: move', () => {
     });
 });
 
-// ── onPointerMove: resize ─────────────────────────────────────────────────────
-
 describe('onPointerMove: resize', () => {
     it('calls renderScene after applyResize', () => {
         const el = makeEl({ id: 'r1', x: 10, y: 20, width: 100, height: 50 });
@@ -513,8 +481,6 @@ describe('onPointerMove: resize', () => {
     });
 });
 
-// ── onPointerMove: freedraw ───────────────────────────────────────────────────
-
 describe('onPointerMove: freedraw', () => {
     it('adds points to the creating freedraw element', () => {
         const ctx = makeInteraction({ initialTool: 'freedraw' });
@@ -523,8 +489,6 @@ describe('onPointerMove: freedraw', () => {
         expect(ctx.creatingElement.value?.points?.length).toBeGreaterThan(1);
     });
 });
-
-// ── onPointerMove: erase ──────────────────────────────────────────────────────
 
 describe('onPointerMove: erase', () => {
     it('erases newly hit elements while dragging', () => {
@@ -557,12 +521,9 @@ describe('onPointerMove: erase', () => {
         ctx.hitTestElement.mockReturnValue(el); // same element "hit" again on move
         ctx.renderScene.mockClear();
         ctx.onPointerMove({ ...ptr(), type: 'pointermove' } as unknown as PointerEvent);
-        // Should NOT call renderScene a second time for same element
         expect(ctx.renderScene).not.toHaveBeenCalled();
     });
 });
-
-// ── onPointerMove: marquee ────────────────────────────────────────────────────
 
 describe('onPointerMove: marquee', () => {
     it('updates marquee rect dimensions and selects enclosed elements', () => {
@@ -588,13 +549,10 @@ describe('onPointerMove: marquee', () => {
             .mockReturnValueOnce({ x: 20, y: 20, width: 30, height: 30 })
             .mockReturnValueOnce({ x: 200, y: 200, width: 10, height: 10 });
         ctx.onPointerMove({ ...ptr({ clientX: 100, clientY: 100 }), type: 'pointermove' } as unknown as PointerEvent);
-        // el-2 preserved from shift, el-1 newly enclosed by marquee
         expect(ctx.selectedIds.value.has('el-1')).toBe(true);
         expect(ctx.selectedIds.value.has('el-2')).toBe(true);
     });
 });
-
-// ── onPointerUp: create ───────────────────────────────────────────────────────
 
 describe('onPointerUp: create', () => {
     it('adds element and saves history when large enough', () => {
@@ -611,7 +569,6 @@ describe('onPointerUp: create', () => {
     it('discards element when too small', () => {
         const ctx = makeInteraction({ initialTool: 'rectangle', isShapeToolResult: true });
         ctx.onPointerDown(ptr({ clientX: 0, clientY: 0 }));
-        // Move only 1px — smaller than MIN_ELEMENT_SIZE (typically 5)
         ctx.onPointerMove({ ...ptr({ clientX: 1, clientY: 1 }), type: 'pointermove' } as unknown as PointerEvent);
         ctx.onPointerUp({ ...ptr(), type: 'pointerup' } as unknown as PointerEvent);
         expect(ctx.elements.value.length).toBe(0);
@@ -621,7 +578,6 @@ describe('onPointerUp: create', () => {
     it('normalizes negative width/height for non-line elements', () => {
         const ctx = makeInteraction({ initialTool: 'rectangle', isShapeToolResult: true });
         ctx.onPointerDown(ptr({ clientX: 100, clientY: 100 }));
-        // Move to upper-left → negative w/h
         ctx.onPointerMove({ ...ptr({ clientX: 0, clientY: 0 }), type: 'pointermove' } as unknown as PointerEvent);
         ctx.onPointerUp({ ...ptr(), type: 'pointerup' } as unknown as PointerEvent);
         const el = ctx.elements.value[0];
@@ -636,12 +592,9 @@ describe('onPointerUp: create', () => {
         ctx.onPointerDown(ptr({ clientX: 100, clientY: 100 }));
         ctx.onPointerMove({ ...ptr({ clientX: 0, clientY: 0 }), type: 'pointermove' } as unknown as PointerEvent);
         ctx.onPointerUp({ ...ptr(), type: 'pointerup' } as unknown as PointerEvent);
-        // line is allowed to keep negative dimensions
         expect(ctx.elements.value.length).toBeGreaterThanOrEqual(0); // just ensure no throw
     });
 });
-
-// ── onPointerUp: move ─────────────────────────────────────────────────────────
 
 describe('onPointerUp: move', () => {
     it('saves history after moving elements', () => {
@@ -656,8 +609,6 @@ describe('onPointerUp: move', () => {
     });
 });
 
-// ── onPointerUp: resize ───────────────────────────────────────────────────────
-
 describe('onPointerUp: resize', () => {
     it('saves history after resize', () => {
         const el = makeEl({ id: 'r1', x: 0, y: 0, width: 100, height: 50 });
@@ -670,8 +621,6 @@ describe('onPointerUp: resize', () => {
         expect(ctx.saveToHistory).toHaveBeenCalled();
     });
 });
-
-// ── onPointerUp: freedraw ─────────────────────────────────────────────────────
 
 describe('onPointerUp: freedraw', () => {
     it('adds freedraw element to elements when enough points', () => {
@@ -688,14 +637,11 @@ describe('onPointerUp: freedraw', () => {
     it('discards freedraw element when too few points', () => {
         const ctx = makeInteraction({ initialTool: 'freedraw' });
         ctx.onPointerDown(ptr({ clientX: 0, clientY: 0 }));
-        // No moves — only 1 point (initial), less than 2 needed
         ctx.onPointerUp({ ...ptr(), type: 'pointerup' } as unknown as PointerEvent);
         expect(ctx.elements.value.length).toBe(0);
         expect(ctx.creatingElement.value).toBeNull();
     });
 });
-
-// ── onPointerUp: erase ────────────────────────────────────────────────────────
 
 describe('onPointerUp: erase', () => {
     it('saves history when elements were erased', () => {
@@ -716,8 +662,6 @@ describe('onPointerUp: erase', () => {
     });
 });
 
-// ── onPointerUp: marquee ──────────────────────────────────────────────────────
-
 describe('onPointerUp: marquee', () => {
     it('clears marqueeRect after finishing marquee selection', () => {
         const ctx = makeInteraction({ initialTool: 'select' });
@@ -728,8 +672,6 @@ describe('onPointerUp: marquee', () => {
     });
 });
 
-// ── onPointerUp: no drag ──────────────────────────────────────────────────────
-
 describe('onPointerUp: not dragging', () => {
     it('returns early without action when isDragging is false', () => {
         const ctx = makeInteraction();
@@ -737,8 +679,6 @@ describe('onPointerUp: not dragging', () => {
         expect(ctx.saveToHistory).not.toHaveBeenCalled();
     });
 });
-
-// ── applyResize ───────────────────────────────────────────────────────────────
 
 describe('applyResize (via onPointerMove resize)', () => {
     function setupResize(handle: string, elementType: CanvasElement['type'] = 'rectangle') {
@@ -807,12 +747,9 @@ describe('applyResize (via onPointerMove resize)', () => {
         ctx.selectedId.value = 't1';
         ctx.onPointerDown(ptr({ clientX: 100, clientY: 50 }));
         ctx.onPointerMove({ ...ptr({ clientX: 200, clientY: 100 }), type: 'pointermove' } as unknown as PointerEvent);
-        // Width doubled → fontSize should also scale
         expect(textEl.fontSize).toBeGreaterThan(20);
     });
 });
-
-// ── constrainDimensions ───────────────────────────────────────────────────────
 
 describe('constrainDimensions (via onPointerMove create + shiftHeld)', () => {
     it('constrains rectangle to square (shift held)', () => {
@@ -820,7 +757,6 @@ describe('constrainDimensions (via onPointerMove create + shiftHeld)', () => {
         ctx.onPointerDown(ptr({ clientX: 0, clientY: 0 }));
         ctx.shiftHeld.value = true;
         ctx.onPointerMove({ ...ptr({ clientX: 80, clientY: 60 }), type: 'pointermove' } as unknown as PointerEvent);
-        // max(80, 60) = 80 for both dimensions
         expect(Math.abs(ctx.creatingElement.value?.width ?? 0)).toBe(80);
         expect(Math.abs(ctx.creatingElement.value?.height ?? 0)).toBe(80);
     });
@@ -839,7 +775,6 @@ describe('constrainDimensions (via onPointerMove create + shiftHeld)', () => {
         ctx.onPointerDown(ptr({ clientX: 0, clientY: 0 }));
         ctx.shiftHeld.value = true;
         ctx.onPointerMove({ ...ptr({ clientX: 100, clientY: 10 }), type: 'pointermove' } as unknown as PointerEvent);
-        // Angle ~5.7° → snaps to 0° → h becomes ~0
         const h = ctx.creatingElement.value?.height ?? 0;
         expect(Math.abs(h)).toBeLessThan(5);
     });
@@ -848,7 +783,6 @@ describe('constrainDimensions (via onPointerMove create + shiftHeld)', () => {
         const ctx = makeInteraction({ initialTool: 'freedraw' });
         ctx.onPointerDown(ptr({ clientX: 0, clientY: 0 }));
         ctx.shiftHeld.value = true;
-        // freedraw has its own pointer move behavior (adds points, doesn't call constrainDimensions)
         ctx.onPointerMove({ ...ptr({ clientX: 100, clientY: 50 }), type: 'pointermove' } as unknown as PointerEvent);
         expect(ctx.creatingElement.value?.type).toBe('freedraw');
     });

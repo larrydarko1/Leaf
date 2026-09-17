@@ -2,13 +2,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { defineComponent, createApp } from 'vue';
 import { useListKeyboardNavigation } from '@/renderer/composables/ui/useListKeyboardNavigation';
 
-// ── lifecycle helpers ─────────────────────────────────────────────────────────
-
-/**
- * Mount a composable inside a minimal Vue app so that onMounted / onUnmounted
- * lifecycle hooks fire correctly.  Returns the composable result and an
- * `unmount` function to clean up after the test.
- */
 function withSetup<T>(composable: () => T): [T, () => void] {
     let result!: T;
     const app = createApp(
@@ -32,13 +25,9 @@ function withSetup<T>(composable: () => T): [T, () => void] {
     ];
 }
 
-// ── key event helper ──────────────────────────────────────────────────────────
-
 function pressKey(key: string, target: EventTarget = window): void {
     target.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
 }
-
-// ── tests ─────────────────────────────────────────────────────────────────────
 
 describe('useListKeyboardNavigation', () => {
     let list: string[];
@@ -52,8 +41,6 @@ describe('useListKeyboardNavigation', () => {
         onOpen = vi.fn() as unknown as (item: string, index: number) => void;
         onEscape = vi.fn() as unknown as () => void;
     });
-
-    // ── wrap = true (default) ─────────────────────────────────────────────────
 
     describe('with wrap = true', () => {
         let nav: ReturnType<typeof useListKeyboardNavigation>;
@@ -116,8 +103,6 @@ describe('useListKeyboardNavigation', () => {
         });
     });
 
-    // ── wrap = false ──────────────────────────────────────────────────────────
-
     describe('with wrap = false', () => {
         let nav: ReturnType<typeof useListKeyboardNavigation>;
         let unmount: () => void;
@@ -145,8 +130,6 @@ describe('useListKeyboardNavigation', () => {
         });
     });
 
-    // ── ignoreWhen ────────────────────────────────────────────────────────────
-
     describe('ignoreWhen (default: ignore INPUT, TEXTAREA, contenteditable)', () => {
         let unmount: () => void;
 
@@ -172,8 +155,6 @@ describe('useListKeyboardNavigation', () => {
             document.body.removeChild(ta);
         });
     });
-
-    // ── external index ────────────────────────────────────────────────────────
 
     describe('external index (getExternalIndex provided)', () => {
         let externalIndex: number;
@@ -202,13 +183,10 @@ describe('useListKeyboardNavigation', () => {
         });
 
         it('does not update the internal selectedIndex ref', () => {
-            // externalIndex starts at -1 → ArrowDown → index 0 (alpha)
             pressKey('ArrowDown');
             expect(onSelect).toHaveBeenCalledWith('alpha', 0);
         });
     });
-
-    // ── resetIndex ────────────────────────────────────────────────────────────
 
     describe('resetIndex', () => {
         let nav: ReturnType<typeof useListKeyboardNavigation>;
@@ -226,8 +204,6 @@ describe('useListKeyboardNavigation', () => {
             expect(nav.selectedIndex.value).toBe(-1);
         });
     });
-
-    // ── unmount removes the listener ──────────────────────────────────────────
 
     describe('listener cleanup on unmount', () => {
         it('stops responding to keydown after unmount', () => {

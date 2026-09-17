@@ -243,7 +243,7 @@ export function useDrawingInteraction({
                         y: el.y,
                         width: el.width,
                         height: el.height,
-                        fontSize: el.fontSize,
+                        ...(el.fontSize === undefined ? {} : { fontSize: el.fontSize }),
                     };
                     return;
                 }

@@ -1,8 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useEmbedResolver } from '@/renderer/composables/editor/useEmbedResolver';
 
-// ── electronAPI mock ──────────────────────────────────────────────────────────
-
 const mockAPI = {
     resolveEmbedPath: vi.fn(),
     log: { error: vi.fn() },
@@ -13,8 +11,6 @@ Object.defineProperty(window, 'electronAPI', {
     writable: true,
     configurable: true,
 });
-
-// ── tests ─────────────────────────────────────────────────────────────────────
 
 describe('useEmbedResolver', () => {
     const file = { path: '/vault/notes/note.md' };
@@ -29,8 +25,6 @@ describe('useEmbedResolver', () => {
             () => workspace,
         );
     });
-
-    // ── getEmbedMediaType ─────────────────────────────────────────────────────
 
     describe('getEmbedMediaType', () => {
         it('identifies PNG as image', () => {
@@ -82,8 +76,6 @@ describe('useEmbedResolver', () => {
         });
     });
 
-    // ── resolveEmbeds – no-ops ────────────────────────────────────────────────
-
     describe('resolveEmbeds (no-ops)', () => {
         it('does nothing when there are no embeds in the text', async () => {
             await resolver.resolveEmbeds('No embeds here.');
@@ -108,8 +100,6 @@ describe('useEmbedResolver', () => {
             expect(mockAPI.resolveEmbedPath).not.toHaveBeenCalled();
         });
     });
-
-    // ── resolveEmbeds – successful resolution ─────────────────────────────────
 
     describe('resolveEmbeds (success)', () => {
         it('resolves an embed and stores the result in the cache', async () => {
@@ -150,8 +140,6 @@ describe('useEmbedResolver', () => {
         });
     });
 
-    // ── resolveEmbeds – failure and caching ───────────────────────────────────
-
     describe('resolveEmbeds (failure/caching)', () => {
         it('caches a negative result (empty string) for files that cannot be resolved', async () => {
             mockAPI.resolveEmbedPath.mockResolvedValue({ success: false });
@@ -170,13 +158,10 @@ describe('useEmbedResolver', () => {
             mockAPI.resolveEmbedPath.mockResolvedValue({ success: true, path: '/vault/image.png' });
             await resolver.resolveEmbeds('![[image.png]]');
             const versionAfterFirst = resolver.embedCacheVersion.value;
-            // Second call — image.png is already cached, so no change
             await resolver.resolveEmbeds('![[image.png]]');
             expect(resolver.embedCacheVersion.value).toBe(versionAfterFirst);
         });
     });
-
-    // ── clearCache ────────────────────────────────────────────────────────────
 
     describe('clearCache', () => {
         it('empties the embed cache', async () => {

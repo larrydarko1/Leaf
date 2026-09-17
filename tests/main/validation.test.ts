@@ -62,7 +62,6 @@ describe('validation', () => {
         });
 
         it('blocks sibling directory with same prefix', () => {
-            // "/home/user/vault-backup" starts with "/home/user/vault" but is not inside it
             expect(() => resolveInsideBoundary('/home/user/vault-backup/file.txt', root)).toThrow('Access denied');
         });
 
@@ -71,7 +70,6 @@ describe('validation', () => {
         });
 
         it('handles relative target paths (resolved against cwd)', () => {
-            // A relative path like "../../etc/passwd" resolves against cwd, not root
             expect(() => resolveInsideBoundary('../../etc/passwd', root)).toThrow('Access denied');
         });
 
@@ -108,8 +106,6 @@ describe('validation', () => {
         });
 
         it('treats a backslash as a literal filename character, not a separator', () => {
-            // Leaf targets macOS and Linux, where path.basename never splits on a
-            // backslash — so it is a legal (if unusual) character in a note name.
             expect(() => assertSafeFileName('sub\\file.md')).not.toThrow();
         });
 

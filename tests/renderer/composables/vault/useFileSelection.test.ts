@@ -2,14 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useFileSelection } from '@/renderer/composables/vault/useFileSelection';
 import type { FileInfo } from '@/schemas/vault';
 
-// ── helpers ──────────────────────────────────────────────────────────────────
-
-function makeFile(name: string, path = `/${name}`): FileInfo {
-    return { name, path, relativePath: name, extension: '.md', size: 0, modified: '', folder: '.' };
-}
-
-// ── localStorage stub ────────────────────────────────────────────────────────
-
 const localStorageMock = (() => {
     let store: Record<string, string> = {};
     return {
@@ -25,9 +17,12 @@ const localStorageMock = (() => {
         }),
     };
 })();
-Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock, writable: true });
 
-// ── tests ─────────────────────────────────────────────────────────────────────
+function makeFile(name: string, path = `/${name}`): FileInfo {
+    return { name, path, relativePath: name, extension: '.md', size: 0, modified: '', folder: '.' };
+}
+
+Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock, writable: true });
 
 describe('useFileSelection', () => {
     let sel: ReturnType<typeof useFileSelection>;
@@ -40,8 +35,6 @@ describe('useFileSelection', () => {
         localStorageMock.clear();
         vi.clearAllMocks();
     });
-
-    // ── initial state ────────────────────────────────────────────────────────
 
     describe('initial state', () => {
         it('starts with no selected files', () => {
@@ -57,13 +50,11 @@ describe('useFileSelection', () => {
         });
     });
 
-    // ── selectFile – plain click ─────────────────────────────────────────────
-
     describe('selectFile (plain click)', () => {
         it('selects the clicked file', () => {
             sel.selectFile(fileA);
             expect(sel.selectedFiles.value).toHaveLength(1);
-            expect(sel.selectedFiles.value[0].path).toBe(fileA.path);
+            expect(sel.selectedFiles.value[0]!.path).toBe(fileA.path);
             expect(sel.activeFile.value?.path).toBe(fileA.path);
         });
 
@@ -85,8 +76,6 @@ describe('useFileSelection', () => {
         });
     });
 
-    // ── selectFile – cmd/ctrl click ──────────────────────────────────────────
-
     describe('selectFile (meta/ctrl click)', () => {
         it('adds the file to an existing selection', () => {
             sel.selectFile(fileA);
@@ -105,7 +94,6 @@ describe('useFileSelection', () => {
         it('updates activeFile to the first remaining file after deselection', () => {
             sel.selectFile(fileA);
             sel.selectFile(fileB, { event: { metaKey: true } as MouseEvent });
-            // Deselect active file → activeFile should shift to fileB
             sel.selectFile(fileA, { event: { metaKey: true } as MouseEvent });
             expect(sel.activeFile.value?.path).toBe(fileB.path);
         });
@@ -116,8 +104,6 @@ describe('useFileSelection', () => {
             expect(sel.selectedFiles.value).toHaveLength(2);
         });
     });
-
-    // ── selectFile – shift click ─────────────────────────────────────────────
 
     describe('selectFile (shift click)', () => {
         it('selects a contiguous range between the anchor and the clicked file', () => {
@@ -135,13 +121,10 @@ describe('useFileSelection', () => {
         });
 
         it('falls back to plain selection when lastSelectedIndex is -1', () => {
-            // No prior selection → shiftKey is treated like a plain click
             sel.selectFile(fileB, { event: { shiftKey: true } as MouseEvent, visibleFiles: [fileA, fileB, fileC] });
             expect(sel.selectedFiles.value).toEqual([fileB]);
         });
     });
-
-    // ── selectFolder ─────────────────────────────────────────────────────────
 
     describe('selectFolder', () => {
         it('sets the selected folder', () => {
@@ -156,8 +139,6 @@ describe('useFileSelection', () => {
             expect(sel.activeFile.value).toBeNull();
         });
     });
-
-    // ── openFile ─────────────────────────────────────────────────────────────
 
     describe('openFile', () => {
         it('sets the active file', () => {
@@ -177,8 +158,6 @@ describe('useFileSelection', () => {
         });
     });
 
-    // ── clearSelection ────────────────────────────────────────────────────────
-
     describe('clearSelection', () => {
         it('clears selected files, active file, and lastSelectedIndex', () => {
             sel.selectFile(fileA);
@@ -191,14 +170,10 @@ describe('useFileSelection', () => {
             const files = [fileA, fileB, fileC];
             sel.selectFile(fileA, { visibleFiles: files });
             sel.clearSelection();
-            // After clearSelection, shift-click should not extend from fileA
             sel.selectFile(fileC, { event: { shiftKey: true } as MouseEvent, visibleFiles: files });
-            // lastSelectedIndex is -1, so shiftKey falls back to plain selection
             expect(sel.selectedFiles.value).toEqual([fileC]);
         });
     });
-
-    // ── syncAfterRefresh ─────────────────────────────────────────────────────
 
     describe('syncAfterRefresh', () => {
         it('returns null when no files are currently selected', () => {
@@ -216,7 +191,7 @@ describe('useFileSelection', () => {
             sel.selectFile(fileA);
             const updatedA = { ...fileA, size: 999 };
             sel.syncAfterRefresh([updatedA]);
-            expect(sel.selectedFiles.value[0].size).toBe(999);
+            expect(sel.selectedFiles.value[0]!.size).toBe(999);
         });
 
         it('clears the selection when none of the previously selected files exist', () => {
@@ -233,8 +208,6 @@ describe('useFileSelection', () => {
             expect(sel.activeFile.value?.modified).toBe('now');
         });
     });
-
-    // ── restoreFromStorage ────────────────────────────────────────────────────
 
     describe('restoreFromStorage', () => {
         it('restores the last selected file from localStorage', () => {

@@ -5,15 +5,11 @@ import { mount } from '@vue/test-utils';
 import { EditorView } from '@codemirror/view';
 import { useCodeEditor } from '@/renderer/composables/editor/codemirror/useCodeEditor';
 
-// Mock ResizeObserver — not in jsdom
 class FakeResizeObserver {
     observe() {}
     unobserve() {}
     disconnect() {}
 }
-vi.stubGlobal('ResizeObserver', FakeResizeObserver);
-
-// ── Helper: mount a component that calls useCodeEditor ───────────────────────
 
 function mountComposable(options: {
     initialContent?: string;
@@ -52,6 +48,8 @@ function mountComposable(options: {
         onContentChange,
     };
 }
+
+vi.stubGlobal('ResizeObserver', FakeResizeObserver);
 
 afterEach(() => {
     document.body.innerHTML = '';

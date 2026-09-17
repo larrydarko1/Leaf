@@ -21,8 +21,8 @@ export async function convertWebMToWav(webmBlob: Blob): Promise<ArrayBuffer> {
 export function arrayBufferToBase64(buffer: ArrayBuffer): string {
     const bytes = new Uint8Array(buffer);
     let binary = '';
-    for (let i = 0; i < bytes.byteLength; i++) {
-        binary += String.fromCharCode(bytes[i]);
+    for (const byte of bytes) {
+        binary += String.fromCharCode(byte);
     }
     return btoa(binary);
 }
@@ -44,9 +44,9 @@ function audioBufferToWav(audioBuffer: AudioBuffer): ArrayBuffer {
         const left = audioBuffer.getChannelData(0);
         const right = audioBuffer.getChannelData(1);
         samples = new Float32Array(left.length * 2);
-        for (let i = 0; i < left.length; i++) {
-            samples[i * 2] = left[i];
-            samples[i * 2 + 1] = right[i];
+        for (const [i, sample] of left.entries()) {
+            samples[i * 2] = sample;
+            samples[i * 2 + 1] = right[i] ?? 0;
         }
     } else {
         samples = audioBuffer.getChannelData(0);
@@ -75,8 +75,8 @@ function audioBufferToWav(audioBuffer: AudioBuffer): ArrayBuffer {
     writeString(view, 36, 'data');
     view.setUint32(40, dataSize, true);
 
-    for (let i = 0; i < samples.length; i++) {
-        const clamped = Math.max(-1, Math.min(1, samples[i]));
+    for (const [i, sample] of samples.entries()) {
+        const clamped = Math.max(-1, Math.min(1, sample));
         const intSample = clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff;
         view.setInt16(44 + i * 2, intSample, true);
     }

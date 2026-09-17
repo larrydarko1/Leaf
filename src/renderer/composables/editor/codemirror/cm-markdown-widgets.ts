@@ -131,7 +131,7 @@ export function createMarkdownWidgetsPlugin(
                     const label = target.closest('.cm-task-label');
                     if (label == null || !(label instanceof HTMLElement)) return;
 
-                    const posStr = label.dataset.taskPos;
+                    const posStr = label.dataset['taskPos'];
                     if (posStr == null) return;
 
                     event.preventDefault();

@@ -53,27 +53,27 @@ const LINE_CAP = 400;
  */
 const LENGTH_BASELINE = {
     'src/renderer/components/ai/AiMessageList.vue': 1098,
-    'src/renderer/App.vue': 919,
+    'src/renderer/App.vue': 915,
     'src/renderer/composables/drawing/useDrawingInteraction.ts': 813,
     'src/main/services/fs.ts': 796,
     'src/renderer/components/explorer/FolderNode.vue': 777,
-    'src/renderer/components/ai/AiInputArea.vue': 733,
+    'src/renderer/components/ai/AiInputArea.vue': 730,
     'src/renderer/components/NoteEditor.vue': 725,
     'src/renderer/components/ai/AiModelBar.vue': 700,
-    'src/renderer/composables/drawing/useCanvasRenderer.ts': 685,
+    'src/renderer/composables/drawing/useCanvasRenderer.ts': 684,
     'src/renderer/components/drawing/DrawingPropertiesPanel.vue': 675,
     'src/renderer/components/drawing/DrawingToolbar.vue': 576,
     'src/renderer/components/drawing/DrawingExportDialog.vue': 573,
     'src/renderer/composables/editor/codemirror/cm-theme.ts': 525,
     'src/renderer/components/editor/AudioViewer.vue': 514,
-    'src/renderer/composables/ai/useAIChat.ts': 499,
+    'src/renderer/composables/ai/useAIChat.ts': 498,
     'src/renderer/components/SearchPanel.vue': 479,
     'src/main/services/ai.ts': 478,
     'src/renderer/components/DrawingCanvas.vue': 474,
     'src/renderer/components/editor/MarkdownToolbar.vue': 465,
     'src/renderer/components/editor/VideoViewer.vue': 441,
     'src/renderer/composables/editor/codemirror/cm-widgets.ts': 429,
-    'src/renderer/composables/editor/codemirror/cm-deco-builders.ts': 422,
+    'src/renderer/composables/editor/codemirror/cm-deco-builders.ts': 421,
 };
 
 /** Modules named by an upstream convention rather than this repo's. */

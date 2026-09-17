@@ -129,6 +129,7 @@ function handleKeyDown(e: KeyboardEvent): void {
 
     // Select the new item
     const newItem = items[newIndex];
+    if (newItem === undefined) return;
     if (newItem.type === 'file' && newItem.file !== null && newItem.file !== undefined) {
         emit('selectFile', newItem.file);
     } else if (
@@ -143,7 +144,7 @@ function handleKeyDown(e: KeyboardEvent): void {
 
 function selectFile(file: FileInfo, event?: MouseEvent): void {
     if (props.renamingFile === null && (props.renamingFolder === null || props.renamingFolder === '')) {
-        emit('selectFile', file, { event, visibleFiles: visibleFiles.value });
+        emit('selectFile', file, { ...(event === undefined ? {} : { event }), visibleFiles: visibleFiles.value });
     }
 }
 
@@ -314,7 +315,7 @@ onUnmounted(() => {
                 :renaming-folder="renamingFolder"
                 :rename-value="renameValue"
                 :expanded-folders="expandedFolders"
-                :bookmarked-files="bookmarkedFiles"
+                :bookmarked-files="bookmarkedFiles ?? []"
                 @select-file="selectFile"
                 @select-folder="selectFolder"
                 @toggle-folder="toggleFolder"

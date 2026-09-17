@@ -66,8 +66,10 @@ export function useListKeyboardNavigation<T>(
                 next = current < 0 ? 0 : Math.max(current - 1, 0);
             }
         }
+        const item = list[next];
+        if (item === undefined) return;
         if (getExternalIndex === undefined) selectedIndex.value = next;
-        callbacks.onSelect(list[next], next);
+        callbacks.onSelect(item, next);
         if (scrollSelector !== undefined) {
             setTimeout((): void => {
                 document.querySelector(scrollSelector)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -88,9 +90,10 @@ export function useListKeyboardNavigation<T>(
         } else if (e.key === 'Enter') {
             const list = getList();
             const idx = getCurrentIndex();
-            if (idx >= 0 && idx < list.length) {
+            const item = list[idx];
+            if (item !== undefined) {
                 e.preventDefault();
-                callbacks.onOpen(list[idx], idx);
+                callbacks.onOpen(item, idx);
             }
         } else if (e.key === 'Escape' && callbacks.onEscape !== undefined) {
             callbacks.onEscape();

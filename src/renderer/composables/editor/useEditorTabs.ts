@@ -36,34 +36,8 @@ export function useEditorTabs(): UseEditorTabsReturn {
     const activeIndex = ref<number>(-1);
     let currentFolderPath: string | null = null;
 
-    const activeTab = computed<TabState | null>(
-        (): {
-            file: {
-                name: string;
-                path: string;
-                relativePath: string;
-                extension: string;
-                size: number;
-                modified: string;
-                folder: string;
-            };
-            content: string | null;
-            savedContent: string | null;
-            hasUnsavedChanges: boolean;
-            scrollTop: number;
-        } => tabs.value[activeIndex.value] ?? null,
-    );
-    const activeFile = computed<FileInfo | null>(
-        (): {
-            name: string;
-            path: string;
-            relativePath: string;
-            extension: string;
-            size: number;
-            modified: string;
-            folder: string;
-        } | null => activeTab.value?.file ?? null,
-    );
+    const activeTab = computed<TabState | null>((): TabState | null => tabs.value[activeIndex.value] ?? null);
+    const activeFile = computed<FileInfo | null>((): FileInfo | null => activeTab.value?.file ?? null);
 
     // --- Persistence helpers ---
 
@@ -292,6 +266,7 @@ export function useEditorTabs(): UseEditorTabsReturn {
         if (from === to || from < 0 || to < 0 || from >= tabs.value.length || to >= tabs.value.length) return;
         const newTabs = [...tabs.value];
         const [moved] = newTabs.splice(from, 1);
+        if (moved === undefined) return;
         newTabs.splice(to, 0, moved);
         tabs.value = newTabs;
 

@@ -54,22 +54,11 @@ function writeTheme(id: string, content: Record<string, unknown>) {
     fs.writeFileSync(path.join(THEMES_DIR, `${id}.json`), JSON.stringify(content));
 }
 
-// Re-import each time to reset the `seeded` module-level flag
 async function freshModule() {
     vi.resetModules();
     return await import('@/main/services/theme');
 }
 
-beforeEach(() => {
-    resetDirs();
-});
-
-afterEach(() => {
-    fs.rmSync(LEAF_HOME, { recursive: true, force: true });
-    fs.rmSync(BUNDLED_DIR, { recursive: true, force: true });
-});
-
-// Seeding has no front door of its own — theme:list is what triggers it.
 async function freshHandlers() {
     const { register } = await freshModule();
     const handlers: Record<string, (...args: unknown[]) => Promise<unknown>> = {};
@@ -81,11 +70,20 @@ async function freshHandlers() {
     return handlers;
 }
 
+beforeEach(() => {
+    resetDirs();
+});
+
+afterEach(() => {
+    fs.rmSync(LEAF_HOME, { recursive: true, force: true });
+    fs.rmSync(BUNDLED_DIR, { recursive: true, force: true });
+});
+
 describe('seeding, via theme:list', () => {
     it('copies bundled themes into THEMES_DIR', async () => {
         writeBundledTheme('dark', { name: 'Dark', colors: { bg: '#000' } });
         const handlers = await freshHandlers();
-        await handlers['theme:list']();
+        await handlers['theme:list']!();
         expect(fs.existsSync(path.join(THEMES_DIR, 'dark.json'))).toBe(true);
     });
 
@@ -93,7 +91,7 @@ describe('seeding, via theme:list', () => {
         writeBundledTheme('dark', { name: 'Dark', colors: { bg: '#000' } });
         writeTheme('dark', { name: 'Custom Dark', colors: { bg: '#111' } });
         const handlers = await freshHandlers();
-        await handlers['theme:list']();
+        await handlers['theme:list']!();
         const content = JSON.parse(fs.readFileSync(path.join(THEMES_DIR, 'dark.json'), 'utf-8')) as Record<
             string,
             unknown
@@ -104,17 +102,16 @@ describe('seeding, via theme:list', () => {
     it('is idempotent — runs seeding only once', async () => {
         writeBundledTheme('dark', { name: 'Dark', colors: {} });
         const handlers = await freshHandlers();
-        await handlers['theme:list']();
+        await handlers['theme:list']!();
         writeBundledTheme('light', { name: 'Light', colors: {} });
-        await handlers['theme:list']();
-        // light.json should NOT exist because seeding was skipped the second time
+        await handlers['theme:list']!();
         expect(fs.existsSync(path.join(THEMES_DIR, 'light.json'))).toBe(false);
     });
 
     it('handles a missing bundled dir gracefully', async () => {
         fs.rmSync(BUNDLED_DIR, { recursive: true, force: true });
         const handlers = await freshHandlers();
-        await expect(handlers['theme:list']()).resolves.toMatchObject({ success: true });
+        await expect(handlers['theme:list']!()).resolves.toMatchObject({ success: true });
     });
 });
 
@@ -139,7 +136,7 @@ describe('register — theme:list', () => {
         };
         expect(result.success).toBe(true);
         expect(result.themes).toHaveLength(1);
-        expect(result.themes[0].id).toBe('dark');
+        expect(result.themes[0]!.id).toBe('dark');
         expect(result.activeId).toBe('dark');
     });
 
@@ -210,7 +207,7 @@ describe('register — theme:list', () => {
         register(ipc as never);
 
         const result = (await handlers['theme:list']?.()) as { themes: { colors: Record<string, string> }[] };
-        const colors = result.themes[0].colors;
+        const colors = result.themes[0]!.colors;
         expect(colors['bg-primary']).toBe('#000');
         expect(colors['../../evil']).toBeUndefined();
     });

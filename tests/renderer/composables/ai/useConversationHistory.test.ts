@@ -4,8 +4,6 @@ import { useConversationHistory } from '@/renderer/composables/ai/useConversatio
 import type { AiStatus, Conversation } from '@/schemas/ai';
 import type { ChatMessage } from '@/schemas/chat';
 
-// ── electronAPI mock ─────────────────────────────────────────────────────────
-
 const mockConversationList = vi.fn();
 const mockConversationCreate = vi.fn();
 const mockConversationLoad = vi.fn();
@@ -14,25 +12,6 @@ const mockConversationDelete = vi.fn();
 const mockConversationRename = vi.fn();
 const mockAiResetChat = vi.fn().mockResolvedValue({ success: true });
 const mockAiRestoreChatHistory = vi.fn().mockResolvedValue({ success: true });
-
-Object.defineProperty(globalThis, 'window', {
-    value: {
-        electronAPI: {
-            conversationList: mockConversationList,
-            conversationCreate: mockConversationCreate,
-            conversationLoad: mockConversationLoad,
-            conversationSave: mockConversationSave,
-            conversationDelete: mockConversationDelete,
-            conversationRename: mockConversationRename,
-            aiResetChat: mockAiResetChat,
-            aiRestoreChatHistory: mockAiRestoreChatHistory,
-            log: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
-        },
-    },
-    writable: true,
-});
-
-// ── helpers ──────────────────────────────────────────────────────────────────
 
 function makeStatus(overrides: Partial<AiStatus> = {}): AiStatus {
     return {
@@ -68,7 +47,22 @@ function makeHistory(initialMessages: ChatMessage[] = [], statusOverrides: Parti
     return { history, status, lastUsedModelName, messages };
 }
 
-// ── tests ────────────────────────────────────────────────────────────────────
+Object.defineProperty(globalThis, 'window', {
+    value: {
+        electronAPI: {
+            conversationList: mockConversationList,
+            conversationCreate: mockConversationCreate,
+            conversationLoad: mockConversationLoad,
+            conversationSave: mockConversationSave,
+            conversationDelete: mockConversationDelete,
+            conversationRename: mockConversationRename,
+            aiResetChat: mockAiResetChat,
+            aiRestoreChatHistory: mockAiRestoreChatHistory,
+            log: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
+        },
+    },
+    writable: true,
+});
 
 describe('useConversationHistory', () => {
     beforeEach(() => {
@@ -81,7 +75,6 @@ describe('useConversationHistory', () => {
         mockConversationRename.mockResolvedValue({ success: true });
     });
 
-    // ── initial state ────────────────────────────────────────────────────────
     describe('initial state', () => {
         it('starts with showHistory false', () => {
             const { history } = makeHistory();
@@ -99,7 +92,6 @@ describe('useConversationHistory', () => {
         });
     });
 
-    // ── toggleHistory / openHistory ──────────────────────────────────────────
     describe('toggleHistory', () => {
         it('shows history when toggled from closed', async () => {
             const { history } = makeHistory();
@@ -129,7 +121,6 @@ describe('useConversationHistory', () => {
         });
     });
 
-    // ── startNewConversation ─────────────────────────────────────────────────
     describe('startNewConversation', () => {
         it('calls aiResetChat', async () => {
             const { history } = makeHistory();
@@ -176,7 +167,6 @@ describe('useConversationHistory', () => {
         });
     });
 
-    // ── createNewConversation ────────────────────────────────────────────────
     describe('createNewConversation', () => {
         it('calls conversationCreate with the current model name', async () => {
             const { history, status } = makeHistory();
@@ -210,7 +200,6 @@ describe('useConversationHistory', () => {
         });
     });
 
-    // ── loadConversation ─────────────────────────────────────────────────────
     describe('loadConversation', () => {
         it('loads messages from the conversation', async () => {
             const { history, messages } = makeHistory();
@@ -226,8 +215,8 @@ describe('useConversationHistory', () => {
             });
             await history.loadConversation('conv-2');
             expect(messages.value).toHaveLength(2);
-            expect(messages.value[0].content).toBe('Hello');
-            expect(messages.value[1].content).toBe('Hi there');
+            expect(messages.value[0]!.content).toBe('Hello');
+            expect(messages.value[1]!.content).toBe('Hi there');
         });
 
         it('sets currentConversationId', async () => {
@@ -310,7 +299,6 @@ describe('useConversationHistory', () => {
         });
     });
 
-    // ── deleteConversation ───────────────────────────────────────────────────
     describe('deleteConversation', () => {
         it('calls conversationDelete with the id', async () => {
             const { history } = makeHistory();
@@ -350,7 +338,6 @@ describe('useConversationHistory', () => {
         });
     });
 
-    // ── saveCurrentConversation ──────────────────────────────────────────────
     describe('saveCurrentConversation', () => {
         it('does nothing when there is no active conversation', async () => {
             const { history } = makeHistory();
@@ -368,7 +355,7 @@ describe('useConversationHistory', () => {
             history.currentConversationId.value = 'conv-save';
             await history.saveCurrentConversation();
 
-            const saved = mockConversationSave.mock.calls[0][0] as Conversation;
+            const saved = mockConversationSave.mock.calls[0]![0] as Conversation;
             expect(saved.messages).toHaveLength(2);
             expect(saved.messages.map((m) => m.role)).toEqual(['user', 'assistant']);
         });
@@ -379,12 +366,11 @@ describe('useConversationHistory', () => {
             history.conversationTokenCount.value = 777;
             await history.saveCurrentConversation();
 
-            const saved = mockConversationSave.mock.calls[0][0] as Conversation;
+            const saved = mockConversationSave.mock.calls[0]![0] as Conversation;
             expect(saved.tokenCount).toBe(777);
         });
     });
 
-    // ── rename ───────────────────────────────────────────────────────────────
     describe('confirmRename', () => {
         it('calls conversationRename with trimmed value', async () => {
             const { history } = makeHistory();
@@ -428,7 +414,6 @@ describe('useConversationHistory', () => {
         });
     });
 
-    // ── formatRelativeDate ───────────────────────────────────────────────────
     describe('formatRelativeDate', () => {
         it('returns "just now" for dates less than 1 minute ago', () => {
             const { history } = makeHistory();

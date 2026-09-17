@@ -172,10 +172,12 @@ function normalizeTheme(id: string, filePath: string, raw: unknown): ThemeInfo |
     if (raw === null || raw === undefined || typeof raw !== 'object') return null;
     const obj = raw as Record<string, unknown>;
 
-    const name = typeof obj.name === 'string' && obj.name.trim() !== '' ? obj.name.trim() : id;
-    const description = typeof obj.description === 'string' ? obj.description.trim() : '';
+    const rawName = obj['name'];
+    const rawDescription = obj['description'];
+    const name = typeof rawName === 'string' && rawName.trim() !== '' ? rawName.trim() : id;
+    const description = typeof rawDescription === 'string' ? rawDescription.trim() : '';
 
-    const colorsRaw = obj.colors;
+    const colorsRaw = obj['colors'];
     const colors: Record<string, string> = {};
     if (colorsRaw !== null && colorsRaw !== undefined && typeof colorsRaw === 'object') {
         for (const [key, value] of Object.entries(colorsRaw as Record<string, unknown>)) {

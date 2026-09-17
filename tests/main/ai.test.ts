@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { register, cleanup } from '@/main/services/ai';
 
 vi.mock('fs/promises', async () => {
     const actual = await vi.importActual<typeof import('fs/promises')>('fs/promises');
@@ -13,18 +14,19 @@ vi.mock('fs/promises', async () => {
 vi.mock('electron', () => ({
     shell: { openPath: vi.fn().mockResolvedValue('') },
 }));
+
 vi.mock('@/main/lib/logger', () => ({
     log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
+
 vi.mock('@/main/lib/paths', () => ({
     DEFAULT_MODELS_DIR: '/fake/models',
     LEAF_HOME: '/fake/leaf-home',
 }));
+
 vi.mock('@/main/services/systemPrompt', () => ({
     getActiveSystemPrompt: vi.fn().mockResolvedValue(''),
 }));
-
-import { register, cleanup } from '@/main/services/ai';
 
 let handlers: Record<string, (...args: unknown[]) => unknown>;
 
@@ -44,15 +46,11 @@ beforeEach(() => {
     register(r.ipc as never, () => null);
 });
 
-// ── cleanup ───────────────────────────────────────────────────────────────────
-
 describe('cleanup', () => {
     it('resolves without error when no model is loaded', async () => {
         await expect(cleanup()).resolves.toBeUndefined();
     });
 });
-
-// ── ai:getStatus ──────────────────────────────────────────────────────────────
 
 describe('ai:getStatus', () => {
     it('reports unloaded state on initial call', () => {
@@ -71,8 +69,6 @@ describe('ai:getStatus', () => {
     });
 });
 
-// ── ai:readModels ─────────────────────────────────────────────────────────────
-
 describe('ai:listModels', () => {
     it('returns an empty models list when the models directory does not exist', async () => {
         const result = (await handlers['ai:listModels']?.()) as {
@@ -85,8 +81,6 @@ describe('ai:listModels', () => {
         expect(result.modelsDir).toBe('/fake/models');
     });
 });
-
-// ── ai:loadModel input validation ─────────────────────────────────────────────
 
 describe('ai:loadModel', () => {
     it('returns failure for non-string modelPath', async () => {
@@ -111,8 +105,6 @@ describe('ai:loadModel', () => {
     });
 });
 
-// ── ai:chat input validation ──────────────────────────────────────────────────
-
 describe('ai:chat', () => {
     it('returns failure for non-string userMessage', async () => {
         const result = (await handlers['ai:chat']?.({}, 123, '')) as { success: boolean; error: string };
@@ -127,8 +119,6 @@ describe('ai:chat', () => {
     });
 });
 
-// ── ai:stopChat ───────────────────────────────────────────────────────────────
-
 describe('ai:stopChat', () => {
     it('returns failure when no generation is in progress', () => {
         const result = handlers['ai:stopChat']?.() as { success: boolean; error: string };
@@ -137,8 +127,6 @@ describe('ai:stopChat', () => {
     });
 });
 
-// ── ai:resetChat ──────────────────────────────────────────────────────────────
-
 describe('ai:resetChat', () => {
     it('returns failure when no model is loaded', async () => {
         const result = (await handlers['ai:resetChat']?.()) as { success: boolean; error: string };
@@ -146,8 +134,6 @@ describe('ai:resetChat', () => {
         expect(result.error).toMatch(/no model loaded/i);
     });
 });
-
-// ── ai:loadModel (file not found) ────────────────────────────────────────────
 
 describe('ai:loadModel (file not found)', () => {
     it('returns failure when model file does not exist inside models directory', async () => {
@@ -160,8 +146,6 @@ describe('ai:loadModel (file not found)', () => {
     });
 });
 
-// ── ai:openLeafDir ────────────────────────────────────────────────────────────
-
 describe('ai:openLeafDir', () => {
     it('calls shell.openPath with LEAF_HOME and returns success', async () => {
         const { shell } = await import('electron');
@@ -170,8 +154,6 @@ describe('ai:openLeafDir', () => {
         expect(shell.openPath).toHaveBeenCalled();
     });
 });
-
-// ── ai:restoreChatHistory ─────────────────────────────────────────────────────
 
 describe('ai:restoreChatHistory', () => {
     it('returns failure for non-array messages', async () => {

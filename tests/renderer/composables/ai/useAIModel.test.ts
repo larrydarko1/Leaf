@@ -13,31 +13,12 @@ vi.mock('vue-i18n', () => ({
     }),
 }));
 
-// ── electronAPI mock ─────────────────────────────────────────────────────────
-
 const mockAiListModels = vi.fn();
 const mockAiLoadModel = vi.fn();
 const mockAiUnloadModel = vi.fn();
 const mockAiGetStatus = vi.fn();
 const mockAiRestoreChatHistory = vi.fn().mockResolvedValue({ success: true });
 const mockAiOpenLeafDir = vi.fn().mockResolvedValue(undefined);
-
-Object.defineProperty(globalThis, 'window', {
-    value: {
-        electronAPI: {
-            aiListModels: mockAiListModels,
-            aiLoadModel: mockAiLoadModel,
-            aiUnloadModel: mockAiUnloadModel,
-            aiGetStatus: mockAiGetStatus,
-            aiRestoreChatHistory: mockAiRestoreChatHistory,
-            aiOpenLeafDir: mockAiOpenLeafDir,
-            log: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
-        },
-    },
-    writable: true,
-});
-
-// ── helpers ──────────────────────────────────────────────────────────────────
 
 function makeModel(overrides: Partial<AiModelInfo> = {}): AiModelInfo {
     return {
@@ -63,7 +44,20 @@ function makeStatus(overrides: Partial<AiStatus> = {}): AiStatus {
     };
 }
 
-// ── tests ────────────────────────────────────────────────────────────────────
+Object.defineProperty(globalThis, 'window', {
+    value: {
+        electronAPI: {
+            aiListModels: mockAiListModels,
+            aiLoadModel: mockAiLoadModel,
+            aiUnloadModel: mockAiUnloadModel,
+            aiGetStatus: mockAiGetStatus,
+            aiRestoreChatHistory: mockAiRestoreChatHistory,
+            aiOpenLeafDir: mockAiOpenLeafDir,
+            log: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
+        },
+    },
+    writable: true,
+});
 
 describe('useAIModel', () => {
     beforeEach(() => {
@@ -74,7 +68,6 @@ describe('useAIModel', () => {
         mockAiUnloadModel.mockResolvedValue({ success: true });
     });
 
-    // ── initial state ────────────────────────────────────────────────────────
     describe('initial state', () => {
         it('starts with model not loaded', () => {
             const m = useAIModel();
@@ -97,7 +90,6 @@ describe('useAIModel', () => {
         });
     });
 
-    // ── previousModelMatch ───────────────────────────────────────────────────
     describe('previousModelMatch', () => {
         it('returns null when lastUsedModelName is not set', () => {
             const m = useAIModel();
@@ -137,7 +129,6 @@ describe('useAIModel', () => {
         });
     });
 
-    // ── selectedModelLabel ───────────────────────────────────────────────────
     describe('selectedModelLabel', () => {
         it('shows placeholder when no model selected', () => {
             const m = useAIModel();
@@ -169,7 +160,6 @@ describe('useAIModel', () => {
         });
     });
 
-    // ── selectModel ──────────────────────────────────────────────────────────
     describe('selectModel', () => {
         it('sets selectedModelPath', () => {
             const m = useAIModel();
@@ -186,7 +176,6 @@ describe('useAIModel', () => {
         });
     });
 
-    // ── loadModel ────────────────────────────────────────────────────────────
     describe('loadModel', () => {
         it('returns error when no path is provided', async () => {
             const m = useAIModel();
@@ -244,7 +233,6 @@ describe('useAIModel', () => {
         });
     });
 
-    // ── unloadModel ──────────────────────────────────────────────────────────
     describe('unloadModel', () => {
         it('saves currentModelName to lastUsedModelName before unloading', async () => {
             const m = useAIModel();
@@ -266,11 +254,9 @@ describe('useAIModel', () => {
         });
     });
 
-    // ── loadPreviousModel ────────────────────────────────────────────────────
     describe('loadPreviousModel', () => {
         it('returns error when there is no previous model match', async () => {
             const m = useAIModel();
-            // no lastUsedModelName → previousModelMatch is null → path is ''
             const result = await m.loadPreviousModel([], { hasActiveConversation: false });
             expect(result.success).toBe(false);
         });
@@ -280,7 +266,6 @@ describe('useAIModel', () => {
             const model = makeModel({ name: 'prev.gguf', path: '/models/prev.gguf' });
             m.availableModels.value = [model];
             m.lastUsedModelName.value = 'prev.gguf';
-            // status.isModelLoaded is false so previousModelMatch is active
 
             const history = [
                 { role: 'user', content: 'Hello' },
@@ -327,12 +312,11 @@ describe('useAIModel', () => {
             ];
             await m.loadPreviousModel(history, { hasActiveConversation: true });
 
-            const restored = mockAiRestoreChatHistory.mock.calls[0][0] as { role: string }[];
+            const restored = mockAiRestoreChatHistory.mock.calls[0]![0] as { role: string }[];
             expect(restored.every((m) => m.role !== 'system')).toBe(true);
         });
     });
 
-    // ── refreshModels ────────────────────────────────────────────────────────
     describe('refreshModels', () => {
         it('populates availableModels on success', async () => {
             const m = useAIModel();
@@ -351,8 +335,6 @@ describe('useAIModel', () => {
         });
     });
 
-    // ── openModelsFolder ─────────────────────────────────────────────────────
-
     describe('openModelsFolder', () => {
         it('calls aiOpenLeafDir', async () => {
             const m = useAIModel();
@@ -368,8 +350,6 @@ describe('useAIModel', () => {
         });
     });
 
-    // ── unloadModel (catch block) ─────────────────────────────────────────────
-
     describe('unloadModel (error path)', () => {
         it('logs error when aiUnloadModel throws', async () => {
             const m = useAIModel();
@@ -378,8 +358,6 @@ describe('useAIModel', () => {
             expect(window.electronAPI.log.error).toHaveBeenCalled();
         });
     });
-
-    // ── loadPreviousModel (catch block) ───────────────────────────────────────
 
     describe('loadPreviousModel (error path)', () => {
         it('logs error when aiRestoreChatHistory throws', async () => {
@@ -396,7 +374,6 @@ describe('useAIModel', () => {
         });
     });
 
-    // ── truncate ─────────────────────────────────────────────────────────────
     describe('truncate', () => {
         it('returns string unchanged when within limit', () => {
             const m = useAIModel();

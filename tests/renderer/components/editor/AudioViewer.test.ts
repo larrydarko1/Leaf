@@ -17,7 +17,6 @@ beforeEach(() => {
     vi.clearAllMocks();
     vi.stubGlobal('requestAnimationFrame', vi.fn());
     vi.stubGlobal('cancelAnimationFrame', vi.fn());
-    // Stub HTMLMediaElement methods not implemented in jsdom
     Object.defineProperty(HTMLMediaElement.prototype, 'play', {
         configurable: true,
         value: vi.fn().mockResolvedValue(undefined),
@@ -109,7 +108,6 @@ describe('AudioViewer', () => {
             props: { filePath: '/vault/song.mp3' },
         });
         await wrapper.vm.$nextTick();
-        // While loading, the loading indicator should show or controls should be absent
         expect(wrapper.exists()).toBe(true);
         resolveFn!({ success: true, dataUrl: 'data:audio/mp3;base64,fake' });
         wrapper.unmount();
@@ -214,7 +212,6 @@ describe('AudioViewer', () => {
             await wrapper.vm.$nextTick();
             const slider = wrapper.find('.audio-volume-slider');
             if (slider.exists()) {
-                // Use setValue which properly sets the value on the element
                 await slider.setValue('0.5');
                 expect(wrapper.exists()).toBe(true);
             }
@@ -262,7 +259,6 @@ describe('AudioViewer', () => {
         if (audio.exists()) {
             await audio.trigger('loadedmetadata');
         }
-        // Trigger a space keydown on the window
         const e = new KeyboardEvent('keydown', { key: ' ', bubbles: true });
         window.dispatchEvent(e);
         expect(wrapper.exists()).toBe(true);

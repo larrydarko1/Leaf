@@ -16,7 +16,6 @@ beforeEach(() => {
 
 describe('ImageViewer', () => {
     it('shows loading state while the image is being fetched', async () => {
-        // Never resolve so we stay in loading state
         mockReadImage.mockReturnValue(new Promise(() => {}));
         const wrapper = mountWithI18n(ImageViewer, {
             props: { filePath: '/vault/photo.png', fileName: 'photo.png' },
@@ -31,7 +30,6 @@ describe('ImageViewer', () => {
         const wrapper = mountWithI18n(ImageViewer, {
             props: { filePath: '/vault/photo.png', fileName: 'photo.png' },
         });
-        // Wait for the async loadImage to finish
         await new Promise((r) => setTimeout(r, 0));
         await wrapper.vm.$nextTick();
         const img = wrapper.find('img.image-preview');

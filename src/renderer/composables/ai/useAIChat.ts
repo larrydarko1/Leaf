@@ -132,7 +132,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions): UseAIChatRe
         if (files.length === 0) return null;
 
         // Single file: pass raw content.
-        if (files.length === 1) return await readFileForContext(files[0]);
+        if (files.length === 1 && files[0] !== undefined) return await readFileForContext(files[0]);
 
         // Multiple files: label each clearly so the model can tell them apart.
         const parts: string[] = [];
@@ -222,10 +222,8 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions): UseAIChatRe
     function startEditMessage(index: number): void {
         if (messages.value[index]?.role !== 'user') return;
         editingIndex.value = index;
-        editContent.value = messages.value[index].content;
-        void nextTick((): void => {
-            if (editInputRef.value !== null && editInputRef.value.length > 0) editInputRef.value[0].focus();
-        });
+        editContent.value = messages.value[index]?.content ?? '';
+        void nextTick((): void => editInputRef.value?.[0]?.focus());
     }
 
     function cancelEditMessage(): void {
@@ -235,11 +233,12 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions): UseAIChatRe
 
     async function confirmEditMessage(index: number): Promise<void> {
         const newContent = editContent.value.trim();
-        if (newContent.length === 0) {
+        const edited = messages.value[index];
+        if (newContent.length === 0 || edited === undefined) {
             cancelEditMessage();
             return;
         }
-        messages.value[index].content = newContent;
+        edited.content = newContent;
         messages.value.splice(index + 1);
         await window.electronAPI.aiResetChat();
         conversationTokenCount.value = 0;
@@ -266,7 +265,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions): UseAIChatRe
 
     async function resendMessage(index: number): Promise<void> {
         const msg = messages.value[index];
-        if (msg.role !== 'user' || !status.value.isModelLoaded || status.value.isGenerating) return;
+        if (msg?.role !== 'user' || !status.value.isModelLoaded || status.value.isGenerating) return;
         await window.electronAPI.aiResetChat();
         conversationTokenCount.value = 0;
         // Restore context of messages that preceded this one so the AI
@@ -342,11 +341,11 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions): UseAIChatRe
     async function regenerateLastResponse(): Promise<void> {
         if (messages.value.length < 2 || isStreaming.value) return;
         const lastMsg = messages.value[messages.value.length - 1];
-        if (lastMsg.role !== 'assistant') return;
+        if (lastMsg?.role !== 'assistant') return;
         messages.value.pop();
         await saveCurrentConversation();
         const lastIndex = messages.value.length - 1;
-        if (lastIndex >= 0 && messages.value[lastIndex].role === 'user') {
+        if (messages.value[lastIndex]?.role === 'user') {
             await resendMessage(lastIndex);
         }
     }

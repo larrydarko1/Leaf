@@ -26,8 +26,6 @@ function classesOf(decos: { value: { spec: { class?: string } } }[]): string[] {
     return decos.map((d) => d.value?.spec?.class).filter((c): c is string => c !== undefined && c !== '');
 }
 
-// ── activeLinesSet ──────────────────────────────────────────────────────────
-
 describe('activeLinesSet', () => {
     it('returns the set of line numbers covered by the cursor', () => {
         const state = makeState('line1\nline2\nline3', 6); // cursor on line 2
@@ -52,18 +50,13 @@ describe('activeLinesSet', () => {
     it('returns empty set-like result for empty document', () => {
         const state = makeState('');
         const lines = activeLinesSet(state);
-        // Line 1 exists but cursor is on it
         expect(lines.size).toBeGreaterThanOrEqual(0);
     });
 });
 
-// ── visible ranges are expanded to whole lines ──────────────────────────────
-
 describe('line-anchored patterns across partial visible ranges', () => {
     it('matches a task whose visible range starts mid-line', () => {
         const state = makeState('- [x] done thing');
-        // A range starting at 8 cuts the '- [x]' marker off; without line expansion
-        // the `^`-anchored task regex would find nothing.
         const decos = buildTaskDecos(state, [{ from: 8, to: state.doc.length }], new Set());
         expect(classesOf(decos as never[]).some((c) => c.includes('cm-task-done'))).toBe(true);
     });
@@ -81,8 +74,6 @@ describe('line-anchored patterns across partial visible ranges', () => {
     });
 });
 
-// ── mergeVisibleRanges ──────────────────────────────────────────────────────
-
 describe('mergeVisibleRanges', () => {
     it('returns empty array when no ranges are provided', () => {
         const state = makeState('hello');
@@ -93,7 +84,7 @@ describe('mergeVisibleRanges', () => {
         const state = makeState('abc\ndef');
         const result = mergeVisibleRanges(state, [{ from: 1, to: 5 }]);
         expect(result).toHaveLength(1);
-        expect(result[0].from).toBe(0); // start of 'abc'
+        expect(result[0]!.from).toBe(0); // start of 'abc'
     });
 
     it('merges overlapping ranges into one', () => {
@@ -117,8 +108,6 @@ describe('mergeVisibleRanges', () => {
     });
 });
 
-// ── buildHighlightDecos ─────────────────────────────────────────────────────
-
 describe('buildHighlightDecos', () => {
     it('returns no decorations for plain text', () => {
         const state = makeState('Hello world');
@@ -139,7 +128,6 @@ describe('buildHighlightDecos', () => {
         const state = makeState(doc, 3); // cursor inside
         const activeLines = activeLinesSet(state);
         const decos = buildHighlightDecos(state, fullRange(state), activeLines);
-        // Active line skip: no highlight decoration should be produced
         expect(decos).toHaveLength(0);
     });
 
@@ -152,8 +140,6 @@ describe('buildHighlightDecos', () => {
         expect(highlightDecos).toHaveLength(2);
     });
 });
-
-// ── buildEmbedDecos ─────────────────────────────────────────────────────────
 
 describe('buildEmbedDecos', () => {
     it('returns no decorations when no embeds are present', () => {
@@ -178,7 +164,6 @@ describe('buildEmbedDecos', () => {
         const activeLines = activeLinesSet(state);
         const cache = new Map<string, string>();
         const { decos, coveredRanges } = buildEmbedDecos(state, fullRange(state), activeLines, cache, () => 'unknown');
-        // Widget not rendered on active line, but range still marked
         expect(decos).toHaveLength(0);
         expect(coveredRanges).toHaveLength(1);
     });
@@ -197,8 +182,6 @@ describe('buildEmbedDecos', () => {
         expect(decos.length).toBeGreaterThan(0);
     });
 });
-
-// ── buildTaskDecos ──────────────────────────────────────────────────────────
 
 describe('buildTaskDecos', () => {
     it('returns no decorations for plain text', () => {
@@ -225,7 +208,6 @@ describe('buildTaskDecos', () => {
     it('produces half-checked decoration for "- [/]"', () => {
         const state = makeState('- [/] half done');
         const decos = buildTaskDecos(state, fullRange(state), new Set());
-        // Should produce decorations but NOT cm-task-done
         expect(decos.length).toBeGreaterThan(0);
         const allClasses = classesOf(decos as never[]);
         expect(allClasses.some((c) => c.includes('cm-task-done'))).toBe(false);
@@ -242,12 +224,9 @@ describe('buildTaskDecos', () => {
     it('handles multiple tasks in the document', () => {
         const state = makeState('- [ ] task one\n- [x] task two\n- [ ] task three');
         const decos = buildTaskDecos(state, fullRange(state), new Set());
-        // Each task produces a line deco + widget deco
         expect(decos.length).toBeGreaterThanOrEqual(6);
     });
 });
-
-// ── buildSyntaxDecos ─────────────────────────────────────────────────────────
 
 describe('buildSyntaxDecos', () => {
     it('returns empty array for plain text', () => {
@@ -307,7 +286,6 @@ describe('buildSyntaxDecos', () => {
     });
 
     it('skips decorations in embed-covered ranges', () => {
-        // Bold text that is "covered" by an embed range
         const state = makeState('**bold**');
         const coveredRanges: [number, number][] = [[0, 8]]; // entire document covered
         const decos = buildSyntaxDecos(state, fullRange(state), new Set(), coveredRanges);
@@ -331,7 +309,6 @@ describe('buildSyntaxDecos', () => {
     it('produces horizontal rule widget for "---" dividers', () => {
         const state = makeState('above\n\n---\n\nbelow');
         const decos = buildSyntaxDecos(state, fullRange(state), new Set(), []);
-        // HorizontalRule produces a replace widget
         expect(decos.length).toBeGreaterThan(0);
     });
 
@@ -351,7 +328,6 @@ describe('buildSyntaxDecos', () => {
 
     it('deduplicates nodes spanning multiple visible ranges', () => {
         const state = makeState('**bold text here**');
-        // Feed the same range twice — should not double the decorations
         const ranges = [
             { from: 0, to: 18 },
             { from: 0, to: 18 }, // duplicate

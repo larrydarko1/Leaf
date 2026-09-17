@@ -4,10 +4,6 @@ import { EditorState, EditorSelection } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { useCodemirrorToolbar } from '@/renderer/composables/editor/codemirror/cm-toolbar';
 
-/**
- * Create a minimal EditorView with the given doc text and cursor/selection.
- * `from` and `to` default to the end of the document (cursor at end).
- */
 function createView(doc: string, from?: number, to?: number): EditorView {
     const f = from ?? doc.length;
     const t = to ?? f;
@@ -16,7 +12,6 @@ function createView(doc: string, from?: number, to?: number): EditorView {
         selection: EditorSelection.create([EditorSelection.range(f, t)]),
     });
     const view = new EditorView({ state, parent: document.createElement('div') });
-    // stub focus so jsdom doesn't throw
     vi.spyOn(view, 'focus').mockImplementation(() => {});
     return view;
 }
@@ -45,7 +40,6 @@ describe('useCodemirrorToolbar', () => {
         toolbar = useCodemirrorToolbar(viewRef);
     });
 
-    // ── no-op when view is null ──────────────────────────────────────────────
     describe('when view is null', () => {
         it('mdFormatText does not throw', () => {
             expect(() => toolbar.mdFormatText('bold')).not.toThrow();
@@ -57,7 +51,6 @@ describe('useCodemirrorToolbar', () => {
         });
     });
 
-    // ── bold ─────────────────────────────────────────────────────────────────
     describe('bold', () => {
         it('wraps selected text with **', () => {
             setup('hello world', 6, 11); // select "world"
@@ -69,12 +62,10 @@ describe('useCodemirrorToolbar', () => {
             setup('hello ', 6);
             toolbar.mdFormatText('bold');
             expect(doc(viewRef.value!)).toBe('hello **bold text**');
-            // placeholder "bold text" should be selected
             expect(sel(viewRef.value!)).toEqual({ from: 8, to: 17 });
         });
     });
 
-    // ── italic ───────────────────────────────────────────────────────────────
     describe('italic', () => {
         it('wraps selected text with *', () => {
             setup('hello world', 6, 11);
@@ -90,7 +81,6 @@ describe('useCodemirrorToolbar', () => {
         });
     });
 
-    // ── strikethrough ────────────────────────────────────────────────────────
     describe('strikethrough', () => {
         it('wraps selected text with ~~', () => {
             setup('remove this', 7, 11);
@@ -105,7 +95,6 @@ describe('useCodemirrorToolbar', () => {
         });
     });
 
-    // ── highlight ────────────────────────────────────────────────────────────
     describe('highlight', () => {
         it('wraps selected text with ==', () => {
             setup('important', 0, 9);
@@ -120,7 +109,6 @@ describe('useCodemirrorToolbar', () => {
         });
     });
 
-    // ── inline code ──────────────────────────────────────────────────────────
     describe('code (inline)', () => {
         it('wraps single-line selection with backticks', () => {
             setup('const x = 1', 0, 11);
@@ -135,7 +123,6 @@ describe('useCodemirrorToolbar', () => {
         });
     });
 
-    // ── code block (multiline) ───────────────────────────────────────────────
     describe('code (block)', () => {
         it('wraps multiline selection with fences', () => {
             const text = 'line one\nline two';
@@ -145,7 +132,6 @@ describe('useCodemirrorToolbar', () => {
         });
     });
 
-    // ── unordered list ───────────────────────────────────────────────────────
     describe('ul', () => {
         it('prefixes each line with "- "', () => {
             const text = 'apples\noranges\nbananas';
@@ -161,7 +147,6 @@ describe('useCodemirrorToolbar', () => {
         });
     });
 
-    // ── ordered list ─────────────────────────────────────────────────────────
     describe('ol', () => {
         it('prefixes each line with sequential numbers', () => {
             const text = 'first\nsecond\nthird';
@@ -171,7 +156,6 @@ describe('useCodemirrorToolbar', () => {
         });
     });
 
-    // ── checkbox ─────────────────────────────────────────────────────────────
     describe('checkbox', () => {
         it('prefixes each line with "- [ ] "', () => {
             const text = 'task one\ntask two';
@@ -181,7 +165,6 @@ describe('useCodemirrorToolbar', () => {
         });
     });
 
-    // ── blockquote ───────────────────────────────────────────────────────────
     describe('quote', () => {
         it('prefixes each line with "> "', () => {
             const text = 'line a\nline b';
@@ -191,13 +174,11 @@ describe('useCodemirrorToolbar', () => {
         });
     });
 
-    // ── link ─────────────────────────────────────────────────────────────────
     describe('link', () => {
         it('wraps selected text as link text and selects "url"', () => {
             setup('click here', 0, 10);
             toolbar.mdFormatText('link');
             expect(doc(viewRef.value!)).toBe('[click here](url)');
-            // "url" should be selected for easy replacement
             expect(sel(viewRef.value!)).toEqual({ from: 13, to: 16 });
         });
 
@@ -205,12 +186,10 @@ describe('useCodemirrorToolbar', () => {
             setup('', 0);
             toolbar.mdFormatText('link');
             expect(doc(viewRef.value!)).toBe('[link text](url)');
-            // "link text" should be selected
             expect(sel(viewRef.value!)).toEqual({ from: 1, to: 10 });
         });
     });
 
-    // ── horizontal rule ──────────────────────────────────────────────────────
     describe('hr', () => {
         it('inserts --- on a new line', () => {
             setup('above', 5);
@@ -219,7 +198,6 @@ describe('useCodemirrorToolbar', () => {
         });
     });
 
-    // ── mdInsertHeading ──────────────────────────────────────────────────────
     describe('mdInsertHeading', () => {
         function headingEvent(level: string): Event {
             return { target: { value: level } } as unknown as Event;

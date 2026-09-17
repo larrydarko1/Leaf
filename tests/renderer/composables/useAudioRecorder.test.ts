@@ -1,18 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mount } from '@vue/test-utils';
-
-// ── audio utils mock ──────────────────────────────────────────────────────────
-
-vi.mock('@/renderer/utils/audio', () => ({
-    convertWebMToWav: vi.fn().mockResolvedValue(new ArrayBuffer(100)),
-    arrayBufferToBase64: vi.fn().mockReturnValue('base64encoded'),
-}));
-
-// ── MediaRecorder mock ────────────────────────────────────────────────────────
-// Methods are regular functions so `this` refers to the instance at call time.
-
-const mockRecorderStart = vi.fn();
-const mockRecorderStop = vi.fn();
+import { useAudioRecorder } from '@/renderer/composables/useAudioRecorder';
 
 class MockMediaRecorder {
     state = 'inactive';
@@ -22,7 +10,6 @@ class MockMediaRecorder {
     start(timeslice?: number) {
         mockRecorderStart(timeslice);
         this.state = 'recording';
-        // Simulate the first audio chunk arriving immediately
         this.ondataavailable?.({ data: new Blob(['audio'], { type: 'audio/webm' }) });
     }
 
@@ -33,37 +20,21 @@ class MockMediaRecorder {
     }
 }
 
-vi.stubGlobal('MediaRecorder', MockMediaRecorder);
+vi.mock('@/renderer/utils/audio', () => ({
+    convertWebMToWav: vi.fn().mockResolvedValue(new ArrayBuffer(100)),
+    arrayBufferToBase64: vi.fn().mockReturnValue('base64encoded'),
+}));
 
-// ── navigator.mediaDevices mock ───────────────────────────────────────────────
-
+const mockRecorderStart = vi.fn();
+const mockRecorderStop = vi.fn();
 const mockTrackStop = vi.fn();
+
 const mockGetUserMedia = vi.fn().mockResolvedValue({
     getTracks: () => [{ stop: mockTrackStop }],
 });
 
-Object.defineProperty(globalThis.navigator, 'mediaDevices', {
-    value: { getUserMedia: mockGetUserMedia },
-    writable: true,
-    configurable: true,
-});
-
-// ── window.electronAPI mock ───────────────────────────────────────────────────
-
 const mockSaveRecording = vi.fn().mockResolvedValue({ success: true, path: '/vault/recording.wav' });
 const mockLogError = vi.fn();
-
-Object.assign(window, {
-    electronAPI: {
-        ...(window.electronAPI ?? {}),
-        saveAudioRecording: mockSaveRecording,
-        log: { error: mockLogError },
-    },
-});
-
-import { useAudioRecorder } from '@/renderer/composables/useAudioRecorder';
-
-// ── helper: run composable inside a real Vue component ────────────────────────
 
 function setupComposable(currentFolder: string | null = '/vault') {
     const onSaved = vi.fn();
@@ -80,8 +51,23 @@ function setupComposable(currentFolder: string | null = '/vault') {
     return { ...result, onSaved, wrapper };
 }
 
-// ── flush all pending microtasks ──────────────────────────────────────────────
 const nextTick = () => new Promise<void>((r) => setTimeout(r, 0));
+
+vi.stubGlobal('MediaRecorder', MockMediaRecorder);
+
+Object.defineProperty(globalThis.navigator, 'mediaDevices', {
+    value: { getUserMedia: mockGetUserMedia },
+    writable: true,
+    configurable: true,
+});
+
+Object.assign(window, {
+    electronAPI: {
+        ...(window.electronAPI ?? {}),
+        saveAudioRecording: mockSaveRecording,
+        log: { error: mockLogError },
+    },
+});
 
 beforeEach(() => {
     vi.clearAllMocks();
@@ -172,15 +158,9 @@ describe('useAudioRecorder', () => {
 
         it('does not call stop when already inactive', async () => {
             const { toggle, wrapper } = setupComposable();
-            // Start then immediately force inactive state to test the guard
             await toggle();
-            // Manually mark MediaRecorder as inactive before toggling off
-            // (simulates the recorder already being stopped externally)
             mockRecorderStop.mockClear();
-            // Calling toggle again should still call stop() on composable
             await toggle();
-            // stop() calls mediaRecorder.stop() only if state !== 'inactive'
-            // Since MockMediaRecorder.start sets state='recording', stop IS called
             expect(mockRecorderStop).toHaveBeenCalled();
             wrapper.unmount();
         });
@@ -242,7 +222,6 @@ describe('useAudioRecorder', () => {
     describe('formattedDuration', () => {
         it('formats seconds-only as 00:SS', () => {
             const { formattedDuration, wrapper } = setupComposable();
-            // Duration starts at 0, so it's 00:00
             expect(formattedDuration.value).toBe('00:00');
             wrapper.unmount();
         });

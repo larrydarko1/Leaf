@@ -6,8 +6,6 @@ import {
     TaskCheckboxWidget,
 } from '@/renderer/composables/editor/codemirror/cm-widgets';
 
-// ── HorizontalRuleWidget ──────────────────────────────────────────────────────
-
 describe('HorizontalRuleWidget', () => {
     it('renders an <hr> with cm-hr class', () => {
         const w = new HorizontalRuleWidget();
@@ -16,8 +14,6 @@ describe('HorizontalRuleWidget', () => {
         expect(el.className).toBe('cm-hr');
     });
 });
-
-// ── TableWidget ───────────────────────────────────────────────────────────────
 
 describe('TableWidget.eq', () => {
     it('returns true for identical raw text', () => {
@@ -54,8 +50,8 @@ describe('TableWidget.toDOM', () => {
         const el = renderTable('| Name | Age |\n|---|---|\n| Alice | 30 |');
         const ths = el.querySelectorAll('thead th');
         expect(ths).toHaveLength(2);
-        expect(ths[0].textContent).toBe('Name');
-        expect(ths[1].textContent).toBe('Age');
+        expect(ths[0]!.textContent).toBe('Name');
+        expect(ths[1]!.textContent).toBe('Age');
     });
 
     it('renders body rows in <tbody>', () => {
@@ -137,8 +133,6 @@ describe('TableWidget.toDOM', () => {
     });
 });
 
-// ── EmbedWidget ───────────────────────────────────────────────────────────────
-
 describe('EmbedWidget.eq', () => {
     it('returns true when fileName and resolvedPath match', () => {
         const a = new EmbedWidget('img.png', '/path/img.png', 'image', '');
@@ -206,7 +200,6 @@ describe('EmbedWidget.toDOM', () => {
         const el = new EmbedWidget('clip.mp4', '/vault/clip.mp4', 'video', '').toDOM();
         const media = el.querySelector('video') as HTMLVideoElement & { paused: boolean; pause: () => void };
         const btn = el.querySelector('button.cm-embed-play-btn') as HTMLButtonElement;
-        // Simulate playing state
         Object.defineProperty(media, 'paused', { get: () => false, configurable: true });
         media.pause = vi.fn();
         btn.click();
@@ -252,7 +245,6 @@ describe('EmbedWidget.toDOM', () => {
     it('timeupdate updates time display when realDuration is known', () => {
         const el = new EmbedWidget('clip.mp4', '/vault/clip.mp4', 'video', '').toDOM();
         const media = el.querySelector('video') as HTMLVideoElement;
-        // Simulate duration known
         Object.defineProperty(media, 'duration', { get: () => 120, configurable: true });
         media.dispatchEvent(new Event('loadedmetadata'));
         Object.defineProperty(media, 'currentTime', { get: () => 60, configurable: true });
@@ -266,7 +258,7 @@ describe('EmbedWidget.toDOM', () => {
         const media = el.querySelector('video') as HTMLVideoElement;
         Object.defineProperty(media, 'duration', { get: () => 90, configurable: true });
         media.dispatchEvent(new Event('loadedmetadata'));
-        expect(el.dataset.realDuration).toBe('90');
+        expect(el.dataset['realDuration']).toBe('90');
     });
 
     it('loadedmetadata probes when duration is Infinity', () => {
@@ -274,20 +266,17 @@ describe('EmbedWidget.toDOM', () => {
         const media = el.querySelector('video') as HTMLVideoElement;
         Object.defineProperty(media, 'duration', { get: () => Infinity, configurable: true });
         media.dispatchEvent(new Event('loadedmetadata'));
-        // Should try to probe by seeking to 1e10
         expect(media.currentTime).toBe(1e10);
     });
 
     it('seeked event finalizes probe and captures duration', () => {
         const el = new EmbedWidget('clip.mp4', '/vault/clip.mp4', 'video', '').toDOM();
         const media = el.querySelector('video') as HTMLVideoElement;
-        // Set up probing state
         Object.defineProperty(media, 'duration', { get: () => Infinity, configurable: true });
         media.dispatchEvent(new Event('loadedmetadata'));
-        // Now duration becomes finite after seek
         Object.defineProperty(media, 'duration', { get: () => 120, configurable: true });
         media.dispatchEvent(new Event('seeked'));
-        expect(el.dataset.realDuration).toBe('120');
+        expect(el.dataset['realDuration']).toBe('120');
     });
 
     it('volume button mutes when volume > 0', () => {
@@ -306,10 +295,8 @@ describe('EmbedWidget.toDOM', () => {
         const media = el.querySelector('video') as HTMLVideoElement;
         const volBtn = el.querySelector('button.cm-embed-vol-btn') as HTMLButtonElement;
         const setter = vi.fn();
-        // First click: mute
         Object.defineProperty(media, 'volume', { get: () => 1, set: setter, configurable: true });
         volBtn.click();
-        // Second click: unmute
         Object.defineProperty(media, 'volume', { get: () => 0, set: setter, configurable: true });
         volBtn.click();
         expect(setter).toHaveBeenCalledTimes(2);
@@ -319,12 +306,10 @@ describe('EmbedWidget.toDOM', () => {
         const el = new EmbedWidget('clip.mp4', '/vault/clip.mp4', 'video', '').toDOM();
         const media = el.querySelector('video') as HTMLVideoElement;
         const progressWrap = el.querySelector('.cm-embed-progress-wrapper') as HTMLElement;
-        // Simulate known duration
         Object.defineProperty(media, 'duration', { get: () => 100, configurable: true });
         media.dispatchEvent(new Event('loadedmetadata'));
         const setter = vi.fn();
         Object.defineProperty(media, 'currentTime', { get: () => 0, set: setter, configurable: true });
-        // Simulate click in the middle of the progress bar
         const mockRect = { left: 0, width: 100 };
         const progressTrack = el.querySelector('.cm-embed-progress-track') as HTMLElement;
         vi.spyOn(progressTrack, 'getBoundingClientRect').mockReturnValue(mockRect as DOMRect);
@@ -368,8 +353,6 @@ describe('EmbedWidget.toDOM', () => {
     });
 });
 
-// ── TaskCheckboxWidget ────────────────────────────────────────────────────────
-
 describe('TaskCheckboxWidget.eq', () => {
     it('returns true for identical state and pos', () => {
         const a = new TaskCheckboxWidget('checked', 10);
@@ -397,7 +380,7 @@ describe('TaskCheckboxWidget.toDOM', () => {
         const el = new TaskCheckboxWidget('unchecked', 5).toDOM();
         expect(el.tagName).toBe('LABEL');
         expect(el.className).toBe('cm-task-label');
-        expect(el.dataset.taskPos).toBe('5');
+        expect(el.dataset['taskPos']).toBe('5');
     });
 
     it('renders a checked checkbox for "checked" state', () => {
@@ -410,7 +393,7 @@ describe('TaskCheckboxWidget.toDOM', () => {
     it('renders a half-checked checkbox for "half" state', () => {
         const el = new TaskCheckboxWidget('half', 0).toDOM();
         const input = el.querySelector('input') as HTMLInputElement;
-        expect(input.dataset.half).toBe('true');
+        expect(input.dataset['half']).toBe('true');
         expect(el.querySelector('span.cm-task-half')).not.toBeNull();
     });
 

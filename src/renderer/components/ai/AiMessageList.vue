@@ -68,7 +68,7 @@ function extractCodeBlocks(content: string): { code: string; lang: string }[] {
     const regex = /```([^\n]*)\n([\s\S]*?)```/g;
     let match: RegExpExecArray | null;
     while ((match = regex.exec(content)) !== null) {
-        blocks.push({ lang: match[1].trim(), code: match[2] });
+        blocks.push({ lang: (match[1] ?? '').trim(), code: match[2] ?? '' });
     }
     return blocks;
 }
@@ -94,7 +94,7 @@ async function onMarkdownClick(content: string, event: MouseEvent): Promise<void
     const btn = closest instanceof HTMLButtonElement ? closest : null;
     if (btn === null) return;
 
-    const idx = parseInt(btn.dataset.blockIdx ?? '-1', 10);
+    const idx = parseInt(btn.dataset['blockIdx'] ?? '-1', 10);
     if (idx < 0) return;
 
     const code = extractCodeBlocks(content)[idx]?.code;

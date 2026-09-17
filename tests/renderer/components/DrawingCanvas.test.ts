@@ -4,8 +4,6 @@ import { shallowMount } from '@vue/test-utils';
 import { i18n } from '@/renderer/i18n';
 import DrawingCanvas from '@/renderer/components/DrawingCanvas.vue';
 
-// ── drawing composable mocks ─────────────────────────────────────────────────
-
 const mockElements = ref<unknown[]>([]);
 const mockSelectedId = ref<string | null>(null);
 const mockSelectedIds = ref<Set<string>>(new Set());
@@ -133,8 +131,6 @@ vi.mock('@/renderer/composables/drawing/useDrawingInteraction', () => ({
         handleKeyup: mockHandleKeyup,
     })),
 }));
-
-// ── helper ────────────────────────────────────────────────────────────────────
 
 const defaultProps = {
     filePath: '/vault/art.drawing',

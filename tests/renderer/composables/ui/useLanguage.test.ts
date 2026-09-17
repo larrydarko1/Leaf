@@ -1,7 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useLanguage } from '@/renderer/composables/ui/useLanguage';
 
-// ── electronAPI mock ──────────────────────────────────────────────────────────
+vi.mock('vue-i18n', () => ({
+    useI18n: () => ({
+        locale: { value: 'en' },
+        setLocale: vi.fn((_locale: string) => {}),
+    }),
+}));
 
 const mockAPI = {
     languageList: vi.fn(),
@@ -9,25 +14,6 @@ const mockAPI = {
     languageOpenLeafDir: vi.fn(),
     log: { error: vi.fn(), warn: vi.fn() },
 };
-
-Object.defineProperty(window, 'electronAPI', {
-    value: mockAPI,
-    writable: true,
-    configurable: true,
-});
-
-// ── i18n mock ─────────────────────────────────────────────────────────────────
-
-vi.mock('vue-i18n', () => ({
-    useI18n: () => ({
-        locale: { value: 'en' },
-        setLocale: vi.fn((_locale: string) => {
-            // Mock locale change
-        }),
-    }),
-}));
-
-// ── sample data ───────────────────────────────────────────────────────────────
 
 const enLanguage = {
     id: 'en',
@@ -41,7 +27,11 @@ const itLanguage = {
     path: '/locales/it.json',
 };
 
-// ── tests ─────────────────────────────────────────────────────────────────────
+Object.defineProperty(window, 'electronAPI', {
+    value: mockAPI,
+    writable: true,
+    configurable: true,
+});
 
 describe('useLanguage', () => {
     let language: ReturnType<typeof useLanguage>;
@@ -50,8 +40,6 @@ describe('useLanguage', () => {
         vi.clearAllMocks();
         language = useLanguage();
     });
-
-    // ── refresh ───────────────────────────────────────────────────────────────
 
     describe('refresh', () => {
         it('populates the languages list from the IPC response', async () => {
@@ -62,7 +50,7 @@ describe('useLanguage', () => {
             });
             await language.refresh();
             expect(language.languages.value).toHaveLength(2);
-            expect(language.languages.value[0].id).toBe('en');
+            expect(language.languages.value[0]!.id).toBe('en');
         });
 
         it('sets activeId from the IPC response', async () => {
@@ -108,8 +96,6 @@ describe('useLanguage', () => {
             expect(mockAPI.log.error).toHaveBeenCalledWith('Failed to list languages:', error);
         });
     });
-
-    // ── setActive ─────────────────────────────────────────────────────────────
 
     describe('setActive', () => {
         beforeEach(async () => {
@@ -160,8 +146,6 @@ describe('useLanguage', () => {
         });
     });
 
-    // ── openLocalesFolder ─────────────────────────────────────────────────────
-
     describe('openLocalesFolder', () => {
         it('calls the IPC handler', async () => {
             mockAPI.languageOpenLeafDir.mockResolvedValue({ success: true });
@@ -176,8 +160,6 @@ describe('useLanguage', () => {
             expect(mockAPI.log.error).toHaveBeenCalled();
         });
     });
-
-    // ── edge cases ────────────────────────────────────────────────────────────
 
     describe('edge cases', () => {
         it('handles empty languages list', async () => {

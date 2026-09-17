@@ -3,6 +3,22 @@ import { mountWithI18n } from '@test-utils';
 import DrawingExportDialog from '@/renderer/components/drawing/DrawingExportDialog.vue';
 import type { CanvasElement } from '@/schemas/drawing';
 
+const fakeBlob = new Blob(['fake'], { type: 'image/png' });
+const mockExportToBlob = vi.fn().mockResolvedValue(fakeBlob);
+const elements: CanvasElement[] = [makeRect('a'), makeRect('b')];
+
+const baseProps = {
+    visible: true,
+    hasSelection: false,
+    filePath: '/vault/sketch.leaf',
+    elements,
+    selectedIds: new Set<string>(),
+    exportToBlob: mockExportToBlob,
+};
+
+let createObjectURLSpy: ReturnType<typeof vi.spyOn>;
+let revokeObjectURLSpy: ReturnType<typeof vi.spyOn>;
+
 function makeRect(id: string): CanvasElement {
     return {
         id,
@@ -20,22 +36,16 @@ function makeRect(id: string): CanvasElement {
     };
 }
 
-const fakeBlob = new Blob(['fake'], { type: 'image/png' });
-const mockExportToBlob = vi.fn().mockResolvedValue(fakeBlob);
-
-const elements: CanvasElement[] = [makeRect('a'), makeRect('b')];
-
-const baseProps = {
-    visible: true,
-    hasSelection: false,
-    filePath: '/vault/sketch.leaf',
-    elements,
-    selectedIds: new Set<string>(),
-    exportToBlob: mockExportToBlob,
-};
-
-let createObjectURLSpy: ReturnType<typeof vi.spyOn>;
-let revokeObjectURLSpy: ReturnType<typeof vi.spyOn>;
+async function openDialog(propsOverrides: Partial<typeof baseProps> = {}) {
+    const wrapper = mountWithI18n(DrawingExportDialog, {
+        props: { ...baseProps, visible: false, ...propsOverrides },
+        attachTo: document.body,
+    });
+    await wrapper.setProps({ visible: true });
+    await new Promise((r) => setTimeout(r, 0));
+    await wrapper.vm.$nextTick();
+    return wrapper;
+}
 
 beforeEach(() => {
     vi.clearAllMocks();
@@ -49,17 +59,6 @@ afterEach(() => {
     revokeObjectURLSpy.mockRestore();
     document.querySelector('.export-overlay')?.remove();
 });
-
-async function openDialog(propsOverrides: Partial<typeof baseProps> = {}) {
-    const wrapper = mountWithI18n(DrawingExportDialog, {
-        props: { ...baseProps, visible: false, ...propsOverrides },
-        attachTo: document.body,
-    });
-    await wrapper.setProps({ visible: true });
-    await new Promise((r) => setTimeout(r, 0));
-    await wrapper.vm.$nextTick();
-    return wrapper;
-}
 
 describe('DrawingExportDialog', () => {
     it('renders the dialog when visible is true', async () => {
@@ -91,7 +90,7 @@ describe('DrawingExportDialog', () => {
 
     it('passes all elements when exportOnlySelected is false', async () => {
         const wrapper = await openDialog({ hasSelection: false });
-        expect(mockExportToBlob.mock.calls[0][0].elements).toHaveLength(2);
+        expect(mockExportToBlob.mock.calls[0]![0].elements).toHaveLength(2);
         wrapper.unmount();
     });
 
@@ -100,7 +99,7 @@ describe('DrawingExportDialog', () => {
             hasSelection: true,
             selectedIds: new Set(['a']),
         });
-        const call = mockExportToBlob.mock.calls[0][0];
+        const call = mockExportToBlob.mock.calls[0]![0];
         expect(call.elements).toHaveLength(1);
         expect(call.elements[0].id).toBe('a');
         wrapper.unmount();
@@ -108,13 +107,13 @@ describe('DrawingExportDialog', () => {
 
     it('passes withBackground: true by default', async () => {
         const wrapper = await openDialog();
-        expect(mockExportToBlob.mock.calls[0][0].withBackground).toBe(true);
+        expect(mockExportToBlob.mock.calls[0]![0].withBackground).toBe(true);
         wrapper.unmount();
     });
 
     it('passes scale: 2 by default', async () => {
         const wrapper = await openDialog();
-        expect(mockExportToBlob.mock.calls[0][0].scale).toBe(2);
+        expect(mockExportToBlob.mock.calls[0]![0].scale).toBe(2);
         wrapper.unmount();
     });
 
@@ -128,7 +127,6 @@ describe('DrawingExportDialog', () => {
         const wrapper = await openDialog();
         await wrapper.vm.$nextTick();
 
-        // The dialog is teleported to <body>, so it is not inside the wrapper's tree.
         const closeBtn = document.querySelector<HTMLButtonElement>('[aria-label="Close export dialog"]');
         expect(closeBtn).not.toBeNull();
 
@@ -143,7 +141,6 @@ describe('DrawingExportDialog', () => {
         const wrapper = await openDialog();
         vi.clearAllMocks();
         mockExportToBlob.mockResolvedValue(new Blob(['new'], { type: 'image/png' }));
-        // Toggle background to trigger re-preview
         const checkbox = document.querySelector<HTMLInputElement>('input[type="checkbox"]');
         if (checkbox !== null) {
             checkbox.click();

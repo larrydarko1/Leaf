@@ -23,9 +23,7 @@ const PATHS = vi.hoisted(() => {
 });
 
 const mockTranscriber = vi.hoisted(() => vi.fn());
-
 const mockFindActiveDictationLanguage = vi.hoisted(() => vi.fn<() => Promise<string | null>>());
-
 vi.mock('electron', () => ({}));
 
 vi.mock('@/main/lib/logger', () => ({
@@ -44,6 +42,9 @@ vi.mock('@huggingface/transformers', () => ({
 vi.mock('@/main/services/language', () => ({
     findActiveDictationLanguage: mockFindActiveDictationLanguage,
 }));
+
+const LOUD_CHUNK = Array.from({ length: 16000 }, () => 0.3);
+const SILENT_CHUNK = Array.from({ length: 16000 }, () => 0);
 
 function makeIpc() {
     const handlers: Partial<SpeechHandlers> = {};
@@ -64,10 +65,6 @@ function createModelFiles() {
     fs.writeFileSync(path.join(onnxDir, 'decoder_model_merged_quantized.onnx'), '');
 }
 
-const LOUD_CHUNK = Array.from({ length: 16000 }, () => 0.3);
-const SILENT_CHUNK = Array.from({ length: 16000 }, () => 0);
-
-// Whisper internals the service reaches into; absent unless a test opts in
 function attachModelInternals(detectedToken = 50274) {
     Object.assign(mockTranscriber, {
         model: {
@@ -88,8 +85,8 @@ beforeEach(() => {
     fs.rmSync(PATHS.modelRoot, { recursive: true, force: true });
     mockTranscriber.mockReset();
     mockTranscriber.mockResolvedValue({ text: 'text' });
-    delete (mockTranscriber as unknown as Record<string, unknown>).model;
-    delete (mockTranscriber as unknown as Record<string, unknown>).processor;
+    delete (mockTranscriber as unknown as Record<string, unknown>)['model'];
+    delete (mockTranscriber as unknown as Record<string, unknown>)['processor'];
     mockFindActiveDictationLanguage.mockReset();
     mockFindActiveDictationLanguage.mockResolvedValue(null);
 });
@@ -141,7 +138,6 @@ describe('speech:transcribe', () => {
 
 describe('speech:init', () => {
     it('returns failure when a required model file is missing', async () => {
-        // modelRoot is empty — no model files exist
         const { ipc, handlers } = makeIpc();
         register(ipc as never, () => null);
         const result = (await handlers['speech:init']?.()) as { success: boolean; error: string };
@@ -218,14 +214,11 @@ describe('speech:init', () => {
         const { ipc, handlers } = makeIpc();
         register(ipc as never, () => null);
 
-        // Start init without awaiting so isModelLoading becomes true
         const firstInitPromise = handlers['speech:init']?.();
-        // Second call should see isModelLoading = true
         const result = (await handlers['speech:init']?.()) as { success: boolean; error: string };
         expect(result.success).toBe(false);
         expect(result.error).toMatch(/currently loading/i);
 
-        // Resolve the slow pipeline so the first init completes
         resolvePipeline(mockTranscriber);
         await firstInitPromise;
     });

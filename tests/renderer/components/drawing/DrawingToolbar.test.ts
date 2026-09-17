@@ -147,15 +147,13 @@ describe('DrawingToolbar', () => {
         const wrapper = mountWithI18n(DrawingToolbar, {
             props: { currentTool: 'select' },
         });
-        // Try to open and select from arch dropdown
         const archBtn = wrapper.find('[aria-label*="rch"], [aria-label*="hape"]');
         if (archBtn.exists()) {
             await archBtn.trigger('click');
             await wrapper.vm.$nextTick();
-            // Find an arch item and click it
             const dropdownItems = wrapper.findAll('.arch-item, .dropdown-item, [aria-label*="atabase"]');
             if (dropdownItems.length > 0) {
-                await dropdownItems[0].trigger('click');
+                await dropdownItems[0]!.trigger('click');
                 expect(wrapper.emitted('selectTool')).toBeDefined();
             }
         }
@@ -166,9 +164,8 @@ describe('DrawingToolbar', () => {
         const wrapper = mountWithI18n(DrawingToolbar, {
             props: { currentTool: 'database' },
         });
-        const vm = wrapper.vm as { handleClickOutside: (e: MouseEvent) => void };
+        const vm = wrapper.vm as unknown as { handleClickOutside: (e: MouseEvent) => void };
         vm.handleClickOutside(new MouseEvent('click', { bubbles: true }));
-        // Should not throw
         expect(wrapper.exists()).toBe(true);
         wrapper.unmount();
     });
@@ -177,7 +174,6 @@ describe('DrawingToolbar', () => {
         const wrapper = mountWithI18n(DrawingToolbar, {
             props: { currentTool: tool },
         });
-        // At least one button should have active class
         const activeBtns = wrapper.findAll('.toolbar-btn.active, .arch-btn.active');
         expect(activeBtns.length).toBeGreaterThanOrEqual(0);
         wrapper.unmount();

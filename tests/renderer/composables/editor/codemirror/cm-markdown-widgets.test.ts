@@ -1,28 +1,16 @@
-/**
- * Tests for cm-markdown-widgets: interactiveExtension and createMarkdownWidgetsPlugin.
- */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref } from 'vue';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
+
 import {
     interactiveExtension,
     createMarkdownWidgetsPlugin,
 } from '@/renderer/composables/editor/codemirror/cm-markdown-widgets';
 
-// ── electronAPI mock ──────────────────────────────────────────────────────────
-
 const mockOpenExternal = vi.fn().mockResolvedValue(undefined);
 const mockLog = { error: vi.fn(), warn: vi.fn(), info: vi.fn() };
-
-Object.defineProperty(window, 'electronAPI', {
-    value: { openExternal: mockOpenExternal, log: mockLog },
-    writable: true,
-    configurable: true,
-});
-
-// ── helpers ───────────────────────────────────────────────────────────────────
 
 function makeDiv(): HTMLElement {
     const div = document.createElement('div');
@@ -61,11 +49,15 @@ function makeViewWithExtension(doc: string, extraExtensions: unknown[] = []): Ed
     });
 }
 
+Object.defineProperty(window, 'electronAPI', {
+    value: { openExternal: mockOpenExternal, log: mockLog },
+    writable: true,
+    configurable: true,
+});
+
 beforeEach(() => {
     vi.clearAllMocks();
 });
-
-// ── interactiveExtension ──────────────────────────────────────────────────────
 
 describe('interactiveExtension', () => {
     it('does not throw when mounted with an empty document', () => {
@@ -82,8 +74,6 @@ describe('interactiveExtension', () => {
 
         const event = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
         inner.dispatchEvent(event);
-        // The event handler should have returned true (preventing default)
-        // We verify that the handler runs without errors
         expect(() => inner.dispatchEvent(event)).not.toThrow();
     });
 
@@ -99,8 +89,6 @@ describe('interactiveExtension', () => {
     });
 });
 
-// ── createMarkdownWidgetsPlugin ────────────────────────────────────────────────
-
 describe('createMarkdownWidgetsPlugin', () => {
     it('creates a plugin without throwing', () => {
         const { cache, cacheVersion, getMediaType } = makeEmbedCache();
@@ -114,7 +102,6 @@ describe('createMarkdownWidgetsPlugin', () => {
     it('renders task checkboxes for task items (cursor off task line)', () => {
         const doc = '- [ ] Task 1\n- [ ] Task 2\n- [x] Done task\n\nno-task line here';
         const view = makeViewWithExtension(doc);
-        // Move cursor to the last line so task lines are not "active"
         view.dispatch({ selection: { anchor: view.state.doc.length } });
         const labels = view.dom.querySelectorAll('.cm-task-label');
         expect(labels.length).toBeGreaterThan(0);
@@ -123,11 +110,9 @@ describe('createMarkdownWidgetsPlugin', () => {
     it('cycles unchecked [ ] → [/] on checkbox click', () => {
         const doc = '- [ ] My task\n\ncursor here';
         const view = makeViewWithExtension(doc);
-        // Move cursor to last line so the task line gets a widget
         view.dispatch({ selection: { anchor: view.state.doc.length } });
         const label = view.dom.querySelector('.cm-task-label');
         if (label === null) {
-            // Widget may not render in headless jsdom — skip gracefully
             expect(true).toBe(true);
             return;
         }
@@ -175,7 +160,6 @@ describe('createMarkdownWidgetsPlugin', () => {
             parent,
         });
 
-        // Trigger a cache version bump + doc update to force rebuild
         cacheVersion.value = 1;
         view.dispatch({
             changes: { from: 0, to: view.state.doc.length, insert: '![[image.png]] updated' },
@@ -185,8 +169,6 @@ describe('createMarkdownWidgetsPlugin', () => {
     });
 
     it('handles build errors gracefully (via catch block)', () => {
-        // The build method catches all errors and returns Decoration.none
-        // We just verify the plugin doesn't crash the editor
         const view = makeViewWithExtension('- [ ] Normal task');
         expect(() => view.dispatch({ changes: { from: 0, to: 0, insert: '' } })).not.toThrow();
     });

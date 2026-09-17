@@ -1,14 +1,6 @@
-/**
- * Tests for useDictation composable.
- * Mocks Web Audio API and window.electronAPI.
- */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref } from 'vue';
-
-// ── Fake Web Audio API (classes so they work with `new`) ──────────────────────
-
-const fakeAudioWorklet = { addModule: vi.fn().mockResolvedValue(undefined) };
-let lastWorkletNode: FakeAudioWorkletNode;
+import { useDictation } from '@/renderer/composables/editor/useDictation';
 
 class FakeAudioWorkletNode {
     port: { onmessage: ((e: MessageEvent) => void) | null } = { onmessage: null };
@@ -41,6 +33,7 @@ class FakeAudioContext {
 }
 
 class MockAudioContext extends FakeAudioContext {}
+
 class MockAudioWorkletNode extends FakeAudioWorkletNode {
     constructor(_ctx: unknown, _name: string) {
         super();
@@ -49,8 +42,34 @@ class MockAudioWorkletNode extends FakeAudioWorkletNode {
     }
 }
 
+const fakeAudioWorklet = { addModule: vi.fn().mockResolvedValue(undefined) };
+let lastWorkletNode: FakeAudioWorkletNode;
+const fakeTrack = { stop: vi.fn() };
+const fakeStream = { getTracks: vi.fn().mockReturnValue([fakeTrack]) };
+const mockGetUserMedia = vi.fn().mockResolvedValue(fakeStream);
+let storedIntervalFn: (() => void) | null = null;
+const mockSpeechGetStatus = vi.fn().mockResolvedValue({ isModelLoaded: true });
+const mockSpeechInit = vi.fn().mockResolvedValue({ success: true });
+const mockSpeechTranscribe = vi.fn().mockResolvedValue({ success: true, text: 'hello world' });
+const mockSpeechResetSession = vi.fn().mockResolvedValue({ success: true });
+const mockLog = { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() };
+
+function makeDictation() {
+    const content = ref('');
+    const onContentChange = vi.fn();
+    const d = useDictation(content, onContentChange);
+    return { content, onContentChange, ...d };
+}
+
+function sendChunk(data: Float32Array) {
+    if (lastWorkletNode?.port.onmessage) {
+        lastWorkletNode.port.onmessage(new MessageEvent('message', { data }));
+    }
+}
+
 vi.stubGlobal('AudioContext', MockAudioContext);
 vi.stubGlobal('AudioWorkletNode', MockAudioWorkletNode);
+
 vi.stubGlobal(
     'Blob',
     // eslint-disable-next-line @typescript-eslint/no-extraneous-class
@@ -59,25 +78,18 @@ vi.stubGlobal(
         constructor(_parts: unknown[], _opts?: unknown) {}
     },
 );
+
 vi.stubGlobal('URL', {
     createObjectURL: vi.fn().mockReturnValue('blob:fake-url'),
     revokeObjectURL: vi.fn(),
 });
 
-// ── Fake navigator.mediaDevices ───────────────────────────────────────────────
-
-const fakeTrack = { stop: vi.fn() };
-const fakeStream = { getTracks: vi.fn().mockReturnValue([fakeTrack]) };
-const mockGetUserMedia = vi.fn().mockResolvedValue(fakeStream);
 Object.defineProperty(globalThis, 'navigator', {
     value: { mediaDevices: { getUserMedia: mockGetUserMedia } },
     writable: true,
     configurable: true,
 });
 
-// ── Fake setInterval / clearInterval ─────────────────────────────────────────
-
-let storedIntervalFn: (() => void) | null = null;
 vi.stubGlobal(
     'setInterval',
     vi.fn((fn: () => void, _ms: number) => {
@@ -85,15 +97,8 @@ vi.stubGlobal(
         return 999;
     }),
 );
+
 vi.stubGlobal('clearInterval', vi.fn());
-
-// ── Fake window.electronAPI ───────────────────────────────────────────────────
-
-const mockSpeechGetStatus = vi.fn().mockResolvedValue({ isModelLoaded: true });
-const mockSpeechInit = vi.fn().mockResolvedValue({ success: true });
-const mockSpeechTranscribe = vi.fn().mockResolvedValue({ success: true, text: 'hello world' });
-const mockSpeechResetSession = vi.fn().mockResolvedValue({ success: true });
-const mockLog = { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() };
 
 Object.defineProperty(globalThis, 'window', {
     value: {
@@ -115,25 +120,6 @@ Object.defineProperty(globalThis, 'window', {
     configurable: true,
 });
 
-// ── Import after stubs ────────────────────────────────────────────────────────
-
-import { useDictation } from '@/renderer/composables/editor/useDictation';
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function makeDictation() {
-    const content = ref('');
-    const onContentChange = vi.fn();
-    const d = useDictation(content, onContentChange);
-    return { content, onContentChange, ...d };
-}
-
-function sendChunk(data: Float32Array) {
-    if (lastWorkletNode?.port.onmessage) {
-        lastWorkletNode.port.onmessage(new MessageEvent('message', { data }));
-    }
-}
-
 beforeEach(() => {
     vi.clearAllMocks();
     storedIntervalFn = null;
@@ -146,8 +132,6 @@ beforeEach(() => {
     (URL.createObjectURL as ReturnType<typeof vi.fn>).mockReturnValue('blob:fake-url');
 });
 
-// ── Initial state ─────────────────────────────────────────────────────────────
-
 describe('initial state', () => {
     it('starts not dictating', () => {
         const { isDictating } = makeDictation();
@@ -159,8 +143,6 @@ describe('initial state', () => {
         expect(isDictationLoading.value).toBe(false);
     });
 });
-
-// ── toggleDictation: start ────────────────────────────────────────────────────
 
 describe('toggleDictation (start)', () => {
     it('sets isDictating to true after start', async () => {
@@ -242,8 +224,6 @@ describe('toggleDictation (start)', () => {
     });
 });
 
-// ── toggleDictation: stop ─────────────────────────────────────────────────────
-
 describe('toggleDictation (stop)', () => {
     it('stops dictation when called while already dictating', async () => {
         const { isDictating, toggleDictation } = makeDictation();
@@ -253,8 +233,6 @@ describe('toggleDictation (stop)', () => {
         expect(isDictating.value).toBe(false);
     });
 });
-
-// ── stopDictation ─────────────────────────────────────────────────────────────
 
 describe('stopDictation', () => {
     it('sets isDictating to false', async () => {
@@ -354,7 +332,6 @@ describe('stopDictation', () => {
     it('does not call speechTranscribe when no samples were buffered', async () => {
         const { toggleDictation, stopDictation } = makeDictation();
         await toggleDictation();
-        // No chunks sent
         stopDictation();
         await new Promise((r) => setTimeout(r, 50));
         expect(mockSpeechTranscribe).not.toHaveBeenCalled();
@@ -398,14 +375,11 @@ describe('stopDictation', () => {
     });
 });
 
-// ── processDictationChunk via interval ────────────────────────────────────────
-
 describe('interval-based chunk processing', () => {
     it('fires processDictationChunk when interval triggers', async () => {
         const { toggleDictation, stopDictation } = makeDictation();
         await toggleDictation();
         sendChunk(new Float32Array([0.1, 0.2]));
-        // Fire the interval callback if captured
         if (storedIntervalFn) {
             storedIntervalFn();
         }
@@ -417,7 +391,6 @@ describe('interval-based chunk processing', () => {
     it('does nothing in processDictationChunk when no samples', async () => {
         const { toggleDictation, stopDictation } = makeDictation();
         await toggleDictation();
-        // No chunks — fire interval anyway
         if (storedIntervalFn) {
             storedIntervalFn();
         }
@@ -440,8 +413,6 @@ describe('interval-based chunk processing', () => {
     });
 });
 
-// ── resampleTo16kHz (tested indirectly) ──────────────────────────────────────
-
 describe('resampling', () => {
     it('passes audio array to speechTranscribe', async () => {
         const { toggleDictation, stopDictation } = makeDictation();
@@ -463,7 +434,6 @@ describe('resampling', () => {
         stopDictation();
         await new Promise((r) => setTimeout(r, 50));
         const call = mockSpeechTranscribe.mock.calls[0]?.[0] as number[];
-        // 44100 samples at 44100Hz → ~16000 samples at 16kHz
         expect(call.length).toBeLessThan(44100);
         expect(call.length).toBeCloseTo(16000, -2);
     });

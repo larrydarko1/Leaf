@@ -85,7 +85,7 @@ export function buildEmbedDecos(
 
             if (activeLines.has(lineNum)) continue;
 
-            const inner = match[1];
+            const inner = match[1] ?? '';
             const pipeIndex = inner.indexOf('|');
             let fileName: string;
             let displayOptions = '';
@@ -93,7 +93,7 @@ export function buildEmbedDecos(
                 fileName = inner.substring(0, pipeIndex).trim();
                 displayOptions = inner.substring(pipeIndex + 1).trim();
             } else {
-                fileName = inner.split('#')[0].trim();
+                fileName = (inner.split('#')[0] ?? inner).trim();
             }
 
             const resolvedPath = embedCache.get(fileName);
@@ -127,8 +127,8 @@ export function buildTaskDecos(
             const lineNum = state.doc.lineAt(matchFrom).number;
             if (activeLines.has(lineNum)) continue;
 
-            const indent = match[1];
-            const marker = match[2].toLowerCase();
+            const indent = match[1] ?? '';
+            const marker = (match[2] ?? '').toLowerCase();
             let checked: 'checked' | 'half' | 'unchecked' = 'unchecked';
             if (marker === 'x') checked = 'checked';
             else if (marker === '/') checked = 'half';
@@ -315,11 +315,11 @@ export function buildSyntaxDecos(
                         decos.push(
                             Decoration.mark({
                                 class: 'cm-link',
-                                attributes: { title: linkMatch[2] },
+                                attributes: { title: linkMatch[2] ?? '' },
                             }).range(from, to),
                         );
                         decos.push(Decoration.replace({}).range(from, from + 1));
-                        const closeBracket = from + 1 + linkMatch[1].length;
+                        const closeBracket = from + 1 + (linkMatch[1]?.length ?? 0);
                         decos.push(Decoration.replace({}).range(closeBracket, to));
                     }
                 }
@@ -345,6 +345,7 @@ export function buildSyntaxDecos(
                         decos.push(Decoration.mark({ class: 'cm-list-bullet' }).range(from, to));
                     }
                 }
+                return undefined;
             },
         });
     }
@@ -369,13 +370,13 @@ export function mergeVisibleRanges(
         return { from: lf, to: lt };
     });
     expanded.sort((a, b): number => a.from - b.from);
-    const merged: { from: number; to: number }[] = [{ ...expanded[0] }];
-    for (let i = 1; i < expanded.length; i++) {
+    const merged: { from: number; to: number }[] = [];
+    for (const range of expanded) {
         const last = merged[merged.length - 1];
-        if (expanded[i].from <= last.to) {
-            last.to = Math.max(last.to, expanded[i].to);
+        if (last !== undefined && range.from <= last.to) {
+            last.to = Math.max(last.to, range.to);
         } else {
-            merged.push({ ...expanded[i] });
+            merged.push({ ...range });
         }
     }
     return merged;

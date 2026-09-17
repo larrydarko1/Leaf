@@ -6,11 +6,6 @@ const mockElectronAPI = {
     log: { error: vi.fn() },
 };
 
-beforeEach(() => {
-    vi.clearAllMocks();
-    (globalThis as Record<string, unknown>).electronAPI = mockElectronAPI;
-});
-
 function makeComposable(
     opts: {
         isMarkdown?: boolean;
@@ -55,7 +50,10 @@ function makeDragEvent(
     return { dataTransfer: dt, preventDefault: vi.fn() } as unknown as DragEvent;
 }
 
-// ── initial state ─────────────────────────────────────────────────────────────
+beforeEach(() => {
+    vi.clearAllMocks();
+    (globalThis as Record<string, unknown>)['electronAPI'] = mockElectronAPI;
+});
 
 describe('isDragOverEditor', () => {
     it('starts as false', () => {
@@ -63,8 +61,6 @@ describe('isDragOverEditor', () => {
         expect(isDragOverEditor.value).toBe(false);
     });
 });
-
-// ── onEditorDragEnter ─────────────────────────────────────────────────────────
 
 describe('onEditorDragEnter', () => {
     it('sets isDragOverEditor to true for embeddable data on a markdown file', () => {
@@ -92,8 +88,6 @@ describe('onEditorDragEnter', () => {
     });
 });
 
-// ── onEditorDragLeave ─────────────────────────────────────────────────────────
-
 describe('onEditorDragLeave', () => {
     it('sets isDragOverEditor back to false after all drag-enters are balanced', () => {
         const { isDragOverEditor, onEditorDragEnter, onEditorDragLeave } = makeComposable({ isMarkdown: true });
@@ -113,8 +107,6 @@ describe('onEditorDragLeave', () => {
         expect(isDragOverEditor.value).toBe(false);
     });
 });
-
-// ── onFileDrop ────────────────────────────────────────────────────────────────
 
 describe('onFileDrop', () => {
     it('resets isDragOverEditor to false on drop', async () => {
@@ -136,7 +128,7 @@ describe('onFileDrop', () => {
     });
 
     it('does nothing when no file is open', async () => {
-        const { content, onFileDrop, onContentChange } = makeComposable({ isMarkdown: true, filePath: undefined });
+        const { content, onFileDrop, onContentChange } = makeComposable({ isMarkdown: true });
         await onFileDrop(makeDragEvent({ textPlain: 'file:/vault/image.png', types: ['text/plain'] }));
         expect(content.value).toBe('');
         expect(onContentChange).not.toHaveBeenCalled();

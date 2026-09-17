@@ -35,7 +35,6 @@ describe('AudioRecorder', () => {
 
         it('shows mic SVG when not recording', () => {
             const wrapper = mountWithI18n(AudioRecorder, { props: { currentFolder: '/vault' } });
-            // Mic icon contains a <path> element (not a <rect>)
             expect(wrapper.find('svg path').exists()).toBe(true);
             expect(wrapper.find('svg rect').exists()).toBe(false);
             wrapper.unmount();
@@ -128,7 +127,7 @@ describe('AudioRecorder', () => {
                     hasPermission: mockHasPermission,
                     formattedDuration: mockFormattedDuration,
                     toggle: mockToggle,
-                };
+                } as unknown as ReturnType<typeof useAudioRecorder>;
             });
             const wrapper = mountWithI18n(AudioRecorder, { props: { currentFolder: '/vault' } });
             capturedOnSaved('/vault/recording.wav');
