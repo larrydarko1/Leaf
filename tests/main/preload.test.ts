@@ -35,29 +35,29 @@ beforeEach(() => {
 describe('preload / electronAPI', () => {
     describe('log methods — route to ipcRenderer.send', () => {
         it('log.error sends "log:error"', () => {
-            (capturedApi.log as Record<string, (...a: unknown[]) => void>).error('msg');
+            (capturedApi['log'] as { error: (...a: unknown[]) => void }).error('msg');
             expect(mockSend).toHaveBeenCalledWith('log:error', 'msg');
         });
 
         it('log.warn sends "log:warn"', () => {
-            (capturedApi.log as Record<string, (...a: unknown[]) => void>).warn('warning');
+            (capturedApi['log'] as { warn: (...a: unknown[]) => void }).warn('warning');
             expect(mockSend).toHaveBeenCalledWith('log:warn', 'warning');
         });
 
         it('log.info sends "log:info"', () => {
-            (capturedApi.log as Record<string, (...a: unknown[]) => void>).info('info msg');
+            (capturedApi['log'] as { info: (...a: unknown[]) => void }).info('info msg');
             expect(mockSend).toHaveBeenCalledWith('log:info', 'info msg');
         });
 
         it('log.debug sends "log:debug"', () => {
-            (capturedApi.log as Record<string, (...a: unknown[]) => void>).debug('debug msg');
+            (capturedApi['log'] as { debug: (...a: unknown[]) => void }).debug('debug msg');
             expect(mockSend).toHaveBeenCalledWith('log:debug', 'debug msg');
         });
     });
 
     describe('isElectron', () => {
         it('returns true', () => {
-            expect((capturedApi.isElectron as () => boolean)()).toBe(true);
+            expect((capturedApi['isElectron'] as () => boolean)()).toBe(true);
         });
     });
 
@@ -132,41 +132,41 @@ describe('preload / electronAPI', () => {
     describe('event listener methods', () => {
         it('onAiToken registers ipcRenderer.on handler for "ai:token"', () => {
             const cb = vi.fn();
-            (capturedApi.onAiToken as (cb: (token: string) => void) => void)(cb);
+            (capturedApi['onAiToken'] as (cb: (token: string) => void) => void)(cb);
             expect(mockOn).toHaveBeenCalledWith('ai:token', expect.any(Function));
             // Verify the handler forwards the token
-            const handler = mockOn.mock.calls[0][1];
+            const handler = mockOn.mock.calls[0]![1];
             handler({}, 'hello');
             expect(cb).toHaveBeenCalledWith('hello');
         });
 
         it('removeAiTokenListener calls removeAllListeners("ai:token")', () => {
-            (capturedApi.removeAiTokenListener as () => void)();
+            (capturedApi['removeAiTokenListener'] as () => void)();
             expect(mockRemoveAllListeners).toHaveBeenCalledWith('ai:token');
         });
 
         it('onFsChanged registers handler for "fs:changed"', () => {
             const cb = vi.fn();
-            (capturedApi.onFsChanged as (cb: (data: object) => void) => void)(cb);
+            (capturedApi['onFsChanged'] as (cb: (data: object) => void) => void)(cb);
             expect(mockOn).toHaveBeenCalledWith('fs:changed', expect.any(Function));
-            const handler = mockOn.mock.calls[0][1];
+            const handler = mockOn.mock.calls[0]![1];
             handler({}, { type: 'change' });
             expect(cb).toHaveBeenCalledWith({ type: 'change' });
         });
 
         it('removeFsChangedListener calls removeAllListeners("fs:changed")', () => {
-            (capturedApi.removeFsChangedListener as () => void)();
+            (capturedApi['removeFsChangedListener'] as () => void)();
             expect(mockRemoveAllListeners).toHaveBeenCalledWith('fs:changed');
         });
 
         it('onSpeechStatus registers handler for "speech:status"', () => {
             const cb = vi.fn();
-            (capturedApi.onSpeechStatus as (cb: (s: object) => void) => void)(cb);
+            (capturedApi['onSpeechStatus'] as (cb: (s: object) => void) => void)(cb);
             expect(mockOn).toHaveBeenCalledWith('speech:status', expect.any(Function));
         });
 
         it('removeSpeechStatusListener calls removeAllListeners("speech:status")', () => {
-            (capturedApi.removeSpeechStatusListener as () => void)();
+            (capturedApi['removeSpeechStatusListener'] as () => void)();
             expect(mockRemoveAllListeners).toHaveBeenCalledWith('speech:status');
         });
     });

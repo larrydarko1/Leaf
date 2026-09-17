@@ -148,8 +148,8 @@ describe('readModels (scanForModels)', () => {
         };
         expect(result.success).toBe(true);
         expect(result.models).toHaveLength(1);
-        expect(result.models[0].name).toBe('test-model.gguf');
-        expect(result.models[0].sizeFormatted).toMatch(/MB/);
+        expect(result.models[0]!.name).toBe('test-model.gguf');
+        expect(result.models[0]!.sizeFormatted).toMatch(/MB/);
     });
 
     it('ignores non-.gguf files', async () => {
@@ -174,15 +174,15 @@ describe('readModels (scanForModels)', () => {
         fs.writeFileSync(path.join(sub, 'llama-7b.gguf'), '');
         const result = (await handlers['ai:listModels']?.()) as { success: boolean; models: { name: string }[] };
         expect(result.models).toHaveLength(1);
-        expect(result.models[0].name).toContain('llama-7b.gguf');
+        expect(result.models[0]!.name).toContain('llama-7b.gguf');
     });
 
     it('sorts models alphabetically by name', async () => {
         fs.writeFileSync(path.join(PATHS.root, 'zeta.gguf'), '');
         fs.writeFileSync(path.join(PATHS.root, 'alpha.gguf'), '');
         const result = (await handlers['ai:listModels']?.()) as { success: boolean; models: { name: string }[] };
-        expect(result.models[0].name).toBe('alpha.gguf');
-        expect(result.models[1].name).toBe('zeta.gguf');
+        expect(result.models[0]!.name).toBe('alpha.gguf');
+        expect(result.models[1]!.name).toBe('zeta.gguf');
     });
 
     it('formatFileSize: returns "0 B" for empty files', async () => {
@@ -191,7 +191,7 @@ describe('readModels (scanForModels)', () => {
             success: boolean;
             models: { sizeFormatted: string }[];
         };
-        expect(result.models[0].sizeFormatted).toBe('0 B');
+        expect(result.models[0]!.sizeFormatted).toBe('0 B');
     });
 });
 
@@ -291,7 +291,7 @@ describe('chat (with loaded model)', () => {
 
     it('includes noteContext in the prompt when provided', async () => {
         await handlers['ai:chat']?.({}, 'What is this?', 'My note content here');
-        const calledWith = mockPrompt.mock.calls[0][0] as string;
+        const calledWith = mockPrompt.mock.calls[0]![0] as string;
         expect(calledWith).toContain('My note content here');
         expect(calledWith).toContain('What is this?');
     });
@@ -303,7 +303,7 @@ describe('chat (with loaded model)', () => {
             { role: 'assistant', content: 'Old answer' },
         ]);
         await handlers['ai:chat']?.({}, 'Follow up', '');
-        const calledWith = mockPrompt.mock.calls[0][0] as string;
+        const calledWith = mockPrompt.mock.calls[0]![0] as string;
         expect(calledWith).toContain('Old question');
         expect(calledWith).toContain('Old answer');
         expect(calledWith).toContain('Follow up');
@@ -388,7 +388,7 @@ describe('restoreChatHistory with messages', () => {
         handlers['ai:restoreChatHistory']?.({}, messages);
 
         await handlers['ai:chat']?.({}, 'Continue', '');
-        const calledWith = mockPrompt.mock.calls[0][0] as string;
+        const calledWith = mockPrompt.mock.calls[0]![0] as string;
         // buildConversationSummary truncates at 50 messages and 2000 chars per message
         expect(calledWith).toContain('User:');
         expect(calledWith).toContain('Assistant:');

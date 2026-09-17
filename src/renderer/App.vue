@@ -20,7 +20,6 @@ import { useLanguage } from '@/renderer/composables/ui/useLanguage';
 
 const { t } = useI18n();
 
-const noteEditorRef = ref<InstanceType<typeof NoteEditor> | null>(null);
 const vault = useVault();
 const selection = useFileSelection();
 const bookmarks = useBookmarks(() => vault.currentFolder.value);
@@ -114,13 +113,10 @@ function handleKeydown(e: KeyboardEvent): void {
     }
 }
 
-function handleFileSelect(
-    file: FileInfo,
-    { event, visibleFiles }: { event?: MouseEvent; visibleFiles?: FileInfo[] } = {},
-): void {
-    selection.selectFile(file, { event, visibleFiles });
+function handleFileSelect(file: FileInfo, options: { event?: MouseEvent; visibleFiles?: FileInfo[] } = {}): void {
+    selection.selectFile(file, options);
     // Open/activate a tab for the single active file (ignore multi-select)
-    if (event?.shiftKey !== true) {
+    if (options.event?.shiftKey !== true) {
         editorTabs.openTab(file);
     }
 }
@@ -227,8 +223,8 @@ async function handleFileDelete(file: FileInfo): Promise<void> {
         .sort((a, b) => b - a);
     indicesToClose.forEach((idx) => editorTabs.closeTab(idx));
     selection.clearSelection();
-    if (vault.files.value.length > 0) {
-        const next = vault.files.value[0];
+    const [next] = vault.files.value;
+    if (next !== undefined) {
         selection.openFile(next);
         editorTabs.openTab(next);
     }
@@ -240,10 +236,11 @@ async function handleFileMove(filePath: string, targetFolderPath: string): Promi
     moves.forEach((move) => relocateBookmark(move.from, move.to));
     const movedPaths = moves.map((move) => move.to);
     const movedFiles = vault.files.value.filter((f: FileInfo) => movedPaths.includes(f.path));
-    if (movedFiles.length > 0) {
+    const [firstMoved] = movedFiles;
+    if (firstMoved !== undefined) {
         selectedFiles.value = movedFiles;
-        selection.openFile(movedFiles[0]);
-        editorTabs.openTab(movedFiles[0]);
+        selection.openFile(firstMoved);
+        editorTabs.openTab(firstMoved);
     }
 }
 
@@ -272,7 +269,7 @@ function closeSearch(): void {
 }
 
 function handleSearchFileSelect(file: FileInfo, event?: MouseEvent | KeyboardEvent): void {
-    selection.selectFile(file, { event: event instanceof MouseEvent ? event : undefined });
+    selection.selectFile(file, event instanceof MouseEvent ? { event } : {});
     editorTabs.openTab(file);
 }
 
@@ -681,7 +678,6 @@ onBeforeUnmount(() => {
                         @close="editorTabs.closeTab"
                         @reorder="editorTabs.reorderTab" />
                     <NoteEditor
-                        ref="noteEditorRef"
                         :file="activeFile"
                         :workspace-path="currentFolder"
                         :aria-label="t('app.note_editor')"

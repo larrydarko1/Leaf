@@ -523,7 +523,7 @@ watch(isRenaming, (renaming) => {
                     :renaming-folder="renamingFolder"
                     :rename-value="renameValue"
                     :expanded-folders="expandedFolders"
-                    :bookmarked-files="bookmarkedFiles"
+                    :bookmarked-files="bookmarkedFiles ?? []"
                     @select-file="
                         (file: FileInfo, event?: MouseEvent, visibleFiles?: FileInfo[]) =>
                             $emit('selectFile', file, event, visibleFiles)

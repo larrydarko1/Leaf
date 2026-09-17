@@ -28,7 +28,7 @@ export class TableWidget extends WidgetType {
         this.rawText = rawText;
     }
 
-    eq(other: TableWidget): boolean {
+    override eq(other: TableWidget): boolean {
         return this.rawText === other.rawText;
     }
 
@@ -94,8 +94,8 @@ export class TableWidget extends WidgetType {
             return wrapper;
         }
 
-        const headerCells = this.parseCells(lines[0]);
-        const delimCells = this.parseCells(lines[1]);
+        const headerCells = this.parseCells(lines[0] ?? '');
+        const delimCells = this.parseCells(lines[1] ?? '');
         const aligns = delimCells.map((c): string => this.parseAlignment(c));
 
         // <thead>
@@ -103,7 +103,7 @@ export class TableWidget extends WidgetType {
         const headerRow = document.createElement('tr');
         headerCells.forEach((cell, i): void => {
             const th = document.createElement('th');
-            if (aligns[i] !== '') th.style.textAlign = aligns[i];
+            th.style.textAlign = aligns[i] ?? '';
             th.innerHTML = this.renderInline(cell);
             headerRow.appendChild(th);
         });
@@ -114,11 +114,11 @@ export class TableWidget extends WidgetType {
         if (lines.length > 2) {
             const tbody = document.createElement('tbody');
             for (let row = 2; row < lines.length; row++) {
-                const cells = this.parseCells(lines[row]);
+                const cells = this.parseCells(lines[row] ?? '');
                 const tr = document.createElement('tr');
                 cells.forEach((cell, i): void => {
                     const td = document.createElement('td');
-                    if (aligns[i] !== '') td.style.textAlign = aligns[i];
+                    td.style.textAlign = aligns[i] ?? '';
                     td.innerHTML = this.renderInline(cell);
                     tr.appendChild(td);
                 });
@@ -132,7 +132,7 @@ export class TableWidget extends WidgetType {
     }
 
     /** Let CM handle events so clicks place the cursor (triggering raw-edit mode). */
-    ignoreEvent(): boolean {
+    override ignoreEvent(): boolean {
         return false;
     }
 }
@@ -151,7 +151,7 @@ export class EmbedWidget extends WidgetType {
         this.displayOptions = displayOptions;
     }
 
-    eq(other: EmbedWidget): boolean {
+    override eq(other: EmbedWidget): boolean {
         return this.fileName === other.fileName && this.resolvedPath === other.resolvedPath;
     }
 
@@ -176,7 +176,7 @@ export class EmbedWidget extends WidgetType {
                 img.loading = 'lazy';
                 const dimMatch = this.displayOptions !== '' ? this.displayOptions.match(/^(\d+)(?:x(\d+))?$/) : null;
                 if (dimMatch !== null) {
-                    img.width = parseInt(dimMatch[1]);
+                    img.width = parseInt(dimMatch[1] ?? '');
                     if (dimMatch[2] !== undefined) img.height = parseInt(dimMatch[2]);
                 }
                 wrapper.appendChild(img);
@@ -262,7 +262,7 @@ export class EmbedWidget extends WidgetType {
                     if (isFinite(media.duration) && media.duration > 0) {
                         realDuration = media.duration;
                         durEl.textContent = fmt(realDuration);
-                        wrapper.dataset.realDuration = String(realDuration);
+                        wrapper.dataset['realDuration'] = String(realDuration);
                     }
                 };
 
@@ -383,7 +383,7 @@ export class EmbedWidget extends WidgetType {
         return div.innerHTML;
     }
 
-    ignoreEvent(): boolean {
+    override ignoreEvent(): boolean {
         return true;
     }
 }
@@ -398,20 +398,20 @@ export class TaskCheckboxWidget extends WidgetType {
         this.pos = pos;
     }
 
-    eq(other: TaskCheckboxWidget): boolean {
+    override eq(other: TaskCheckboxWidget): boolean {
         return this.checked === other.checked && this.pos === other.pos;
     }
 
     toDOM(): HTMLElement {
         const label = document.createElement('label');
         label.className = 'cm-task-label';
-        label.dataset.taskPos = String(this.pos);
+        label.dataset['taskPos'] = String(this.pos);
 
         const input = document.createElement('input');
         input.type = 'checkbox';
         input.className = 'cm-task-checkbox-input';
         if (this.checked === 'checked') input.checked = true;
-        if (this.checked === 'half') input.dataset.half = 'true';
+        if (this.checked === 'half') input.dataset['half'] = 'true';
 
         const span = document.createElement('span');
         span.className = 'cm-task-checkbox';
@@ -423,7 +423,7 @@ export class TaskCheckboxWidget extends WidgetType {
         return label;
     }
 
-    ignoreEvent(): boolean {
+    override ignoreEvent(): boolean {
         return false;
     }
 }

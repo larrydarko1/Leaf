@@ -93,7 +93,7 @@ describe('mergeVisibleRanges', () => {
         const state = makeState('abc\ndef');
         const result = mergeVisibleRanges(state, [{ from: 1, to: 5 }]);
         expect(result).toHaveLength(1);
-        expect(result[0].from).toBe(0); // start of 'abc'
+        expect(result[0]!.from).toBe(0); // start of 'abc'
     });
 
     it('merges overlapping ranges into one', () => {

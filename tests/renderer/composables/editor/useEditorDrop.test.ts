@@ -8,7 +8,7 @@ const mockElectronAPI = {
 
 beforeEach(() => {
     vi.clearAllMocks();
-    (globalThis as Record<string, unknown>).electronAPI = mockElectronAPI;
+    (globalThis as Record<string, unknown>)['electronAPI'] = mockElectronAPI;
 });
 
 function makeComposable(
@@ -136,7 +136,7 @@ describe('onFileDrop', () => {
     });
 
     it('does nothing when no file is open', async () => {
-        const { content, onFileDrop, onContentChange } = makeComposable({ isMarkdown: true, filePath: undefined });
+        const { content, onFileDrop, onContentChange } = makeComposable({ isMarkdown: true });
         await onFileDrop(makeDragEvent({ textPlain: 'file:/vault/image.png', types: ['text/plain'] }));
         expect(content.value).toBe('');
         expect(onContentChange).not.toHaveBeenCalled();

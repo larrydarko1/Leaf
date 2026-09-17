@@ -28,7 +28,7 @@ register(serviceIpc as never);
 
 type Result = { success: boolean; conversation?: Conversation; error?: string };
 const invoke = <T>(channel: string, ...args: unknown[]): Promise<T> =>
-    serviceHandlers[channel]({}, ...args) as Promise<T>;
+    serviceHandlers[channel]!({}, ...args) as Promise<T>;
 
 const createConversation = (model: unknown) => invoke<Result>('conversations:create', model);
 const loadConversation = (id: unknown) => invoke<Result>('conversations:load', id);
@@ -156,14 +156,14 @@ describe('addMessage', () => {
         expect(result.success).toBe(true);
         const reloaded = await reload(conversation!.id);
         expect(reloaded?.messages).toHaveLength(1);
-        expect(reloaded?.messages[0].content).toBe('Hello');
+        expect(reloaded?.messages[0]!.content).toBe('Hello');
     });
 
     it('sets a timestamp on the added message', async () => {
         const { conversation } = await createConversation('llama');
         await addMessage(conversation!.id, { role: 'user', content: 'Hi' });
         const reloaded = await reload(conversation!.id);
-        expect(reloaded?.messages[0].timestamp).toBeTruthy();
+        expect(reloaded?.messages[0]!.timestamp).toBeTruthy();
     });
 
     it('returns failure for non-existent conversation', async () => {
@@ -182,7 +182,7 @@ describe('updateLastMessage', () => {
         await addMessage(conversation!.id, { role: 'user', content: 'Original' });
         await updateLastMessage(conversation!.id, 'Updated');
         const reloaded = await reload(conversation!.id);
-        expect(reloaded?.messages[0].content).toBe('Updated');
+        expect(reloaded?.messages[0]!.content).toBe('Updated');
     });
 
     it('returns failure when there are no messages', async () => {

@@ -49,8 +49,8 @@ describe('TabBar', () => {
             props: { tabs: defaultTabs, activeIndex: 1 },
         });
         const tabs = wrapper.findAll('.tab');
-        expect(tabs[1].classes()).toContain('active');
-        expect(tabs[0].classes()).not.toContain('active');
+        expect(tabs[1]!.classes()).toContain('active');
+        expect(tabs[0]!.classes()).not.toContain('active');
         wrapper.unmount();
     });
 
@@ -59,8 +59,8 @@ describe('TabBar', () => {
             props: { tabs: defaultTabs, activeIndex: 0 },
         });
         const tabs = wrapper.findAll('.tab');
-        expect(tabs[1].find('.tab-dot').exists()).toBe(true);
-        expect(tabs[0].find('.tab-dot').exists()).toBe(false);
+        expect(tabs[1]!.find('.tab-dot').exists()).toBe(true);
+        expect(tabs[0]!.find('.tab-dot').exists()).toBe(false);
         wrapper.unmount();
     });
 
@@ -84,7 +84,7 @@ describe('TabBar', () => {
         const wrapper = mountWithI18n(TabBar, {
             props: { tabs: defaultTabs, activeIndex: 0 },
         });
-        await wrapper.findAll('.tab')[2].trigger('click');
+        await wrapper.findAll('.tab')[2]!.trigger('click');
         expect(wrapper.emitted('switch')?.[0]).toEqual([2]);
         wrapper.unmount();
     });
@@ -93,7 +93,7 @@ describe('TabBar', () => {
         const wrapper = mountWithI18n(TabBar, {
             props: { tabs: defaultTabs, activeIndex: 0 },
         });
-        await wrapper.findAll('.tab-close')[0].trigger('click');
+        await wrapper.findAll('.tab-close')[0]!.trigger('click');
         expect(wrapper.emitted('close')?.[0]).toEqual([0]);
         wrapper.unmount();
     });
@@ -102,7 +102,7 @@ describe('TabBar', () => {
         const wrapper = mountWithI18n(TabBar, {
             props: { tabs: defaultTabs, activeIndex: 0 },
         });
-        await wrapper.findAll('.tab-close')[0].trigger('click');
+        await wrapper.findAll('.tab-close')[0]!.trigger('click');
         expect(wrapper.emitted('switch')).toBeUndefined();
         wrapper.unmount();
     });
@@ -111,7 +111,7 @@ describe('TabBar', () => {
         const wrapper = mountWithI18n(TabBar, {
             props: { tabs: defaultTabs, activeIndex: 0 },
         });
-        await wrapper.findAll('.tab')[1].trigger('mousedown', { button: 1 });
+        await wrapper.findAll('.tab')[1]!.trigger('mousedown', { button: 1 });
         expect(wrapper.emitted('close')?.[0]).toEqual([1]);
         wrapper.unmount();
     });
@@ -120,7 +120,7 @@ describe('TabBar', () => {
         const wrapper = mountWithI18n(TabBar, {
             props: { tabs: defaultTabs, activeIndex: 0 },
         });
-        await wrapper.findAll('.tab')[0].trigger('mousedown', { button: 0 });
+        await wrapper.findAll('.tab')[0]!.trigger('mousedown', { button: 0 });
         expect(wrapper.emitted('close')).toBeUndefined();
         wrapper.unmount();
     });
@@ -129,7 +129,7 @@ describe('TabBar', () => {
         const wrapper = mountWithI18n(TabBar, {
             props: { tabs: defaultTabs, activeIndex: 0 },
         });
-        await wrapper.findAll('.tab')[1].trigger('keydown', { key: 'Enter' });
+        await wrapper.findAll('.tab')[1]!.trigger('keydown', { key: 'Enter' });
         expect(wrapper.emitted('switch')?.[0]).toEqual([1]);
         wrapper.unmount();
     });
@@ -140,8 +140,8 @@ describe('TabBar', () => {
         });
         const tabs = wrapper.findAll('.tab');
         const dt = { effectAllowed: '', dropEffect: '', setDragImage: vi.fn() };
-        await tabs[0].trigger('dragstart', { dataTransfer: dt });
-        await tabs[2].trigger('drop', { dataTransfer: dt });
+        await tabs[0]!.trigger('dragstart', { dataTransfer: dt });
+        await tabs[2]!.trigger('drop', { dataTransfer: dt });
         expect(wrapper.emitted('reorder')?.[0]).toEqual([0, 2]);
         wrapper.unmount();
     });
@@ -152,8 +152,8 @@ describe('TabBar', () => {
         });
         const tabs = wrapper.findAll('.tab');
         const dt = { effectAllowed: '', dropEffect: '', setDragImage: vi.fn() };
-        await tabs[1].trigger('dragstart', { dataTransfer: dt });
-        await tabs[1].trigger('drop', { dataTransfer: dt });
+        await tabs[1]!.trigger('dragstart', { dataTransfer: dt });
+        await tabs[1]!.trigger('drop', { dataTransfer: dt });
         expect(wrapper.emitted('reorder')).toBeUndefined();
         wrapper.unmount();
     });
@@ -164,11 +164,11 @@ describe('TabBar', () => {
         });
         const tabs = wrapper.findAll('.tab');
         const dt = { effectAllowed: '', dropEffect: '', setDragImage: vi.fn() };
-        await tabs[0].trigger('dragstart', { dataTransfer: dt });
+        await tabs[0]!.trigger('dragstart', { dataTransfer: dt });
         // Trigger dragend without dropping
-        await tabs[0].trigger('dragend');
+        await tabs[0]!.trigger('dragend');
         // After dragend, no "dragging" class should remain
-        expect(tabs[0].classes()).not.toContain('dragging');
+        expect(tabs[0]!.classes()).not.toContain('dragging');
         wrapper.unmount();
     });
 });

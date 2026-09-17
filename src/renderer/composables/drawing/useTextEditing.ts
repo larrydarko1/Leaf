@@ -97,13 +97,13 @@ export function useTextEditing({
                 textEditBounds.value.y + textEditBounds.value.height,
             );
             const pad = 8 * zoom.value;
-            style.left = `${tl.x + pad}px`;
-            style.top = `${tl.y + pad}px`;
-            style.width = `${br.x - tl.x - pad * 2}px`;
-            style.height = `${br.y - tl.y - pad * 2}px`;
+            style['left'] = `${tl.x + pad}px`;
+            style['top'] = `${tl.y + pad}px`;
+            style['width'] = `${br.x - tl.x - pad * 2}px`;
+            style['height'] = `${br.y - tl.y - pad * 2}px`;
         } else {
-            style.left = `${screen.x}px`;
-            style.top = `${screen.y}px`;
+            style['left'] = `${screen.x}px`;
+            style['top'] = `${screen.y}px`;
         }
         return style;
     });

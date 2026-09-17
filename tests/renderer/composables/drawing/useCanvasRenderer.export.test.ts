@@ -30,6 +30,47 @@ afterEach(() => {
 // Capture original createElement before any mocking happens
 const originalCreateElement = document.createElement.bind(document);
 
+/** Every 2D context call the renderer makes; jsdom has no canvas, so each one is a spy. */
+const CTX_METHODS = [
+    'save',
+    'restore',
+    'scale',
+    'translate',
+    'setTransform',
+    'beginPath',
+    'closePath',
+    'moveTo',
+    'lineTo',
+    'arc',
+    'ellipse',
+    'quadraticCurveTo',
+    'fill',
+    'stroke',
+    'fillRect',
+    'strokeRect',
+    'fillText',
+    'setLineDash',
+    'clearRect',
+    'roundRect',
+] as const;
+
+/** A minimal stand-in for CanvasRenderingContext2D: spies for calls, plain values for style state. */
+function makeMockCtx(): Record<string, unknown> {
+    const ctx: Record<string, unknown> = {};
+    for (const m of CTX_METHODS) ctx[m] = vi.fn();
+    ctx['measureText'] = vi.fn(() => ({ width: 50 }));
+    ctx['strokeStyle'] = '';
+    ctx['fillStyle'] = '';
+    ctx['lineWidth'] = 1;
+    ctx['globalAlpha'] = 1;
+    ctx['lineCap'] = 'round';
+    ctx['lineJoin'] = 'round';
+    ctx['font'] = '';
+    ctx['textBaseline'] = 'top';
+    ctx['textAlign'] = 'start';
+    return ctx;
+}
+
 function makeElement(overrides: Partial<CanvasElement> & { id: string; type: CanvasElement['type'] }): CanvasElement {
     return {
         x: 0,
@@ -87,43 +128,7 @@ function setupRenderer(elementList: CanvasElement[] = []) {
     const canvasEl = document.createElement('canvas');
 
     // Build a minimal mock 2D context covering methods used by drawElement / export
-    const mockCtx: Record<string, unknown> = {};
-    const noop = () => {};
-    for (const m of [
-        'save',
-        'restore',
-        'scale',
-        'translate',
-        'setTransform',
-        'beginPath',
-        'closePath',
-        'moveTo',
-        'lineTo',
-        'arc',
-        'ellipse',
-        'quadraticCurveTo',
-        'fill',
-        'stroke',
-        'fillRect',
-        'strokeRect',
-        'fillText',
-        'setLineDash',
-        'clearRect',
-        'roundRect',
-    ] as const) {
-        mockCtx[m] = vi.fn(noop);
-    }
-    mockCtx.measureText = vi.fn(() => ({ width: 50 }));
-    // Writable style properties
-    mockCtx.strokeStyle = '';
-    mockCtx.fillStyle = '';
-    mockCtx.lineWidth = 1;
-    mockCtx.globalAlpha = 1;
-    mockCtx.lineCap = 'round';
-    mockCtx.lineJoin = 'round';
-    mockCtx.font = '';
-    mockCtx.textBaseline = 'top';
-    mockCtx.textAlign = 'start';
+    const mockCtx = makeMockCtx();
 
     canvasEl.getContext = vi.fn(() => mockCtx) as unknown as typeof canvasEl.getContext;
 
@@ -199,41 +204,7 @@ describe('exportToBlob', () => {
                         cb(new Blob(['data'], { type: 'image/png' }));
                     });
                     offscreen.getContext = vi.fn(() => {
-                        const ctx: Record<string, unknown> = {};
-                        for (const m of [
-                            'save',
-                            'restore',
-                            'scale',
-                            'translate',
-                            'setTransform',
-                            'beginPath',
-                            'closePath',
-                            'moveTo',
-                            'lineTo',
-                            'arc',
-                            'ellipse',
-                            'quadraticCurveTo',
-                            'fill',
-                            'stroke',
-                            'fillRect',
-                            'strokeRect',
-                            'fillText',
-                            'setLineDash',
-                            'clearRect',
-                            'roundRect',
-                        ]) {
-                            ctx[m] = vi.fn();
-                        }
-                        ctx.measureText = vi.fn(() => ({ width: 50 }));
-                        ctx.strokeStyle = '';
-                        ctx.fillStyle = '';
-                        ctx.lineWidth = 1;
-                        ctx.globalAlpha = 1;
-                        ctx.lineCap = 'round';
-                        ctx.lineJoin = 'round';
-                        ctx.font = '';
-                        ctx.textBaseline = 'top';
-                        ctx.textAlign = 'start';
+                        const ctx = makeMockCtx();
                         return ctx;
                     }) as unknown as typeof offscreen.getContext;
                 }
@@ -268,41 +239,7 @@ describe('exportToBlob', () => {
                         cb(new Blob(['data'], { type: 'image/png' }));
                     });
                     offscreen.getContext = vi.fn(() => {
-                        const ctx: Record<string, unknown> = {};
-                        for (const m of [
-                            'save',
-                            'restore',
-                            'scale',
-                            'translate',
-                            'setTransform',
-                            'beginPath',
-                            'closePath',
-                            'moveTo',
-                            'lineTo',
-                            'arc',
-                            'ellipse',
-                            'quadraticCurveTo',
-                            'fill',
-                            'stroke',
-                            'fillRect',
-                            'strokeRect',
-                            'fillText',
-                            'setLineDash',
-                            'clearRect',
-                            'roundRect',
-                        ]) {
-                            ctx[m] = vi.fn();
-                        }
-                        ctx.measureText = vi.fn(() => ({ width: 50 }));
-                        ctx.strokeStyle = '';
-                        ctx.fillStyle = '';
-                        ctx.lineWidth = 1;
-                        ctx.globalAlpha = 1;
-                        ctx.lineCap = 'round';
-                        ctx.lineJoin = 'round';
-                        ctx.font = '';
-                        ctx.textBaseline = 'top';
-                        ctx.textAlign = 'start';
+                        const ctx = makeMockCtx();
                         return ctx;
                     }) as unknown as typeof offscreen.getContext;
                 }
@@ -336,41 +273,7 @@ describe('exportToBlob', () => {
                         cb(new Blob(['data'], { type: 'image/png' }));
                     });
                     offscreen.getContext = vi.fn(() => {
-                        const ctx: Record<string, unknown> = {};
-                        for (const m of [
-                            'save',
-                            'restore',
-                            'scale',
-                            'translate',
-                            'setTransform',
-                            'beginPath',
-                            'closePath',
-                            'moveTo',
-                            'lineTo',
-                            'arc',
-                            'ellipse',
-                            'quadraticCurveTo',
-                            'fill',
-                            'stroke',
-                            'fillRect',
-                            'strokeRect',
-                            'fillText',
-                            'setLineDash',
-                            'clearRect',
-                            'roundRect',
-                        ]) {
-                            ctx[m] = vi.fn();
-                        }
-                        ctx.measureText = vi.fn(() => ({ width: 50 }));
-                        ctx.strokeStyle = '';
-                        ctx.fillStyle = '';
-                        ctx.lineWidth = 1;
-                        ctx.globalAlpha = 1;
-                        ctx.lineCap = 'round';
-                        ctx.lineJoin = 'round';
-                        ctx.font = '';
-                        ctx.textBaseline = 'top';
-                        ctx.textAlign = 'start';
+                        const ctx = makeMockCtx();
                         return ctx;
                     }) as unknown as typeof offscreen.getContext;
                 }
@@ -429,9 +332,9 @@ describe('exportToBlob', () => {
                     ]) {
                         proxyCtx[m] = vi.fn();
                     }
-                    proxyCtx.measureText = vi.fn(() => ({ width: 50 }));
-                    proxyCtx.fillRect = vi.fn((...args: unknown[]) => fillRectCalls.push(args));
-                    proxyCtx.strokeStyle = '';
+                    proxyCtx['measureText'] = vi.fn(() => ({ width: 50 }));
+                    proxyCtx['fillRect'] = vi.fn((...args: unknown[]) => fillRectCalls.push(args));
+                    proxyCtx['strokeStyle'] = '';
                     let _fillStyle = '';
                     Object.defineProperty(proxyCtx, 'fillStyle', {
                         get: () => _fillStyle,
@@ -440,13 +343,13 @@ describe('exportToBlob', () => {
                             fillStyleLog.push(v);
                         },
                     });
-                    proxyCtx.lineWidth = 1;
-                    proxyCtx.globalAlpha = 1;
-                    proxyCtx.lineCap = 'round';
-                    proxyCtx.lineJoin = 'round';
-                    proxyCtx.font = '';
-                    proxyCtx.textBaseline = 'top';
-                    proxyCtx.textAlign = 'start';
+                    proxyCtx['lineWidth'] = 1;
+                    proxyCtx['globalAlpha'] = 1;
+                    proxyCtx['lineCap'] = 'round';
+                    proxyCtx['lineJoin'] = 'round';
+                    proxyCtx['font'] = '';
+                    proxyCtx['textBaseline'] = 'top';
+                    proxyCtx['textAlign'] = 'start';
                     (elem as HTMLCanvasElement).getContext = vi.fn(
                         () => proxyCtx,
                     ) as unknown as HTMLCanvasElement['getContext'];
@@ -504,8 +407,8 @@ describe('exportToBlob', () => {
                     ]) {
                         proxyCtx[m] = vi.fn();
                     }
-                    proxyCtx.measureText = vi.fn(() => ({ width: 50 }));
-                    proxyCtx.strokeStyle = '';
+                    proxyCtx['measureText'] = vi.fn(() => ({ width: 50 }));
+                    proxyCtx['strokeStyle'] = '';
                     let _fillStyle = '';
                     Object.defineProperty(proxyCtx, 'fillStyle', {
                         get: () => _fillStyle,
@@ -514,13 +417,13 @@ describe('exportToBlob', () => {
                             fillStyleLog.push(v);
                         },
                     });
-                    proxyCtx.lineWidth = 1;
-                    proxyCtx.globalAlpha = 1;
-                    proxyCtx.lineCap = 'round';
-                    proxyCtx.lineJoin = 'round';
-                    proxyCtx.font = '';
-                    proxyCtx.textBaseline = 'top';
-                    proxyCtx.textAlign = 'start';
+                    proxyCtx['lineWidth'] = 1;
+                    proxyCtx['globalAlpha'] = 1;
+                    proxyCtx['lineCap'] = 'round';
+                    proxyCtx['lineJoin'] = 'round';
+                    proxyCtx['font'] = '';
+                    proxyCtx['textBaseline'] = 'top';
+                    proxyCtx['textAlign'] = 'start';
                     (elem as HTMLCanvasElement).getContext = vi.fn(
                         () => proxyCtx,
                     ) as unknown as HTMLCanvasElement['getContext'];
@@ -574,23 +477,23 @@ describe('exportToBlob', () => {
                     ]) {
                         proxyCtx[m] = vi.fn();
                     }
-                    proxyCtx.measureText = vi.fn(() => ({ width: 50 }));
-                    proxyCtx.scale = vi.fn(() => {
+                    proxyCtx['measureText'] = vi.fn(() => ({ width: 50 }));
+                    proxyCtx['scale'] = vi.fn(() => {
                         scaleCallCount++;
                     });
                     // fillRect should only be called after scale (for element drawing), not before
-                    proxyCtx.fillRect = vi.fn(() => {
+                    proxyCtx['fillRect'] = vi.fn(() => {
                         if (scaleCallCount === 0) bgFillRectCalled = true;
                     });
-                    proxyCtx.strokeStyle = '';
-                    proxyCtx.fillStyle = '';
-                    proxyCtx.lineWidth = 1;
-                    proxyCtx.globalAlpha = 1;
-                    proxyCtx.lineCap = 'round';
-                    proxyCtx.lineJoin = 'round';
-                    proxyCtx.font = '';
-                    proxyCtx.textBaseline = 'top';
-                    proxyCtx.textAlign = 'start';
+                    proxyCtx['strokeStyle'] = '';
+                    proxyCtx['fillStyle'] = '';
+                    proxyCtx['lineWidth'] = 1;
+                    proxyCtx['globalAlpha'] = 1;
+                    proxyCtx['lineCap'] = 'round';
+                    proxyCtx['lineJoin'] = 'round';
+                    proxyCtx['font'] = '';
+                    proxyCtx['textBaseline'] = 'top';
+                    proxyCtx['textAlign'] = 'start';
                     (elem as HTMLCanvasElement).getContext = vi.fn(
                         () => proxyCtx,
                     ) as unknown as HTMLCanvasElement['getContext'];
@@ -625,41 +528,7 @@ describe('exportToBlob', () => {
                         cb(new Blob(['data'], { type: 'image/png' }));
                     });
                     offscreen.getContext = vi.fn(() => {
-                        const ctx: Record<string, unknown> = {};
-                        for (const m of [
-                            'save',
-                            'restore',
-                            'scale',
-                            'translate',
-                            'setTransform',
-                            'beginPath',
-                            'closePath',
-                            'moveTo',
-                            'lineTo',
-                            'arc',
-                            'ellipse',
-                            'quadraticCurveTo',
-                            'fill',
-                            'stroke',
-                            'fillRect',
-                            'strokeRect',
-                            'fillText',
-                            'setLineDash',
-                            'clearRect',
-                            'roundRect',
-                        ]) {
-                            ctx[m] = vi.fn();
-                        }
-                        ctx.measureText = vi.fn(() => ({ width: 50 }));
-                        ctx.strokeStyle = '';
-                        ctx.fillStyle = '';
-                        ctx.lineWidth = 1;
-                        ctx.globalAlpha = 1;
-                        ctx.lineCap = 'round';
-                        ctx.lineJoin = 'round';
-                        ctx.font = '';
-                        ctx.textBaseline = 'top';
-                        ctx.textAlign = 'start';
+                        const ctx = makeMockCtx();
                         return ctx;
                     }) as unknown as typeof offscreen.getContext;
                 }
@@ -695,41 +564,7 @@ describe('exportToBlob', () => {
                         cb(new Blob(['data'], { type: 'image/png' }));
                     });
                     offscreen.getContext = vi.fn(() => {
-                        const ctx: Record<string, unknown> = {};
-                        for (const m of [
-                            'save',
-                            'restore',
-                            'scale',
-                            'translate',
-                            'setTransform',
-                            'beginPath',
-                            'closePath',
-                            'moveTo',
-                            'lineTo',
-                            'arc',
-                            'ellipse',
-                            'quadraticCurveTo',
-                            'fill',
-                            'stroke',
-                            'fillRect',
-                            'strokeRect',
-                            'fillText',
-                            'setLineDash',
-                            'clearRect',
-                            'roundRect',
-                        ]) {
-                            ctx[m] = vi.fn();
-                        }
-                        ctx.measureText = vi.fn(() => ({ width: 50 }));
-                        ctx.strokeStyle = '';
-                        ctx.fillStyle = '';
-                        ctx.lineWidth = 1;
-                        ctx.globalAlpha = 1;
-                        ctx.lineCap = 'round';
-                        ctx.lineJoin = 'round';
-                        ctx.font = '';
-                        ctx.textBaseline = 'top';
-                        ctx.textAlign = 'start';
+                        const ctx = makeMockCtx();
                         return ctx;
                     }) as unknown as typeof offscreen.getContext;
                 }
@@ -763,41 +598,7 @@ describe('exportToBlob', () => {
                         cb(new Blob(['data'], { type: 'image/png' }));
                     });
                     offscreen.getContext = vi.fn(() => {
-                        const ctx: Record<string, unknown> = {};
-                        for (const m of [
-                            'save',
-                            'restore',
-                            'scale',
-                            'translate',
-                            'setTransform',
-                            'beginPath',
-                            'closePath',
-                            'moveTo',
-                            'lineTo',
-                            'arc',
-                            'ellipse',
-                            'quadraticCurveTo',
-                            'fill',
-                            'stroke',
-                            'fillRect',
-                            'strokeRect',
-                            'fillText',
-                            'setLineDash',
-                            'clearRect',
-                            'roundRect',
-                        ]) {
-                            ctx[m] = vi.fn();
-                        }
-                        ctx.measureText = vi.fn(() => ({ width: 50 }));
-                        ctx.strokeStyle = '';
-                        ctx.fillStyle = '';
-                        ctx.lineWidth = 1;
-                        ctx.globalAlpha = 1;
-                        ctx.lineCap = 'round';
-                        ctx.lineJoin = 'round';
-                        ctx.font = '';
-                        ctx.textBaseline = 'top';
-                        ctx.textAlign = 'start';
+                        const ctx = makeMockCtx();
                         return ctx;
                     }) as unknown as typeof offscreen.getContext;
                 }
@@ -831,41 +632,7 @@ describe('exportToBlob', () => {
                         cb(new Blob(['png-content'], { type: type ?? 'image/png' }));
                     });
                     (elem as HTMLCanvasElement).getContext = vi.fn(() => {
-                        const ctx: Record<string, unknown> = {};
-                        for (const m of [
-                            'save',
-                            'restore',
-                            'scale',
-                            'translate',
-                            'setTransform',
-                            'beginPath',
-                            'closePath',
-                            'moveTo',
-                            'lineTo',
-                            'arc',
-                            'ellipse',
-                            'quadraticCurveTo',
-                            'fill',
-                            'stroke',
-                            'fillRect',
-                            'strokeRect',
-                            'fillText',
-                            'setLineDash',
-                            'clearRect',
-                            'roundRect',
-                        ]) {
-                            ctx[m] = vi.fn();
-                        }
-                        ctx.measureText = vi.fn(() => ({ width: 50 }));
-                        ctx.strokeStyle = '';
-                        ctx.fillStyle = '';
-                        ctx.lineWidth = 1;
-                        ctx.globalAlpha = 1;
-                        ctx.lineCap = 'round';
-                        ctx.lineJoin = 'round';
-                        ctx.font = '';
-                        ctx.textBaseline = 'top';
-                        ctx.textAlign = 'start';
+                        const ctx = makeMockCtx();
                         return ctx;
                     }) as unknown as HTMLCanvasElement['getContext'];
                 }
@@ -912,41 +679,7 @@ describe('exportToBlob', () => {
                         cb(new Blob(['data'], { type: 'image/png' }));
                     });
                     offscreen.getContext = vi.fn(() => {
-                        const ctx: Record<string, unknown> = {};
-                        for (const m of [
-                            'save',
-                            'restore',
-                            'scale',
-                            'translate',
-                            'setTransform',
-                            'beginPath',
-                            'closePath',
-                            'moveTo',
-                            'lineTo',
-                            'arc',
-                            'ellipse',
-                            'quadraticCurveTo',
-                            'fill',
-                            'stroke',
-                            'fillRect',
-                            'strokeRect',
-                            'fillText',
-                            'setLineDash',
-                            'clearRect',
-                            'roundRect',
-                        ]) {
-                            ctx[m] = vi.fn();
-                        }
-                        ctx.measureText = vi.fn(() => ({ width: 50 }));
-                        ctx.strokeStyle = '';
-                        ctx.fillStyle = '';
-                        ctx.lineWidth = 1;
-                        ctx.globalAlpha = 1;
-                        ctx.lineCap = 'round';
-                        ctx.lineJoin = 'round';
-                        ctx.font = '';
-                        ctx.textBaseline = 'top';
-                        ctx.textAlign = 'start';
+                        const ctx = makeMockCtx();
                         return ctx;
                     }) as unknown as typeof offscreen.getContext;
                 }
@@ -983,41 +716,7 @@ describe('exportToBlob', () => {
                         cb(new Blob(['data'], { type: 'image/png' }));
                     });
                     offscreen.getContext = vi.fn(() => {
-                        const ctx: Record<string, unknown> = {};
-                        for (const m of [
-                            'save',
-                            'restore',
-                            'scale',
-                            'translate',
-                            'setTransform',
-                            'beginPath',
-                            'closePath',
-                            'moveTo',
-                            'lineTo',
-                            'arc',
-                            'ellipse',
-                            'quadraticCurveTo',
-                            'fill',
-                            'stroke',
-                            'fillRect',
-                            'strokeRect',
-                            'fillText',
-                            'setLineDash',
-                            'clearRect',
-                            'roundRect',
-                        ]) {
-                            ctx[m] = vi.fn();
-                        }
-                        ctx.measureText = vi.fn(() => ({ width: 50 }));
-                        ctx.strokeStyle = '';
-                        ctx.fillStyle = '';
-                        ctx.lineWidth = 1;
-                        ctx.globalAlpha = 1;
-                        ctx.lineCap = 'round';
-                        ctx.lineJoin = 'round';
-                        ctx.font = '';
-                        ctx.textBaseline = 'top';
-                        ctx.textAlign = 'start';
+                        const ctx = makeMockCtx();
                         return ctx;
                     }) as unknown as typeof offscreen.getContext;
                 }

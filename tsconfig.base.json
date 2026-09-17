@@ -1,0 +1,41 @@
+{
+    "compilerOptions": {
+        /* Type Checking - Base */
+        /*
+         * `strict` covers noImplicitAny, noImplicitThis, strictNullChecks,
+         * strictFunctionTypes, strictBindCallApply, strictPropertyInitialization,
+         * useUnknownInCatchVariables, strictBuiltinIteratorReturn and alwaysStrict.
+         */
+        "strict": true,
+
+        /* Type Checking - Additional Strictness */
+        "exactOptionalPropertyTypes": true,
+        "noImplicitOverride": true,
+        "noImplicitReturns": true,
+        "noPropertyAccessFromIndexSignature": true,
+        "noUncheckedIndexedAccess": true,
+
+        /* Specific Behaviors */
+        "allowUnreachableCode": false,
+        "allowUnusedLabels": false,
+        "noFallthroughCasesInSwitch": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+
+        /* Module System */
+        "esModuleInterop": true,
+        "isolatedModules": true,
+        "noUncheckedSideEffectImports": true,
+        "resolveJsonModule": true,
+        "verbatimModuleSyntax": true,
+
+        /* Library & Syntax */
+        "erasableSyntaxOnly": true,
+        "forceConsistentCasingInFileNames": true,
+        /*
+         * Third-party `.d.ts` files are not ours to fix; checking them only
+         * surfaces bugs in published packages, never in this repo.
+         */
+        "skipLibCheck": true
+    }
+}

@@ -31,7 +31,8 @@
         "dev": "electron-vite dev",
         "test": "vitest run",
         "test:watch": "vitest",
-        "build": "vue-tsc -b && electron-vite build",
+        "typecheck": "vue-tsc -b tsconfig.json",
+        "build": "npm run typecheck && electron-vite build",
         "build:electron": "npm run build && electron-builder",
         "build:mac": "npm run build && electron-builder --mac --publish never",
         "build:linux": "npm run build && electron-builder --linux --publish never",
@@ -55,11 +56,12 @@
         "scss:check": "node scripts/check/check-scss-standards.mjs",
         "security:check": "node scripts/check/check-electron-security.mjs",
         "test:check": "node scripts/check/check-testing.mjs",
+        "tsconfig:check": "node scripts/check/check-tsconfigs.mjs",
         "stylelint": "stylelint \"src/**/*.{scss,vue}\"",
         "stylelint:fix": "stylelint \"src/**/*.{scss,vue}\" --fix",
         "prepare": "husky",
         "test:coverage": "npx vitest run --coverage",
-        "ci:check": "npm run audit:check && npm run lint && npm run format:check && npm run stylelint && npm run pkg:check && npm run pipeline:check && npm run code:check && npm run declorder:check && npm run html:check && npm run scss:check && npm run refactor:check && npm run ipc:check && npm run security:check && npm run error:check && npm run dup:check && npm run dead:check && npm run i18n:check && npm run test:coverage && npm run test:check && npm run build"
+        "ci:check": "npm run audit:check && npm run lint && npm run format:check && npm run stylelint && npm run pkg:check && npm run pipeline:check && npm run code:check && npm run declorder:check && npm run html:check && npm run scss:check && npm run refactor:check && npm run ipc:check && npm run security:check && npm run error:check && npm run dup:check && npm run dead:check && npm run i18n:check && npm run tsconfig:check && npm run test:coverage && npm run test:check && npm run build"
     },
     "dependencies": {
         "@codemirror/autocomplete": "^6.20.1",

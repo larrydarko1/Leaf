@@ -62,7 +62,7 @@ describe('useLanguage', () => {
             });
             await language.refresh();
             expect(language.languages.value).toHaveLength(2);
-            expect(language.languages.value[0].id).toBe('en');
+            expect(language.languages.value[0]!.id).toBe('en');
         });
 
         it('sets activeId from the IPC response', async () => {

@@ -54,8 +54,8 @@ describe('TableWidget.toDOM', () => {
         const el = renderTable('| Name | Age |\n|---|---|\n| Alice | 30 |');
         const ths = el.querySelectorAll('thead th');
         expect(ths).toHaveLength(2);
-        expect(ths[0].textContent).toBe('Name');
-        expect(ths[1].textContent).toBe('Age');
+        expect(ths[0]!.textContent).toBe('Name');
+        expect(ths[1]!.textContent).toBe('Age');
     });
 
     it('renders body rows in <tbody>', () => {
@@ -266,7 +266,7 @@ describe('EmbedWidget.toDOM', () => {
         const media = el.querySelector('video') as HTMLVideoElement;
         Object.defineProperty(media, 'duration', { get: () => 90, configurable: true });
         media.dispatchEvent(new Event('loadedmetadata'));
-        expect(el.dataset.realDuration).toBe('90');
+        expect(el.dataset['realDuration']).toBe('90');
     });
 
     it('loadedmetadata probes when duration is Infinity', () => {
@@ -287,7 +287,7 @@ describe('EmbedWidget.toDOM', () => {
         // Now duration becomes finite after seek
         Object.defineProperty(media, 'duration', { get: () => 120, configurable: true });
         media.dispatchEvent(new Event('seeked'));
-        expect(el.dataset.realDuration).toBe('120');
+        expect(el.dataset['realDuration']).toBe('120');
     });
 
     it('volume button mutes when volume > 0', () => {
@@ -397,7 +397,7 @@ describe('TaskCheckboxWidget.toDOM', () => {
         const el = new TaskCheckboxWidget('unchecked', 5).toDOM();
         expect(el.tagName).toBe('LABEL');
         expect(el.className).toBe('cm-task-label');
-        expect(el.dataset.taskPos).toBe('5');
+        expect(el.dataset['taskPos']).toBe('5');
     });
 
     it('renders a checked checkbox for "checked" state', () => {
@@ -410,7 +410,7 @@ describe('TaskCheckboxWidget.toDOM', () => {
     it('renders a half-checked checkbox for "half" state', () => {
         const el = new TaskCheckboxWidget('half', 0).toDOM();
         const input = el.querySelector('input') as HTMLInputElement;
-        expect(input.dataset.half).toBe('true');
+        expect(input.dataset['half']).toBe('true');
         expect(el.querySelector('span.cm-task-half')).not.toBeNull();
     });
 

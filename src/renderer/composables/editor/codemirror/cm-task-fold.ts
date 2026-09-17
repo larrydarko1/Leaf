@@ -28,7 +28,7 @@ class TaskFoldToggleWidget extends WidgetType {
         this.folded = folded;
     }
 
-    eq(other: TaskFoldToggleWidget): boolean {
+    override eq(other: TaskFoldToggleWidget): boolean {
         return this.folded === other.folded;
     }
 
@@ -39,7 +39,7 @@ class TaskFoldToggleWidget extends WidgetType {
         return span;
     }
 
-    ignoreEvent(): boolean {
+    override ignoreEvent(): boolean {
         return false;
     }
 }
@@ -186,7 +186,7 @@ function taskFoldRange(state: EditorState, lineStart: number): { from: number; t
     const match = line.text.match(taskLineRegex);
     if (match == null) return null;
 
-    const parentIndent = match[1].length;
+    const parentIndent = match[1]?.length ?? 0;
     let lastNonEmptyChildLine = line.number;
 
     for (let lineNo = line.number + 1; lineNo <= state.doc.lines; lineNo++) {
@@ -198,7 +198,7 @@ function taskFoldRange(state: EditorState, lineStart: number): { from: number; t
             continue;
         }
 
-        const nextIndent = nextLine.text.match(/^(\s*)/)?.[1].length ?? 0;
+        const nextIndent = nextLine.text.match(/^(\s*)/)?.[1]?.length ?? 0;
         if (nextIndent > parentIndent) {
             lastNonEmptyChildLine = lineNo;
         } else {

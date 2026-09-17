@@ -72,7 +72,7 @@ async function metaOfDefault(content: string): Promise<{ name: string; descripti
             handlers[channel] = fn;
         }),
     } as never);
-    const result = (await handlers['systemPrompt:list']()) as {
+    const result = (await handlers['systemPrompt:list']!()) as {
         prompts: { id: string; name: string; description: string }[];
     };
     return result.prompts.find((p) => p.id === 'default')!;
@@ -261,7 +261,7 @@ describe('systemPrompt:list', () => {
             activeId: string;
         };
         expect(result.success).toBe(true);
-        expect(result.prompts[0].id).toBe('default');
+        expect(result.prompts[0]!.id).toBe('default');
         expect(result.prompts.map((p) => p.id)).toEqual(['default', 'alpha', 'zebra']);
         expect(result.activeId).toBe('default');
     });

@@ -205,7 +205,7 @@ describe('tokenUsagePercent', () => {
     });
 
     it('returns 0 when contextSize is undefined', async () => {
-        (mockStatus.value as Record<string, unknown>).contextSize = undefined;
+        (mockStatus.value as Record<string, unknown>)['contextSize'] = undefined;
         mockConversationTokenCount.value = 50;
         const wrapper = mountPanel();
         const msgList = wrapper.findComponent({ name: 'AiMessageList' });

@@ -6,8 +6,8 @@ function makeAudioBuffer(channels: Float32Array[], sampleRate: number): AudioBuf
     return {
         numberOfChannels: channels.length,
         sampleRate,
-        length: channels[0].length,
-        duration: channels[0].length / sampleRate,
+        length: channels[0]!.length,
+        duration: channels[0]!.length / sampleRate,
         getChannelData(ch: number) {
             return channels[ch];
         },

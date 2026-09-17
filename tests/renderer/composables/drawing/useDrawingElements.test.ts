@@ -229,8 +229,8 @@ describe('useDrawingElements', () => {
         it('returns start/end handles for an arrow element', () => {
             const el = makeEl('a', { type: 'arrow', x: 10, y: 20, width: 40, height: 30 });
             const handles = d.getHandlePositions(el);
-            expect(handles.start).toEqual({ x: 10, y: 20 });
-            expect(handles.end).toEqual({ x: 50, y: 50 });
+            expect(handles['start']).toEqual({ x: 10, y: 20 });
+            expect(handles['end']).toEqual({ x: 50, y: 50 });
         });
     });
 

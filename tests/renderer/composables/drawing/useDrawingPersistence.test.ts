@@ -153,7 +153,7 @@ describe('saveDrawing', () => {
         zoom.value = 1.5;
         saveDrawing();
         expect(onSave).toHaveBeenCalled();
-        const saved = JSON.parse((onSave.mock.calls[0] as string[])[0]);
+        const saved = JSON.parse((onSave.mock.calls[0] as string[])[0]!);
         expect(saved.version).toBe(2);
         expect(saved.elements).toHaveLength(1);
         expect(saved.viewState.scrollX).toBe(10);
@@ -240,7 +240,7 @@ describe('loadDrawing (v2 format)', () => {
 
         loadDrawing();
         expect(elements.value).toHaveLength(1);
-        expect(elements.value[0].id).toBe(el.id);
+        expect(elements.value[0]!.id).toBe(el.id);
     });
 
     it('loads scrollX, scrollY, zoom from v2 content', () => {
@@ -317,7 +317,7 @@ describe('loadDrawing (v1 migration)', () => {
         findCtx.mockReturnValue({} as CanvasRenderingContext2D);
         loadDrawing();
         expect(elements.value).toHaveLength(1);
-        expect(elements.value[0].strokeColor).toBe('#ff0000');
+        expect(elements.value[0]!.strokeColor).toBe('#ff0000');
     });
 
     it('migrates v1 fill shape (sets fillColor to stroke color)', () => {
@@ -335,7 +335,7 @@ describe('loadDrawing (v1 migration)', () => {
         canvas.value = {} as HTMLCanvasElement;
         findCtx.mockReturnValue({} as CanvasRenderingContext2D);
         loadDrawing();
-        expect(elements.value[0].fillColor).toBe('#00ff00');
+        expect(elements.value[0]!.fillColor).toBe('#00ff00');
     });
 
     it('migrates v1 line/arrow shapes correctly', () => {
@@ -353,9 +353,9 @@ describe('loadDrawing (v1 migration)', () => {
         canvas.value = {} as HTMLCanvasElement;
         findCtx.mockReturnValue({} as CanvasRenderingContext2D);
         loadDrawing();
-        expect(elements.value[0].type).toBe('line');
-        expect(elements.value[0].x).toBe(0);
-        expect(elements.value[0].y).toBe(0);
+        expect(elements.value[0]!.type).toBe('line');
+        expect(elements.value[0]!.x).toBe(0);
+        expect(elements.value[0]!.y).toBe(0);
     });
 
     it('migrates v1 freedraw points', () => {
@@ -378,7 +378,7 @@ describe('loadDrawing (v1 migration)', () => {
         findCtx.mockReturnValue({} as CanvasRenderingContext2D);
         loadDrawing();
         expect(elements.value).toHaveLength(1);
-        expect(elements.value[0].type).toBe('freedraw');
+        expect(elements.value[0]!.type).toBe('freedraw');
     });
 
     it('skips eraser strokes', () => {

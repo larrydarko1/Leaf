@@ -115,7 +115,7 @@ describe('AiHistoryPanel', () => {
             const wrapper = mountWithI18n(AiHistoryPanel, {
                 props: { ...defaultProps, conversationList: [conv] },
             });
-            await wrapper.findAll('.ai-btn-icon')[0].trigger('click');
+            await wrapper.findAll('.ai-btn-icon')[0]!.trigger('click');
             expect(wrapper.emitted('start-rename')).toBeTruthy();
             wrapper.unmount();
         });
@@ -125,7 +125,7 @@ describe('AiHistoryPanel', () => {
             const wrapper = mountWithI18n(AiHistoryPanel, {
                 props: { ...defaultProps, conversationList: [conv] },
             });
-            await wrapper.findAll('.ai-btn-icon')[1].trigger('click');
+            await wrapper.findAll('.ai-btn-icon')[1]!.trigger('click');
             expect(wrapper.emitted('delete')?.[0]).toEqual(['del-conv']);
             wrapper.unmount();
         });

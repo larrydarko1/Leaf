@@ -678,7 +678,7 @@ describe('AiInputArea', () => {
 
             const items = wrapper.findAll('.ai-file-picker-item');
             expect(items).toHaveLength(1);
-            expect(items[0].text()).toContain('beta.md');
+            expect(items[0]!.text()).toContain('beta.md');
         });
 
         it('shows an empty message when the search matches nothing', async () => {

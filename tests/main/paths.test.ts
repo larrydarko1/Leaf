@@ -134,7 +134,7 @@ describe('paths', () => {
         });
 
         it('returns dev path when resourcesPath is undefined', () => {
-            (process as { resourcesPath?: string }).resourcesPath = undefined;
+            (process as { resourcesPath?: string | undefined }).resourcesPath = undefined;
             const result = getWhisperModelDir();
             expect(result).toContain('models/whisper');
             expect(result).not.toContain('Resources/models');
@@ -171,7 +171,7 @@ describe('paths', () => {
         });
 
         it('returns dev path when resourcesPath is undefined', () => {
-            (process as { resourcesPath?: string }).resourcesPath = undefined;
+            (process as { resourcesPath?: string | undefined }).resourcesPath = undefined;
             const result = getBundledThemesDir();
             expect(result).toContain('assets/themes');
         });
@@ -205,7 +205,7 @@ describe('paths', () => {
         });
 
         it('returns dev path when resourcesPath is undefined', () => {
-            (process as { resourcesPath?: string }).resourcesPath = undefined;
+            (process as { resourcesPath?: string | undefined }).resourcesPath = undefined;
             const result = getBundledLocalesDir();
             expect(result).toContain('assets/locales');
         });
@@ -239,7 +239,7 @@ describe('paths', () => {
         });
 
         it('returns dev path when resourcesPath is undefined', () => {
-            (process as { resourcesPath?: string }).resourcesPath = undefined;
+            (process as { resourcesPath?: string | undefined }).resourcesPath = undefined;
             const result = getBundledPromptsDir();
             expect(result).toContain('assets/prompts');
         });

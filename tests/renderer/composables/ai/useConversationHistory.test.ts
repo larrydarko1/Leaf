@@ -226,8 +226,8 @@ describe('useConversationHistory', () => {
             });
             await history.loadConversation('conv-2');
             expect(messages.value).toHaveLength(2);
-            expect(messages.value[0].content).toBe('Hello');
-            expect(messages.value[1].content).toBe('Hi there');
+            expect(messages.value[0]!.content).toBe('Hello');
+            expect(messages.value[1]!.content).toBe('Hi there');
         });
 
         it('sets currentConversationId', async () => {
@@ -368,7 +368,7 @@ describe('useConversationHistory', () => {
             history.currentConversationId.value = 'conv-save';
             await history.saveCurrentConversation();
 
-            const saved = mockConversationSave.mock.calls[0][0] as Conversation;
+            const saved = mockConversationSave.mock.calls[0]![0] as Conversation;
             expect(saved.messages).toHaveLength(2);
             expect(saved.messages.map((m) => m.role)).toEqual(['user', 'assistant']);
         });
@@ -379,7 +379,7 @@ describe('useConversationHistory', () => {
             history.conversationTokenCount.value = 777;
             await history.saveCurrentConversation();
 
-            const saved = mockConversationSave.mock.calls[0][0] as Conversation;
+            const saved = mockConversationSave.mock.calls[0]![0] as Conversation;
             expect(saved.tokenCount).toBe(777);
         });
     });

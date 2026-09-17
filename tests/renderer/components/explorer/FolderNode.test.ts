@@ -438,13 +438,13 @@ describe('FolderNode — recursive child forwarding', () => {
             props: { ...baseProps, node: parent, expandedFolders: expanded },
         });
         const childItem = wrapper.findAll('.folder-item')[1];
-        await childItem.trigger('click');
+        await childItem!.trigger('click');
         expect(wrapper.emitted('selectFolder')?.at(-1)).toEqual(['/vault/docs/sub']);
 
-        await wrapper.findAll('.chevron-button')[1].trigger('click');
+        await wrapper.findAll('.chevron-button')[1]!.trigger('click');
         expect(wrapper.emitted('toggleFolder')?.at(-1)).toEqual(['/vault/docs/sub']);
 
-        await childItem.trigger('contextmenu');
+        await childItem!.trigger('contextmenu');
         expect(wrapper.emitted('contextMenu')?.at(-1)?.slice(0, 2)).toEqual(['folder', '/vault/docs/sub']);
         wrapper.unmount();
     });
@@ -454,9 +454,9 @@ describe('FolderNode — recursive child forwarding', () => {
             props: { ...baseProps, node: parent, expandedFolders: expanded },
         });
         const childItem = wrapper.findAll('.folder-item')[1];
-        await childItem.trigger('drop', { dataTransfer: makeDataTransfer('file:/vault/x.md') });
+        await childItem!.trigger('drop', { dataTransfer: makeDataTransfer('file:/vault/x.md') });
         expect(wrapper.emitted('moveFile')?.at(-1)).toEqual(['/vault/x.md', '/vault/docs/sub']);
-        await childItem.trigger('drop', { dataTransfer: makeDataTransfer('folder:/vault/y') });
+        await childItem!.trigger('drop', { dataTransfer: makeDataTransfer('folder:/vault/y') });
         expect(wrapper.emitted('moveFolder')?.at(-1)).toEqual(['/vault/y', '/vault/docs/sub']);
         wrapper.unmount();
     });

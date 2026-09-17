@@ -155,7 +155,7 @@ describe('DrawingToolbar', () => {
             // Find an arch item and click it
             const dropdownItems = wrapper.findAll('.arch-item, .dropdown-item, [aria-label*="atabase"]');
             if (dropdownItems.length > 0) {
-                await dropdownItems[0].trigger('click');
+                await dropdownItems[0]!.trigger('click');
                 expect(wrapper.emitted('selectTool')).toBeDefined();
             }
         }
@@ -166,7 +166,7 @@ describe('DrawingToolbar', () => {
         const wrapper = mountWithI18n(DrawingToolbar, {
             props: { currentTool: 'database' },
         });
-        const vm = wrapper.vm as { handleClickOutside: (e: MouseEvent) => void };
+        const vm = wrapper.vm as unknown as { handleClickOutside: (e: MouseEvent) => void };
         vm.handleClickOutside(new MouseEvent('click', { bubbles: true }));
         // Should not throw
         expect(wrapper.exists()).toBe(true);

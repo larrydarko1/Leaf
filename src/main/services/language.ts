@@ -80,10 +80,10 @@ export async function findActiveDictationLanguage(): Promise<string | null> {
     const result = await loadLanguageContent(id);
     if (result.content === undefined) return null;
 
-    const meta = result.content.meta;
+    const meta = result.content['meta'];
     if (!isPlainObject(meta)) return null;
 
-    const code = meta.dictationLanguage;
+    const code = meta['dictationLanguage'];
     return typeof code === 'string' && code.trim() !== '' ? code.trim() : null;
 }
 
@@ -329,8 +329,8 @@ async function listLanguagesArray(): Promise<LanguageInfo[]> {
 async function resolveLanguageName(id: string, filePath: string): Promise<string> {
     try {
         const parsed: unknown = JSON.parse(await fs.readFile(filePath, 'utf-8'));
-        if (isPlainObject(parsed) && isPlainObject(parsed.meta)) {
-            const name = parsed.meta.name;
+        if (isPlainObject(parsed) && isPlainObject(parsed['meta'])) {
+            const name = parsed['meta']['name'];
             if (typeof name === 'string' && name.trim() !== '') return name.trim();
         }
     } catch (err) {

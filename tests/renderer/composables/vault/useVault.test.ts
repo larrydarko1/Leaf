@@ -167,7 +167,7 @@ describe('useVault', () => {
                 folders: [],
             });
             await vault.refreshFiles();
-            expect(vault.files.value[0].name).toBe('b.md');
+            expect(vault.files.value[0]!.name).toBe('b.md');
         });
     });
 

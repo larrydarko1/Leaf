@@ -135,7 +135,7 @@ describe('useEditorTabs', () => {
             tabs.openTab(makeFile('b.md'));
             tabs.closeTab(0);
             expect(tabs.tabs.value).toHaveLength(1);
-            expect(tabs.tabs.value[0].file.name).toBe('b.md');
+            expect(tabs.tabs.value[0]!.file.name).toBe('b.md');
         });
 
         it('sets activeIndex to -1 when last tab is closed', () => {
@@ -211,14 +211,14 @@ describe('useEditorTabs', () => {
             tabs.openTab(file);
             tabs.updateTabContent(file.path, { content: 'hello', hasUnsavedChanges: true });
             const tab = tabs.tabs.value[0];
-            expect(tab.content).toBe('hello');
-            expect(tab.hasUnsavedChanges).toBe(true);
+            expect(tab!.content).toBe('hello');
+            expect(tab!.hasUnsavedChanges).toBe(true);
         });
 
         it('does nothing for an unknown file path', () => {
             tabs.openTab(makeFile('a.md'));
             tabs.updateTabContent('/nonexistent.md', { content: 'x', hasUnsavedChanges: true });
-            expect(tabs.tabs.value[0].content).toBeNull();
+            expect(tabs.tabs.value[0]!.content).toBeNull();
         });
     });
 
@@ -230,9 +230,9 @@ describe('useEditorTabs', () => {
             tabs.updateTabContent(file.path, { content: 'new content', hasUnsavedChanges: true });
             tabs.markTabSaved(file.path, 'new content');
             const tab = tabs.tabs.value[0];
-            expect(tab.hasUnsavedChanges).toBe(false);
-            expect(tab.savedContent).toBe('new content');
-            expect(tab.content).toBe('new content');
+            expect(tab!.hasUnsavedChanges).toBe(false);
+            expect(tab!.savedContent).toBe('new content');
+            expect(tab!.content).toBe('new content');
         });
     });
 
@@ -242,13 +242,13 @@ describe('useEditorTabs', () => {
             const file = makeFile('a.md');
             tabs.openTab(file);
             tabs.saveScrollPosition(file.path, 320);
-            expect(tabs.tabs.value[0].scrollTop).toBe(320);
+            expect(tabs.tabs.value[0]!.scrollTop).toBe(320);
         });
 
         it('does nothing for an unknown path', () => {
             tabs.openTab(makeFile('a.md'));
             tabs.saveScrollPosition('/unknown.md', 100);
-            expect(tabs.tabs.value[0].scrollTop).toBe(0);
+            expect(tabs.tabs.value[0]!.scrollTop).toBe(0);
         });
     });
 
@@ -261,7 +261,7 @@ describe('useEditorTabs', () => {
             tabs.openTab(b);
             tabs.syncTabFiles([b]);
             expect(tabs.tabs.value).toHaveLength(1);
-            expect(tabs.tabs.value[0].file.name).toBe('b.md');
+            expect(tabs.tabs.value[0]!.file.name).toBe('b.md');
         });
 
         it('updates FileInfo reference when file still exists', () => {
@@ -269,7 +269,7 @@ describe('useEditorTabs', () => {
             tabs.openTab(a);
             const updated = { ...a, size: 999 };
             tabs.syncTabFiles([updated]);
-            expect(tabs.tabs.value[0].file.size).toBe(999);
+            expect(tabs.tabs.value[0]!.file.size).toBe(999);
         });
 
         it('clamps activeIndex if it exceeds new tab count', () => {
@@ -290,15 +290,15 @@ describe('useEditorTabs', () => {
             tabs.openTab(file);
             const renamed = makeFile('new.md', '/new.md');
             tabs.renameTabFile('/old.md', renamed);
-            expect(tabs.tabs.value[0].file.name).toBe('new.md');
-            expect(tabs.tabs.value[0].file.path).toBe('/new.md');
+            expect(tabs.tabs.value[0]!.file.name).toBe('new.md');
+            expect(tabs.tabs.value[0]!.file.path).toBe('/new.md');
         });
 
         it('does nothing for an unknown old path', () => {
             const file = makeFile('a.md', '/a.md');
             tabs.openTab(file);
             tabs.renameTabFile('/nonexistent.md', makeFile('x.md'));
-            expect(tabs.tabs.value[0].file.name).toBe('a.md');
+            expect(tabs.tabs.value[0]!.file.name).toBe('a.md');
         });
     });
 
@@ -374,10 +374,10 @@ describe('useEditorTabs', () => {
             const restored = tabs.restoreTabs(FOLDER, files);
             expect(restored).toBe(true);
             expect(tabs.tabs.value).toHaveLength(2);
-            expect(tabs.tabs.value[0].file.name).toBe('a.md');
-            expect(tabs.tabs.value[0].scrollTop).toBe(100);
-            expect(tabs.tabs.value[1].file.name).toBe('c.md');
-            expect(tabs.tabs.value[1].scrollTop).toBe(200);
+            expect(tabs.tabs.value[0]!.file.name).toBe('a.md');
+            expect(tabs.tabs.value[0]!.scrollTop).toBe(100);
+            expect(tabs.tabs.value[1]!.file.name).toBe('c.md');
+            expect(tabs.tabs.value[1]!.scrollTop).toBe(200);
             expect(tabs.activeIndex.value).toBe(1);
         });
 
@@ -398,7 +398,7 @@ describe('useEditorTabs', () => {
             const restored = tabs.restoreTabs(FOLDER, files);
             expect(restored).toBe(true);
             expect(tabs.tabs.value).toHaveLength(1);
-            expect(tabs.tabs.value[0].file.name).toBe('a.md');
+            expect(tabs.tabs.value[0]!.file.name).toBe('a.md');
             // activeIndex was 1, but only 1 tab now — should clamp to 0
             expect(tabs.activeIndex.value).toBe(0);
         });

@@ -160,7 +160,7 @@ describe('useAIChat', () => {
 
             await chat.resendMessage(2);
 
-            const call = mockAiRestoreChatHistory.mock.calls[0][0] as ChatMessage[];
+            const call = mockAiRestoreChatHistory.mock.calls[0]![0] as ChatMessage[];
             expect(call.every((m) => m.role !== 'system')).toBe(true);
         });
     });
@@ -219,7 +219,7 @@ describe('useAIChat', () => {
 
             // Messages after index 2 should be removed
             expect(messages.value).toHaveLength(3);
-            expect(messages.value[2].content).toBe('Edited');
+            expect(messages.value[2]!.content).toBe('Edited');
         });
 
         it('cancels edit without changes if content is empty', async () => {
@@ -229,7 +229,7 @@ describe('useAIChat', () => {
             chat.editContent.value = '   ';
             await chat.confirmEditMessage(0);
 
-            expect(messages.value[0].content).toBe('Original');
+            expect(messages.value[0]!.content).toBe('Original');
             expect(mockAiResetChat).not.toHaveBeenCalled();
         });
     });
@@ -279,7 +279,7 @@ describe('useAIChat', () => {
 
             await chat.deleteLastMessagePair();
 
-            const call = mockAiRestoreChatHistory.mock.calls[0][0] as ChatMessage[];
+            const call = mockAiRestoreChatHistory.mock.calls[0]![0] as ChatMessage[];
             expect(call.every((m) => m.role !== 'system')).toBe(true);
         });
 
@@ -645,7 +645,7 @@ describe('useAIChat', () => {
 
             await chat.sendMessage();
 
-            const ctx = mockAiChat.mock.calls[0][1] as string;
+            const ctx = mockAiChat.mock.calls[0]![1] as string;
             expect(ctx).toContain('File: a.md');
             expect(ctx).toContain('File: b.md');
             expect(ctx).toContain('CONTENT');
@@ -662,7 +662,7 @@ describe('useAIChat', () => {
 
             await chat.sendMessage();
 
-            const ctx = mockAiChat.mock.calls[0][1] as string;
+            const ctx = mockAiChat.mock.calls[0]![1] as string;
             expect(ctx).toContain('File: a.md');
             expect(ctx).not.toContain('File: b.md');
         });
@@ -676,7 +676,7 @@ describe('useAIChat', () => {
 
             await chat.sendMessage();
 
-            expect(mockAiChat.mock.calls[0][1]).toBeNull();
+            expect(mockAiChat.mock.calls[0]![1]).toBeNull();
         });
 
         it('logs and yields null context when readFile throws', async () => {
@@ -688,7 +688,7 @@ describe('useAIChat', () => {
             await chat.sendMessage();
 
             expect(window.electronAPI.log.error).toHaveBeenCalled();
-            expect(mockAiChat.mock.calls[0][1]).toBeNull();
+            expect(mockAiChat.mock.calls[0]![1]).toBeNull();
         });
     });
 

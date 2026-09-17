@@ -128,7 +128,7 @@ describe('AudioRecorder', () => {
                     hasPermission: mockHasPermission,
                     formattedDuration: mockFormattedDuration,
                     toggle: mockToggle,
-                };
+                } as unknown as ReturnType<typeof useAudioRecorder>;
             });
             const wrapper = mountWithI18n(AudioRecorder, { props: { currentFolder: '/vault' } });
             capturedOnSaved('/vault/recording.wav');

@@ -91,7 +91,7 @@ describe('DrawingExportDialog', () => {
 
     it('passes all elements when exportOnlySelected is false', async () => {
         const wrapper = await openDialog({ hasSelection: false });
-        expect(mockExportToBlob.mock.calls[0][0].elements).toHaveLength(2);
+        expect(mockExportToBlob.mock.calls[0]![0].elements).toHaveLength(2);
         wrapper.unmount();
     });
 
@@ -100,7 +100,7 @@ describe('DrawingExportDialog', () => {
             hasSelection: true,
             selectedIds: new Set(['a']),
         });
-        const call = mockExportToBlob.mock.calls[0][0];
+        const call = mockExportToBlob.mock.calls[0]![0];
         expect(call.elements).toHaveLength(1);
         expect(call.elements[0].id).toBe('a');
         wrapper.unmount();
@@ -108,13 +108,13 @@ describe('DrawingExportDialog', () => {
 
     it('passes withBackground: true by default', async () => {
         const wrapper = await openDialog();
-        expect(mockExportToBlob.mock.calls[0][0].withBackground).toBe(true);
+        expect(mockExportToBlob.mock.calls[0]![0].withBackground).toBe(true);
         wrapper.unmount();
     });
 
     it('passes scale: 2 by default', async () => {
         const wrapper = await openDialog();
-        expect(mockExportToBlob.mock.calls[0][0].scale).toBe(2);
+        expect(mockExportToBlob.mock.calls[0]![0].scale).toBe(2);
         wrapper.unmount();
     });
 

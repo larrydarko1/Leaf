@@ -25,12 +25,12 @@ function renumberOrderedList(text: string, fromPos: number, indent: string, star
     let num = startNum;
     let changed = false;
 
-    for (let i = 0; i < lines.length; i++) {
-        const match = lines[i].match(pattern);
+    for (const [i, lineText] of lines.entries()) {
+        const match = lineText.match(pattern);
         if (match == null) break;
-        const oldNum = parseInt(match[1]);
+        const oldNum = parseInt(match[1] ?? '');
         if (oldNum !== num) {
-            lines[i] = lines[i].replace(pattern, `${indent}${num}. `);
+            lines[i] = lineText.replace(pattern, `${indent}${num}. `);
             changed = true;
         }
         num++;
@@ -55,11 +55,12 @@ function buildLineChanges(
     const origLines = original.substring(fromPos).split('\n');
     const updLines = updated.substring(fromPos).split('\n');
     let pos = fromPos;
-    for (let i = 0; i < origLines.length; i++) {
-        if (origLines[i] !== updLines[i]) {
-            changes.push({ from: pos, to: pos + origLines[i].length, insert: updLines[i] });
+    for (const [i, origLine] of origLines.entries()) {
+        const updLine = updLines[i] ?? '';
+        if (origLine !== updLine) {
+            changes.push({ from: pos, to: pos + origLine.length, insert: updLine });
         }
-        pos += origLines[i].length + 1;
+        pos += origLine.length + 1;
     }
     return changes;
 }
@@ -75,9 +76,9 @@ function continueMarkdownList(view: EditorView): boolean {
     // Bullet list: "  - content" or "  - [ ] content" or "  - [x] content" or "  - [/] content"
     const bulletMatch = textBeforeCursor.match(/^(\s*)- (\[[ x/]\] )?(.*)$/i);
     if (bulletMatch != null) {
-        const indent = bulletMatch[1];
+        const indent = bulletMatch[1] ?? '';
         const checkbox = bulletMatch[2] ?? '';
-        const lineContent = bulletMatch[3];
+        const lineContent = bulletMatch[3] ?? '';
         const trimmedContent = lineContent.trim();
         const isEmpty = trimmedContent.length === 0;
 
@@ -102,9 +103,9 @@ function continueMarkdownList(view: EditorView): boolean {
     // Ordered list: "  1. content"
     const orderedMatch = textBeforeCursor.match(/^(\s*)(\d+)\. (.*)$/);
     if (orderedMatch != null) {
-        const indent = orderedMatch[1];
-        const num = parseInt(orderedMatch[2]);
-        const lineContent = orderedMatch[3];
+        const indent = orderedMatch[1] ?? '';
+        const num = parseInt(orderedMatch[2] ?? '');
+        const lineContent = orderedMatch[3] ?? '';
         const trimmedContent = lineContent.trim();
         const isEmpty = trimmedContent.length === 0;
 

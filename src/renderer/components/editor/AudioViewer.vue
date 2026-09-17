@@ -13,6 +13,7 @@ const { t } = useI18n();
 
 const {
     audioUrl,
+    // @ts-expect-error noUnusedLocals false-positive: bound via ref="audioRef" in template
     audioRef,
     audioError,
     isLoadingAudio,
@@ -100,7 +101,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                 <p>{{ t('editor.loading_audio') }}</p>
             </div>
 
-            <!-- Hidden native audio element -->
             <!-- eslint-disable-next-line a11y/media-has-caption -->
             <audio
                 v-if="audioUrl && !audioError"

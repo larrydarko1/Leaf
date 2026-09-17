@@ -63,7 +63,7 @@ describe('useFileSelection', () => {
         it('selects the clicked file', () => {
             sel.selectFile(fileA);
             expect(sel.selectedFiles.value).toHaveLength(1);
-            expect(sel.selectedFiles.value[0].path).toBe(fileA.path);
+            expect(sel.selectedFiles.value[0]!.path).toBe(fileA.path);
             expect(sel.activeFile.value?.path).toBe(fileA.path);
         });
 
@@ -216,7 +216,7 @@ describe('useFileSelection', () => {
             sel.selectFile(fileA);
             const updatedA = { ...fileA, size: 999 };
             sel.syncAfterRefresh([updatedA]);
-            expect(sel.selectedFiles.value[0].size).toBe(999);
+            expect(sel.selectedFiles.value[0]!.size).toBe(999);
         });
 
         it('clears the selection when none of the previously selected files exist', () => {

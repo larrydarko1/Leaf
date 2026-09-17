@@ -120,7 +120,7 @@ describe('SearchPanel', () => {
     });
 
     it('applies "selected" class to files in selectedFiles', async () => {
-        const target = files[0];
+        const target = files[0]!;
         const wrapper = mountWithI18n(SearchPanel, {
             props: { files, selectedFiles: [target], activeFile: null },
         });

@@ -313,9 +313,9 @@ export function useCanvasRenderer({
             case 'freedraw': {
                 if (el.points === null || el.points === undefined || el.points.length < 2) break;
                 ctx.beginPath();
-                ctx.moveTo(el.x + el.points[0].x, el.y + el.points[0].y);
-                for (let i = 1; i < el.points.length; i++) {
-                    ctx.lineTo(el.x + el.points[i].x, el.y + el.points[i].y);
+                for (const [i, point] of el.points.entries()) {
+                    if (i === 0) ctx.moveTo(el.x + point.x, el.y + point.y);
+                    else ctx.lineTo(el.x + point.x, el.y + point.y);
                 }
                 ctx.stroke();
                 break;
@@ -329,8 +329,8 @@ export function useCanvasRenderer({
                 ctx.textBaseline = 'top';
                 const lines = el.text.split('\n');
                 const lh = fsNum * 1.3;
-                for (let i = 0; i < lines.length; i++) {
-                    ctx.fillText(lines[i], el.x, el.y + i * lh);
+                for (const [i, line] of lines.entries()) {
+                    ctx.fillText(line, el.x, el.y + i * lh);
                 }
                 break;
             }
@@ -515,10 +515,9 @@ export function useCanvasRenderer({
     ): void {
         const pointCount = points.length;
         if (pointCount < 3) return;
-        for (let i = 0; i < pointCount; i++) {
-            const prev = points[(i - 1 + pointCount) % pointCount];
-            const curr = points[i];
-            const next = points[(i + 1) % pointCount];
+        for (const [i, curr] of points.entries()) {
+            const prev = points[(i - 1 + pointCount) % pointCount] ?? curr;
+            const next = points[(i + 1) % pointCount] ?? curr;
             const toPrev = { x: prev.x - curr.x, y: prev.y - curr.y };
             const toNext = { x: next.x - curr.x, y: next.y - curr.y };
             const distPrev = Math.sqrt(toPrev.x * toPrev.x + toPrev.y * toPrev.y);
@@ -555,8 +554,8 @@ export function useCanvasRenderer({
         const cx = bounds.x + bounds.width / 2;
         const cy = bounds.y + bounds.height / 2;
         const startY = cy - totalH / 2 + lh / 2;
-        for (let i = 0; i < lines.length; i++) {
-            ctx.fillText(lines[i], cx, startY + i * lh);
+        for (const [i, line] of lines.entries()) {
+            ctx.fillText(line, cx, startY + i * lh);
         }
         ctx.restore();
     }

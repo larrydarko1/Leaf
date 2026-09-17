@@ -20,7 +20,7 @@ function makeFile(name: string, folder = '.'): FileInfo {
 function makeFolder(relativePath: string): FolderInfo {
     const parts = relativePath.split('/');
     return {
-        name: parts[parts.length - 1],
+        name: parts[parts.length - 1] ?? relativePath,
         path: `/${relativePath}`,
         relativePath,
         type: 'folder',
@@ -123,7 +123,7 @@ describe('useFolderTree', () => {
         it('names files without their extension', () => {
             files = [makeFile('my-note.md')];
             const { folderTree } = make();
-            expect(folderTree.value[0].name).toBe('my-note');
+            expect(folderTree.value[0]!.name).toBe('my-note');
         });
     });
 
@@ -133,8 +133,8 @@ describe('useFolderTree', () => {
         it('places folders before files at the same level', () => {
             files = [makeFile('z.md'), makeFile('a.md', 'docs')];
             const { folderTree } = make();
-            expect(folderTree.value[0].type).toBe('folder');
-            expect(folderTree.value[1].type).toBe('file');
+            expect(folderTree.value[0]!.type).toBe('folder');
+            expect(folderTree.value[1]!.type).toBe('file');
         });
 
         it('sorts multiple folders alphabetically', () => {
@@ -153,9 +153,9 @@ describe('useFolderTree', () => {
             const { folderTree } = make();
             expect(folderTree.value).toHaveLength(1);
             const docsNode = folderTree.value[0];
-            expect(docsNode.type).toBe('folder');
-            expect(docsNode.children).toHaveLength(1);
-            expect(docsNode.children![0].name).toBe('note');
+            expect(docsNode!.type).toBe('folder');
+            expect(docsNode!.children).toHaveLength(1);
+            expect(docsNode!.children![0]!.name).toBe('note');
         });
 
         it('builds a deep hierarchy from nested folder paths', () => {
@@ -167,7 +167,7 @@ describe('useFolderTree', () => {
             expect(b).toBeDefined();
             const c = b!.children?.find((n) => n.name === 'c');
             expect(c).toBeDefined();
-            expect(c!.children?.[0].name).toBe('deep');
+            expect(c!.children?.[0]!.name).toBe('deep');
         });
 
         it('does not duplicate a folder node when the explicit folders list also contains it', () => {
@@ -181,7 +181,7 @@ describe('useFolderTree', () => {
         it('exposes the correct full path on folder nodes', () => {
             files = [makeFile('f.md', 'docs')];
             const { folderTree } = make();
-            expect(folderTree.value[0].path).toBe('docs');
+            expect(folderTree.value[0]!.path).toBe('docs');
         });
     });
 
@@ -237,7 +237,7 @@ describe('useFolderTree', () => {
             const { flattenedItems } = make();
             const folderItems = flattenedItems.value.filter((i) => i.type === 'folder');
             expect(folderItems).toHaveLength(1);
-            expect(folderItems[0].folderPath).toBe('docs');
+            expect(folderItems[0]!.folderPath).toBe('docs');
         });
 
         it('does not include children of collapsed folders', () => {

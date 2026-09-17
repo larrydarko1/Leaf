@@ -223,7 +223,7 @@ async function loadModel(modelPath: string): Promise<{ success: boolean; modelNa
         const systemPrompt = await getActiveSystemPrompt();
         session = new LlamaChatSession({
             contextSequence: context.getSequence(),
-            systemPrompt: systemPrompt !== '' ? systemPrompt : undefined,
+            ...(systemPrompt !== '' ? { systemPrompt } : {}),
         });
 
         isModelLoaded = true;
@@ -278,13 +278,13 @@ async function unloadModel(): Promise<{ success: boolean; error?: string }> {
 async function startCompactedSession(seq: LlamaContextSequence): Promise<LlamaChatSession> {
     const { LlamaChatSession } = await import('node-llama-cpp');
     const systemPrompt = await getActiveSystemPrompt();
-    const resolvedSystemPrompt = systemPrompt !== '' ? systemPrompt : undefined;
+    const systemPromptOption = systemPrompt !== '' ? { systemPrompt } : {};
     if (!seq.disposed) {
         await seq.clearHistory();
-        return new LlamaChatSession({ contextSequence: seq, systemPrompt: resolvedSystemPrompt });
+        return new LlamaChatSession({ contextSequence: seq, ...systemPromptOption });
     }
     if (context !== null) {
-        return new LlamaChatSession({ contextSequence: context.getSequence(), systemPrompt: resolvedSystemPrompt });
+        return new LlamaChatSession({ contextSequence: context.getSequence(), ...systemPromptOption });
     }
     throw new Error('No context available to rebuild the chat session after compaction.');
 }
@@ -385,7 +385,7 @@ async function resetChat(): Promise<{ success: boolean; error?: string }> {
         trackedMessages = [];
         const { LlamaChatSession } = await import('node-llama-cpp');
         const systemPrompt = await getActiveSystemPrompt();
-        const resolvedSystemPrompt = systemPrompt !== '' ? systemPrompt : undefined;
+        const systemPromptOption = systemPrompt !== '' ? { systemPrompt } : {};
         // Reuse the existing sequence (clear its KV cache) instead of
         // calling context.getSequence() which allocates a new slot and
         // can exhaust the context's sequence limit, crashing Metal.
@@ -394,12 +394,12 @@ async function resetChat(): Promise<{ success: boolean; error?: string }> {
             await existingSeq.clearHistory();
             session = new LlamaChatSession({
                 contextSequence: existingSeq,
-                systemPrompt: resolvedSystemPrompt,
+                ...systemPromptOption,
             });
         } else {
             session = new LlamaChatSession({
                 contextSequence: context.getSequence(),
-                systemPrompt: resolvedSystemPrompt,
+                ...systemPromptOption,
             });
         }
         return { success: true };

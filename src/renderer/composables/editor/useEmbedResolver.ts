@@ -40,8 +40,8 @@ export function useEmbedResolver(
         // Collect unique unresolved filenames
         const fileNames = new Set<string>();
         for (const match of matches) {
-            const inner = match[1];
-            const fileName = inner.split('|')[0].split('#')[0].trim();
+            const inner = match[1] ?? '';
+            const fileName = (inner.split('|')[0]?.split('#')[0] ?? '').trim();
             if (fileName !== '' && !embedCache.value.has(fileName)) {
                 fileNames.add(fileName);
             }

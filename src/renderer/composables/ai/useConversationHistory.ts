@@ -151,10 +151,10 @@ export function useConversationHistory(
                 }
                 currentConversationId.value = result.conversation.id;
                 messages.value = result.conversation.messages.map(
-                    (m): { role: 'user' | 'assistant'; content: string; thinking: string | undefined } => ({
+                    (m): ChatMessage => ({
                         role: m.role,
                         content: m.content,
-                        thinking: m.thinking,
+                        ...(m.thinking === undefined ? {} : { thinking: m.thinking }),
                     }),
                 );
                 if (result.conversation.model !== null && result.conversation.model !== '') {
@@ -197,9 +197,10 @@ export function useConversationHistory(
         renamingConversationId.value = conv.id;
         renameValue.value = conv.title;
         await nextTick((): void => {
-            if (renameInputRef.value !== null && renameInputRef.value.length > 0) {
-                renameInputRef.value[0].focus();
-                renameInputRef.value[0].select();
+            const input = renameInputRef.value?.[0];
+            if (input !== undefined) {
+                input.focus();
+                input.select();
             }
         });
     }

@@ -31,7 +31,6 @@ const maxWidth = 600;
 const { t } = useI18n();
 
 const model = useAIModel();
-/* eslint-disable @typescript-eslint/no-unused-vars */
 const {
     status,
     availableModels,
@@ -41,17 +40,12 @@ const {
     isReady,
     isAnyGenerating,
     selectedModelLabel,
-    showDropdown,
-    dropdownRef,
-    dropdownPosition,
     previousModelMatch,
-    toggleDropdown,
     selectModel,
     refreshModels,
     refreshStatus,
     openModelsFolder,
 } = model;
-/* eslint-enable @typescript-eslint/no-unused-vars */
 const messages = ref<ChatMessage[]>([]);
 const conversation = useConversationHistory(status, lastUsedModelName, messages);
 const {

@@ -125,7 +125,7 @@ export function useDrawingPersistence({
     function isV1Data(data: unknown): data is V1Data {
         if (typeof data !== 'object' || data === null) return false;
         const obj = data as Record<string, unknown>;
-        return Array.isArray(obj.strokes) || Object.keys(obj).length === 0;
+        return Array.isArray(obj['strokes']) || Object.keys(obj).length === 0;
     }
 
     // Migration

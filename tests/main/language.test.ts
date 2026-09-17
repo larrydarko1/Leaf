@@ -71,7 +71,7 @@ async function freshService() {
     } as never);
     return {
         list: () =>
-            handlers['language:list']({}) as Promise<{
+            handlers['language:list']!({}) as Promise<{
                 success: boolean;
                 languages?: { id: string; name: string }[];
                 activeId: string;
@@ -79,9 +79,9 @@ async function freshService() {
                 error?: string;
             }>,
         setActive: (id: unknown) =>
-            handlers['language:setActive']({}, id) as Promise<{ success: boolean; error?: string }>,
+            handlers['language:setActive']!({}, id) as Promise<{ success: boolean; error?: string }>,
         load: (id: unknown) =>
-            handlers['language:load']({}, id) as Promise<{
+            handlers['language:load']!({}, id) as Promise<{
                 success: boolean;
                 content?: Record<string, unknown>;
                 error?: string;
@@ -177,7 +177,7 @@ describe('language service', () => {
             const svc = await freshService();
             const result = await svc.list();
             expect(result.languages).toHaveLength(1);
-            expect(result.languages?.[0].id).toBe('en');
+            expect(result.languages?.[0]!.id).toBe('en');
         });
 
         it('returns localesDir path in response', async () => {
@@ -278,7 +278,7 @@ describe('language service', () => {
             const svc = await freshService();
             const result = await svc.load('en');
             expect(result.success).toBe(true);
-            expect(result.content?.common).toBeDefined();
+            expect(result.content?.['common']).toBeDefined();
         });
 
         it('returns failure for invalid language id', async () => {

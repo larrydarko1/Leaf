@@ -88,8 +88,8 @@ beforeEach(() => {
     fs.rmSync(PATHS.modelRoot, { recursive: true, force: true });
     mockTranscriber.mockReset();
     mockTranscriber.mockResolvedValue({ text: 'text' });
-    delete (mockTranscriber as unknown as Record<string, unknown>).model;
-    delete (mockTranscriber as unknown as Record<string, unknown>).processor;
+    delete (mockTranscriber as unknown as Record<string, unknown>)['model'];
+    delete (mockTranscriber as unknown as Record<string, unknown>)['processor'];
     mockFindActiveDictationLanguage.mockReset();
     mockFindActiveDictationLanguage.mockResolvedValue(null);
 });

@@ -12,4 +12,4 @@ app.use(i18n);
 i18n.global.setLocaleMessage('en', en);
 
 // Make i18n available globally in tests
-(globalThis as Record<string, unknown>).i18nPlugin = i18n;
+(globalThis as Record<string, unknown>)['i18nPlugin'] = i18n;

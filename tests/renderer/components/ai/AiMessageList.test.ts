@@ -215,7 +215,7 @@ describe('AiMessageList', () => {
                 props: { ...baseProps, messages: [makeMsg('user', 'Hello')] },
             });
             const editBtn = wrapper.findAll('.ai-btn-action')[1];
-            await editBtn.trigger('click');
+            await editBtn!.trigger('click');
             expect(wrapper.emitted('start-edit')?.[0]).toEqual([0]);
             wrapper.unmount();
         });
@@ -262,7 +262,7 @@ describe('AiMessageList', () => {
                     editContent: 'Editing',
                 },
             });
-            await wrapper.findAll('.ai-btn-icon.ai-btn-tiny')[0].trigger('click');
+            await wrapper.findAll('.ai-btn-icon.ai-btn-tiny')[0]!.trigger('click');
             expect(wrapper.emitted('cancel-edit')).toBeTruthy();
             wrapper.unmount();
         });
@@ -276,7 +276,7 @@ describe('AiMessageList', () => {
                     editContent: 'Editing',
                 },
             });
-            await wrapper.findAll('.ai-btn-icon.ai-btn-tiny')[1].trigger('click');
+            await wrapper.findAll('.ai-btn-icon.ai-btn-tiny')[1]!.trigger('click');
             expect(wrapper.emitted('confirm-edit')?.[0]).toEqual([0]);
             wrapper.unmount();
         });

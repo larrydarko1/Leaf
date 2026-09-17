@@ -71,7 +71,7 @@ describe('useDrawingHistory', () => {
         it('serialises the current elements as JSON', () => {
             ctx.elements.value = [makeEl('a')];
             ctx.hist.saveToHistory();
-            const snapshot = JSON.parse(ctx.history.value[ctx.historyIndex.value]);
+            const snapshot = JSON.parse(ctx.history.value[ctx.historyIndex.value]!);
             expect(snapshot[0].id).toBe('a');
         });
 
@@ -116,7 +116,7 @@ describe('useDrawingHistory', () => {
             ctx.hist.saveToHistory();
             ctx.hist.undo();
             expect(ctx.elements.value).toHaveLength(1);
-            expect(ctx.elements.value[0].id).toBe('a');
+            expect(ctx.elements.value[0]!.id).toBe('a');
         });
 
         it('does nothing when already at the first entry', () => {
@@ -151,7 +151,7 @@ describe('useDrawingHistory', () => {
             ctx.hist.undo();
             ctx.hist.redo();
             expect(ctx.elements.value).toHaveLength(1);
-            expect(ctx.elements.value[0].id).toBe('a');
+            expect(ctx.elements.value[0]!.id).toBe('a');
         });
 
         it('does nothing when already at the last entry', () => {
@@ -207,7 +207,7 @@ describe('useDrawingHistory', () => {
             ctx.selectedIds.value = new Set(['a']);
             ctx.hist.copySelected();
             expect(ctx.clipboard.value).toHaveLength(1);
-            expect(ctx.clipboard.value[0].id).toBe('a');
+            expect(ctx.clipboard.value[0]!.id).toBe('a');
         });
 
         it('is a no-op when nothing is selected', () => {
@@ -220,8 +220,8 @@ describe('useDrawingHistory', () => {
             ctx.elements.value = [makeEl('a')];
             ctx.selectedIds.value = new Set(['a']);
             ctx.hist.copySelected();
-            ctx.elements.value[0].x = 999;
-            expect(ctx.clipboard.value[0].x).toBe(0); // unchanged
+            ctx.elements.value[0]!.x = 999;
+            expect(ctx.clipboard.value[0]!.x).toBe(0); // unchanged
         });
     });
 
@@ -235,8 +235,8 @@ describe('useDrawingHistory', () => {
             ctx.hist.pasteClipboard();
             expect(ctx.elements.value).toHaveLength(2);
             const pasted = ctx.elements.value[1];
-            expect(pasted.x).toBe(30); // 10 + 20
-            expect(pasted.y).toBe(40); // 20 + 20
+            expect(pasted!.x).toBe(30); // 10 + 20
+            expect(pasted!.y).toBe(40); // 20 + 20
         });
 
         it('assigns a unique id to each pasted element', () => {
@@ -244,7 +244,7 @@ describe('useDrawingHistory', () => {
             ctx.selectedIds.value = new Set(['a']);
             ctx.hist.copySelected();
             ctx.hist.pasteClipboard();
-            expect(ctx.elements.value[1].id).not.toBe('a');
+            expect(ctx.elements.value[1]!.id).not.toBe('a');
         });
 
         it('updates the clipboard offset so subsequent pastes are staggered', () => {
@@ -254,8 +254,8 @@ describe('useDrawingHistory', () => {
             ctx.hist.pasteClipboard(); // clipboard now at +20,+20
             ctx.hist.pasteClipboard(); // should be at +40,+40
             const third = ctx.elements.value[2];
-            expect(third.x).toBe(40);
-            expect(third.y).toBe(40);
+            expect(third!.x).toBe(40);
+            expect(third!.y).toBe(40);
         });
 
         it('is a no-op when the clipboard is empty', () => {

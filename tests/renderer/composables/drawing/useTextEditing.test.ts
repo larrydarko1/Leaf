@@ -275,7 +275,7 @@ describe('startEditShapeText', () => {
         startEditShapeText(el);
         // textEditCentered = true affects textOverlayStyle
         const style = textOverlayStyle.value;
-        expect(style.textAlign).toBe('center');
+        expect(style['textAlign']).toBe('center');
     });
 
     it('calls getElementBounds to position the overlay', () => {
@@ -415,9 +415,9 @@ describe('finalizeText (with text)', () => {
         textValue.value = 'Hello World';
         finalizeText();
         expect(elements.value).toHaveLength(1);
-        expect(elements.value[0].type).toBe('text');
-        expect(elements.value[0].text).toBe('Hello World');
-        expect(elements.value[0].width).toBe(120);
+        expect(elements.value[0]!.type).toBe('text');
+        expect(elements.value[0]!.text).toBe('Hello World');
+        expect(elements.value[0]!.width).toBe(120);
     });
 
     it('selects the new text element', () => {
@@ -425,7 +425,7 @@ describe('finalizeText (with text)', () => {
         startNewText(10, 20);
         textValue.value = 'selected text';
         finalizeText();
-        expect(selectedId.value).toBe(elements.value[0].id);
+        expect(selectedId.value).toBe(elements.value[0]!.id);
     });
 
     it('calls ctx.save and ctx.restore', () => {
@@ -466,7 +466,7 @@ describe('finalizeText (with text)', () => {
         finalizeText();
         const el = elements.value[0];
         // 3 lines * 20 * 1.3 = 78
-        expect(el.height).toBeCloseTo(78, 0);
+        expect(el!.height).toBeCloseTo(78, 0);
     });
 
     it('uses element strokeColor from defaultStyle when color is empty', () => {
@@ -475,7 +475,7 @@ describe('finalizeText (with text)', () => {
         startNewText(0, 0);
         textValue.value = 'colored';
         finalizeText();
-        expect(elements.value[0].strokeColor).toBe('#ff0000');
+        expect(elements.value[0]!.strokeColor).toBe('#ff0000');
     });
 });
 
@@ -486,8 +486,8 @@ describe('textOverlayStyle', () => {
         const { startNewText, textOverlayStyle } = makeEditing();
         startNewText(100, 200);
         const style = textOverlayStyle.value;
-        expect(style.left).toBeDefined();
-        expect(style.top).toBeDefined();
+        expect(style['left']).toBeDefined();
+        expect(style['top']).toBeDefined();
     });
 
     it('returns centered layout for shape text', () => {
@@ -495,15 +495,15 @@ describe('textOverlayStyle', () => {
         const el = makeShapeEl({ x: 0, y: 0, width: 200, height: 100 });
         startEditShapeText(el);
         const style = textOverlayStyle.value;
-        expect(style.textAlign).toBe('center');
-        expect(style.width).toBeDefined();
-        expect(style.height).toBeDefined();
+        expect(style['textAlign']).toBe('center');
+        expect(style['width']).toBeDefined();
+        expect(style['height']).toBeDefined();
     });
 
     it('uses defaultStyle fontSize when textEditFontSize is not set', () => {
         const { textOverlayStyle } = makeEditing();
         const style = textOverlayStyle.value;
-        expect(style.fontSize).toContain('px');
+        expect(style['fontSize']).toContain('px');
     });
 });
 

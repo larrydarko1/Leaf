@@ -57,7 +57,7 @@ describe('useSystemPrompt', () => {
             });
             await sp.refresh();
             expect(sp.prompts.value).toHaveLength(2);
-            expect(sp.prompts.value[0].id).toBe('default');
+            expect(sp.prompts.value[0]!.id).toBe('default');
         });
 
         it('updates activeId from the IPC response', async () => {

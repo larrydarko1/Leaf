@@ -50,8 +50,8 @@ const folder1: FolderInfo = {
     path: '/vault/sub',
     name: 'sub',
     relativePath: 'sub',
-    folderPath: '/vault/sub',
-    folderName: 'sub',
+    type: 'folder',
+    folder: '.',
 };
 
 const baseProps = {

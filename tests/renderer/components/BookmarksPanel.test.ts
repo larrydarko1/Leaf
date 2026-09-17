@@ -71,7 +71,7 @@ describe('BookmarksPanel', () => {
                 activeFile: null,
             },
         });
-        await wrapper.findAll('.bookmark-item')[1].trigger('click');
+        await wrapper.findAll('.bookmark-item')[1]!.trigger('click');
         expect(wrapper.emitted('selectFile')?.[0]?.[0]).toMatchObject({ path: fileB.path });
         wrapper.unmount();
     });
@@ -114,8 +114,8 @@ describe('BookmarksPanel', () => {
             },
         });
         const items = wrapper.findAll('.bookmark-item');
-        expect(items[0].classes()).toContain('selected');
-        expect(items[1].classes()).not.toContain('selected');
+        expect(items[0]!.classes()).toContain('selected');
+        expect(items[1]!.classes()).not.toContain('selected');
         wrapper.unmount();
     });
 

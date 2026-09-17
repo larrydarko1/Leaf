@@ -327,7 +327,7 @@ describe('useAIModel', () => {
             ];
             await m.loadPreviousModel(history, { hasActiveConversation: true });
 
-            const restored = mockAiRestoreChatHistory.mock.calls[0][0] as { role: string }[];
+            const restored = mockAiRestoreChatHistory.mock.calls[0]![0] as { role: string }[];
             expect(restored.every((m) => m.role !== 'system')).toBe(true);
         });
     });

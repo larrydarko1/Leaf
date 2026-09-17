@@ -39,7 +39,7 @@ describe('ContextMenu', () => {
             attachTo: document.body,
         });
         const buttons = document.querySelectorAll<HTMLButtonElement>('.context-menu-item');
-        buttons[0].click(); // 'rename' — not disabled
+        buttons[0]!.click(); // 'rename' — not disabled
         await wrapper.vm.$nextTick();
         expect(wrapper.emitted('action')?.[0]).toEqual(['rename']);
         wrapper.unmount();
@@ -52,7 +52,7 @@ describe('ContextMenu', () => {
             attachTo: document.body,
         });
         const buttons = document.querySelectorAll<HTMLButtonElement>('.context-menu-item');
-        buttons[0].click(); // 'rename'
+        buttons[0]!.click(); // 'rename'
         await wrapper.vm.$nextTick();
         expect(wrapper.emitted('close')).toBeDefined();
         wrapper.unmount();
@@ -65,7 +65,7 @@ describe('ContextMenu', () => {
             attachTo: document.body,
         });
         const buttons = document.querySelectorAll<HTMLButtonElement>('.context-menu-item');
-        buttons[2].click(); // 'move' — disabled
+        buttons[2]!.click(); // 'move' — disabled
         await wrapper.vm.$nextTick();
         expect(wrapper.emitted('action')).toBeUndefined();
         wrapper.unmount();
