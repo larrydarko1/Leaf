@@ -3,6 +3,13 @@ import { mountWithI18n } from '@test-utils';
 import AiHistoryPanel from '@/renderer/components/ai/AiHistoryPanel.vue';
 import type { ConversationMeta } from '@/schemas/ai';
 
+const defaultProps = {
+    conversationList: [] as ConversationMeta[],
+    currentConversationId: null as string | null,
+    renamingConversationId: null as string | null,
+    renameValue: '',
+};
+
 function makeMeta(overrides: Partial<ConversationMeta> = {}): ConversationMeta {
     return {
         id: 'conv-1',
@@ -15,13 +22,6 @@ function makeMeta(overrides: Partial<ConversationMeta> = {}): ConversationMeta {
         ...overrides,
     };
 }
-
-const defaultProps = {
-    conversationList: [] as ConversationMeta[],
-    currentConversationId: null as string | null,
-    renamingConversationId: null as string | null,
-    renameValue: '',
-};
 
 describe('AiHistoryPanel', () => {
     describe('empty state', () => {
@@ -208,7 +208,6 @@ describe('AiHistoryPanel', () => {
                 props: { ...defaultProps, conversationList: [makeConvWithDate(tenDaysAgo)] },
             });
             const text = wrapper.find('.ai-history-item-meta').text();
-            // Should contain a locale-formatted date (not "ago")
             expect(text).not.toContain('ago');
             wrapper.unmount();
         });

@@ -1,15 +1,9 @@
-/**
- * Tests for the drawing useTextEditing composable.
- */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref, nextTick } from 'vue';
 import { useTextEditing } from '@/renderer/composables/drawing/useTextEditing';
 import type { CanvasElement, DefaultStyle } from '@/schemas/drawing';
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 let idCounter = 0;
-const genId = () => `el-${++idCounter}`;
 
 const defaultDefaultStyle: DefaultStyle = {
     strokeColor: '#000000',
@@ -19,6 +13,10 @@ const defaultDefaultStyle: DefaultStyle = {
     fontSize: 20,
     borderRadius: 0,
 };
+
+const fakeFocus = vi.fn();
+
+const genId = () => `el-${++idCounter}`;
 
 function makeTextEl(overrides: Partial<CanvasElement> = {}): CanvasElement {
     return {
@@ -58,8 +56,6 @@ function makeShapeEl(overrides: Partial<CanvasElement> = {}): CanvasElement {
         ...overrides,
     };
 }
-
-const fakeFocus = vi.fn();
 
 function makeEditing(opts: { hasCanvas?: boolean; hasInput?: boolean; ctxReturnsNull?: boolean } = {}) {
     const { hasCanvas = false, hasInput = true, ctxReturnsNull = false } = opts;
@@ -141,8 +137,6 @@ beforeEach(() => {
     idCounter = 0;
 });
 
-// ── initial state ─────────────────────────────────────────────────────────────
-
 describe('initial state', () => {
     it('textEditing starts false', () => {
         const { textEditing } = makeEditing();
@@ -154,8 +148,6 @@ describe('initial state', () => {
         expect(textValue.value).toBe('');
     });
 });
-
-// ── startNewText ──────────────────────────────────────────────────────────────
 
 describe('startNewText', () => {
     it('sets textEditing to true', () => {
@@ -181,7 +173,6 @@ describe('startNewText', () => {
         const { startNewText, defaultStyle } = makeEditing();
         defaultStyle.value.fontSize = 24;
         startNewText(0, 0);
-        // textEditFontSize is internal but can be verified via textOverlayStyle
         expect(true).toBe(true); // just check no throw
     });
 
@@ -199,8 +190,6 @@ describe('startNewText', () => {
         expect(true).toBe(true);
     });
 });
-
-// ── startEditText ─────────────────────────────────────────────────────────────
 
 describe('startEditText', () => {
     it('sets textEditing to true', () => {
@@ -241,12 +230,9 @@ describe('startEditText', () => {
         const { startEditText } = makeEditing();
         const el = makeTextEl({ fontSize: 32 });
         startEditText(el);
-        // Can verify via textOverlayStyle.fontSize
         expect(true).toBe(true);
     });
 });
-
-// ── startEditShapeText ────────────────────────────────────────────────────────
 
 describe('startEditShapeText', () => {
     it('sets textEditing to true', () => {
@@ -273,7 +259,6 @@ describe('startEditShapeText', () => {
         const { startEditShapeText, textOverlayStyle } = makeEditing();
         const el = makeShapeEl();
         startEditShapeText(el);
-        // textEditCentered = true affects textOverlayStyle
         const style = textOverlayStyle.value;
         expect(style['textAlign']).toBe('center');
     });
@@ -285,8 +270,6 @@ describe('startEditShapeText', () => {
         expect(getElementBounds).toHaveBeenCalledWith(el);
     });
 });
-
-// ── cancelText ────────────────────────────────────────────────────────────────
 
 describe('cancelText', () => {
     it('sets textEditing to false', () => {
@@ -308,8 +291,6 @@ describe('cancelText', () => {
     });
 });
 
-// ── onTextEnter ───────────────────────────────────────────────────────────────
-
 describe('onTextEnter', () => {
     it('calls finalizeText when Enter is pressed without shift', () => {
         const { onTextEnter, startNewText, textValue } = makeEditing();
@@ -328,8 +309,6 @@ describe('onTextEnter', () => {
         expect(textEditing.value).toBe(true); // still editing
     });
 });
-
-// ── finalizeText: empty text ──────────────────────────────────────────────────
 
 describe('finalizeText (empty text)', () => {
     it('does nothing when not editing', () => {
@@ -396,15 +375,12 @@ describe('finalizeText (empty text)', () => {
     });
 });
 
-// ── finalizeText: with text ───────────────────────────────────────────────────
-
 describe('finalizeText (with text)', () => {
     it('returns early if ctx is null', () => {
         const { startNewText, textValue, finalizeText, elements } = makeEditing({ ctxReturnsNull: true });
         startNewText(0, 0);
         textValue.value = 'hello';
         finalizeText();
-        // No elements added since ctx is null
         expect(elements.value).toHaveLength(0);
     });
 
@@ -465,7 +441,6 @@ describe('finalizeText (with text)', () => {
         textValue.value = 'line1\nline2\nline3';
         finalizeText();
         const el = elements.value[0];
-        // 3 lines * 20 * 1.3 = 78
         expect(el!.height).toBeCloseTo(78, 0);
     });
 
@@ -478,8 +453,6 @@ describe('finalizeText (with text)', () => {
         expect(elements.value[0]!.strokeColor).toBe('#ff0000');
     });
 });
-
-// ── textOverlayStyle ──────────────────────────────────────────────────────────
 
 describe('textOverlayStyle', () => {
     it('returns left/top position for non-centered text', () => {
@@ -506,8 +479,6 @@ describe('textOverlayStyle', () => {
         expect(style['fontSize']).toContain('px');
     });
 });
-
-// ── onDoubleClick ─────────────────────────────────────────────────────────────
 
 describe('onDoubleClick', () => {
     it('does nothing when canvas is null', () => {
@@ -597,7 +568,6 @@ describe('onDoubleClick', () => {
                 .mockReturnValue({ x: shapeEl.x, y: shapeEl.y, width: shapeEl.width, height: shapeEl.height }),
             hitTestElement: vi.fn().mockReturnValue(shapeEl),
             isShapeElement: vi.fn().mockReturnValue(true),
-            // isShapeElement = true
             genId: genId,
             defaultStyle: ref({ ...defaultDefaultStyle }),
             worldToScreen: vi.fn().mockImplementation((x: number, y: number) => ({ x, y })),

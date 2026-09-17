@@ -4,20 +4,8 @@ import AiMessageList from '@/renderer/components/ai/AiMessageList.vue';
 import type { ChatMessage } from '@/schemas/chat';
 import type { AiStatus, AiModelInfo } from '@/schemas/ai';
 
-// ── window mocks ─────────────────────────────────────────────────────────────
-
 const mockWriteClipboard = vi.fn().mockResolvedValue(undefined);
 const mockLogError = vi.fn();
-
-// Assign to existing window object rather than replacing it (avoids breaking jsdom internals)
-Object.assign(window, {
-    electronAPI: {
-        writeClipboard: mockWriteClipboard,
-        log: { error: mockLogError },
-    },
-});
-
-// ── helpers ───────────────────────────────────────────────────────────────────
 
 function makeStatus(overrides: Partial<AiStatus> = {}): AiStatus {
     return {
@@ -58,6 +46,13 @@ const baseProps = {
     renderMarkdown: noopRender,
     showThinking: false,
 };
+
+Object.assign(window, {
+    electronAPI: {
+        writeClipboard: mockWriteClipboard,
+        log: { error: mockLogError },
+    },
+});
 
 beforeEach(() => {
     vi.clearAllMocks();
@@ -205,7 +200,6 @@ describe('AiMessageList', () => {
             const wrapper = mountWithI18n(AiMessageList, {
                 props: { ...baseProps, messages: [makeMsg('user', 'Hello')], copiedIndex: 0 },
             });
-            // copied state: the check SVG should be visible (no copy SVG with rect)
             expect(wrapper.find('.ai-btn-action svg rect').exists()).toBe(false);
             wrapper.unmount();
         });

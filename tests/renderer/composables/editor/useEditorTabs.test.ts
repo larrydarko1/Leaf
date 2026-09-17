@@ -2,19 +2,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useEditorTabs } from '@/renderer/composables/editor/useEditorTabs';
 import type { FileInfo } from '@/schemas/vault';
 
-function makeFile(name: string, path = `/${name}`): FileInfo {
-    return {
-        name,
-        path,
-        relativePath: name,
-        extension: '.md',
-        size: 0,
-        modified: '',
-        folder: '.',
-    };
-}
-
-// Mock localStorage for persistence tests
 const localStorageMock = (() => {
     let store: Record<string, string> = {};
     return {
@@ -35,6 +22,18 @@ const localStorageMock = (() => {
     };
 })();
 
+function makeFile(name: string, path = `/${name}`): FileInfo {
+    return {
+        name,
+        path,
+        relativePath: name,
+        extension: '.md',
+        size: 0,
+        modified: '',
+        folder: '.',
+    };
+}
+
 Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock });
 
 describe('useEditorTabs', () => {
@@ -46,7 +45,6 @@ describe('useEditorTabs', () => {
         vi.clearAllMocks();
     });
 
-    // ── initial state ────────────────────────────────────────────────────────
     describe('initial state', () => {
         it('starts with no tabs', () => {
             expect(tabs.tabs.value).toHaveLength(0);
@@ -65,7 +63,6 @@ describe('useEditorTabs', () => {
         });
     });
 
-    // ── openTab ──────────────────────────────────────────────────────────────
     describe('openTab', () => {
         it('adds a new tab and activates it', () => {
             const file = makeFile('note.md');
@@ -110,7 +107,6 @@ describe('useEditorTabs', () => {
             }
             expect(tabs.tabs.value).toHaveLength(tabs.MAX_TABS);
 
-            // Opening one more should not exceed the cap
             tabs.openTab(makeFile('overflow.md'));
             expect(tabs.tabs.value).toHaveLength(tabs.MAX_TABS);
         });
@@ -119,7 +115,6 @@ describe('useEditorTabs', () => {
             for (let i = 0; i < tabs.MAX_TABS; i++) {
                 tabs.openTab(makeFile(`file${i}.md`));
             }
-            // All 10 open; active is index 9 (last opened)
             const overflow = makeFile('overflow.md');
             tabs.openTab(overflow);
             const paths = tabs.tabs.value.map((t) => t.file.path);
@@ -128,7 +123,6 @@ describe('useEditorTabs', () => {
         });
     });
 
-    // ── closeTab ─────────────────────────────────────────────────────────────
     describe('closeTab', () => {
         it('removes the tab at the given index', () => {
             tabs.openTab(makeFile('a.md'));
@@ -149,7 +143,6 @@ describe('useEditorTabs', () => {
         it('activates previous tab when active tab is last and closed', () => {
             tabs.openTab(makeFile('a.md'));
             tabs.openTab(makeFile('b.md'));
-            // active = 1 (b.md); close it
             tabs.closeTab(1);
             expect(tabs.activeIndex.value).toBe(0);
         });
@@ -181,7 +174,6 @@ describe('useEditorTabs', () => {
         });
     });
 
-    // ── switchTab ────────────────────────────────────────────────────────────
     describe('switchTab', () => {
         it('changes the active tab', () => {
             tabs.openTab(makeFile('a.md'));
@@ -204,7 +196,6 @@ describe('useEditorTabs', () => {
         });
     });
 
-    // ── updateTabContent ─────────────────────────────────────────────────────
     describe('updateTabContent', () => {
         it('updates content and unsaved flag for matching tab', () => {
             const file = makeFile('a.md');
@@ -222,7 +213,6 @@ describe('useEditorTabs', () => {
         });
     });
 
-    // ── markTabSaved ─────────────────────────────────────────────────────────
     describe('markTabSaved', () => {
         it('clears unsaved flag and updates savedContent', () => {
             const file = makeFile('a.md');
@@ -236,7 +226,6 @@ describe('useEditorTabs', () => {
         });
     });
 
-    // ── saveScrollPosition ───────────────────────────────────────────────────
     describe('saveScrollPosition', () => {
         it('stores the scroll position on the tab', () => {
             const file = makeFile('a.md');
@@ -252,7 +241,6 @@ describe('useEditorTabs', () => {
         });
     });
 
-    // ── syncTabFiles ─────────────────────────────────────────────────────────
     describe('syncTabFiles', () => {
         it('removes tabs whose files no longer exist', () => {
             const a = makeFile('a.md');
@@ -277,13 +265,11 @@ describe('useEditorTabs', () => {
             tabs.openTab(makeFile('b.md'));
             tabs.openTab(makeFile('c.md'));
             tabs.switchTab(2);
-            // Only a.md survives the refresh
             tabs.syncTabFiles([makeFile('a.md')]);
             expect(tabs.activeIndex.value).toBe(0);
         });
     });
 
-    // ── renameTabFile ────────────────────────────────────────────────────────
     describe('renameTabFile', () => {
         it('updates the FileInfo on the matching tab', () => {
             const file = makeFile('old.md', '/old.md');
@@ -302,7 +288,6 @@ describe('useEditorTabs', () => {
         });
     });
 
-    // ── clearTabs ────────────────────────────────────────────────────────────
     describe('clearTabs', () => {
         it('removes all tabs and resets activeIndex', () => {
             tabs.openTab(makeFile('a.md'));
@@ -314,7 +299,6 @@ describe('useEditorTabs', () => {
         });
     });
 
-    // ── Tab persistence ──────────────────────────────────────────────────────
     describe('persistence', () => {
         const FOLDER = '/my/vault';
 
@@ -359,7 +343,6 @@ describe('useEditorTabs', () => {
         it('restores tabs from localStorage', () => {
             const files = [makeFile('a.md'), makeFile('b.md'), makeFile('c.md')];
 
-            // Simulate saved state
             localStorage.setItem(
                 `leaf-tabs-${FOLDER}`,
                 JSON.stringify({
@@ -399,7 +382,6 @@ describe('useEditorTabs', () => {
             expect(restored).toBe(true);
             expect(tabs.tabs.value).toHaveLength(1);
             expect(tabs.tabs.value[0]!.file.name).toBe('a.md');
-            // activeIndex was 1, but only 1 tab now — should clamp to 0
             expect(tabs.activeIndex.value).toBe(0);
         });
 
@@ -425,7 +407,6 @@ describe('useEditorTabs', () => {
         });
 
         it('does not persist when folderPath is not set', () => {
-            // No setFolderPath call
             tabs.openTab(makeFile('a.md'));
             expect(localStorageMock.setItem).not.toHaveBeenCalled();
         });

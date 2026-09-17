@@ -2,8 +2,6 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { useDrawingElements } from '@/renderer/composables/drawing/useDrawingElements';
 import type { CanvasElement } from '@/schemas/drawing';
 
-// ── helpers ──────────────────────────────────────────────────────────────────
-
 function makeEl(id: string, overrides: Partial<CanvasElement> = {}): CanvasElement {
     return {
         id,
@@ -21,16 +19,12 @@ function makeEl(id: string, overrides: Partial<CanvasElement> = {}): CanvasEleme
     };
 }
 
-// ── tests ─────────────────────────────────────────────────────────────────────
-
 describe('useDrawingElements', () => {
     let d: ReturnType<typeof useDrawingElements>;
 
     beforeEach(() => {
         d = useDrawingElements();
     });
-
-    // ── initial state ─────────────────────────────────────────────────────────
 
     describe('initial state', () => {
         it('starts with an empty element list', () => {
@@ -49,8 +43,6 @@ describe('useDrawingElements', () => {
             expect(d.selectedIds.value.size).toBe(0);
         });
     });
-
-    // ── selectedId / selectedElement ──────────────────────────────────────────
 
     describe('selectedId / selectedElement', () => {
         it('resolves selectedElement from selectedId', () => {
@@ -78,8 +70,6 @@ describe('useDrawingElements', () => {
         });
     });
 
-    // ── selectedElements ──────────────────────────────────────────────────────
-
     describe('selectedElements', () => {
         it('returns all elements whose ids are in selectedIds', () => {
             d.elements.value = [makeEl('a'), makeEl('b'), makeEl('c')];
@@ -92,8 +82,6 @@ describe('useDrawingElements', () => {
             expect(d.selectedElements.value).toHaveLength(0);
         });
     });
-
-    // ── getElementBounds ──────────────────────────────────────────────────────
 
     describe('getElementBounds', () => {
         it('returns the exact bounds for a normal rectangle', () => {
@@ -153,8 +141,6 @@ describe('useDrawingElements', () => {
         });
     });
 
-    // ── hitTestElement ────────────────────────────────────────────────────────
-
     describe('hitTestElement', () => {
         it('returns an element when the point is inside it', () => {
             d.elements.value = [makeEl('a', { x: 0, y: 0, width: 100, height: 100 })];
@@ -179,13 +165,10 @@ describe('useDrawingElements', () => {
         });
 
         it('accepts a threshold hit at the edge of an element', () => {
-            // threshold = 8/zoom. With zoom=1, threshold=8. Point is 4px outside.
             d.elements.value = [makeEl('a', { x: 10, y: 10, width: 100, height: 100 })];
             expect(d.hitTestElement(106, 60, 1)?.id).toBe('a');
         });
     });
-
-    // ── hitTestHandle ─────────────────────────────────────────────────────────
 
     describe('hitTestHandle', () => {
         it('returns null when no element is selected', () => {
@@ -197,7 +180,6 @@ describe('useDrawingElements', () => {
             const el = makeEl('a', { x: 0, y: 0, width: 100, height: 100 });
             d.elements.value = [el];
             d.selectedId.value = 'a';
-            // NW handle is at (0,0)
             const result = d.hitTestHandle(0, 0, 1);
             expect(result?.handle).toBe('nw');
             expect(result?.elementId).toBe('a');
@@ -210,8 +192,6 @@ describe('useDrawingElements', () => {
             expect(d.hitTestHandle(50, 50, 1)).toBeNull();
         });
     });
-
-    // ── getHandlePositions ────────────────────────────────────────────────────
 
     describe('getHandlePositions', () => {
         it('returns four corner handles for a rectangle', () => {
@@ -233,8 +213,6 @@ describe('useDrawingElements', () => {
             expect(handles['end']).toEqual({ x: 50, y: 50 });
         });
     });
-
-    // ── isShapeElement ────────────────────────────────────────────────────────
 
     describe('isShapeElement', () => {
         it('returns true for shape types', () => {
@@ -274,8 +252,6 @@ describe('useDrawingElements', () => {
         });
     });
 
-    // ── isShapeTool ───────────────────────────────────────────────────────────
-
     describe('isShapeTool', () => {
         it('returns true for shape tool names', () => {
             expect(d.isShapeTool('rectangle')).toBe(true);
@@ -291,8 +267,6 @@ describe('useDrawingElements', () => {
         });
     });
 
-    // ── distanceToSegment ─────────────────────────────────────────────────────
-
     describe('distanceToSegment', () => {
         it('returns ~0 for a point lying on the segment', () => {
             expect(d.distanceToSegment(5, 0, 0, 0, 10, 0)).toBeCloseTo(0);
@@ -303,12 +277,10 @@ describe('useDrawingElements', () => {
         });
 
         it('returns the distance to the nearest endpoint when the projection is outside', () => {
-            // Point (15,0) is past the end (10,0) → distance = 5
             expect(d.distanceToSegment(15, 0, 0, 0, 10, 0)).toBeCloseTo(5);
         });
 
         it('returns distance to the single point for a zero-length segment', () => {
-            // segment (0,0)→(0,0), point (3,4) → distance 5
             expect(d.distanceToSegment(3, 4, 0, 0, 0, 0)).toBeCloseTo(5);
         });
     });

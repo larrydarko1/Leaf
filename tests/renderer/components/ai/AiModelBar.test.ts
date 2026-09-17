@@ -18,6 +18,16 @@ vi.mock('@/renderer/composables/ai/useSystemPrompt', () => ({
     })),
 }));
 
+const baseProps = {
+    status: makeStatus(),
+    availableModels: [] as AiModelInfo[],
+    isLoading: false,
+    selectedModelPath: null as string | null,
+    selectedModelLabel: 'Select a model',
+    showHistory: false,
+    isAnyGenerating: false,
+};
+
 function makeStatus(overrides: Partial<AiStatus> = {}): AiStatus {
     return {
         isModelLoaded: false,
@@ -34,16 +44,6 @@ function makeStatus(overrides: Partial<AiStatus> = {}): AiStatus {
 function makeModel(name: string): AiModelInfo {
     return { name, path: `/models/${name}`, size: 4e9, sizeFormatted: '4 GB', modified: '' };
 }
-
-const baseProps = {
-    status: makeStatus(),
-    availableModels: [] as AiModelInfo[],
-    isLoading: false,
-    selectedModelPath: null as string | null,
-    selectedModelLabel: 'Select a model',
-    showHistory: false,
-    isAnyGenerating: false,
-};
 
 beforeEach(() => {
     mockPrompts.value = [];
@@ -104,7 +104,6 @@ describe('AiModelBar', () => {
                 attachTo: document.body,
             });
             await wrapper.find('.ai-dropdown-trigger').trigger('click');
-            // Dropdown is teleported to body
             const menuItems = document.querySelectorAll('.ai-dropdown-item');
             expect(menuItems.length).toBe(2);
             wrapper.unmount();
@@ -230,7 +229,6 @@ describe('AiModelBar', () => {
                 (b) => (b.attributes('aria-haspopup') ?? '') === 'listbox' && b.classes().includes('ai-btn-icon'),
             );
             await promptBtn?.trigger('click');
-            // Dropdown is teleported to body
             const promptMenu = document.querySelector('.ai-prompt-menu');
             expect(promptMenu).not.toBeNull();
             wrapper.unmount();

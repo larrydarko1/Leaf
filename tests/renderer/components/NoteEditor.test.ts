@@ -9,9 +9,6 @@ import { useEmbedResolver } from '@/renderer/composables/editor/useEmbedResolver
 import { useEditorDrop } from '@/renderer/composables/editor/useEditorDrop';
 import type { FileInfo } from '@/schemas/vault';
 
-// ── CodeMirror utilities ────────────────────────────────────────────────────
-// Must be mocked before the component is imported (vi.mock hoists automatically)
-
 vi.mock('@codemirror/view', () => ({
     keymap: { of: vi.fn().mockReturnValue([]) },
     EditorView: { domEventHandlers: vi.fn().mockReturnValue([]) },
@@ -50,7 +47,25 @@ vi.mock('@/renderer/composables/editor/codemirror/useCodeEditor', () => ({
     useCodeEditor: vi.fn(),
 }));
 
-// ── Editor composables ───────────────────────────────────────────────────────
+vi.mock('@/renderer/composables/editor/useEmbedResolver', () => ({
+    useEmbedResolver: vi.fn(() => ({
+        embedCache: ref(new Map()),
+        embedCacheVersion: ref(0),
+        resolveEmbeds: vi.fn(),
+        getEmbedMediaType: vi.fn().mockReturnValue(null),
+        clearCache: vi.fn(),
+    })),
+}));
+
+vi.mock('@/renderer/composables/editor/useEditorDrop', () => ({
+    useEditorDrop: vi.fn(() => ({
+        isDragOverEditor: ref(false),
+        onEditorDragEnter: vi.fn(),
+        onEditorDragOver: vi.fn(),
+        onEditorDragLeave: vi.fn(),
+        onFileDrop: vi.fn(),
+    })),
+}));
 
 const mockContent = ref('');
 const mockOriginalContent = ref('');
@@ -78,17 +93,8 @@ vi.mock('@/renderer/composables/editor/useNotePersistence', () => ({
     })),
 }));
 
-vi.mock('@/renderer/composables/editor/useEmbedResolver', () => ({
-    useEmbedResolver: vi.fn(() => ({
-        embedCache: ref(new Map()),
-        embedCacheVersion: ref(0),
-        resolveEmbeds: vi.fn(),
-        getEmbedMediaType: vi.fn().mockReturnValue(null),
-        clearCache: vi.fn(),
-    })),
-}));
-
 const mockStopDictation = vi.fn();
+
 vi.mock('@/renderer/composables/editor/useDictation', () => ({
     useDictation: vi.fn(() => ({
         isDictating: ref(false),
@@ -98,30 +104,8 @@ vi.mock('@/renderer/composables/editor/useDictation', () => ({
     })),
 }));
 
-vi.mock('@/renderer/composables/editor/useEditorDrop', () => ({
-    useEditorDrop: vi.fn(() => ({
-        isDragOverEditor: ref(false),
-        onEditorDragEnter: vi.fn(),
-        onEditorDragOver: vi.fn(),
-        onEditorDragLeave: vi.fn(),
-        onFileDrop: vi.fn(),
-    })),
-}));
-
-// ── window.electronAPI mock ───────────────────────────────────────────────────
-
 const mockReadFile = vi.fn().mockResolvedValue({ success: false });
 const mockRemoveSpeechStatusListener = vi.fn();
-
-Object.assign(window, {
-    electronAPI: {
-        ...(window.electronAPI ?? {}),
-        readFile: mockReadFile,
-        removeSpeechStatusListener: mockRemoveSpeechStatusListener,
-    },
-});
-
-// ── helpers ───────────────────────────────────────────────────────────────────
 
 function makeFile(overrides: Partial<FileInfo> = {}): FileInfo {
     return {
@@ -142,6 +126,14 @@ function mountEditor(file: FileInfo | null, workspacePath: string | null = '/vau
         global: { plugins: [i18n] },
     });
 }
+
+Object.assign(window, {
+    electronAPI: {
+        ...(window.electronAPI ?? {}),
+        readFile: mockReadFile,
+        removeSpeechStatusListener: mockRemoveSpeechStatusListener,
+    },
+});
 
 beforeEach(() => {
     vi.clearAllMocks();

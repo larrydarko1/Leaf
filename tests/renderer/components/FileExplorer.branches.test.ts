@@ -1,15 +1,9 @@
-/**
- * Branch-focused tests for FileExplorer.vue.
- * Covers context menu logic, keyboard nav, rename/delete/drag actions, and guard clauses.
- */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref } from 'vue';
 import { shallowMount } from '@vue/test-utils';
 import { i18n } from '@/renderer/i18n';
 import FileExplorer from '@/renderer/components/FileExplorer.vue';
 import type { FileInfo, FolderInfo } from '@/schemas/vault';
-
-// ── useFolderTree mock ─────────────────────────────────────────────────────────
 
 const mockExpandedFolders = ref(new Set<string>());
 const mockFolderTree = ref<unknown[]>([]);
@@ -29,23 +23,9 @@ vi.mock('@/renderer/composables/vault/useFolderTree', () => ({
     })),
 }));
 
-// ── helpers ────────────────────────────────────────────────────────────────────
-
-function makeFile(overrides: Partial<FileInfo> = {}): FileInfo {
-    return {
-        name: 'note.md',
-        path: '/vault/note.md',
-        relativePath: 'note.md',
-        extension: '.md',
-        size: 100,
-        modified: new Date().toISOString(),
-        folder: '/vault',
-        ...overrides,
-    };
-}
-
 const file1 = makeFile({ name: 'a.md', path: '/vault/a.md' });
 const file2 = makeFile({ name: 'b.md', path: '/vault/b.md' });
+
 const folder1: FolderInfo = {
     path: '/vault/sub',
     name: 'sub',
@@ -66,6 +46,19 @@ const baseProps = {
     bookmarkedFiles: [] as string[],
 };
 
+function makeFile(overrides: Partial<FileInfo> = {}): FileInfo {
+    return {
+        name: 'note.md',
+        path: '/vault/note.md',
+        relativePath: 'note.md',
+        extension: '.md',
+        size: 100,
+        modified: new Date().toISOString(),
+        folder: '/vault',
+        ...overrides,
+    };
+}
+
 function mount(props: Partial<typeof baseProps> = {}) {
     return shallowMount(FileExplorer, {
         props: { ...baseProps, ...props },
@@ -79,8 +72,6 @@ beforeEach(() => {
     mockFlattenedItems.value = [];
     mockGetFileNameWithoutExtension.mockImplementation((name: string) => name.replace(/\.[^.]+$/, ''));
 });
-
-// ── contextMenuItems computed ─────────────────────────────────────────────────
 
 describe('contextMenuItems', () => {
     it('returns rename+delete for folder type', async () => {
@@ -127,8 +118,6 @@ describe('contextMenuItems', () => {
     });
 });
 
-// ── watch: renamingFile ───────────────────────────────────────────────────────
-
 describe('watch: renamingFile', () => {
     it('sets renameValue to filename without extension when renamingFile changes', async () => {
         mockGetFileNameWithoutExtension.mockReturnValue('note');
@@ -148,8 +137,6 @@ describe('watch: renamingFile', () => {
         wrapper.unmount();
     });
 });
-
-// ── watch: renamingFolder ─────────────────────────────────────────────────────
 
 describe('watch: renamingFolder', () => {
     it('sets renameValue to folder basename when renamingFolder changes', async () => {
@@ -181,13 +168,10 @@ describe('watch: renamingFolder', () => {
     });
 });
 
-// ── handleKeyDown: guard clauses ──────────────────────────────────────────────
-
 describe('handleKeyDown: guard clauses', () => {
     it('ignores keys when renamingFile is set', () => {
         const wrapper = mount({ renamingFile: file1 });
         window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
-        // No interaction should occur (no events emitted for navigation)
         expect(wrapper.emitted('selectFile')).toBeUndefined();
         wrapper.unmount();
     });
@@ -235,8 +219,6 @@ describe('handleKeyDown: guard clauses', () => {
     });
 });
 
-// ── handleKeyDown: folder expand/collapse ─────────────────────────────────────
-
 describe('handleKeyDown: ArrowRight/Left folder expand/collapse', () => {
     it('ArrowRight expands a collapsed selected folder', async () => {
         const wrapper = mount({ selectedFolder: '/vault/sub' });
@@ -281,8 +263,6 @@ describe('handleKeyDown: ArrowRight/Left folder expand/collapse', () => {
         wrapper.unmount();
     });
 });
-
-// ── handleKeyDown: keyboard navigation ───────────────────────────────────────
 
 describe('handleKeyDown: ArrowDown/Up navigation', () => {
     it('emits selectFile for the next file item (ArrowDown)', () => {
@@ -369,13 +349,10 @@ describe('handleKeyDown: ArrowDown/Up navigation', () => {
         ];
         const wrapper = mount({ activeFile: null, selectedFolder: null });
         window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
-        // currentIndex = -1 → newIndex = 0
         expect(wrapper.emitted('selectFile')?.[0]?.[0]).toEqual(file1);
         wrapper.unmount();
     });
 });
-
-// ── selectFile / selectFolder guard ──────────────────────────────────────────
 
 describe('selectFile / selectFolder guards', () => {
     it('selectFile does not emit when renamingFile is set', () => {
@@ -418,8 +395,6 @@ describe('selectFile / selectFolder guards', () => {
         wrapper.unmount();
     });
 });
-
-// ── handleContextMenuAction ───────────────────────────────────────────────────
 
 describe('handleContextMenuAction', () => {
     function openContextMenu(wrapper: ReturnType<typeof mount>, type: 'file' | 'folder', path: string) {
@@ -514,8 +489,6 @@ describe('handleContextMenuAction', () => {
     });
 });
 
-// ── confirmRename ─────────────────────────────────────────────────────────────
-
 describe('confirmRename', () => {
     function setRenameValue(wrapper: ReturnType<typeof mount>, value: string) {
         const vm = wrapper.vm as unknown as { renameValue: string };
@@ -586,8 +559,6 @@ describe('confirmRename', () => {
     });
 });
 
-// ── drag events ───────────────────────────────────────────────────────────────
-
 describe('drag events', () => {
     it('handleRootDragOver sets isDragOverRoot to true', async () => {
         const wrapper = mount();
@@ -617,7 +588,6 @@ describe('drag events', () => {
         vm.handleRootDragOver({ preventDefault: vi.fn(), dataTransfer: null } as unknown as DragEvent);
         await wrapper.vm.$nextTick();
         const outsideEl = document.createElement('div');
-        // Simulate leaving: target does not contain relatedTarget (outsideEl is detached)
         const fileListEl = wrapper.find('.file-list').element as HTMLElement;
         vm.handleRootDragLeave({
             target: fileListEl,
@@ -677,8 +647,6 @@ describe('drag events', () => {
     });
 });
 
-// ── empty state ───────────────────────────────────────────────────────────────
-
 describe('empty state', () => {
     it('shows empty state when files list is empty', () => {
         const wrapper = mount({ files: [] });
@@ -692,8 +660,6 @@ describe('empty state', () => {
         wrapper.unmount();
     });
 });
-
-// ── close context menu ────────────────────────────────────────────────────────
 
 describe('closeContextMenu', () => {
     it('hides context menu', async () => {

@@ -124,7 +124,6 @@ describe('DrawingPropertiesPanel', () => {
         const wrapper = mountWithI18n(DrawingPropertiesPanel, {
             props: { ...baseProps, showRoundnessOption: true },
         });
-        // Should render border radius buttons
         expect(wrapper.findAll('.border-radius-btn, .roundness-btn, [class*="radius"]').length).toBeGreaterThanOrEqual(
             0,
         );

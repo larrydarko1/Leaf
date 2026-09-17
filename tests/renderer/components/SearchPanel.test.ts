@@ -3,6 +3,15 @@ import { mountWithI18n } from '@test-utils';
 import SearchPanel from '@/renderer/components/SearchPanel.vue';
 import type { FileInfo } from '@/schemas/vault';
 
+const files: FileInfo[] = [
+    makeFile('notes.md', 'docs'),
+    makeFile('ideas.md', 'work'),
+    makeFile('README.md', '.'),
+    makeFile('todos.md', 'work'),
+    makeFile('draft.txt', '.'),
+    makeFile('noodles.md', 'recipes'),
+];
+
 function makeFile(name: string, folder = '.'): FileInfo {
     return {
         name,
@@ -15,14 +24,12 @@ function makeFile(name: string, folder = '.'): FileInfo {
     };
 }
 
-const files: FileInfo[] = [
-    makeFile('notes.md', 'docs'),
-    makeFile('ideas.md', 'work'),
-    makeFile('README.md', '.'),
-    makeFile('todos.md', 'work'),
-    makeFile('draft.txt', '.'),
-    makeFile('noodles.md', 'recipes'),
-];
+async function search(wrapper: ReturnType<typeof mountWithI18n>, query: string) {
+    const input = wrapper.find('.search-input');
+    await input.setValue(query);
+    vi.advanceTimersByTime(600);
+    await wrapper.vm.$nextTick();
+}
 
 beforeEach(() => {
     vi.useFakeTimers();
@@ -31,13 +38,6 @@ beforeEach(() => {
 afterEach(() => {
     vi.useRealTimers();
 });
-
-async function search(wrapper: ReturnType<typeof mountWithI18n>, query: string) {
-    const input = wrapper.find('.search-input');
-    await input.setValue(query);
-    vi.advanceTimersByTime(600);
-    await wrapper.vm.$nextTick();
-}
 
 describe('SearchPanel', () => {
     it('renders the panel with an empty search input', () => {
@@ -81,7 +81,6 @@ describe('SearchPanel', () => {
         const wrapper = mountWithI18n(SearchPanel, {
             props: { files, selectedFiles: [], activeFile: null },
         });
-        // 'bbb' contains 'b' which appears in none of the test file names
         await search(wrapper, 'bbb');
         expect(wrapper.findAll('.search-result-item').length).toBe(0);
         wrapper.unmount();
@@ -160,10 +159,8 @@ describe('SearchPanel', () => {
             attachTo: document.body,
         });
         await search(wrapper, 'notes');
-        // Navigate down to select the first item (window-level ArrowDown)
         await wrapper.find('.search-input').trigger('keydown', { key: 'ArrowDown' });
         await wrapper.vm.$nextTick();
-        // Now press Enter to open
         await wrapper.find('.search-input').trigger('keydown', { key: 'Enter' });
         await wrapper.vm.$nextTick();
         expect(wrapper.emitted('openFile')).toBeDefined();
@@ -186,8 +183,6 @@ describe('SearchPanel', () => {
         });
         await search(wrapper, 'no');
         const items = wrapper.findAll('.search-result-item');
-        // notes.md starts with "no", should appear before noodles.md
-        // but both should appear
         expect(items.length).toBeGreaterThanOrEqual(2);
         wrapper.unmount();
     });

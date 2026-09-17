@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
 
-// Prevent electron-log → electron binary from being loaded in CI.
 vi.mock('electron', () => ({
     app: { getPath: vi.fn(() => '/tmp'), getVersion: vi.fn(() => '0.0.0'), on: vi.fn(), isPackaged: false },
 }));

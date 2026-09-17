@@ -3,8 +3,6 @@ import { ref, computed } from 'vue';
 import { useDrawingHistory } from '@/renderer/composables/drawing/useDrawingHistory';
 import type { CanvasElement } from '@/schemas/drawing';
 
-// ── helpers ──────────────────────────────────────────────────────────────────
-
 function makeEl(id: string, x = 0, y = 0): CanvasElement {
     return {
         id,
@@ -21,14 +19,11 @@ function makeEl(id: string, x = 0, y = 0): CanvasElement {
     };
 }
 
-// ── test factory ──────────────────────────────────────────────────────────────
-
 function makeHistory() {
     const elements = ref<CanvasElement[]>([]);
     const selectedId = ref<string | null>(null);
     const selectedIds = ref<Set<string>>(new Set());
     const clipboard = ref<CanvasElement[]>([]);
-    // Seed history with an empty-state snapshot so index starts at 0
     const history = ref<string[]>(['[]']);
     const historyIndex = ref(0);
     const scheduleAutoSave = vi.fn();
@@ -50,16 +45,12 @@ function makeHistory() {
     return { elements, selectedId, selectedIds, clipboard, history, historyIndex, scheduleAutoSave, renderScene, hist };
 }
 
-// ── tests ─────────────────────────────────────────────────────────────────────
-
 describe('useDrawingHistory', () => {
     let ctx: ReturnType<typeof makeHistory>;
 
     beforeEach(() => {
         ctx = makeHistory();
     });
-
-    // ── saveToHistory ─────────────────────────────────────────────────────────
 
     describe('saveToHistory', () => {
         it('appends a snapshot to the history stack', () => {
@@ -84,7 +75,6 @@ describe('useDrawingHistory', () => {
             ctx.elements.value = [makeEl('c')];
             ctx.hist.saveToHistory(); // overwrites forward entry
             expect(ctx.historyIndex.value).toBe(ctx.history.value.length - 1);
-            // forward entry 'b' should be gone
             const ids = ctx.history.value.map((s) => JSON.parse(s)[0]?.id ?? null);
             expect(ids).not.toContain('b');
         });
@@ -105,8 +95,6 @@ describe('useDrawingHistory', () => {
             expect(ctx.historyIndex.value).toBe(ctx.history.value.length - 1);
         });
     });
-
-    // ── undo ─────────────────────────────────────────────────────────────────
 
     describe('undo', () => {
         it('restores the previous snapshot', () => {
@@ -142,8 +130,6 @@ describe('useDrawingHistory', () => {
         });
     });
 
-    // ── redo ─────────────────────────────────────────────────────────────────
-
     describe('redo', () => {
         it('re-applies a snapshot that was undone', () => {
             ctx.elements.value = [makeEl('a')];
@@ -171,8 +157,6 @@ describe('useDrawingHistory', () => {
         });
     });
 
-    // ── clearAll ─────────────────────────────────────────────────────────────
-
     describe('clearAll', () => {
         it('removes every element', () => {
             ctx.elements.value = [makeEl('a'), makeEl('b')];
@@ -199,8 +183,6 @@ describe('useDrawingHistory', () => {
         });
     });
 
-    // ── copySelected ─────────────────────────────────────────────────────────
-
     describe('copySelected', () => {
         it('stores selected elements in the clipboard', () => {
             ctx.elements.value = [makeEl('a'), makeEl('b')];
@@ -224,8 +206,6 @@ describe('useDrawingHistory', () => {
             expect(ctx.clipboard.value[0]!.x).toBe(0); // unchanged
         });
     });
-
-    // ── pasteClipboard ────────────────────────────────────────────────────────
 
     describe('pasteClipboard', () => {
         it('adds offset copies of the clipboard elements', () => {
@@ -268,13 +248,10 @@ describe('useDrawingHistory', () => {
             ctx.selectedIds.value = new Set(['a']);
             ctx.hist.copySelected();
             ctx.hist.pasteClipboard();
-            // Original 'a' should not be selected after paste
             expect(ctx.selectedIds.value.has('a')).toBe(false);
             expect(ctx.selectedIds.value.size).toBe(1);
         });
     });
-
-    // ── duplicateSelected ─────────────────────────────────────────────────────
 
     describe('duplicateSelected', () => {
         it('copies and immediately pastes the selected element', () => {
@@ -290,8 +267,6 @@ describe('useDrawingHistory', () => {
             expect(ctx.elements.value).toHaveLength(1);
         });
     });
-
-    // ── deleteSelected ────────────────────────────────────────────────────────
 
     describe('deleteSelected', () => {
         it('removes the selected elements', () => {

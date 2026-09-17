@@ -2,13 +2,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { register } from '@/main/services/media';
 
 vi.mock('electron', () => ({}));
+
 vi.mock('@/main/lib/logger', () => ({
     log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
-
-import { register } from '@/main/services/media';
 
 let tmpDir: string;
 let vaultRoot: string;

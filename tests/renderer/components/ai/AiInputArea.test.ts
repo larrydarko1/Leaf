@@ -2,7 +2,15 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import AiInputArea from '@/renderer/components/ai/AiInputArea.vue';
 import { mountWithI18n } from '@test-utils';
 
-// ── localStorage mock ────────────────────────────────────────────────────────
+type FileInfo = {
+    name: string;
+    path: string;
+    relativePath: string;
+    extension: string;
+    size: number;
+    modified: string;
+    folder: string;
+};
 
 const localStorageMock = (() => {
     let store: Record<string, string> = {};
@@ -20,24 +28,6 @@ const localStorageMock = (() => {
     };
 })();
 
-Object.defineProperty(globalThis, 'localStorage', {
-    value: localStorageMock,
-    writable: true,
-    configurable: true,
-});
-
-// ── test helpers ────────────────────────────────────────────────────────────
-
-type FileInfo = {
-    name: string;
-    path: string;
-    relativePath: string;
-    extension: string;
-    size: number;
-    modified: string;
-    folder: string;
-};
-
 function makeFile(name: string, path = `/${name}`): FileInfo {
     return {
         name,
@@ -50,15 +40,17 @@ function makeFile(name: string, path = `/${name}`): FileInfo {
     };
 }
 
-// ── tests ────────────────────────────────────────────────────────────────────
+Object.defineProperty(globalThis, 'localStorage', {
+    value: localStorageMock,
+    writable: true,
+    configurable: true,
+});
 
 describe('AiInputArea', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         localStorageMock.clear();
     });
-
-    // ── initial state ────────────────────────────────────────────────────────
 
     describe('initial state', () => {
         it('renders with default height', () => {
@@ -126,8 +118,6 @@ describe('AiInputArea', () => {
         });
     });
 
-    // ── resize functionality ─────────────────────────────────────────────────
-
     describe('resize', () => {
         it('increases height on upward drag', async () => {
             const wrapper = mountWithI18n(AiInputArea, {
@@ -147,15 +137,12 @@ describe('AiInputArea', () => {
             const startY = 100;
             const newY = 70; // drag up by 30px
 
-            // Simulate mousedown on handle
             await handle.trigger('mousedown', { clientY: startY, preventDefault: () => {} });
 
-            // Simulate mousemove
             const moveEvent = new MouseEvent('mousemove', { clientY: newY });
             document.dispatchEvent(moveEvent);
             await wrapper.vm.$nextTick();
 
-            // Height should increase by the delta (100 - 70 = 30)
             const textarea = wrapper.find('textarea');
             expect(textarea.attributes('style')).toContain('height: 150px'); // 120 + 30, but clamped to max 150
         });
@@ -268,8 +255,6 @@ describe('AiInputArea', () => {
         });
     });
 
-    // ── localStorage persistence ─────────────────────────────────────────────
-
     describe('localStorage persistence', () => {
         it('saves height on mouseup', async () => {
             const wrapper = mountWithI18n(AiInputArea, {
@@ -299,7 +284,6 @@ describe('AiInputArea', () => {
         });
 
         it('restores height from localStorage on mount', async () => {
-            // Clear first, then set value before mounting
             localStorageMock.clear();
             localStorageMock.setItem('ai-input-max-height', '100');
 
@@ -335,7 +319,6 @@ describe('AiInputArea', () => {
                 },
             });
 
-            // Should use default 120px
             const textarea = wrapper.find('textarea');
             expect(textarea.attributes('style')).toContain('height: 120px');
         });
@@ -359,8 +342,6 @@ describe('AiInputArea', () => {
             expect(textarea.attributes('style')).toContain('height: 120px');
         });
     });
-
-    // ── event emissions ──────────────────────────────────────────────────────
 
     describe('event emissions', () => {
         it('emits send when Enter is pressed', async () => {
@@ -398,7 +379,6 @@ describe('AiInputArea', () => {
             const textarea = wrapper.find('textarea');
             await textarea.trigger('keydown.enter.shift');
 
-            // The handler is @keydown.enter.exact, so a modified Enter must not send.
             expect(wrapper.emitted('send')).toBeUndefined();
         });
 
@@ -461,8 +441,6 @@ describe('AiInputArea', () => {
             expect(emitted?.[0]).toEqual(['new message']);
         });
     });
-
-    // ── UI state and interactions ────────────────────────────────────────────
 
     describe('UI state', () => {
         it('disables textarea when not ready', () => {
@@ -550,8 +528,6 @@ describe('AiInputArea', () => {
             expect(sendBtn.attributes('disabled')).toBeUndefined();
         });
     });
-
-    // ── context files ────────────────────────────────────────────────────────
 
     describe('context files', () => {
         it('renders a chip for each attached context file', () => {

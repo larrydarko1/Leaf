@@ -1,8 +1,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import path from 'path';
 import os from 'os';
+import fs from 'fs';
+import {
+    LEAF_HOME,
+    DEFAULT_MODELS_DIR,
+    PROMPTS_DIR,
+    STATE_FILE,
+    getWhisperModelDir,
+    getBundledPromptsDir,
+    getBundledThemesDir,
+    getBundledLocalesDir,
+    migrateLegacyPaths,
+} from '@/main/lib/paths';
 
-// Prevent electron-log → electron binary from being loaded in CI.
 vi.mock('electron', () => ({
     app: { getPath: vi.fn(), getVersion: vi.fn() },
 }));
@@ -11,11 +22,6 @@ vi.mock('@/main/lib/logger', () => ({
     log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 
-/**
- * Mock fs before importing the module. We delegate to the real fs by default
- * so unrelated imports (e.g. the logger) keep working; tests override the
- * returned mock fns as needed.
- */
 vi.mock('fs', async () => {
     const actual = await vi.importActual<typeof import('fs')>('fs');
     const existsSync = vi.fn(actual.existsSync);
@@ -34,19 +40,6 @@ vi.mock('fs', async () => {
         },
     };
 });
-
-import fs from 'fs';
-import {
-    LEAF_HOME,
-    DEFAULT_MODELS_DIR,
-    PROMPTS_DIR,
-    STATE_FILE,
-    getWhisperModelDir,
-    getBundledPromptsDir,
-    getBundledThemesDir,
-    getBundledLocalesDir,
-    migrateLegacyPaths,
-} from '@/main/lib/paths';
 
 describe('paths', () => {
     describe('LEAF_HOME', () => {

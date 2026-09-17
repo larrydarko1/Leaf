@@ -1,13 +1,7 @@
-/**
- * Tests for useDrawingInteraction composable.
- * Focuses on keyboard handlers, zoom, and wheel events.
- */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref, computed } from 'vue';
 import { useDrawingInteraction } from '@/renderer/composables/drawing/useDrawingInteraction';
 import type { CanvasElement, DefaultStyle, ToolType } from '@/schemas/drawing';
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
 
 let idCounter = 0;
 const genId = () => `el-${++idCounter}`;
@@ -216,8 +210,6 @@ beforeEach(() => {
     idCounter = 0;
 });
 
-// ── effectiveTool ─────────────────────────────────────────────────────────────
-
 describe('effectiveTool', () => {
     it('returns current tool when space is not held', () => {
         const { effectiveTool } = makeInteraction({ initialTool: 'rectangle' });
@@ -230,8 +222,6 @@ describe('effectiveTool', () => {
         expect(effectiveTool.value).toBe('hand');
     });
 });
-
-// ── handleKeyup ───────────────────────────────────────────────────────────────
 
 describe('handleKeyup', () => {
     it('releases Space when Space key is released', () => {
@@ -248,8 +238,6 @@ describe('handleKeyup', () => {
         expect(shiftHeld.value).toBe(false);
     });
 });
-
-// ── handleKeydown: space ──────────────────────────────────────────────────────
 
 describe('handleKeydown (Space)', () => {
     it('sets spaceHeld to true', () => {
@@ -274,8 +262,6 @@ describe('handleKeydown (Space)', () => {
     });
 });
 
-// ── handleKeydown: shift ──────────────────────────────────────────────────────
-
 describe('handleKeydown (Shift)', () => {
     it('sets shiftHeld to true', () => {
         const { shiftHeld, handleKeydown } = makeInteraction();
@@ -284,8 +270,6 @@ describe('handleKeydown (Shift)', () => {
     });
 });
 
-// ── handleKeydown: ignored during text editing ────────────────────────────────
-
 describe('handleKeydown (text editing)', () => {
     it('ignores all keys while text editing is active', () => {
         const { undo, handleKeydown } = makeInteraction({ textEditing: true });
@@ -293,8 +277,6 @@ describe('handleKeydown (text editing)', () => {
         expect(undo).not.toHaveBeenCalled();
     });
 });
-
-// ── handleKeydown: undo/redo ──────────────────────────────────────────────────
 
 describe('handleKeydown (undo/redo)', () => {
     it('calls undo on Ctrl+Z', () => {
@@ -316,8 +298,6 @@ describe('handleKeydown (undo/redo)', () => {
     });
 });
 
-// ── handleKeydown: copy/paste/duplicate ──────────────────────────────────────
-
 describe('handleKeydown (copy/paste/duplicate)', () => {
     it('calls copySelected on Ctrl+C', () => {
         const { copySelected, handleKeydown } = makeInteraction();
@@ -338,8 +318,6 @@ describe('handleKeydown (copy/paste/duplicate)', () => {
     });
 });
 
-// ── handleKeydown: select all ─────────────────────────────────────────────────
-
 describe('handleKeydown (select all)', () => {
     it('selects all elements on Ctrl+A', () => {
         const el1 = makeEl('a');
@@ -356,8 +334,6 @@ describe('handleKeydown (select all)', () => {
         expect(renderScene).toHaveBeenCalled();
     });
 });
-
-// ── handleKeydown: delete ─────────────────────────────────────────────────────
 
 describe('handleKeydown (delete)', () => {
     it('calls deleteSelected on Delete when elements are selected', () => {
@@ -380,8 +356,6 @@ describe('handleKeydown (delete)', () => {
         expect(deleteSelected).not.toHaveBeenCalled();
     });
 });
-
-// ── handleKeydown: enter to edit ─────────────────────────────────────────────
 
 describe('handleKeydown (Enter to edit)', () => {
     it('calls startEditText when Enter is pressed on a text element', () => {
@@ -412,8 +386,6 @@ describe('handleKeydown (Enter to edit)', () => {
         expect(startEditShapeText).not.toHaveBeenCalled();
     });
 });
-
-// ── handleKeydown: tool shortcuts ─────────────────────────────────────────────
 
 describe('handleKeydown (tool shortcuts)', () => {
     const shortcuts: [string, ToolType][] = [
@@ -446,8 +418,6 @@ describe('handleKeydown (tool shortcuts)', () => {
     });
 });
 
-// ── handleKeydown: Escape ─────────────────────────────────────────────────────
-
 describe('handleKeydown (Escape)', () => {
     it('clears selection on Escape', () => {
         const { selectedIds, handleKeydown } = makeInteraction();
@@ -467,8 +437,6 @@ describe('handleKeydown (Escape)', () => {
         expect(isDragging.value).toBe(false);
     });
 });
-
-// ── handleKeydown: zoom shortcuts ────────────────────────────────────────────
 
 describe('handleKeydown (zoom shortcuts)', () => {
     it('zooms in with Ctrl+=', () => {
@@ -493,8 +461,6 @@ describe('handleKeydown (zoom shortcuts)', () => {
     });
 });
 
-// ── zoomAtPoint ───────────────────────────────────────────────────────────────
-
 describe('zoomAtPoint', () => {
     it('clamps minimum zoom to 0.1', () => {
         const { zoom, zoomAtPoint } = makeInteraction();
@@ -517,7 +483,6 @@ describe('zoomAtPoint', () => {
         scrollY.value = 0;
         zoomAtPoint(2, 100, 100);
         expect(zoom.value).toBe(2);
-        // scroll should be adjusted (not zero)
         expect(scrollX.value).toBe(-100);
         expect(scrollY.value).toBe(-100);
     });
@@ -528,8 +493,6 @@ describe('zoomAtPoint', () => {
         expect(zoom.value).toBe(1.5);
     });
 });
-
-// ── zoomToCenter ──────────────────────────────────────────────────────────────
 
 describe('zoomToCenter', () => {
     it('sets zoom to given value centered on canvas', () => {
@@ -544,8 +507,6 @@ describe('zoomToCenter', () => {
         expect(renderScene).toHaveBeenCalled();
     });
 });
-
-// ── onWheel ───────────────────────────────────────────────────────────────────
 
 describe('onWheel', () => {
     it('scrolls when Ctrl/Meta is not held', () => {
@@ -581,8 +542,6 @@ describe('onWheel', () => {
         expect(zoom.value).toBeGreaterThan(1);
     });
 });
-
-// ── onPointerDown / onPointerUp ───────────────────────────────────────────────
 
 describe('onPointerDown', () => {
     it('does not throw with default setup', () => {

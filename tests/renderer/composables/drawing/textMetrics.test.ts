@@ -1,18 +1,8 @@
-/**
- * Tests for measureTextBox.
- *
- * The 2D context is a stub whose `measureText` reports one unit per character,
- * so a measured width is readable straight from the input string.
- */
 import { describe, it, expect, vi } from 'vitest';
 import { measureTextBox } from '@/renderer/composables/drawing/textMetrics';
 
 const FONT_FAMILY = '"Helvetica", "Segoe UI", sans-serif';
 
-/**
- * Records every call and font assignment in order, so the tests can assert that
- * the font is set inside the save/restore pair and before anything is measured.
- */
 function makeCtx(widthOf: (line: string) => number = (line) => line.length) {
     const calls: string[] = [];
     let font = 'initial-font';

@@ -3,6 +3,12 @@ import { mountWithI18n } from '@test-utils';
 import TabBar from '@/renderer/components/TabBar.vue';
 import type { TabState } from '@/schemas/vault';
 
+const defaultTabs: TabState[] = [
+    makeTab('notes.md', '/vault/notes.md'),
+    makeTab('ideas.md', '/vault/ideas.md', true),
+    makeTab('draft.txt', '/vault/draft.txt'),
+];
+
 function makeTab(name: string, path: string, hasUnsavedChanges = false): TabState {
     return {
         file: {
@@ -20,12 +26,6 @@ function makeTab(name: string, path: string, hasUnsavedChanges = false): TabStat
         scrollTop: 0,
     };
 }
-
-const defaultTabs: TabState[] = [
-    makeTab('notes.md', '/vault/notes.md'),
-    makeTab('ideas.md', '/vault/ideas.md', true),
-    makeTab('draft.txt', '/vault/draft.txt'),
-];
 
 describe('TabBar', () => {
     it('renders nothing when tabs array is empty', () => {
@@ -165,9 +165,7 @@ describe('TabBar', () => {
         const tabs = wrapper.findAll('.tab');
         const dt = { effectAllowed: '', dropEffect: '', setDragImage: vi.fn() };
         await tabs[0]!.trigger('dragstart', { dataTransfer: dt });
-        // Trigger dragend without dropping
         await tabs[0]!.trigger('dragend');
-        // After dragend, no "dragging" class should remain
         expect(tabs[0]!.classes()).not.toContain('dragging');
         wrapper.unmount();
     });

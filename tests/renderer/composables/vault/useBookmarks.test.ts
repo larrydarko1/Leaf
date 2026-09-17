@@ -22,8 +22,6 @@ describe('useBookmarks', () => {
         bm = useBookmarks(() => '/vault');
     });
 
-    // ── loadBookmarks ────────────────────────────────────────────────────────
-
     describe('loadBookmarks', () => {
         it('populates bookmarkedFiles on success', async () => {
             mockAPI.bookmarksLoad.mockResolvedValue({
@@ -60,8 +58,6 @@ describe('useBookmarks', () => {
             expect(bm.bookmarkedFiles.value).toEqual(['/vault/b.md']);
         });
     });
-
-    // ── toggleBookmark ───────────────────────────────────────────────────────
 
     describe('toggleBookmark', () => {
         it('adds a file not yet in the list', () => {
@@ -106,8 +102,6 @@ describe('useBookmarks', () => {
         });
     });
 
-    // ── removeBookmark ───────────────────────────────────────────────────────
-
     describe('removeBookmark', () => {
         it('removes a bookmarked file', () => {
             bm.bookmarkedFiles.value = ['/vault/a.md', '/vault/b.md'];
@@ -147,8 +141,6 @@ describe('useBookmarks', () => {
             expect(Array.isArray(arg)).toBe(true);
         });
     });
-
-    // ── relocateBookmark ─────────────────────────────────────────────────────
 
     describe('relocateBookmark', () => {
         it('follows a bookmarked file to its new folder', () => {

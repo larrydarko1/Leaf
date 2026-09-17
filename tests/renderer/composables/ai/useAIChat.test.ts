@@ -4,8 +4,6 @@ import { useAIChat, MAX_CONTEXT_FILES } from '@/renderer/composables/ai/useAICha
 import type { ChatMessage } from '@/schemas/chat';
 import type { AiStatus } from '@/schemas/ai';
 
-// ── electronAPI mock ─────────────────────────────────────────────────────────
-
 const mockAiResetChat = vi.fn().mockResolvedValue({ success: true });
 const mockAiRestoreChatHistory = vi.fn().mockResolvedValue({ success: true });
 const mockAiChat = vi.fn().mockResolvedValue({ success: true, response: 'AI response' });
@@ -15,29 +13,6 @@ const mockAiStopChat = vi.fn().mockResolvedValue({ success: true });
 const mockReadFile = vi.fn().mockResolvedValue({ success: false });
 const mockOnAiToken = vi.fn();
 const mockOnAiThinkingToken = vi.fn();
-
-Object.defineProperty(globalThis, 'window', {
-    value: {
-        electronAPI: {
-            aiResetChat: mockAiResetChat,
-            aiRestoreChatHistory: mockAiRestoreChatHistory,
-            aiChat: mockAiChat,
-            aiGetStatus: mockAiGetStatus,
-            aiStopChat: mockAiStopChat,
-            conversationAddMessage: mockConversationAddMessage,
-            readFile: mockReadFile,
-            writeClipboard: vi.fn().mockResolvedValue(undefined),
-            onAiToken: mockOnAiToken,
-            removeAiTokenListener: vi.fn(),
-            onAiThinkingToken: mockOnAiThinkingToken,
-            removeAiThinkingTokenListener: vi.fn(),
-            log: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
-        },
-    },
-    writable: true,
-});
-
-// ── helpers ──────────────────────────────────────────────────────────────────
 
 function makeStatus(overrides: Partial<AiStatus> = {}): AiStatus {
     return {
@@ -85,21 +60,35 @@ function makeChat(initialMessages: ChatMessage[] = []) {
     return { chat, messages, status, conversationTokenCount, currentConversationId, actions };
 }
 
-// ── tests ────────────────────────────────────────────────────────────────────
+Object.defineProperty(globalThis, 'window', {
+    value: {
+        electronAPI: {
+            aiResetChat: mockAiResetChat,
+            aiRestoreChatHistory: mockAiRestoreChatHistory,
+            aiChat: mockAiChat,
+            aiGetStatus: mockAiGetStatus,
+            aiStopChat: mockAiStopChat,
+            conversationAddMessage: mockConversationAddMessage,
+            readFile: mockReadFile,
+            writeClipboard: vi.fn().mockResolvedValue(undefined),
+            onAiToken: mockOnAiToken,
+            removeAiTokenListener: vi.fn(),
+            onAiThinkingToken: mockOnAiThinkingToken,
+            removeAiThinkingTokenListener: vi.fn(),
+            log: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
+        },
+    },
+    writable: true,
+});
 
 describe('useAIChat', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        // Default aiChat mock streams no tokens, returns success
         mockAiChat.mockResolvedValue({ success: true, response: 'AI response' });
     });
 
-    // ── context reset on new conversation ───────────────────────────────────
     describe('new conversation context reset', () => {
         it('calls aiResetChat when startNewConversation is invoked (via useConversationHistory)', async () => {
-            // startNewConversation is owned by useConversationHistory; here we verify
-            // that aiResetChat is wired correctly at the IPC level when triggered.
-            // We test the chat composable's own reset paths below.
             expect(mockAiResetChat).toBeDefined();
         });
 
@@ -114,7 +103,6 @@ describe('useAIChat', () => {
         });
     });
 
-    // ── resendMessage context restore ────────────────────────────────────────
     describe('resendMessage', () => {
         it('calls aiResetChat before resending', async () => {
             const { chat } = makeChat([
@@ -165,7 +153,6 @@ describe('useAIChat', () => {
         });
     });
 
-    // ── confirmEditMessage context restore ───────────────────────────────────
     describe('confirmEditMessage', () => {
         it('calls aiResetChat after editing a message', async () => {
             const { chat } = makeChat([makeMessage('user', 'Original'), makeMessage('assistant', 'Response')]);
@@ -217,7 +204,6 @@ describe('useAIChat', () => {
             chat.editContent.value = 'Edited';
             await chat.confirmEditMessage(2);
 
-            // Messages after index 2 should be removed
             expect(messages.value).toHaveLength(3);
             expect(messages.value[2]!.content).toBe('Edited');
         });
@@ -234,7 +220,6 @@ describe('useAIChat', () => {
         });
     });
 
-    // ── deleteLastMessagePair context restore ────────────────────────────────
     describe('deleteLastMessagePair', () => {
         it('calls aiResetChat after deleting a message', async () => {
             const { chat } = makeChat([makeMessage('user', 'Hello'), makeMessage('assistant', 'Hi')]);
@@ -292,7 +277,6 @@ describe('useAIChat', () => {
         });
     });
 
-    // ── copyMessage ──────────────────────────────────────────────────────────
     describe('copyMessage', () => {
         it('writes the message content to the clipboard', async () => {
             const { chat } = makeChat([makeMessage('assistant', 'Hello world')]);
@@ -327,18 +311,14 @@ describe('useAIChat', () => {
             vi.useFakeTimers();
             const { chat } = makeChat([makeMessage('assistant', 'Hi'), makeMessage('assistant', 'There')]);
 
-            // Copy message 0 at T=0 — timeout fires at T=2000
             await chat.copyMessage('Hi', 0);
 
-            // Advance 1 second, then copy message 1 — its timeout fires at T=3000
             vi.advanceTimersByTime(1000);
             await chat.copyMessage('There', 1);
 
-            // T=2000: first timeout fires; guard sees copiedIndex===1 (not 0) → no-op
             vi.advanceTimersByTime(1000);
             expect(chat.copiedIndex.value).toBe(1);
 
-            // T=3000: second timeout fires → resets to null
             vi.advanceTimersByTime(1000);
             expect(chat.copiedIndex.value).toBeNull();
 
@@ -346,7 +326,6 @@ describe('useAIChat', () => {
         });
     });
 
-    // ── stopGeneration ───────────────────────────────────────────────────────
     describe('stopGeneration', () => {
         it('calls aiStopChat', async () => {
             const { chat } = makeChat();
@@ -368,7 +347,6 @@ describe('useAIChat', () => {
         });
     });
 
-    // ── regenerateLastResponse ───────────────────────────────────────────────
     describe('regenerateLastResponse', () => {
         it('does nothing when fewer than 2 messages', async () => {
             const { chat } = makeChat([makeMessage('user', 'Hi')]);
@@ -395,12 +373,10 @@ describe('useAIChat', () => {
                 makeMessage('assistant', 'Old response'),
             ]);
             await chat.regenerateLastResponse();
-            // A new assistant message should appear after resend
             expect(messages.value.some((m) => m.role === 'user' && m.content === 'Hello')).toBe(true);
         });
     });
 
-    // ── formatTokenCount ─────────────────────────────────────────────────────
     describe('formatTokenCount', () => {
         it('returns string for small numbers', () => {
             const { chat } = makeChat();
@@ -418,7 +394,6 @@ describe('useAIChat', () => {
         });
     });
 
-    // ── renderMarkdown ───────────────────────────────────────────────────────
     describe('renderMarkdown', () => {
         it('returns empty string for empty input', () => {
             const { chat } = makeChat();
@@ -449,7 +424,6 @@ describe('useAIChat', () => {
         });
     });
 
-    // ── sendMessage ──────────────────────────────────────────────────────────
     describe('sendMessage', () => {
         it('does nothing when input is empty', async () => {
             const { chat } = makeChat();
@@ -586,7 +560,6 @@ describe('useAIChat', () => {
         });
     });
 
-    // ── context files ──────────────────────────────────────────────────────
     describe('context files', () => {
         const fileA = {
             name: 'a.md',
@@ -692,7 +665,6 @@ describe('useAIChat', () => {
         });
     });
 
-    // ── streaming and stop ───────────────────────────────────────────────────
     describe('streaming and stop', () => {
         function mountChat() {
             const messages = ref<ChatMessage[]>([]);

@@ -2,8 +2,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import path from 'path';
 import fs from 'fs';
 
-// Hoisted shared paths — `vi.hoisted` is the only way to share state between
-// the test body and `vi.mock` factories (which are themselves hoisted).
 const PATHS = vi.hoisted(() => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { join } = require('path') as typeof import('path');
@@ -21,13 +19,10 @@ const PATHS = vi.hoisted(() => {
     };
 });
 
-// Mock electron (the service imports `shell`). Shell APIs are only used by
-// IPC handlers which aren't exercised here.
 vi.mock('electron', () => ({
     shell: { openPath: vi.fn().mockResolvedValue('') },
 }));
 
-// Mock the logger to keep test output clean.
 vi.mock('@/main/lib/logger', () => ({
     log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
@@ -50,19 +45,6 @@ function resetTmp() {
     fs.mkdirSync(BUNDLED_DIR, { recursive: true });
 }
 
-beforeEach(() => {
-    resetTmp();
-    vi.resetModules();
-});
-
-afterEach(() => {
-    resetTmp();
-});
-
-// The service memoises its in-flight seed promise at module scope, so every
-// test imports it fresh.
-
-/** Seed `default.md` with `content`, then read its parsed meta back off systemPrompt:list. */
 async function metaOfDefault(content: string): Promise<{ name: string; description: string }> {
     fs.writeFileSync(path.join(BUNDLED_DIR, 'default.md'), content);
     const { register } = await import('@/main/services/systemPrompt');
@@ -78,12 +60,32 @@ async function metaOfDefault(content: string): Promise<{ name: string; descripti
     return result.prompts.find((p) => p.id === 'default')!;
 }
 
-/** Seed `default.md` with `content`, then read the body the AI actually receives. */
 async function bodyOfDefault(content: string): Promise<string> {
     fs.writeFileSync(path.join(BUNDLED_DIR, 'default.md'), content);
     const mod = await import('@/main/services/systemPrompt');
     return await mod.getActiveSystemPrompt();
 }
+
+async function makeHandlers() {
+    const mod = await import('@/main/services/systemPrompt');
+    const handlers: Record<string, (...args: unknown[]) => unknown> = {};
+    const ipc = {
+        handle: vi.fn((ch: string, fn: (...args: unknown[]) => unknown) => {
+            handlers[ch] = fn;
+        }),
+    };
+    mod.register(ipc as never);
+    return handlers;
+}
+
+beforeEach(() => {
+    resetTmp();
+    vi.resetModules();
+});
+
+afterEach(() => {
+    resetTmp();
+});
 
 describe('frontmatter handling', () => {
     it('returns the full body when there is no frontmatter', async () => {
@@ -141,7 +143,6 @@ describe('seeding, via getActiveSystemPrompt', () => {
         fs.writeFileSync(path.join(BUNDLED_DIR, 'default.md'), `---\nname: Default\n---\nseeded body`);
         fs.writeFileSync(path.join(BUNDLED_DIR, 'coding.md'), 'no frontmatter coder');
 
-        // Re-import to get a fresh `seeded` flag.
         const mod = await import('@/main/services/systemPrompt');
         await mod.getActiveSystemPrompt();
 
@@ -157,9 +158,6 @@ describe('seeding, via getActiveSystemPrompt', () => {
         fs.writeFileSync(path.join(BUNDLED_DIR, 'default.md'), 'body');
 
         const mod = await import('@/main/services/systemPrompt');
-        // Fire many concurrent seeds before the first resolves. The boolean-flag
-        // version would race all of them through copyFile; the memoised promise
-        // funnels them into a single run, so copyFile is called at most once.
         const copySpy = vi.spyOn(fs.promises, 'copyFile');
         await Promise.all(Array.from({ length: 10 }, () => mod.getActiveSystemPrompt()));
 
@@ -198,7 +196,6 @@ describe('seeding, via getActiveSystemPrompt', () => {
 
         const mod = await import('@/main/services/systemPrompt');
         await mod.getActiveSystemPrompt();
-        // Switch active prompt by writing state directly.
         fs.writeFileSync(STATE_FILE, JSON.stringify({ activePrompt: 'coding' }), 'utf-8');
 
         const body = await mod.getActiveSystemPrompt();
@@ -223,20 +220,6 @@ describe('seeding, via getActiveSystemPrompt', () => {
         expect(body).toBe('');
     });
 });
-
-// ── IPC register ──────────────────────────────────────────────────────────────
-
-async function makeHandlers() {
-    const mod = await import('@/main/services/systemPrompt');
-    const handlers: Record<string, (...args: unknown[]) => unknown> = {};
-    const ipc = {
-        handle: vi.fn((ch: string, fn: (...args: unknown[]) => unknown) => {
-            handlers[ch] = fn;
-        }),
-    };
-    mod.register(ipc as never);
-    return handlers;
-}
 
 describe('systemPrompt:list', () => {
     it('returns empty list when prompts directory does not exist', async () => {

@@ -2,7 +2,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useNotePersistence } from '@/renderer/composables/editor/useNotePersistence';
 import type { FileInfo } from '@/schemas/vault';
 
-// ── helpers ──────────────────────────────────────────────────────────────────
+const mockAPI = {
+    readFile: vi.fn(),
+    writeFile: vi.fn(),
+    log: { error: vi.fn() },
+};
 
 function makeFile(name = 'note.md'): FileInfo {
     return {
@@ -16,24 +20,13 @@ function makeFile(name = 'note.md'): FileInfo {
     };
 }
 
-// ── electronAPI mock ──────────────────────────────────────────────────────────
-
-const mockAPI = {
-    readFile: vi.fn(),
-    writeFile: vi.fn(),
-    log: { error: vi.fn() },
-};
-
 Object.defineProperty(window, 'electronAPI', {
     value: mockAPI,
     writable: true,
     configurable: true,
 });
 
-// Stub window.alert so saves that fail don't throw in jsdom
 vi.stubGlobal('alert', vi.fn());
-
-// ── tests ─────────────────────────────────────────────────────────────────────
 
 describe('useNotePersistence', () => {
     let file: FileInfo | null;
@@ -59,8 +52,6 @@ describe('useNotePersistence', () => {
         );
     });
 
-    // ── initial state ─────────────────────────────────────────────────────────
-
     describe('initial state', () => {
         it('starts with empty content', () => {
             expect(np.content.value).toBe('');
@@ -78,8 +69,6 @@ describe('useNotePersistence', () => {
             expect(np.lastLoadedPath.value).toBeNull();
         });
     });
-
-    // ── loadFile ──────────────────────────────────────────────────────────────
 
     describe('loadFile', () => {
         it('sets content and originalContent on success', async () => {
@@ -121,8 +110,6 @@ describe('useNotePersistence', () => {
         });
     });
 
-    // ── onContentChange ───────────────────────────────────────────────────────
-
     describe('onContentChange', () => {
         it('sets hasUnsavedChanges to true when content differs from originalContent', () => {
             np.originalContent.value = 'original';
@@ -140,8 +127,6 @@ describe('useNotePersistence', () => {
             expect(onContentChanged).toHaveBeenCalledWith(false);
         });
     });
-
-    // ── saveFile ──────────────────────────────────────────────────────────────
 
     describe('saveFile', () => {
         it('writes the file and clears the unsaved-changes flag on success', async () => {
@@ -213,8 +198,6 @@ describe('useNotePersistence', () => {
         });
     });
 
-    // ── handleDrawingSave ─────────────────────────────────────────────────────
-
     describe('handleDrawingSave', () => {
         it('writes the drawing content and reflects it in the content ref', async () => {
             mockAPI.writeFile.mockResolvedValue({ success: true });
@@ -255,8 +238,6 @@ describe('useNotePersistence', () => {
             expect(mockAPI.writeFile).not.toHaveBeenCalled();
         });
     });
-
-    // ── clearAutoSaveTimeout ──────────────────────────────────────────────────
 
     describe('clearAutoSaveTimeout', () => {
         it('can be called without throwing even when no timeout is pending', () => {

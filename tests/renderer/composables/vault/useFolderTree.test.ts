@@ -2,7 +2,21 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useFolderTree } from '@/renderer/composables/vault/useFolderTree';
 import type { FileInfo, FolderInfo } from '@/schemas/vault';
 
-// ── helpers ──────────────────────────────────────────────────────────────────
+const localStorageMock = (() => {
+    let store: Record<string, string> = {};
+    return {
+        getItem: vi.fn((key: string) => store[key] ?? null),
+        setItem: vi.fn((key: string, value: string) => {
+            store[key] = value;
+        }),
+        removeItem: vi.fn((key: string) => {
+            delete store[key];
+        }),
+        clear: vi.fn(() => {
+            store = {};
+        }),
+    };
+})();
 
 function makeFile(name: string, folder = '.'): FileInfo {
     const inFolder = folder !== '.';
@@ -28,26 +42,7 @@ function makeFolder(relativePath: string): FolderInfo {
     };
 }
 
-// ── localStorage stub ────────────────────────────────────────────────────────
-
-const localStorageMock = (() => {
-    let store: Record<string, string> = {};
-    return {
-        getItem: vi.fn((key: string) => store[key] ?? null),
-        setItem: vi.fn((key: string, value: string) => {
-            store[key] = value;
-        }),
-        removeItem: vi.fn((key: string) => {
-            delete store[key];
-        }),
-        clear: vi.fn(() => {
-            store = {};
-        }),
-    };
-})();
 Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock, writable: true });
-
-// ── tests ─────────────────────────────────────────────────────────────────────
 
 describe('useFolderTree', () => {
     let files: FileInfo[];
@@ -69,8 +64,6 @@ describe('useFolderTree', () => {
             () => currentFolder,
         );
     }
-
-    // ── getFileNameWithoutExtension ──────────────────────────────────────────
 
     describe('getFileNameWithoutExtension', () => {
         it('strips the extension', () => {
@@ -94,16 +87,12 @@ describe('useFolderTree', () => {
         });
     });
 
-    // ── folderTree: empty ────────────────────────────────────────────────────
-
     describe('folderTree (empty inputs)', () => {
         it('returns an empty array when there are no files or folders', () => {
             const { folderTree } = make();
             expect(folderTree.value).toEqual([]);
         });
     });
-
-    // ── folderTree: root-level files ─────────────────────────────────────────
 
     describe('folderTree (root-level files)', () => {
         it('places root-level files at the root of the tree', () => {
@@ -127,8 +116,6 @@ describe('useFolderTree', () => {
         });
     });
 
-    // ── folderTree: sorting ──────────────────────────────────────────────────
-
     describe('folderTree (sorting)', () => {
         it('places folders before files at the same level', () => {
             files = [makeFile('z.md'), makeFile('a.md', 'docs')];
@@ -144,8 +131,6 @@ describe('useFolderTree', () => {
             expect(folderNames).toEqual(['alpha', 'zoo']);
         });
     });
-
-    // ── folderTree: nesting ──────────────────────────────────────────────────
 
     describe('folderTree (nesting)', () => {
         it('nests files inside their folder', () => {
@@ -185,8 +170,6 @@ describe('useFolderTree', () => {
         });
     });
 
-    // ── toggleFolder ─────────────────────────────────────────────────────────
-
     describe('toggleFolder', () => {
         it('marks a folder as expanded', () => {
             const { expandedFolders, toggleFolder } = make();
@@ -201,8 +184,6 @@ describe('useFolderTree', () => {
             expect(expandedFolders.value.has('docs')).toBe(false);
         });
     });
-
-    // ── visibleFiles ─────────────────────────────────────────────────────────
 
     describe('visibleFiles', () => {
         it('only shows root-level files when no folder is expanded', () => {
@@ -228,8 +209,6 @@ describe('useFolderTree', () => {
             expect(visibleFiles.value).toHaveLength(0);
         });
     });
-
-    // ── flattenedItems ───────────────────────────────────────────────────────
 
     describe('flattenedItems', () => {
         it('includes folder entries in the flattened list', () => {

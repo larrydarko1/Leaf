@@ -1,24 +1,11 @@
-/**
- * Tests for the remaining IPC handlers in src/main/services/fs.ts.
- * Uses real temp directories; mocks only electron and logger.
- */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import path from 'path';
 import os from 'os';
 import fs from 'fs';
 
-// ── Mocks ─────────────────────────────────────────────────────────────────────
+type IpcHandler = (_event: null, ...args: unknown[]) => Promise<unknown>;
 
-const mockTrashItem = vi.fn().mockResolvedValue(undefined);
-const mockShowSaveDialog = vi.fn();
-const mockShowOpenDialog = vi.fn();
 const { mockState } = vi.hoisted(() => ({ mockState: { current: {} as Record<string, unknown> } }));
-
-vi.mock('electron', () => ({
-    app: { getPath: vi.fn(() => '/home/test') },
-    dialog: { showOpenDialog: mockShowOpenDialog, showSaveDialog: mockShowSaveDialog },
-    shell: { trashItem: mockTrashItem, openExternal: vi.fn() },
-}));
 
 vi.mock('@/main/lib/logger', () => ({
     log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
@@ -32,9 +19,19 @@ vi.mock('@/main/lib/appState', () => ({
     }),
 }));
 
-// ── IPC helper ────────────────────────────────────────────────────────────────
+const mockTrashItem = vi.fn().mockResolvedValue(undefined);
+const mockShowSaveDialog = vi.fn();
+const mockShowOpenDialog = vi.fn();
 
-type IpcHandler = (_event: null, ...args: unknown[]) => Promise<unknown>;
+vi.mock('electron', () => ({
+    app: { getPath: vi.fn(() => '/home/test') },
+    dialog: { showOpenDialog: mockShowOpenDialog, showSaveDialog: mockShowSaveDialog },
+    shell: { trashItem: mockTrashItem, openExternal: vi.fn() },
+}));
+
+let tmpVault: string;
+let ipc: ReturnType<typeof makeMockIpc>;
+const fakeWindow = {} as never;
 
 function makeMockIpc() {
     const handlers = new Map<string, IpcHandler>();
@@ -50,19 +47,11 @@ function makeMockIpc() {
     };
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 function newTmpVault(): string {
     const dir = path.join(os.tmpdir(), `leaf-fs-test-${process.pid}-${Date.now()}`);
     fs.mkdirSync(dir, { recursive: true });
     return dir;
 }
-
-let tmpVault: string;
-let ipc: ReturnType<typeof makeMockIpc>;
-
-// A stand-in BrowserWindow — the handlers only pass it through to the dialog.
-const fakeWindow = {} as never;
 
 beforeEach(async () => {
     vi.resetModules();
@@ -72,7 +61,6 @@ beforeEach(async () => {
     ipc = makeMockIpc();
     const { register } = await import('@/main/services/fs');
     register(ipc as never, () => fakeWindow);
-    // Set the vault root the only way it can be set: the native folder dialog.
     mockShowOpenDialog.mockResolvedValue({ canceled: false, filePaths: [tmpVault] });
     await ipc.invoke('dialog:openFolder');
 });
@@ -80,8 +68,6 @@ beforeEach(async () => {
 afterEach(() => {
     fs.rmSync(tmpVault, { recursive: true, force: true });
 });
-
-// ── findVaultRoot / cleanup exports ────────────────────────────────────────────
 
 describe('findVaultRoot', () => {
     it('returns the vault root after the folder dialog', async () => {
@@ -176,8 +162,6 @@ describe('cleanup', () => {
     });
 });
 
-// ── file:read ─────────────────────────────────────────────────────────────────
-
 describe('file:read', () => {
     it('reads a text file successfully', async () => {
         const filePath = path.join(tmpVault, 'hello.md');
@@ -206,8 +190,6 @@ describe('file:read', () => {
     });
 });
 
-// ── file:write ────────────────────────────────────────────────────────────────
-
 describe('file:write', () => {
     it('writes content to a file', async () => {
         const filePath = path.join(tmpVault, 'note.md');
@@ -234,8 +216,6 @@ describe('file:write', () => {
     });
 });
 
-// ── file:create ───────────────────────────────────────────────────────────────
-
 describe('file:create', () => {
     it('creates a new empty file', async () => {
         const result = (await ipc.invoke('file:create', tmpVault, 'new-note.md')) as {
@@ -261,8 +241,6 @@ describe('file:create', () => {
         expect(result.success).toBe(false);
     });
 });
-
-// ── folder:create ─────────────────────────────────────────────────────────────
 
 describe('folder:create', () => {
     it('creates a new folder', async () => {
@@ -292,8 +270,6 @@ describe('folder:create', () => {
     });
 });
 
-// ── file:rename ───────────────────────────────────────────────────────────────
-
 describe('file:rename', () => {
     it('renames a file', async () => {
         const oldPath = path.join(tmpVault, 'old.md');
@@ -319,7 +295,6 @@ describe('file:rename', () => {
         const filePath = path.join(tmpVault, 'note.md');
         fs.writeFileSync(filePath, '');
         const result = (await ipc.invoke('file:rename', filePath, 'NOTE.md')) as { success: boolean };
-        // Case-insensitive check: same path → allowed
         expect(result.success).toBe(true);
     });
 
@@ -333,8 +308,6 @@ describe('file:rename', () => {
         expect(result.success).toBe(false);
     });
 });
-
-// ── folder:rename ─────────────────────────────────────────────────────────────
 
 describe('folder:rename', () => {
     it('renames a folder', async () => {
@@ -362,8 +335,6 @@ describe('folder:rename', () => {
         expect(result.success).toBe(false);
     });
 });
-
-// ── file:delete ───────────────────────────────────────────────────────────────
 
 describe('file:delete', () => {
     it('trashes a file via shell.trashItem', async () => {
@@ -394,8 +365,6 @@ describe('file:delete', () => {
     });
 });
 
-// ── folder:delete ─────────────────────────────────────────────────────────────
-
 describe('folder:delete', () => {
     it('trashes a folder via shell.trashItem', async () => {
         const folderPath = path.join(tmpVault, 'to-trash');
@@ -415,8 +384,6 @@ describe('folder:delete', () => {
         expect(result.success).toBe(false);
     });
 });
-
-// ── file:move ─────────────────────────────────────────────────────────────────
 
 describe('file:move', () => {
     it('moves a file to a new folder', async () => {
@@ -463,8 +430,6 @@ describe('file:move', () => {
     });
 });
 
-// ── folder:move ───────────────────────────────────────────────────────────────
-
 describe('folder:move', () => {
     it('moves a folder into another folder', async () => {
         const srcDir = path.join(tmpVault, 'source');
@@ -510,8 +475,6 @@ describe('folder:move', () => {
     });
 });
 
-// ── file:readImage ────────────────────────────────────────────────────────────
-
 describe('file:readImage', () => {
     it('returns a base64 data URL for a png', async () => {
         const imgPath = path.join(tmpVault, 'photo.png');
@@ -545,8 +508,6 @@ describe('file:readImage', () => {
     });
 });
 
-// ── file:readAudio ────────────────────────────────────────────────────────────
-
 describe('file:readAudio', () => {
     it('returns a base64 data URL for an mp3', async () => {
         const audioPath = path.join(tmpVault, 'clip.mp3');
@@ -574,8 +535,6 @@ describe('file:readAudio', () => {
         expect(result.dataUrl).toMatch(/^data:audio\/mpeg;base64,/);
     });
 });
-
-// ── file:writeBuffer ──────────────────────────────────────────────────────────
 
 describe('file:writeBuffer', () => {
     async function authorize(target: string): Promise<void> {
@@ -651,8 +610,6 @@ describe('file:writeBuffer', () => {
         expect(result.success).toBe(false);
     });
 });
-
-// ── bookmarks:load / bookmarks:save ───────────────────────────────────────────
 
 describe('bookmarks:load', () => {
     it('returns empty bookmarks when no bookmarks file exists', async () => {
@@ -730,8 +687,6 @@ describe('bookmarks:save', () => {
     });
 });
 
-// ── file:resolveEmbedPath ─────────────────────────────────────────────────────
-
 describe('file:resolveEmbedPath', () => {
     it('resolves embed relative to note directory', async () => {
         const imgPath = path.join(tmpVault, 'image.png');
@@ -776,8 +731,6 @@ describe('file:resolveEmbedPath', () => {
         expect(result.success).toBe(false);
     });
 });
-
-// ── file:updateEmbedRefs ──────────────────────────────────────────────────────
 
 describe('file:updateEmbedRefs', () => {
     it('updates embed references across markdown files', async () => {
@@ -827,13 +780,10 @@ describe('file:updateEmbedRefs', () => {
     });
 });
 
-// ── fs:watchFolder / fs:unwatchFolder ─────────────────────────────────────────
-
 describe('fs:watchFolder', () => {
     it('returns success and sets up a watcher', async () => {
         const result = (await ipc.invoke('fs:watchFolder')) as { success: boolean };
         expect(result.success).toBe(true);
-        // Clean up by unwatching
         await ipc.invoke('fs:unwatchFolder');
     });
 
@@ -878,8 +828,6 @@ describe('fs:unwatchFolder', () => {
         expect(result.success).toBe(true);
     });
 });
-
-// ── cleanup ───────────────────────────────────────────────────────────────────
 
 describe('cleanup (with active watcher)', () => {
     it('closes active watcher during cleanup', async () => {

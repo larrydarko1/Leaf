@@ -1,11 +1,3 @@
-/**
- * Tests for the env config module.
- *
- * `config` is built once at import time from `process.env`, so every case here
- * stubs the environment first and then re-imports the module under a fresh
- * registry — a plain top-level import would freeze whatever the runner's own
- * environment happened to be.
- */
 import { describe, it, expect, vi, afterEach } from 'vitest';
 
 async function loadConfig() {

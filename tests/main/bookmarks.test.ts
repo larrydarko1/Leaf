@@ -3,7 +3,7 @@ import path from 'path';
 import os from 'os';
 import fs from 'fs';
 
-// ── Mocks (must be declared before any imports that pull in the mocked modules) ──
+type IpcHandler = (_event: null, ...args: unknown[]) => Promise<unknown>;
 
 const { mockShowOpenDialog } = vi.hoisted(() => ({ mockShowOpenDialog: vi.fn() }));
 const { mockState } = vi.hoisted(() => ({ mockState: { current: {} as Record<string, unknown> } }));
@@ -26,11 +26,8 @@ vi.mock('@/main/lib/appState', () => ({
     }),
 }));
 
-// ── Mock IPC helper ──────────────────────────────────────────────────────────
-// Captures handlers registered via ipc.handle() so they can be called directly
-// in tests without a running Electron instance.
-
-type IpcHandler = (_event: null, ...args: unknown[]) => Promise<unknown>;
+let tmpVault: string;
+let ipc: ReturnType<typeof makeMockIpc>;
 
 function makeMockIpc() {
     const handlers = new Map<string, IpcHandler>();
@@ -46,24 +43,13 @@ function makeMockIpc() {
     };
 }
 
-// ── Shared state ─────────────────────────────────────────────────────────────
-
-let tmpVault: string;
-let ipc: ReturnType<typeof makeMockIpc>;
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
 function newTmpVault(): string {
     const dir = path.join(os.tmpdir(), `leaf-bm-test-${process.pid}-${Date.now()}`);
     fs.mkdirSync(dir, { recursive: true });
     return dir;
 }
 
-// ── Tests ────────────────────────────────────────────────────────────────────
-
 describe('bookmarks IPC handlers', () => {
-    // Each test gets a fresh module (so vaultRoot is reset to null) and a
-    // brand-new empty temp vault.
     beforeEach(async () => {
         vi.resetModules();
         tmpVault = newTmpVault();
@@ -78,8 +64,6 @@ describe('bookmarks IPC handlers', () => {
     afterEach(() => {
         fs.rmSync(tmpVault, { recursive: true, force: true });
     });
-
-    // ── bookmarks:load ───────────────────────────────────────────────────────
 
     describe('bookmarks:load', () => {
         it('returns empty array when .leaf/bookmarks.json does not exist', async () => {
@@ -142,8 +126,6 @@ describe('bookmarks IPC handlers', () => {
             expect(result.bookmarks).toEqual([]);
         });
     });
-
-    // ── bookmarks:save ───────────────────────────────────────────────────────
 
     describe('bookmarks:save', () => {
         it('returns success for a valid list of vault-internal paths', async () => {
@@ -219,11 +201,8 @@ describe('bookmarks IPC handlers', () => {
         });
     });
 
-    // ── no vault open ────────────────────────────────────────────────────────
-
     describe('when no vault is open', () => {
         beforeEach(async () => {
-            // Reset so vaultRoot is null for this sub-suite
             vi.resetModules();
             ipc = makeMockIpc();
             const { register } = await import('@/main/services/fs');

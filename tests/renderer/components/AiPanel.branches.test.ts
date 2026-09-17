@@ -1,9 +1,3 @@
-/**
- * Branch-focused tests for AiPanel.vue script section.
- * Uses shallowMount + fully-mocked composables to exercise
- * loadSelectedModel, unloadModel, loadPreviousModel, tokenUsagePercent,
- * panel toggles, and keyboard resize shortcuts.
- */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref, computed } from 'vue';
 import { shallowMount } from '@vue/test-utils';
@@ -11,7 +5,9 @@ import { i18n } from '@/renderer/i18n';
 import AiPanel from '@/renderer/components/AiPanel.vue';
 import type { FileInfo } from '@/schemas/vault';
 
-// ── useAIModel mock ───────────────────────────────────────────────────────────
+vi.mock('@/renderer/composables/useThrottle', () => ({
+    useThrottleFn: (fn: (...a: unknown[]) => unknown) => Object.assign(fn, { cancel: vi.fn() }),
+}));
 
 const mockStatus = ref({
     isModelLoaded: false,
@@ -22,6 +18,7 @@ const mockStatus = ref({
     contextTokens: 0,
     modelsDir: '',
 });
+
 const mockAvailableModels = ref<unknown[]>([]);
 const mockIsLoading = ref(false);
 const mockSelectedModelPath = ref<string | null>(null);
@@ -67,8 +64,6 @@ vi.mock('@/renderer/composables/ai/useAIModel', () => ({
     })),
 }));
 
-// ── useConversationHistory mock ────────────────────────────────────────────────
-
 const mockShowHistory = ref(false);
 const mockConversationList = ref<unknown[]>([]);
 const mockCurrentConversationId = ref<string | null>(null);
@@ -111,8 +106,6 @@ vi.mock('@/renderer/composables/ai/useConversationHistory', () => ({
     })),
 }));
 
-// ── useAIChat mock ────────────────────────────────────────────────────────────
-
 const mockInputField = ref<HTMLTextAreaElement | null>(null);
 const mockScrollToBottom = vi.fn();
 const mockStopGeneration = vi.fn().mockResolvedValue(undefined);
@@ -145,14 +138,6 @@ vi.mock('@/renderer/composables/ai/useAIChat', () => ({
         scrollToBottom: mockScrollToBottom,
     })),
 }));
-
-// ── throttle mock (bypass throttle) ───────────────────────────────────────────
-
-vi.mock('@/renderer/composables/useThrottle', () => ({
-    useThrottleFn: (fn: (...a: unknown[]) => unknown) => Object.assign(fn, { cancel: vi.fn() }),
-}));
-
-// ── helpers ───────────────────────────────────────────────────────────────────
 
 const defaultProps: { activeFile: FileInfo | null; workspacePath: string | null } = {
     activeFile: null,
@@ -192,8 +177,6 @@ beforeEach(() => {
     mockInputField.value = null;
 });
 
-// ── tokenUsagePercent computed ────────────────────────────────────────────────
-
 describe('tokenUsagePercent', () => {
     it('returns 0 when contextSize is 0', async () => {
         mockStatus.value.contextSize = 0;
@@ -232,8 +215,6 @@ describe('tokenUsagePercent', () => {
     });
 });
 
-// ── onMounted ─────────────────────────────────────────────────────────────────
-
 describe('onMounted', () => {
     it('calls refreshStatus, refreshModels, refreshConversationList', async () => {
         mountPanel();
@@ -262,8 +243,6 @@ describe('onMounted', () => {
     });
 });
 
-// ── loadSelectedModel ─────────────────────────────────────────────────────────
-
 describe('loadSelectedModel', () => {
     it('calls startNewConversation on success', async () => {
         mockLoadModel.mockResolvedValue({ success: true });
@@ -288,8 +267,6 @@ describe('loadSelectedModel', () => {
         wrapper.unmount();
     });
 });
-
-// ── unloadModel ───────────────────────────────────────────────────────────────
 
 describe('unloadModel', () => {
     it('calls stopGeneration when model is generating', async () => {
@@ -323,8 +300,6 @@ describe('unloadModel', () => {
     });
 });
 
-// ── startNewConversation ──────────────────────────────────────────────────────
-
 describe('startNewConversation', () => {
     it('calls conversation.startNewConversation', async () => {
         const wrapper = mountPanel();
@@ -345,8 +320,6 @@ describe('startNewConversation', () => {
     });
 });
 
-// ── loadConversation ──────────────────────────────────────────────────────────
-
 describe('loadConversation', () => {
     it('calls conversation.loadConversation and scrollToBottom', async () => {
         const wrapper = mountPanel();
@@ -357,8 +330,6 @@ describe('loadConversation', () => {
         wrapper.unmount();
     });
 });
-
-// ── loadPreviousModel ─────────────────────────────────────────────────────────
 
 describe('loadPreviousModel', () => {
     it('success + no conversation: calls startNewConversation', async () => {
@@ -415,8 +386,6 @@ describe('loadPreviousModel', () => {
     });
 });
 
-// ── v-if panel branches ───────────────────────────────────────────────────────
-
 describe('v-if panel rendering', () => {
     it('renders AiHistoryPanel when showHistory is true', async () => {
         mockShowHistory.value = true;
@@ -434,15 +403,11 @@ describe('v-if panel rendering', () => {
     });
 });
 
-// ── decreaseWidth / increaseWidth ─────────────────────────────────────────────
-
 describe('decreaseWidth / increaseWidth', () => {
     it('decreaseWidth reduces panelWidth by 50 (keyboard ArrowLeft on handle)', async () => {
         const wrapper = mountPanel();
-        // Initial width is 340 (minWidth) — should stay clamped
         const handle = wrapper.find('.ai-panel-resize-handle');
         await handle.trigger('keydown.left');
-        // 340 - 50 = 290 → clamped to 340 (minWidth)
         expect(wrapper.find('.ai-panel').attributes('style')).toContain('width: 340px');
         wrapper.unmount();
     });
@@ -451,7 +416,6 @@ describe('decreaseWidth / increaseWidth', () => {
         const wrapper = mountPanel();
         const handle = wrapper.find('.ai-panel-resize-handle');
         await handle.trigger('keydown.right');
-        // 340 + 50 = 390
         expect(wrapper.find('.ai-panel').attributes('style')).toContain('width: 390px');
         wrapper.unmount();
     });
@@ -459,7 +423,6 @@ describe('decreaseWidth / increaseWidth', () => {
     it('increaseWidth clamps to maxWidth (600)', async () => {
         const wrapper = mountPanel();
         const handle = wrapper.find('.ai-panel-resize-handle');
-        // Increase many times
         for (let i = 0; i < 20; i++) {
             await handle.trigger('keydown.right');
         }
@@ -467,8 +430,6 @@ describe('decreaseWidth / increaseWidth', () => {
         wrapper.unmount();
     });
 });
-
-// ── onBeforeUnmount ───────────────────────────────────────────────────────────
 
 describe('onBeforeUnmount', () => {
     it('sets isResizing to false on unmount', () => {

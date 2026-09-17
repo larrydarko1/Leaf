@@ -1,7 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// ── electron mock ─────────────────────────────────────────────────────────────
-
 const mockSend = vi.fn();
 const mockInvoke = vi.fn().mockResolvedValue(undefined);
 const mockOn = vi.fn();
@@ -22,9 +20,6 @@ vi.mock('electron', () => ({
         removeAllListeners: mockRemoveAllListeners,
     },
 }));
-
-// ── import preload (runs exposeInMainWorld immediately) ───────────────────────
-// Dynamic import after mock so the factory captures our mock ipcRenderer
 
 await import('@/preload/index');
 
@@ -134,7 +129,6 @@ describe('preload / electronAPI', () => {
             const cb = vi.fn();
             (capturedApi['onAiToken'] as (cb: (token: string) => void) => void)(cb);
             expect(mockOn).toHaveBeenCalledWith('ai:token', expect.any(Function));
-            // Verify the handler forwards the token
             const handler = mockOn.mock.calls[0]![1];
             handler({}, 'hello');
             expect(cb).toHaveBeenCalledWith('hello');

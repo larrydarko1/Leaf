@@ -3,6 +3,24 @@ import { mountWithI18n } from '@test-utils';
 import FolderNode from '@/renderer/components/explorer/FolderNode.vue';
 import type { FileInfo, TreeNode } from '@/schemas/vault';
 
+const noteFile = makeFile('notes.md', '/vault/notes.md');
+const imageFile = makeFile('photo.png', '/vault/photo.png', 'png');
+const videoFile = makeFile('clip.mp4', '/vault/clip.mp4', 'mp4');
+const audioFile = makeFile('song.mp3', '/vault/song.mp3', 'mp3');
+const drawingFile = makeFile('sketch.leaf', '/vault/sketch.leaf', 'leaf');
+
+const baseProps = {
+    depth: 0,
+    selectedFiles: [] as FileInfo[],
+    activeFile: null as FileInfo | null,
+    renamingFile: null as FileInfo | null,
+    selectedFolder: null as string | null,
+    renamingFolder: null as string | null,
+    renameValue: '',
+    expandedFolders: new Set<string>(),
+    bookmarkedFiles: [] as string[],
+};
+
 function makeDataTransfer(data = ''): DataTransfer {
     return {
         effectAllowed: '',
@@ -32,24 +50,6 @@ function makeFileNode(file: FileInfo): TreeNode {
 function makeFolderNode(path: string, name: string, children: TreeNode[] = []): TreeNode {
     return { path, name, type: 'folder', children };
 }
-
-const noteFile = makeFile('notes.md', '/vault/notes.md');
-const imageFile = makeFile('photo.png', '/vault/photo.png', 'png');
-const videoFile = makeFile('clip.mp4', '/vault/clip.mp4', 'mp4');
-const audioFile = makeFile('song.mp3', '/vault/song.mp3', 'mp3');
-const drawingFile = makeFile('sketch.leaf', '/vault/sketch.leaf', 'leaf');
-
-const baseProps = {
-    depth: 0,
-    selectedFiles: [] as FileInfo[],
-    activeFile: null as FileInfo | null,
-    renamingFile: null as FileInfo | null,
-    selectedFolder: null as string | null,
-    renamingFolder: null as string | null,
-    renameValue: '',
-    expandedFolders: new Set<string>(),
-    bookmarkedFiles: [] as string[],
-};
 
 describe('FolderNode — file node', () => {
     it('renders a file item for a file type node', () => {
@@ -140,7 +140,6 @@ describe('FolderNode — file node', () => {
         const wrapper = mountWithI18n(FolderNode, {
             props: { ...baseProps, node: makeFileNode(noteFile), depth: 2 },
         });
-        // Depth 2 means paddingLeft = 2 * 16 + 10 = 42px
         expect(wrapper.html()).toContain('42px');
         wrapper.unmount();
     });
@@ -187,7 +186,6 @@ describe('FolderNode — folder node', () => {
         const wrapper = mountWithI18n(FolderNode, {
             props: { ...baseProps, node: folderNode },
         });
-        // Without being expanded, children should not be rendered
         expect(wrapper.findAll('.file-item').length).toBe(0);
         wrapper.unmount();
     });
@@ -200,7 +198,6 @@ describe('FolderNode — folder node', () => {
                 expandedFolders: new Set(['/vault/docs']),
             },
         });
-        // Children should be rendered when expanded
         expect(wrapper.findAll('.file-item').length).toBeGreaterThan(0);
         wrapper.unmount();
     });

@@ -3,6 +3,11 @@ import { mountWithI18n } from '@test-utils';
 import BookmarksPanel from '@/renderer/components/BookmarksPanel.vue';
 import type { FileInfo } from '@/schemas/vault';
 
+const fileA = makeFile('notes.md', '/vault/notes.md');
+const fileB = makeFile('ideas.md', '/vault/ideas.md');
+const fileC = makeFile('draft.md', '/vault/draft.md');
+const allFiles = [fileA, fileB, fileC];
+
 function makeFile(name: string, path: string): FileInfo {
     return {
         name,
@@ -14,12 +19,6 @@ function makeFile(name: string, path: string): FileInfo {
         folder: '.',
     };
 }
-
-const fileA = makeFile('notes.md', '/vault/notes.md');
-const fileB = makeFile('ideas.md', '/vault/ideas.md');
-const fileC = makeFile('draft.md', '/vault/draft.md');
-
-const allFiles = [fileA, fileB, fileC];
 
 describe('BookmarksPanel', () => {
     it('renders nothing when no files are bookmarked', () => {

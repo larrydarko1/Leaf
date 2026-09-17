@@ -1,22 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useTheme } from '@/renderer/composables/ui/useTheme';
 
-// ── electronAPI mock ──────────────────────────────────────────────────────────
-
 const mockAPI = {
     themeList: vi.fn(),
     themeSetActive: vi.fn(),
     themeOpenLeafDir: vi.fn(),
     log: { error: vi.fn(), warn: vi.fn() },
 };
-
-Object.defineProperty(window, 'electronAPI', {
-    value: mockAPI,
-    writable: true,
-    configurable: true,
-});
-
-// ── localStorage stub ────────────────────────────────────────────────────────
 
 const localStorageMock = (() => {
     let store: Record<string, string> = {};
@@ -33,9 +23,6 @@ const localStorageMock = (() => {
         }),
     };
 })();
-Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock, writable: true });
-
-// ── sample data ───────────────────────────────────────────────────────────────
 
 const darkTheme = {
     id: 'dark',
@@ -53,7 +40,13 @@ const lightTheme = {
     path: '/themes/light.json',
 };
 
-// ── tests ─────────────────────────────────────────────────────────────────────
+Object.defineProperty(window, 'electronAPI', {
+    value: mockAPI,
+    writable: true,
+    configurable: true,
+});
+
+Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock, writable: true });
 
 describe('useTheme', () => {
     let theme: ReturnType<typeof useTheme>;
@@ -61,11 +54,8 @@ describe('useTheme', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         localStorageMock.clear();
-        // useTheme uses module-level singletons — reset them by calling refresh
         theme = useTheme();
     });
-
-    // ── refresh ───────────────────────────────────────────────────────────────
 
     describe('refresh', () => {
         it('populates the themes list from the IPC response', async () => {
@@ -110,8 +100,6 @@ describe('useTheme', () => {
             expect(theme.isLoading.value).toBe(false);
         });
     });
-
-    // ── setActive ─────────────────────────────────────────────────────────────
 
     describe('setActive', () => {
         beforeEach(async () => {
@@ -160,8 +148,6 @@ describe('useTheme', () => {
             expect(result).toBe(false);
         });
     });
-
-    // ── openThemesFolder ──────────────────────────────────────────────────────
 
     describe('openThemesFolder', () => {
         it('calls the IPC handler', async () => {

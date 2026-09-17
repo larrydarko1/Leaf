@@ -3,34 +3,8 @@ import { ref } from 'vue';
 import type { CanvasElement } from '@/schemas/drawing';
 import { useCanvasRenderer } from '@/renderer/composables/drawing/useCanvasRenderer';
 
-// ─── Setup CSS Variables ───────────────────────────────────────────────────
-
-beforeEach(() => {
-    // Set up CSS custom properties for tests
-    const style = document.createElement('style');
-    style.textContent = `
-        :root {
-            --base1: #ffffff;
-            --base2: #f5f5f5;
-            --base3: #efefef;
-            --grid-color: #e0e0e0;
-        }
-    `;
-    document.head.appendChild(style);
-});
-
-afterEach(() => {
-    // Clean up style tag
-    const styles = document.head.querySelectorAll('style');
-    styles.forEach((s) => s.remove());
-});
-
-// ─── Helpers ───────────────────────────────────────────────────────────
-
-// Capture original createElement before any mocking happens
 const originalCreateElement = document.createElement.bind(document);
 
-/** Every 2D context call the renderer makes; jsdom has no canvas, so each one is a spy. */
 const CTX_METHODS = [
     'save',
     'restore',
@@ -54,7 +28,6 @@ const CTX_METHODS = [
     'roundRect',
 ] as const;
 
-/** A minimal stand-in for CanvasRenderingContext2D: spies for calls, plain values for style state. */
 function makeMockCtx(): Record<string, unknown> {
     const ctx: Record<string, unknown> = {};
     for (const m of CTX_METHODS) ctx[m] = vi.fn();
@@ -118,26 +91,17 @@ function getHandlePositions(el: CanvasElement) {
     };
 }
 
-/**
- * Set up useCanvasRenderer with a mock canvas and container,
- * wiring in the needed refs and helpers.
- */
 function setupRenderer(elementList: CanvasElement[] = []) {
-    // jsdom doesn't fully support canvas. We create a real element and
-    // monkey-patch getContext so the composable has something to work with.
     const canvasEl = document.createElement('canvas');
 
-    // Build a minimal mock 2D context covering methods used by drawElement / export
     const mockCtx = makeMockCtx();
 
     canvasEl.getContext = vi.fn(() => mockCtx) as unknown as typeof canvasEl.getContext;
 
-    // Mock toBlob to return a fake Blob synchronously
     canvasEl.toBlob = vi.fn((cb: BlobCallback, type?: string) => {
         cb(new Blob(['fake-png-data'], { type: type ?? 'image/png' }));
     });
 
-    // Mock container
     const container = document.createElement('div');
     Object.defineProperty(container, 'getBoundingClientRect', {
         value: () => ({ width: 800, height: 600, top: 0, left: 0, right: 800, bottom: 600, x: 0, y: 0 }),
@@ -167,13 +131,28 @@ function setupRenderer(elementList: CanvasElement[] = []) {
         getHandlePositions,
     });
 
-    // Need to call setupCanvas to initialise the internal ctx
     renderer.setupCanvas();
 
     return { renderer, canvasEl, mockCtx, elements };
 }
 
-// ─── Tests ─────────────────────────────────────────────────────────────
+beforeEach(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+        :root {
+            --base1: #ffffff;
+            --base2: #f5f5f5;
+            --base3: #efefef;
+            --grid-color: #e0e0e0;
+        }
+    `;
+    document.head.appendChild(style);
+});
+
+afterEach(() => {
+    const styles = document.head.querySelectorAll('style');
+    styles.forEach((s) => s.remove());
+});
 
 describe('exportToBlob', () => {
     describe('empty elements', () => {
@@ -193,13 +172,11 @@ describe('exportToBlob', () => {
             const el = makeElement({ id: 'a', type: 'rectangle', x: 10, y: 20, width: 100, height: 50 });
             const { renderer } = setupRenderer([el]);
 
-            // Spy on document.createElement to capture the offscreen canvas
             let offscreen: HTMLCanvasElement | null = null;
             vi.spyOn(document, 'createElement').mockImplementation(((tag: string) => {
                 const elem = originalCreateElement(tag);
                 if (tag === 'canvas') {
                     offscreen = elem as HTMLCanvasElement;
-                    // Also mock toBlob on the offscreen canvas
                     offscreen.toBlob = vi.fn((cb: BlobCallback) => {
                         cb(new Blob(['data'], { type: 'image/png' }));
                     });
@@ -219,7 +196,6 @@ describe('exportToBlob', () => {
             });
 
             expect(blob).not.toBeNull();
-            // Bounds: x=10, y=20, w=100, h=50 → canvas = ceil((100 + 40) * 1) x ceil((50 + 40) * 1) = 140 x 90
             expect(offscreen!.width).toBe(140);
             expect(offscreen!.height).toBe(90);
 
@@ -253,7 +229,6 @@ describe('exportToBlob', () => {
                 padding: 20,
             });
 
-            // (200 + 40) * 2 = 480, (100 + 40) * 2 = 280
             expect(offscreen!.width).toBe(480);
             expect(offscreen!.height).toBe(280);
 
@@ -287,7 +262,6 @@ describe('exportToBlob', () => {
                 padding: 20,
             });
 
-            // (60 + 40) * 3 = 300, (40 + 40) * 3 = 240
             expect(offscreen!.width).toBe(300);
             expect(offscreen!.height).toBe(240);
 
@@ -363,9 +337,7 @@ describe('exportToBlob', () => {
                 scale: 1,
             });
 
-            // First fillStyle set should be the background color
             expect(fillStyleLog[0]).toBe('#ffffff');
-            // First fillRect call is the background fill
             expect(fillRectCalls[0]).toEqual([0, 0, 90, 90]); // (50+40)*1
 
             vi.restoreAllMocks();
@@ -481,7 +453,6 @@ describe('exportToBlob', () => {
                     proxyCtx['scale'] = vi.fn(() => {
                         scaleCallCount++;
                     });
-                    // fillRect should only be called after scale (for element drawing), not before
                     proxyCtx['fillRect'] = vi.fn(() => {
                         if (scaleCallCount === 0) bgFillRectCalled = true;
                     });
@@ -542,7 +513,6 @@ describe('exportToBlob', () => {
                 padding: 20,
             });
 
-            // BBox: x=0..300, y=0..230 → (300 + 40) x (230 + 40) = 340 x 270
             expect(offscreen!.width).toBe(340);
             expect(offscreen!.height).toBe(270);
 
@@ -578,7 +548,6 @@ describe('exportToBlob', () => {
                 padding: 50,
             });
 
-            // (100 + 100) * 1 = 200
             expect(offscreen!.width).toBe(200);
             expect(offscreen!.height).toBe(200);
 
@@ -609,10 +578,8 @@ describe('exportToBlob', () => {
                 elements: [el],
                 withBackground: true,
                 scale: 1,
-                // no padding → defaults to 20
             });
 
-            // (100 + 40) * 1 = 140
             expect(offscreen!.width).toBe(140);
             expect(offscreen!.height).toBe(140);
 
@@ -693,7 +660,6 @@ describe('exportToBlob', () => {
                 padding: 20,
             });
 
-            // Freedraw bounds: x=10..110, y=10..90 → w=100, h=80 → canvas = (100+40)x(80+40) = 140x120
             expect(offscreen!.width).toBe(140);
             expect(offscreen!.height).toBe(120);
 
@@ -703,7 +669,6 @@ describe('exportToBlob', () => {
 
     describe('negative dimensions', () => {
         it('handles elements with negative width/height', async () => {
-            // Elements created by dragging right-to-left have negative width
             const el = makeElement({ id: 'm', type: 'rectangle', x: 100, y: 100, width: -80, height: -60 });
             const { renderer } = setupRenderer([el]);
 
@@ -730,7 +695,6 @@ describe('exportToBlob', () => {
                 padding: 20,
             });
 
-            // getElementBounds normalizes: x=20, y=40, w=80, h=60 → (80+40)x(60+40) = 120x100
             expect(offscreen!.width).toBe(120);
             expect(offscreen!.height).toBe(100);
 

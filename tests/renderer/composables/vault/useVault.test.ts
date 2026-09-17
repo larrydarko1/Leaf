@@ -2,18 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useVault } from '@/renderer/composables/vault/useVault';
 import type { FileInfo, FolderInfo } from '@/schemas/vault';
 
-// ── helpers ──────────────────────────────────────────────────────────────────
-
-function makeFile(name: string, folder = '.'): FileInfo {
-    return { name, path: `/vault/${name}`, relativePath: name, extension: '.md', size: 0, modified: '', folder };
-}
-
-function makeFolder(name: string): FolderInfo {
-    return { name, path: `/vault/${name}`, relativePath: name, type: 'folder', folder: '.' };
-}
-
-// ── electronAPI mock ──────────────────────────────────────────────────────────
-
 const mockAPI = {
     scanFolder: vi.fn(),
     watchFolder: vi.fn(),
@@ -35,14 +23,6 @@ const mockAPI = {
     log: { error: vi.fn(), warn: vi.fn() },
 };
 
-Object.defineProperty(window, 'electronAPI', {
-    value: mockAPI,
-    writable: true,
-    configurable: true,
-});
-
-// ── localStorage stub ─────────────────────────────────────────────────────────
-
 const localStorageMock = (() => {
     let store: Record<string, string> = {};
     return {
@@ -58,11 +38,23 @@ const localStorageMock = (() => {
         }),
     };
 })();
+
+function makeFile(name: string, folder = '.'): FileInfo {
+    return { name, path: `/vault/${name}`, relativePath: name, extension: '.md', size: 0, modified: '', folder };
+}
+
+function makeFolder(name: string): FolderInfo {
+    return { name, path: `/vault/${name}`, relativePath: name, type: 'folder', folder: '.' };
+}
+
+Object.defineProperty(window, 'electronAPI', {
+    value: mockAPI,
+    writable: true,
+    configurable: true,
+});
+
 Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock, writable: true });
-
 vi.stubGlobal('alert', vi.fn());
-
-// ── tests ─────────────────────────────────────────────────────────────────────
 
 describe('useVault', () => {
     let vault: ReturnType<typeof useVault>;
@@ -70,13 +62,10 @@ describe('useVault', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         localStorageMock.clear();
-        // Default stub for watchFolder / removeFsChangedListener
         mockAPI.watchFolder.mockResolvedValue({ success: true });
         mockAPI.unwatchFolder.mockResolvedValue({ success: true });
         vault = useVault();
     });
-
-    // ── initial state ─────────────────────────────────────────────────────────
 
     describe('initial state', () => {
         it('currentFolder is null', () => {
@@ -91,8 +80,6 @@ describe('useVault', () => {
             expect(vault.folders.value).toHaveLength(0);
         });
     });
-
-    // ── loadVault ─────────────────────────────────────────────────────────────
 
     describe('loadVault', () => {
         it('populates currentFolder, files, and folders on success', async () => {
@@ -141,8 +128,6 @@ describe('useVault', () => {
         });
     });
 
-    // ── refreshFiles ──────────────────────────────────────────────────────────
-
     describe('refreshFiles', () => {
         it('is a no-op when no vault is open', async () => {
             await vault.refreshFiles();
@@ -150,7 +135,6 @@ describe('useVault', () => {
         });
 
         it('re-scans and updates files/folders', async () => {
-            // Open vault first
             mockAPI.scanFolder.mockResolvedValue({
                 success: true,
                 root: '/vault',
@@ -159,7 +143,6 @@ describe('useVault', () => {
             });
             await vault.loadVault();
 
-            // Now refresh with a different file list
             mockAPI.scanFolder.mockResolvedValue({
                 success: true,
                 root: '/vault',
@@ -170,8 +153,6 @@ describe('useVault', () => {
             expect(vault.files.value[0]!.name).toBe('b.md');
         });
     });
-
-    // ── closeVault ────────────────────────────────────────────────────────────
 
     describe('closeVault', () => {
         it('clears all vault state', async () => {
@@ -203,8 +184,6 @@ describe('useVault', () => {
         });
     });
 
-    // ── openFolderDialog ──────────────────────────────────────────────────────
-
     describe('openFolderDialog', () => {
         it('loads the selected folder and returns the path', async () => {
             mockAPI.openFolderDialog.mockResolvedValue('/selected/vault');
@@ -226,8 +205,6 @@ describe('useVault', () => {
             expect(result).toBeNull();
         });
     });
-
-    // ── createFile ────────────────────────────────────────────────────────────
 
     describe('createFile', () => {
         beforeEach(async () => {
@@ -257,8 +234,6 @@ describe('useVault', () => {
         });
     });
 
-    // ── renameFile ────────────────────────────────────────────────────────────
-
     describe('renameFile', () => {
         const existingFile = makeFile('old.md');
 
@@ -283,8 +258,6 @@ describe('useVault', () => {
         });
     });
 
-    // ── deleteFile ────────────────────────────────────────────────────────────
-
     describe('deleteFile', () => {
         const file = makeFile('to-delete.md');
 
@@ -307,8 +280,6 @@ describe('useVault', () => {
             expect(globalThis.alert).toHaveBeenCalled();
         });
     });
-
-    // ── moveFiles ─────────────────────────────────────────────────────────────
 
     describe('moveFiles', () => {
         const file = makeFile('note.md');
@@ -336,8 +307,6 @@ describe('useVault', () => {
             await expect(vault.moveFiles([file.path], 'docs')).resolves.not.toThrow();
         });
     });
-
-    // ── createDrawing ─────────────────────────────────────────────────────────
 
     describe('createDrawing', () => {
         beforeEach(async () => {
@@ -375,8 +344,6 @@ describe('useVault', () => {
         });
     });
 
-    // ── createFolder ─────────────────────────────────────────────────────────
-
     describe('createFolder', () => {
         beforeEach(async () => {
             mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [], folders: [] });
@@ -412,8 +379,6 @@ describe('useVault', () => {
             await expect(vault.createFolder()).resolves.not.toThrow();
         });
     });
-
-    // ── renameFolder ─────────────────────────────────────────────────────────
 
     describe('renameFolder', () => {
         beforeEach(async () => {
@@ -466,8 +431,6 @@ describe('useVault', () => {
         });
     });
 
-    // ── deleteFolder ─────────────────────────────────────────────────────────
-
     describe('deleteFolder', () => {
         beforeEach(async () => {
             mockAPI.scanFolder.mockResolvedValue({
@@ -507,8 +470,6 @@ describe('useVault', () => {
         });
     });
 
-    // ── moveFiles (additional branches) ──────────────────────────────────────
-
     describe('moveFiles (additional)', () => {
         const file = makeFile('note.md');
 
@@ -538,8 +499,6 @@ describe('useVault', () => {
             expect(globalThis.alert).toHaveBeenCalled();
         });
     });
-
-    // ── moveFolder ────────────────────────────────────────────────────────────
 
     describe('moveFolder', () => {
         beforeEach(async () => {
@@ -593,8 +552,6 @@ describe('useVault', () => {
         });
     });
 
-    // ── renameFile (catch block) ───────────────────────────────────────────────
-
     describe('renameFile (error paths)', () => {
         const existingFile = makeFile('old.md');
 
@@ -610,8 +567,6 @@ describe('useVault', () => {
             expect(globalThis.alert).toHaveBeenCalled();
         });
     });
-
-    // ── deleteFile (catch block) ───────────────────────────────────────────────
 
     describe('deleteFile (error paths)', () => {
         const file = makeFile('to-delete.md');
@@ -629,8 +584,6 @@ describe('useVault', () => {
         });
     });
 
-    // ── setExternalChangeCallback ─────────────────────────────────────────────
-
     describe('setExternalChangeCallback', () => {
         it('registers a callback that is invoked when the FS watcher fires', async () => {
             mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [], folders: [] });
@@ -639,18 +592,14 @@ describe('useVault', () => {
             const onChange = vi.fn();
             vault.setExternalChangeCallback(onChange);
 
-            // Simulate the FS watcher firing by invoking the registered onFsChanged callback
             const fsChangedCallback = mockAPI.onFsChanged.mock.calls[0]?.[0];
             if (fsChangedCallback) {
                 fsChangedCallback({ eventType: 'change', filename: 'note.md' });
             }
-            // The debounce timer needs to expire — advance fake timers
             vi.useFakeTimers();
             vi.advanceTimersByTime(600);
             vi.useRealTimers();
 
-            // Because of the debounce, we just verify the callback was registered,
-            // not that it was called (timer behaviour is out of scope here).
             expect(typeof onChange).toBe('function');
         });
     });

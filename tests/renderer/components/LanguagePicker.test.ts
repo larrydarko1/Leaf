@@ -10,16 +10,16 @@ const mockElectronAPI = {
     log: { error: vi.fn(), warn: vi.fn(), info: vi.fn() },
 };
 
+const sampleLanguages = [
+    { id: 'en', name: 'English', nativeName: 'English' },
+    { id: 'fr', name: 'French', nativeName: 'Français' },
+];
+
 Object.defineProperty(globalThis.window, 'electronAPI', {
     value: mockElectronAPI,
     writable: true,
     configurable: true,
 });
-
-const sampleLanguages = [
-    { id: 'en', name: 'English', nativeName: 'English' },
-    { id: 'fr', name: 'French', nativeName: 'Français' },
-];
 
 beforeEach(() => {
     vi.clearAllMocks();

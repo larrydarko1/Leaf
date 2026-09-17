@@ -2,8 +2,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ref, nextTick, defineComponent, createApp } from 'vue';
 import { useContextMenu } from '@/renderer/composables/ui/useContextMenu';
 
-// ── lifecycle helper ──────────────────────────────────────────────────────────
-
 function withSetup<T>(composable: () => T): [T, () => void] {
     let result!: T;
     const app = createApp(
@@ -26,8 +24,6 @@ function withSetup<T>(composable: () => T): [T, () => void] {
         },
     ];
 }
-
-// ── tests ─────────────────────────────────────────────────────────────────────
 
 describe('useContextMenu', () => {
     let visible: ReturnType<typeof ref<boolean>>;
@@ -53,8 +49,6 @@ describe('useContextMenu', () => {
 
     afterEach(() => unmount());
 
-    // ── initial state ─────────────────────────────────────────────────────────
-
     it('menuRef starts as null', () => {
         expect(ctx.menuRef.value).toBeNull();
     });
@@ -62,8 +56,6 @@ describe('useContextMenu', () => {
     it('adjustedPosition starts as { x: 0, y: 0 }', () => {
         expect(ctx.adjustedPosition.value).toEqual({ x: 0, y: 0 });
     });
-
-    // ── becoming visible ──────────────────────────────────────────────────────
 
     describe('when visible becomes true', () => {
         beforeEach(async () => {
@@ -87,8 +79,6 @@ describe('useContextMenu', () => {
         });
     });
 
-    // ── Escape key dismissal ──────────────────────────────────────────────────
-
     describe('Escape key', () => {
         beforeEach(async () => {
             vi.useFakeTimers();
@@ -109,8 +99,6 @@ describe('useContextMenu', () => {
         });
     });
 
-    // ── click-outside dismissal ───────────────────────────────────────────────
-
     describe('click-outside dismissal', () => {
         beforeEach(async () => {
             vi.useFakeTimers();
@@ -121,12 +109,10 @@ describe('useContextMenu', () => {
         });
 
         it('calls onClose when a click occurs on an element outside the menu', () => {
-            // Attach a real element as the menuRef so click-outside logic can work.
             const menuEl = document.createElement('div');
             document.body.appendChild(menuEl);
             ctx.menuRef.value = menuEl;
 
-            // Click somewhere outside the menu element
             const outside = document.createElement('div');
             document.body.appendChild(outside);
             outside.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -142,15 +128,12 @@ describe('useContextMenu', () => {
             document.body.appendChild(menuEl);
             ctx.menuRef.value = menuEl;
 
-            // Click inside the menu
             menuEl.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
             expect(onClose).not.toHaveBeenCalled();
             document.body.removeChild(menuEl);
         });
     });
-
-    // ── listener removal when hidden ──────────────────────────────────────────
 
     describe('when visible becomes false', () => {
         it('removes the keydown listener so Escape no longer calls onClose', async () => {
@@ -169,8 +152,6 @@ describe('useContextMenu', () => {
         });
     });
 
-    // ── unmount cleanup ───────────────────────────────────────────────────────
-
     describe('onUnmounted cleanup', () => {
         it('removes listeners so Escape does not fire after unmount', async () => {
             vi.useFakeTimers();
@@ -187,15 +168,11 @@ describe('useContextMenu', () => {
         });
     });
 
-    // ── viewport boundary clamping ─────────────────────────────────────────────
-
     describe('viewport boundary clamping', () => {
         it('clamps the y position if the menu would overflow the bottom of the viewport', async () => {
-            // Simulate window.innerHeight = 600 and menu positioned near the bottom
             Object.defineProperty(window, 'innerHeight', { value: 600, configurable: true });
             position.value = { x: 100, y: 580 };
 
-            // Provide a fake menuRef element with a bounding rect
             const fakeEl = document.createElement('div');
             fakeEl.getBoundingClientRect = () => ({
                 height: 200,
@@ -216,7 +193,6 @@ describe('useContextMenu', () => {
             await nextTick();
             await nextTick(); // allow the inner nextTick inside the watcher to fire
 
-            // y should be clamped: max(0, 600 - 200 - 4) = 396
             expect(ctx.adjustedPosition.value.y).toBeLessThan(580);
         });
 
@@ -244,7 +220,6 @@ describe('useContextMenu', () => {
             await nextTick();
             await nextTick();
 
-            // x should be clamped: max(0, 800 - 200 - 4) = 596
             expect(ctx.adjustedPosition.value.x).toBeLessThan(700);
         });
     });

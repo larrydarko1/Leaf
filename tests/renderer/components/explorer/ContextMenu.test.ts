@@ -14,7 +14,6 @@ describe('ContextMenu', () => {
             props: { visible: false, position: { x: 0, y: 0 }, items: baseItems },
             attachTo: document.body,
         });
-        // The menu is teleported to body, but v-if prevents rendering
         expect(wrapper.find('.context-menu').exists()).toBe(false);
         wrapper.unmount();
     });
@@ -24,7 +23,6 @@ describe('ContextMenu', () => {
             props: { visible: true, position: { x: 10, y: 20 }, items: baseItems },
             attachTo: document.body,
         });
-        // Teleport renders to body, not inside the wrapper's element
         const menu = document.querySelector('.context-menu');
         expect(menu).not.toBeNull();
         const buttons = document.querySelectorAll('.context-menu-item');

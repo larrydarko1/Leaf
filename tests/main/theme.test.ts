@@ -54,22 +54,11 @@ function writeTheme(id: string, content: Record<string, unknown>) {
     fs.writeFileSync(path.join(THEMES_DIR, `${id}.json`), JSON.stringify(content));
 }
 
-// Re-import each time to reset the `seeded` module-level flag
 async function freshModule() {
     vi.resetModules();
     return await import('@/main/services/theme');
 }
 
-beforeEach(() => {
-    resetDirs();
-});
-
-afterEach(() => {
-    fs.rmSync(LEAF_HOME, { recursive: true, force: true });
-    fs.rmSync(BUNDLED_DIR, { recursive: true, force: true });
-});
-
-// Seeding has no front door of its own — theme:list is what triggers it.
 async function freshHandlers() {
     const { register } = await freshModule();
     const handlers: Record<string, (...args: unknown[]) => Promise<unknown>> = {};
@@ -80,6 +69,15 @@ async function freshHandlers() {
     } as never);
     return handlers;
 }
+
+beforeEach(() => {
+    resetDirs();
+});
+
+afterEach(() => {
+    fs.rmSync(LEAF_HOME, { recursive: true, force: true });
+    fs.rmSync(BUNDLED_DIR, { recursive: true, force: true });
+});
 
 describe('seeding, via theme:list', () => {
     it('copies bundled themes into THEMES_DIR', async () => {
@@ -107,7 +105,6 @@ describe('seeding, via theme:list', () => {
         await handlers['theme:list']!();
         writeBundledTheme('light', { name: 'Light', colors: {} });
         await handlers['theme:list']!();
-        // light.json should NOT exist because seeding was skipped the second time
         expect(fs.existsSync(path.join(THEMES_DIR, 'light.json'))).toBe(false);
     });
 

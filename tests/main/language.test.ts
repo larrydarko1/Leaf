@@ -50,17 +50,6 @@ function writeState(state: Record<string, unknown>) {
     fs.writeFileSync(STATE_FILE, JSON.stringify(state));
 }
 
-beforeEach(() => {
-    resetTmp();
-    vi.resetModules();
-});
-
-afterEach(() => {
-    resetTmp();
-});
-
-// The service memoises its in-flight seed promise at module scope, so each test
-// takes a fresh copy and drives it through the IPC handlers production uses.
 async function freshService() {
     const { register } = await import('@/main/services/language');
     const handlers: Record<string, (...args: unknown[]) => unknown> = {};
@@ -89,6 +78,15 @@ async function freshService() {
     };
 }
 
+beforeEach(() => {
+    resetTmp();
+    vi.resetModules();
+});
+
+afterEach(() => {
+    resetTmp();
+});
+
 describe('language service', () => {
     it('ensures locales directory exists on first seeding', async () => {
         writeBundledLocale('en', { common: { save: 'Save' } });
@@ -108,15 +106,12 @@ describe('language service', () => {
 
     it('preserves existing values but backfills missing keys when seeding', async () => {
         writeBundledLocale('en', { common: { save: 'Save' } });
-        // Pre-manifest file the user already has, with their own content.
         fs.mkdirSync(LOCALES_DIR, { recursive: true });
         fs.writeFileSync(path.join(LOCALES_DIR, 'en.json'), JSON.stringify({ custom: true }));
         const svc = await freshService();
         await svc.list();
         const content = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, 'en.json'), 'utf-8'));
-        // Existing content is never overwritten...
         expect(content.custom).toBe(true);
-        // ...but keys the bundle has and the file lacks are added.
         expect(content.common.save).toBe('Save');
     });
 
@@ -125,7 +120,6 @@ describe('language service', () => {
         const svc = await freshService();
         await svc.list();
         const stats1 = fs.statSync(path.join(LOCALES_DIR, 'en.json'));
-        // Small delay to ensure timestamps would differ
         await new Promise((resolve) => setTimeout(resolve, 10));
         await svc.list();
         const stats2 = fs.statSync(path.join(LOCALES_DIR, 'en.json'));
@@ -233,9 +227,6 @@ describe('language service', () => {
         });
     });
 
-    // An id that passes validation but has no file on disk fails with "Language
-    // not found"; one that fails validation never reaches the disk at all and
-    // says "Invalid language id". That difference is how validity is observable.
     describe('language id validation, via language:setActive', () => {
         it.each(['en', 'en_US', 'zh-Hans', 'pt_BR'])('accepts the well-formed id %s', async (id) => {
             const svc = await freshService();

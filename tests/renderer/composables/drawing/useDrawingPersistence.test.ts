@@ -1,26 +1,11 @@
-/**
- * Tests for useDrawingPersistence composable.
- */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ref, nextTick } from 'vue';
 import { useDrawingPersistence } from '@/renderer/composables/drawing/useDrawingPersistence';
 import type { CanvasElement } from '@/schemas/drawing';
 
-// ── Stubs ─────────────────────────────────────────────────────────────────────
-
 const mockLog = { error: vi.fn(), info: vi.fn(), warn: vi.fn() };
-
-// Patch electronAPI onto the existing window without replacing it
-// (replacing window breaks vi.useFakeTimers)
-Object.defineProperty(window, 'electronAPI', {
-    value: { log: mockLog },
-    writable: true,
-    configurable: true,
-});
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 let idCounter = 0;
+
 function genId(): string {
     return `id-${++idCounter}`;
 }
@@ -96,6 +81,12 @@ function makePersistence(contentFn: () => string | undefined = () => undefined) 
     };
 }
 
+Object.defineProperty(window, 'electronAPI', {
+    value: { log: mockLog },
+    writable: true,
+    configurable: true,
+});
+
 beforeEach(() => {
     vi.useFakeTimers();
     vi.clearAllMocks();
@@ -106,8 +97,6 @@ afterEach(() => {
     vi.useRealTimers();
     vi.clearAllMocks();
 });
-
-// ── scheduleAutoSave ──────────────────────────────────────────────────────────
 
 describe('scheduleAutoSave', () => {
     it('sets hasUnsavedChanges to true', () => {
@@ -134,14 +123,10 @@ describe('scheduleAutoSave', () => {
         const { scheduleAutoSave, onSave } = makePersistence();
         scheduleAutoSave();
         scheduleAutoSave();
-        // Second call resets the timer — advancing only 1000ms from the start
-        // should still call onSave once (from the second timer)
         vi.advanceTimersByTime(1000);
         expect(onSave).toHaveBeenCalledTimes(1);
     });
 });
-
-// ── saveDrawing ───────────────────────────────────────────────────────────────
 
 describe('saveDrawing', () => {
     it('calls onSave with serialized drawing data', () => {
@@ -186,8 +171,6 @@ describe('saveDrawing', () => {
     });
 });
 
-// ── loadDrawing: empty/null cases ─────────────────────────────────────────────
-
 describe('loadDrawing (empty)', () => {
     it('resets state when content is undefined', async () => {
         const el = makeEl();
@@ -226,15 +209,12 @@ describe('loadDrawing (empty)', () => {
     });
 });
 
-// ── loadDrawing: v2 format ────────────────────────────────────────────────────
-
 describe('loadDrawing (v2 format)', () => {
     it('loads elements from v2 content', () => {
         const el = makeEl();
         const content = makeV2Content([el]);
         const { canvas, findCtx, elements, loadDrawing } = makePersistence(() => content);
 
-        // Provide a canvas and ctx so loadDrawing proceeds past null check
         canvas.value = {} as HTMLCanvasElement;
         findCtx.mockReturnValue({} as CanvasRenderingContext2D);
 
@@ -297,8 +277,6 @@ describe('loadDrawing (v2 format)', () => {
         expect(zoom.value).toBe(1);
     });
 });
-
-// ── loadDrawing: v1 migration ─────────────────────────────────────────────────
 
 describe('loadDrawing (v1 migration)', () => {
     it('migrates v1 shape strokes to v2 elements', () => {
@@ -432,8 +410,6 @@ describe('loadDrawing (v1 migration)', () => {
     });
 });
 
-// ── loadDrawing: error handling ───────────────────────────────────────────────
-
 describe('loadDrawing (invalid content)', () => {
     it('logs error and resets state for invalid JSON', () => {
         const { canvas, findCtx, elements, loadDrawing } = makePersistence(() => 'not-json');
@@ -461,8 +437,6 @@ describe('loadDrawing (invalid content)', () => {
     });
 });
 
-// ── cleanup ───────────────────────────────────────────────────────────────────
-
 describe('cleanup', () => {
     it('does not throw when no pending timeout', () => {
         const { cleanup } = makePersistence();
@@ -473,7 +447,6 @@ describe('cleanup', () => {
         const { scheduleAutoSave, cleanup, onSave } = makePersistence();
         scheduleAutoSave();
         cleanup();
-        // After cleanup, advancing timers should NOT trigger onSave
         vi.advanceTimersByTime(2000);
         expect(onSave).not.toHaveBeenCalled();
     });

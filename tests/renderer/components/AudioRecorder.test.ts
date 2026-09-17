@@ -35,7 +35,6 @@ describe('AudioRecorder', () => {
 
         it('shows mic SVG when not recording', () => {
             const wrapper = mountWithI18n(AudioRecorder, { props: { currentFolder: '/vault' } });
-            // Mic icon contains a <path> element (not a <rect>)
             expect(wrapper.find('svg path').exists()).toBe(true);
             expect(wrapper.find('svg rect').exists()).toBe(false);
             wrapper.unmount();

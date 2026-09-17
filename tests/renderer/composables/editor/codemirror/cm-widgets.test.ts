@@ -6,8 +6,6 @@ import {
     TaskCheckboxWidget,
 } from '@/renderer/composables/editor/codemirror/cm-widgets';
 
-// ── HorizontalRuleWidget ──────────────────────────────────────────────────────
-
 describe('HorizontalRuleWidget', () => {
     it('renders an <hr> with cm-hr class', () => {
         const w = new HorizontalRuleWidget();
@@ -16,8 +14,6 @@ describe('HorizontalRuleWidget', () => {
         expect(el.className).toBe('cm-hr');
     });
 });
-
-// ── TableWidget ───────────────────────────────────────────────────────────────
 
 describe('TableWidget.eq', () => {
     it('returns true for identical raw text', () => {
@@ -137,8 +133,6 @@ describe('TableWidget.toDOM', () => {
     });
 });
 
-// ── EmbedWidget ───────────────────────────────────────────────────────────────
-
 describe('EmbedWidget.eq', () => {
     it('returns true when fileName and resolvedPath match', () => {
         const a = new EmbedWidget('img.png', '/path/img.png', 'image', '');
@@ -206,7 +200,6 @@ describe('EmbedWidget.toDOM', () => {
         const el = new EmbedWidget('clip.mp4', '/vault/clip.mp4', 'video', '').toDOM();
         const media = el.querySelector('video') as HTMLVideoElement & { paused: boolean; pause: () => void };
         const btn = el.querySelector('button.cm-embed-play-btn') as HTMLButtonElement;
-        // Simulate playing state
         Object.defineProperty(media, 'paused', { get: () => false, configurable: true });
         media.pause = vi.fn();
         btn.click();
@@ -252,7 +245,6 @@ describe('EmbedWidget.toDOM', () => {
     it('timeupdate updates time display when realDuration is known', () => {
         const el = new EmbedWidget('clip.mp4', '/vault/clip.mp4', 'video', '').toDOM();
         const media = el.querySelector('video') as HTMLVideoElement;
-        // Simulate duration known
         Object.defineProperty(media, 'duration', { get: () => 120, configurable: true });
         media.dispatchEvent(new Event('loadedmetadata'));
         Object.defineProperty(media, 'currentTime', { get: () => 60, configurable: true });
@@ -274,17 +266,14 @@ describe('EmbedWidget.toDOM', () => {
         const media = el.querySelector('video') as HTMLVideoElement;
         Object.defineProperty(media, 'duration', { get: () => Infinity, configurable: true });
         media.dispatchEvent(new Event('loadedmetadata'));
-        // Should try to probe by seeking to 1e10
         expect(media.currentTime).toBe(1e10);
     });
 
     it('seeked event finalizes probe and captures duration', () => {
         const el = new EmbedWidget('clip.mp4', '/vault/clip.mp4', 'video', '').toDOM();
         const media = el.querySelector('video') as HTMLVideoElement;
-        // Set up probing state
         Object.defineProperty(media, 'duration', { get: () => Infinity, configurable: true });
         media.dispatchEvent(new Event('loadedmetadata'));
-        // Now duration becomes finite after seek
         Object.defineProperty(media, 'duration', { get: () => 120, configurable: true });
         media.dispatchEvent(new Event('seeked'));
         expect(el.dataset['realDuration']).toBe('120');
@@ -306,10 +295,8 @@ describe('EmbedWidget.toDOM', () => {
         const media = el.querySelector('video') as HTMLVideoElement;
         const volBtn = el.querySelector('button.cm-embed-vol-btn') as HTMLButtonElement;
         const setter = vi.fn();
-        // First click: mute
         Object.defineProperty(media, 'volume', { get: () => 1, set: setter, configurable: true });
         volBtn.click();
-        // Second click: unmute
         Object.defineProperty(media, 'volume', { get: () => 0, set: setter, configurable: true });
         volBtn.click();
         expect(setter).toHaveBeenCalledTimes(2);
@@ -319,12 +306,10 @@ describe('EmbedWidget.toDOM', () => {
         const el = new EmbedWidget('clip.mp4', '/vault/clip.mp4', 'video', '').toDOM();
         const media = el.querySelector('video') as HTMLVideoElement;
         const progressWrap = el.querySelector('.cm-embed-progress-wrapper') as HTMLElement;
-        // Simulate known duration
         Object.defineProperty(media, 'duration', { get: () => 100, configurable: true });
         media.dispatchEvent(new Event('loadedmetadata'));
         const setter = vi.fn();
         Object.defineProperty(media, 'currentTime', { get: () => 0, set: setter, configurable: true });
-        // Simulate click in the middle of the progress bar
         const mockRect = { left: 0, width: 100 };
         const progressTrack = el.querySelector('.cm-embed-progress-track') as HTMLElement;
         vi.spyOn(progressTrack, 'getBoundingClientRect').mockReturnValue(mockRect as DOMRect);
@@ -367,8 +352,6 @@ describe('EmbedWidget.toDOM', () => {
         expect(el.className).toBe('cm-embed-placeholder');
     });
 });
-
-// ── TaskCheckboxWidget ────────────────────────────────────────────────────────
 
 describe('TaskCheckboxWidget.eq', () => {
     it('returns true for identical state and pos', () => {

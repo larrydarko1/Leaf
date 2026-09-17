@@ -3,8 +3,6 @@ import { ref } from 'vue';
 import { useCanvasRenderer } from '@/renderer/composables/drawing/useCanvasRenderer';
 import type { CanvasElement } from '@/schemas/drawing';
 
-// ── Canvas mock ──────────────────────────────────────────────────────────────
-
 const mockCtx: CanvasRenderingContext2D = {
     canvas: {} as HTMLCanvasElement,
     save: vi.fn(),
@@ -78,21 +76,6 @@ const mockCtx: CanvasRenderingContext2D = {
 
 let originalGetContext: typeof HTMLCanvasElement.prototype.getContext;
 let originalToDataURL: typeof HTMLCanvasElement.prototype.toDataURL;
-
-beforeEach(() => {
-    vi.clearAllMocks();
-    originalGetContext = HTMLCanvasElement.prototype.getContext;
-    originalToDataURL = HTMLCanvasElement.prototype.toDataURL;
-    HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue(mockCtx) as never;
-    HTMLCanvasElement.prototype.toDataURL = vi.fn().mockReturnValue('data:image/png;base64,fake') as never;
-});
-
-afterEach(() => {
-    HTMLCanvasElement.prototype.getContext = originalGetContext;
-    HTMLCanvasElement.prototype.toDataURL = originalToDataURL;
-});
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
 
 function makeRect(overrides: Partial<CanvasElement> = {}): CanvasElement {
     return {
@@ -187,7 +170,18 @@ function makeRenderer(
     };
 }
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
+beforeEach(() => {
+    vi.clearAllMocks();
+    originalGetContext = HTMLCanvasElement.prototype.getContext;
+    originalToDataURL = HTMLCanvasElement.prototype.toDataURL;
+    HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue(mockCtx) as never;
+    HTMLCanvasElement.prototype.toDataURL = vi.fn().mockReturnValue('data:image/png;base64,fake') as never;
+});
+
+afterEach(() => {
+    HTMLCanvasElement.prototype.getContext = originalGetContext;
+    HTMLCanvasElement.prototype.toDataURL = originalToDataURL;
+});
 
 describe('useCanvasRenderer', () => {
     describe('setupCanvas', () => {
@@ -284,7 +278,6 @@ describe('useCanvasRenderer', () => {
                 getElementBounds: (el) => ({ x: el.x, y: el.y, width: 0, height: 0 }),
                 getHandlePositions: () => ({}),
             });
-            // Should not throw
             renderer.renderScene();
             expect(mockCtx.setTransform).not.toHaveBeenCalled();
         });
@@ -497,7 +490,6 @@ describe('useCanvasRenderer', () => {
         });
 
         it('returns null when offscreen canvas getContext returns null', async () => {
-            // Second call to getContext returns null (for offscreen)
             let callCount = 0;
             HTMLCanvasElement.prototype.getContext = vi.fn().mockImplementation(() => {
                 callCount++;

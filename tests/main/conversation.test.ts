@@ -5,11 +5,16 @@ import os from 'os';
 import { init, register } from '@/main/services/conversation';
 import type { Conversation, ConversationMessage } from '@/schemas/ai';
 
+type Result = { success: boolean; conversation?: Conversation; error?: string };
+
 vi.mock('electron', () => ({}));
 
 vi.mock('@/main/lib/logger', () => ({
     log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
+
+const { ipc: serviceIpc, handlers: serviceHandlers } = makeIpc();
+let tmpDir: string;
 
 function makeIpc() {
     const h: Record<string, (...args: unknown[]) => unknown> = {};
@@ -21,12 +26,6 @@ function makeIpc() {
     return { ipc, handlers: h };
 }
 
-// Production reaches this service only through its registered IPC handlers, so
-// that is what the behaviour tests below drive.
-const { ipc: serviceIpc, handlers: serviceHandlers } = makeIpc();
-register(serviceIpc as never);
-
-type Result = { success: boolean; conversation?: Conversation; error?: string };
 const invoke = <T>(channel: string, ...args: unknown[]): Promise<T> =>
     serviceHandlers[channel]!({}, ...args) as Promise<T>;
 
@@ -34,17 +33,18 @@ const createConversation = (model: unknown) => invoke<Result>('conversations:cre
 const loadConversation = (id: unknown) => invoke<Result>('conversations:load', id);
 const saveConversation = (c: Conversation) => invoke<Result>('conversations:save', c);
 const addMessage = (id: string, m: ConversationMessage) => invoke<Result>('conversations:addMessage', id, m);
+
 const updateLastMessage = (id: string, content: string) =>
     invoke<Result>('conversations:updateLastMessage', id, content);
+
 const readConversations = () =>
     invoke<{ success: boolean; conversations: object[]; error?: string }>('conversations:list');
+
 const deleteConversation = (id: unknown) => invoke<Result>('conversations:delete', id);
 const renameConversation = (id: unknown, title: unknown) => invoke<Result>('conversations:rename', id, title);
-
-/** Reading one back: conversations:load is the only way production does it. */
 const reload = async (id: string): Promise<Conversation | null> => (await loadConversation(id)).conversation ?? null;
 
-let tmpDir: string;
+register(serviceIpc as never);
 
 beforeEach(() => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'leaf-conv-'));
@@ -232,11 +232,7 @@ describe('readConversations', () => {
     it('returns failure when the conversations directory was removed', async () => {
         const convsDir = path.join(tmpDir, 'conversations');
         fs.rmSync(convsDir, { recursive: true, force: true });
-        // Re-init pointing to a non-existent parent so conversationsDir ends up valid
-        // but the readConversations call hits an error path.
-        // Directly testing the directory-missing case covers the same error branch.
         const result = await readConversations();
-        // readdir on a missing dir rejects — service should handle it gracefully
         expect(result).toBeDefined();
     });
 });
@@ -283,8 +279,6 @@ describe('renameConversation', () => {
         expect(result.success).toBe(false);
     });
 });
-
-// ── IPC handler registration (register) ───────────────────────────────────────
 
 describe('register', () => {
     let handlers: Record<string, (...args: unknown[]) => unknown>;

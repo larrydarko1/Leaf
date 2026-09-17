@@ -1,8 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import fs from 'fs';
 
-// Hoisted shared paths — `vi.hoisted` is the only way to share state between
-// the test body and `vi.mock` factories (which are themselves hoisted).
 const PATHS = vi.hoisted(() => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { join } = require('path') as typeof import('path');
@@ -67,9 +65,6 @@ describe('appState', () => {
 
     it('serialises concurrent read-modify-writes without losing any of them', async () => {
         const { readState, updateState } = await import('@/main/lib/appState');
-        // Fire three interleaving RMW updates at once. Without the lock, each
-        // would read the same empty base and the last writer would win,
-        // dropping the other two keys. Under the lock all three survive.
         await Promise.all([
             updateState((s) => ({ ...s, activeTheme: 'dark' })),
             updateState((s) => ({ ...s, activeLanguage: 'en' })),
