@@ -75,7 +75,7 @@ function callName(n) {
     return null;
 }
 
-export function classify(stmt) {
+function classify(stmt) {
     if (ts.isImportDeclaration(stmt) || ts.isImportEqualsDeclaration(stmt)) return 'imports';
     if (ts.isExportDeclaration(stmt) && stmt.moduleSpecifier) return 'imports';
     if (ts.isInterfaceDeclaration(stmt) || ts.isTypeAliasDeclaration(stmt)) return 'types';
@@ -201,7 +201,7 @@ function loadTimeRefs(stmt) {
  * statement in the wrong place is reported as one problem, not as every statement
  * after it having shifted.
  */
-export function analyze(code, filename) {
+function analyze(code, filename) {
     const sf = ts.createSourceFile(filename, code, ts.ScriptTarget.ESNext, true, ts.ScriptKind.TS);
     const stmts = [...sf.statements];
     if (stmts.length < 2) return { misplaced: [], count: stmts.length };

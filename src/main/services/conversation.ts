@@ -41,166 +41,6 @@ export function init(userDataPath: string): void {
     }
 }
 
-export async function createConversation(
-    modelName: string,
-): Promise<{ success: boolean; conversation?: Conversation; error?: string }> {
-    try {
-        const now = new Date().toISOString();
-        const conversation: Conversation = {
-            id: generateId(),
-            title: 'New Conversation',
-            model: modelName.trim() !== '' ? modelName.trim() : 'unknown',
-            createdAt: now,
-            updatedAt: now,
-            messages: [],
-            tokenCount: 0,
-        };
-
-        await writeFileAtomic(getConversationPath(conversation.id), JSON.stringify(conversation, null, 2));
-
-        return { success: true, conversation };
-    } catch (error) {
-        log.error('Failed to create conversation:', error);
-        return { success: false, error: (error as Error).message };
-    }
-}
-
-export async function saveConversation(conversation: Conversation): Promise<{ success: boolean; error?: string }> {
-    try {
-        conversation.updatedAt = new Date().toISOString();
-        if (conversation.title === 'New Conversation' && conversation.messages.length > 0) {
-            conversation.title = deriveTitle(conversation.messages);
-        }
-
-        await writeFileAtomic(getConversationPath(conversation.id), JSON.stringify(conversation, null, 2));
-
-        return { success: true };
-    } catch (error) {
-        log.error('Failed to save conversation:', error);
-        return { success: false, error: (error as Error).message };
-    }
-}
-
-export async function addMessage(
-    conversationId: string,
-    message: ConversationMessage,
-): Promise<{ success: boolean; error?: string }> {
-    try {
-        const conversation = await findConversation(conversationId);
-        if (conversation === null) {
-            return { success: false, error: 'Conversation not found' };
-        }
-
-        message.timestamp = new Date().toISOString();
-        conversation.messages.push(message);
-
-        return await saveConversation(conversation);
-    } catch (error) {
-        log.error('Failed to add message:', error);
-        return { success: false, error: (error as Error).message };
-    }
-}
-
-export async function updateLastMessage(
-    conversationId: string,
-    content: string,
-): Promise<{ success: boolean; error?: string }> {
-    try {
-        const conversation = await findConversation(conversationId);
-        if (conversation === null) {
-            return { success: false, error: 'Conversation not found' };
-        }
-
-        if (conversation.messages.length === 0) {
-            return { success: false, error: 'No messages to update' };
-        }
-
-        conversation.messages[conversation.messages.length - 1].content = content;
-
-        return await saveConversation(conversation);
-    } catch (error) {
-        log.error('Failed to update last message:', error);
-        return { success: false, error: (error as Error).message };
-    }
-}
-
-export async function findConversation(id: string): Promise<Conversation | null> {
-    try {
-        const filePath = getConversationPath(id);
-        const data = await fs.readFile(filePath, 'utf-8');
-        const result = ConversationSchema.safeParse(JSON.parse(data));
-        if (!result.success) {
-            log.error('Corrupt conversation file:', result.error.message);
-            return null;
-        }
-        return result.data;
-    } catch {
-        return null;
-    }
-}
-
-export async function readConversations(): Promise<{ success: boolean; conversations: object[]; error?: string }> {
-    try {
-        if (conversationsDir === null) {
-            return { success: false, conversations: [], error: 'Conversations directory not initialized' };
-        }
-        const dir = conversationsDir;
-        const entries = await fs.readdir(dir, { withFileTypes: true });
-        const conversations: ConversationSummary[] = [];
-
-        for (const entry of entries) {
-            if (!entry.isFile() || !entry.name.endsWith('.json')) continue;
-            const summary = await findConversationSummary(dir, entry.name);
-            if (summary !== null) conversations.push(summary);
-        }
-
-        conversations.sort((a, b): number => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-
-        return { success: true, conversations };
-    } catch (error) {
-        log.error('Failed to read conversations', error);
-        return { success: false, conversations: [], error: (error as Error).message };
-    }
-}
-
-export async function loadConversation(
-    id: string,
-): Promise<{ success: boolean; conversation?: Conversation; error?: string }> {
-    try {
-        const conversation = await findConversation(id);
-        if (conversation === null) {
-            return { success: false, error: 'Conversation not found' };
-        }
-        return { success: true, conversation };
-    } catch (error) {
-        return { success: false, error: (error as Error).message };
-    }
-}
-
-export async function deleteConversation(id: string): Promise<{ success: boolean; error?: string }> {
-    try {
-        const filePath = getConversationPath(id);
-        await fs.unlink(filePath);
-        return { success: true };
-    } catch (error) {
-        log.error('Failed to delete conversation:', error);
-        return { success: false, error: (error as Error).message };
-    }
-}
-
-export async function renameConversation(id: string, newTitle: string): Promise<{ success: boolean; error?: string }> {
-    try {
-        const conversation = await findConversation(id);
-        if (conversation === null) {
-            return { success: false, error: 'Conversation not found' };
-        }
-        conversation.title = newTitle;
-        return await saveConversation(conversation);
-    } catch (error) {
-        return { success: false, error: (error as Error).message };
-    }
-}
-
 export function register(ipc: IpcMain): void {
     ipc.handle(
         'conversations:list',
@@ -272,6 +112,166 @@ export function register(ipc: IpcMain): void {
             return renameConversation(idParsed.data, titleParsed.data);
         },
     );
+}
+
+async function createConversation(
+    modelName: string,
+): Promise<{ success: boolean; conversation?: Conversation; error?: string }> {
+    try {
+        const now = new Date().toISOString();
+        const conversation: Conversation = {
+            id: generateId(),
+            title: 'New Conversation',
+            model: modelName.trim() !== '' ? modelName.trim() : 'unknown',
+            createdAt: now,
+            updatedAt: now,
+            messages: [],
+            tokenCount: 0,
+        };
+
+        await writeFileAtomic(getConversationPath(conversation.id), JSON.stringify(conversation, null, 2));
+
+        return { success: true, conversation };
+    } catch (error) {
+        log.error('Failed to create conversation:', error);
+        return { success: false, error: (error as Error).message };
+    }
+}
+
+async function saveConversation(conversation: Conversation): Promise<{ success: boolean; error?: string }> {
+    try {
+        conversation.updatedAt = new Date().toISOString();
+        if (conversation.title === 'New Conversation' && conversation.messages.length > 0) {
+            conversation.title = deriveTitle(conversation.messages);
+        }
+
+        await writeFileAtomic(getConversationPath(conversation.id), JSON.stringify(conversation, null, 2));
+
+        return { success: true };
+    } catch (error) {
+        log.error('Failed to save conversation:', error);
+        return { success: false, error: (error as Error).message };
+    }
+}
+
+async function addMessage(
+    conversationId: string,
+    message: ConversationMessage,
+): Promise<{ success: boolean; error?: string }> {
+    try {
+        const conversation = await findConversation(conversationId);
+        if (conversation === null) {
+            return { success: false, error: 'Conversation not found' };
+        }
+
+        message.timestamp = new Date().toISOString();
+        conversation.messages.push(message);
+
+        return await saveConversation(conversation);
+    } catch (error) {
+        log.error('Failed to add message:', error);
+        return { success: false, error: (error as Error).message };
+    }
+}
+
+async function updateLastMessage(
+    conversationId: string,
+    content: string,
+): Promise<{ success: boolean; error?: string }> {
+    try {
+        const conversation = await findConversation(conversationId);
+        if (conversation === null) {
+            return { success: false, error: 'Conversation not found' };
+        }
+
+        if (conversation.messages.length === 0) {
+            return { success: false, error: 'No messages to update' };
+        }
+
+        conversation.messages[conversation.messages.length - 1].content = content;
+
+        return await saveConversation(conversation);
+    } catch (error) {
+        log.error('Failed to update last message:', error);
+        return { success: false, error: (error as Error).message };
+    }
+}
+
+async function findConversation(id: string): Promise<Conversation | null> {
+    try {
+        const filePath = getConversationPath(id);
+        const data = await fs.readFile(filePath, 'utf-8');
+        const result = ConversationSchema.safeParse(JSON.parse(data));
+        if (!result.success) {
+            log.error('Corrupt conversation file:', result.error.message);
+            return null;
+        }
+        return result.data;
+    } catch {
+        return null;
+    }
+}
+
+async function readConversations(): Promise<{ success: boolean; conversations: object[]; error?: string }> {
+    try {
+        if (conversationsDir === null) {
+            return { success: false, conversations: [], error: 'Conversations directory not initialized' };
+        }
+        const dir = conversationsDir;
+        const entries = await fs.readdir(dir, { withFileTypes: true });
+        const conversations: ConversationSummary[] = [];
+
+        for (const entry of entries) {
+            if (!entry.isFile() || !entry.name.endsWith('.json')) continue;
+            const summary = await findConversationSummary(dir, entry.name);
+            if (summary !== null) conversations.push(summary);
+        }
+
+        conversations.sort((a, b): number => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+
+        return { success: true, conversations };
+    } catch (error) {
+        log.error('Failed to read conversations', error);
+        return { success: false, conversations: [], error: (error as Error).message };
+    }
+}
+
+async function loadConversation(
+    id: string,
+): Promise<{ success: boolean; conversation?: Conversation; error?: string }> {
+    try {
+        const conversation = await findConversation(id);
+        if (conversation === null) {
+            return { success: false, error: 'Conversation not found' };
+        }
+        return { success: true, conversation };
+    } catch (error) {
+        return { success: false, error: (error as Error).message };
+    }
+}
+
+async function deleteConversation(id: string): Promise<{ success: boolean; error?: string }> {
+    try {
+        const filePath = getConversationPath(id);
+        await fs.unlink(filePath);
+        return { success: true };
+    } catch (error) {
+        log.error('Failed to delete conversation:', error);
+        return { success: false, error: (error as Error).message };
+    }
+}
+
+async function renameConversation(id: string, newTitle: string): Promise<{ success: boolean; error?: string }> {
+    try {
+        const conversation = await findConversation(id);
+        if (conversation === null) {
+            return { success: false, error: 'Conversation not found' };
+        }
+        conversation.title = newTitle;
+        return await saveConversation(conversation);
+    } catch (error) {
+        return { success: false, error: (error as Error).message };
+    }
 }
 
 /** Write content to a file atomically: write to .tmp, then rename into place. */

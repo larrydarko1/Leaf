@@ -2,8 +2,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import path from 'path';
 import fs from 'fs';
 
-// ── Hoisted shared paths ──────────────────────────────────────────────────────
-
 const PATHS = vi.hoisted(() => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { join } = require('path') as typeof import('path');
@@ -20,19 +18,13 @@ const PATHS = vi.hoisted(() => {
     };
 });
 
-// ── Mock electron ─────────────────────────────────────────────────────────────
-
 vi.mock('electron', () => ({
     shell: { openPath: vi.fn().mockResolvedValue('') },
 }));
 
-// ── Mock logger ───────────────────────────────────────────────────────────────
-
 vi.mock('@/main/lib/logger', () => ({
     log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
-
-// ── Mock paths ────────────────────────────────────────────────────────────────
 
 vi.mock('@/main/lib/paths', () => ({
     LEAF_HOME: PATHS.LEAF_HOME,
@@ -42,8 +34,6 @@ vi.mock('@/main/lib/paths', () => ({
 }));
 
 const { LEAF_HOME, LOCALES_DIR, STATE_FILE, BUNDLED_DIR } = PATHS;
-
-// ── Test utilities ────────────────────────────────────────────────────────────
 
 function resetTmp() {
     fs.rmSync(LEAF_HOME, { recursive: true, force: true });
@@ -69,21 +59,49 @@ afterEach(() => {
     resetTmp();
 });
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
+// The service memoises its in-flight seed promise at module scope, so each test
+// takes a fresh copy and drives it through the IPC handlers production uses.
+async function freshService() {
+    const { register } = await import('@/main/services/language');
+    const handlers: Record<string, (...args: unknown[]) => unknown> = {};
+    register({
+        handle: vi.fn((channel: string, fn: (...args: unknown[]) => unknown) => {
+            handlers[channel] = fn;
+        }),
+    } as never);
+    return {
+        list: () =>
+            handlers['language:list']({}) as Promise<{
+                success: boolean;
+                languages?: { id: string; name: string }[];
+                activeId: string;
+                localesDir: string;
+                error?: string;
+            }>,
+        setActive: (id: unknown) =>
+            handlers['language:setActive']({}, id) as Promise<{ success: boolean; error?: string }>,
+        load: (id: unknown) =>
+            handlers['language:load']({}, id) as Promise<{
+                success: boolean;
+                content?: Record<string, unknown>;
+                error?: string;
+            }>,
+    };
+}
 
 describe('language service', () => {
     it('ensures locales directory exists on first seeding', async () => {
         writeBundledLocale('en', { common: { save: 'Save' } });
-        const { ensureSeeded } = await import('@/main/services/language');
-        await ensureSeeded();
+        const svc = await freshService();
+        await svc.list();
         expect(fs.existsSync(LOCALES_DIR)).toBe(true);
     });
 
     it('copies bundled locale files to ~/.leaf/locales/ on first seed', async () => {
         writeBundledLocale('en', { common: { save: 'Save' } });
         writeBundledLocale('it', { common: { save: 'Salva' } });
-        const { ensureSeeded } = await import('@/main/services/language');
-        await ensureSeeded();
+        const svc = await freshService();
+        await svc.list();
         expect(fs.existsSync(path.join(LOCALES_DIR, 'en.json'))).toBe(true);
         expect(fs.existsSync(path.join(LOCALES_DIR, 'it.json'))).toBe(true);
     });
@@ -93,8 +111,8 @@ describe('language service', () => {
         // Pre-manifest file the user already has, with their own content.
         fs.mkdirSync(LOCALES_DIR, { recursive: true });
         fs.writeFileSync(path.join(LOCALES_DIR, 'en.json'), JSON.stringify({ custom: true }));
-        const { ensureSeeded } = await import('@/main/services/language');
-        await ensureSeeded();
+        const svc = await freshService();
+        await svc.list();
         const content = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, 'en.json'), 'utf-8'));
         // Existing content is never overwritten...
         expect(content.custom).toBe(true);
@@ -102,25 +120,25 @@ describe('language service', () => {
         expect(content.common.save).toBe('Save');
     });
 
-    it('is idempotent — calling ensureSeeded twice only copies once', async () => {
+    it('is idempotent — listing twice only copies once', async () => {
         writeBundledLocale('en', { common: { save: 'Save' } });
-        const { ensureSeeded } = await import('@/main/services/language');
-        await ensureSeeded();
+        const svc = await freshService();
+        await svc.list();
         const stats1 = fs.statSync(path.join(LOCALES_DIR, 'en.json'));
         // Small delay to ensure timestamps would differ
         await new Promise((resolve) => setTimeout(resolve, 10));
-        await ensureSeeded();
+        await svc.list();
         const stats2 = fs.statSync(path.join(LOCALES_DIR, 'en.json'));
         expect(stats1.mtimeMs).toBe(stats2.mtimeMs);
     });
 
-    describe('readLanguages', () => {
+    describe('language:list', () => {
         it('returns all language files from ~/.leaf/locales/', async () => {
             fs.mkdirSync(LOCALES_DIR, { recursive: true });
             fs.writeFileSync(path.join(LOCALES_DIR, 'en.json'), JSON.stringify({ common: {} }));
             fs.writeFileSync(path.join(LOCALES_DIR, 'it.json'), JSON.stringify({ common: {} }));
-            const { readLanguages } = await import('@/main/services/language');
-            const result = await readLanguages();
+            const svc = await freshService();
+            const result = await svc.list();
             expect(result.success).toBe(true);
             expect(result.languages).toHaveLength(2);
             const ids = result.languages?.map((l) => l.id).sort();
@@ -131,8 +149,8 @@ describe('language service', () => {
             fs.mkdirSync(LOCALES_DIR, { recursive: true });
             fs.writeFileSync(path.join(LOCALES_DIR, 'en.json'), JSON.stringify({ common: {} }));
             writeState({ activeLanguage: 'en' });
-            const { readLanguages } = await import('@/main/services/language');
-            const result = await readLanguages();
+            const svc = await freshService();
+            const result = await svc.list();
             expect(result.activeId).toBe('en');
         });
 
@@ -140,14 +158,14 @@ describe('language service', () => {
             fs.mkdirSync(LOCALES_DIR, { recursive: true });
             fs.writeFileSync(path.join(LOCALES_DIR, 'en.json'), JSON.stringify({ common: {} }));
             writeState({});
-            const { readLanguages } = await import('@/main/services/language');
-            const result = await readLanguages();
+            const svc = await freshService();
+            const result = await svc.list();
             expect(result.activeId).toBe('en');
         });
 
         it('returns empty list when locales directory does not exist', async () => {
-            const { readLanguages } = await import('@/main/services/language');
-            const result = await readLanguages();
+            const svc = await freshService();
+            const result = await svc.list();
             expect(result.success).toBe(true);
             expect(result.languages).toEqual([]);
         });
@@ -156,21 +174,21 @@ describe('language service', () => {
             fs.mkdirSync(LOCALES_DIR, { recursive: true });
             fs.writeFileSync(path.join(LOCALES_DIR, 'en.json'), JSON.stringify({ common: {} }));
             fs.writeFileSync(path.join(LOCALES_DIR, 'README.md'), '# Locales');
-            const { readLanguages } = await import('@/main/services/language');
-            const result = await readLanguages();
+            const svc = await freshService();
+            const result = await svc.list();
             expect(result.languages).toHaveLength(1);
             expect(result.languages?.[0].id).toBe('en');
         });
 
         it('returns localesDir path in response', async () => {
             fs.mkdirSync(LOCALES_DIR, { recursive: true });
-            const { readLanguages } = await import('@/main/services/language');
-            const result = await readLanguages();
+            const svc = await freshService();
+            const result = await svc.list();
             expect(result.localesDir).toBe(LOCALES_DIR);
         });
     });
 
-    describe('setActiveLanguage', () => {
+    describe('language:setActive', () => {
         beforeEach(() => {
             fs.mkdirSync(LOCALES_DIR, { recursive: true });
             fs.writeFileSync(path.join(LOCALES_DIR, 'en.json'), JSON.stringify({ common: {} }));
@@ -179,35 +197,35 @@ describe('language service', () => {
         });
 
         it('updates activeLanguage in state', async () => {
-            const { setActiveLanguage } = await import('@/main/services/language');
-            await setActiveLanguage('it');
+            const svc = await freshService();
+            await svc.setActive('it');
             const state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf-8'));
             expect(state.activeLanguage).toBe('it');
         });
 
         it('returns success when language file exists', async () => {
-            const { setActiveLanguage } = await import('@/main/services/language');
-            const result = await setActiveLanguage('it');
+            const svc = await freshService();
+            const result = await svc.setActive('it');
             expect(result.success).toBe(true);
         });
 
         it('returns error when language file does not exist', async () => {
-            const { setActiveLanguage } = await import('@/main/services/language');
-            const result = await setActiveLanguage('fr');
+            const svc = await freshService();
+            const result = await svc.setActive('fr');
             expect(result.success).toBe(false);
             expect(result.error).toBeDefined();
         });
 
         it('rejects invalid language ids', async () => {
-            const { setActiveLanguage } = await import('@/main/services/language');
-            const result = await setActiveLanguage('../../../etc/passwd');
+            const svc = await freshService();
+            const result = await svc.setActive('../../../etc/passwd');
             expect(result.success).toBe(false);
         });
 
         it('preserves other state properties when updating activeLanguage', async () => {
             writeState({ activeTheme: 'dark', activePrompt: 'coding' });
-            const { setActiveLanguage } = await import('@/main/services/language');
-            await setActiveLanguage('it');
+            const svc = await freshService();
+            await svc.setActive('it');
             const state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf-8'));
             expect(state.activeLanguage).toBe('it');
             expect(state.activeTheme).toBe('dark');
@@ -215,65 +233,72 @@ describe('language service', () => {
         });
     });
 
-    describe('isValidLanguageId', () => {
-        it('accepts alphanumeric ids with hyphens and underscores', async () => {
-            const { isValidLanguageId } = await import('@/main/services/language');
-            expect(isValidLanguageId('en')).toBe(true);
-            expect(isValidLanguageId('en_US')).toBe(true);
-            expect(isValidLanguageId('zh-Hans')).toBe(true);
-            expect(isValidLanguageId('pt_BR')).toBe(true);
+    // An id that passes validation but has no file on disk fails with "Language
+    // not found"; one that fails validation never reaches the disk at all and
+    // says "Invalid language id". That difference is how validity is observable.
+    describe('language id validation, via language:setActive', () => {
+        it.each(['en', 'en_US', 'zh-Hans', 'pt_BR'])('accepts the well-formed id %s', async (id) => {
+            const svc = await freshService();
+            const result = await svc.setActive(id);
+            expect(result.error).toBe('Language not found');
         });
 
-        it('rejects path traversal attempts', async () => {
-            const { isValidLanguageId } = await import('@/main/services/language');
-            expect(isValidLanguageId('../../../etc/passwd')).toBe(false);
-            expect(isValidLanguageId('..\\windows\\system32')).toBe(false);
+        it.each(['../../../etc/passwd', '..\\windows\\system32'])('rejects the traversal attempt %s', async (id) => {
+            const svc = await freshService();
+            const result = await svc.setActive(id);
+            expect(result.success).toBe(false);
+            expect(result.error).toBe('Invalid language id');
         });
 
-        it('rejects special characters', async () => {
-            const { isValidLanguageId } = await import('@/main/services/language');
-            expect(isValidLanguageId('en;rm -rf /')).toBe(false);
-            expect(isValidLanguageId('en`whoami`')).toBe(false);
-            expect(isValidLanguageId('en$(cat /etc/passwd)')).toBe(false);
-        });
+        it.each(['en;rm -rf /', 'en`whoami`', 'en$(cat /etc/passwd)', ''])(
+            'rejects the special-character id %s',
+            async (id) => {
+                const svc = await freshService();
+                const result = await svc.setActive(id);
+                expect(result.success).toBe(false);
+                expect(result.error).toBe('Invalid language id');
+            },
+        );
 
-        it('rejects empty strings', async () => {
-            const { isValidLanguageId } = await import('@/main/services/language');
-            expect(isValidLanguageId('')).toBe(false);
+        it('rejects a non-string id before it reaches the service', async () => {
+            const svc = await freshService();
+            const result = await svc.setActive(123);
+            expect(result.success).toBe(false);
+            expect(result.error).toBe('Invalid language id');
         });
     });
 
-    describe('loadLanguageContent', () => {
+    describe('language:load', () => {
         beforeEach(() => {
             fs.mkdirSync(LOCALES_DIR, { recursive: true });
         });
 
         it('returns content for a valid existing language file', async () => {
             fs.writeFileSync(path.join(LOCALES_DIR, 'en.json'), JSON.stringify({ common: { save: 'Save' } }));
-            const { loadLanguageContent } = await import('@/main/services/language');
-            const result = await loadLanguageContent('en');
+            const svc = await freshService();
+            const result = await svc.load('en');
             expect(result.success).toBe(true);
             expect(result.content?.common).toBeDefined();
         });
 
         it('returns failure for invalid language id', async () => {
-            const { loadLanguageContent } = await import('@/main/services/language');
-            const result = await loadLanguageContent('../../../etc/passwd');
+            const svc = await freshService();
+            const result = await svc.load('../../../etc/passwd');
             expect(result.success).toBe(false);
             expect(result.error).toMatch(/invalid language id/i);
         });
 
         it('returns failure when language file does not exist', async () => {
-            const { loadLanguageContent } = await import('@/main/services/language');
-            const result = await loadLanguageContent('fr');
+            const svc = await freshService();
+            const result = await svc.load('fr');
             expect(result.success).toBe(false);
             expect(result.error).toMatch(/not found/i);
         });
 
         it('returns failure when file contains invalid JSON', async () => {
             fs.writeFileSync(path.join(LOCALES_DIR, 'en.json'), 'not valid json{{');
-            const { loadLanguageContent } = await import('@/main/services/language');
-            const result = await loadLanguageContent('en');
+            const svc = await freshService();
+            const result = await svc.load('en');
             expect(result.success).toBe(false);
         });
     });

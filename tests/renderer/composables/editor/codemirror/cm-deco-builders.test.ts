@@ -3,7 +3,6 @@ import { EditorState, EditorSelection } from '@codemirror/state';
 import { markdown } from '@codemirror/lang-markdown';
 import {
     activeLinesSet,
-    expandToLines,
     buildHighlightDecos,
     buildEmbedDecos,
     buildTaskDecos,
@@ -58,28 +57,27 @@ describe('activeLinesSet', () => {
     });
 });
 
-// ── expandToLines ───────────────────────────────────────────────────────────
+// ── visible ranges are expanded to whole lines ──────────────────────────────
 
-describe('expandToLines', () => {
-    it('expands character offsets to full line boundaries', () => {
-        const state = makeState('hello\nworld\nfoo');
-        const [lineFrom, lineTo] = expandToLines(state, 7, 9); // middle of 'world'
-        expect(lineFrom).toBe(6); // start of 'world'
-        expect(lineTo).toBe(11); // end of 'world'
+describe('line-anchored patterns across partial visible ranges', () => {
+    it('matches a task whose visible range starts mid-line', () => {
+        const state = makeState('- [x] done thing');
+        // A range starting at 8 cuts the '- [x]' marker off; without line expansion
+        // the `^`-anchored task regex would find nothing.
+        const decos = buildTaskDecos(state, [{ from: 8, to: state.doc.length }], new Set());
+        expect(classesOf(decos as never[]).some((c) => c.includes('cm-task-done'))).toBe(true);
     });
 
-    it('handles the start of the document', () => {
-        const state = makeState('abc\ndef');
-        const [lf, lt] = expandToLines(state, 0, 0);
-        expect(lf).toBe(0);
-        expect(lt).toBe(3);
+    it('matches a task on the first line when the range starts at the document end', () => {
+        const state = makeState('- [ ] only line');
+        const decos = buildTaskDecos(state, [{ from: state.doc.length, to: state.doc.length }], new Set());
+        expect(classesOf(decos as never[]).some((c) => c.includes('cm-task'))).toBe(true);
     });
 
-    it('handles the end of the document', () => {
-        const state = makeState('abc');
-        const [lf, lt] = expandToLines(state, 1, 3);
-        expect(lf).toBe(0);
-        expect(lt).toBe(3);
+    it('does not reach a task on a line outside the visible range', () => {
+        const state = makeState('plain line\n- [x] done thing');
+        const decos = buildTaskDecos(state, [{ from: 0, to: 4 }], new Set());
+        expect(decos).toHaveLength(0);
     });
 });
 

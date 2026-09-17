@@ -14,34 +14,7 @@
  */
 import { execFileSync } from 'node:child_process';
 
-const ALLOWLIST = [
-    {
-        id: 'GHSA-f88m-g3jw-g9cj',
-        package: 'sharp',
-        why:
-            '@huggingface/transformers pins sharp "^0.34.5". A caret range on a 0.x version is bounded ' +
-            'at the next minor, so it cannot resolve the patched 0.35 line. Upstream fix is open but ' +
-            'unmerged: huggingface/transformers.js#1731 (issue #1729). ' +
-            'Reachability: Leaf never imports sharp, and uses transformers for exactly one thing — local ' +
-            'Whisper speech-to-text in src/main/services/speech.ts, which takes a Float32Array of audio ' +
-            'and returns text. sharp is transformers\' image backend; no image pipeline is constructed, ' +
-            'so the vulnerable libvips decoders are not on any Leaf code path. This waiver lapses the ' +
-            'moment image processing or a transformers image pipeline is added.',
-    },
-    {
-        id: 'GHSA-xcpc-8h2w-3j85',
-        package: 'adm-zip',
-        why:
-            'onnxruntime-node declares adm-zip "^0.5.16"; the fix is in 0.6.0, which that range cannot ' +
-            'reach. Both copies in the tree are affected — the direct onnxruntime-node 1.27.0 and the ' +
-            '1.24.3 that @huggingface/transformers pins — and 1.27.0 is already the latest release, so ' +
-            'upgrading does not help. ' +
-            'Reachability: adm-zip is used only by onnxruntime-node/script/install-utils.js to unpack the ' +
-            'native binary at postinstall — it is not on any runtime path, and Leaf exposes no ZIP import ' +
-            'or extraction to users. Exploiting it would require a malicious archive served from the ONNX ' +
-            'Runtime CDN during install.',
-    },
-];
+const ALLOWLIST = [];
 
 const FAIL_SEVERITIES = new Set(['high', 'critical']);
 

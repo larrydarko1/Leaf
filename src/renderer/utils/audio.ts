@@ -17,10 +17,20 @@ export async function convertWebMToWav(webmBlob: Blob): Promise<ArrayBuffer> {
     }
 }
 
+/** Encode an ArrayBuffer as a base64 string. */
+export function arrayBufferToBase64(buffer: ArrayBuffer): string {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+}
+
 /**
  * Encode an AudioBuffer as a WAV ArrayBuffer (16-bit PCM, mono or stereo).
  */
-export function audioBufferToWav(audioBuffer: AudioBuffer): ArrayBuffer {
+function audioBufferToWav(audioBuffer: AudioBuffer): ArrayBuffer {
     const numChannels = audioBuffer.numberOfChannels;
     const sampleRate = audioBuffer.sampleRate;
     const bitDepth = 16;
@@ -73,18 +83,6 @@ export function audioBufferToWav(audioBuffer: AudioBuffer): ArrayBuffer {
 
     return buffer;
 }
-
-/** Encode an ArrayBuffer as a base64 string. */
-export function arrayBufferToBase64(buffer: ArrayBuffer): string {
-    const bytes = new Uint8Array(buffer);
-    let binary = '';
-    for (let i = 0; i < bytes.byteLength; i++) {
-        binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary);
-}
-
-// ─── Internal helper ─────────────────────────────────────────────────────────
 
 function writeString(view: DataView, offset: number, str: string): void {
     for (let i = 0; i < str.length; i++) {

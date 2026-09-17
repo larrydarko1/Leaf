@@ -1,9 +1,7 @@
-import { z } from 'zod';
+/** Chat message shape. A plain type: nothing validates it at runtime. */
 
-export const ChatMessageSchema = z.object({
-    role: z.enum(['user', 'assistant', 'system']),
-    content: z.string(),
-    thinking: z.string().optional(),
-});
-
-export type ChatMessage = z.infer<typeof ChatMessageSchema>;
+export type ChatMessage = {
+    role: 'user' | 'assistant' | 'system';
+    content: string;
+    thinking?: string;
+};

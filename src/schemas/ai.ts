@@ -1,59 +1,50 @@
 import { z } from 'zod';
 
-export const AiModelInfoSchema = z.object({
-    name: z.string(),
-    path: z.string(),
-    size: z.number(),
-    sizeFormatted: z.string(),
-    modified: z.string(),
-});
+// IPC result shapes. Plain types: the main process is the only producer and
+// nothing validates them on the way back, so there is no schema to keep.
 
-export type AiModelInfo = z.infer<typeof AiModelInfoSchema>;
+export type AiModelInfo = {
+    name: string;
+    path: string;
+    size: number;
+    sizeFormatted: string;
+    modified: string;
+};
 
-export const AiListModelsResultSchema = z.object({
-    success: z.boolean(),
-    models: z.array(AiModelInfoSchema),
-    modelsDir: z.string(),
-    error: z.string().optional(),
-});
+export type AiListModelsResult = {
+    success: boolean;
+    models: AiModelInfo[];
+    modelsDir: string;
+    error?: string;
+};
 
-export type AiListModelsResult = z.infer<typeof AiListModelsResultSchema>;
+export type AiLoadResult = {
+    success: boolean;
+    modelName?: string;
+    error?: string;
+};
 
-export const AiLoadResultSchema = z.object({
-    success: z.boolean(),
-    modelName: z.string().optional(),
-    error: z.string().optional(),
-});
+export type AiChatResult = {
+    success: boolean;
+    response?: string;
+    compacted?: boolean;
+    error?: string;
+};
 
-export type AiLoadResult = z.infer<typeof AiLoadResultSchema>;
+export type AiStatus = {
+    isModelLoaded: boolean;
+    currentModelPath: string | null;
+    currentModelName: string | null;
+    isGenerating: boolean;
+    modelsDir: string;
+    contextTokens: number;
+    contextSize: number;
+};
 
-export const AiChatResultSchema = z.object({
-    success: z.boolean(),
-    response: z.string().optional(),
-    compacted: z.boolean().optional(),
-    error: z.string().optional(),
-});
-
-export type AiChatResult = z.infer<typeof AiChatResultSchema>;
-
-export const AiStatusSchema = z.object({
-    isModelLoaded: z.boolean(),
-    currentModelPath: z.string().nullable(),
-    currentModelName: z.string().nullable(),
-    isGenerating: z.boolean(),
-    modelsDir: z.string(),
-    contextTokens: z.number(),
-    contextSize: z.number(),
-});
-
-export type AiStatus = z.infer<typeof AiStatusSchema>;
-
-export const AiSimpleResultSchema = z.object({
-    success: z.boolean(),
-    error: z.string().optional(),
-});
-
-export type AiSimpleResult = z.infer<typeof AiSimpleResultSchema>;
+export type AiSimpleResult = {
+    success: boolean;
+    error?: string;
+};
 
 // Conversation persistence types
 
@@ -78,50 +69,40 @@ export const ConversationSchema = z.object({
 
 export type Conversation = z.infer<typeof ConversationSchema>;
 
-export const ConversationMetaSchema = z.object({
-    id: z.string(),
-    title: z.string(),
-    model: z.string(),
-    createdAt: z.string(),
-    updatedAt: z.string(),
-    messageCount: z.number(),
-    tokenCount: z.number(),
-});
+export type ConversationMeta = {
+    id: string;
+    title: string;
+    model: string;
+    createdAt: string;
+    updatedAt: string;
+    messageCount: number;
+    tokenCount: number;
+};
 
-export type ConversationMeta = z.infer<typeof ConversationMetaSchema>;
+export type ConversationListResult = {
+    success: boolean;
+    conversations: ConversationMeta[];
+    error?: string;
+};
 
-export const ConversationListResultSchema = z.object({
-    success: z.boolean(),
-    conversations: z.array(ConversationMetaSchema),
-    error: z.string().optional(),
-});
+export type ConversationCreateResult = {
+    success: boolean;
+    conversation?: Conversation;
+    error?: string;
+};
 
-export type ConversationListResult = z.infer<typeof ConversationListResultSchema>;
+export type ConversationLoadResult = {
+    success: boolean;
+    conversation?: Conversation;
+    error?: string;
+};
 
-export const ConversationCreateResultSchema = z.object({
-    success: z.boolean(),
-    conversation: ConversationSchema.optional(),
-    error: z.string().optional(),
-});
-
-export type ConversationCreateResult = z.infer<typeof ConversationCreateResultSchema>;
-
-export const ConversationLoadResultSchema = z.object({
-    success: z.boolean(),
-    conversation: ConversationSchema.optional(),
-    error: z.string().optional(),
-});
-
-export type ConversationLoadResult = z.infer<typeof ConversationLoadResultSchema>;
-
-export const PromptInfoSchema = z.object({
-    id: z.string(),
-    name: z.string(),
-    description: z.string(),
-    path: z.string(),
-});
-
-export type PromptInfo = z.infer<typeof PromptInfoSchema>;
+export type PromptInfo = {
+    id: string;
+    name: string;
+    description: string;
+    path: string;
+};
 
 export const PromptStateSchema = z
     .object({

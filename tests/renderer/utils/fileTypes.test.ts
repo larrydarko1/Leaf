@@ -4,8 +4,6 @@ import {
     VIDEO_EXTENSIONS,
     AUDIO_EXTENSIONS,
     PDF_EXTENSIONS,
-    DRAWING_EXTENSIONS,
-    CODE_EXTENSIONS,
     isImageFile,
     isVideoFile,
     isAudioFile,
@@ -191,17 +189,14 @@ describe('fileTypes', () => {
             expect(isCodeFile('.drawing')).toBe(false);
         });
 
-        it('CODE_EXTENSIONS has no duplicates', () => {
-            const unique = new Set(CODE_EXTENSIONS);
-            expect(unique.size).toBe(CODE_EXTENSIONS.length);
-        });
-
         it('PDF_EXTENSIONS has exactly one entry', () => {
             expect(PDF_EXTENSIONS).toHaveLength(1);
         });
 
-        it('DRAWING_EXTENSIONS has exactly one entry', () => {
-            expect(DRAWING_EXTENSIONS).toHaveLength(1);
+        it('.drawing is the only drawing extension', () => {
+            for (const ext of [...IMAGE_EXTENSIONS, ...VIDEO_EXTENSIONS, ...AUDIO_EXTENSIONS, ...PDF_EXTENSIONS]) {
+                expect(isDrawingFile(ext)).toBe(false);
+            }
         });
     });
 });

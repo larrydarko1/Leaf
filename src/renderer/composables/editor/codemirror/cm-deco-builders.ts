@@ -28,14 +28,6 @@ export function activeLinesSet(state: EditorState): Set<number> {
     return lines;
 }
 
-/**
- * Expand a visible range to full-line boundaries so regex patterns
- * that use `^` (like tasks) match correctly.
- */
-export function expandToLines(state: EditorState, from: number, to: number): [number, number] {
-    return [state.doc.lineAt(from).from, state.doc.lineAt(to).to];
-}
-
 export function buildHighlightDecos(
     state: EditorState,
     visibleRanges: readonly { from: number; to: number }[],
@@ -387,6 +379,14 @@ export function mergeVisibleRanges(
         }
     }
     return merged;
+}
+
+/**
+ * Expand a visible range to full-line boundaries so regex patterns
+ * that use `^` (like tasks) match correctly.
+ */
+function expandToLines(state: EditorState, from: number, to: number): [number, number] {
+    return [state.doc.lineAt(from).from, state.doc.lineAt(to).to];
 }
 
 /** Collapse table rows `from`..`to` so only the rendered widget shows. */

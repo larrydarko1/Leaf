@@ -1,78 +1,46 @@
 import { describe, it, expect } from 'vitest';
-import {
-    TEXT_EXTENSIONS,
-    CODE_EXTENSIONS,
-    IMAGE_EXTENSIONS,
-    VIDEO_EXTENSIONS,
-    AUDIO_EXTENSIONS,
-    PDF_EXTENSIONS,
-    DRAWING_EXTENSIONS,
-    ALLOWED_EXTENSIONS,
-} from '@/main/lib/extensions';
+import { ALLOWED_EXTENSIONS } from '@/main/lib/extensions';
 
 describe('extensions', () => {
-    describe('individual arrays', () => {
-        it('TEXT_EXTENSIONS includes .txt and .md', () => {
-            expect(TEXT_EXTENSIONS).toContain('.txt');
-            expect(TEXT_EXTENSIONS).toContain('.md');
-        });
-
-        it('CODE_EXTENSIONS includes common languages', () => {
-            expect(CODE_EXTENSIONS).toContain('.py');
-            expect(CODE_EXTENSIONS).toContain('.js');
-            expect(CODE_EXTENSIONS).toContain('.ts');
-            expect(CODE_EXTENSIONS).toContain('.go');
-            expect(CODE_EXTENSIONS).toContain('.rs');
-        });
-
-        it('IMAGE_EXTENSIONS includes common image formats', () => {
-            expect(IMAGE_EXTENSIONS).toContain('.png');
-            expect(IMAGE_EXTENSIONS).toContain('.jpg');
-            expect(IMAGE_EXTENSIONS).toContain('.svg');
-        });
-
-        it('PDF_EXTENSIONS contains only .pdf', () => {
-            expect(PDF_EXTENSIONS).toEqual(['.pdf']);
-        });
-
-        it('DRAWING_EXTENSIONS contains only .drawing', () => {
-            expect(DRAWING_EXTENSIONS).toEqual(['.drawing']);
-        });
-    });
-
     describe('ALLOWED_EXTENSIONS', () => {
         it('is a Set', () => {
             expect(ALLOWED_EXTENSIONS).toBeInstanceOf(Set);
         });
 
-        it('contains every text extension', () => {
-            for (const ext of TEXT_EXTENSIONS) {
-                expect(ALLOWED_EXTENSIONS.has(ext)).toBe(true);
-            }
+        it.each(['.txt', '.md'])('allows the text extension %s', (ext) => {
+            expect(ALLOWED_EXTENSIONS.has(ext)).toBe(true);
         });
 
-        it('contains every code extension', () => {
-            for (const ext of CODE_EXTENSIONS) {
+        it.each(['.py', '.js', '.ts', '.go', '.rs', '.java', '.sh', '.sql', '.cjs'])(
+            'allows the code extension %s',
+            (ext) => {
                 expect(ALLOWED_EXTENSIONS.has(ext)).toBe(true);
-            }
+            },
+        );
+
+        it.each(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico'])(
+            'allows the image extension %s',
+            (ext) => {
+                expect(ALLOWED_EXTENSIONS.has(ext)).toBe(true);
+            },
+        );
+
+        it.each(['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'])('allows the video extension %s', (ext) => {
+            expect(ALLOWED_EXTENSIONS.has(ext)).toBe(true);
         });
 
-        it('contains every image extension', () => {
-            for (const ext of IMAGE_EXTENSIONS) {
+        it.each(['.mp3', '.wav', '.flac', '.aac', '.m4a', '.ogg', '.wma', '.aiff'])(
+            'allows the audio extension %s',
+            (ext) => {
                 expect(ALLOWED_EXTENSIONS.has(ext)).toBe(true);
-            }
-        });
+            },
+        );
 
-        it('contains every video extension', () => {
-            for (const ext of VIDEO_EXTENSIONS) {
-                expect(ALLOWED_EXTENSIONS.has(ext)).toBe(true);
-            }
-        });
-
-        it('contains every audio extension', () => {
-            for (const ext of AUDIO_EXTENSIONS) {
-                expect(ALLOWED_EXTENSIONS.has(ext)).toBe(true);
-            }
+        it('allows dotfile-style config extensions', () => {
+            expect(ALLOWED_EXTENSIONS.has('.dockerfile')).toBe(true);
+            expect(ALLOWED_EXTENSIONS.has('.env')).toBe(true);
+            expect(ALLOWED_EXTENSIONS.has('.gitignore')).toBe(true);
+            expect(ALLOWED_EXTENSIONS.has('.eslintrc')).toBe(true);
         });
 
         it('contains .pdf and .drawing', () => {
@@ -80,21 +48,13 @@ describe('extensions', () => {
             expect(ALLOWED_EXTENSIONS.has('.drawing')).toBe(true);
         });
 
-        it('deduplicates .ogg (in both video and audio)', () => {
-            expect(VIDEO_EXTENSIONS).toContain('.ogg');
-            expect(AUDIO_EXTENSIONS).toContain('.ogg');
-            // Count how many times .ogg appears across all arrays
-            const allArrays = [
-                ...TEXT_EXTENSIONS,
-                ...CODE_EXTENSIONS,
-                ...IMAGE_EXTENSIONS,
-                ...VIDEO_EXTENSIONS,
-                ...AUDIO_EXTENSIONS,
-                ...PDF_EXTENSIONS,
-                ...DRAWING_EXTENSIONS,
-            ];
-            const totalRaw = allArrays.length;
-            expect(ALLOWED_EXTENSIONS.size).toBeLessThan(totalRaw);
+        it('holds 87 extensions — 88 declared, with .ogg deduplicated across video and audio', () => {
+            expect(ALLOWED_EXTENSIONS.size).toBe(87);
+        });
+
+        it('is case-sensitive: .R and .r are distinct entries', () => {
+            expect(ALLOWED_EXTENSIONS.has('.r')).toBe(true);
+            expect(ALLOWED_EXTENSIONS.has('.R')).toBe(true);
         });
 
         it('does not contain disallowed extensions', () => {
