@@ -1,30 +1,6 @@
 import { z } from 'zod';
 
-export const ToolTypeSchema = z.enum([
-    'select',
-    'hand',
-    'rectangle',
-    'ellipse',
-    'diamond',
-    'triangle',
-    'line',
-    'arrow',
-    'freedraw',
-    'text',
-    'eraser',
-    'database',
-    'server',
-    'user',
-    'cloud',
-    'document',
-    'hexagon',
-    'parallelogram',
-    'star',
-]);
-
-export type ToolType = z.infer<typeof ToolTypeSchema>;
-
-export const ElementTypeSchema = z.enum([
+const ElementTypeSchema = z.enum([
     'rectangle',
     'ellipse',
     'diamond',
@@ -45,24 +21,14 @@ export const ElementTypeSchema = z.enum([
 
 export type ElementType = z.infer<typeof ElementTypeSchema>;
 
-export const StrokeStyleSchema = z.enum(['solid', 'dashed', 'dotted']);
+/** Every element the canvas can draw, plus the three tools that draw nothing. */
+export type ToolType = ElementType | 'select' | 'hand' | 'eraser';
+
+const StrokeStyleSchema = z.enum(['solid', 'dashed', 'dotted']);
 
 export type StrokeStyle = z.infer<typeof StrokeStyleSchema>;
 
-export const StyleKeySchema = z.enum([
-    'strokeColor',
-    'fillColor',
-    'strokeWidth',
-    'strokeStyle',
-    'borderRadius',
-    'fontSize',
-]);
-
-export type StyleKey = z.infer<typeof StyleKeySchema>;
-
-export const DragActionSchema = z.enum(['none', 'create', 'move', 'resize', 'pan', 'freedraw', 'erase', 'marquee']);
-
-export type DragAction = z.infer<typeof DragActionSchema>;
+export type DragAction = 'none' | 'create' | 'move' | 'resize' | 'pan' | 'freedraw' | 'erase' | 'marquee';
 
 export const CanvasElementSchema = z.object({
     id: z.string(),
@@ -96,13 +62,14 @@ export const DrawingDataV2Schema = z.object({
 
 export type DrawingDataV2 = z.infer<typeof DrawingDataV2Schema>;
 
-export const DefaultStyleSchema = z.object({
-    strokeColor: z.string(),
-    fillColor: z.string(),
-    strokeWidth: z.number(),
-    strokeStyle: StrokeStyleSchema,
-    borderRadius: z.number(),
-    fontSize: z.number(),
-});
+export type DefaultStyle = {
+    strokeColor: string;
+    fillColor: string;
+    strokeWidth: number;
+    strokeStyle: StrokeStyle;
+    borderRadius: number;
+    fontSize: number;
+};
 
-export type DefaultStyle = z.infer<typeof DefaultStyleSchema>;
+/** The element properties the properties panel can set — exactly the ones DefaultStyle seeds. */
+export type StyleKey = keyof DefaultStyle;

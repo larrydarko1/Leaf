@@ -8,17 +8,15 @@ export type ContextMenuItem = {
     disabled?: boolean;
 };
 
-const FileInfoSchema = z.object({
-    name: z.string(),
-    path: z.string(),
-    relativePath: z.string(),
-    extension: z.string(),
-    size: z.number(),
-    modified: z.string(),
-    folder: z.string(),
-});
-
-export type FileInfo = z.infer<typeof FileInfoSchema>;
+export type FileInfo = {
+    name: string;
+    path: string;
+    relativePath: string;
+    extension: string;
+    size: number;
+    modified: string;
+    folder: string;
+};
 
 export type FolderInfo = {
     name: string;
@@ -117,41 +115,6 @@ export type AudioSaveResult = {
     error?: string;
 };
 
-export const TreeNodeSchema: z.ZodType<TreeNode> = z.lazy(
-    (): z.ZodObject<
-        {
-            path: z.ZodString;
-            name: z.ZodString;
-            type: z.ZodEnum<{ file: 'file'; folder: 'folder' }>;
-            children: z.ZodOptional<
-                z.ZodArray<z.ZodType<TreeNode, unknown, z.core.$ZodTypeInternals<TreeNode, unknown>>>
-            >;
-            file: z.ZodOptional<
-                z.ZodObject<
-                    {
-                        name: z.ZodString;
-                        path: z.ZodString;
-                        relativePath: z.ZodString;
-                        extension: z.ZodString;
-                        size: z.ZodNumber;
-                        modified: z.ZodString;
-                        folder: z.ZodString;
-                    },
-                    z.core.$strip
-                >
-            >;
-        },
-        z.core.$strip
-    > =>
-        z.object({
-            path: z.string(),
-            name: z.string(),
-            type: z.enum(['folder', 'file']),
-            children: z.array(TreeNodeSchema).optional(),
-            file: FileInfoSchema.optional(),
-        }),
-);
-
 export type TreeNode = {
     path: string;
     name: string;
@@ -212,7 +175,7 @@ export type TabState = {
     scrollTop: number;
 };
 
-export const PersistedTabSchema = z.object({
+const PersistedTabSchema = z.object({
     path: z.string(),
     scrollTop: z.number(),
 });

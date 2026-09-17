@@ -71,6 +71,22 @@ export function register(ipc: IpcMain): void {
         },
     );
 }
+
+export async function findActiveDictationLanguage(): Promise<string | null> {
+    const state = await readState();
+    const id = state.activeLanguage;
+    if (typeof id !== 'string' || !isValidLanguageId(id)) return null;
+
+    const result = await loadLanguageContent(id);
+    if (result.content === undefined) return null;
+
+    const meta = result.content.meta;
+    if (!isPlainObject(meta)) return null;
+
+    const code = meta.dictationLanguage;
+    return typeof code === 'string' && code.trim() !== '' ? code.trim() : null;
+}
+
 /**
  * Idempotent: reconcile bundled language files into ~/.leaf/locales/.
  *
@@ -79,7 +95,7 @@ export function register(ipc: IpcMain): void {
  * read-modify-write. The "start it once" decision happens synchronously,
  * before any await. Resets to null on failure so a later call can retry.
  */
-export function ensureSeeded(): Promise<void> {
+function ensureSeeded(): Promise<void> {
     if (seedPromise === null) {
         seedPromise = doSeed().catch((err): void => {
             seedPromise = null;
@@ -89,7 +105,7 @@ export function ensureSeeded(): Promise<void> {
     return seedPromise;
 }
 
-export async function readLanguages(): Promise<{
+async function readLanguages(): Promise<{
     success: boolean;
     languages?: LanguageInfo[];
     activeId: string;
@@ -117,7 +133,7 @@ export async function readLanguages(): Promise<{
     }
 }
 
-export async function setActiveLanguage(id: string): Promise<{
+async function setActiveLanguage(id: string): Promise<{
     success: boolean;
     error?: string;
 }> {
@@ -134,7 +150,7 @@ export async function setActiveLanguage(id: string): Promise<{
     }
 }
 
-export async function loadLanguageContent(id: string): Promise<{
+async function loadLanguageContent(id: string): Promise<{
     success: boolean;
     content?: Record<string, unknown>;
     error?: string;
@@ -156,22 +172,7 @@ export async function loadLanguageContent(id: string): Promise<{
     }
 }
 
-export async function findActiveDictationLanguage(): Promise<string | null> {
-    const state = await readState();
-    const id = state.activeLanguage;
-    if (typeof id !== 'string' || !isValidLanguageId(id)) return null;
-
-    const result = await loadLanguageContent(id);
-    if (result.content === undefined) return null;
-
-    const meta = result.content.meta;
-    if (!isPlainObject(meta)) return null;
-
-    const code = meta.dictationLanguage;
-    return typeof code === 'string' && code.trim() !== '' ? code.trim() : null;
-}
-
-export function isValidLanguageId(id: string): boolean {
+function isValidLanguageId(id: string): boolean {
     return typeof id === 'string' && LANGUAGE_ID_PATTERN.test(id);
 }
 

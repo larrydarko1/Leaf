@@ -6,8 +6,8 @@ export const IMAGE_EXTENSIONS: string[] = ['.png', '.jpg', '.jpeg', '.gif', '.we
 export const VIDEO_EXTENSIONS: string[] = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
 export const AUDIO_EXTENSIONS: string[] = ['.mp3', '.wav', '.flac', '.aac', '.m4a', '.ogg', '.wma', '.aiff'];
 export const PDF_EXTENSIONS: string[] = ['.pdf'];
-export const DRAWING_EXTENSIONS: string[] = ['.drawing'];
-export const CODE_EXTENSIONS: string[] = [
+const DRAWING_EXTENSIONS: string[] = ['.drawing'];
+const CODE_EXTENSIONS: string[] = [
     '.py',
     '.js',
     '.jsx',

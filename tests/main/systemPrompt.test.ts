@@ -59,78 +59,91 @@ afterEach(() => {
     resetTmp();
 });
 
-// Static import for parseFrontmatter only — getActiveSystemPrompt and
-// ensureSeeded are imported fresh per-test (because the service memoises the
-// in-flight seed promise at module scope).
-import { parseFrontmatter } from '@/main/services/systemPrompt';
+// The service memoises its in-flight seed promise at module scope, so every
+// test imports it fresh.
 
-describe('parseFrontmatter', () => {
-    it('returns empty meta and full body when there is no frontmatter', () => {
-        const { meta, body } = parseFrontmatter('Hello world');
-        expect(meta).toEqual({});
-        expect(body).toBe('Hello world');
+/** Seed `default.md` with `content`, then read its parsed meta back off systemPrompt:list. */
+async function metaOfDefault(content: string): Promise<{ name: string; description: string }> {
+    fs.writeFileSync(path.join(BUNDLED_DIR, 'default.md'), content);
+    const { register } = await import('@/main/services/systemPrompt');
+    const handlers: Record<string, (...args: unknown[]) => Promise<unknown>> = {};
+    register({
+        handle: vi.fn((channel: string, fn: (...args: unknown[]) => Promise<unknown>) => {
+            handlers[channel] = fn;
+        }),
+    } as never);
+    const result = (await handlers['systemPrompt:list']()) as {
+        prompts: { id: string; name: string; description: string }[];
+    };
+    return result.prompts.find((p) => p.id === 'default')!;
+}
+
+/** Seed `default.md` with `content`, then read the body the AI actually receives. */
+async function bodyOfDefault(content: string): Promise<string> {
+    fs.writeFileSync(path.join(BUNDLED_DIR, 'default.md'), content);
+    const mod = await import('@/main/services/systemPrompt');
+    return await mod.getActiveSystemPrompt();
+}
+
+describe('frontmatter handling', () => {
+    it('returns the full body when there is no frontmatter', async () => {
+        expect(await bodyOfDefault('Hello world')).toBe('Hello world');
     });
 
-    it('parses name and description', () => {
+    it('parses name and description, and strips them from the body', async () => {
         const input = `---
 name: Coding Assistant
 description: Programming help
 ---
 You are an engineer.`;
-        const { meta, body } = parseFrontmatter(input);
-        expect(meta.name).toBe('Coding Assistant');
-        expect(meta.description).toBe('Programming help');
-        expect(body.trim()).toBe('You are an engineer.');
+        expect(await metaOfDefault(input)).toMatchObject({
+            name: 'Coding Assistant',
+            description: 'Programming help',
+        });
+        expect(await bodyOfDefault(input)).toBe('You are an engineer.');
     });
 
-    it('strips matching surrounding quotes', () => {
+    it('strips matching surrounding quotes', async () => {
         const input = `---
 name: "Quoted Name"
 description: 'Single quoted'
 ---
 body`;
-        const { meta } = parseFrontmatter(input);
-        expect(meta.name).toBe('Quoted Name');
-        expect(meta.description).toBe('Single quoted');
+        expect(await metaOfDefault(input)).toMatchObject({ name: 'Quoted Name', description: 'Single quoted' });
     });
 
-    it('lowercases keys but preserves value casing', () => {
+    it('lowercases keys but preserves value casing', async () => {
         const input = `---
 Name: PascalCase
 DESCRIPTION: Mixed Case Value
 ---
 body`;
-        const { meta } = parseFrontmatter(input);
-        expect(meta.name).toBe('PascalCase');
-        expect(meta.description).toBe('Mixed Case Value');
+        expect(await metaOfDefault(input)).toMatchObject({ name: 'PascalCase', description: 'Mixed Case Value' });
     });
 
-    it('handles CRLF line endings', () => {
+    it('handles CRLF line endings', async () => {
         const input = '---\r\nname: Win\r\n---\r\nbody\r\n';
-        const { meta, body } = parseFrontmatter(input);
-        expect(meta.name).toBe('Win');
-        expect(body.trim()).toBe('body');
+        expect(await metaOfDefault(input)).toMatchObject({ name: 'Win' });
+        expect(await bodyOfDefault(input)).toBe('body');
     });
 
-    it('treats malformed frontmatter (no closing) as plain body', () => {
+    it('treats malformed frontmatter (no closing) as plain body', async () => {
         const input = `---
 name: Broken
 no closing fence
 this is body`;
-        const { meta, body } = parseFrontmatter(input);
-        expect(meta).toEqual({});
-        expect(body).toBe(input);
+        expect(await bodyOfDefault(input)).toBe(input);
     });
 });
 
-describe('ensureSeeded + getActiveSystemPrompt', () => {
+describe('seeding, via getActiveSystemPrompt', () => {
     it('seeds bundled defaults into PROMPTS_DIR', async () => {
         fs.writeFileSync(path.join(BUNDLED_DIR, 'default.md'), `---\nname: Default\n---\nseeded body`);
         fs.writeFileSync(path.join(BUNDLED_DIR, 'coding.md'), 'no frontmatter coder');
 
         // Re-import to get a fresh `seeded` flag.
         const mod = await import('@/main/services/systemPrompt');
-        await mod.ensureSeeded();
+        await mod.getActiveSystemPrompt();
 
         expect(fs.existsSync(path.join(PROMPTS_DIR, 'default.md'))).toBe(true);
         expect(fs.existsSync(path.join(PROMPTS_DIR, 'coding.md'))).toBe(true);
@@ -148,7 +161,7 @@ describe('ensureSeeded + getActiveSystemPrompt', () => {
         // version would race all of them through copyFile; the memoised promise
         // funnels them into a single run, so copyFile is called at most once.
         const copySpy = vi.spyOn(fs.promises, 'copyFile');
-        await Promise.all(Array.from({ length: 10 }, () => mod.ensureSeeded()));
+        await Promise.all(Array.from({ length: 10 }, () => mod.getActiveSystemPrompt()));
 
         expect(copySpy).toHaveBeenCalledTimes(1);
         expect(copySpy).toHaveBeenCalledWith(
@@ -164,7 +177,7 @@ describe('ensureSeeded + getActiveSystemPrompt', () => {
         fs.writeFileSync(path.join(PROMPTS_DIR, 'default.md'), 'USER EDIT');
 
         const mod = await import('@/main/services/systemPrompt');
-        await mod.ensureSeeded();
+        await mod.getActiveSystemPrompt();
 
         expect(fs.readFileSync(path.join(PROMPTS_DIR, 'default.md'), 'utf-8')).toBe('USER EDIT');
     });
@@ -184,7 +197,7 @@ describe('ensureSeeded + getActiveSystemPrompt', () => {
         fs.writeFileSync(path.join(BUNDLED_DIR, 'coding.md'), 'coding body');
 
         const mod = await import('@/main/services/systemPrompt');
-        await mod.ensureSeeded();
+        await mod.getActiveSystemPrompt();
         // Switch active prompt by writing state directly.
         fs.writeFileSync(STATE_FILE, JSON.stringify({ activePrompt: 'coding' }), 'utf-8');
 

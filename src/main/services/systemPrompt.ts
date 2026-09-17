@@ -127,7 +127,7 @@ export async function getActiveSystemPrompt(): Promise<string> {
  * synchronously, before any await, so there's no window for a second caller
  * to slip past. Resets to null on failure so a later call can retry.
  */
-export function ensureSeeded(): Promise<void> {
+function ensureSeeded(): Promise<void> {
     if (seedPromise === null) {
         // On failure, log and reset the memo so a later call can retry, and
         // swallow so callers never see a rejection — seeding is non-fatal.
@@ -144,10 +144,8 @@ export function ensureSeeded(): Promise<void> {
  * containing `key: value` lines (string values, optional quotes). Anything
  * after the closing `---` is the body. No dependencies; intentionally
  * limited to keep the format approachable for hand-editing.
- *
- * Exported for unit testing.
  */
-export function parseFrontmatter(content: string): {
+function parseFrontmatter(content: string): {
     meta: { name?: string; description?: string };
     body: string;
 } {

@@ -2,25 +2,14 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { init, register } from '@/main/services/conversation';
+import type { Conversation, ConversationMessage } from '@/schemas/ai';
 
 vi.mock('electron', () => ({}));
+
 vi.mock('@/main/lib/logger', () => ({
     log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
-
-import {
-    init,
-    createConversation,
-    saveConversation,
-    addMessage,
-    updateLastMessage,
-    findConversation,
-    readConversations,
-    loadConversation,
-    deleteConversation,
-    renameConversation,
-    register,
-} from '@/main/services/conversation';
 
 function makeIpc() {
     const h: Record<string, (...args: unknown[]) => unknown> = {};
@@ -31,6 +20,29 @@ function makeIpc() {
     };
     return { ipc, handlers: h };
 }
+
+// Production reaches this service only through its registered IPC handlers, so
+// that is what the behaviour tests below drive.
+const { ipc: serviceIpc, handlers: serviceHandlers } = makeIpc();
+register(serviceIpc as never);
+
+type Result = { success: boolean; conversation?: Conversation; error?: string };
+const invoke = <T>(channel: string, ...args: unknown[]): Promise<T> =>
+    serviceHandlers[channel]({}, ...args) as Promise<T>;
+
+const createConversation = (model: unknown) => invoke<Result>('conversations:create', model);
+const loadConversation = (id: unknown) => invoke<Result>('conversations:load', id);
+const saveConversation = (c: Conversation) => invoke<Result>('conversations:save', c);
+const addMessage = (id: string, m: ConversationMessage) => invoke<Result>('conversations:addMessage', id, m);
+const updateLastMessage = (id: string, content: string) =>
+    invoke<Result>('conversations:updateLastMessage', id, content);
+const readConversations = () =>
+    invoke<{ success: boolean; conversations: object[]; error?: string }>('conversations:list');
+const deleteConversation = (id: unknown) => invoke<Result>('conversations:delete', id);
+const renameConversation = (id: unknown, title: unknown) => invoke<Result>('conversations:rename', id, title);
+
+/** Reading one back: conversations:load is the only way production does it. */
+const reload = async (id: string): Promise<Conversation | null> => (await loadConversation(id)).conversation ?? null;
 
 let tmpDir: string;
 
@@ -52,9 +64,10 @@ describe('createConversation', () => {
         expect(result.conversation?.id).toBeTruthy();
     });
 
-    it('uses "unknown" when model name is empty', async () => {
+    it('rejects an empty model name at the boundary', async () => {
         const result = await createConversation('');
-        expect(result.conversation?.model).toBe('unknown');
+        expect(result.success).toBe(false);
+        expect(result.error).toMatch(/invalid model name/i);
     });
 
     it('trims whitespace from model name', async () => {
@@ -71,29 +84,32 @@ describe('createConversation', () => {
     });
 });
 
-describe('findConversation', () => {
+describe('reading one back', () => {
     it('returns the conversation by id', async () => {
         const { conversation } = await createConversation('llama');
-        const loaded = await findConversation(conversation!.id);
+        const loaded = await reload(conversation!.id);
         expect(loaded?.id).toBe(conversation!.id);
         expect(loaded?.model).toBe('llama');
     });
 
-    it('returns null for a non-existent id', async () => {
-        const result = await findConversation('00000000-0000-0000-0000-000000000000');
-        expect(result).toBeNull();
+    it('returns nothing for a non-existent id', async () => {
+        const result = await loadConversation('00000000-0000-0000-0000-000000000000');
+        expect(result.success).toBe(false);
+        expect(result.conversation).toBeUndefined();
     });
 
-    it('returns null for a path-traversal attempt', async () => {
-        const result = await findConversation('../../etc/passwd');
-        expect(result).toBeNull();
+    it('returns nothing for a path-traversal attempt', async () => {
+        const result = await loadConversation('../../etc/passwd');
+        expect(result.success).toBe(false);
+        expect(result.conversation).toBeUndefined();
     });
 
-    it('returns null for a corrupt JSON file', async () => {
+    it('returns nothing for a corrupt JSON file', async () => {
         const id = '11111111-1111-1111-1111-111111111111';
         fs.writeFileSync(path.join(tmpDir, `${id}.json`), 'not valid json');
-        const result = await findConversation(id);
-        expect(result).toBeNull();
+        const result = await loadConversation(id);
+        expect(result.success).toBe(false);
+        expect(result.conversation).toBeUndefined();
     });
 });
 
@@ -102,7 +118,7 @@ describe('saveConversation', () => {
         const { conversation } = await createConversation('llama');
         conversation!.title = 'Updated Title';
         await saveConversation(conversation!);
-        const reloaded = await findConversation(conversation!.id);
+        const reloaded = await reload(conversation!.id);
         expect(reloaded?.title).toBe('Updated Title');
     });
 
@@ -110,7 +126,7 @@ describe('saveConversation', () => {
         const { conversation } = await createConversation('llama');
         conversation!.messages = [{ role: 'user', content: 'What is AI?' }];
         await saveConversation(conversation!);
-        const reloaded = await findConversation(conversation!.id);
+        const reloaded = await reload(conversation!.id);
         expect(reloaded?.title).toBe('What is AI?');
     });
 
@@ -119,7 +135,7 @@ describe('saveConversation', () => {
         const longContent = 'A'.repeat(80);
         conversation!.messages = [{ role: 'user', content: longContent }];
         await saveConversation(conversation!);
-        const reloaded = await findConversation(conversation!.id);
+        const reloaded = await reload(conversation!.id);
         expect(reloaded?.title).toHaveLength(60);
         expect(reloaded?.title).toMatch(/\.\.\.$/);
     });
@@ -128,7 +144,7 @@ describe('saveConversation', () => {
         const { conversation } = await createConversation('llama');
         conversation!.messages = [{ role: 'assistant', content: 'Hello' }];
         await saveConversation(conversation!);
-        const reloaded = await findConversation(conversation!.id);
+        const reloaded = await reload(conversation!.id);
         expect(reloaded?.title).toBe('New Conversation');
     });
 });
@@ -138,7 +154,7 @@ describe('addMessage', () => {
         const { conversation } = await createConversation('llama');
         const result = await addMessage(conversation!.id, { role: 'user', content: 'Hello' });
         expect(result.success).toBe(true);
-        const reloaded = await findConversation(conversation!.id);
+        const reloaded = await reload(conversation!.id);
         expect(reloaded?.messages).toHaveLength(1);
         expect(reloaded?.messages[0].content).toBe('Hello');
     });
@@ -146,7 +162,7 @@ describe('addMessage', () => {
     it('sets a timestamp on the added message', async () => {
         const { conversation } = await createConversation('llama');
         await addMessage(conversation!.id, { role: 'user', content: 'Hi' });
-        const reloaded = await findConversation(conversation!.id);
+        const reloaded = await reload(conversation!.id);
         expect(reloaded?.messages[0].timestamp).toBeTruthy();
     });
 
@@ -165,7 +181,7 @@ describe('updateLastMessage', () => {
         const { conversation } = await createConversation('llama');
         await addMessage(conversation!.id, { role: 'user', content: 'Original' });
         await updateLastMessage(conversation!.id, 'Updated');
-        const reloaded = await findConversation(conversation!.id);
+        const reloaded = await reload(conversation!.id);
         expect(reloaded?.messages[0].content).toBe('Updated');
     });
 
@@ -258,7 +274,7 @@ describe('renameConversation', () => {
         const { conversation } = await createConversation('llama');
         const result = await renameConversation(conversation!.id, 'Renamed');
         expect(result.success).toBe(true);
-        const reloaded = await findConversation(conversation!.id);
+        const reloaded = await reload(conversation!.id);
         expect(reloaded?.title).toBe('Renamed');
     });
 

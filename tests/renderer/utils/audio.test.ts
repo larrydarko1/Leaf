@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { audioBufferToWav, arrayBufferToBase64 } from '@/renderer/utils/audio';
+import { describe, it, expect, vi } from 'vitest';
+import { convertWebMToWav, arrayBufferToBase64 } from '@/renderer/utils/audio';
 
 /** Create a minimal AudioBuffer-shaped object for testing. */
 function makeAudioBuffer(channels: Float32Array[], sampleRate: number): AudioBuffer {
@@ -12,6 +12,23 @@ function makeAudioBuffer(channels: Float32Array[], sampleRate: number): AudioBuf
             return channels[ch];
         },
     } as AudioBuffer;
+}
+
+/** Drives the WAV encoder through its front door: an AudioContext whose decode hands back `buffer`. */
+async function encode(buffer: AudioBuffer): Promise<ArrayBuffer> {
+    const close = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal(
+        'AudioContext',
+        class {
+            decodeAudioData = vi.fn().mockResolvedValue(buffer);
+            close = close;
+        },
+    );
+    try {
+        return await convertWebMToWav({ arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)) } as Blob);
+    } finally {
+        vi.unstubAllGlobals();
+    }
 }
 
 describe('audio utilities', () => {
@@ -41,11 +58,11 @@ describe('audio utilities', () => {
         });
     });
 
-    describe('audioBufferToWav', () => {
-        it('produces a valid WAV header for mono silence', () => {
+    describe('convertWebMToWav', () => {
+        it('produces a valid WAV header for mono silence', async () => {
             const samples = new Float32Array(100); // 100 samples of silence
             const ab = makeAudioBuffer([samples], 44100);
-            const wav = audioBufferToWav(ab);
+            const wav = await encode(ab);
             const view = new DataView(wav);
 
             // RIFF header
@@ -74,11 +91,11 @@ describe('audio utilities', () => {
             ).toBe('data');
         });
 
-        it('has correct file size for mono', () => {
+        it('has correct file size for mono', async () => {
             const numSamples = 48;
             const samples = new Float32Array(numSamples);
             const ab = makeAudioBuffer([samples], 22050);
-            const wav = audioBufferToWav(ab);
+            const wav = await encode(ab);
 
             // Total: 44-byte header + numSamples * 2 bytes
             expect(wav.byteLength).toBe(44 + numSamples * 2);
@@ -90,11 +107,11 @@ describe('audio utilities', () => {
             expect(view.getUint32(40, true)).toBe(numSamples * 2);
         });
 
-        it('encodes stereo with correct interleaving and header', () => {
+        it('encodes stereo with correct interleaving and header', async () => {
             const left = new Float32Array([0.5, -0.5]);
             const right = new Float32Array([0.25, -0.25]);
             const ab = makeAudioBuffer([left, right], 16000);
-            const wav = audioBufferToWav(ab);
+            const wav = await encode(ab);
             const view = new DataView(wav);
 
             // Stereo (2 channels)
@@ -122,10 +139,10 @@ describe('audio utilities', () => {
             expect(s3).toBe(Math.floor(-0.25 * 0x8000));
         });
 
-        it('clamps values outside [-1, 1]', () => {
+        it('clamps values outside [-1, 1]', async () => {
             const samples = new Float32Array([2.0, -3.0]);
             const ab = makeAudioBuffer([samples], 8000);
-            const wav = audioBufferToWav(ab);
+            const wav = await encode(ab);
             const view = new DataView(wav);
 
             // 2.0 clamped to 1.0 → 0x7FFF = 32767
@@ -134,10 +151,25 @@ describe('audio utilities', () => {
             expect(view.getInt16(46, true)).toBe(-0x8000);
         });
 
-        it('silence produces all zero samples', () => {
+        it('closes the AudioContext even when decoding throws', async () => {
+            const close = vi.fn().mockResolvedValue(undefined);
+            vi.stubGlobal(
+                'AudioContext',
+                class {
+                    decodeAudioData = vi.fn().mockRejectedValue(new Error('bad codec'));
+                    close = close;
+                },
+            );
+            const blob = { arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)) } as Blob;
+            await expect(convertWebMToWav(blob)).rejects.toThrow('bad codec');
+            expect(close).toHaveBeenCalledOnce();
+            vi.unstubAllGlobals();
+        });
+
+        it('silence produces all zero samples', async () => {
             const samples = new Float32Array(4); // all zeros
             const ab = makeAudioBuffer([samples], 44100);
-            const wav = audioBufferToWav(ab);
+            const wav = await encode(ab);
             const view = new DataView(wav);
 
             for (let i = 0; i < 4; i++) {

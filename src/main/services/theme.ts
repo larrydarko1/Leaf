@@ -107,7 +107,7 @@ export function register(ipc: IpcMain): void {
  * it once" decision happens synchronously, before any await. Resets to null on
  * failure so a later call can retry.
  */
-export function ensureSeeded(): Promise<void> {
+function ensureSeeded(): Promise<void> {
     if (seedPromise === null) {
         seedPromise = doSeed().catch((err): void => {
             seedPromise = null;

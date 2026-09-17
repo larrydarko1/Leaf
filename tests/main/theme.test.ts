@@ -69,19 +69,31 @@ afterEach(() => {
     fs.rmSync(BUNDLED_DIR, { recursive: true, force: true });
 });
 
-describe('ensureSeeded', () => {
+// Seeding has no front door of its own — theme:list is what triggers it.
+async function freshHandlers() {
+    const { register } = await freshModule();
+    const handlers: Record<string, (...args: unknown[]) => Promise<unknown>> = {};
+    register({
+        handle: vi.fn((channel: string, fn: (...args: unknown[]) => Promise<unknown>) => {
+            handlers[channel] = fn;
+        }),
+    } as never);
+    return handlers;
+}
+
+describe('seeding, via theme:list', () => {
     it('copies bundled themes into THEMES_DIR', async () => {
         writeBundledTheme('dark', { name: 'Dark', colors: { bg: '#000' } });
-        const { ensureSeeded } = await freshModule();
-        await ensureSeeded();
+        const handlers = await freshHandlers();
+        await handlers['theme:list']();
         expect(fs.existsSync(path.join(THEMES_DIR, 'dark.json'))).toBe(true);
     });
 
     it('does not overwrite existing user themes', async () => {
         writeBundledTheme('dark', { name: 'Dark', colors: { bg: '#000' } });
         writeTheme('dark', { name: 'Custom Dark', colors: { bg: '#111' } });
-        const { ensureSeeded } = await freshModule();
-        await ensureSeeded();
+        const handlers = await freshHandlers();
+        await handlers['theme:list']();
         const content = JSON.parse(fs.readFileSync(path.join(THEMES_DIR, 'dark.json'), 'utf-8')) as Record<
             string,
             unknown
@@ -91,18 +103,18 @@ describe('ensureSeeded', () => {
 
     it('is idempotent — runs seeding only once', async () => {
         writeBundledTheme('dark', { name: 'Dark', colors: {} });
-        const { ensureSeeded } = await freshModule();
-        await ensureSeeded();
+        const handlers = await freshHandlers();
+        await handlers['theme:list']();
         writeBundledTheme('light', { name: 'Light', colors: {} });
-        await ensureSeeded();
+        await handlers['theme:list']();
         // light.json should NOT exist because seeding was skipped the second time
         expect(fs.existsSync(path.join(THEMES_DIR, 'light.json'))).toBe(false);
     });
 
     it('handles a missing bundled dir gracefully', async () => {
         fs.rmSync(BUNDLED_DIR, { recursive: true, force: true });
-        const { ensureSeeded } = await freshModule();
-        await expect(ensureSeeded()).resolves.not.toThrow();
+        const handlers = await freshHandlers();
+        await expect(handlers['theme:list']()).resolves.toMatchObject({ success: true });
     });
 });
 
