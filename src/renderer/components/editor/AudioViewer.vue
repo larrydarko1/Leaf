@@ -63,7 +63,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 
 <template>
     <div
-        class="audio-viewer"
+        class="audio-viewer media-stage"
         role="region"
         :aria-label="t('editor.audio_player')">
         <div class="audio-container">
@@ -95,7 +95,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
             <!-- Loading state -->
             <div
                 v-if="isLoadingAudio"
-                class="audio-loading"
+                class="audio-loading media-message"
                 role="status"
                 aria-live="polite">
                 <p>{{ t('editor.loading_audio') }}</p>
@@ -266,42 +266,20 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
             <!-- Error state -->
             <div
                 v-if="audioError"
-                class="audio-error"
+                class="audio-error media-message"
                 role="alert">
-                <p>{{ t('editor.audio_load_error') }}</p>
-                <p class="audio-error-hint">{{ t('editor.audio_format_not_supported') }}</p>
+                <h2 class="media-message-title">{{ t('editor.audio_load_error') }}</h2>
+                <p class="audio-error-hint hint">{{ t('editor.audio_format_not_supported') }}</p>
             </div>
         </div>
     </div>
 </template>
 
 <style lang="scss" scoped>
-/* ––– Root Container ––– */
-
-.audio-viewer {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: $space-7;
-    overflow: auto;
-    background: $base1;
-    position: relative;
-
-    &::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: url('../../assets/images/pattern.png');
-        background-size: cover;
-        background-position: center;
-        opacity: 0.01;
-        pointer-events: none;
-    }
-}
-
-/* ––– Audio Container Layout ––– */
-
+// The stage is `.media-stage`, the loading and error blocks are `.media-message`,
+// the transport bar is `.media-controls`. What is left is the card in the middle of
+// the pane, which only this viewer has — there is no file to look at, so the player
+// is the content.
 .audio-container {
     display: flex;
     flex-direction: column;
@@ -313,55 +291,15 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
     z-index: $z-normal;
 }
 
+// The large glyph standing in for the waveform, dimmed so it reads as decoration.
 .audio-icon {
     color: $text2;
     opacity: $opacity-mid;
 }
 
-/* ––– Loading State ––– */
-
-.audio-loading {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: $text2;
-    position: relative;
-    z-index: $z-normal;
-
-    p {
-        margin: $space-2 0;
-        font-size: $font-size-base;
-    }
-}
-
-/* ––– Audio Player Controls ––– */
-
 // A standalone card, so it is rounded on all four corners and blurred.
 .custom-audio-player {
     border-radius: $border-radius-xl;
     backdrop-filter: blur($backdrop-blur-sm);
-}
-
-/* ––– Error State ––– */
-
-.audio-error {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: $text2;
-    position: relative;
-    z-index: $z-normal;
-
-    p {
-        margin: $space-2 0;
-        font-size: $font-size-base;
-    }
-
-    .audio-error-hint {
-        font-size: $font-size-sm;
-        opacity: $opacity-mid-high;
-    }
 }
 </style>

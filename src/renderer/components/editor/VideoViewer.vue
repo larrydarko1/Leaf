@@ -58,7 +58,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 </script>
 
 <template>
-    <div class="video-viewer">
+    <div class="video-viewer media-stage">
         <!-- Video player area -->
         <div
             v-if="videoUrl && !videoError"
@@ -231,42 +231,22 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
         <!-- Error state fallback -->
         <section
             v-if="videoError"
-            class="video-error"
+            class="video-error media-message"
             role="alert">
-            <h2>{{ t('editor.video_load_error') }}</h2>
+            <h2 class="media-message-title">{{ t('editor.video_load_error') }}</h2>
             <p>{{ t('editor.failed_to_load_video') }}</p>
-            <p class="video-error-hint">{{ t('editor.video_format_not_supported') }}</p>
+            <p class="video-error-hint hint">{{ t('editor.video_format_not_supported') }}</p>
         </section>
     </div>
 </template>
 
 <style lang="scss" scoped>
-/* ––– Video Viewer Container ––– */
+// The stage is `.media-stage`, the error block is `.media-message`, the transport
+// bar is `.media-controls`. What is left is that here the bar is joined to the video
+// above it rather than standing on its own.
 
-.video-viewer {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: $space-7;
-    overflow: auto;
-    background: $base1;
-    position: relative;
-
-    &::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: url('../../assets/images/pattern.png');
-        background-size: cover;
-        background-position: center;
-        opacity: 0.01;
-        pointer-events: none;
-    }
-}
-
-/* ––– Player Wrapper & Preview ––– */
-
+// The two of them are one object: a column the width of the video, with nothing
+// between the picture and the controls.
 .video-player-wrapper {
     display: flex;
     flex-direction: column;
@@ -275,9 +255,10 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
     max-height: 100%;
     position: relative;
     z-index: $z-normal;
-    gap: 0;
 }
 
+// It leaves room for the bar rather than filling the pane, and rounds only the two
+// corners the bar is not against.
 .video-preview {
     max-width: 100%;
     max-height: calc(100% - $size-16);
@@ -287,8 +268,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
     cursor: pointer;
 }
 
-/* ––– Control Bar ––– */
-
 // Joined to the video above it, so the top edge is open and only the bottom
 // corners round.
 .video-controls {
@@ -297,33 +276,17 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
     border-radius: 0 0 $border-radius-xl $border-radius-xl;
 }
 
-/* ––– Error State ––– */
-
-.video-error {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: $text2;
-    position: relative;
-    z-index: $z-normal;
-
-    p {
-        margin: $space-2 0;
-        font-size: $font-size-base;
-    }
-
-    .video-error-hint {
-        font-size: $font-size-sm;
-        opacity: $opacity-mid-high;
-    }
-}
-
-/* ––– Reset Utility ––– */
-
-fieldset,
-time,
-section {
-    all: unset;
+// `<fieldset>` groups the volume controls for assistive tech, and arrives with a
+// border, a margin and a min-width that have nothing to do with how it looks here.
+// This was `fieldset, time, section { all: unset }`, which took `.media-volume` off
+// the group it was applied to — a scoped element selector outranks a global class —
+// so the video's volume row was laid out inline while the audio player's was flex.
+// Only what the browser actually supplies is reset now; `time` and `section` were in
+// that list with nothing to undo.
+fieldset {
+    margin: 0;
+    padding: 0;
+    border: none;
+    min-width: 0;
 }
 </style>

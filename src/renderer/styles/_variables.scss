@@ -100,6 +100,10 @@ $size-31: 720px;
 
 // –– Opacity scale ––––––––––––––––––––
 
+// Below the scale's names rather than on it: the media viewers' pattern wash, at
+// the value all three of them had written inline. `lowest` was already 0.3.
+$opacity-wash: 0.01;
+
 $opacity-lowest: 0.3;
 $opacity-low: 0.4;
 $opacity-mid-low: 0.5;

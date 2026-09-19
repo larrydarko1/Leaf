@@ -37,7 +37,7 @@ const SCAN = 'src';
  */
 const CEILINGS = {
     typescript: { limit: 4, note: 'logic — two copies of a branch is how a fixed bug comes back' },
-    scss: { limit: 3.2, note: 'presentation — real debt, but it makes things look wrong rather than behave wrong' },
+    scss: { limit: 0.5, note: 'presentation — real debt, but it makes things look wrong rather than behave wrong' },
     html: { limit: 6, note: 'SFC markup — structural repetition is often cheaper than another component' },
 };
 
