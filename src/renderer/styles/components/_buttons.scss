@@ -150,6 +150,14 @@
     background: $danger-color;
 }
 
+// The full-width version, for a filled button at the end of a stack of actions
+// rather than at the end of a row — the export dialog's save.
+.btn-accent-block {
+    gap: $space-2;
+    width: 100%;
+    padding: $space-2 $space-3;
+}
+
 // –– Outlined buttons ––––––––––––––––––––
 
 // The bordered, unfilled action offered alongside a piece of explanatory text —
@@ -169,6 +177,41 @@
     }
 }
 
+// –– Option buttons ––––––––––––––––––––
+
+// A row of equal boxes, one of which is the value in force: stroke width, stroke
+// style, roundness, font size, export scale. The five of them were four
+// byte-identical scoped rules plus one joined variant, under five names.
+.opt-btns {
+    display: flex;
+    gap: $space-1;
+}
+
+// One box. It is sized by the row rather than by its content, because these hold
+// glyphs and rules of different widths and a ragged row would read as a mistake.
+.opt-btn {
+    @extend %btn-base;
+
+    flex: 1;
+    height: $size-12;
+    border-color: $border-color;
+    border-radius: $border-radius;
+    color: $text1;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+
+    &:hover:not(:disabled, .disabled) {
+        background: $bg-hover;
+    }
+
+    // The chosen one is tinted and outlined rather than filled: the box often
+    // contains the preview of what it selects, which a solid accent would bury.
+    &.active {
+        background: $accent-color-alpha;
+        border-color: $accent-color;
+    }
+}
+
 // –– Footer buttons ––––––––––––––––––––
 
 // The full-width bordered button that closes a panel. Identical in both pickers,
@@ -179,6 +222,7 @@
 .btn-block {
     @extend %btn-base;
 
+    gap: $space-2;
     width: 100%;
     padding: $space-2 $space-3;
     border-color: $border-color;

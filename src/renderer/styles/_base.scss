@@ -77,6 +77,16 @@ a,
     cursor: pointer;
 }
 
+// –– Grouping elements ––––––––––––––––––––
+
+// A fieldset is only ever a grouping for the screen reader here — never a visible
+// box — so the UA's border and inset go once rather than in each form.
+fieldset {
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
 // –– Scrollbar ––––––––––––––––––––
 
 ::-webkit-scrollbar {
@@ -122,6 +132,38 @@ a,
     clip-path: inset(50%);
     white-space: nowrap;
     border-width: 0;
+}
+
+// –– Transitions ––––––––––––––––––––
+
+// The classes `<transition>` applies. A transition name is a global contract —
+// Vue writes `panel-fade-enter-from` onto the element wherever the element lives —
+// so defining one inside an SFC only hides it. `panel-fade` was defined twice,
+// identically, in the canvas toolbar and the properties panel.
+
+// The panel that slides in from the left edge it is anchored to.
+.panel-fade-enter-active,
+.panel-fade-leave-active {
+    transition:
+        opacity $transition-base,
+        transform $transition-base;
+}
+
+.panel-fade-enter-from,
+.panel-fade-leave-to {
+    opacity: 0;
+    transform: translateX(-$space-2);
+}
+
+// The plain crossfade, for anything that appears in place: the export dialog.
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity $transition-base;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
 }
 
 // –– Animations ––––––––––––––––––––

@@ -137,7 +137,7 @@ watch([exportWithBackground, exportScale, exportOnlySelected], () => {
 
 <template>
     <teleport to="body">
-        <transition name="export-fade">
+        <transition name="fade">
             <div
                 v-if="visible"
                 class="export-overlay"
@@ -148,7 +148,7 @@ watch([exportWithBackground, exportScale, exportOnlySelected], () => {
                     aria-labelledby="export-dialog-title"
                     aria-modal="true">
                     <!-- Image preview area -->
-                    <div class="export-preview">
+                    <div class="export-preview row fill">
                         <figure
                             v-if="exportPreviewUrl"
                             class="export-preview-figure">
@@ -159,7 +159,7 @@ watch([exportWithBackground, exportScale, exportOnlySelected], () => {
                         </figure>
                         <div
                             v-else
-                            class="export-empty"
+                            class="export-empty empty-state"
                             role="status"
                             aria-live="polite"
                             >{{ t('drawing.no_elements_to_export') }}</div
@@ -167,10 +167,10 @@ watch([exportWithBackground, exportScale, exportOnlySelected], () => {
                     </div>
 
                     <!-- Export options and controls -->
-                    <div class="export-settings">
+                    <div class="export-settings stack">
                         <h2
                             id="export-dialog-title"
-                            class="export-title"
+                            class="export-title panel-title"
                             >{{ t('drawing.export_image') }}</h2
                         >
 
@@ -212,16 +212,16 @@ watch([exportWithBackground, exportScale, exportOnlySelected], () => {
                         </fieldset>
 
                         <!-- Scale selection buttons -->
-                        <fieldset class="export-field">
-                            <legend class="export-label">{{ t('drawing.scale') }}</legend>
+                        <fieldset class="export-field stack">
+                            <legend class="export-label panel-label">{{ t('drawing.scale') }}</legend>
                             <div
-                                class="export-scale-btns"
+                                class="export-scale-btns opt-btns"
                                 role="group"
                                 :aria-label="t('drawing.export_scale_options')">
                                 <button
                                     v-for="opt in exportScaleOptions"
                                     :key="opt.value"
-                                    class="export-scale-btn"
+                                    class="export-scale-btn opt-btn"
                                     :class="{ active: exportScale === opt.value }"
                                     :aria-pressed="exportScale === opt.value"
                                     @click="exportScale = opt.value">
@@ -239,9 +239,9 @@ watch([exportWithBackground, exportScale, exportOnlySelected], () => {
                         </output>
 
                         <!-- Action buttons: save and copy -->
-                        <div class="export-actions">
+                        <div class="export-actions stack">
                             <button
-                                class="export-action-btn primary"
+                                class="export-action-btn btn-accent btn-accent-block"
                                 :disabled="isExporting"
                                 :aria-busy="isExporting"
                                 @click="savePng">
@@ -265,7 +265,7 @@ watch([exportWithBackground, exportScale, exportOnlySelected], () => {
                                 {{ t('drawing.save_png') }}
                             </button>
                             <button
-                                class="export-action-btn"
+                                class="export-action-btn btn-block"
                                 :disabled="isExporting"
                                 :aria-busy="isExporting"
                                 @click="copyClipboard">
@@ -292,7 +292,7 @@ watch([exportWithBackground, exportScale, exportOnlySelected], () => {
 
                         <!-- Close button -->
                         <button
-                            class="export-close-btn"
+                            class="export-close-btn icon-btn"
                             :aria-label="t('drawing.close_export_dialog')"
                             @click="close">
                             &times;
@@ -307,6 +307,9 @@ watch([exportWithBackground, exportScale, exportOnlySelected], () => {
 <style scoped lang="scss">
 /* ––– Overlay & Dialog Container ––– */
 
+// Scoped: the app has one dialog, and a shared `.modal` would be a layer with a
+// single caller. The transparent click-catching layer is `.menu-overlay`; this one
+// dims what is behind it, which is the difference between a menu and a dialog.
 .export-overlay {
     position: fixed;
     inset: 0;
@@ -331,23 +334,22 @@ watch([exportWithBackground, exportScale, exportOnlySelected], () => {
 /* ––– Preview Area ––– */
 
 .export-preview {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    align-items: center;
     justify-content: center;
     padding: $space-6;
     background: $bg-secondary;
+}
 
-    &-inner {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        max-width: 100%;
-        max-height: 60vh;
-        border-radius: $border-radius-lg;
-        overflow: hidden;
-    }
+// These declarations were written against `.export-preview-inner`, which is not a
+// class this template has ever rendered — the figure is the element they meant.
+.export-preview-figure {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    max-width: 100%;
+    max-height: 60vh;
+    border-radius: $border-radius-lg;
+    overflow: hidden;
 }
 
 .export-preview-img {
@@ -357,8 +359,6 @@ watch([exportWithBackground, exportScale, exportOnlySelected], () => {
 }
 
 .export-empty {
-    padding: $space-8;
-    color: $text-muted;
     font-size: $font-size-sm;
 }
 
@@ -367,22 +367,20 @@ watch([exportWithBackground, exportScale, exportOnlySelected], () => {
 .export-settings {
     width: $size-25;
     padding: $space-6 $space-5;
-    display: flex;
-    flex-direction: column;
     gap: $space-4;
     position: relative;
     border-left: $border-width-thin $border-color;
 }
 
 .export-title {
-    font-size: $font-size-base;
-    font-weight: $font-weight-semibold;
     margin: 0;
-    color: $text1;
+    font-size: $font-size-base;
 }
 
 /* ––– Toggle Switches ––– */
 
+// Scoped: this is the only switch in the app. The rest of its toggles are buttons
+// that stay pressed (`.icon-btn-toggle`), which is a different control.
 .export-toggle {
     display: flex;
     align-items: center;
@@ -392,8 +390,15 @@ watch([exportWithBackground, exportScale, exportOnlySelected], () => {
     cursor: pointer;
     user-select: none;
 
+    // Not `display: none`, which was here before: that takes the checkbox out of
+    // the tab order, and since the track below is the only visible part, the
+    // switch became unreachable by keyboard. Zero-sized but still focusable, with
+    // the ring drawn on the track instead.
     .export-checkbox {
-        display: none;
+        appearance: none;
+        width: 0;
+        height: 0;
+        margin: 0;
     }
 
     .toggle-track {
@@ -417,6 +422,11 @@ watch([exportWithBackground, exportScale, exportOnlySelected], () => {
         box-shadow: $shadow-sm;
     }
 
+    .export-checkbox:focus-visible + .toggle-track {
+        outline: $border-width-thin $accent-color;
+        outline-offset: $size-0;
+    }
+
     .export-checkbox:checked + .toggle-track {
         background: $accent-color;
 
@@ -429,49 +439,7 @@ watch([exportWithBackground, exportScale, exportOnlySelected], () => {
 /* ––– Scale Selection ––– */
 
 .export-field {
-    display: flex;
-    flex-direction: column;
     gap: $space-2;
-}
-
-.export-label {
-    font-size: $font-size-sm;
-    color: $text2;
-}
-
-.export-scale-btns {
-    display: flex;
-    gap: 0;
-    border: $border-width-thin $border-color;
-    border-radius: $border-radius;
-    overflow: hidden;
-}
-
-.export-scale-btn {
-    flex: 1;
-    padding: $space-2 0;
-    border: none;
-    background: transparent;
-    font-size: $font-size-sm;
-    font-weight: $font-weight-medium;
-    color: $text1;
-    cursor: pointer;
-    transition:
-        background $transition-base,
-        color $transition-base;
-
-    &:not(:last-child) {
-        border-right: $border-width-thin $border-color;
-    }
-
-    &:hover {
-        background: $bg-hover;
-    }
-
-    &.active {
-        background: $accent-color;
-        color: $text3;
-    }
 }
 
 .export-dimensions {
@@ -483,48 +451,8 @@ watch([exportWithBackground, exportScale, exportOnlySelected], () => {
 /* ––– Action Buttons ––– */
 
 .export-actions {
-    display: flex;
-    flex-direction: column;
     gap: $space-2;
     margin-top: auto;
-}
-
-.export-action-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: $space-2;
-    padding: $space-2 $space-3;
-    border: $border-width-thin $border-color;
-    border-radius: $border-radius-lg;
-    background: $base3;
-    color: $text1;
-    font-size: $font-size-sm;
-    font-weight: $font-weight-medium;
-    cursor: pointer;
-    transition:
-        background $transition-base,
-        border-color $transition-base;
-
-    &:hover:not(:disabled) {
-        background: $bg-hover;
-    }
-
-    &:disabled {
-        opacity: $opacity-mid-low;
-        cursor: not-allowed;
-    }
-
-    &.primary {
-        background: $accent-color;
-        color: $text3;
-        border-color: $accent-color;
-
-        &:hover:not(:disabled) {
-            filter: brightness(1.1);
-            background: $accent-color;
-        }
-    }
 }
 
 /* ––– Close Button ––– */
@@ -533,41 +461,7 @@ watch([exportWithBackground, exportScale, exportOnlySelected], () => {
     position: absolute;
     top: $space-3;
     right: $space-3;
-    width: $size-11;
-    height: $size-11;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    border-radius: $border-radius-xl;
-    background: transparent;
-    color: $text2;
     font-size: $font-size-lg;
-    cursor: pointer;
-    transition: background $transition-base;
-
-    &:hover {
-        background: $bg-hover;
-    }
-}
-
-/* ––– Dialog Transition Animation ––– */
-
-.export-fade-enter-active,
-.export-fade-leave-active {
-    transition: opacity $transition-base;
-}
-
-.export-fade-enter-from,
-.export-fade-leave-to {
-    opacity: 0;
-}
-
-/* ––– Fieldset Reset ––– */
-
-fieldset {
-    border: none;
-    padding: 0;
-    margin: 0;
+    line-height: 1;
 }
 </style>

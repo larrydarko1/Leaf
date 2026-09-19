@@ -27,12 +27,12 @@ void props;
 
 <template>
     <footer
-        class="canvas-footer"
+        class="canvas-footer row"
         :aria-label="t('drawing.canvas_controls')">
         <!-- Zoom controls -->
-        <div class="footer-left">
+        <div class="footer-left row">
             <div
-                class="zoom-controls"
+                class="zoom-controls row"
                 role="group"
                 :aria-label="t('drawing.zoom_controls')">
                 <button
@@ -90,7 +90,7 @@ void props;
         </div>
 
         <!-- History controls: undo, redo, clear -->
-        <div class="footer-center">
+        <div class="footer-center row">
             <button
                 class="footer-btn icon-btn-square"
                 :disabled="historyIndex <= 0"
@@ -154,7 +154,7 @@ void props;
         </div>
 
         <!-- Save status and export -->
-        <div class="footer-right">
+        <div class="footer-right row">
             <!-- eslint-disable-next-line a11y/form-control-has-label -->
             <output
                 v-if="isSaving || hasUnsavedChanges"
@@ -201,8 +201,6 @@ void props;
     left: 0;
     right: 0;
     height: $size-14;
-    display: flex;
-    align-items: center;
     justify-content: space-between;
     padding: 0 $space-3;
     background: $bg-primary;
@@ -213,11 +211,11 @@ void props;
 
 /* ––– Footer Layout Sections ––– */
 
+// The two outer sections are held at a minimum width so the centre group stays
+// centred as the zoom reading and the save status change length.
 .footer-left,
 .footer-center,
 .footer-right {
-    display: flex;
-    align-items: center;
     gap: $space-1;
 }
 
@@ -232,9 +230,9 @@ void props;
 
 /* ––– Zoom Controls ––– */
 
+// Joined rather than `.opt-btns`: these two are a stepper around a reading, not a
+// choice between values, so they share one border instead of each having their own.
 .zoom-controls {
-    display: flex;
-    align-items: center;
     gap: 0;
     border: $border-width-thin $border-color;
     border-radius: $border-radius;

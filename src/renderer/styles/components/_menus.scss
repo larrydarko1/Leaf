@@ -86,7 +86,9 @@
 
 // –– Items ––––––––––––––––––––
 
-// One choice. `.selected` marks the value in force, not the row under the cursor.
+// One choice — in a dropdown, in the explorer's context menu, or in the properties
+// panel's action stack, which were three names for this rule.
+// `.selected` marks the value in force, not the row under the cursor.
 .menu-item {
     display: flex;
     align-items: center;
@@ -103,13 +105,31 @@
     cursor: pointer;
     transition: background $transition-fast;
 
-    &:hover {
+    &:hover:not(:disabled, .disabled) {
         background: $bg-hover;
     }
 
     &.selected {
         background: $bg-hover;
         color: $accent-color;
+    }
+
+    // Matched to `%btn-base` rather than to the context menu's own $opacity-low:
+    // an unavailable row means the same thing as an unavailable button.
+    &:disabled,
+    &.disabled {
+        opacity: $opacity-mid-low;
+        cursor: not-allowed;
+    }
+}
+
+// The destructive row. Unlike `.icon-btn-danger` it is red at rest — it carries a
+// word, and a row that only reddens under the cursor is read after it is clicked.
+.menu-item-danger {
+    color: $danger-color;
+
+    &:hover:not(:disabled, .disabled) {
+        background: $danger-color-alpha;
     }
 }
 
@@ -128,7 +148,13 @@
     line-height: $line-height;
 }
 
-// The trailing detail: a size, a path, a one-line description. Quieter than the
+// The label half of a single-line item: it takes the room the trailing detail does
+// not, which is what pushes a shortcut or a size to the right edge.
+.menu-item-label {
+    flex: 1;
+}
+
+// The trailing detail: a size, a path, a keyboard shortcut, a one-line description. Quieter than the
 // name and never the reason the row is wide.
 .menu-item-meta {
     flex-shrink: 0;

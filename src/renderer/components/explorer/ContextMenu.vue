@@ -41,7 +41,7 @@ void menuRef;
         <div
             v-if="visible"
             ref="menuRef"
-            class="context-menu"
+            class="context-menu floating"
             role="menu"
             :aria-label="t('context_menu.label')"
             :style="{ top: adjustedPosition.y + 'px', left: adjustedPosition.x + 'px' }"
@@ -49,15 +49,15 @@ void menuRef;
             <button
                 v-for="item in items"
                 :key="item.label"
-                class="context-menu-item"
+                class="context-menu-item menu-item"
                 role="menuitem"
                 :aria-disabled="item.disabled"
                 :disabled="item.disabled"
                 @click="handleItemClick(item)">
-                <span class="menu-label">{{ item.label }}</span>
+                <span class="menu-label menu-item-label">{{ item.label }}</span>
                 <span
                     v-if="item.shortcut"
-                    class="menu-shortcut"
+                    class="menu-shortcut menu-item-meta"
                     :aria-label="t('context_menu.keyboard_shortcut', { shortcut: item.shortcut })"
                     >{{ item.shortcut }}</span
                 >
@@ -67,51 +67,22 @@ void menuRef;
 </template>
 
 <style scoped lang="scss">
+// The surface is `.floating`, the rows are `.menu-item` — this is only where the
+// menu opens and how narrow it may be. It sat on $bg-secondary with $shadow-sm
+// while the other three floating panels used the shared surface; that difference
+// was never a decision.
 .context-menu {
     position: fixed;
-    background: $bg-secondary;
-    border: $border-width-thin $border-color;
-    color: $text-primary;
-    border-radius: $border-radius;
-    box-shadow: $shadow-sm;
     padding: $space-1 0;
     min-width: $size-22;
     z-index: $z-extreme;
-    backdrop-filter: blur($backdrop-blur-md);
 }
 
+// Wider than a dropdown's: the shortcut on the right has to clear the label, not
+// sit against it.
 .context-menu-item {
-    display: flex;
-    align-items: center;
-    border: none;
-    background: transparent;
-    width: 100%;
-    text-align: left;
     justify-content: space-between;
-    padding: $space-2 $space-3;
-    cursor: pointer;
-    transition: background $transition-fast;
-    color: $text-primary;
-    font-size: $font-size-sm;
     gap: $space-4;
-
-    &:hover:not(.disabled) {
-        background: $bg-hover;
-    }
-
-    &.disabled {
-        opacity: $opacity-low;
-        cursor: not-allowed;
-    }
-}
-
-.menu-label {
-    flex: 1;
-}
-
-.menu-shortcut {
-    color: $text2;
-    font-size: $font-size-xs;
-    opacity: $opacity-mid-high;
+    font-size: $font-size-sm;
 }
 </style>

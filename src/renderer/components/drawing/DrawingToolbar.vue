@@ -97,7 +97,7 @@ function handleClickOutside(e: MouseEvent): void {
         class="floating-toolbar"
         :aria-label="t('drawing.toolbar')">
         <div
-            class="toolbar-inner"
+            class="toolbar-inner floating"
             role="toolbar"
             :aria-label="t('drawing.tool_selection')">
             <!-- Selection -->
@@ -407,13 +407,13 @@ function handleClickOutside(e: MouseEvent): void {
                 <transition name="panel-fade">
                     <div
                         v-if="archDropdownOpen"
-                        class="arch-dropdown-menu"
+                        class="arch-dropdown-menu floating"
                         role="menu"
                         :aria-label="t('drawing.architecture_shape_options')">
                         <button
                             v-for="shape in archShapes"
                             :key="shape.tool"
-                            class="arch-shape-btn"
+                            class="arch-shape-btn menu-item"
                             :class="{ active: currentTool === shape.tool }"
                             :aria-label="shape.label"
                             :aria-pressed="currentTool === shape.tool"
@@ -443,15 +443,14 @@ function handleClickOutside(e: MouseEvent): void {
     z-index: $z-mid;
 }
 
+// The surface is `.floating`. It was a hand-rolled one at $border-radius-xl and
+// $shadow-float — the same panel the properties panel and the two dropdowns each
+// drew for themselves.
 .toolbar-inner {
     display: flex;
     align-items: center;
     gap: $space-0;
     padding: $space-1;
-    background: $bg-primary;
-    border: $border-width-thin solid $border-color;
-    border-radius: $border-radius-xl;
-    box-shadow: $shadow-float;
 }
 
 /* ––– Architecture Dropdown Menu ––– */
@@ -460,6 +459,8 @@ function handleClickOutside(e: MouseEvent): void {
     position: relative;
 }
 
+// Two columns rather than `.menu`'s single one: these are short labels beside a
+// glyph, and a one-column list of them would be twice as tall as the toolbar.
 .arch-dropdown-menu {
     position: absolute;
     top: calc(100% + $space-2);
@@ -469,35 +470,16 @@ function handleClickOutside(e: MouseEvent): void {
     grid-template-columns: 1fr 1fr;
     gap: $space-0;
     padding: $space-2;
-    background: $bg-primary;
-    border: $border-width-thin solid $border-color;
-    border-radius: $border-radius-xl;
-    box-shadow: $shadow-dropdown;
     z-index: $z-mid;
     min-width: $size-24;
 }
 
 .arch-shape-btn {
-    display: flex;
-    align-items: center;
-    gap: $space-2;
-    padding: $space-2 $space-3;
-    border: none;
-    border-radius: $border-radius;
-    background: transparent;
-    color: $text2;
-    cursor: pointer;
-    transition:
-        background $transition-fast,
-        color $transition-fast;
-    font-size: $font-size-xs;
     white-space: nowrap;
 
-    &:hover {
-        background: $bg-hover;
-        color: $text1;
-    }
-
+    // The toolbar names this state `.active`, as its tool buttons do, and tints it
+    // the way `.icon-btn-toggle` does rather than the way a dropdown row does:
+    // this menu chooses a tool, so it should match the buttons beside it.
     &.active {
         background: $accent-color-alpha;
         color: $accent-color;
@@ -520,20 +502,5 @@ function handleClickOutside(e: MouseEvent): void {
 
 .arch-shape-label {
     font-weight: $font-weight-medium;
-}
-
-/* ––– Panel Transition Animation ––– */
-
-.panel-fade-enter-active,
-.panel-fade-leave-active {
-    transition:
-        opacity $transition-base,
-        transform $transition-base;
-}
-
-.panel-fade-enter-from,
-.panel-fade-leave-to {
-    opacity: 0;
-    transform: translateX(-$space-2);
 }
 </style>
