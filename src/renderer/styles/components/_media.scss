@@ -1,0 +1,167 @@
+// Media transport controls — the bar under the audio and video viewers.
+// The two viewers had built the same seven controls twice under `audio-*` and
+// `video-*` names, and the copies had drifted on every dimension: two slider
+// widths, two radii, and one of them had lost its focus ring.
+
+@use '@/renderer/styles/variables' as *;
+@use '@/renderer/styles/components/placeholders' as *;
+
+// –– Control bar ––––––––––––––––––––
+
+// A bordered strip holding play, time, progress and volume.
+.media-controls {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    width: 100%;
+    padding: $space-3 $space-4;
+    background: $bg-primary;
+    border: $border-width-thin $text3;
+}
+
+// –– Play button ––––––––––––––––––––
+
+// The one filled control in the bar: a round accent disc that grows slightly
+// under the pointer and dips when pressed.
+.media-ctrl-btn {
+    @extend %btn-base;
+
+    width: $size-13;
+    height: $size-13;
+    min-width: $size-13;
+    border: none;
+    border-radius: $border-radius-round;
+    background: $accent-color;
+    color: $text1;
+    transition: all $transition-fast;
+
+    &:hover:not(:disabled) {
+        transform: scale($scale-hover);
+        filter: brightness(1.1);
+    }
+
+    &:active:not(:disabled) {
+        transform: scale($scale-hover-sm);
+    }
+}
+
+// –– Time readout ––––––––––––––––––––
+
+// Tabular figures so the elapsed time does not jog the layout as digits change.
+.media-time {
+    font-size: $font-size-xs;
+    color: $text2;
+    font-variant-numeric: tabular-nums;
+    min-width: $size-14;
+    text-align: center;
+    user-select: none;
+}
+
+// –– Progress bar ––––––––––––––––––––
+
+// The whole strip is the hit target, padded well past the 4px track so it can be
+// aimed at. It is focusable, and the tint is how that focus reads — the video
+// viewer's copy had neither the tint nor the radius, so keyboard users could not
+// see where they were.
+.media-progress {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: $space-2 0;
+    cursor: pointer;
+    outline: none;
+    border-radius: $border-radius-xs;
+    transition: background-color $transition-fast;
+
+    &:focus-visible {
+        background-color: $bg-hover;
+    }
+}
+
+.media-progress-track {
+    position: relative;
+    width: 100%;
+    height: $size-2;
+    background: $bg-hover;
+    border-radius: $border-radius-xs;
+    overflow: hidden;
+}
+
+.media-progress-fill {
+    height: 100%;
+    background: $accent-color;
+    border-radius: $border-radius-xs;
+    transition: width $transition-instant;
+}
+
+// –– Volume ––––––––––––––––––––
+
+.media-volume {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+}
+
+// The mute toggle. Quieter than the play button — it tints rather than fills.
+.media-volume-btn {
+    @extend %btn-base;
+
+    padding: $space-1;
+    border-radius: $border-radius-sm;
+
+    &:hover:not(:disabled) {
+        color: $text1;
+    }
+}
+
+// A native range input with its track replaced. The fill is an `::after` sized
+// from the `--volume` custom property the component sets, so the painted level
+// follows the value without a second element.
+// The thumb needs its own stacking context or the `::after` fill covers it — the
+// audio viewer's copy omitted that and its thumb was painted over.
+.media-volume-slider {
+    appearance: none;
+    position: relative;
+    width: $size-18;
+    height: $size-2;
+    background: $bg-hover;
+    border-radius: $border-radius-sm;
+    outline: none;
+    cursor: pointer;
+    transition: outline $transition-fast;
+
+    &:focus-visible {
+        outline: $border-width-thin $accent-color;
+        outline-offset: $size-0;
+    }
+
+    &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: $size-2;
+        /* stylelint-disable-next-line no-unknown-custom-properties -- set by the component through a :style binding; declared in check-scss-standards.mjs */
+        width: calc(var(--volume) * 100%);
+        max-width: $size-18;
+        background: $accent-color;
+        border-radius: $border-radius-sm;
+        pointer-events: none;
+    }
+
+    &::-webkit-slider-thumb {
+        appearance: none;
+        position: relative;
+        z-index: $z-normal;
+        width: $size-6;
+        height: $size-6;
+        border-radius: $border-radius-round;
+        background: $accent-color;
+        cursor: pointer;
+        transition: transform $transition-fast;
+    }
+
+    &::-webkit-slider-thumb:hover {
+        transform: scale($scale-hover-lg);
+    }
+}

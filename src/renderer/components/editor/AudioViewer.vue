@@ -115,12 +115,12 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
             <!-- Custom audio player controls -->
             <div
                 v-if="audioUrl && !audioError && !isLoadingAudio"
-                class="custom-audio-player"
+                class="custom-audio-player media-controls"
                 role="group"
                 :aria-label="t('editor.audio_playback_controls')">
                 <!-- Play/pause button -->
                 <button
-                    class="audio-play-btn"
+                    class="audio-play-btn media-ctrl-btn"
                     :aria-label="audioPlaying ? t('editor.pause_audio') : t('editor.play_audio')"
                     :title="audioPlaying ? t('editor.pause') : t('editor.play')"
                     @click="toggleAudioPlayback">
@@ -157,7 +157,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 
                 <!-- Current time display -->
                 <time
-                    class="audio-time"
+                    class="audio-time media-time"
                     :aria-label="t('editor.current_playback_time')"
                     >{{ formatTime(audioCurrentTime) }}</time
                 >
@@ -165,7 +165,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                 <!-- Progress bar and seek control -->
                 <!-- eslint-disable-next-line a11y/click-events-have-key-events -->
                 <div
-                    class="audio-progress-wrapper"
+                    class="audio-progress-wrapper media-progress"
                     role="slider"
                     :aria-valuenow="Math.round(audioProgressPercent)"
                     aria-valuemin="0"
@@ -174,27 +174,27 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                     :aria-valuetext="`${formatTime(audioCurrentTime)} of ${formatTime(audioDuration)}`"
                     tabindex="0"
                     @click="seekAudio">
-                    <div class="audio-progress-track">
+                    <div class="audio-progress-track media-progress-track">
                         <div
-                            class="audio-progress-fill"
+                            class="audio-progress-fill media-progress-fill"
                             :style="{ width: audioProgressPercent + '%' }"></div>
                     </div>
                 </div>
 
                 <!-- Total duration display -->
                 <time
-                    class="audio-time"
+                    class="audio-time media-time"
                     :aria-label="t('editor.total_duration')"
                     >{{ formatTime(audioDuration) }}</time
                 >
 
                 <!-- Volume controls -->
                 <div
-                    class="audio-volume-wrapper"
+                    class="audio-volume-wrapper media-volume"
                     role="group"
                     :aria-label="t('editor.volume_controls')">
                     <button
-                        class="audio-volume-btn"
+                        class="audio-volume-btn media-volume-btn"
                         :aria-label="audioVolume === 0 ? t('editor.unmute_audio') : t('editor.mute_audio')"
                         :title="audioVolume === 0 ? t('editor.unmute') : t('editor.mute')"
                         @click="toggleMute">
@@ -252,7 +252,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                     </button>
                     <input
                         type="range"
-                        class="audio-volume-slider"
+                        class="audio-volume-slider media-volume-slider"
                         min="0"
                         max="1"
                         step="0.01"
@@ -337,157 +337,10 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 
 /* ––– Audio Player Controls ––– */
 
+// A standalone card, so it is rounded on all four corners and blurred.
 .custom-audio-player {
-    display: flex;
-    align-items: center;
-    gap: $space-3;
-    width: 100%;
-    padding: $space-3 $space-4;
-    background: $bg-primary;
-    border: $border-width-thin solid $text3;
     border-radius: $border-radius-xl;
     backdrop-filter: blur($backdrop-blur-sm);
-}
-
-.audio-play-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: $size-13;
-    height: $size-13;
-    min-width: $size-13;
-    border-radius: $border-radius-round;
-    border: none;
-    background: $accent-color;
-    color: $text1;
-    cursor: pointer;
-    transition: all $transition-fast;
-
-    &:hover {
-        transform: scale($scale-hover);
-        filter: brightness(1.1);
-    }
-
-    &:active {
-        transform: scale($scale-hover-sm);
-    }
-}
-
-.audio-time {
-    font-size: $font-size-xs;
-    color: $text2;
-    font-variant-numeric: tabular-nums;
-    min-width: $size-14;
-    text-align: center;
-    user-select: none;
-}
-
-/* ––– Progress Bar ––– */
-
-.audio-progress-wrapper {
-    flex: 1;
-    cursor: pointer;
-    padding: $space-2 0;
-    display: flex;
-    align-items: center;
-    outline: none;
-    border-radius: $border-radius-xs;
-    transition: background-color $transition-fast;
-
-    &:focus-visible {
-        background-color: $bg-hover;
-    }
-}
-
-.audio-progress-track {
-    width: 100%;
-    height: $size-2;
-    background: $bg-hover;
-    border-radius: $border-radius-xs;
-    overflow: hidden;
-    position: relative;
-}
-
-.audio-progress-fill {
-    height: 100%;
-    background: $accent-color;
-    border-radius: $border-radius-xs;
-    transition: width $transition-instant;
-}
-
-/* ––– Volume Controls ––– */
-
-.audio-volume-wrapper {
-    display: flex;
-    align-items: center;
-    gap: $space-2;
-}
-
-.audio-volume-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: none;
-    border: none;
-    color: $text2;
-    cursor: pointer;
-    padding: $space-1;
-    border-radius: $border-radius-sm;
-    transition: color $transition-fast;
-
-    &:hover {
-        color: $text1;
-    }
-
-    &:focus-visible {
-        outline: $border-width-thin $accent-color;
-        outline-offset: $size-0;
-    }
-}
-
-.audio-volume-slider {
-    appearance: none;
-    width: $size-18;
-    height: $size-2;
-    background: $bg-hover;
-    border-radius: $border-radius-sm;
-    outline: none;
-    cursor: pointer;
-    position: relative;
-    transition: outline $transition-fast;
-
-    &:focus-visible {
-        outline: $border-width-thin solid $accent-color;
-        outline-offset: $size-0;
-    }
-
-    &::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        background: $accent-color;
-        /* stylelint-disable-next-line no-unknown-custom-properties */
-        width: calc(var(--volume) * 100%);
-        max-width: $size-18;
-        height: $size-2;
-        border-radius: $border-radius-sm;
-        pointer-events: none;
-    }
-
-    &::-webkit-slider-thumb {
-        appearance: none;
-        width: $size-6;
-        height: $size-6;
-        border-radius: $border-radius-round;
-        background: $accent-color;
-        cursor: pointer;
-        transition: transform $transition-fast;
-    }
-
-    &::-webkit-slider-thumb:hover {
-        transform: scale($scale-hover-lg);
-    }
 }
 
 /* ––– Error State ––– */

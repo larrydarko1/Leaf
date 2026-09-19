@@ -1,0 +1,74 @@
+// Scroll containers.
+// base.scss styles the default scrollbar for the whole app; these classes are for
+// panes that want a different one — a narrower track, or a thumb that only
+// appears on hover.
+
+// Applied in the template (`class="scroll-y"`) rather than through a mixin, so a
+// scrolling pane declares what it is in the markup and the SFC needs no style
+// block to say it.
+
+@use '@/renderer/styles/variables' as *;
+
+// –– Vertical scroll ––––––––––––––––––––
+
+.scroll-y {
+    overflow-y: auto;
+
+    &::-webkit-scrollbar {
+        width: $size-3;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: $scrollbar-thumb;
+        border-radius: $border-radius-xs;
+
+        &:hover {
+            background: $scrollbar-thumb-hover;
+        }
+    }
+}
+
+// The thumb fades in with the pointer. For the file tree, where a permanent
+// track competes with the indent guides.
+.scroll-y-hover {
+    overflow-y: auto;
+
+    &::-webkit-scrollbar {
+        width: $size-3;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: transparent;
+        border-radius: $border-radius-xs;
+        transition: background $transition-base;
+    }
+
+    &:hover::-webkit-scrollbar-thumb {
+        background: $scrollbar-thumb;
+
+        &:hover {
+            background: $scrollbar-thumb-hover;
+        }
+    }
+}
+
+// –– Horizontal scroll ––––––––––––––––––––
+
+// Scrolls sideways with no visible track at all — the tab strip, which is
+// dragged and wheel-scrolled rather than aimed at.
+.scroll-x-hidden {
+    overflow: auto hidden;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}

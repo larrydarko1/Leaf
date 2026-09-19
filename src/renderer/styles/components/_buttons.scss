@@ -1,0 +1,110 @@
+// Buttons and the button-shaped controls.
+// Everything here is built on `%btn-base`, so the chrome reset and the disabled
+// state are settled in one place. Before this, 22 files each re-derived
+// `border: none` + flex centring, and `:disabled` was written out 12 times across
+// four different opacities — controls that meant the same thing faded by
+// different amounts.
+
+@use '@/renderer/styles/variables' as *;
+@use '@/renderer/styles/components/placeholders' as *;
+
+// –– Icon buttons ––––––––––––––––––––
+
+// The square, chromeless control that holds nothing but an icon: panel header
+// actions, close buttons, the bookmark toggle.
+// The two picker panels had disagreed on every property of theirs — radius
+// ($border-radius vs -lg), resting colour ($text-muted vs $text2) and display
+// (inline-flex vs flex). The brighter $text2 wins: $text-muted on $base1 is below
+// comfortable contrast for a 16px glyph.
+.icon-btn {
+    @extend %btn-base;
+    @extend %btn-hover-tint;
+
+    padding: $space-1;
+    border-radius: $border-radius;
+
+    svg {
+        display: block;
+    }
+}
+
+// –– Square icon buttons ––––––––––––––––––––
+
+// A fixed square, for icon buttons sitting in a row of equals where ragged widths
+// would show: the canvas footer, the markdown toolbar, the canvas toolbar. Four of
+// these existed at three sizes and two radii.
+// The softer `$border-radius-lg` is the majority and the better fit — at 32px the
+// tighter corner of `.icon-btn` reads as a rectangle.
+.icon-btn-square {
+    @extend %btn-base;
+    @extend %btn-hover-tint;
+
+    width: $size-12;
+    height: $size-12;
+    padding: 0;
+    border: none;
+    border-radius: $border-radius-lg;
+    flex-shrink: 0;
+}
+
+// The roomier square the canvas toolbar uses — it floats over the drawing with
+// nothing around it to borrow scale from.
+.icon-btn-square-lg {
+    width: $size-13;
+    height: $size-13;
+}
+
+// Tool buttons that stay on once chosen, rather than acting and releasing.
+.icon-btn-toggle {
+    &.active {
+        background: $accent-color-alpha;
+        color: $accent-color;
+    }
+}
+
+// The quieter icon button that sits inside a row or a field rather than in panel
+// chrome — the search field's clear button, the bookmark row's remove button. A
+// tighter radius and a darker hover fill, so it reads as nested rather than as
+// another control in the header.
+.icon-btn-subtle {
+    @extend %btn-base;
+
+    flex-shrink: 0;
+    padding: $space-1;
+    border-radius: $border-radius-sm;
+    color: $text-muted;
+
+    &:hover:not(:disabled, .disabled) {
+        background: $bg-tertiary;
+        color: $text-primary;
+    }
+}
+
+// Hidden until its row is hovered. The row owns the reveal, so the rule that
+// shows it lives with the row, not here.
+.icon-btn-on-hover {
+    opacity: 0;
+}
+
+// –– Footer buttons ––––––––––––––––––––
+
+// The full-width bordered button that closes a panel. Identical in both pickers,
+// down to a padding of `$border-radius $border-radius-lg` and a `font-size` of
+// `$space-3` — spacing and radius tokens standing in for values they do not name.
+// Normalised to the real scale here: the em values were never a design decision,
+// they were whichever token happened to be the right number.
+.btn-block {
+    @extend %btn-base;
+
+    width: 100%;
+    padding: $space-2 $space-3;
+    border-color: $border-color;
+    border-radius: $border-radius;
+    font-size: $font-size-xs;
+    color: $text1;
+
+    &:hover:not(:disabled, .disabled) {
+        background: $bg-hover;
+        border-color: $text2;
+    }
+}

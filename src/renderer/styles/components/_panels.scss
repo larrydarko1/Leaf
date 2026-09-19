@@ -1,0 +1,92 @@
+// Side panel shells.
+// The four side panels — search, bookmarks, themes, languages — are the same
+// three boxes: a full-height column, a header that does not scroll, and a
+// scrolling body, sometimes over a footer. Each had hand-rolled all of it under
+// its own names, and they had drifted apart on every shared value.
+
+@use '@/renderer/styles/variables' as *;
+
+// –– Panel shell ––––––––––––––––––––
+
+// The rail panels (search, bookmarks) sit in the left rail on $bg-secondary.
+.panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    background: $bg-secondary;
+}
+
+// The picker panels (themes, languages) overlay from the right instead: darker,
+// bordered against the editor, and a fixed width rather than the rail's.
+.panel-aside {
+    width: $size-28;
+    min-width: $size-27;
+    background: $base1;
+    border-left: $border-width-thin $text3;
+    color: $text1;
+}
+
+// –– Panel header ––––––––––––––––––––
+
+// The four disagreed only on the inset: two used `$space-3 $space-4`, the other
+// two had each picked their own. They use the roomier pair now.
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $space-3 $space-4;
+    border-bottom: $border-width-thin $text3;
+    flex-shrink: 0;
+}
+
+// The panel's own name. Semibold, following the theme picker — the language
+// picker's `medium` was the odd one out of the four.
+.panel-title {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $text1;
+}
+
+// The quieter, uppercase variant the rail panels use, where the title is a
+// section label above a search field rather than a heading on its own.
+.panel-label {
+    margin: 0;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+    text-transform: uppercase;
+    letter-spacing: $letter-spacing-wider;
+}
+
+// The cluster of icon buttons at the end of a header.
+.panel-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
+}
+
+// –– Panel footer ––––––––––––––––––––
+
+.panel-footer {
+    border-top: $border-width-thin $text3;
+    padding: $space-2 $space-4 $space-3;
+    flex-shrink: 0;
+}
+
+// The hint under a footer button, where an inline `<code>` names the file type or
+// path the button acts on. Both pickers had the same rule for it.
+.panel-hint {
+    margin: $space-2 0 0;
+    font-size: $font-size-xs;
+    color: $text-muted;
+    line-height: $line-height;
+
+    code {
+        background: $bg-primary;
+        color: $accent-color;
+        padding: 0 $space-1;
+        border-radius: $border-radius-xs;
+        font-family: $font-family-mono;
+    }
+}

@@ -75,7 +75,7 @@ dragGhost.src = TRANSPARENT_GIF;
 <template>
     <div
         v-if="tabs.length > 0"
-        class="tab-bar"
+        class="tab-bar scroll-x-hidden"
         role="tablist"
         :aria-label="t('app.open_files')">
         <div
@@ -154,13 +154,7 @@ dragGhost.src = TRANSPARENT_GIF;
     height: $size-13;
     background: $base1;
     border-bottom: $border-width-thin color-mix(in srgb, $text3 80%, transparent);
-    overflow: auto hidden;
     flex-shrink: 0;
-    scrollbar-width: none;
-
-    &::-webkit-scrollbar {
-        display: none;
-    }
 }
 
 /* ––– Tab Item ––– */

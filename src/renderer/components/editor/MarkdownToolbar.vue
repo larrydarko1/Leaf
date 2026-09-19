@@ -16,7 +16,7 @@ const { t } = useI18n();
         :aria-label="t('editor.markdown_formatting_toolbar')">
         <!-- Text formatting buttons -->
         <button
-            class="md-toolbar-btn"
+            class="md-toolbar-btn icon-btn-square"
             type="button"
             :title="t('editor.bold') + ' (⌘B)'"
             :aria-label="t('editor.bold')"
@@ -36,7 +36,7 @@ const { t } = useI18n();
             </svg>
         </button>
         <button
-            class="md-toolbar-btn"
+            class="md-toolbar-btn icon-btn-square"
             type="button"
             :title="t('editor.italic') + ' (⌘I)'"
             :aria-label="t('editor.italic')"
@@ -69,7 +69,7 @@ const { t } = useI18n();
             </svg>
         </button>
         <button
-            class="md-toolbar-btn"
+            class="md-toolbar-btn icon-btn-square"
             type="button"
             :title="t('editor.strikethrough')"
             :aria-label="t('editor.strikethrough')"
@@ -90,7 +90,7 @@ const { t } = useI18n();
             </svg>
         </button>
         <button
-            class="md-toolbar-btn"
+            class="md-toolbar-btn icon-btn-square"
             type="button"
             :title="t('editor.highlight') + ' (⌘⇧H)'"
             :aria-label="t('editor.highlight')"
@@ -110,7 +110,7 @@ const { t } = useI18n();
             </svg>
         </button>
         <button
-            class="md-toolbar-btn"
+            class="md-toolbar-btn icon-btn-square"
             type="button"
             :title="t('editor.inline_code')"
             :aria-label="t('editor.inline_code')"
@@ -131,7 +131,7 @@ const { t } = useI18n();
         </button>
 
         <div
-            class="md-toolbar-separator"
+            class="md-toolbar-separator toolbar-sep"
             aria-hidden="true"></div>
 
         <!-- Heading level selector -->
@@ -153,12 +153,12 @@ const { t } = useI18n();
         </select>
 
         <div
-            class="md-toolbar-separator"
+            class="md-toolbar-separator toolbar-sep"
             aria-hidden="true"></div>
 
         <!-- List formatting buttons -->
         <button
-            class="md-toolbar-btn"
+            class="md-toolbar-btn icon-btn-square"
             type="button"
             :title="t('editor.bullet_list')"
             :aria-label="t('editor.bullet_list')"
@@ -206,7 +206,7 @@ const { t } = useI18n();
             </svg>
         </button>
         <button
-            class="md-toolbar-btn"
+            class="md-toolbar-btn icon-btn-square"
             type="button"
             :title="t('editor.numbered_list')"
             :aria-label="t('editor.numbered_list')"
@@ -242,7 +242,7 @@ const { t } = useI18n();
             </svg>
         </button>
         <button
-            class="md-toolbar-btn"
+            class="md-toolbar-btn icon-btn-square"
             type="button"
             :title="t('editor.checkbox')"
             :aria-label="t('editor.checkbox')"
@@ -269,12 +269,12 @@ const { t } = useI18n();
         </button>
 
         <div
-            class="md-toolbar-separator"
+            class="md-toolbar-separator toolbar-sep"
             aria-hidden="true"></div>
 
         <!-- Block-level formatting buttons -->
         <button
-            class="md-toolbar-btn"
+            class="md-toolbar-btn icon-btn-square"
             type="button"
             :title="t('editor.blockquote')"
             :aria-label="t('editor.blockquote')"
@@ -290,7 +290,7 @@ const { t } = useI18n();
             </svg>
         </button>
         <button
-            class="md-toolbar-btn"
+            class="md-toolbar-btn icon-btn-square"
             type="button"
             :title="t('editor.link')"
             :aria-label="t('editor.link')"
@@ -310,7 +310,7 @@ const { t } = useI18n();
             </svg>
         </button>
         <button
-            class="md-toolbar-btn"
+            class="md-toolbar-btn icon-btn-square"
             type="button"
             :title="t('editor.table')"
             :aria-label="t('editor.table')"
@@ -355,7 +355,7 @@ const { t } = useI18n();
             </svg>
         </button>
         <button
-            class="md-toolbar-btn"
+            class="md-toolbar-btn icon-btn-square"
             type="button"
             :title="t('editor.horizontal_rule')"
             :aria-label="t('editor.horizontal_rule')"
@@ -397,23 +397,10 @@ const { t } = useI18n();
 
 /* ––– Toolbar Buttons ––– */
 
+// Shorter than the square default: the toolbar is a dense strip above the editor,
+// and full-height buttons would crowd the text.
 .md-toolbar-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: $size-12;
     height: $size-11;
-    border: none;
-    border-radius: $border-radius-lg;
-    background: transparent;
-    color: $text2;
-    cursor: pointer;
-    transition: all $transition-fast;
-
-    &:hover {
-        background: color-mix(in srgb, $text2 15%, transparent);
-        color: $text1;
-    }
 
     &:active {
         background: $accent-color;
@@ -428,15 +415,6 @@ const { t } = useI18n();
 }
 
 /* ––– Separator Dividers ––– */
-
-.md-toolbar-separator {
-    width: $size-0;
-    height: $size-8;
-    background: color-mix(in srgb, $text2 20%, transparent);
-    margin: 0 $space-1;
-    flex-shrink: 0;
-    border-radius: $border-radius-xs;
-}
 
 /* ––– Heading Level Selector ––– */
 

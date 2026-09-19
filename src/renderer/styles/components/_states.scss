@@ -1,0 +1,43 @@
+// Empty and secondary-information states — what stands in for content that has
+// not arrived or does not exist.
+
+@use '@/renderer/styles/variables' as *;
+
+// –– Empty states ––––––––––––––––––––
+
+// The centred block in place of an empty list. Five components had their own, at
+// four paddings and three colours; this is the roomy version the rail panels use,
+// for a whole pane with nothing in it.
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: $space-9 $space-6;
+    text-align: center;
+    color: $text-muted;
+}
+
+// The large glyph above an empty state's text, dimmed so it reads as decoration
+// rather than as something to click.
+.empty-state-icon {
+    opacity: $opacity-lowest;
+    margin-bottom: $space-4;
+}
+
+// The first line of an empty state — what is missing, in the page's own voice.
+.empty-state-title {
+    margin: $space-1 0;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $text-primary;
+}
+
+// –– Hints ––––––––––––––––––––
+
+// A quieter follow-up line: what to do about it, or which key does it.
+.hint {
+    margin-top: $space-2;
+    font-size: $font-size-xs;
+    color: $text-muted;
+}

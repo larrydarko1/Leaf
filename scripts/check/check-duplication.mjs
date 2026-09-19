@@ -8,7 +8,7 @@
  *        • typescript is LOGIC. Two copies of a branch is the case that actually
  *          costs you a bug.
  *        • scss is presentation. Repetition there is real debt (it is what the
- *          token system and the shared mixins in components.scss exist to
+ *          token system and the shared patterns in styles/components/ exist to
  *          absorb), but a stale copy makes something look wrong, not behave
  *          wrong — so it gets a looser ceiling, honestly labelled.
  *        • html is SFC template markup, where structural repetition is often the
@@ -37,16 +37,18 @@ const SCAN = 'src';
  */
 const CEILINGS = {
     typescript: { limit: 4, note: 'logic — two copies of a branch is how a fixed bug comes back' },
-    scss: { limit: 8, note: 'presentation — real debt, but it makes things look wrong rather than behave wrong' },
+    scss: { limit: 6, note: 'presentation — real debt, but it makes things look wrong rather than behave wrong' },
     html: { limit: 6, note: 'SFC markup — structural repetition is often cheaper than another component' },
 };
 
 /**
  * No single clone may exceed this many tokens, whatever the percentages say.
- * The largest today is 147 (a shared panel layout between LanguagePicker and
- * ThemePicker); this leaves a little room without leaving room for a new one.
+ * The largest today is 132; the 147-token panel layout shared by LanguagePicker
+ * and ThemePicker that used to hold this record is now one rule in
+ * styles/components/_panels.scss. This leaves a little room without leaving room
+ * for a new one.
  */
-const MAX_CLONE_TOKENS = 160;
+const MAX_CLONE_TOKENS = 140;
 
 /**
  * Resolved from node_modules rather than imported, because jscpd is a CLI.

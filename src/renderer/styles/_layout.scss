@@ -1,0 +1,37 @@
+// Layout utilities and patterns
+// Global layout helpers:
+// - Text utilities (.truncate)
+// - Flex primitives (.row, .stack, .fill)
+// Keep component-specific layouts scoped in the SFC.
+
+@use '@/renderer/styles/variables' as *;
+@use '@/renderer/styles/components/placeholders' as *;
+
+// –– Text utilities ––––––––––––––––––––
+
+// The single-line clip, as a class for the template. Sixteen sites wrote it by
+// hand; the ones inside a flex row needed `min-width: 0` too and not all had it,
+// which is why those names clipped their container instead of themselves.
+.truncate {
+    @extend %truncate;
+}
+
+// –– Flex primitives ––––––––––––––––––––
+
+.row {
+    display: flex;
+    align-items: center;
+}
+
+.stack {
+    display: flex;
+    flex-direction: column;
+}
+
+// Takes the free space in a flex parent and is allowed to shrink below its
+// content — the pairing every scrolling pane and every truncating label inside a
+// row needs.
+.fill {
+    flex: 1;
+    min-width: 0;
+}

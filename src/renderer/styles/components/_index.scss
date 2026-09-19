@@ -1,0 +1,14 @@
+// Reusable component patterns.
+// This file is the entry point for `@use '@/renderer/styles/components'` — it
+// forwards every partial in this folder and holds no rules of its own. Add a
+// category here when you add a partial.
+// Only move a pattern into these files if it is used by 2+ unrelated
+// components. Anything that belongs to one component stays scoped in its SFC.
+
+@forward '@/renderer/styles/components/scrollbars';
+@forward '@/renderer/styles/components/states';
+@forward '@/renderer/styles/components/buttons';
+@forward '@/renderer/styles/components/panels';
+@forward '@/renderer/styles/components/lists';
+@forward '@/renderer/styles/components/media';
+@forward '@/renderer/styles/components/toolbars';

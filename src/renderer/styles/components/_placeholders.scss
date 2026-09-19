@@ -1,0 +1,76 @@
+// Shared placeholder selectors.
+// A placeholder emits no CSS of its own — it only exists to be `@extend`ed, so
+// the declarations land once in the extending rule instead of being repeated.
+// They live together in one file because `@extend` cannot reach across module
+// boundaries unless the placeholder is `@use`d: `%btn-base` is defined for
+// buttons but extended by the media transport and the toolbars. Keeping them
+// here means a partial `@use`s this file rather than each other, which is also
+// what stops the graph growing cycles.
+
+// `@extend` also cannot cross the SFC boundary — a scoped block extending one of
+// these would emit its own copy. SFCs compose the classes instead; these are for
+// the stylesheets in this folder only.
+
+@use '@/renderer/styles/variables' as *;
+
+// –– Interaction bases ––––––––––––––––––––
+
+// Every button-shaped control in the app starts here: the chrome is stripped, the
+// icon is centred, and disabled is settled once. Before this, 22 files each
+// re-derived `border: none` + flex centring, and `:disabled` was written 12 times
+// across four different opacities.
+%btn-base {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: $border-width-thin transparent;
+    background: transparent;
+    color: $text2;
+    cursor: pointer;
+    transition:
+        background $transition-base,
+        border-color $transition-base,
+        color $transition-base,
+        opacity $transition-base;
+
+    &:disabled,
+    &.disabled {
+        opacity: $opacity-mid-low;
+        cursor: not-allowed;
+    }
+}
+
+// The neutral hover every quiet control shares — a tint plus a lift to full-
+// strength text. Split from `%btn-base` because the transport controls and the
+// canvas toolbar suppress it in favour of their own.
+%btn-hover-tint {
+    &:hover:not(:disabled, .disabled) {
+        background: $bg-hover;
+        color: $text1;
+    }
+}
+
+// –– Surfaces ––––––––––––––––––––
+
+// A raised, blurred panel that floats over content: the context menu, the model
+// dropdown, the file picker, the canvas toolbar. Seven files had their own
+// `backdrop-filter` surface at three different blur radii.
+%floating-surface {
+    background: color-mix(in srgb, $bg-primary $opacity-almost-opaque * 100%, transparent);
+    backdrop-filter: blur($backdrop-blur-sm);
+    border: $border-width-thin $border-color;
+    border-radius: $border-radius-lg;
+    box-shadow: $shadow-dropdown;
+}
+
+// –– Text ––––––––––––––––––––
+
+// Single-line clipping. Sixteen sites across eight files wrote these three
+// declarations out; roughly half also needed the `min-width: 0` that makes them
+// work inside a flex row, and only some remembered it.
+%truncate {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

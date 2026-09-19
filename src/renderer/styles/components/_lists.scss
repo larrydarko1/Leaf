@@ -1,0 +1,128 @@
+// List rows and the panels' result lists.
+// The selectable row, the file row inside it, and the message that stands in for
+// an empty list.
+
+@use '@/renderer/styles/variables' as *;
+@use '@/renderer/styles/components/placeholders' as *;
+
+// –– Selectable row ––––––––––––––––––––
+
+// A full-width button acting as a list row, with a tinted active state carrying a
+// visible border as well as a fill — the fill alone is too close to the hover
+// tint to read as "selected" in the lighter themes.
+// The theme and language pickers had byte-identical copies of this.
+.list-item {
+    @extend %btn-base;
+
+    width: 100%;
+    justify-content: flex-start;
+    gap: $space-3;
+    padding: $space-2 $space-3;
+    margin-bottom: $space-1;
+    border-radius: $border-radius-lg;
+    color: $text1;
+    text-align: left;
+
+    &:hover {
+        background: $bg-hover;
+    }
+
+    &.active {
+        background: $accent-color-alpha;
+        border-color: color-mix(in srgb, $accent-color 35%, transparent);
+    }
+}
+
+// The accent tick at the end of the selected row.
+.list-check {
+    flex-shrink: 0;
+    color: $accent-color;
+}
+
+// –– Result row ––––––––––––––––––––
+
+// The rail panels' result row. Unlike `.list-item` this is a div, not a button:
+// it carries both a `.selected` (keyboard cursor) and an `.active` (open file)
+// state, and the two are allowed to coincide. The search results and the
+// bookmarks list had identical copies.
+.result-item {
+    padding: $space-2 $space-3;
+    border-radius: $border-radius-lg;
+    margin-bottom: $space-0;
+    cursor: pointer;
+    user-select: none;
+    transition: background $transition-fast;
+
+    &:hover {
+        background: $bg-hover;
+    }
+
+    &.selected {
+        background: $bg-selected;
+    }
+
+    // The open file. Lifts the muted secondary text to full strength too —
+    // otherwise the path under an active row stays as dim as an inactive one.
+    &.active {
+        background: $bg-selected;
+        color: $text1;
+
+        .file-path,
+        .file-icon {
+            color: $text1;
+        }
+    }
+}
+
+// The padded well the rows sit in.
+.list-body {
+    padding: $space-1;
+}
+
+// –– File row ––––––––––––––––––––
+
+// An icon, then a name over its path. Shared by the search results and the
+// bookmarks list, which held identical copies of all five rules.
+.file-info {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+}
+
+.file-icon {
+    flex-shrink: 0;
+    color: $text-muted;
+}
+
+.file-details {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: $space-0;
+}
+
+.file-name {
+    @extend %truncate;
+
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+}
+
+.file-path {
+    @extend %truncate;
+
+    font-size: $font-size-xs;
+    color: $text-muted;
+}
+
+// –– Empty list ––––––––––––––––––––
+
+// The message in place of a list with nothing in it. The four panels had four
+// paddings and three colours between them.
+.list-empty {
+    padding: $space-4 $space-3;
+    text-align: center;
+    font-size: $font-size-xs;
+    color: $text-muted;
+}

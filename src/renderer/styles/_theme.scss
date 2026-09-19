@@ -1,0 +1,43 @@
+// Theme fallback layer
+// The compiled-in palette, applied on first paint before JS loads the user's
+// active theme. useTheme.ts then overrides these same custom properties on
+// <html> from the selected preset.
+
+// Matches assets/themes/dark.json. Must stay in sync — check-scss-standards.mjs
+// compares this block against every preset's `colors` map in both directions.
+
+// This lives apart from _variables.scss because it EMITS a rule, and
+// _variables.scss is injected into every SFC. Kept there, this block shipped 27
+// times.
+
+:root {
+    --text1: #fff;
+    --text2: #b0b0b0;
+    --text3: #282828;
+    --text-primary: #fff;
+    --text-muted: #888;
+    --base1: #121212;
+    --base2: #fff;
+    --base3: #282828;
+    --bg-primary: #1e1e1e;
+    --bg-secondary: #181818;
+    --bg-tertiary: #252525;
+    --bg-hover: #2a2a2a;
+    --bg-selected: #333;
+    --border-color: #333;
+    --accent-color: #3eb489;
+    --accent-color-alpha: rgb(62 180 137 / 15%);
+    --success-color: #28a745;
+    --success-color-alpha: rgb(40 167 69 / 15%);
+    --warning-color: #ffc107;
+    --warning-color-alpha: rgb(255 193 7 / 15%);
+    --danger-color: #dc3545;
+    --danger-color-alpha: rgb(220 53 69 / 15%);
+    --tier-small: rgb(40 167 69 / 15%);
+    --tier-medium: rgb(0 123 255 / 15%);
+    --tier-large: rgb(255 165 0 / 15%);
+    --tier-extreme: rgb(220 53 69 / 15%);
+    --scrollbar-thumb: #444;
+    --scrollbar-thumb-hover: #555;
+    --grid-color: rgb(255 255 255 / 6%);
+}

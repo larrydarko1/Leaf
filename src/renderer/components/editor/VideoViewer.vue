@@ -77,12 +77,12 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 
             <!-- Control bar -->
             <div
-                class="video-controls"
+                class="video-controls media-controls"
                 role="group"
                 :aria-label="t('editor.video_player_controls')">
                 <!-- Play/pause button -->
                 <button
-                    class="video-ctrl-btn"
+                    class="video-ctrl-btn media-ctrl-btn"
                     type="button"
                     :aria-label="videoPlaying ? t('editor.pause_video') : t('editor.play_video')"
                     :title="videoPlaying ? t('editor.pause') : t('editor.play')"
@@ -120,7 +120,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 
                 <!-- Current time display -->
                 <time
-                    class="video-time"
+                    class="video-time media-time"
                     aria-live="polite"
                     aria-atomic="true"
                     >{{ formatTime(videoCurrentTime) }}</time
@@ -128,7 +128,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 
                 <!-- Progress bar -->
                 <div
-                    class="video-progress-wrapper"
+                    class="video-progress-wrapper media-progress"
                     role="slider"
                     :aria-label="t('editor.video_progress', { progress: videoProgressPercent })"
                     :aria-valuenow="videoProgressPercent"
@@ -139,24 +139,24 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                     @click="seekVideo"
                     @keydown.left="seekVideoBySeconds(-5)"
                     @keydown.right="seekVideoBySeconds(5)">
-                    <div class="video-progress-track">
+                    <div class="video-progress-track media-progress-track">
                         <div
-                            class="video-progress-fill"
+                            class="video-progress-fill media-progress-fill"
                             :style="{ width: videoProgressPercent + '%' }"></div>
                     </div>
                 </div>
 
                 <!-- Total duration display -->
                 <time
-                    class="video-time"
+                    class="video-time media-time"
                     :aria-label="t('editor.total_duration')"
                     >{{ formatTime(videoDuration) }}</time
                 >
 
                 <!-- Volume control -->
-                <fieldset class="video-volume-wrapper">
+                <fieldset class="video-volume-wrapper media-volume">
                     <button
-                        class="video-ctrl-btn"
+                        class="video-ctrl-btn media-ctrl-btn"
                         type="button"
                         :aria-label="videoVolume === 0 ? t('editor.unmute_video') : t('editor.mute_video')"
                         :title="videoVolume === 0 ? t('editor.unmute') : t('editor.mute')"
@@ -216,7 +216,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                     <input
                         id="volume-slider"
                         type="range"
-                        class="video-volume-slider"
+                        class="video-volume-slider media-volume-slider"
                         min="0"
                         max="1"
                         step="0.01"
@@ -289,124 +289,12 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 
 /* ––– Control Bar ––– */
 
+// Joined to the video above it, so the top edge is open and only the bottom
+// corners round.
 .video-controls {
-    display: flex;
-    align-items: center;
-    gap: $space-3;
-    width: 100%;
     padding: $space-2 $space-4;
-    background: $bg-primary;
-    border: $border-width-thin $text3;
     border-top: none;
     border-radius: 0 0 $border-radius-xl $border-radius-xl;
-}
-
-.video-ctrl-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: $size-12;
-    height: $size-12;
-    min-width: $size-12;
-    border-radius: $border-radius-round;
-    border: none;
-    background: $accent-color;
-    color: $text1;
-    cursor: pointer;
-    transition: all $transition-fast;
-    padding: 0;
-
-    &:hover {
-        transform: scale($scale-hover);
-        filter: brightness(1.1);
-    }
-
-    &:active {
-        transform: scale($scale-hover-sm);
-    }
-}
-
-/* ––– Progress & Time Display ––– */
-
-.video-time {
-    font-size: $font-size-xs;
-    color: $text2;
-    font-variant-numeric: tabular-nums;
-    min-width: $size-14;
-    text-align: center;
-    user-select: none;
-}
-
-.video-progress-wrapper {
-    flex: 1;
-    cursor: pointer;
-    padding: $space-2 0;
-    display: flex;
-    align-items: center;
-}
-
-.video-progress-track {
-    width: 100%;
-    height: $size-2;
-    background: $bg-hover;
-    border-radius: $border-radius-xs;
-    overflow: hidden;
-}
-
-.video-progress-fill {
-    height: 100%;
-    background: $accent-color;
-    border-radius: $border-radius-xs;
-    transition: width $transition-instant;
-}
-
-/* ––– Volume Control ––– */
-
-.video-volume-wrapper {
-    display: flex;
-    align-items: center;
-    gap: $space-1;
-}
-
-.video-volume-slider {
-    appearance: none;
-    width: $size-17;
-    height: $size-2;
-    background: $bg-hover;
-    border-radius: $border-radius-xs;
-    outline: none;
-    cursor: pointer;
-    position: relative;
-
-    &::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        background: $accent-color;
-        /* stylelint-disable-next-line no-unknown-custom-properties */
-        width: calc(var(--volume) * 100%);
-        max-width: $size-17;
-        height: $size-2;
-        border-radius: $border-radius-xs;
-        pointer-events: none;
-    }
-
-    &::-webkit-slider-thumb {
-        appearance: none;
-        width: $size-6;
-        height: $size-6;
-        border-radius: $border-radius-round;
-        background: $accent-color;
-        cursor: pointer;
-        transition: transform $transition-fast;
-        position: relative;
-        z-index: $z-normal;
-    }
-
-    &::-webkit-slider-thumb:hover {
-        transform: scale($scale-hover-lg);
-    }
 }
 
 /* ––– Error State ––– */

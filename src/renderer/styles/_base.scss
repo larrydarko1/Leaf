@@ -1,5 +1,6 @@
 // Global reset and base styles
-// Resets, universal styles, animations, and element defaults
+// Resets, universal styles, animations, and element defaults.
+// Emits rules, so it is reached only through index.scss — never injected.
 
 @use '@/renderer/styles/variables' as *;
 
@@ -47,8 +48,8 @@ html,
 // –– Reduced motion ––––––––––––––––––––
 
 // The single escape hatch for every transition and animation in the app. The
-// SFCs declare motion freely; this is what makes all of it opt-out in one place
-// for users who asked the OS for less of it.
+// stylesheets declare motion freely; this is what makes all of it opt-out in one
+// place for users who asked the OS for less of it.
 // Kept at 0.01ms rather than `none` so animationend/transitionend still fire —
 // anything that waits on one keeps working instead of hanging.
 @media (prefers-reduced-motion: reduce) {

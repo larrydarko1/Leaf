@@ -1,0 +1,18 @@
+// Toolbar chrome — the rules between groups of tool buttons.
+
+@use '@/renderer/styles/variables' as *;
+
+// –– Separators ––––––––––––––––––––
+
+// The hairline between two groups of toolbar buttons. The markdown toolbar and the
+// canvas toolbar each had one, at two heights and two colours — one a flat
+// $border-color, the other a 20% tint of $text2. The tint is the one that survives
+// the light themes, where $border-color is nearly the toolbar's own background.
+.toolbar-sep {
+    width: $size-0;
+    height: $size-11;
+    margin: 0 $space-1;
+    background: color-mix(in srgb, $text2 20%, transparent);
+    border-radius: $border-radius-xs;
+    flex-shrink: 0;
+}

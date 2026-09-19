@@ -102,7 +102,7 @@ function handleClickOutside(e: MouseEvent): void {
             :aria-label="t('drawing.tool_selection')">
             <!-- Selection -->
             <button
-                class="toolbar-btn"
+                class="toolbar-btn icon-btn-square icon-btn-square-lg icon-btn-toggle"
                 :class="{ active: currentTool === 'select' }"
                 :aria-label="t('drawing.selection_tool', { shortcut: 'V' })"
                 :aria-pressed="currentTool === 'select'"
@@ -121,7 +121,7 @@ function handleClickOutside(e: MouseEvent): void {
 
             <!-- Hand -->
             <button
-                class="toolbar-btn"
+                class="toolbar-btn icon-btn-square icon-btn-square-lg icon-btn-toggle"
                 :class="{ active: currentTool === 'hand' }"
                 :aria-label="t('drawing.hand_tool', { shortcut: 'H' })"
                 :aria-pressed="currentTool === 'hand'"
@@ -150,7 +150,7 @@ function handleClickOutside(e: MouseEvent): void {
 
             <!-- Rectangle -->
             <button
-                class="toolbar-btn"
+                class="toolbar-btn icon-btn-square icon-btn-square-lg icon-btn-toggle"
                 :class="{ active: currentTool === 'rectangle' }"
                 :aria-label="t('drawing.rectangle_tool', { shortcut: 'R' })"
                 :aria-pressed="currentTool === 'rectangle'"
@@ -175,7 +175,7 @@ function handleClickOutside(e: MouseEvent): void {
 
             <!-- Diamond -->
             <button
-                class="toolbar-btn"
+                class="toolbar-btn icon-btn-square icon-btn-square-lg icon-btn-toggle"
                 :class="{ active: currentTool === 'diamond' }"
                 :aria-label="t('drawing.diamond_tool', { shortcut: 'D' })"
                 :aria-pressed="currentTool === 'diamond'"
@@ -195,7 +195,7 @@ function handleClickOutside(e: MouseEvent): void {
 
             <!-- Ellipse -->
             <button
-                class="toolbar-btn"
+                class="toolbar-btn icon-btn-square icon-btn-square-lg icon-btn-toggle"
                 :class="{ active: currentTool === 'ellipse' }"
                 :aria-label="t('drawing.ellipse_tool', { shortcut: 'O' })"
                 :aria-pressed="currentTool === 'ellipse'"
@@ -218,7 +218,7 @@ function handleClickOutside(e: MouseEvent): void {
 
             <!-- Triangle -->
             <button
-                class="toolbar-btn"
+                class="toolbar-btn icon-btn-square icon-btn-square-lg icon-btn-toggle"
                 :class="{ active: currentTool === 'triangle' }"
                 :aria-label="t('drawing.triangle_tool', { shortcut: 'T' })"
                 :aria-pressed="currentTool === 'triangle'"
@@ -238,7 +238,7 @@ function handleClickOutside(e: MouseEvent): void {
 
             <!-- Arrow -->
             <button
-                class="toolbar-btn"
+                class="toolbar-btn icon-btn-square icon-btn-square-lg icon-btn-toggle"
                 :class="{ active: currentTool === 'arrow' }"
                 :aria-label="t('drawing.arrow_tool', { shortcut: 'A' })"
                 :aria-pressed="currentTool === 'arrow'"
@@ -265,7 +265,7 @@ function handleClickOutside(e: MouseEvent): void {
 
             <!-- Line -->
             <button
-                class="toolbar-btn"
+                class="toolbar-btn icon-btn-square icon-btn-square-lg icon-btn-toggle"
                 :class="{ active: currentTool === 'line' }"
                 :aria-label="t('drawing.line_tool', { shortcut: 'L' })"
                 :aria-pressed="currentTool === 'line'"
@@ -294,7 +294,7 @@ function handleClickOutside(e: MouseEvent): void {
 
             <!-- Freedraw -->
             <button
-                class="toolbar-btn"
+                class="toolbar-btn icon-btn-square icon-btn-square-lg icon-btn-toggle"
                 :class="{ active: currentTool === 'freedraw' }"
                 :aria-label="t('drawing.freedraw_tool', { shortcut: 'P' })"
                 :aria-pressed="currentTool === 'freedraw'"
@@ -316,7 +316,7 @@ function handleClickOutside(e: MouseEvent): void {
 
             <!-- Text -->
             <button
-                class="toolbar-btn"
+                class="toolbar-btn icon-btn-square icon-btn-square-lg icon-btn-toggle"
                 :class="{ active: currentTool === 'text' }"
                 :aria-label="t('drawing.text_tool', { shortcut: 'X' })"
                 :aria-pressed="currentTool === 'text'"
@@ -348,7 +348,7 @@ function handleClickOutside(e: MouseEvent): void {
 
             <!-- Eraser -->
             <button
-                class="toolbar-btn"
+                class="toolbar-btn icon-btn-square icon-btn-square-lg icon-btn-toggle"
                 :class="{ active: currentTool === 'eraser' }"
                 :aria-label="t('drawing.eraser_tool', { shortcut: 'E' })"
                 :aria-pressed="currentTool === 'eraser'"
@@ -377,7 +377,7 @@ function handleClickOutside(e: MouseEvent): void {
                 ref="archDropdownEl"
                 class="arch-dropdown">
                 <button
-                    class="toolbar-btn"
+                    class="toolbar-btn icon-btn-square icon-btn-square-lg icon-btn-toggle"
                     :class="{ active: isArchTool }"
                     :aria-label="t('drawing.architecture_shapes')"
                     :aria-pressed="isArchTool"
@@ -452,43 +452,6 @@ function handleClickOutside(e: MouseEvent): void {
     border: $border-width-thin solid $border-color;
     border-radius: $border-radius-xl;
     box-shadow: $shadow-float;
-}
-
-/* ––– Toolbar Buttons & Controls ––– */
-
-.toolbar-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: $size-13;
-    height: $size-13;
-    border: none;
-    border-radius: $border-radius-lg;
-    background: transparent;
-    color: $text2;
-    cursor: pointer;
-    transition:
-        background $transition-fast,
-        color $transition-fast;
-    flex-shrink: 0;
-
-    &:hover {
-        background: $bg-hover;
-        color: $text1;
-    }
-
-    &.active {
-        background: $accent-color-alpha;
-        color: $accent-color;
-    }
-}
-
-.toolbar-sep {
-    width: $size-0;
-    height: $size-11;
-    background: $border-color;
-    margin: 0 $space-0;
-    flex-shrink: 0;
 }
 
 /* ––– Architecture Dropdown Menu ––– */

@@ -296,7 +296,7 @@ onUnmounted(() => {
     <div class="file-explorer">
         <!-- eslint-disable-next-line a11y/no-static-element-interactions -->
         <div
-            class="file-list"
+            class="file-list scroll-y-hover"
             role="region"
             :class="{ 'drag-over-root': isDragOverRoot }"
             @dragover.prevent="handleRootDragOver"
@@ -360,10 +360,7 @@ onUnmounted(() => {
 
 .file-list {
     flex: 1;
-    overflow-y: auto;
     padding: $space-1 0;
-
-    @include scrollbar($show-on-hover: true);
 
     &.drag-over-root {
         background: $bg-hover;
