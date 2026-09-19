@@ -31,7 +31,8 @@
         background $transition-base,
         border-color $transition-base,
         color $transition-base,
-        opacity $transition-base;
+        opacity $transition-base,
+        transform $transition-fast;
 
     &:disabled,
     &.disabled {

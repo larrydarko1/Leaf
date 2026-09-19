@@ -117,10 +117,10 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="ai-input-area">
+    <div class="ai-input-area stack">
         <!-- eslint-disable-next-line a11y/no-static-element-interactions -->
         <div
-            class="ai-resize-handle"
+            class="ai-resize-handle row"
             :class="{ 'ai-resize-active': isResizing }"
             :title="t('ai.drag_to_resize_input_area')"
             @mousedown="startResize">
@@ -130,11 +130,11 @@ onMounted(() => {
         <!-- Attached context files -->
         <div
             v-if="contextFiles.length > 0"
-            class="ai-context-files">
+            class="ai-context-files stack">
             <span class="ai-context-files-label"
                 >{{ t('ai.context_files') }} ({{ contextFiles.length }}/{{ maxContextFiles }})</span
             >
-            <div class="ai-context-chips">
+            <div class="ai-context-chips row">
                 <span
                     v-for="file in contextFiles"
                     :key="file.path"
@@ -148,10 +148,10 @@ onMounted(() => {
                         aria-hidden="true">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z" />
                     </svg>
-                    <span class="ai-context-chip-name">{{ file.name }}</span>
+                    <span class="ai-context-chip-name truncate">{{ file.name }}</span>
                     <button
                         type="button"
-                        class="ai-context-chip-remove"
+                        class="ai-context-chip-remove icon-btn icon-btn-danger"
                         :title="t('ai.remove_from_context')"
                         :aria-label="t('ai.remove_file_from_context', { file: file.name })"
                         @click="$emit('remove-context-file', file.path)">
@@ -184,10 +184,10 @@ onMounted(() => {
             class="ai-input-row"
             :class="{ 'ai-input-activated': isStreaming }">
             <!-- Add files to context -->
-            <div class="ai-context-picker">
+            <div class="ai-context-picker row">
                 <button
                     type="button"
-                    class="ai-context-toggle ai-add-context-btn"
+                    class="ai-context-toggle ai-add-context-btn icon-btn"
                     :class="{ 'ai-context-active': showFilePicker }"
                     :title="t('ai.add_files_to_context')"
                     :aria-label="t('ai.add_files_to_context')"
@@ -210,22 +210,22 @@ onMounted(() => {
                 <!-- eslint-disable-next-line a11y/no-static-element-interactions, a11y/click-events-have-key-events -->
                 <div
                     v-if="showFilePicker"
-                    class="ai-file-picker-overlay"
+                    class="ai-file-picker-overlay menu-overlay"
                     @click="showFilePicker = false" />
                 <div
                     v-if="showFilePicker"
-                    class="ai-file-picker">
+                    class="ai-file-picker stack floating">
                     <input
                         ref="fileSearchInput"
                         v-model="fileSearch"
                         type="text"
-                        class="ai-file-picker-search"
+                        class="ai-file-picker-search field-bare"
                         :placeholder="t('ai.search_files')"
                         :aria-label="t('ai.search_files')" />
-                    <ul class="ai-file-picker-list">
+                    <ul class="ai-file-picker-list scroll-y">
                         <li
                             v-if="filteredAvailableFiles.length === 0"
-                            class="ai-file-picker-empty">
+                            class="ai-file-picker-empty menu-empty">
                             {{ t('ai.no_files_to_add') }}
                         </li>
                         <li
@@ -233,10 +233,10 @@ onMounted(() => {
                             :key="file.path">
                             <button
                                 type="button"
-                                class="ai-file-picker-item"
+                                class="ai-file-picker-item menu-item menu-item-stacked"
                                 @click="selectContextFile(file)">
-                                <span class="ai-file-picker-item-name">{{ file.name }}</span>
-                                <span class="ai-file-picker-item-path">{{ file.relativePath }}</span>
+                                <span class="ai-file-picker-item-name truncate">{{ file.name }}</span>
+                                <span class="ai-file-picker-item-path truncate">{{ file.relativePath }}</span>
                             </button>
                         </li>
                     </ul>
@@ -245,7 +245,7 @@ onMounted(() => {
 
             <button
                 type="button"
-                class="ai-context-toggle"
+                class="ai-context-toggle icon-btn"
                 :class="{ 'ai-context-active': showThinking }"
                 :title="t('ai.show_thinking')"
                 :aria-label="t('ai.show_thinking')"
@@ -285,7 +285,7 @@ onMounted(() => {
                 ref="inputField"
                 :value="inputMessage"
                 :placeholder="t('ai.ask_something')"
-                class="ai-input"
+                class="ai-input field-bare field-bare-grow"
                 :style="{ height: maxHeightPx + 'px' }"
                 :disabled="!isReady || isAnyGenerating"
                 rows="1"
@@ -294,7 +294,7 @@ onMounted(() => {
                 @keydown.enter.exact.prevent="$emit('send')" />
             <button
                 v-if="isStreaming"
-                class="ai-btn-send ai-btn-stop"
+                class="ai-btn-send ai-btn-stop btn-accent btn-accent-square btn-danger"
                 :title="t('ai.stop_generating')"
                 :aria-label="t('ai.stop_generating')"
                 @click="$emit('stop')">
@@ -316,7 +316,7 @@ onMounted(() => {
             </button>
             <button
                 v-else
-                class="ai-btn-send"
+                class="ai-btn-send btn-accent btn-accent-square"
                 :disabled="!inputMessage.trim() || !isReady || isStreaming"
                 :title="t('ai.send_message')"
                 :aria-label="t('ai.send_message')"
@@ -350,42 +350,27 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-/* ––– Root Container ––– */
-
 .ai-input-area {
-    display: flex;
-    flex-direction: column;
-    padding: $space-2 $space-3 $space-3;
     flex-shrink: 0;
+    padding: $space-2 $space-3 $space-3;
     user-select: none;
 }
 
-/* ––– Resize Handle ––– */
+// –– Resize handle ––––––––––––––––––––
 
+// A drag target with no appearance of its own: the grip inside it is what the
+// pointer sees, and the handle is only the area that catches the drag.
 .ai-resize-handle {
-    display: flex;
-    align-items: center;
     justify-content: center;
     height: $size-6;
     margin-top: $space-1;
     cursor: ns-resize;
-    transition: background-color $transition-base;
     user-select: none;
-    pointer-events: auto;
 
-    &:hover,
-    &.ai-resize-active {
-        background: transparent;
-
-        .ai-resize-grip {
-            background-color: $accent-color;
-            opacity: 1;
-        }
-    }
-
-    &.ai-resize-active {
-        user-select: none;
-        background: transparent;
+    &:hover .ai-resize-grip,
+    &.ai-resize-active .ai-resize-grip {
+        background-color: $accent-color;
+        opacity: 1;
     }
 }
 
@@ -400,32 +385,37 @@ onMounted(() => {
         background-color $transition-base;
 }
 
-/* ––– Input Row ––– */
+// –– Composer row ––––––––––––––––––––
 
+// The bordered row the textarea sits bare inside, so the whole row takes the
+// focus rather than the field drawing a second edge within it.
 .ai-input-row {
     display: flex;
     align-items: flex-start;
-    gap: 0;
+    padding: $space-1 $space-1 $space-1 $space-2;
     background: $bg-primary;
     border: $border-width-thin $text3;
     border-radius: $border-radius-xl;
-    padding: $space-1 $space-1 $space-1 $space-2;
     transition: border-color $transition-base;
 
     &:focus-within {
         border-color: $accent-color;
     }
 
+    // While a reply is streaming the border becomes a rotating conic gradient: the
+    // ::before is the spinning wheel and the ::after masks all but its edge, which
+    // is why the row needs its own stacking context.
     &.ai-input-activated {
-        border-color: transparent;
         position: relative;
         overflow: hidden;
         isolation: isolate;
+        border-color: transparent;
 
         &::before {
             content: '';
             position: absolute;
             inset: -50%;
+            z-index: -2;
             background: conic-gradient(
                 from 0deg,
                 transparent 0deg,
@@ -435,44 +425,29 @@ onMounted(() => {
                 transparent 360deg
             );
             animation: ai-border-spin 2s linear infinite;
-            z-index: -2;
         }
 
         &::after {
             content: '';
             position: absolute;
             inset: $size-0;
+            z-index: $z-negative;
             background: $bg-primary;
             border-radius: $border-radius-xl;
-            z-index: $z-negative;
         }
     }
 }
 
-/* ––– Context Toggle ––– */
+// –– Context toggles ––––––––––––––––––––
 
+// The two switches flanking the field — attach files, show thinking. They are
+// icon buttons whose state is a colour rather than a fill, because a fill inside
+// the composer row reads as a second row.
 .ai-context-toggle {
-    display: flex;
-    border: none;
-    background: transparent;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
     padding: $space-3 $space-1;
-    color: $text2;
-    flex-shrink: 0;
-    border-radius: $border-radius;
-    transition:
-        color $transition-fast,
-        background $transition-fast;
 
     input {
         display: none;
-    }
-
-    &:hover {
-        color: $text1;
-        background: $bg-hover;
     }
 }
 
@@ -480,38 +455,40 @@ onMounted(() => {
     color: $accent-color;
 }
 
-/* ––– Context Files (attached) ––– */
+.ai-add-context-btn {
+    &:disabled:hover {
+        background: transparent;
+        color: $text2;
+    }
+}
+
+// –– Attached context files ––––––––––––––––––––
 
 .ai-context-files {
-    display: flex;
-    flex-direction: column;
     gap: $space-1;
     padding: 0 $space-1 $space-2;
 }
 
 .ai-context-files-label {
-    font-size: $font-size-xs;
     color: $text2;
+    font-size: $font-size-xs;
     font-weight: $font-weight-semibold;
 }
 
 .ai-context-chips {
-    display: flex;
     flex-wrap: wrap;
     gap: $space-1;
 }
 
 .ai-context-chip {
-    display: inline-flex;
-    align-items: center;
     gap: $space-1;
     max-width: 100%;
     padding: $space-0 $space-1 $space-0 $space-2;
     background: $bg-hover;
     border: $border-width-thin $text3;
     border-radius: $border-radius;
-    font-size: $font-size-xs;
     color: $text1;
+    font-size: $font-size-xs;
 
     svg {
         flex-shrink: 0;
@@ -520,63 +497,22 @@ onMounted(() => {
 }
 
 .ai-context-chip-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
     max-width: $size-22;
 }
 
 .ai-context-chip-remove {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     padding: $space-0;
-    background: transparent;
-    border: none;
     border-radius: $border-radius-xs;
-    color: $text2;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition:
-        color $transition-fast,
-        background $transition-fast;
-
-    &:hover {
-        color: $danger-color;
-        background: $bg-primary;
-    }
 }
 
-/* ––– Context File Picker ––– */
+// –– Context file picker ––––––––––––––––––––
 
 .ai-context-picker {
-    position: relative;
-    display: flex;
-    align-items: center;
     flex-shrink: 0;
 }
 
-.ai-add-context-btn {
-    background: transparent;
-    border: none;
-
-    &:disabled {
-        opacity: $opacity-low;
-        cursor: not-allowed;
-
-        &:hover {
-            color: $text2;
-            background: transparent;
-        }
-    }
-}
-
-.ai-file-picker-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: $z-dropdown;
-}
-
+// Opens upward, because the composer is at the bottom of the panel. `overflow:
+// hidden` is what keeps the search field's own corners inside the rounded edge.
 .ai-file-picker {
     position: absolute;
     bottom: calc(100% + #{$space-1});
@@ -584,147 +520,33 @@ onMounted(() => {
     z-index: $z-overlay;
     width: $size-27;
     max-width: 80vw;
-    display: flex;
-    flex-direction: column;
-    background: $bg-primary;
-    border: $border-width-thin $text3;
-    border-radius: $border-radius-lg;
-    box-shadow: $shadow-md;
     overflow: hidden;
 }
 
 .ai-file-picker-search {
-    padding: $space-2;
-    background: transparent;
-    border: none;
     border-bottom: $border-width-thin $text3;
-    color: $text1;
-    font-size: $font-size-sm;
-    font-family: inherit;
-
-    &::placeholder {
-        color: $text2;
-    }
-
-    &:focus {
-        outline: none;
-    }
 }
 
 .ai-file-picker-list {
-    list-style: none;
     margin: 0;
     padding: $space-1;
     max-height: $size-25;
-    overflow-y: auto;
-}
-
-.ai-file-picker-empty {
-    padding: $space-2;
-    font-size: $font-size-xs;
-    color: $text2;
-    text-align: center;
+    list-style: none;
 }
 
 .ai-file-picker-item {
-    display: flex;
     flex-direction: column;
     gap: $space-0;
-    width: 100%;
     padding: $space-1 $space-2;
-    background: transparent;
-    border: none;
-    border-radius: $border-radius;
-    text-align: left;
-    cursor: pointer;
-    transition: background $transition-fast;
-
-    &:hover {
-        background: $bg-hover;
-    }
 }
 
 .ai-file-picker-item-name {
-    font-size: $font-size-sm;
     color: $text1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-size: $font-size-sm;
 }
 
 .ai-file-picker-item-path {
-    font-size: $font-size-xs;
     color: $text2;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-/* ––– Message Input ––– */
-
-.ai-input {
-    flex: 1;
-    min-width: 0;
-    padding: $space-2;
-    background: transparent;
-    color: $text1;
-    border: none;
-    font-size: $font-size-sm;
-    font-family: inherit;
-    line-height: $line-height;
-    resize: none;
-    overflow-y: auto;
-
-    &::placeholder {
-        color: $text2;
-    }
-
-    &:focus {
-        outline: none;
-    }
-
-    &:disabled {
-        opacity: $opacity-mid-low;
-        cursor: not-allowed;
-    }
-}
-
-/* ––– Send / Stop Button ––– */
-
-.ai-btn-send {
-    background: $accent-color;
-    color: $text1;
-    border: none;
-    border-radius: $border-radius-lg;
-    width: $size-14;
-    height: $size-14;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition:
-        opacity $transition-base,
-        transform $transition-fast,
-        color $transition-fast;
-
-    &:hover:not(:disabled) {
-        opacity: $opacity-highest;
-        transform: scale($scale-hover);
-    }
-
-    &:disabled {
-        opacity: $opacity-lowest;
-        cursor: not-allowed;
-    }
-
-    &.ai-btn-stop {
-        background: $danger-color;
-
-        &:hover {
-            opacity: $opacity-highest;
-            transform: scale($scale-hover);
-        }
-    }
+    font-size: $font-size-xs;
 }
 </style>

@@ -80,10 +80,93 @@
     }
 }
 
+// The same control at the scale a pill-shaped action group needs — the AI model
+// bar's button cluster, where the icons are the whole row rather than trailing it.
+.icon-btn-lg {
+    padding: $space-2;
+}
+
 // Hidden until its row is hovered. The row owns the reveal, so the rule that
 // shows it lives with the row, not here.
 .icon-btn-on-hover {
     opacity: 0;
+}
+
+// A destructive icon button: it looks like its neighbours until hovered, and only
+// then admits what it does. Delete, clear the conversation, detach a context file.
+.icon-btn-danger {
+    &:hover:not(:disabled, .disabled) {
+        color: $danger-color;
+    }
+}
+
+// An icon button that is currently on — a panel it opened is showing. Distinct
+// from `.icon-btn-toggle` in that the state is owned elsewhere, so there is no
+// `.active` to nest under.
+.icon-btn-accent {
+    background: $bg-hover;
+    color: $accent-color;
+}
+
+// –– Filled buttons ––––––––––––––––––––
+
+// The accent-filled action: send the message, load the model, confirm the export.
+// Three of these existed across the AI panel. They agreed on the fill and on the
+// `opacity` + `scale` hover, and disagreed on everything else — the label was
+// $base1 twice and $text1 once, and `:disabled` faded to three different values
+// for the same meaning.
+.btn-accent {
+    @extend %btn-base;
+
+    flex-shrink: 0;
+    padding: $space-1 $space-2;
+    background: $accent-color;
+    border: none;
+    border-radius: $border-radius-lg;
+    color: $base1;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    white-space: nowrap;
+
+    &:hover:not(:disabled, .disabled) {
+        opacity: $opacity-highest;
+        transform: scale($scale-hover);
+    }
+}
+
+// The square version, for a filled button holding only an icon: the composer's
+// send key. Its label is $text1 because the glyph sits on the accent fill at a
+// size where $base1 is too thin to read.
+.btn-accent-square {
+    width: $size-14;
+    height: $size-14;
+    padding: 0;
+    color: $text1;
+}
+
+// The same shape, filled with the colour that stops something. Applied beside
+// `.btn-accent`, so it only has to say what changes.
+.btn-danger {
+    background: $danger-color;
+}
+
+// –– Outlined buttons ––––––––––––––––––––
+
+// The bordered, unfilled action offered alongside a piece of explanatory text —
+// the one in an empty state, where a filled button would outweigh the sentence
+// above it.
+.btn-secondary {
+    @extend %btn-base;
+
+    padding: $space-2 $space-4;
+    border-color: $text3;
+    border-radius: $border-radius;
+    font-size: $font-size-sm;
+
+    &:hover:not(:disabled, .disabled) {
+        border-color: $text2;
+        color: $text1;
+    }
 }
 
 // –– Footer buttons ––––––––––––––––––––

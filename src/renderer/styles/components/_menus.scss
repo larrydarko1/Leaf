@@ -1,0 +1,160 @@
+// Menus and dropdowns — the surfaces that open over the page and close on a
+// choice: the model list, the system-prompt list, the context-file picker, the
+// explorer's context menu.
+// All of them are `%floating-surface`, which is why that placeholder exists.
+// Before this, each drew its own raised panel and the three disagreed on blur
+// radius ($backdrop-blur-sm, -md and none), on shadow ($shadow-md vs
+// $shadow-dropdown) and on border colour ($text3 vs $border-color).
+
+@use '@/renderer/styles/variables' as *;
+@use '@/renderer/styles/components/placeholders' as *;
+
+// –– The surface ––––––––––––––––––––
+
+// The raised, blurred surface itself, with no opinion about layout — for the
+// floating panels that are not menus and cannot use `.menu`'s padding and
+// scrolling: the context-file picker, whose search field spans its full width.
+// It exists because `@extend` cannot cross the SFC boundary, so a scoped block
+// wanting this surface would otherwise re-derive it and drift.
+.floating {
+    @extend %floating-surface;
+}
+
+// The menu body. It sets a max-height and scrolls rather than growing off-screen,
+// because every one of these is positioned against a trigger near an edge.
+.menu {
+    @extend %floating-surface;
+
+    display: flex;
+    flex-direction: column;
+    gap: $space-0;
+    padding: $space-2;
+    max-height: $size-24;
+    max-width: calc(100vw - $size-11);
+    overflow: hidden auto;
+}
+
+// The transparent full-viewport layer under an open menu, there to catch the
+// click that closes it. It must sit below the menu and above everything else.
+.menu-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: $z-dropdown;
+}
+
+// –– The trigger ––––––––––––––––––––
+
+// The button that opens a menu, shaped like a field rather than like a button:
+// it reads as the current value, and the chevron is what says it can be changed.
+.menu-trigger {
+    @extend %btn-base;
+
+    justify-content: flex-start;
+    gap: $space-2;
+    width: 100%;
+    padding: $space-1 $space-2;
+    border: none;
+    border-radius: $border-radius;
+    color: $text1;
+    font-size: $font-size-xs;
+    text-align: left;
+
+    &:hover:not(:disabled, .disabled) {
+        background: $bg-hover;
+    }
+}
+
+// The current value inside a trigger — the part that has to give way when the
+// trigger is narrower than the name it is showing.
+.menu-trigger-label {
+    @extend %truncate;
+
+    flex: 1;
+    color: $text2;
+}
+
+// The affordance. Add `.open` when the menu is showing.
+.menu-chevron {
+    flex-shrink: 0;
+    color: $text2;
+    transition: transform $transition-base;
+
+    &.open {
+        transform: rotate(180deg);
+    }
+}
+
+// –– Items ––––––––––––––––––––
+
+// One choice. `.selected` marks the value in force, not the row under the cursor.
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    width: 100%;
+    padding: $space-2 $space-3;
+    background: transparent;
+    border: none;
+    border-radius: $border-radius;
+    color: $text1;
+    font-family: inherit;
+    font-size: $font-size-xs;
+    text-align: left;
+    cursor: pointer;
+    transition: background $transition-fast;
+
+    &:hover {
+        background: $bg-hover;
+    }
+
+    &.selected {
+        background: $bg-hover;
+        color: $accent-color;
+    }
+}
+
+// An item whose two lines are a name over a detail, so the row aligns on the
+// first line rather than centring the block.
+.menu-item-stacked {
+    align-items: flex-start;
+}
+
+// The name half of an item — it wraps rather than truncating, because a model id
+// is unreadable clipped and the menu can afford the height.
+.menu-item-name {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: break-word;
+    line-height: $line-height;
+}
+
+// The trailing detail: a size, a path, a one-line description. Quieter than the
+// name and never the reason the row is wide.
+.menu-item-meta {
+    flex-shrink: 0;
+    color: $text2;
+    font-size: $font-size-xs;
+    opacity: $opacity-mid-high;
+}
+
+// –– Chrome ––––––––––––––––––––
+
+// A group label inside a menu. Distinct from `.panel-label` only in scale — this
+// one shares a surface with the items it introduces.
+.menu-header {
+    padding: $space-1 $space-2;
+    color: $text2;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    text-transform: uppercase;
+    letter-spacing: $letter-spacing-wider;
+}
+
+// What a menu says when it has nothing to offer. Centred, because an empty menu
+// is narrow and a left-aligned line in it looks like a disabled item.
+.menu-empty {
+    padding: $space-2 $space-3;
+    color: $text2;
+    font-size: $font-size-xs;
+    text-align: center;
+}

@@ -1,0 +1,86 @@
+// Text entry — the inputs and textareas the app types into.
+// Two shapes only: a bordered field that owns its own focus treatment, and a
+// bare one that inherits the focus of the row it sits inside. Six fields across
+// the AI panel had re-derived one or the other, and they disagreed on how a
+// focused field signals it (`box-shadow: $accent-shadow` in three, nothing in
+// the rest) and on whether `:disabled` fades at all.
+
+@use '@/renderer/styles/variables' as *;
+
+// –– Bordered fields ––––––––––––––––––––
+
+// A field standing on its own: the message editor, the inline rename. The accent
+// border is the resting state rather than the focus state — these appear only
+// when something is already being edited, so the border is what says so.
+.field {
+    width: 100%;
+    padding: $space-2 $space-3;
+    background: $bg-primary;
+    color: $text1;
+    border: $border-width-thin $accent-color;
+    border-radius: $border-radius-lg;
+    font-family: inherit;
+    font-size: $font-size-sm;
+    line-height: $line-height;
+    outline: none;
+
+    &:focus {
+        box-shadow: $accent-shadow;
+    }
+
+    &:disabled {
+        opacity: $opacity-mid-low;
+        cursor: not-allowed;
+    }
+}
+
+// The one-line variant that replaces a label in place, so it has to fit the row
+// it took over rather than set its own height.
+.field-sm {
+    padding: $space-0 $space-1;
+    border-radius: $border-radius-sm;
+    font-size: $font-size-xs;
+}
+
+// A textarea the user is allowed to drag taller.
+.field-resize-y {
+    resize: vertical;
+}
+
+// –– Bare fields ––––––––––––––––––––
+
+// A field inside a container that already draws the border and takes the focus —
+// the composer row, the file picker's search line. It suppresses its own outline
+// on purpose: the ring would sit inside the parent's border and read as a second
+// edge. The parent is responsible for a `:focus-within` treatment.
+.field-bare {
+    padding: $space-2;
+    background: transparent;
+    color: $text1;
+    border: none;
+    font-family: inherit;
+    font-size: $font-size-sm;
+    line-height: $line-height;
+
+    &::placeholder {
+        color: $text2;
+    }
+
+    &:focus {
+        outline: none;
+    }
+
+    &:disabled {
+        opacity: $opacity-mid-low;
+        cursor: not-allowed;
+    }
+}
+
+// The composer's own textarea: it grows by script, so it must not be draggable
+// and must scroll rather than push the row open.
+.field-bare-grow {
+    flex: 1;
+    min-width: 0;
+    resize: none;
+    overflow-y: auto;
+}
