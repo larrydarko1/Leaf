@@ -162,13 +162,16 @@
 }
 
 // The square version, for a filled button holding only an icon: the composer's
-// send key. Its label is $text1 because the glyph sits on the accent fill at a
-// size where $base1 is too thin to read.
+// send key. Smaller than it was — at 40px it outweighed the row of toggles beside
+// it. $text3 is the glyph colour because it is the dark end of every theme's text
+// scale and the accent fill is the light end; $base1 and $text1 both disappear into
+// it. The two icons had been painting themselves `var(--text3)` in the markup while
+// this rule set a colour nothing used.
 .btn-accent-square {
-    width: $size-14;
-    height: $size-14;
+    width: $size-12;
+    height: $size-12;
     padding: 0;
-    color: $text1;
+    color: $text3;
 }
 
 // The same shape, filled with the colour that stops something. Applied beside
