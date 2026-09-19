@@ -41,3 +41,72 @@
     font-size: $font-size-xs;
     color: $text-muted;
 }
+
+// –– Heroes ––––––––––––––––––––
+
+// The whole-pane welcome: the app before a vault is chosen, the editor before a
+// note is open. Both centred the same mark over the same one-line invitation, at
+// two scales — and the editor's was written as `4rem` and `Inter, sans-serif`,
+// neither of which is a token and the second of which is not a font this app
+// loads, so that wordmark was rendering in the platform's default sans.
+.hero {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+// The centred column inside it, capped so the line under the mark does not run
+// the full width of the window.
+.hero-content {
+    max-width: $size-30;
+    padding: $space-7;
+    text-align: center;
+}
+
+// The mark itself: icon beside wordmark, above everything else.
+.hero-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: $space-6;
+}
+
+.hero-brand-icon {
+    width: $size-21;
+    height: $size-21;
+    object-fit: contain;
+}
+
+// Not a heading — it is the product name, so it is not in the document outline
+// and it is not selectable text either.
+.hero-brand-text {
+    font-family: $font-family;
+    font-size: $font-size-4xl;
+    font-weight: $font-weight-semibold;
+    color: $text1;
+    letter-spacing: $letter-spacing-tight;
+    cursor: default;
+}
+
+// The line under the mark: what to do next, in the page's own voice.
+.hero-title {
+    margin: $space-2 0;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $text1;
+}
+
+// –– Drop targets ––––––––––––––––––––
+
+// What a drag is allowed to land on: the folder row under the cursor, the
+// explorer's root well. Drawn as an outline rather than a border because a
+// border appearing under the cursor re-lays the row out — the tree row shifted
+// sideways by 2px the moment a drag entered it. The explorer's root already knew
+// this and used an outline, but in $text2 rather than the accent, so the two
+// halves of the same pane answered a drag in different colours.
+.drop-target {
+    background: $accent-color-alpha;
+    outline: $border-width-md $accent-color;
+    outline-offset: -$size-0;
+}

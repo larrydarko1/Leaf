@@ -166,11 +166,11 @@ watch(isRenaming, (renaming) => {
         <!-- eslint-disable-next-line a11y/click-events-have-key-events a11y/interactive-supports-focus -->
         <div
             v-if="node.type === 'folder'"
-            class="folder-item"
+            class="folder-item row"
             :class="{
                 'active': isSelected,
                 'renaming': isRenaming,
-                'drag-over': isDragOver,
+                'drag-over drop-target': isDragOver,
                 'is-dragging': isDragging,
             }"
             :style="{ paddingLeft: depth * 16 + 10 + 'px' }"
@@ -254,7 +254,7 @@ watch(isRenaming, (renaming) => {
                 v-if="isRenaming"
                 ref="renameInput"
                 :value="renameValue"
-                class="folder-name-input"
+                class="folder-name-input field field-sm"
                 type="text"
                 :aria-label="`${t('file.rename')}: ${node.name}`"
                 @input="$emit('updateRenameValue', ($event.target as HTMLInputElement).value)"
@@ -266,7 +266,7 @@ watch(isRenaming, (renaming) => {
             <!-- Folder name display -->
             <span
                 v-else
-                class="folder-name">
+                class="folder-name fill">
                 <span
                     ref="folderNameTextEl"
                     class="name-text"
@@ -281,7 +281,7 @@ watch(isRenaming, (renaming) => {
         <!-- eslint-disable-next-line a11y/click-events-have-key-events a11y/interactive-supports-focus -->
         <div
             v-else
-            class="file-item"
+            class="file-item row"
             :class="{
                 'selected': isSelected,
                 'active': isActive,
@@ -468,7 +468,7 @@ watch(isRenaming, (renaming) => {
                 v-if="isRenaming"
                 ref="renameInput"
                 :value="renameValue"
-                class="file-name-input"
+                class="file-name-input field field-sm"
                 type="text"
                 :aria-label="`${t('file.rename')}: ${node.name}`"
                 @input="$emit('updateRenameValue', ($event.target as HTMLInputElement).value)"
@@ -480,7 +480,7 @@ watch(isRenaming, (renaming) => {
             <!-- File name display -->
             <span
                 v-else
-                class="file-name">
+                class="file-name fill">
                 <span
                     ref="fileNameTextEl"
                     class="name-text"
@@ -550,28 +550,57 @@ watch(isRenaming, (renaming) => {
 </template>
 
 <style scoped lang="scss">
-/* ––– Tree Node Base ––– */
+// –– The tree ––––––––––––––––––––
 
 .tree-node {
     user-select: none;
 }
 
-/* ––– Folder Item ––– */
+// –– Rows ––––––––––––––––––––
 
+// A folder row and a file row are the same row, and always were: the two rules
+// agreed on all nine declarations and were written out twice.
 .folder-item,
 .file-item {
-    display: flex;
-    align-items: center;
+    gap: $space-2;
     padding: $space-2 $space-4 $space-2 0;
+    margin: $space-0 0;
+    border-radius: $border-radius;
     cursor: pointer;
     transition: all $transition-fast;
-    border-radius: $border-radius;
-    margin: $space-0 0;
-    gap: $space-2;
+
+    // A highlighted row pulls in from both edges, so its fill reads as a pill
+    // rather than as a band across the pane. Five states had each written this
+    // margin out in full, under two names.
+    &:hover,
+    &.active,
+    &.selected,
+    &.drag-over {
+        margin-inline: $space-2;
+    }
 
     &:hover {
         background: $bg-hover;
-        margin: $space-0 $space-2 $space-0 $space-2;
+    }
+
+    // The row that is open, or picked out for the next action. A file can be both
+    // at once — `.selected` is the multi-selection, `.active` is the open tab —
+    // and they were given the same fill from the start.
+    &.selected,
+    &.active {
+        background: $bg-selected;
+    }
+
+    // While being dragged the row stays where it is and fades, because the cursor
+    // already carries the thing that is moving.
+    &.is-dragging {
+        opacity: $opacity-mid-low;
+        cursor: move;
+    }
+
+    // The row is a text field now; a pointer over it would promise a click.
+    &.renaming {
+        cursor: default;
     }
 }
 
@@ -580,145 +609,84 @@ watch(isRenaming, (renaming) => {
     font-size: $font-size-sm;
     font-weight: $font-weight-medium;
 
-    &.active {
-        background: $bg-selected;
-        margin: $space-0 $space-2 $space-0 $space-2;
-
-        .folder-name {
-            color: $accent-color;
-            font-weight: $font-weight-medium;
-        }
-    }
-
-    &.renaming {
-        cursor: default;
-    }
-
-    &.is-dragging {
-        opacity: $opacity-mid-low;
-        cursor: move;
-    }
-
-    &.drag-over {
-        background: $accent-color-alpha;
-        border: $border-width-md $accent-color;
-        margin: $space-0 $space-2 $space-0 $space-2;
-    }
-
-    .chevron {
-        flex-shrink: 0;
-        color: $text2;
-        transition: transform $transition-base;
-        margin-left: $space-0;
-        cursor: pointer;
-
-        &.expanded {
-            transform: rotate(90deg);
-        }
-    }
-
-    .chevron-button {
-        background: none;
-        border: none;
-        margin: 0;
-        padding: 0;
-        outline: none;
-    }
-
-    .folder-icon {
-        flex-shrink: 0;
-        color: $text2;
-        opacity: $opacity-higher;
-    }
-
-    .folder-name {
-        flex: 1;
-        min-width: 0;
-        overflow: hidden;
-    }
-
-    .folder-name-input {
-        flex: 1;
-        font-size: $font-size-sm;
-        color: $text1;
-        background: $bg-primary;
-        border: $border-width-thin $border-color;
-        border-radius: $border-radius;
-        padding: $space-0 $space-1;
-        outline: none;
-        font-family: inherit;
-        font-weight: $font-weight-medium;
-        line-height: $line-height;
-        transition: background $transition-fast;
-
-        &:focus {
-            background: $bg-primary;
-            border-color: $accent-color;
-        }
+    &.active .folder-name {
+        color: $accent-color;
     }
 }
 
-/* ––– File Item ––– */
+// –– Chevron ––––––––––––––––––––
 
-.file-item {
-    &.selected {
-        background: $bg-selected;
-        margin: $space-0 $space-2 $space-0 $space-2;
+// Only a hit area — the row draws everything, so this adds no padding of its own.
+// It used to set `outline: none`, which took the focus ring off the one control in
+// the tree that can be reached by keyboard and does not open a file.
+.chevron-button {
+    margin: 0;
+    padding: 0;
+    background: none;
+    border: none;
+}
 
-        .file-name {
-            font-weight: $font-weight-medium;
-        }
-    }
+.chevron {
+    flex-shrink: 0;
+    margin-left: $space-0;
+    color: $text2;
+    cursor: pointer;
+    transition: transform $transition-base;
 
-    &.active {
-        background: $bg-selected;
-        margin: $space-0 $space-2 $space-0 $space-2;
-
-        .file-name {
-            color: $text1;
-            font-weight: $font-weight-medium;
-        }
-
-        .file-icon {
-            opacity: 1;
-        }
-    }
-
-    &.renaming {
-        cursor: default;
-    }
-
-    &.is-dragging {
-        opacity: $opacity-mid-low;
-        cursor: move;
-    }
-
-    .file-icon {
-        flex-shrink: 0;
-        color: $text2;
-        opacity: $opacity-mid-high;
-        margin: $space-0 $space-2 $space-0 $space-2;
-    }
-
-    &.media-drawing .drawing-icon {
-        color: $text2;
-        opacity: $opacity-almost-opaque;
+    &.expanded {
+        transform: rotate(90deg);
     }
 }
 
-/* ––– File Name & Metadata ––– */
+// –– Icons ––––––––––––––––––––
 
-.file-name {
-    flex: 1;
-    min-width: 0;
-    font-size: $font-size-sm;
+.folder-icon {
+    flex-shrink: 0;
+    color: $text2;
+    opacity: $opacity-higher;
+}
+
+// Brighter and dimmer than the `.file-icon` the result lists use: in a dense tree
+// the icon is a texture down the left edge, not something to read.
+.file-icon {
+    color: $text2;
+    opacity: $opacity-mid-high;
+    margin: $space-0 $space-2;
+}
+
+.file-item.active .file-icon {
+    opacity: 1;
+}
+
+// A drawing's mark is finer than the other glyphs, so it needs the extra strength
+// to weigh the same in the column.
+.file-item.media-drawing .drawing-icon {
+    opacity: $opacity-almost-opaque;
+}
+
+.bookmark-star {
+    flex-shrink: 0;
+    margin-left: $space-1;
+    color: $accent-color;
+    opacity: $opacity-higher;
+}
+
+.file-item.active .bookmark-star {
     color: $text1;
-    overflow: hidden;
-    line-height: $line-height;
+    opacity: 1;
 }
 
-/* ––– Truncated name marquee on hover ––– */
+// –– Names ––––––––––––––––––––
 
+// The name is `.fill`; this is only the clip, which belongs to the wrapper because
+// the span inside it is allowed to overflow while it scrolls.
+.folder-name,
+.file-name {
+    overflow: hidden;
+}
+
+// The marquee. A name too long for the row scrolls it through on hover instead of
+// ending in an ellipsis, over a distance the component measures and passes in.
 .name-text {
     display: block;
     max-width: 100%;
@@ -735,43 +703,23 @@ watch(isRenaming, (renaming) => {
     }
 }
 
+// The global reduced-motion rule shortens animations rather than removing them,
+// which for a loop means it never stops. This one has to be turned off outright.
 @media (prefers-reduced-motion: reduce) {
     .name-text.scrolling {
         animation: none;
     }
 }
 
-.bookmark-star {
-    flex-shrink: 0;
-    color: $accent-color;
-    margin-left: $space-1;
-    opacity: $opacity-higher;
-}
+// –– Rename ––––––––––––––––––––
 
-.file-item.active .bookmark-star {
-    color: $text1;
-    opacity: 1;
-}
-
-/* ––– Input Fields ––– */
-
+// Both inputs are `.field .field-sm` — they were two byte-identical rules under
+// two names. What is left is that this one replaces a row's label rather than
+// standing on its own, so it fits the row and matches the text it took over.
+.folder-name-input,
 .file-name-input {
     flex: 1;
     font-size: $font-size-sm;
-    color: $text1;
-    background: $bg-primary;
-    border: $border-width-thin $border-color;
-    border-radius: $border-radius;
-    padding: $space-0 $space-1;
-    outline: none;
-    font-family: inherit;
     font-weight: $font-weight-medium;
-    line-height: $line-height;
-    transition: background $transition-fast;
-
-    &:focus {
-        background: $bg-primary;
-        border-color: $accent-color;
-    }
 }
 </style>

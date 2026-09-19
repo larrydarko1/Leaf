@@ -105,7 +105,7 @@ dragGhost.src = TRANSPARENT_GIF;
             @drop="onDrop($event, i)"
             @dragend="onDragEnd">
             <span
-                class="tab-name"
+                class="tab-name truncate fill"
                 aria-hidden="false"
                 >{{ getFileNameWithoutExtension(tab.file.name) }}</span
             >
@@ -115,7 +115,7 @@ dragGhost.src = TRANSPARENT_GIF;
                 :aria-label="t('app.tab_unsaved_indicator')"
                 role="status" />
             <button
-                class="tab-close"
+                class="tab-close icon-btn icon-btn-on-hover"
                 :aria-label="t('app.tab_close_button', { filename: tab.file.name })"
                 :title="t('app.tab_close_button', { filename: tab.file.name })"
                 @click.stop="emit('close', i)">
@@ -146,7 +146,7 @@ dragGhost.src = TRANSPARENT_GIF;
 </template>
 
 <style scoped lang="scss">
-/* ––– Tab Bar Container ––– */
+// –– The bar ––––––––––––––––––––
 
 .tab-bar {
     display: flex;
@@ -157,38 +157,39 @@ dragGhost.src = TRANSPARENT_GIF;
     flex-shrink: 0;
 }
 
-/* ––– Tab Item ––– */
+// –– One tab ––––––––––––––––––––
 
+// Not a list row: a tab is bounded left and right, keeps its own width between a
+// floor and a ceiling, and marks the active one with an underline rather than a
+// fill. Nothing else in the app is shaped like it.
 .tab {
     display: flex;
     align-items: center;
-    background: $base1;
+    position: relative;
     gap: $space-2;
     padding: 0 $space-3 0 $space-4;
     min-width: $size-19;
     max-width: $size-23;
+    background: $base1;
     border-right: $border-width-thin color-mix(in srgb, $text3 60%, transparent);
+    color: $text2;
+    font-size: $font-size-sm;
     cursor: pointer;
     user-select: none;
     flex-shrink: 0;
-    position: relative;
     transition: background $transition-fast;
-    color: $text2;
-    font-size: $font-size-sm;
 
     &:hover {
         background: $bg-hover;
         color: $text1;
-
-        .tab-close {
-            opacity: 1;
-        }
     }
 
     &.dragging {
         opacity: $opacity-low;
     }
 
+    // Which side of this tab the dragged one would land on, drawn as an inset edge
+    // so it appears between two tabs without moving either of them.
     &.drop-left {
         box-shadow: inset $size-0 0 0 $accent-color;
     }
@@ -202,10 +203,8 @@ dragGhost.src = TRANSPARENT_GIF;
         color: $text1;
         font-weight: $font-weight-medium;
 
-        .tab-close {
-            opacity: 1;
-        }
-
+        // The accent underline. A fill alone would not separate the active tab
+        // from a hovered one, which is the same $bg-hover tint.
         &::after {
             content: '';
             position: absolute;
@@ -216,48 +215,34 @@ dragGhost.src = TRANSPARENT_GIF;
             background: $accent-color;
         }
     }
+
+    // The close button is `.icon-btn-on-hover`; the tab owns when it appears,
+    // because the row is what is hovered and the active tab keeps it showing.
+    &:hover .tab-close,
+    &.active .tab-close {
+        opacity: 1;
+    }
 }
 
-/* ––– Tab Content ––– */
+// –– Tab contents ––––––––––––––––––––
 
-.tab-name {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
+// The unsaved marker.
 .tab-dot {
     width: $size-3;
     height: $size-3;
-    border-radius: $border-radius-xl;
+    border-radius: $border-radius-round;
     background: $accent-color;
     flex-shrink: 0;
 }
 
-/* ––– Tab Close Button ––– */
-
+// Smaller and squarer than a header's `.icon-btn`, and it takes the tab's own
+// colour rather than $text2 — it is part of the tab, not a control beside it.
 .tab-close {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     width: $size-8;
     height: $size-8;
     min-width: $size-8;
-    border-radius: $border-radius-xs;
-    border: none;
-    background: transparent;
-    color: inherit;
-    cursor: pointer;
     padding: 0;
-    opacity: 0;
-    transition: all $transition-fast;
-    flex-shrink: 0;
-
-    &:hover {
-        background: $bg-hover;
-        color: $text1;
-    }
+    border-radius: $border-radius-xs;
+    color: inherit;
 }
 </style>
