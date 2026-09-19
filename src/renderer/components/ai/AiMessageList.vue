@@ -339,7 +339,7 @@ watch(
                         !(isStreaming && index >= messages.length - 2) &&
                         editingIndex !== index
                     "
-                    class="ai-message-actions row"
+                    class="ai-message-actions row actions-on-hover"
                     role="toolbar"
                     :aria-label="t('ai.message_actions', { role: msg.role, index: index + 1 })">
                     <button
@@ -527,9 +527,9 @@ watch(
         aria-valuemin="0"
         aria-valuemax="100"
         :aria-label="`Context tokens: ${formatTokenCount(conversationTokenCount)} of ${formatTokenCount(status.contextSize)}`">
-        <div class="ai-token-bar-track">
+        <div class="ai-token-bar-track progress-track">
             <div
-                class="ai-token-bar-fill"
+                class="ai-token-bar-fill progress-fill"
                 :class="{ warning: tokenUsagePercent > 75, danger: tokenUsagePercent > 90 }"
                 :style="{ width: tokenUsagePercent + '%' }"></div>
         </div>
@@ -687,14 +687,13 @@ watch(
 
 // –– Message actions ––––––––––––––––––––
 
-// Revealed by hovering the message, not the row — so the buttons do not appear
-// under a pointer that is only passing through.
+// The cluster is `.actions-on-hover`; what is left is its inset. The reveal is
+// hung on the message rather than on the row, so the buttons do not appear under a
+// pointer that is only passing through.
 .ai-message-actions {
     gap: $space-0;
     margin-top: $space-0;
     padding: 0 $space-0;
-    opacity: 0;
-    transition: opacity $transition-fast;
 }
 
 // –– Thinking block ––––––––––––––––––––
@@ -777,29 +776,12 @@ watch(
     padding: 0 $space-3;
 }
 
+// The groove and the fill are `.progress-track` / `.progress-fill`, shared with the
+// media scrubber, and the thresholds come with them. This one is a line thinner
+// than the scrubber because it is only read, never aimed at.
 .ai-token-bar-track {
     flex: 1;
     height: $size-1;
-    background: $text3;
-    border-radius: $border-radius-xs;
-    overflow: hidden;
-}
-
-// The fill changes colour as the context fills up — the bar's length says how
-// much is used, the colour says whether that matters yet.
-.ai-token-bar-fill {
-    height: 100%;
-    background: $accent-color;
-    border-radius: $border-radius-xs;
-    transition: width $transition-slow;
-
-    &.warning {
-        background: $warning-color;
-    }
-
-    &.danger {
-        background: $danger-color;
-    }
 }
 
 // Tabular figures so the count does not jitter as it climbs.

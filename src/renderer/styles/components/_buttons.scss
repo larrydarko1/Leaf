@@ -107,10 +107,16 @@
     }
 }
 
-// Hidden until its row is hovered. The row owns the reveal, so the rule that
-// shows it lives with the row, not here.
-.icon-btn-on-hover {
+// Hidden until its row is hovered — a single button (`.icon-btn-on-hover`: the
+// tab's close, the bookmark's remove) or the whole cluster of them
+// (`.actions-on-hover`: the AI message's actions, the history row's). The row owns
+// the reveal, so the rule that shows it lives with the row, not here.
+// The two AI clusters faded and the two single buttons snapped, for no reason
+// either could give; they fade now.
+.icon-btn-on-hover,
+.actions-on-hover {
     opacity: 0;
+    transition: opacity $transition-fast;
 }
 
 // A destructive icon button: it looks like its neighbours until hovered, and only

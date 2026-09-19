@@ -163,6 +163,16 @@
     opacity: $opacity-mid-high;
 }
 
+// The second line of a `.menu-item-stacked` — what the name on the first line
+// actually is: the file's path in the context picker, the prompt's description in
+// the system-prompt list. Distinct from `.menu-item-meta`, which trails a name on
+// the same line and so must not grow; this one is the width of the item.
+.menu-item-desc {
+    color: $text2;
+    font-size: $font-size-xs;
+    line-height: $line-height;
+}
+
 // –– Chrome ––––––––––––––––––––
 
 // A group label inside a menu. Distinct from `.panel-label` only in scale — this

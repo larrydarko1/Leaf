@@ -165,7 +165,7 @@ onMounted(() => {
         class="search-panel panel"
         :aria-label="t('search.search_panel')">
         <header class="panel-header search-header">
-            <div class="search-input-wrapper">
+            <div class="search-input-wrapper field-well">
                 <svg
                     class="search-icon"
                     width="16"
@@ -309,19 +309,11 @@ onMounted(() => {
 
 /* ––– Search Field ––– */
 
+// The row is `.field-well`, shared with the AI composer. Its inset is the only
+// thing left of it — the `position: relative` it also carried had nothing absolute
+// inside it to position.
 .search-input-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    background: $bg-primary;
-    border: $border-width-thin $text3;
-    border-radius: $border-radius-lg;
     padding: $space-2 $space-3;
-    transition: border-color $transition-base;
-
-    &:focus-within {
-        border-color: $accent-color;
-    }
 }
 
 .search-icon {

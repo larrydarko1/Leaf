@@ -181,7 +181,7 @@ onMounted(() => {
         </div>
 
         <div
-            class="ai-input-row"
+            class="ai-input-row field-well"
             :class="{ 'ai-input-activated': isStreaming }">
             <!-- Add files to context -->
             <div class="ai-context-picker row">
@@ -235,8 +235,10 @@ onMounted(() => {
                                 type="button"
                                 class="ai-file-picker-item menu-item menu-item-stacked"
                                 @click="selectContextFile(file)">
-                                <span class="ai-file-picker-item-name truncate">{{ file.name }}</span>
-                                <span class="ai-file-picker-item-path truncate">{{ file.relativePath }}</span>
+                                <span class="ai-file-picker-item-name menu-item-name truncate">{{ file.name }}</span>
+                                <span class="ai-file-picker-item-path menu-item-desc truncate">{{
+                                    file.relativePath
+                                }}</span>
                             </button>
                         </li>
                     </ul>
@@ -387,20 +389,13 @@ onMounted(() => {
 
 // –– Composer row ––––––––––––––––––––
 
-// The bordered row the textarea sits bare inside, so the whole row takes the
-// focus rather than the field drawing a second edge within it.
+// The row is `.field-well` — the textarea sits bare inside it and the row takes the
+// focus for it. This one aligns to the top rather than centring, because the
+// textarea grows downward and a centred row would walk the buttons down with it.
 .ai-input-row {
-    display: flex;
     align-items: flex-start;
     padding: $space-1 $space-1 $space-1 $space-2;
-    background: $bg-primary;
-    border: $border-width-thin $text3;
     border-radius: $border-radius-xl;
-    transition: border-color $transition-base;
-
-    &:focus-within {
-        border-color: $accent-color;
-    }
 
     // While a reply is streaming the border becomes a rotating conic gradient: the
     // ::before is the spinning wheel and the ::after masks all but its edge, which
@@ -534,19 +529,12 @@ onMounted(() => {
     list-style: none;
 }
 
+// The two lines are `.menu-item-name` over `.menu-item-desc`, as in the
+// system-prompt list — this one's name had been a size larger than that one's for
+// no reason either could give, so two pickers a click apart were set differently.
 .ai-file-picker-item {
     flex-direction: column;
     gap: $space-0;
     padding: $space-1 $space-2;
-}
-
-.ai-file-picker-item-name {
-    color: $text1;
-    font-size: $font-size-sm;
-}
-
-.ai-file-picker-item-path {
-    color: $text2;
-    font-size: $font-size-xs;
 }
 </style>

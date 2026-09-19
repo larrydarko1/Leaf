@@ -6,6 +6,7 @@
 // the rest) and on whether `:disabled` fades at all.
 
 @use '@/renderer/styles/variables' as *;
+@use '@/renderer/styles/components/placeholders' as *;
 
 // –– Bordered fields ––––––––––––––––––––
 
@@ -83,4 +84,24 @@
     min-width: 0;
     resize: none;
     overflow-y: auto;
+}
+
+// –– Field rows ––––––––––––––––––––
+
+// The bordered row a `.field-bare` sits inside and which takes the focus on its
+// behalf: the AI composer and the search line. Both had written out the same fill,
+// hairline, `border-color` transition and `:focus-within` accent; what actually
+// differs between them is the radius, the inset and, in the composer, that the row
+// aligns to the first line because its textarea grows downward.
+.field-well {
+    @extend %well;
+
+    display: flex;
+    align-items: center;
+    border-radius: $border-radius-lg;
+    transition: border-color $transition-base;
+
+    &:focus-within {
+        border-color: $accent-color;
+    }
 }

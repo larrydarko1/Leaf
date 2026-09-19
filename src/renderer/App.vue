@@ -371,7 +371,7 @@ onBeforeUnmount(() => {
                     class="sidebar-menu stack"
                     :aria-label="t('app.main_navigation')">
                     <!-- Workspace pill -->
-                    <div class="menu-pill stack">
+                    <div class="menu-pill well stack">
                         <button
                             class="rail-btn icon-btn icon-btn-lg icon-btn-toggle"
                             :aria-label="t('app.change_folder')"
@@ -394,7 +394,7 @@ onBeforeUnmount(() => {
                     </div>
 
                     <!-- Create actions pill -->
-                    <div class="menu-pill stack">
+                    <div class="menu-pill well stack">
                         <button
                             class="rail-btn icon-btn icon-btn-lg icon-btn-toggle"
                             :aria-label="t('app.create_new_note')"
@@ -462,7 +462,7 @@ onBeforeUnmount(() => {
                     </div>
 
                     <!-- Tools pill -->
-                    <div class="menu-pill stack">
+                    <div class="menu-pill well stack">
                         <button
                             class="rail-btn icon-btn icon-btn-lg icon-btn-toggle"
                             :class="{ active: showSearchPanel }"
@@ -543,7 +543,7 @@ onBeforeUnmount(() => {
 
                     <!-- Bottom pill: AI + Theme -->
                     <div class="menu-spacer"></div>
-                    <div class="menu-pill stack">
+                    <div class="menu-pill well stack">
                         <button
                             class="rail-btn icon-btn icon-btn-lg icon-btn-toggle"
                             :class="{ active: showAiPanel }"
@@ -755,13 +755,12 @@ onBeforeUnmount(() => {
     overflow-y: auto;
 }
 
-// A group of rail buttons that belong together, on a surface of its own.
+// A group of rail buttons that belong together, on a `.well` of its own — blurred,
+// because the rail's pills are the one place this surface floats over content.
 .menu-pill {
     align-items: center;
     gap: $space-0;
     padding: $space-0;
-    background: $bg-primary;
-    border: $border-width-thin $text3;
     border-radius: $border-radius-xl;
     backdrop-filter: blur($backdrop-blur-sm);
 }

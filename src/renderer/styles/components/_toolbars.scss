@@ -1,6 +1,19 @@
-// Toolbar chrome — the rules between groups of tool buttons.
+// Bar chrome — the surface a group of controls sits in, and the rule between two
+// such groups.
 
 @use '@/renderer/styles/variables' as *;
+@use '@/renderer/styles/components/placeholders' as *;
+
+// –– Wells ––––––––––––––––––––
+
+// The surface a cluster of controls shares, so a bar reads as two or three objects
+// rather than as eight loose buttons: the rail's button pills, the model pill, the
+// AI bar's action cluster. Each caller keeps its own radius and inset — the rail's
+// pills are $border-radius-xl round a column, the model pill -lg round a line of
+// text — but the fill and the hairline are one decision now.
+.well {
+    @extend %well;
+}
 
 // –– Separators ––––––––––––––––––––
 

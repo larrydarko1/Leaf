@@ -122,7 +122,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
         role="toolbar"
         :aria-label="t('ai.model_controls')">
         <!-- Model selection and status pill -->
-        <div class="ai-model-pill row fill">
+        <div class="ai-model-pill well row fill">
             <!-- Model selector (when not loaded) -->
             <div
                 v-if="!status.isModelLoaded"
@@ -224,7 +224,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
         </div>
 
         <!-- Action buttons -->
-        <div class="ai-bar-actions row">
+        <div class="ai-bar-actions well row">
             <!-- Open models folder -->
             <button
                 class="ai-btn-icon icon-btn icon-btn-lg"
@@ -290,10 +290,10 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
                             :aria-selected="prompt.id === activeId"
                             @click="handleSelectPrompt(prompt.id)">
                             <div class="ai-prompt-item-main stack fill">
-                                <span class="ai-prompt-item-name">{{ prompt.name }}</span>
+                                <span class="ai-prompt-item-name menu-item-name">{{ prompt.name }}</span>
                                 <span
                                     v-if="prompt.description"
-                                    class="ai-prompt-item-desc">
+                                    class="ai-prompt-item-desc menu-item-desc">
                                     {{ prompt.description }}
                                 </span>
                             </div>
@@ -417,12 +417,10 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
     padding: $space-2 $space-3;
 }
 
-// The model name and its status share one rounded well, so the bar reads as two
-// objects — what is loaded, and what can be done — rather than six controls.
+// The model name and its status share one `.well`, so the bar reads as two objects
+// — what is loaded, and what can be done — rather than as six loose controls.
 .ai-model-pill {
     padding: $space-1 $space-2;
-    background: $bg-primary;
-    border: $border-width-thin $text3;
     border-radius: $border-radius-lg;
 }
 
@@ -462,14 +460,12 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
     font-size: $font-size-xs;
 }
 
-// The action cluster is its own pill, tighter than `.panel-actions` because the
-// buttons are the row rather than trailing a title.
+// The action cluster is the bar's second `.well`, tighter than `.panel-actions`
+// because the buttons are the row rather than trailing a title.
 .ai-bar-actions {
     flex-shrink: 0;
     gap: $space-0;
     padding: $space-0 $space-1;
-    background: $bg-primary;
-    border: $border-width-thin $text3;
     border-radius: $border-radius-xl;
 }
 
@@ -489,18 +485,9 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
     margin-bottom: $space-1;
 }
 
+// The column holding the two lines, which are `.menu-item-name` over
+// `.menu-item-desc` — the same pair the context-file picker uses.
 .ai-prompt-item-main {
     gap: $space-0;
-}
-
-.ai-prompt-item-name {
-    font-size: $font-size-xs;
-    line-height: $line-height;
-}
-
-.ai-prompt-item-desc {
-    color: $text2;
-    font-size: $font-size-xs;
-    line-height: $line-height;
 }
 </style>

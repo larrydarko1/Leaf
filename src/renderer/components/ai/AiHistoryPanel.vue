@@ -128,7 +128,7 @@ watch(
 
                     <!-- Item actions -->
                     <div
-                        class="ai-history-item-actions"
+                        class="ai-history-item-actions actions-on-hover"
                         role="group"
                         :aria-label="t('ai.conversation_actions')">
                         <button
@@ -259,11 +259,10 @@ watch(
     opacity: $opacity-mid-high;
 }
 
+// The cluster is `.actions-on-hover`; the row above owns when it appears.
 .ai-history-item-actions {
     display: flex;
     flex-shrink: 0;
     gap: $space-2;
-    opacity: 0;
-    transition: opacity $transition-fast;
 }
 </style>
