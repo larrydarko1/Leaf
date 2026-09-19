@@ -165,7 +165,7 @@ onMounted(() => {
         class="search-panel panel"
         :aria-label="t('search.search_panel')">
         <header class="panel-header search-header">
-            <div class="search-input-wrapper field-well">
+            <div class="search-input-wrapper field-well field-well-single">
                 <svg
                     class="search-icon"
                     width="16"
@@ -186,7 +186,7 @@ onMounted(() => {
                     v-model="searchQuery"
                     type="text"
                     :placeholder="t('search.search_placeholder')"
-                    class="search-input"
+                    class="search-input field-bare"
                     :aria-label="t('search.search_placeholder')"
                     aria-describedby="search-results-count"
                     @keydown.escape="clearSearch"
@@ -216,7 +216,7 @@ onMounted(() => {
             <div
                 v-if="searchQuery"
                 id="search-results-count"
-                class="search-info"
+                class="hint"
                 aria-live="polite"
                 aria-atomic="true">
                 {{ searchResults.length }} {{ searchResults.length === 1 ? t('search.result') : t('search.results') }}
@@ -309,37 +309,21 @@ onMounted(() => {
 
 /* ––– Search Field ––– */
 
-// The row is `.field-well`, shared with the AI composer. Its inset is the only
-// thing left of it — the `position: relative` it also carried had nothing absolute
-// inside it to position.
+// `.field-well .field-well-single`, shared with the AI composer — inset only.
 .search-input-wrapper {
     padding: $space-2 $space-3;
 }
 
 .search-icon {
-    color: $text-muted;
+    color: $text2;
     flex-shrink: 0;
     margin-right: $space-2;
 }
 
+// `.field-bare` minus its inset: the well is already padded.
 .search-input {
     flex: 1;
-    border: none;
-    background: none;
-    color: $text-primary;
-    font-size: $font-size-sm;
-    outline: none;
-    font-family: inherit;
-
-    &::placeholder {
-        color: $text-muted;
-    }
-}
-
-.search-info {
-    margin-top: $space-2;
-    font-size: $font-size-xs;
-    color: $text-muted;
+    padding: 0;
 }
 
 /* ––– Search Results ––– */

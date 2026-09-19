@@ -588,7 +588,9 @@ watch(
         .ai-message-content {
             background: $accent-color;
             border-radius: $border-radius-xl $border-radius-xl $border-radius-xs $border-radius-xl;
-            color: $text3;
+
+            // On-accent text is $base1, as in `.btn-accent` — $text3 is the hairline.
+            color: $base1;
         }
 
         .ai-message-actions {

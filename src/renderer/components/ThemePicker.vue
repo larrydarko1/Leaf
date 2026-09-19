@@ -143,7 +143,7 @@ onMounted(() => {
                 @click="handleOpenFolder">
                 {{ t('theme.open_folder') }}
             </button>
-            <p class="panel-hint">
+            <p class="hint panel-hint">
                 {{ t('theme.footer_hint_intro') }}
                 <code>{{ t('theme.footer_hint_file_type') }}</code>
                 {{ t('theme.footer_hint_files_in') }}

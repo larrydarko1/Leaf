@@ -50,7 +50,7 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 
 - **Obsidian-inspired UI** - Clean, familiar interface
 - **Multi-language support** - 14 built-in languages with easy language switching; add your own translations
-- **Theme customization** - 20+ built-in color themes; drop in your own for automatic detection
+- **Theme customization** - 4 built-in color themes; drop in your own for automatic detection
 
 ## Security & Privacy
 
@@ -102,7 +102,7 @@ Leaf stores AI models in `~/.leaf/models/`. To get started with the AI assistant
 
 ### Themes
 
-Leaf ships with 20+ built-in color themes. All themes are stored in `~/.leaf/themes/`:
+Leaf ships with 4 built-in color themes. All themes are stored in `~/.leaf/themes/`:
 
 1. Open the app and click the **palette icon** in the sidebar (or use the theme menu)
 2. Select a theme from the built-in list to apply it instantly
@@ -504,7 +504,8 @@ leaf/
 │   └── themes/                     # Built-in colour themes (JSON)
 │       ├── dark.json
 │       ├── light.json
-│       └── ...                     # 18 themes total (catppuccin, dracula, nord, etc.)
+│       ├── dark-contrast.json
+│       └── light-contrast.json     # 4 themes, all WCAG-verified (AA; -contrast are AAA)
 ├── models/
 │   └── whisper/                    # Whisper ONNX model (download manually — see above)
 ├── public/                         # Static assets (demo screenshot)

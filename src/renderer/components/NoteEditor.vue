@@ -614,7 +614,9 @@ if (typeof window !== 'undefined') {
     // `.menu-item-danger` is: a state you have to hover to see is a state you miss.
     &.active {
         background: $danger-color;
-        color: $text1;
+
+        // Dark on the fill, like `.btn-danger` — white was the odd one out.
+        color: $base1;
         border-color: $danger-color;
         box-shadow: $red-shadow;
     }

@@ -70,7 +70,10 @@
 // line. Six rules across five files had written the pair out.
 %well {
     background: $bg-primary;
-    border: $border-width-thin $text3;
+
+    // Softened: this edge only groups, so it is held under the dividers that
+    // use $text3 at full strength.
+    border: $border-width-thin color-mix(in srgb, $text3 20%, transparent);
 }
 
 // –– Text ––––––––––––––––––––

@@ -105,3 +105,9 @@
         border-color: $accent-color;
     }
 }
+
+// Height pinned, not left to the tallest child: a clear button that appears only
+// once there is a query would otherwise jog the row taller the moment one types.
+.field-well-single {
+    height: $size-14;
+}

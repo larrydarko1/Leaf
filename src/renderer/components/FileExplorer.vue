@@ -349,7 +349,6 @@ onUnmounted(() => {
 // which is what makes the tree scroll rather than the rail.
 .file-explorer {
     min-height: 0;
-    background: $bg-secondary;
     overflow: hidden;
 }
 

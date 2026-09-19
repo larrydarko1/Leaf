@@ -726,8 +726,10 @@ onBeforeUnmount(() => {
     overflow: hidden;
 }
 
+// Both flanks sit on the app's base surface, same as the AI panel: what separates
+// a column from the editor is its border, and what sits ON it is the only thing
+// that carries a fill.
 .left-column {
-    background: $bg-secondary;
     flex-shrink: 0;
 }
 
@@ -738,7 +740,6 @@ onBeforeUnmount(() => {
 .sidebar {
     width: $size-26;
     border-right: $border-width-thin $text3;
-    background: $base3;
     overflow: hidden;
 }
 
@@ -751,16 +752,17 @@ onBeforeUnmount(() => {
     align-items: center;
     gap: $space-2;
     padding: $space-2 $space-1;
-    background: $bg-secondary;
     overflow-y: auto;
 }
 
 // A group of rail buttons that belong together, on a `.well` of its own — blurred,
-// because the rail's pills are the one place this surface floats over content.
+// because the rail's pills are the one place this surface floats over content. Its
+// edge is the brighter one: the fill cannot lift without erasing the buttons' hover.
 .menu-pill {
     align-items: center;
     gap: $space-0;
     padding: $space-0;
+    border-color: color-mix(in srgb, $border-color 20%, transparent);
     border-radius: $border-radius-xl;
     backdrop-filter: blur($backdrop-blur-sm);
 }

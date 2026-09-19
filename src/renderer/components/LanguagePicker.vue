@@ -120,7 +120,7 @@ onMounted(() => {
                 @click="handleOpenFolder">
                 {{ t('language.open_folder') }}…
             </button>
-            <p class="panel-hint">
+            <p class="hint panel-hint">
                 {{ t('language.footer_hint_intro') }} <code>{{ t('language.footer_hint_file_type') }}</code>
                 {{ t('language.footer_hint_path') }} {{ t('language.footer_hint_action') }}
             </p>

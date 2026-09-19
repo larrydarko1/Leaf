@@ -8,21 +8,20 @@
 
 // –– Panel shell ––––––––––––––––––––
 
-// The rail panels (search, bookmarks) sit in the left rail on $bg-secondary.
+// Every panel sits on the app's base surface and declares no fill of its own —
+// what separates one from the editor is its border.
 .panel {
     display: flex;
     flex-direction: column;
     height: 100%;
     overflow: hidden;
-    background: $bg-secondary;
 }
 
-// The picker panels (themes, languages) overlay from the right instead: darker,
-// bordered against the editor, and a fixed width rather than the rail's.
+// The picker panels (themes, languages) sit to the right of the editor instead:
+// bordered against it, and a fixed width rather than the rail's.
 .panel-aside {
     width: $size-28;
     min-width: $size-27;
-    background: $base1;
     border-left: $border-width-thin $text3;
     color: $text1;
 }
@@ -74,12 +73,11 @@
     flex-shrink: 0;
 }
 
-// The hint under a footer button, where an inline `<code>` names the file type or
-// path the button acts on. Both pickers had the same rule for it.
+// The delta over `.hint` for the line under a footer button, where an inline
+// `<code>` names the file type or path the button acts on. It sits flush against
+// the footer edge, so unlike a free-standing hint it drops its trailing margin.
 .panel-hint {
-    margin: $space-2 0 0;
-    font-size: $font-size-xs;
-    color: $text-muted;
+    margin-bottom: 0;
     line-height: $line-height;
 
     code {
