@@ -19,7 +19,7 @@ const { isRecording, hasPermission, formattedDuration, toggle } = useAudioRecord
 
 <template>
     <button
-        class="rail-btn icon-btn icon-btn-lg icon-btn-toggle"
+        class="icon-btn icon-btn-lg icon-btn-toggle"
         :class="{ recording: isRecording }"
         :aria-label="
             isRecording
@@ -69,7 +69,7 @@ const { isRecording, hasPermission, formattedDuration, toggle } = useAudioRecord
 // The shape is the rail's; this is the one state only this button has. It kept the
 // danger tint on hover so the button does not look like it is about to do
 // something else while it is recording.
-.rail-btn {
+.icon-btn {
     &.recording {
         color: $danger-color;
         background: $danger-color-alpha;

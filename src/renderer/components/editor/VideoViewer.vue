@@ -62,7 +62,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
         <!-- Video player area -->
         <div
             v-if="videoUrl && !videoError"
-            class="video-player-wrapper">
+            class="video-player-wrapper media-frame">
             <!-- eslint-disable-next-line a11y/media-has-caption a11y/click-events-have-key-events a11y/no-static-element-interactions -->
             <video
                 ref="videoRef"
@@ -77,7 +77,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 
             <!-- Control bar -->
             <div
-                class="video-controls media-controls"
+                class="video-controls media-controls media-controls-joined"
                 role="group"
                 :aria-label="t('editor.video_player_controls')">
                 <!-- Play/pause button -->
@@ -89,8 +89,8 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                     @click="toggleVideoPlayback">
                     <svg
                         v-if="!videoPlaying"
-                        width="18"
-                        height="18"
+                        width="16"
+                        height="16"
                         viewBox="0 0 24 24"
                         fill="currentColor"
                         aria-hidden="true">
@@ -98,8 +98,8 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                     </svg>
                     <svg
                         v-else
-                        width="18"
-                        height="18"
+                        width="16"
+                        height="16"
                         viewBox="0 0 24 24"
                         fill="currentColor"
                         aria-hidden="true">
@@ -156,15 +156,15 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                 <!-- Volume control -->
                 <fieldset class="video-volume-wrapper media-volume">
                     <button
-                        class="video-ctrl-btn media-ctrl-btn"
+                        class="video-volume-btn media-volume-btn"
                         type="button"
                         :aria-label="videoVolume === 0 ? t('editor.unmute_video') : t('editor.mute_video')"
                         :title="videoVolume === 0 ? t('editor.unmute') : t('editor.mute')"
                         @click="toggleVideoMute">
                         <svg
                             v-if="videoVolume === 0"
-                            width="15"
-                            height="15"
+                            width="16"
+                            height="16"
                             viewBox="0 0 24 24"
                             fill="none"
                             stroke="currentColor"
@@ -186,8 +186,8 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                         </svg>
                         <svg
                             v-else-if="videoVolume < 0.5"
-                            width="15"
-                            height="15"
+                            width="16"
+                            height="16"
                             viewBox="0 0 24 24"
                             fill="none"
                             stroke="currentColor"
@@ -200,8 +200,8 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                         </svg>
                         <svg
                             v-else
-                            width="15"
-                            height="15"
+                            width="16"
+                            height="16"
                             viewBox="0 0 24 24"
                             fill="none"
                             stroke="currentColor"
@@ -241,15 +241,12 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 </template>
 
 <style lang="scss" scoped>
-// The stage is `.media-stage`, the error block is `.media-message`, the transport
-// bar is `.media-controls`. What is left is that here the bar is joined to the video
-// above it rather than standing on its own.
+// The stage is `.media-stage`, the error block is `.media-message`, the picture and
+// its bar are `.media-frame` + `.media-controls` + `.media-controls-joined`. What is
+// left is where the frame sits in the pane and how tall the picture may be.
 
-// The two of them are one object: a column the width of the video, with nothing
-// between the picture and the controls.
+// Above the stage's wash, and no wider than the video it holds.
 .video-player-wrapper {
-    display: flex;
-    flex-direction: column;
     align-items: center;
     max-width: 100%;
     max-height: 100%;
@@ -257,23 +254,14 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
     z-index: $z-normal;
 }
 
-// It leaves room for the bar rather than filling the pane, and rounds only the two
-// corners the bar is not against.
+// It leaves room for the bar rather than filling the pane. The corners are the
+// frame's — it clips, so the video has none of its own.
 .video-preview {
     max-width: 100%;
     max-height: calc(100% - $size-16);
-    border-radius: $border-radius-xl $border-radius-xl 0 0;
     display: block;
     background: $base1;
     cursor: pointer;
-}
-
-// Joined to the video above it, so the top edge is open and only the bottom
-// corners round.
-.video-controls {
-    padding: $space-2 $space-4;
-    border-top: none;
-    border-radius: 0 0 $border-radius-xl $border-radius-xl;
 }
 
 // `<fieldset>` groups the volume controls for assistive tech, and arrives with a

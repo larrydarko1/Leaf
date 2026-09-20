@@ -139,32 +139,6 @@ watch(
             v-if="messages.length === 0"
             class="ai-empty-state empty-state fill"
             role="status">
-            <div
-                class="ai-empty-icon empty-state-icon"
-                aria-hidden="true">
-                <svg
-                    width="32"
-                    height="32"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <path
-                        d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" />
-                    <line
-                        x1="9"
-                        y1="21"
-                        x2="15"
-                        y2="21" />
-                    <line
-                        x1="10"
-                        y1="24"
-                        x2="14"
-                        y2="24" />
-                </svg>
-            </div>
             <p class="ai-empty-text">
                 {{ status.isModelLoaded ? t('ai.ask_anything') : t('ai.load_model_hint') }}
             </p>
@@ -552,6 +526,7 @@ watch(
 // rail panels' generous inset would push the call to action off-centre.
 .ai-empty-state {
     padding: $space-4;
+    gap: $space-4;
 }
 
 .ai-empty-icon {

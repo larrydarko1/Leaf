@@ -245,6 +245,8 @@ void props;
     display: flex;
     align-items: center;
     justify-content: center;
+    background: $bg-primary;
+    border: none;
     height: $size-12;
     min-width: $size-15;
     padding: 0 $space-2;

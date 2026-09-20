@@ -428,7 +428,10 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
     gap: $space-2;
 }
 
+// Flex, not block: the trigger is an inline-flex button, and a block wrapper gives
+// it a line box whose descender space made the trigger sit high of the Load button.
 .ai-dropdown {
+    display: flex;
     position: relative;
 }
 

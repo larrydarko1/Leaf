@@ -126,8 +126,8 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                     @click="toggleAudioPlayback">
                     <svg
                         v-if="!audioPlaying"
-                        width="20"
-                        height="20"
+                        width="16"
+                        height="16"
                         viewBox="0 0 24 24"
                         fill="currentColor"
                         aria-hidden="true">
@@ -135,8 +135,8 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                     </svg>
                     <svg
                         v-else
-                        width="20"
-                        height="20"
+                        width="16"
+                        height="16"
                         viewBox="0 0 24 24"
                         fill="currentColor"
                         aria-hidden="true">
@@ -295,11 +295,5 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 .audio-icon {
     color: $text2;
     opacity: $opacity-mid;
-}
-
-// A standalone card, so it is rounded on all four corners and blurred.
-.custom-audio-player {
-    border-radius: $border-radius-xl;
-    backdrop-filter: blur($backdrop-blur-sm);
 }
 </style>

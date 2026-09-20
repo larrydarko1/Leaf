@@ -26,15 +26,6 @@
     background: $base1;
     overflow: auto;
     position: relative;
-
-    &::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: url('../../assets/images/pattern.png') center / cover;
-        opacity: $opacity-wash;
-        pointer-events: none;
-    }
 }
 
 // –– Messages ––––––––––––––––––––
@@ -75,40 +66,62 @@
 
 // –– Control bar ––––––––––––––––––––
 
-// A bordered strip holding play, time, progress and volume.
+// A strip holding play, time, progress and volume: the app's backdrop inside a
+// hairline, compact enough that it reads as chrome under the media rather than a
+// panel of its own. Rounded on all four corners, because standing alone it is a
+// card — the audio viewer and the editor's audio embed.
 .media-controls {
-    @extend %well;
-
     display: flex;
     align-items: center;
     gap: $space-3;
     width: 100%;
-    padding: $space-3 $space-4;
+    padding: $space-2 $space-4;
+    background: $base1;
+    border: $border-width-thin $text3;
+    border-radius: $border-radius-xl;
+}
+
+// The same bar inside `.media-frame`, under a picture: the frame draws the border
+// and does the rounding, so the bar carries neither.
+.media-controls-joined {
+    border: none;
+    border-radius: 0;
+}
+
+// –– Frame ––––––––––––––––––––
+
+// A picture and its transport bar as one bordered box — the video viewer and the
+// editor's video embed. It clips, so the media inside needs no corners of its own.
+.media-frame {
+    display: flex;
+    flex-direction: column;
+    border: $border-width-thin $text3;
+    border-radius: $border-radius-xl;
+    overflow: hidden;
 }
 
 // –– Play button ––––––––––––––––––––
 
-// The one filled control in the bar: a round accent disc that grows slightly
-// under the pointer and dips when pressed.
+// The one filled control in the bar: a round accent disc with the glyph cut out
+// of it in the page's own background, so it brightens rather than resizes.
 .media-ctrl-btn {
     @extend %btn-base;
 
-    width: $size-13;
-    height: $size-13;
-    min-width: $size-13;
+    width: $size-12;
+    height: $size-12;
+    min-width: $size-12;
     border: none;
     border-radius: $border-radius-round;
     background: $accent-color;
-    color: $text1;
-    transition: all $transition-fast;
+    color: $base1;
+    transition: filter $transition-fast;
 
     &:hover:not(:disabled) {
-        transform: scale($scale-hover);
         filter: brightness(1.1);
     }
 
     &:active:not(:disabled) {
-        transform: scale($scale-hover-sm);
+        filter: brightness(0.92);
     }
 }
 
@@ -119,7 +132,7 @@
     font-size: $font-size-xs;
     color: $text2;
     font-variant-numeric: tabular-nums;
-    min-width: $size-14;
+    min-width: $size-12;
     text-align: center;
     user-select: none;
 }
@@ -181,54 +194,38 @@
     }
 }
 
-// A native range input with its track replaced. The fill is an `::after` sized
-// from the `--volume` custom property the component sets, so the painted level
-// follows the value without a second element.
-// The thumb needs its own stacking context or the `::after` fill covers it — the
-// audio viewer's copy omitted that and its thumb was painted over.
+// A native range with no handle: the level is painted straight onto the input as a
+// gradient stopped at the `--volume` the component sets, and the thumb is zeroed
+// away on both the track and itself. The bar already reports the level, so the
+// handle was only sitting on top of it — which is also why the fill had been an
+// `::after` fighting the thumb for stacking order.
 .media-volume-slider {
     appearance: none;
-    position: relative;
     width: $size-18;
     height: $size-2;
-    background: $bg-hover;
+    /* stylelint-disable no-unknown-custom-properties -- set by the component through a :style binding; declared in check-scss-standards.mjs */
+    background: linear-gradient(
+        to right,
+        $accent-color 0 calc(var(--volume) * 100%),
+        $bg-hover calc(var(--volume) * 100%) 100%
+    );
+    /* stylelint-enable no-unknown-custom-properties */
     border-radius: $border-radius-sm;
     outline: none;
     cursor: pointer;
-    transition: outline $transition-fast;
 
     &:focus-visible {
         outline: $border-width-thin $accent-color;
         outline-offset: $size-0;
     }
 
-    &::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        height: $size-2;
-        /* stylelint-disable-next-line no-unknown-custom-properties -- set by the component through a :style binding; declared in check-scss-standards.mjs */
-        width: calc(var(--volume) * 100%);
-        max-width: $size-18;
-        background: $accent-color;
-        border-radius: $border-radius-sm;
-        pointer-events: none;
+    &::-webkit-slider-runnable-track {
+        background: transparent;
     }
 
     &::-webkit-slider-thumb {
         appearance: none;
-        position: relative;
-        z-index: $z-normal;
-        width: $size-6;
-        height: $size-6;
-        border-radius: $border-radius-round;
-        background: $accent-color;
-        cursor: pointer;
-        transition: transform $transition-fast;
-    }
-
-    &::-webkit-slider-thumb:hover {
-        transform: scale($scale-hover-lg);
+        width: 0;
+        height: 0;
     }
 }

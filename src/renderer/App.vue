@@ -373,7 +373,7 @@ onBeforeUnmount(() => {
                     <!-- Workspace pill -->
                     <div class="menu-pill well stack">
                         <button
-                            class="rail-btn icon-btn icon-btn-lg icon-btn-toggle"
+                            class="icon-btn icon-btn-lg icon-btn-toggle"
                             :aria-label="t('app.change_folder')"
                             @click="changeFolder">
                             <svg
@@ -396,7 +396,7 @@ onBeforeUnmount(() => {
                     <!-- Create actions pill -->
                     <div class="menu-pill well stack">
                         <button
-                            class="rail-btn icon-btn icon-btn-lg icon-btn-toggle"
+                            class="icon-btn icon-btn-lg icon-btn-toggle"
                             :aria-label="t('app.create_new_note')"
                             @click="createNewFile">
                             <svg
@@ -426,7 +426,7 @@ onBeforeUnmount(() => {
                             </svg>
                         </button>
                         <button
-                            class="rail-btn icon-btn icon-btn-lg icon-btn-toggle"
+                            class="icon-btn icon-btn-lg icon-btn-toggle"
                             :aria-label="t('app.create_new_folder')"
                             @click="createNewFolder">
                             <svg
@@ -464,7 +464,7 @@ onBeforeUnmount(() => {
                     <!-- Tools pill -->
                     <div class="menu-pill well stack">
                         <button
-                            class="rail-btn icon-btn icon-btn-lg icon-btn-toggle"
+                            class="icon-btn icon-btn-lg icon-btn-toggle"
                             :class="{ active: showSearchPanel }"
                             :aria-label="t('app.search_files')"
                             :aria-pressed="showSearchPanel"
@@ -490,7 +490,7 @@ onBeforeUnmount(() => {
                             </svg>
                         </button>
                         <button
-                            class="rail-btn icon-btn icon-btn-lg icon-btn-toggle"
+                            class="icon-btn icon-btn-lg icon-btn-toggle"
                             :class="{ active: showBookmarksPanel }"
                             :aria-label="t('app.view_bookmarks')"
                             :aria-pressed="showBookmarksPanel"
@@ -512,7 +512,7 @@ onBeforeUnmount(() => {
                             </svg>
                         </button>
                         <button
-                            class="rail-btn icon-btn icon-btn-lg icon-btn-toggle"
+                            class="icon-btn icon-btn-lg icon-btn-toggle"
                             :aria-label="t('app.create_new_drawing')"
                             @click="createNewDrawing">
                             <svg
@@ -545,7 +545,7 @@ onBeforeUnmount(() => {
                     <div class="menu-spacer"></div>
                     <div class="menu-pill well stack">
                         <button
-                            class="rail-btn icon-btn icon-btn-lg icon-btn-toggle"
+                            class="icon-btn icon-btn-lg icon-btn-toggle"
                             :class="{ active: showAiPanel }"
                             :aria-label="t('app.ai_assistant')"
                             :aria-pressed="showAiPanel"
@@ -570,7 +570,7 @@ onBeforeUnmount(() => {
                             </svg>
                         </button>
                         <button
-                            class="rail-btn icon-btn icon-btn-lg icon-btn-toggle"
+                            class="icon-btn icon-btn-lg icon-btn-toggle"
                             :class="{ active: showThemePanel }"
                             :aria-label="t('app.theme_selector')"
                             :aria-pressed="showThemePanel"
@@ -589,7 +589,7 @@ onBeforeUnmount(() => {
                             </svg>
                         </button>
                         <button
-                            class="rail-btn icon-btn icon-btn-lg icon-btn-toggle"
+                            class="icon-btn icon-btn-lg icon-btn-toggle"
                             :class="{ active: showLanguagePanel }"
                             :aria-label="t('app.language_selector')"
                             :aria-pressed="showLanguagePanel"
@@ -701,34 +701,20 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped lang="scss">
-// This block used to be unscoped — a global stylesheet living in an SFC, which is
-// how `.hint` came to be defined twice app-wide (here and in components/_states)
-// and how the recorder's button came to depend on a rule App.vue happened to own.
-// What was shared has moved to styles/; what is left is the shell itself.
-
 // –– Shell ––––––––––––––––––––
 
-// The window. It used to sit inside a second `<div id="app">` of its own, so the
-// document carried two elements with that id — the mount point from index.html
-// and this one — and both files had a rule for it.
 .leaf-app {
     height: 100%;
     background: $base1;
     color: $text1;
 }
 
-// The three panes: the rail and its sidebar, the editor, and whichever panel is
-// open to the right of it. Not `.row` — these stretch to the window's full height
-// rather than centring on a line.
 .app-layout {
     display: flex;
     height: 100%;
     overflow: hidden;
 }
 
-// Both flanks sit on the app's base surface, same as the AI panel: what separates
-// a column from the editor is its border, and what sits ON it is the only thing
-// that carries a fill.
 .left-column {
     flex-shrink: 0;
 }

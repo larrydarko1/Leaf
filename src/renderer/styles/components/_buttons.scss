@@ -85,19 +85,14 @@
 // than trailing it. The softer corner follows `.icon-btn-square`: inside a pill
 // with a $border-radius-xl edge, the tighter corner of `.icon-btn` reads as a
 // rectangle set into a rounded box.
+// The glyph tilts as the button lights up — the flourish the rail had under its
+// own `.rail-btn`, which named a place rather than the effect and so never
+// reached the AI bar's identical cluster. The transition is on the glyph because
+// that is what moves; the one on the button never reached it.
 .icon-btn-lg {
     padding: $space-2;
     border-radius: $border-radius-lg;
-}
 
-// The sidebar rail's buttons, which are `.icon-btn .icon-btn-lg .icon-btn-toggle`
-// plus one flourish: the glyph tilts as the button lights up. It is here rather
-// than in App.vue because the audio recorder's button is one of the rail's row and
-// had been inheriting its whole shape from a global rule App.vue happened to own —
-// an unscoped SFC block styling another component's root by name.
-// The transition is on the glyph because that is what moves; the `transition: all`
-// on the button never reached it, so the tilt used to snap.
-.rail-btn {
     svg {
         transition: transform $transition-base;
     }

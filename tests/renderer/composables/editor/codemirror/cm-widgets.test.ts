@@ -191,7 +191,7 @@ describe('EmbedWidget.toDOM', () => {
 
     it('renders a video wrapper with controls', () => {
         const el = new EmbedWidget('clip.mp4', '/vault/clip.mp4', 'video', '').toDOM();
-        expect(el.className).toBe('cm-embed-video-wrapper');
+        expect(el.className).toBe('cm-embed-video-wrapper media-frame');
         expect(el.querySelector('video')).not.toBeNull();
         expect(el.querySelector('button.cm-embed-play-btn')).not.toBeNull();
     });
@@ -323,16 +323,26 @@ describe('EmbedWidget.toDOM', () => {
         expect(el.querySelector('audio')).not.toBeNull();
     });
 
-    it('volume slider click on audio sets volume', () => {
+    it('volume slider input on audio sets volume', () => {
         const el = new EmbedWidget('sound.mp3', '/vault/sound.mp3', 'audio', '').toDOM();
         const media = el.querySelector('audio') as HTMLAudioElement;
-        const volWrap = el.querySelector('.cm-embed-vol-wrapper') as HTMLElement;
+        const slider = el.querySelector('.cm-embed-vol-slider') as HTMLInputElement;
         const setter = vi.fn();
         Object.defineProperty(media, 'volume', { get: () => 0.5, set: setter, configurable: true });
-        const volTrack = el.querySelector('.cm-embed-vol-track') as HTMLElement;
-        vi.spyOn(volTrack, 'getBoundingClientRect').mockReturnValue({ left: 0, width: 100 } as DOMRect);
-        volWrap.dispatchEvent(Object.assign(new MouseEvent('click', { clientX: 75 })));
+        slider.value = '0.75';
+        slider.dispatchEvent(new Event('input'));
         expect(setter).toHaveBeenCalledWith(0.75);
+    });
+
+    it('volume slider tracks the mute button', () => {
+        const el = new EmbedWidget('sound.mp3', '/vault/sound.mp3', 'audio', '').toDOM();
+        const media = el.querySelector('audio') as HTMLAudioElement;
+        const slider = el.querySelector('.cm-embed-vol-slider') as HTMLInputElement;
+        const volBtn = el.querySelector('button.cm-embed-vol-btn') as HTMLButtonElement;
+        Object.defineProperty(media, 'volume', { get: () => 1, set: vi.fn(), configurable: true });
+        volBtn.click();
+        expect(slider.value).toBe('0');
+        expect(slider.style.getPropertyValue('--volume')).toBe('0');
     });
 
     it('renders a PDF iframe', () => {
