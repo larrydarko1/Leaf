@@ -753,9 +753,8 @@ watch(
     padding: 0 $space-3;
 }
 
-// The groove and the fill are `.progress-track` / `.progress-fill`, shared with the
-// media scrubber, and the thresholds come with them. This one is a line thinner
-// than the scrubber because it is only read, never aimed at.
+// The groove and the fill are `.progress-track` / `.progress-fill`, shared with the media scrubber.
+// A line thinner, because this one is only read, never aimed at.
 .ai-token-bar-track {
     flex: 1;
     height: $size-1;

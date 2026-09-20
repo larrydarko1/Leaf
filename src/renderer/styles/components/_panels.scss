@@ -1,15 +1,12 @@
-// Side panel shells.
-// The four side panels — search, bookmarks, themes, languages — are the same
-// three boxes: a full-height column, a header that does not scroll, and a
-// scrolling body, sometimes over a footer. Each had hand-rolled all of it under
-// its own names, and they had drifted apart on every shared value.
+// Side panel shells: a full-height column, a header that does not scroll, and a scrolling body,
+// sometimes over a footer.
 
 @use '@/renderer/styles/variables' as *;
 
 // –– Panel shell ––––––––––––––––––––
 
-// Every panel sits on the app's base surface and declares no fill of its own —
-// what separates one from the editor is its border.
+// Every panel sits on the app's base surface and declares no fill of its own — its border is what
+// separates it from the editor.
 .panel {
     display: flex;
     flex-direction: column;
@@ -17,8 +14,8 @@
     overflow: hidden;
 }
 
-// The picker panels (themes, languages) sit to the right of the editor instead:
-// bordered against it, and a fixed width rather than the rail's.
+// The picker panels (themes, languages) sit to the right of the editor instead: bordered against
+// it, at a fixed width.
 .panel-aside {
     width: $size-28;
     min-width: $size-27;
@@ -28,8 +25,6 @@
 
 // –– Panel header ––––––––––––––––––––
 
-// The four disagreed only on the inset: two used `$space-3 $space-4`, the other
-// two had each picked their own. They use the roomier pair now.
 .panel-header {
     display: flex;
     align-items: center;
@@ -39,16 +34,15 @@
     flex-shrink: 0;
 }
 
-// The panel's own name. Semibold, following the theme picker — the language
-// picker's `medium` was the odd one out of the four.
+// The panel's own name.
 .panel-title {
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
     color: $text1;
 }
 
-// The quieter, uppercase variant the rail panels use, where the title is a
-// section label above a search field rather than a heading on its own.
+// The quieter, uppercase variant the rail panels use, where the title labels a section above a
+// search field.
 .panel-label {
     margin: 0;
     font-size: $font-size-xs;
@@ -73,9 +67,8 @@
     flex-shrink: 0;
 }
 
-// The delta over `.hint` for the line under a footer button, where an inline
-// `<code>` names the file type or path the button acts on. It sits flush against
-// the footer edge, so unlike a free-standing hint it drops its trailing margin.
+// The delta over `.hint` for the line under a footer button; it sits flush against the footer edge,
+// so it drops its trailing margin.
 .panel-hint {
     margin-bottom: 0;
     line-height: $line-height;

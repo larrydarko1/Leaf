@@ -76,9 +76,8 @@ watch(
 </template>
 
 <style lang="scss" scoped>
-// The stage is `.media-stage`, the loading and error blocks are `.media-message`.
-// What is left is the image itself: it fits the pane rather than filling it, and it
-// sits above the stage's wash.
+// The stage and the messages are `media-*` classes. What is left is the image itself: it fits the
+// pane rather than filling it.
 .image-preview {
     max-width: 100%;
     max-height: 100%;

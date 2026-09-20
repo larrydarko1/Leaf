@@ -528,9 +528,8 @@ if (typeof window !== 'undefined') {
     overflow: hidden;
 }
 
-// CodeMirror sizes itself from its container, so the container has to be the one
-// that ends — otherwise the editor grows with the document and the pane scrolls
-// instead of the text.
+// CodeMirror sizes itself from its container, so the container has to be the one that ends —
+// otherwise the editor grows with the document and the pane scrolls, not the text.
 .cm-editor-container {
     overflow: hidden;
 
@@ -543,9 +542,8 @@ if (typeof window !== 'undefined') {
 
 // –– Drop overlay ––––––––––––––––––––
 
-// Not `.drop-target`: that marks a row or a well that is already there, while this
-// is a whole layer that appears over the text — dimming what is underneath is the
-// point of it. The dashed edge is the same $border-width-md the tree row uses.
+// Not `.drop-target`: that marks a row or a well that is already there, while this is a whole layer
+// over the text — dimming what is underneath is the point of it.
 .drop-overlay {
     position: absolute;
     inset: 0;
@@ -581,9 +579,8 @@ if (typeof window !== 'undefined') {
 
 // –– Textarea ––––––––––––––––––––
 
-// The plain-text editor is `.field-bare .field-bare-grow`; what is left is that it
-// is a page of prose rather than a line in a row. It also carried a `.code-editor`
-// variant, which nothing has rendered since CodeMirror took over the code files.
+// The plain-text editor is `.field-bare .field-bare-grow`; what is left is that it is a page of
+// prose rather than a line in a row.
 .editor-textarea {
     padding: $space-7;
     font-size: $font-size-base;
@@ -615,7 +612,7 @@ if (typeof window !== 'undefined') {
     &.active {
         background: $danger-color;
 
-        // Dark on the fill, like `.btn-danger` — white was the odd one out.
+        // Dark on the fill, like `.btn-danger`.
         color: $base1;
         border-color: $danger-color;
         box-shadow: $red-shadow;

@@ -66,9 +66,8 @@ const { isRecording, hasPermission, formattedDuration, toggle } = useAudioRecord
 </template>
 
 <style scoped lang="scss">
-// The shape is the rail's; this is the one state only this button has. It kept the
-// danger tint on hover so the button does not look like it is about to do
-// something else while it is recording.
+// The shape is the rail's; this is the one state only this button has. The danger tint stays on
+// hover, so the button does not look like it is about to do something else.
 .icon-btn {
     &.recording {
         color: $danger-color;

@@ -241,9 +241,8 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 </template>
 
 <style lang="scss" scoped>
-// The stage is `.media-stage`, the error block is `.media-message`, the picture and
-// its bar are `.media-frame` + `.media-controls` + `.media-controls-joined`. What is
-// left is where the frame sits in the pane and how tall the picture may be.
+// The stage, the error block, the frame and its bar are all `media-*` classes. What is left is
+// where the frame sits in the pane and how tall the picture may be.
 
 // Above the stage's wash, and no wider than the video it holds.
 .video-player-wrapper {
@@ -264,13 +263,8 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
     cursor: pointer;
 }
 
-// `<fieldset>` groups the volume controls for assistive tech, and arrives with a
-// border, a margin and a min-width that have nothing to do with how it looks here.
-// This was `fieldset, time, section { all: unset }`, which took `.media-volume` off
-// the group it was applied to — a scoped element selector outranks a global class —
-// so the video's volume row was laid out inline while the audio player's was flex.
-// Only what the browser actually supplies is reset now; `time` and `section` were in
-// that list with nothing to undo.
+// `<fieldset>` groups the volume controls for assistive tech, and arrives with a border, a margin
+// and a min-width that have nothing to do with how it looks here.
 fieldset {
     margin: 0;
     padding: 0;

@@ -1,14 +1,10 @@
-// Theme fallback layer
-// The compiled-in palette, applied on first paint before JS loads the user's
-// active theme. useTheme.ts then overrides these same custom properties on
-// <html> from the selected preset.
+// The compiled-in palette, applied on first paint before useTheme.ts overrides these custom
+// properties from the user's active theme.
 
-// Matches assets/themes/dark.json. Must stay in sync — check-scss-standards.mjs
-// compares this block against every preset's `colors` map in both directions.
+// Matches assets/themes/dark.json and must stay in sync — check-scss-standards.mjs compares this
+// block against every preset in both directions.
 
-// This lives apart from _variables.scss because it EMITS a rule, and
-// _variables.scss is injected into every SFC. Kept there, this block shipped 27
-// times.
+// Kept out of _variables.scss because it emits a rule, and that file is injected into every SFC.
 
 :root {
     --text1: #fff;

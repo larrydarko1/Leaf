@@ -395,18 +395,16 @@ onMounted(() => {
 
 // –– Composer ––––––––––––––––––––
 
-// The composer is a `.field-well` turned on its side: the field takes the full
-// width and the controls sit under it, the shape Copilot and Claude Code use. A
-// column rather than the shared row, so the buttons stay put as the textarea grows.
+// The composer is a `.field-well` turned on its side: the field takes the full width and the
+// controls sit under it. A column, so the buttons stay put as the textarea grows.
 .ai-input-row {
     flex-direction: column;
     align-items: stretch;
     padding: $space-1;
     border-radius: $border-radius-xl;
 
-    // While a reply is streaming the border becomes a rotating conic gradient: the
-    // ::before is the spinning wheel and the ::after masks all but its edge, which
-    // is why the row needs its own stacking context.
+    // While a reply is streaming the border becomes a rotating conic gradient: the ::before is the
+    // wheel and the ::after masks all but its edge, so the row needs its own stacking context.
     &.ai-input-activated {
         position: relative;
         overflow: hidden;
@@ -440,9 +438,8 @@ onMounted(() => {
     }
 }
 
-// The field's height is the one the drag handle stored, so it must not take its
-// height from the column it now sits in — `.field-bare-grow`'s `flex: 1` is what
-// NoteEditor's full-height editor needs and what this one has to refuse.
+// The field's height is the one the drag handle stored, so it must refuse the `flex: 1` that
+// `.field-bare-grow` gives NoteEditor's full-height editor.
 .ai-input {
     flex: none;
 }
@@ -463,9 +460,8 @@ onMounted(() => {
 
 // –– Context toggles ––––––––––––––––––––
 
-// The two switches at the left of the control row — attach files, show thinking.
-// They are icon buttons whose state is a colour rather than a fill, because a fill
-// here reads as a second row of chrome.
+// The two switches at the left of the control row — attach files, show thinking. Their state is a
+// colour rather than a fill, because a fill here reads as a second row of chrome.
 .ai-context-toggle {
     input {
         display: none;
@@ -528,10 +524,8 @@ onMounted(() => {
 
 // –– Context file picker ––––––––––––––––––––
 
-// The containing block for the picker below, which is positioned against this
-// button rather than against the panel. `.row` replaced this rule's own
-// `display: flex`, and the `position: relative` beside it went with it — which
-// left the picker anchored to `.ai-panel` and opening above the window.
+// The containing block for the picker below, which is positioned against this button rather than
+// against the panel.
 .ai-context-picker {
     position: relative;
     flex-shrink: 0;
@@ -560,9 +554,7 @@ onMounted(() => {
     list-style: none;
 }
 
-// The two lines are `.menu-item-name` over `.menu-item-desc`, as in the
-// system-prompt list — this one's name had been a size larger than that one's for
-// no reason either could give, so two pickers a click apart were set differently.
+// The two lines are `.menu-item-name` over `.menu-item-desc`, as in the system-prompt list.
 .ai-file-picker-item {
     flex-direction: column;
     gap: $space-0;

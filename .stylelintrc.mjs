@@ -96,13 +96,10 @@ export default {
       customSyntax: 'postcss-html'
     },
     {
-      // The alias file maps every `--token` to a `$variable`, but the `:root` that
-      // declares them lives in _theme.scss — they are deliberately separate,
-      // because _variables.scss is injected into all 26 SFCs and so must emit
-      // nothing. stylelint resolves custom properties per file, so from here every
-      // token looks undeclared. The real three-way check (this file's `var()`s vs
-      // the `:root` fallback vs all 20 theme presets) is what
-      // scripts/check/check-scss-standards.mjs does, in both directions.
+      // _variables.scss maps every `--token` to a `$variable`, but the `:root` that declares them
+      // is in _theme.scss, and stylelint resolves custom properties per file — so from here every
+      // token looks undeclared. The real three-way check is what
+      // scripts/check/check-scss-standards.mjs does.
       files: ['**/styles/_variables.scss'],
       rules: {
         'no-unknown-custom-properties': null

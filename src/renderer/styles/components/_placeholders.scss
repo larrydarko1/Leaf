@@ -1,24 +1,13 @@
-// Shared placeholder selectors.
-// A placeholder emits no CSS of its own — it only exists to be `@extend`ed, so
-// the declarations land once in the extending rule instead of being repeated.
-// They live together in one file because `@extend` cannot reach across module
-// boundaries unless the placeholder is `@use`d: `%btn-base` is defined for
-// buttons but extended by the media transport and the toolbars. Keeping them
-// here means a partial `@use`s this file rather than each other, which is also
-// what stops the graph growing cycles.
-
-// `@extend` also cannot cross the SFC boundary — a scoped block extending one of
-// these would emit its own copy. SFCs compose the classes instead; these are for
-// the stylesheets in this folder only.
+// Shared placeholders: they emit nothing and exist only to be `@extend`ed. Kept in one file because
+// `@extend` cannot cross module boundaries — nor the SFC boundary, so SFCs compose the classes
+// instead.
 
 @use '@/renderer/styles/variables' as *;
 
 // –– Interaction bases ––––––––––––––––––––
 
-// Every button-shaped control in the app starts here: the chrome is stripped, the
-// icon is centred, and disabled is settled once. Before this, 22 files each
-// re-derived `border: none` + flex centring, and `:disabled` was written 12 times
-// across four different opacities.
+// Every button-shaped control in the app starts here: chrome stripped, icon centred, disabled
+// settled once.
 %btn-base {
     display: inline-flex;
     align-items: center;
@@ -41,9 +30,8 @@
     }
 }
 
-// The neutral hover every quiet control shares — a tint plus a lift to full-
-// strength text. Split from `%btn-base` because the transport controls and the
-// canvas toolbar suppress it in favour of their own.
+// The neutral hover every quiet control shares. Split from `%btn-base` because the transport
+// controls and the canvas toolbar suppress it in favour of their own.
 %btn-hover-tint {
     &:hover:not(:disabled, .disabled) {
         background: $bg-hover;
@@ -53,9 +41,8 @@
 
 // –– Surfaces ––––––––––––––––––––
 
-// A raised, blurred panel that floats over content: the context menu, the model
-// dropdown, the file picker, the canvas toolbar. Seven files had their own
-// `backdrop-filter` surface at three different blur radii.
+// A raised, blurred panel that floats over content: the context menu, the model dropdown, the file
+// picker, the canvas toolbar.
 %floating-surface {
     background: color-mix(in srgb, $bg-primary $opacity-almost-opaque * 100%, transparent);
     backdrop-filter: blur($backdrop-blur-sm);
@@ -64,10 +51,8 @@
     box-shadow: $shadow-dropdown;
 }
 
-// The recessed surface: the app's own fill inside a hairline. It is what a group
-// of controls sits IN rather than on — the rail's button pill, the model pill and
-// the action cluster beside it, the composer row, the search line. Six rules across
-// five files had written the pair out.
+// The recessed surface a group of controls sits IN rather than on — the rail's button pill, the
+// model pill, the composer row, the search line.
 %well {
     background: $bg-primary;
 
@@ -78,9 +63,7 @@
 
 // –– Text ––––––––––––––––––––
 
-// Single-line clipping. Sixteen sites across eight files wrote these three
-// declarations out; roughly half also needed the `min-width: 0` that makes them
-// work inside a flex row, and only some remembered it.
+// Single-line clipping, with the `min-width: 0` that makes it work inside a flex row.
 %truncate {
     min-width: 0;
     white-space: nowrap;
@@ -90,11 +73,8 @@
 
 // –– Bars ––––––––––––––––––––
 
-// A bar that reports a proportion: the media scrubber's groove and the AI panel's
-// context meter. The two had agreed on the shape and drifted on every value — one
-// groove was 4px on $bg-hover and the other 3px on $text3, a border colour used as
-// a fill. The groove is $bg-hover in both now; the height stays each caller's,
-// because the media one is a hit target and the meter is only read.
+// A bar that reports a proportion: the media scrubber's groove and the AI panel's context meter.
+// The height stays each caller's, because one is a hit target and the other is only read.
 %progress-track {
     position: relative;
     height: $size-2;
@@ -103,8 +83,8 @@
     overflow: hidden;
 }
 
-// The painted part. `width` is set by the component, so it is the one thing this
-// does not carry — and the reason the transition is on `width` alone.
+// The painted part. `width` is set by the component, which is why the transition is on `width`
+// alone.
 %progress-fill {
     height: 100%;
     background: $accent-color;

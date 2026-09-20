@@ -5,9 +5,8 @@
 
 // –– Empty states ––––––––––––––––––––
 
-// The centred block in place of an empty list. Five components had their own, at
-// four paddings and three colours; this is the roomy version the rail panels use,
-// for a whole pane with nothing in it.
+// The centred block in place of an empty list: the roomy version, for a whole pane with nothing in
+// it.
 .empty-state {
     display: flex;
     flex-direction: column;
@@ -44,11 +43,7 @@
 
 // –– Heroes ––––––––––––––––––––
 
-// The whole-pane welcome: the app before a vault is chosen, the editor before a
-// note is open. Both centred the same mark over the same one-line invitation, at
-// two scales — and the editor's was written as `4rem` and `Inter, sans-serif`,
-// neither of which is a token and the second of which is not a font this app
-// loads, so that wordmark was rendering in the platform's default sans.
+// The whole-pane welcome: the app before a vault is chosen, the editor before a note is open.
 .hero {
     display: flex;
     height: 100%;
@@ -85,8 +80,8 @@
     object-fit: contain;
 }
 
-// Not a heading — it is the product name, so it is not in the document outline
-// and it is not selectable text either.
+// Not a heading — it is the product name, so it is out of the document outline and not selectable
+// text.
 .hero-brand-text {
     font-family: $font-family;
     font-size: $font-size-4xl;
@@ -106,12 +101,8 @@
 
 // –– Drop targets ––––––––––––––––––––
 
-// What a drag is allowed to land on: the folder row under the cursor, the
-// explorer's root well. Drawn as an outline rather than a border because a
-// border appearing under the cursor re-lays the row out — the tree row shifted
-// sideways by 2px the moment a drag entered it. The explorer's root already knew
-// this and used an outline, but in $text2 rather than the accent, so the two
-// halves of the same pane answered a drag in different colours.
+// What a drag is allowed to land on. An outline rather than a border, because a border appearing
+// under the cursor re-lays the row out.
 .drop-target {
     background: $accent-color-alpha;
     outline: $border-width-md $accent-color;

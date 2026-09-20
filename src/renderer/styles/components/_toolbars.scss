@@ -6,21 +6,16 @@
 
 // –– Wells ––––––––––––––––––––
 
-// The surface a cluster of controls shares, so a bar reads as two or three objects
-// rather than as eight loose buttons: the rail's button pills, the model pill, the
-// AI bar's action cluster. Each caller keeps its own radius and inset — the rail's
-// pills are $border-radius-xl round a column, the model pill -lg round a line of
-// text — but the fill and the hairline are one decision now.
+// The surface a cluster of controls shares, so a bar reads as two or three objects rather than
+// eight loose buttons. Each caller keeps its own radius and inset.
 .well {
     @extend %well;
 }
 
 // –– Separators ––––––––––––––––––––
 
-// The hairline between two groups of toolbar buttons. The markdown toolbar and the
-// canvas toolbar each had one, at two heights and two colours — one a flat
-// $border-color, the other a 20% tint of $text2. The tint is the one that survives
-// the light themes, where $border-color is nearly the toolbar's own background.
+// The hairline between two groups of toolbar buttons. A tint of $text2 rather than a flat
+// $border-color, which is nearly the toolbar's own background in the light themes.
 .toolbar-sep {
     width: $size-0;
     height: $size-11;

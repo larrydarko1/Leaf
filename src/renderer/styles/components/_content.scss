@@ -1,16 +1,11 @@
-// Rendered prose — the typography of markdown the app did not author.
-// This layer is global rather than scoped for a reason that is not stylistic: the
-// markdown arrives through `v-html`, so its elements carry no scope attribute and
-// a scoped block can only reach them through `:deep()`. Thirty selectors in
-// AiMessageList.vue were wrapped in it. Here they are ordinary descendants.
+// Rendered prose — markdown arrives through `v-html`, so it is global: its elements carry no scope
+// attribute.
 
 @use '@/renderer/styles/variables' as *;
 
 // –– Prose ––––––––––––––––––––
 
-// Everything inside is addressed by element, because the content is generated and
-// has no classes to hook. `white-space: normal` undoes the `pre-wrap` the
-// surrounding message bubble sets for plain text.
+// Addressed by element, because the content is generated and has no classes to hook.
 .prose {
     position: relative;
     white-space: normal;
@@ -80,9 +75,8 @@
         border-top: $border-width-thin $text3;
     }
 
-    // The tints are mixed from $bg-primary rather than named outright: prose sits
-    // on a message bubble whose background is either the accent or the surface, so
-    // a fixed fill reads as a hole in one of the two.
+    // Tints are mixed from $bg-primary: prose sits on either the accent bubble or the surface, and
+    // a fixed fill reads as a hole in one of them.
     code {
         padding: $space-0 $space-1;
         background: color-mix(in srgb, $bg-primary 15%, transparent);
@@ -127,8 +121,8 @@
 
 // –– Code block copy affordance ––––––––––––––––––––
 
-// The wrapper the markdown renderer puts around every `<pre>`, so the copy button
-// has something positioned to sit in.
+// The wrapper the markdown renderer puts around every `<pre>`, so the copy button has something to
+// sit in.
 .prose .ai-pre-wrapper {
     position: relative;
 
@@ -138,9 +132,7 @@
     }
 }
 
-// Hidden until the block is hovered or focused, so a wall of code is not also a
-// wall of buttons. It stays visible once focused by keyboard — the reveal is a
-// convenience for the mouse, not a condition of reaching it.
+// Hidden until the block is hovered or focused, so a wall of code is not also a wall of buttons.
 .prose .ai-code-copy-btn {
     position: absolute;
     top: $space-2;

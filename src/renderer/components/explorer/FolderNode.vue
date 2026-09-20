@@ -558,8 +558,7 @@ watch(isRenaming, (renaming) => {
 
 // –– Rows ––––––––––––––––––––
 
-// A folder row and a file row are the same row, and always were: the two rules
-// agreed on all nine declarations and were written out twice.
+// A folder row and a file row are the same row.
 .folder-item,
 .file-item {
     gap: $space-2;
@@ -569,9 +568,8 @@ watch(isRenaming, (renaming) => {
     cursor: pointer;
     transition: all $transition-fast;
 
-    // A highlighted row pulls in from both edges, so its fill reads as a pill
-    // rather than as a band across the pane. Five states had each written this
-    // margin out in full, under two names.
+    // A highlighted row pulls in from both edges, so its fill reads as a pill rather than as a band
+    // across the pane.
     &:hover,
     &.active,
     &.selected,
@@ -583,9 +581,8 @@ watch(isRenaming, (renaming) => {
         background: $bg-hover;
     }
 
-    // The row that is open, or picked out for the next action. A file can be both
-    // at once — `.selected` is the multi-selection, `.active` is the open tab —
-    // and they were given the same fill from the start.
+    // The row that is open, or picked out for the next action. A file can be both at once —
+    // `.selected` is the multi-selection, `.active` is the open tab.
     &.selected,
     &.active {
         background: $bg-selected;
@@ -617,8 +614,6 @@ watch(isRenaming, (renaming) => {
 // –– Chevron ––––––––––––––––––––
 
 // Only a hit area — the row draws everything, so this adds no padding of its own.
-// It used to set `outline: none`, which took the focus ring off the one control in
-// the tree that can be reached by keyboard and does not open a file.
 .chevron-button {
     margin: 0;
     padding: 0;
@@ -713,9 +708,8 @@ watch(isRenaming, (renaming) => {
 
 // –– Rename ––––––––––––––––––––
 
-// Both inputs are `.field .field-sm` — they were two byte-identical rules under
-// two names. What is left is that this one replaces a row's label rather than
-// standing on its own, so it fits the row and matches the text it took over.
+// It replaces a row's label rather than standing on its own, so it fits the row and matches the
+// text it took over.
 .folder-name-input,
 .file-name-input {
     flex: 1;

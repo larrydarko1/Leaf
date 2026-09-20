@@ -185,9 +185,10 @@ export class EmbedWidget extends WidgetType {
             case 'video':
             case 'audio': {
                 const isVideo = this.mediaType === 'video';
-                const wrapper = document.createElement('div');
-                wrapper.className = isVideo ? 'cm-embed-video-wrapper media-frame' : 'cm-embed-audio-wrapper';
+                const el = (tag: string, className: string): HTMLElement =>
+                    Object.assign(document.createElement(tag), { className });
 
+                const wrapper = el('div', isVideo ? 'cm-embed-video-wrapper media-frame' : 'cm-embed-audio-wrapper');
                 const media = isVideo
                     ? Object.assign(document.createElement('video'), {
                           src: fileUrl,
@@ -196,37 +197,29 @@ export class EmbedWidget extends WidgetType {
                       })
                     : Object.assign(document.createElement('audio'), { src: fileUrl, preload: 'auto' });
 
-                // The app's `.media-*` transport, shared with the standalone viewers; the
-                // `cm-embed-*` names stay as this file's and cm-markdown-widgets' hooks.
-                const ctrlBar = document.createElement('div');
-                ctrlBar.className = 'cm-embed-controls media-controls' + (isVideo ? ' media-controls-joined' : '');
+                // The app's shared `.media-*` transport; the `cm-embed-*` names stay as this file's hooks.
+                const joined = isVideo ? ' media-controls-joined' : '';
+                const ctrlBar = el('div', 'cm-embed-controls media-controls' + joined);
 
-                const playBtn = document.createElement('button');
-                playBtn.className = 'cm-embed-play-btn media-ctrl-btn';
+                const playBtn = el('button', 'cm-embed-play-btn media-ctrl-btn');
                 const playSvg =
                     '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
                 const pauseSvg =
                     '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
                 playBtn.innerHTML = playSvg;
 
-                const timeEl = document.createElement('span');
-                timeEl.className = 'cm-embed-time media-time';
+                const timeEl = el('span', 'cm-embed-time media-time');
                 timeEl.textContent = '0:00';
 
-                const progressWrap = document.createElement('div');
-                progressWrap.className = 'cm-embed-progress-wrapper media-progress';
-                const progressTrack = document.createElement('div');
-                progressTrack.className = 'cm-embed-progress-track media-progress-track';
-                const progressFill = document.createElement('div');
-                progressFill.className = 'cm-embed-progress-fill media-progress-fill';
+                const progressWrap = el('div', 'cm-embed-progress-wrapper media-progress');
+                const progressTrack = el('div', 'cm-embed-progress-track media-progress-track');
+                const progressFill = el('div', 'cm-embed-progress-fill media-progress-fill');
                 progressTrack.appendChild(progressFill);
                 progressWrap.appendChild(progressTrack);
 
-                const durEl = document.createElement('span');
-                durEl.className = 'cm-embed-time media-time';
+                const durEl = el('span', 'cm-embed-time media-time');
                 durEl.textContent = '0:00';
 
-                // Volume controls — the viewers' stroked glyphs, at their size
                 const volIcon =
                     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">';
                 const volSvg =
@@ -236,23 +229,16 @@ export class EmbedWidget extends WidgetType {
                     volIcon +
                     '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>';
 
-                const volWrap = document.createElement('div');
-                volWrap.className = 'cm-embed-vol-wrapper media-volume';
+                const volWrap = el('div', 'cm-embed-vol-wrapper media-volume');
+                const volBtn = el('button', 'cm-embed-vol-btn media-volume-btn');
 
-                const volBtn = document.createElement('button');
-                volBtn.className = 'cm-embed-vol-btn media-volume-btn';
-                volBtn.innerHTML = volSvg;
-
-                // The viewers' slider, down to the `--volume` fill: a native range, so the
-                // level is reachable from the keyboard rather than by aiming at a bar.
+                // A native range, so the level is reachable from the keyboard rather than by aiming at a bar.
                 const volSlider = document.createElement('input');
                 volSlider.type = 'range';
                 volSlider.min = '0';
                 volSlider.max = '1';
                 volSlider.step = '0.01';
-                volSlider.value = '1';
                 volSlider.className = 'cm-embed-vol-slider media-volume-slider';
-                volSlider.style.setProperty('--volume', '1');
                 volWrap.append(volBtn, volSlider);
 
                 const setVolume = (volume: number): void => {
@@ -261,6 +247,7 @@ export class EmbedWidget extends WidgetType {
                     volSlider.style.setProperty('--volume', String(volume));
                     volBtn.innerHTML = volume === 0 ? muteSvg : volSvg;
                 };
+                setVolume(1);
 
                 const fmt = (totalSeconds: number): string => {
                     if (!isFinite(totalSeconds) || isNaN(totalSeconds) || totalSeconds <= 0) return '0:00';
@@ -270,9 +257,8 @@ export class EmbedWidget extends WidgetType {
                         .padStart(2, '0')}`;
                 };
 
-                // Duration resolution: some formats report Infinity via custom protocol.
-                // Probe by seeking to a huge value — Chromium clamps to actual end and
-                // fires durationchange with the real value.
+                // Some formats report Infinity over the custom protocol. Seeking to a huge value
+                // makes Chromium clamp to the real end and fire durationchange with it.
                 let realDuration = 0;
                 let probing = false;
 

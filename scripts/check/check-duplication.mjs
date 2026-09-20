@@ -43,10 +43,8 @@ const CEILINGS = {
 
 /**
  * No single clone may exceed this many tokens, whatever the percentages say.
- * The largest today is 132; the 147-token panel layout shared by LanguagePicker
- * and ThemePicker that used to hold this record is now one rule in
- * styles/components/_panels.scss. This leaves a little room without leaving room
- * for a new one.
+ * The largest today is 132. This leaves a little room without leaving room for a
+ * new one.
  */
 const MAX_CLONE_TOKENS = 140;
 

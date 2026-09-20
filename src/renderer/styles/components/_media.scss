@@ -1,22 +1,13 @@
-// The media viewers: the pane a file is shown in, what stands in for it while it
-// loads or fails, and the transport bar under the two that play.
-// The four viewers had each written the pane out, the loading and error blocks came
-// to six copies of one column, and the audio and video players had built the same
-// seven controls twice under `audio-*` and `video-*` names — copies that had
-// drifted on every dimension: two slider widths, two radii, and one of them had
-// lost its focus ring.
+// The media viewers: the pane a file is shown in, what stands in for it while it loads or fails,
+// and the transport bar under the two that play.
 
 @use '@/renderer/styles/variables' as *;
 @use '@/renderer/styles/components/placeholders' as *;
 
 // –– The stage ––––––––––––––––––––
 
-// The pane a media file is shown in: the file centred on the window's own
-// background with room around it. All four viewers had written this out, and
-// three of them also carried the same wash — `pattern.png` over the whole pane at
-// an opacity of 0.01, which is far enough below visible that the three of them
-// were decoding an image nobody can see. The value is kept as they agreed on it;
-// making the pattern show, or dropping it, is one line here rather than three.
+// The pane a media file is shown in: the file centred on the window's own background with room
+// around it.
 .media-stage {
     flex: 1;
     display: flex;
@@ -30,11 +21,7 @@
 
 // –– Messages ––––––––––––––––––––
 
-// What a viewer shows instead of the media: still loading, or could not be loaded
-// at all. Six of these existed — a loading block and an error block per viewer —
-// as the same eight declarations under six names.
-// It is lifted above the wash like the media itself, because the `::before` is a
-// sibling that paints after it.
+// What a viewer shows instead of the media: still loading, or could not be loaded at all.
 .media-message {
     display: flex;
     flex-direction: column;
@@ -47,17 +34,14 @@
     font-size: $font-size-base;
     text-align: center;
 
-    // The column's gap is the only spacing here: the margins the browser gives a
-    // heading and a paragraph would add to it and to each other.
+    // The column's gap is the only spacing here.
     h2,
     p {
         margin: 0;
     }
 }
 
-// The first line — what happened. It had no rule at all in any of the four, so it
-// was rendering at the browser's own heading scale, 1.5em, which is not a size
-// this app has a token for. Matched to `.hero-title`, the other whole-pane line.
+// The first line — what happened. Matched to `.hero-title`, the other whole-pane line.
 .media-message-title {
     font-size: $font-size-lg;
     font-weight: $font-weight-semibold;
@@ -66,10 +50,8 @@
 
 // –– Control bar ––––––––––––––––––––
 
-// A strip holding play, time, progress and volume: the app's backdrop inside a
-// hairline, compact enough that it reads as chrome under the media rather than a
-// panel of its own. Rounded on all four corners, because standing alone it is a
-// card — the audio viewer and the editor's audio embed.
+// A strip holding play, time, progress and volume. Rounded on all four corners, because standing
+// alone it is a card — the audio viewer and the editor's audio embed.
 .media-controls {
     display: flex;
     align-items: center;
@@ -81,8 +63,8 @@
     border-radius: $border-radius-xl;
 }
 
-// The same bar inside `.media-frame`, under a picture: the frame draws the border
-// and does the rounding, so the bar carries neither.
+// The same bar inside `.media-frame`: the frame draws the border and does the rounding, so the bar
+// carries neither.
 .media-controls-joined {
     border: none;
     border-radius: 0;
@@ -90,8 +72,8 @@
 
 // –– Frame ––––––––––––––––––––
 
-// A picture and its transport bar as one bordered box — the video viewer and the
-// editor's video embed. It clips, so the media inside needs no corners of its own.
+// A picture and its transport bar as one bordered box. It clips, so the media inside needs no
+// corners of its own.
 .media-frame {
     display: flex;
     flex-direction: column;
@@ -102,8 +84,8 @@
 
 // –– Play button ––––––––––––––––––––
 
-// The one filled control in the bar: a round accent disc with the glyph cut out
-// of it in the page's own background, so it brightens rather than resizes.
+// The one filled control in the bar: a round accent disc with the glyph cut out of it in the page's
+// own background.
 .media-ctrl-btn {
     @extend %btn-base;
 
@@ -139,10 +121,8 @@
 
 // –– Progress bar ––––––––––––––––––––
 
-// The whole strip is the hit target, padded well past the 4px track so it can be
-// aimed at. It is focusable, and the tint is how that focus reads — the video
-// viewer's copy had neither the tint nor the radius, so keyboard users could not
-// see where they were.
+// The whole strip is the hit target, padded well past the 4px track so it can be aimed at; the tint
+// is how its focus reads.
 .media-progress {
     flex: 1;
     display: flex;
@@ -158,10 +138,8 @@
     }
 }
 
-// The groove and the played part are `%progress-track` / `%progress-fill`, shared
-// with the AI panel's context meter. The track spans the strip it is flexed into,
-// and the fill follows playback rather than easing to it — at a `timeupdate` every
-// frame, the shared transition would read as lag.
+// The fill follows playback rather than easing to it — at a `timeupdate` every frame, the shared
+// transition would read as lag.
 .media-progress-track {
     @extend %progress-track;
 
@@ -194,11 +172,8 @@
     }
 }
 
-// A native range with no handle: the level is painted straight onto the input as a
-// gradient stopped at the `--volume` the component sets, and the thumb is zeroed
-// away on both the track and itself. The bar already reports the level, so the
-// handle was only sitting on top of it — which is also why the fill had been an
-// `::after` fighting the thumb for stacking order.
+// A native range with no handle: the level is painted onto the input as a gradient stopped at the
+// `--volume` the component sets, and the thumb is zeroed away.
 .media-volume-slider {
     appearance: none;
     width: $size-18;

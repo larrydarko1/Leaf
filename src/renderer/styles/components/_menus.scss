@@ -1,27 +1,19 @@
-// Menus and dropdowns — the surfaces that open over the page and close on a
-// choice: the model list, the system-prompt list, the context-file picker, the
-// explorer's context menu.
-// All of them are `%floating-surface`, which is why that placeholder exists.
-// Before this, each drew its own raised panel and the three disagreed on blur
-// radius ($backdrop-blur-sm, -md and none), on shadow ($shadow-md vs
-// $shadow-dropdown) and on border colour ($text3 vs $border-color).
+// Menus and dropdowns — the surfaces that open over the page and close on a choice, all built on
+// `%floating-surface`.
 
 @use '@/renderer/styles/variables' as *;
 @use '@/renderer/styles/components/placeholders' as *;
 
 // –– The surface ––––––––––––––––––––
 
-// The raised, blurred surface itself, with no opinion about layout — for the
-// floating panels that are not menus and cannot use `.menu`'s padding and
-// scrolling: the context-file picker, whose search field spans its full width.
-// It exists because `@extend` cannot cross the SFC boundary, so a scoped block
-// wanting this surface would otherwise re-derive it and drift.
+// The raised, blurred surface alone, with no opinion about layout — for floating panels that are
+// not menus, like the context-file picker.
 .floating {
     @extend %floating-surface;
 }
 
-// The menu body. It sets a max-height and scrolls rather than growing off-screen,
-// because every one of these is positioned against a trigger near an edge.
+// The menu body. It scrolls rather than growing off-screen, since every one of these is positioned
+// against a trigger near an edge.
 .menu {
     @extend %floating-surface;
 
@@ -34,8 +26,7 @@
     overflow: hidden auto;
 }
 
-// The transparent full-viewport layer under an open menu, there to catch the
-// click that closes it. It must sit below the menu and above everything else.
+// The transparent full-viewport layer that catches the click closing an open menu.
 .menu-overlay {
     position: fixed;
     inset: 0;
@@ -44,8 +35,8 @@
 
 // –– The trigger ––––––––––––––––––––
 
-// The button that opens a menu, shaped like a field rather than like a button:
-// it reads as the current value, and the chevron is what says it can be changed.
+// The button that opens a menu, shaped like a field: it reads as the current value, and the chevron
+// says it can be changed.
 .menu-trigger {
     @extend %btn-base;
 
@@ -64,8 +55,8 @@
     }
 }
 
-// The current value inside a trigger — the part that has to give way when the
-// trigger is narrower than the name it is showing.
+// The current value inside a trigger — the part that gives way when the trigger is narrower than
+// the name.
 .menu-trigger-label {
     @extend %truncate;
 
@@ -86,9 +77,8 @@
 
 // –– Items ––––––––––––––––––––
 
-// One choice — in a dropdown, in the explorer's context menu, or in the properties
-// panel's action stack, which were three names for this rule.
-// `.selected` marks the value in force, not the row under the cursor.
+// One choice, in a dropdown, a context menu or the properties panel's action stack. `.selected`
+// marks the value in force, not the row under the cursor.
 .menu-item {
     display: flex;
     align-items: center;
@@ -114,8 +104,7 @@
         color: $accent-color;
     }
 
-    // Matched to `%btn-base` rather than to the context menu's own $opacity-low:
-    // an unavailable row means the same thing as an unavailable button.
+    // Matched to `%btn-base`: an unavailable row means the same thing as an unavailable button.
     &:disabled,
     &.disabled {
         opacity: $opacity-mid-low;
@@ -123,8 +112,8 @@
     }
 }
 
-// The destructive row. Unlike `.icon-btn-danger` it is red at rest — it carries a
-// word, and a row that only reddens under the cursor is read after it is clicked.
+// The destructive row. Unlike `.icon-btn-danger` it is red at rest — it carries a word, and a row
+// that only reddens under the cursor is read after it is clicked.
 .menu-item-danger {
     color: $danger-color;
 
@@ -133,14 +122,13 @@
     }
 }
 
-// An item whose two lines are a name over a detail, so the row aligns on the
-// first line rather than centring the block.
+// An item whose two lines are a name over a detail, so the row aligns on the first line.
 .menu-item-stacked {
     align-items: flex-start;
 }
 
-// The name half of an item — it wraps rather than truncating, because a model id
-// is unreadable clipped and the menu can afford the height.
+// The name half of an item — it wraps rather than truncating, because a model id is unreadable
+// clipped.
 .menu-item-name {
     flex: 1;
     min-width: 0;
@@ -148,14 +136,13 @@
     line-height: $line-height;
 }
 
-// The label half of a single-line item: it takes the room the trailing detail does
-// not, which is what pushes a shortcut or a size to the right edge.
+// The label half of a single-line item: it takes the room the trailing detail does not.
 .menu-item-label {
     flex: 1;
 }
 
-// The trailing detail: a size, a path, a keyboard shortcut, a one-line description. Quieter than the
-// name and never the reason the row is wide.
+// The trailing detail: a size, a path, a shortcut. Quieter than the name and never the reason the
+// row is wide.
 .menu-item-meta {
     flex-shrink: 0;
     color: $text2;
@@ -163,10 +150,8 @@
     opacity: $opacity-mid-high;
 }
 
-// The second line of a `.menu-item-stacked` — what the name on the first line
-// actually is: the file's path in the context picker, the prompt's description in
-// the system-prompt list. Distinct from `.menu-item-meta`, which trails a name on
-// the same line and so must not grow; this one is the width of the item.
+// The second line of a `.menu-item-stacked`. Distinct from `.menu-item-meta`, which trails a name
+// on the same line and so must not grow.
 .menu-item-desc {
     color: $text2;
     font-size: $font-size-xs;
@@ -175,8 +160,7 @@
 
 // –– Chrome ––––––––––––––––––––
 
-// A group label inside a menu. Distinct from `.panel-label` only in scale — this
-// one shares a surface with the items it introduces.
+// A group label inside a menu. Distinct from `.panel-label` only in scale.
 .menu-header {
     padding: $space-1 $space-2;
     color: $text2;
@@ -186,8 +170,8 @@
     letter-spacing: $letter-spacing-wider;
 }
 
-// What a menu says when it has nothing to offer. Centred, because an empty menu
-// is narrow and a left-aligned line in it looks like a disabled item.
+// What a menu says when it has nothing to offer. Centred, because a left-aligned line in a narrow
+// menu reads as a disabled item.
 .menu-empty {
     padding: $space-2 $space-3;
     color: $text2;

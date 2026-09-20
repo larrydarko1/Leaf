@@ -1,8 +1,5 @@
-// Bars that report a proportion.
-// Two of these existed under six names — the media scrubber's groove and fill in
-// components/_media.scss, and the AI panel's context meter written out again in
-// AiMessageList.vue. The shape is `%progress-track` / `%progress-fill`; these are
-// the classes an SFC composes, since `@extend` cannot cross that boundary.
+// Bars that report a proportion. The shape is `%progress-track` / `%progress-fill`; these are the
+// classes an SFC composes, since `@extend` cannot cross that boundary.
 
 @use '@/renderer/styles/variables' as *;
 @use '@/renderer/styles/components/placeholders' as *;
@@ -19,9 +16,8 @@
 
 // –– Thresholds ––––––––––––––––––––
 
-// Applied beside `.progress-fill` when the proportion itself is the warning: the
-// context window filling up. The length says how much is used, the colour says
-// whether that matters yet.
+// Applied beside `.progress-fill` when the proportion itself is the warning: the context window
+// filling up.
 .progress-fill.warning {
     background: $warning-color;
 }

@@ -307,9 +307,8 @@ watch([exportWithBackground, exportScale, exportOnlySelected], () => {
 <style scoped lang="scss">
 /* ––– Overlay & Dialog Container ––– */
 
-// Scoped: the app has one dialog, and a shared `.modal` would be a layer with a
-// single caller. The transparent click-catching layer is `.menu-overlay`; this one
-// dims what is behind it, which is the difference between a menu and a dialog.
+// Scoped: the app has one dialog, and a shared `.modal` would be a layer with a single caller.
+// Unlike `.menu-overlay` it dims what is behind it, which is what makes it a dialog.
 .export-overlay {
     position: fixed;
     inset: 0;
@@ -339,8 +338,6 @@ watch([exportWithBackground, exportScale, exportOnlySelected], () => {
     background: $bg-secondary;
 }
 
-// These declarations were written against `.export-preview-inner`, which is not a
-// class this template has ever rendered — the figure is the element they meant.
 .export-preview-figure {
     display: flex;
     align-items: center;
@@ -390,10 +387,8 @@ watch([exportWithBackground, exportScale, exportOnlySelected], () => {
     cursor: pointer;
     user-select: none;
 
-    // Not `display: none`, which was here before: that takes the checkbox out of
-    // the tab order, and since the track below is the only visible part, the
-    // switch became unreachable by keyboard. Zero-sized but still focusable, with
-    // the ring drawn on the track instead.
+    // Zero-sized but still focusable, with the ring drawn on the track: `display: none` would take
+    // the checkbox out of the tab order and leave the switch unreachable by keyboard.
     .export-checkbox {
         appearance: none;
         width: 0;

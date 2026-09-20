@@ -276,10 +276,9 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 </template>
 
 <style lang="scss" scoped>
-// The stage is `.media-stage`, the loading and error blocks are `.media-message`,
-// the transport bar is `.media-controls`. What is left is the card in the middle of
-// the pane, which only this viewer has — there is no file to look at, so the player
-// is the content.
+// The stage, messages and transport bar are all `media-*` classes. What is left is the card in the
+// middle of the pane, which only this viewer has: there is no file to look at, so the player is the
+// content.
 .audio-container {
     display: flex;
     flex-direction: column;

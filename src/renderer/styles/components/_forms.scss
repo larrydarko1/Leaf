@@ -1,18 +1,13 @@
-// Text entry — the inputs and textareas the app types into.
-// Two shapes only: a bordered field that owns its own focus treatment, and a
-// bare one that inherits the focus of the row it sits inside. Six fields across
-// the AI panel had re-derived one or the other, and they disagreed on how a
-// focused field signals it (`box-shadow: $accent-shadow` in three, nothing in
-// the rest) and on whether `:disabled` fades at all.
+// Text entry: a bordered field that owns its focus treatment, and a bare one that inherits the
+// row's.
 
 @use '@/renderer/styles/variables' as *;
 @use '@/renderer/styles/components/placeholders' as *;
 
 // –– Bordered fields ––––––––––––––––––––
 
-// A field standing on its own: the message editor, the inline rename. The accent
-// border is the resting state rather than the focus state — these appear only
-// when something is already being edited, so the border is what says so.
+// A field standing on its own: the message editor, the inline rename. The accent border is the
+// resting state — these appear only when something is already being edited.
 .field {
     width: 100%;
     padding: $space-2 $space-3;
@@ -35,8 +30,7 @@
     }
 }
 
-// The one-line variant that replaces a label in place, so it has to fit the row
-// it took over rather than set its own height.
+// The one-line variant that replaces a label in place, so it fits the row it took over.
 .field-sm {
     padding: $space-0 $space-1;
     border-radius: $border-radius-sm;
@@ -50,10 +44,8 @@
 
 // –– Bare fields ––––––––––––––––––––
 
-// A field inside a container that already draws the border and takes the focus —
-// the composer row, the file picker's search line. It suppresses its own outline
-// on purpose: the ring would sit inside the parent's border and read as a second
-// edge. The parent is responsible for a `:focus-within` treatment.
+// A field inside a container that draws the border and takes the focus; its own ring would read as
+// a second edge.
 .field-bare {
     padding: $space-2;
     background: transparent;
@@ -77,8 +69,7 @@
     }
 }
 
-// The composer's own textarea: it grows by script, so it must not be draggable
-// and must scroll rather than push the row open.
+// The composer's own textarea: it grows by script, so it must not be draggable.
 .field-bare-grow {
     flex: 1;
     min-width: 0;
@@ -88,11 +79,8 @@
 
 // –– Field rows ––––––––––––––––––––
 
-// The bordered row a `.field-bare` sits inside and which takes the focus on its
-// behalf: the AI composer and the search line. Both had written out the same fill,
-// hairline, `border-color` transition and `:focus-within` accent; what actually
-// differs between them is the radius, the inset and, in the composer, that the row
-// aligns to the first line because its textarea grows downward.
+// The bordered row a `.field-bare` sits inside and which takes the focus on its behalf: the AI
+// composer and the search line.
 .field-well {
     @extend %well;
 
@@ -106,8 +94,7 @@
     }
 }
 
-// Height pinned, not left to the tallest child: a clear button that appears only
-// once there is a query would otherwise jog the row taller the moment one types.
+// Height pinned, so a clear button appearing on input cannot jog the row taller.
 .field-well-single {
     height: $size-14;
 }

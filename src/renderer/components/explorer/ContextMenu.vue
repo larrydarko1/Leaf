@@ -67,10 +67,8 @@ void menuRef;
 </template>
 
 <style scoped lang="scss">
-// The surface is `.floating`, the rows are `.menu-item` — this is only where the
-// menu opens and how narrow it may be. It sat on $bg-secondary with $shadow-sm
-// while the other three floating panels used the shared surface; that difference
-// was never a decision.
+// The surface is `.floating`, the rows are `.menu-item` — this is only where the menu opens and how
+// narrow it may be.
 .context-menu {
     position: fixed;
     padding: $space-1 0;

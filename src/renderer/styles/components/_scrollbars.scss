@@ -1,11 +1,8 @@
-// Scroll containers.
-// base.scss styles the default scrollbar for the whole app; these classes are for
-// panes that want a different one — a narrower track, or a thumb that only
-// appears on hover.
+// Scroll containers: base.scss styles the app's default scrollbar; these are for panes wanting a
+// narrower track or a thumb that only appears on hover.
 
-// Applied in the template (`class="scroll-y"`) rather than through a mixin, so a
-// scrolling pane declares what it is in the markup and the SFC needs no style
-// block to say it.
+// Applied in the template (`class="scroll-y"`), so a scrolling pane declares what it is in the
+// markup.
 
 @use '@/renderer/styles/variables' as *;
 
@@ -32,8 +29,8 @@
     }
 }
 
-// The thumb fades in with the pointer. For the file tree, where a permanent
-// track competes with the indent guides.
+// The thumb fades in with the pointer — for the file tree, where a permanent track competes with
+// the indent guides.
 .scroll-y-hover {
     overflow-y: auto;
 
@@ -62,8 +59,8 @@
 
 // –– Horizontal scroll ––––––––––––––––––––
 
-// Scrolls sideways with no visible track at all — the tab strip, which is
-// dragged and wheel-scrolled rather than aimed at.
+// Scrolls sideways with no visible track — the tab strip, which is dragged and wheel-scrolled
+// rather than aimed at.
 .scroll-x-hidden {
     overflow: auto hidden;
     scrollbar-width: none;

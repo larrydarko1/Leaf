@@ -443,9 +443,7 @@ function handleClickOutside(e: MouseEvent): void {
     z-index: $z-mid;
 }
 
-// The surface is `.floating`. It was a hand-rolled one at $border-radius-xl and
-// $shadow-float — the same panel the properties panel and the two dropdowns each
-// drew for themselves.
+// The surface is `.floating`; what is left is where the toolbar floats.
 .toolbar-inner {
     display: flex;
     align-items: center;
@@ -477,9 +475,8 @@ function handleClickOutside(e: MouseEvent): void {
 .arch-shape-btn {
     white-space: nowrap;
 
-    // The toolbar names this state `.active`, as its tool buttons do, and tints it
-    // the way `.icon-btn-toggle` does rather than the way a dropdown row does:
-    // this menu chooses a tool, so it should match the buttons beside it.
+    // The toolbar names this state `.active` and tints it the way `.icon-btn-toggle` does rather
+    // than the way a dropdown row does: this menu chooses a tool, so it matches the buttons beside it.
     &.active {
         background: $accent-color-alpha;
         color: $accent-color;

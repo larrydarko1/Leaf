@@ -1,22 +1,17 @@
-// Global stylesheet — imported once in main.ts.
-// Barrel file that imports all style partials.
+// Global stylesheet — imported once in main.ts. The barrel for every style partial.
 // ── Style Architecture ────────────────────────────────────────────────────────
 // _variables.scss → Design tokens and SCSS aliases. EMITS NOTHING, and is the
-//                   only module auto-injected into every SFC via
-//                   electron.vite.config.ts (css.preprocessorOptions).
+//                   only module auto-injected into every SFC.
 // _theme.scss     → The `:root` palette fallback
 // _base.scss      → Resets, global styles, animations
-// components/     → Reusable component patterns, one partial per category,
-//                   forwarded by components/_index.scss
+// components/     → Reusable component patterns, forwarded by components/_index.scss
 // _layout.scss    → Flex/text utilities
 
-// Every file here but this one is a partial (leading underscore) — this is the
-// only entry point, so it is the only one the compiler may emit standalone.
+// Every file here but this one is a partial, so this is the only entry point the compiler may emit
+// standalone.
 
-// Nothing below this line may be added to the SFC injection. Each SFC style block
-// is its own sass compilation, so an injected module that emits rules ships one
-// copy per component: when the injection was the whole barrel, all 26 SFCs
-// carried their own duplicate of the reset, the keyframes and the palette.
+// Nothing below this line may be added to the SFC injection: each SFC style block is its own sass
+// compilation, so an injected module that emits rules ships one copy per component.
 
 // –– Forwarded tokens –––––––––––––––––––––––––
 

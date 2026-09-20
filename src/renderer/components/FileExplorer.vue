@@ -352,9 +352,8 @@ onUnmounted(() => {
     overflow: hidden;
 }
 
-// The tree's well. It is also the drop target for "move to the vault root", which
-// is `.drop-target` — it had its own outline in $text2, so the root answered a drag
-// in a different colour from the folder rows inside it.
+// The tree's well. It is also the drop target for "move to the vault root", which is
+// `.drop-target`, so the root answers a drag in the same colour as the rows inside it.
 .file-list {
     flex: 1;
     padding: $space-1 0;

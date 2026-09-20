@@ -13,12 +13,9 @@
  *      @uses itself and sass fails on a circular load.
  *   2b. THE INJECTED MODULE EMITS NOTHING. Each SFC style block is a separate sass
  *      compilation, so an injected module that emits rules ships one copy per
- *      component and nothing warns. This gate exists because the injection was
- *      once the whole barrel: all 26 SFCs carried the reset, the keyframes, the
- *      scrollbar and the `:root` palette, and the bundle held 27 copies of the
- *      global layer. It is why _theme.scss is a separate file from _variables.scss
- *      — the palette emits, the tokens do not. A declaration added to the injected
- *      module is 26 invisible duplicates.
+ *      component and nothing warns. It is why _theme.scss is a separate file from
+ *      _variables.scss — the palette emits, the tokens do not. A declaration added
+ *      to the injected module is 26 invisible duplicates.
  *   3. THEME TOKEN PARITY, THREE WAYS. Theme presets are JSON under assets/themes/,
  *      seeded into ~/.leaf/themes/ where users hand-edit them, and applied by
  *      useTheme.ts as `--<key>` custom properties on <html>. So a token has three

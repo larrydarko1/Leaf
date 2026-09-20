@@ -1,12 +1,7 @@
-// Design tokens and variables
-// All design system variables (colors, spacing, typography, sizing, etc.)
-// Auto-injected into every Vue SFC via electron.vite.config.ts.
+// Design tokens, auto-injected into every Vue SFC via electron.vite.config.ts.
 
-// THIS FILE MUST EMIT NO CSS. It is prepended to all 26 SFC style blocks, and
-// each block is its own sass compilation — so any rule here is emitted once per
-// SFC instead of once. That is why the `:root` theme fallback lives in
-// _theme.scss, which only index.scss reaches. Add a declaration here and you
-// add 26 copies of it to the bundle.
+// THIS FILE MUST EMIT NO CSS: it is prepended to every SFC style block, and each block is its own
+// sass compilation, so a rule here ships once per SFC.
 
 // –– Typography ––––––––––––––––––––
 
@@ -100,10 +95,6 @@ $size-31: 720px;
 
 // –– Opacity scale ––––––––––––––––––––
 
-// Below the scale's names rather than on it: the media viewers' pattern wash, at
-// the value all three of them had written inline. `lowest` was already 0.3.
-$opacity-wash: 0.01;
-
 $opacity-lowest: 0.3;
 $opacity-low: 0.4;
 $opacity-mid-low: 0.5;
@@ -165,10 +156,9 @@ $z-extreme: 10000;
 
 // –– Maps CSS custom properties to SCSS variables for use in components. ––––––––––––––––––––
 
-// The custom property names below are the app's public theme contract: they are
-// the `colors` keys of every preset in assets/themes/ and of the copies users
-// hand-edit in ~/.leaf/themes/. Renaming one breaks every theme file already on
-// disk, so the names stay as they are even where a tidier scheme exists.
+// These custom property names are the app's public theme contract — the `colors` keys of every
+// preset in assets/themes/ and of the copies users hand-edit in ~/.leaf/themes/ — so they cannot be
+// renamed.
 
 $text1: var(--text1);
 $text2: var(--text2);

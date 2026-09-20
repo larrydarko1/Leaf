@@ -741,9 +741,8 @@ onBeforeUnmount(() => {
     overflow-y: auto;
 }
 
-// A group of rail buttons that belong together, on a `.well` of its own — blurred,
-// because the rail's pills are the one place this surface floats over content. Its
-// edge is the brighter one: the fill cannot lift without erasing the buttons' hover.
+// A group of rail buttons that belong together, on a `.well` of its own — blurred, because the
+// rail's pills are the one place this surface floats over content.
 .menu-pill {
     align-items: center;
     gap: $space-0;

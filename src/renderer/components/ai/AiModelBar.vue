@@ -435,9 +435,8 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
     position: relative;
 }
 
-// Teleported to the body and positioned against the trigger by script, so unlike
-// the other menus it is fixed rather than absolute, and has to clear the editor's
-// own stacking contexts.
+// Teleported to the body and positioned against the trigger by script, so unlike the other menus it
+// is fixed rather than absolute, and must clear the editor's stacking contexts.
 .ai-dropdown-menu {
     position: fixed;
     z-index: $z-extreme;

@@ -159,9 +159,8 @@ dragGhost.src = TRANSPARENT_GIF;
 
 // –– One tab ––––––––––––––––––––
 
-// Not a list row: a tab is bounded left and right, keeps its own width between a
-// floor and a ceiling, and marks the active one with an underline rather than a
-// fill. Nothing else in the app is shaped like it.
+// Not a list row: a tab is bounded left and right, keeps its own width between a floor and a
+// ceiling, and marks the active one with an underline rather than a fill.
 .tab {
     display: flex;
     align-items: center;

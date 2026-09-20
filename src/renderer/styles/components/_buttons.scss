@@ -1,21 +1,12 @@
-// Buttons and the button-shaped controls.
-// Everything here is built on `%btn-base`, so the chrome reset and the disabled
-// state are settled in one place. Before this, 22 files each re-derived
-// `border: none` + flex centring, and `:disabled` was written out 12 times across
-// four different opacities — controls that meant the same thing faded by
-// different amounts.
+// Buttons and the button-shaped controls, all built on `%btn-base`.
 
 @use '@/renderer/styles/variables' as *;
 @use '@/renderer/styles/components/placeholders' as *;
 
 // –– Icon buttons ––––––––––––––––––––
 
-// The square, chromeless control that holds nothing but an icon: panel header
-// actions, close buttons, the bookmark toggle.
-// The two picker panels had disagreed on every property of theirs — radius
-// ($border-radius vs -lg), resting colour ($text-muted vs $text2) and display
-// (inline-flex vs flex). The brighter $text2 wins: $text-muted on $base1 is below
-// comfortable contrast for a 16px glyph.
+// The square, chromeless icon-only control: panel header actions, close buttons, the bookmark
+// toggle.
 .icon-btn {
     @extend %btn-base;
     @extend %btn-hover-tint;
@@ -30,11 +21,8 @@
 
 // –– Square icon buttons ––––––––––––––––––––
 
-// A fixed square, for icon buttons sitting in a row of equals where ragged widths
-// would show: the canvas footer, the markdown toolbar, the canvas toolbar. Four of
-// these existed at three sizes and two radii.
-// The softer `$border-radius-lg` is the majority and the better fit — at 32px the
-// tighter corner of `.icon-btn` reads as a rectangle.
+// A fixed square, for icon buttons in a row of equals: canvas footer, markdown toolbar, canvas
+// toolbar.
 .icon-btn-square {
     @extend %btn-base;
     @extend %btn-hover-tint;
@@ -47,8 +35,7 @@
     flex-shrink: 0;
 }
 
-// The roomier square the canvas toolbar uses — it floats over the drawing with
-// nothing around it to borrow scale from.
+// The roomier square the canvas toolbar uses, floating over the drawing.
 .icon-btn-square-lg {
     width: $size-13;
     height: $size-13;
@@ -62,10 +49,7 @@
     }
 }
 
-// The quieter icon button that sits inside a row or a field rather than in panel
-// chrome — the search field's clear button, the bookmark row's remove button. A
-// tighter radius and a darker hover fill, so it reads as nested rather than as
-// another control in the header.
+// The quieter icon button nested inside a row or a field rather than in panel chrome.
 .icon-btn-subtle {
     @extend %btn-base;
 
@@ -80,15 +64,8 @@
     }
 }
 
-// The same control at the scale a pill-shaped action group needs — the AI model
-// bar's cluster and the sidebar rail's, where the icons are the whole row rather
-// than trailing it. The softer corner follows `.icon-btn-square`: inside a pill
-// with a $border-radius-xl edge, the tighter corner of `.icon-btn` reads as a
-// rectangle set into a rounded box.
-// The glyph tilts as the button lights up — the flourish the rail had under its
-// own `.rail-btn`, which named a place rather than the effect and so never
-// reached the AI bar's identical cluster. The transition is on the glyph because
-// that is what moves; the one on the button never reached it.
+// The same control at the scale a pill-shaped action group needs; the glyph tilts as the button
+// lights up.
 .icon-btn-lg {
     padding: $space-2;
     border-radius: $border-radius-lg;
@@ -102,29 +79,23 @@
     }
 }
 
-// Hidden until its row is hovered — a single button (`.icon-btn-on-hover`: the
-// tab's close, the bookmark's remove) or the whole cluster of them
-// (`.actions-on-hover`: the AI message's actions, the history row's). The row owns
-// the reveal, so the rule that shows it lives with the row, not here.
-// The two AI clusters faded and the two single buttons snapped, for no reason
-// either could give; they fade now.
+// Hidden until its row is hovered — one button (`.icon-btn-on-hover`) or a cluster
+// (`.actions-on-hover`); the row owns the reveal.
 .icon-btn-on-hover,
 .actions-on-hover {
     opacity: 0;
     transition: opacity $transition-fast;
 }
 
-// A destructive icon button: it looks like its neighbours until hovered, and only
-// then admits what it does. Delete, clear the conversation, detach a context file.
+// A destructive icon button: it looks like its neighbours until hovered.
 .icon-btn-danger {
     &:hover:not(:disabled, .disabled) {
         color: $danger-color;
     }
 }
 
-// An icon button that is currently on — a panel it opened is showing. Distinct
-// from `.icon-btn-toggle` in that the state is owned elsewhere, so there is no
-// `.active` to nest under.
+// An icon button that is currently on — the state is owned elsewhere, so there is no `.active` to
+// nest under.
 .icon-btn-accent {
     background: $bg-hover;
     color: $accent-color;
@@ -133,10 +104,6 @@
 // –– Filled buttons ––––––––––––––––––––
 
 // The accent-filled action: send the message, load the model, confirm the export.
-// Three of these existed across the AI panel. They agreed on the fill and on the
-// `opacity` + `scale` hover, and disagreed on everything else — the label was
-// $base1 twice and $text1 once, and `:disabled` faded to three different values
-// for the same meaning.
 .btn-accent {
     @extend %btn-base;
 
@@ -156,12 +123,8 @@
     }
 }
 
-// The square version, for a filled button holding only an icon: the composer's
-// send key. Smaller than it was — at 40px it outweighed the row of toggles beside
-// it. $text3 is the glyph colour because it is the dark end of every theme's text
-// scale and the accent fill is the light end; $base1 and $text1 both disappear into
-// it. The two icons had been painting themselves `var(--text3)` in the markup while
-// this rule set a colour nothing used.
+// The square version, for a filled button holding only an icon. $text3 reads on the accent fill
+// where $base1 and $text1 both disappear into it.
 .btn-accent-square {
     width: $size-12;
     height: $size-12;
@@ -169,14 +132,12 @@
     color: $text3;
 }
 
-// The same shape, filled with the colour that stops something. Applied beside
-// `.btn-accent`, so it only has to say what changes.
+// The same shape, filled with the colour that stops something; applied beside `.btn-accent`.
 .btn-danger {
     background: $danger-color;
 }
 
-// The full-width version, for a filled button at the end of a stack of actions
-// rather than at the end of a row — the export dialog's save.
+// The full-width version, for a filled button ending a stack of actions.
 .btn-accent-block {
     gap: $space-2;
     width: 100%;
@@ -185,9 +146,7 @@
 
 // –– Outlined buttons ––––––––––––––––––––
 
-// The bordered, unfilled action offered alongside a piece of explanatory text —
-// the one in an empty state, where a filled button would outweigh the sentence
-// above it.
+// The bordered, unfilled action offered alongside explanatory text — empty states.
 .btn-secondary {
     @extend %btn-base;
 
@@ -204,16 +163,14 @@
 
 // –– Option buttons ––––––––––––––––––––
 
-// A row of equal boxes, one of which is the value in force: stroke width, stroke
-// style, roundness, font size, export scale. The five of them were four
-// byte-identical scoped rules plus one joined variant, under five names.
+// A row of equal boxes, one of which is the value in force: stroke width, style, roundness, font
+// size, export scale.
 .opt-btns {
     display: flex;
     gap: $space-1;
 }
 
-// One box. It is sized by the row rather than by its content, because these hold
-// glyphs and rules of different widths and a ragged row would read as a mistake.
+// One box, sized by the row rather than by its content so the row cannot go ragged.
 .opt-btn {
     @extend %btn-base;
 
@@ -229,8 +186,7 @@
         background: $bg-hover;
     }
 
-    // The chosen one is tinted and outlined rather than filled: the box often
-    // contains the preview of what it selects, which a solid accent would bury.
+    // The chosen one is tinted rather than filled: the box often previews what it selects.
     &.active {
         background: $accent-color-alpha;
         border-color: $accent-color;
@@ -239,11 +195,7 @@
 
 // –– Footer buttons ––––––––––––––––––––
 
-// The full-width bordered button that closes a panel. Identical in both pickers,
-// down to a padding of `$border-radius $border-radius-lg` and a `font-size` of
-// `$space-3` — spacing and radius tokens standing in for values they do not name.
-// Normalised to the real scale here: the em values were never a design decision,
-// they were whichever token happened to be the right number.
+// The full-width bordered button that closes a panel.
 .btn-block {
     @extend %btn-base;
 

@@ -1,6 +1,5 @@
-// Global reset and base styles
-// Resets, universal styles, animations, and element defaults.
-// Emits rules, so it is reached only through index.scss — never injected.
+// Resets, universal styles, animations and element defaults. Emits rules, so it is reached only
+// through index.scss — never injected.
 
 @use '@/renderer/styles/variables' as *;
 
@@ -47,11 +46,8 @@ html,
 
 // –– Reduced motion ––––––––––––––––––––
 
-// The single escape hatch for every transition and animation in the app. The
-// stylesheets declare motion freely; this is what makes all of it opt-out in one
-// place for users who asked the OS for less of it.
-// Kept at 0.01ms rather than `none` so animationend/transitionend still fire —
-// anything that waits on one keeps working instead of hanging.
+// The single opt-out for every transition and animation in the app. Kept at 0.01ms rather than
+// `none` so animationend/transitionend still fire.
 @media (prefers-reduced-motion: reduce) {
     /* stylelint-disable declaration-no-important -- a global override has to beat the scoped SFC rules it is overriding; specificity alone cannot reach them. */
     *,
@@ -79,8 +75,7 @@ a,
 
 // –– Grouping elements ––––––––––––––––––––
 
-// A fieldset is only ever a grouping for the screen reader here — never a visible
-// box — so the UA's border and inset go once rather than in each form.
+// A fieldset is only ever a grouping for the screen reader here, never a visible box.
 fieldset {
     margin: 0;
     padding: 0;
@@ -136,10 +131,9 @@ fieldset {
 
 // –– Transitions ––––––––––––––––––––
 
-// The classes `<transition>` applies. A transition name is a global contract —
-// Vue writes `panel-fade-enter-from` onto the element wherever the element lives —
-// so defining one inside an SFC only hides it. `panel-fade` was defined twice,
-// identically, in the canvas toolbar and the properties panel.
+// The classes `<transition>` applies. A transition name is a global contract — Vue writes
+// `panel-fade-enter-from` onto the element wherever it lives — so defining one inside an SFC only
+// hides it.
 
 // The panel that slides in from the left edge it is anchored to.
 .panel-fade-enter-active,
