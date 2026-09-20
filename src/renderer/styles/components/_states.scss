@@ -1,0 +1,110 @@
+// Empty and secondary-information states — what stands in for content that has
+// not arrived or does not exist.
+
+@use '@/renderer/styles/variables' as *;
+
+// –– Empty states ––––––––––––––––––––
+
+// The centred block in place of an empty list: the roomy version, for a whole pane with nothing in
+// it.
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: $space-9 $space-6;
+    text-align: center;
+    color: $text-muted;
+}
+
+// The large glyph above an empty state's text, dimmed so it reads as decoration
+// rather than as something to click.
+.empty-state-icon {
+    opacity: $opacity-lowest;
+    margin-bottom: $space-4;
+}
+
+// The first line of an empty state — what is missing, in the page's own voice.
+.empty-state-title {
+    margin: $space-1 0;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $text-primary;
+}
+
+// –– Hints ––––––––––––––––––––
+
+// A quieter follow-up line: what to do about it, or which key does it.
+.hint {
+    margin-top: $space-2;
+    font-size: $font-size-xs;
+    color: $text-muted;
+}
+
+// –– Heroes ––––––––––––––––––––
+
+// The whole-pane welcome: the app before a vault is chosen, the editor before a note is open.
+.hero {
+    display: flex;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+// The centred column inside it, capped so the line under the mark does not run
+// the full width of the window.
+.hero-content {
+    text-align: center;
+    margin: auto;
+
+    // A trailing <p> keeps the UA's bottom margin, which lifts the block off centre.
+    > :last-child {
+        margin-bottom: 0;
+    }
+}
+
+// The mark itself: icon beside wordmark, above everything else.
+.hero-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    // icon.png's transparent left padding has no counterpart right of the
+    // wordmark, so the pair reads ~8px right of centre; this takes it back.
+    margin: 0 $size-8 $space-6 0;
+}
+
+.hero-brand-icon {
+    width: $size-21;
+    height: $size-21;
+    object-fit: contain;
+}
+
+// Not a heading — it is the product name, so it is out of the document outline and not selectable
+// text.
+.hero-brand-text {
+    font-family: $font-family;
+    font-size: $font-size-4xl;
+    font-weight: $font-weight-semibold;
+    color: $text1;
+    letter-spacing: $letter-spacing-tight;
+    cursor: default;
+}
+
+// The line under the mark: what to do next, in the page's own voice.
+.hero-title {
+    margin: $space-2 0;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $text1;
+}
+
+// –– Drop targets ––––––––––––––––––––
+
+// What a drag is allowed to land on. An outline rather than a border, because a border appearing
+// under the cursor re-lays the row out.
+.drop-target {
+    background: $accent-color-alpha;
+    outline: $border-width-md $accent-color;
+    outline-offset: -$size-0;
+}

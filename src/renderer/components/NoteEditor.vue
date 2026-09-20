@@ -307,7 +307,7 @@ if (typeof window !== 'undefined') {
 
 <template>
     <div
-        class="note-editor"
+        class="note-editor stack"
         role="main"
         :aria-label="t('editor.note_editor')">
         <!-- Media viewers -->
@@ -352,7 +352,7 @@ if (typeof window !== 'undefined') {
         <!-- eslint-disable-next-line a11y/no-static-element-interactions -->
         <section
             v-else-if="file && !isImageFile && !isVideoFile && !isAudioFile && !isPdfFile && !isDrawingFile"
-            class="text-editor-container"
+            class="text-editor-container stack fill"
             :aria-label="t('editor.text_editor')"
             @dragenter.prevent="onEditorDragEnter"
             @dragover.prevent="onEditorDragOver"
@@ -402,7 +402,7 @@ if (typeof window !== 'undefined') {
             <div
                 v-if="isMarkdownFile"
                 ref="cmContainerRef"
-                class="cm-editor-container"
+                class="cm-editor-container stack fill"
                 role="textbox"
                 :aria-label="t('editor.markdown_editor')"
                 aria-multiline="true"></div>
@@ -411,7 +411,7 @@ if (typeof window !== 'undefined') {
             <div
                 v-else-if="isCodeFile"
                 ref="codeContainerRef"
-                class="cm-editor-container code-editor-container"
+                class="cm-editor-container code-editor-container stack fill"
                 role="textbox"
                 :aria-label="t('editor.code_editor')"
                 aria-multiline="true"></div>
@@ -421,7 +421,7 @@ if (typeof window !== 'undefined') {
                 v-else
                 ref="textareaRef"
                 v-model="content"
-                class="editor-textarea"
+                class="editor-textarea field-bare field-bare-grow"
                 placeholder="Start writing..."
                 :aria-label="t('editor.text_editor')"
                 @input="onContentChange"></textarea>
@@ -429,7 +429,7 @@ if (typeof window !== 'undefined') {
             <!-- Dictation button for txt/md files -->
             <button
                 v-if="isDictatable"
-                class="dictation-btn"
+                class="dictation-btn icon-btn"
                 :class="{ active: isDictating, loading: isDictationLoading }"
                 :aria-pressed="isDictating"
                 :aria-label="
@@ -493,19 +493,19 @@ if (typeof window !== 'undefined') {
         <!-- Empty state -->
         <section
             v-else
-            class="editor-empty"
+            class="editor-empty hero"
             aria-label="No note selected">
-            <div class="empty-message">
-                <div class="empty-logo">
+            <div class="empty-message hero-content">
+                <div class="empty-logo hero-brand">
                     <img
                         draggable="false"
                         src="@/renderer/assets/icons/icon.png"
                         :alt="t('editor.leaf_logo')"
-                        class="empty-logo-icon" />
+                        class="empty-logo-icon hero-brand-icon" />
                     <!-- eslint-disable-next-line @intlify/vue-i18n/no-raw-text -- brand name, not translated -->
-                    <span class="empty-logo-text">leaf.</span>
+                    <span class="empty-logo-text hero-brand-text">leaf.</span>
                 </div>
-                <h2>{{ t('editor.select_note_to_start_editing') }}</h2>
+                <h2 class="hero-title">{{ t('editor.select_note_to_start_editing') }}</h2>
                 <p class="hint">{{ t('editor.or_create_new_note') }}</p>
             </div>
         </section>
@@ -513,31 +513,24 @@ if (typeof window !== 'undefined') {
 </template>
 
 <style scoped lang="scss">
-/* ––– Note Editor Container ––– */
+// –– Shell ––––––––––––––––––––
 
+// The column is `.stack`; the editor only needs to be the positioning context its
+// drop overlay and dictation button are placed against.
 .note-editor {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    background: transparent;
     position: relative;
+    height: 100%;
     overflow: hidden;
 }
-
-/* ––– Text Editor Area ––– */
 
 .text-editor-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
     position: relative;
+    overflow: hidden;
 }
 
+// CodeMirror sizes itself from its container, so the container has to be the one that ends —
+// otherwise the editor grows with the document and the pane scrolls, not the text.
 .cm-editor-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
     overflow: hidden;
 
     :deep(.cm-editor) {
@@ -547,8 +540,10 @@ if (typeof window !== 'undefined') {
     }
 }
 
-/* ––– Drop Overlay ––– */
+// –– Drop overlay ––––––––––––––––––––
 
+// Not `.drop-target`: that marks a row or a well that is already there, while this is a whole layer
+// over the text — dimming what is underneath is the point of it.
 .drop-overlay {
     position: absolute;
     inset: 0;
@@ -582,79 +577,55 @@ if (typeof window !== 'undefined') {
     }
 }
 
-/* ––– Editor Textarea ––– */
+// –– Textarea ––––––––––––––––––––
 
+// The plain-text editor is `.field-bare .field-bare-grow`; what is left is that it is a page of
+// prose rather than a line in a row.
 .editor-textarea {
-    flex: 1;
     padding: $space-7;
-    background: transparent;
-    color: $text1;
-    border: none;
-    outline: none;
-    font-family: $font-family;
     font-size: $font-size-base;
-    line-height: $line-height;
-    resize: none;
     cursor: text;
-
-    &::placeholder {
-        color: $text2;
-    }
-
-    &.code-editor {
-        font-family: $font-family-mono;
-        font-size: $font-size-sm;
-        line-height: $line-height;
-        tab-size: 4;
-        white-space: pre;
-        overflow-wrap: normal;
-    }
 }
 
-/* ––– Dictation Button ––– */
+// –– Dictation ––––––––––––––––––––
 
+// An `.icon-btn` lifted off the page: it floats over the text it is about to write
+// into, so unlike the other icon buttons it carries its own surface and shadow.
 .dictation-btn {
     position: absolute;
-    bottom: $space-5;
     right: $space-5;
+    bottom: $space-5;
+    z-index: $z-mid;
     width: $size-14;
     height: $size-14;
-    border-radius: $border-radius-xl;
-    border: $border-width-thin $text3;
     background: $base1;
-    color: $text2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all $transition-base;
-    z-index: $z-mid;
+    border: $border-width-thin $text3;
+    border-radius: $border-radius-xl;
     box-shadow: $shadow-sm;
 
-    &:hover {
-        background: $bg-hover;
-        color: $text1;
+    &:hover:not(:disabled) {
         border-color: $text2;
     }
 
+    // Recording. Red at rest rather than on hover, for the same reason
+    // `.menu-item-danger` is: a state you have to hover to see is a state you miss.
     &.active {
         background: $danger-color;
-        color: $text1;
+
+        // Dark on the fill, like `.btn-danger`.
+        color: $base1;
         border-color: $danger-color;
         box-shadow: $red-shadow;
     }
 
+    // Fetching the Whisper model. Not the shared `:disabled` fade — this button
+    // will become available on its own, so the cursor says wait rather than no.
     &.loading {
         opacity: $opacity-mid;
-        cursor: wait;
     }
 
     &:disabled {
         cursor: wait;
-    }
-
-    svg {
-        display: block;
     }
 
     .spin {
@@ -662,63 +633,22 @@ if (typeof window !== 'undefined') {
     }
 }
 
+// The dot that says the microphone is live, pinned to the button's corner.
 .dictation-pulse {
     position: absolute;
     top: -$size-1;
     right: -$size-1;
     width: $size-5;
     height: $size-5;
-    border-radius: $border-radius-xl;
+    border-radius: $border-radius-round;
     background: $danger-color;
     animation: pulse 1.5s ease-in-out infinite;
 }
 
-/* ––– Empty State ––– */
+// –– Sections ––––––––––––––––––––
 
-.editor-empty {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.empty-message {
-    text-align: center;
-    color: $text2;
-
-    .empty-logo {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: $space-4;
-    }
-
-    .empty-logo-icon {
-        width: $size-20;
-        height: $size-20;
-        object-fit: contain;
-    }
-
-    .empty-logo-text {
-        font-family: Inter, sans-serif;
-        font-size: 4rem;
-        font-weight: $font-weight-semibold;
-        color: $text1;
-        letter-spacing: $letter-spacing-tight;
-        cursor: default;
-    }
-
-    h2 {
-        margin: $space-2 0;
-        font-size: $font-size-lg;
-    }
-
-    .hint {
-        font-size: $font-size-base;
-        color: $text2;
-    }
-}
-
+// Each viewer is wrapped in a `<section>` for its accessible name only; the box it
+// would otherwise introduce would break the column it sits in.
 section {
     display: contents;
 }

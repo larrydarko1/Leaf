@@ -29,12 +29,12 @@ onMounted(() => {
 
 <template>
     <aside
-        class="language-panel"
+        class="language-panel panel panel-aside"
         :aria-label="t('language.selection_panel')">
-        <header class="language-header">
-            <span class="language-title">{{ t('language.title') }}</span>
+        <header class="panel-header">
+            <span class="panel-title">{{ t('language.title') }}</span>
             <div
-                class="header-actions"
+                class="panel-actions"
                 role="toolbar"
                 :aria-label="t('language.panel_controls')">
                 <button
@@ -76,22 +76,22 @@ onMounted(() => {
         </header>
 
         <div
-            class="language-list"
+            class="language-list scroll-y"
             role="listbox"
             :aria-label="t('language.available_languages')">
             <button
                 v-for="language in languages"
                 :key="language.id"
-                class="language-item"
+                class="language-item list-item"
                 :class="{ active: language.id === activeId }"
                 role="option"
                 :aria-selected="language.id === activeId"
                 :aria-label="`${language.name} ${t('language.language')}`"
                 @click="handleSelect(language.id)">
-                <span class="language-name">{{ language.name }}</span>
+                <span class="language-name fill truncate">{{ language.name }}</span>
                 <svg
                     v-if="language.id === activeId"
-                    class="check"
+                    class="list-check"
                     width="14"
                     height="14"
                     viewBox="0 0 24 24"
@@ -107,20 +107,20 @@ onMounted(() => {
 
             <div
                 v-if="!languages.length"
-                class="language-empty"
+                class="language-empty list-empty"
                 role="status"
                 >{{ t('language.no_languages_found') }}</div
             >
         </div>
 
-        <footer class="language-footer">
+        <footer class="panel-footer">
             <button
-                class="footer-btn"
+                class="btn-block"
                 :aria-label="t('language.open_folder')"
                 @click="handleOpenFolder">
                 {{ t('language.open_folder') }}…
             </button>
-            <p class="footer-hint">
+            <p class="hint panel-hint">
                 {{ t('language.footer_hint_intro') }} <code>{{ t('language.footer_hint_file_type') }}</code>
                 {{ t('language.footer_hint_path') }} {{ t('language.footer_hint_action') }}
             </p>
@@ -129,173 +129,16 @@ onMounted(() => {
 </template>
 
 <style scoped lang="scss">
-/* ––– Language Panel Container ––– */
-
-.language-panel {
-    display: flex;
-    flex-direction: column;
-    background: $base1;
-    border-left: $border-width-thin $text3;
-    overflow: hidden;
-    color: $text1;
-    width: $size-28;
-    min-width: $size-27;
-}
-
-/* ––– Header ––– */
-
-.language-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: $space-3;
-    border-bottom: $border-width-thin $text3;
-    flex-shrink: 0;
-}
-
-.language-title {
-    font-size: $font-size-sm;
-    font-weight: $font-weight-medium;
-    letter-spacing: $letter-spacing-wide;
-}
-
-.header-actions {
-    display: flex;
-    gap: $space-1;
-}
-
-.icon-btn {
-    background: none;
-    border: none;
-    color: $text2;
-    cursor: pointer;
-    padding: $space-1;
-    border-radius: $border-radius-lg;
-    transition: all $transition-base;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    &:hover {
-        background: $bg-hover;
-        color: $text1;
-    }
-
-    svg {
-        display: block;
-    }
-}
-
 /* ––– Language List ––– */
 
 .language-list {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0;
-    overflow-y: auto;
     padding: 0;
-    scrollbar-width: thin;
-    scrollbar-color: $text3 transparent;
-
-    &::-webkit-scrollbar {
-        width: $size-4;
-    }
-
-    &::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    &::-webkit-scrollbar-thumb {
-        background: $text3;
-        border-radius: $border-radius-sm;
-
-        &:hover {
-            background: $text2;
-        }
-    }
 }
-
-.language-item {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: $space-3;
-    padding: $space-2 $space-3;
-    background: none;
-    border: $border-width-thin transparent;
-    border-radius: $border-radius-lg;
-    color: $text1;
-    text-align: left;
-    cursor: pointer;
-    margin-bottom: $space-1;
-    transition: background $transition-fast;
-
-    &:hover {
-        background: $bg-hover;
-    }
-
-    &.active {
-        background: $accent-color-alpha;
-        border-color: color-mix(in srgb, $accent-color 35%, transparent);
-    }
-}
-
-/* ––– Language Metadata ––– */
 
 .language-name {
-    flex: 1;
     font-size: $font-size-sm;
-}
-
-.check {
-    flex-shrink: 0;
-    color: $accent-color;
-}
-
-.language-empty {
-    padding: $space-4 $space-3;
-    text-align: center;
-    font-size: $font-size-xs;
-    color: $text3;
-}
-
-/* ––– Footer ––– */
-
-.language-footer {
-    border-top: $border-width-thin $text3;
-    padding: $space-2 $space-4 $space-3;
-    flex-shrink: 0;
-}
-
-.footer-btn {
-    width: 100%;
-    background: none;
-    border: $border-width-thin $border-color;
-    border-radius: $border-radius;
-    padding: $border-radius $border-radius-lg;
-    font-size: $space-3;
-    color: $text1;
-    cursor: pointer;
-
-    &:hover {
-        background: $bg-hover;
-        border-color: $text2;
-    }
-}
-
-.footer-hint {
-    margin: 0;
-    font-size: $font-size-xs;
-    color: $text-muted;
-    line-height: $line-height;
-
-    code {
-        background: $bg-primary;
-        color: $accent-color;
-        padding: 0 $space-1;
-        border-radius: $border-radius-xs;
-        font-family: $font-family-mono;
-    }
 }
 </style>

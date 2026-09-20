@@ -1,0 +1,39 @@
+// The compiled-in palette, applied on first paint before useTheme.ts overrides these custom
+// properties from the user's active theme.
+
+// Matches assets/themes/dark.json and must stay in sync — check-scss-standards.mjs compares this
+// block against every preset in both directions.
+
+// Kept out of _variables.scss because it emits a rule, and that file is injected into every SFC.
+
+:root {
+    --text1: #fff;
+    --text2: #bdbdbd;
+    --text3: #474747;
+    --text-primary: #fff;
+    --text-muted: #9b9b9b;
+    --base1: #121212;
+    --base2: #fff;
+    --base3: #252525;
+    --bg-primary: #1e1e1e;
+    --bg-secondary: #181818;
+    --bg-tertiary: #252525;
+    --bg-hover: #2a2a2a;
+    --bg-selected: #333;
+    --border-color: #5c5c5c;
+    --accent-color: #3eb489;
+    --accent-color-alpha: rgb(62 180 137 / 15%);
+    --success-color: #35b14e;
+    --success-color-alpha: rgb(53 177 78 / 15%);
+    --warning-color: #ffc107;
+    --warning-color-alpha: rgb(255 193 7 / 15%);
+    --danger-color: #ff696f;
+    --danger-color-alpha: rgb(255 105 111 / 15%);
+    --tier-small: rgb(40 167 69 / 15%);
+    --tier-medium: rgb(0 123 255 / 15%);
+    --tier-large: rgb(255 165 0 / 15%);
+    --tier-extreme: rgb(220 53 69 / 15%);
+    --scrollbar-thumb: #616161;
+    --scrollbar-thumb-hover: #848484;
+    --grid-color: rgb(255 255 255 / 6%);
+}

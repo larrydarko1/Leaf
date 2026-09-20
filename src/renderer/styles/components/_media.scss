@@ -1,0 +1,206 @@
+// The media viewers: the pane a file is shown in, what stands in for it while it loads or fails,
+// and the transport bar under the two that play.
+
+@use '@/renderer/styles/variables' as *;
+@use '@/renderer/styles/components/placeholders' as *;
+
+// –– The stage ––––––––––––––––––––
+
+// The pane a media file is shown in: the file centred on the window's own background with room
+// around it.
+.media-stage {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $space-7;
+    background: $base1;
+    overflow: auto;
+    position: relative;
+}
+
+// –– Messages ––––––––––––––––––––
+
+// What a viewer shows instead of the media: still loading, or could not be loaded at all.
+.media-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: $space-2;
+    position: relative;
+    z-index: $z-normal;
+    color: $text2;
+    font-size: $font-size-base;
+    text-align: center;
+
+    // The column's gap is the only spacing here.
+    h2,
+    p {
+        margin: 0;
+    }
+}
+
+// The first line — what happened. Matched to `.hero-title`, the other whole-pane line.
+.media-message-title {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $text1;
+}
+
+// –– Control bar ––––––––––––––––––––
+
+// A strip holding play, time, progress and volume. Rounded on all four corners, because standing
+// alone it is a card — the audio viewer and the editor's audio embed.
+.media-controls {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    width: 100%;
+    padding: $space-2 $space-4;
+    background: $base1;
+    border: $border-width-thin $text3;
+    border-radius: $border-radius-xl;
+}
+
+// The same bar inside `.media-frame`: the frame draws the border and does the rounding, so the bar
+// carries neither.
+.media-controls-joined {
+    border: none;
+    border-radius: 0;
+}
+
+// –– Frame ––––––––––––––––––––
+
+// A picture and its transport bar as one bordered box. It clips, so the media inside needs no
+// corners of its own.
+.media-frame {
+    display: flex;
+    flex-direction: column;
+    border: $border-width-thin $text3;
+    border-radius: $border-radius-xl;
+    overflow: hidden;
+}
+
+// –– Play button ––––––––––––––––––––
+
+// The one filled control in the bar: a round accent disc with the glyph cut out of it in the page's
+// own background.
+.media-ctrl-btn {
+    @extend %btn-base;
+
+    width: $size-12;
+    height: $size-12;
+    min-width: $size-12;
+    border: none;
+    border-radius: $border-radius-round;
+    background: $accent-color;
+    color: $base1;
+    transition: filter $transition-fast;
+
+    &:hover:not(:disabled) {
+        filter: brightness(1.1);
+    }
+
+    &:active:not(:disabled) {
+        filter: brightness(0.92);
+    }
+}
+
+// –– Time readout ––––––––––––––––––––
+
+// Tabular figures so the elapsed time does not jog the layout as digits change.
+.media-time {
+    font-size: $font-size-xs;
+    color: $text2;
+    font-variant-numeric: tabular-nums;
+    min-width: $size-12;
+    text-align: center;
+    user-select: none;
+}
+
+// –– Progress bar ––––––––––––––––––––
+
+// The whole strip is the hit target, padded well past the 4px track so it can be aimed at; the tint
+// is how its focus reads.
+.media-progress {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: $space-2 0;
+    cursor: pointer;
+    outline: none;
+    border-radius: $border-radius-xs;
+    transition: background-color $transition-fast;
+
+    &:focus-visible {
+        background-color: $bg-hover;
+    }
+}
+
+// The fill follows playback rather than easing to it — at a `timeupdate` every frame, the shared
+// transition would read as lag.
+.media-progress-track {
+    @extend %progress-track;
+
+    width: 100%;
+}
+
+.media-progress-fill {
+    @extend %progress-fill;
+
+    transition: width $transition-instant;
+}
+
+// –– Volume ––––––––––––––––––––
+
+.media-volume {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+}
+
+// The mute toggle. Quieter than the play button — it tints rather than fills.
+.media-volume-btn {
+    @extend %btn-base;
+
+    padding: $space-1;
+    border-radius: $border-radius-sm;
+
+    &:hover:not(:disabled) {
+        color: $text1;
+    }
+}
+
+// A native range with no handle: the level is painted onto the input as a gradient stopped at the
+// `--volume` the component sets, and the thumb is zeroed away.
+.media-volume-slider {
+    appearance: none;
+    width: $size-18;
+    height: $size-2;
+    /* stylelint-disable no-unknown-custom-properties -- set by the component through a :style binding; declared in check-scss-standards.mjs */
+    background: linear-gradient(
+        to right,
+        $accent-color 0 calc(var(--volume) * 100%),
+        $bg-hover calc(var(--volume) * 100%) 100%
+    );
+    /* stylelint-enable no-unknown-custom-properties */
+    border-radius: $border-radius-sm;
+    outline: none;
+    cursor: pointer;
+
+    &:focus-visible {
+        outline: $border-width-thin $accent-color;
+        outline-offset: $size-0;
+    }
+
+    &::-webkit-slider-runnable-track {
+        background: transparent;
+    }
+
+    &::-webkit-slider-thumb {
+        appearance: none;
+        width: 0;
+        height: 0;
+    }
+}

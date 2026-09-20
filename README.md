@@ -49,8 +49,8 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 ### Design
 
 - **Obsidian-inspired UI** - Clean, familiar interface
-- **Multi-language support** - 14 built-in languages with easy language switching; add your own translations
-- **Theme customization** - 20+ built-in color themes; drop in your own for automatic detection
+- **Multi-language support** - 15 built-in languages with easy language switching; add your own translations
+- **Theme customization** - 4 built-in color themes; drop in your own for automatic detection
 
 ## Security & Privacy
 
@@ -102,7 +102,7 @@ Leaf stores AI models in `~/.leaf/models/`. To get started with the AI assistant
 
 ### Themes
 
-Leaf ships with 20+ built-in color themes. All themes are stored in `~/.leaf/themes/`:
+Leaf ships with 4 built-in color themes. All themes are stored in `~/.leaf/themes/`:
 
 1. Open the app and click the **palette icon** in the sidebar (or use the theme menu)
 2. Select a theme from the built-in list to apply it instantly
@@ -116,7 +116,6 @@ Theme file format (see `~/.leaf/themes/dark.json` for examples):
 {
     "name": "My Custom Theme",
     "description": "A Small description",
-    "scheme": "dark", // or light
     "colors": {
         "text1": "#ffffff",
         "bg-primary": "#1e1e1e",
@@ -400,7 +399,6 @@ leaf/
 │       ├── main.ts                 # Mounts the Vue app onto #app
 │       ├── i18n.ts                 # Vue i18n setup and message loading
 │       ├── App.vue                 # Root component: layout, sidebar, tab bar
-│       ├── style.scss              # Global SCSS styles and CSS custom properties
 │       ├── vite-env.d.ts
 │       ├── assets/                 # App icons and images
 │       ├── components/
@@ -475,6 +473,13 @@ leaf/
 │       │       ├── useFolderTree.ts    # Recursive tree structure from flat file/folder lists
 │       │       ├── useTreeNodeDrag.ts  # Drag-and-drop file/folder moves in tree
 │       │       └── useVault.ts         # Core vault: folder open, FS watcher, CRUD
+│       ├── styles/                 # Global SCSS: design tokens, base layer, component classes
+│       │   ├── index.scss          # Barrel imported once by main.ts — the only entry point
+│       │   ├── _variables.scss     # Design tokens; injected into every SFC, emits no CSS
+│       │   ├── _theme.scss         # `:root` palette fallback used before a theme is applied
+│       │   ├── _base.scss          # Resets, element defaults, transitions and keyframes
+│       │   ├── _layout.scss        # Flex and text utility classes
+│       │   └── components/         # Reusable component classes, one partial per category
 │       └── utils/                  # Shared utilities
 │           ├── audio.ts            # WebM→WAV conversion and PCM encoding helpers
 │           └── fileTypes.ts        # File extension classification constants and predicates
@@ -504,7 +509,8 @@ leaf/
 │   └── themes/                     # Built-in colour themes (JSON)
 │       ├── dark.json
 │       ├── light.json
-│       └── ...                     # 18 themes total (catppuccin, dracula, nord, etc.)
+│       ├── dark-contrast.json
+│       └── light-contrast.json     # 4 themes, all WCAG-verified (AA; -contrast are AAA)
 ├── models/
 │   └── whisper/                    # Whisper ONNX model (download manually — see above)
 ├── public/                         # Static assets (demo screenshot)

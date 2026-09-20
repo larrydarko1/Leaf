@@ -1,0 +1,214 @@
+// Buttons and the button-shaped controls, all built on `%btn-base`.
+
+@use '@/renderer/styles/variables' as *;
+@use '@/renderer/styles/components/placeholders' as *;
+
+// –– Icon buttons ––––––––––––––––––––
+
+// The square, chromeless icon-only control: panel header actions, close buttons, the bookmark
+// toggle.
+.icon-btn {
+    @extend %btn-base;
+    @extend %btn-hover-tint;
+
+    padding: $space-1;
+    border-radius: $border-radius;
+
+    svg {
+        display: block;
+    }
+}
+
+// –– Square icon buttons ––––––––––––––––––––
+
+// A fixed square, for icon buttons in a row of equals: canvas footer, markdown toolbar, canvas
+// toolbar.
+.icon-btn-square {
+    @extend %btn-base;
+    @extend %btn-hover-tint;
+
+    width: $size-12;
+    height: $size-12;
+    padding: 0;
+    border: none;
+    border-radius: $border-radius-lg;
+    flex-shrink: 0;
+}
+
+// The roomier square the canvas toolbar uses, floating over the drawing.
+.icon-btn-square-lg {
+    width: $size-13;
+    height: $size-13;
+}
+
+// Tool buttons that stay on once chosen, rather than acting and releasing.
+.icon-btn-toggle {
+    &.active {
+        background: $accent-color-alpha;
+        color: $accent-color;
+    }
+}
+
+// The quieter icon button nested inside a row or a field rather than in panel chrome.
+.icon-btn-subtle {
+    @extend %btn-base;
+
+    flex-shrink: 0;
+    padding: $space-1;
+    border-radius: $border-radius-sm;
+    color: $text-muted;
+
+    &:hover:not(:disabled, .disabled) {
+        background: $bg-tertiary;
+        color: $text-primary;
+    }
+}
+
+// The same control at the scale a pill-shaped action group needs; the glyph tilts as the button
+// lights up.
+.icon-btn-lg {
+    padding: $space-2;
+    border-radius: $border-radius-lg;
+
+    svg {
+        transition: transform $transition-base;
+    }
+
+    &:hover:not(:disabled, .disabled) svg {
+        transform: scale($scale-hover) rotate(-2deg);
+    }
+}
+
+// Hidden until its row is hovered — one button (`.icon-btn-on-hover`) or a cluster
+// (`.actions-on-hover`); the row owns the reveal.
+.icon-btn-on-hover,
+.actions-on-hover {
+    opacity: 0;
+    transition: opacity $transition-fast;
+}
+
+// A destructive icon button: it looks like its neighbours until hovered.
+.icon-btn-danger {
+    &:hover:not(:disabled, .disabled) {
+        color: $danger-color;
+    }
+}
+
+// An icon button that is currently on — the state is owned elsewhere, so there is no `.active` to
+// nest under.
+.icon-btn-accent {
+    background: $bg-hover;
+    color: $accent-color;
+}
+
+// –– Filled buttons ––––––––––––––––––––
+
+// The accent-filled action: send the message, load the model, confirm the export.
+.btn-accent {
+    @extend %btn-base;
+
+    flex-shrink: 0;
+    padding: $space-1 $space-2;
+    background: $accent-color;
+    border: none;
+    border-radius: $border-radius-lg;
+    color: $base1;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    white-space: nowrap;
+
+    &:hover:not(:disabled, .disabled) {
+        opacity: $opacity-highest;
+        transform: scale($scale-hover);
+    }
+}
+
+// The square version, for a filled button holding only an icon. $text3 reads on the accent fill
+// where $base1 and $text1 both disappear into it.
+.btn-accent-square {
+    width: $size-12;
+    height: $size-12;
+    padding: 0;
+    color: $text3;
+}
+
+// The same shape, filled with the colour that stops something; applied beside `.btn-accent`.
+.btn-danger {
+    background: $danger-color;
+}
+
+// The full-width version, for a filled button ending a stack of actions.
+.btn-accent-block {
+    gap: $space-2;
+    width: 100%;
+    padding: $space-2 $space-3;
+}
+
+// –– Outlined buttons ––––––––––––––––––––
+
+// The bordered, unfilled action offered alongside explanatory text — empty states.
+.btn-secondary {
+    @extend %btn-base;
+
+    padding: $space-2 $space-4;
+    border-color: $text3;
+    border-radius: $border-radius;
+    font-size: $font-size-sm;
+
+    &:hover:not(:disabled, .disabled) {
+        border-color: $text2;
+        color: $text1;
+    }
+}
+
+// –– Option buttons ––––––––––––––––––––
+
+// A row of equal boxes, one of which is the value in force: stroke width, style, roundness, font
+// size, export scale.
+.opt-btns {
+    display: flex;
+    gap: $space-1;
+}
+
+// One box, sized by the row rather than by its content so the row cannot go ragged.
+.opt-btn {
+    @extend %btn-base;
+
+    flex: 1;
+    height: $size-12;
+    border-color: $border-color;
+    border-radius: $border-radius;
+    color: $text1;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+
+    &:hover:not(:disabled, .disabled) {
+        background: $bg-hover;
+    }
+
+    // The chosen one is tinted rather than filled: the box often previews what it selects.
+    &.active {
+        background: $accent-color-alpha;
+        border-color: $accent-color;
+    }
+}
+
+// –– Footer buttons ––––––––––––––––––––
+
+// The full-width bordered button that closes a panel.
+.btn-block {
+    @extend %btn-base;
+
+    gap: $space-2;
+    width: 100%;
+    padding: $space-2 $space-3;
+    border-color: $border-color;
+    border-radius: $border-radius;
+    font-size: $font-size-xs;
+    color: $text1;
+
+    &:hover:not(:disabled, .disabled) {
+        background: $bg-hover;
+        border-color: $text2;
+    }
+}

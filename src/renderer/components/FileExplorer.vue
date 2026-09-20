@@ -293,12 +293,12 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="file-explorer">
+    <div class="file-explorer stack fill">
         <!-- eslint-disable-next-line a11y/no-static-element-interactions -->
         <div
-            class="file-list"
+            class="file-list scroll-y-hover"
             role="region"
-            :class="{ 'drag-over-root': isDragOverRoot }"
+            :class="{ 'drag-over-root drop-target': isDragOverRoot }"
             @dragover.prevent="handleRootDragOver"
             @dragleave="handleRootDragLeave"
             @drop.prevent="handleRootDrop">
@@ -329,7 +329,7 @@ onUnmounted(() => {
             <div
                 v-if="files.length === 0"
                 class="empty-state">
-                <p>{{ t('file.no_files_found') }}</p>
+                <p class="empty-state-title">{{ t('file.no_files_found') }}</p>
                 <p class="hint">{{ t('file.add_files_hint') }}</p>
             </div>
         </div>
@@ -345,48 +345,17 @@ onUnmounted(() => {
 </template>
 
 <style scoped lang="scss">
-/* ––– File Explorer ––– */
-
+// The column is `.stack .fill`; this is only that it may shrink below its content,
+// which is what makes the tree scroll rather than the rail.
 .file-explorer {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
     min-height: 0;
-    background: $bg-secondary;
     overflow: hidden;
 }
 
-/* ––– File List ––– */
-
+// The tree's well. It is also the drop target for "move to the vault root", which is
+// `.drop-target`, so the root answers a drag in the same colour as the rows inside it.
 .file-list {
     flex: 1;
-    overflow-y: auto;
     padding: $space-1 0;
-
-    @include scrollbar($show-on-hover: true);
-
-    &.drag-over-root {
-        background: $bg-hover;
-        outline: $border-width-md $text2;
-        outline-offset: -$space-1;
-    }
-}
-
-/* ––– Empty State ––– */
-
-.empty-state {
-    padding: $space-7 $space-4;
-    text-align: center;
-    color: $text2;
-
-    p {
-        margin: $space-2 0;
-        font-size: $font-size-base;
-    }
-
-    .hint {
-        font-size: $font-size-sm;
-        color: $text2;
-    }
 }
 </style>

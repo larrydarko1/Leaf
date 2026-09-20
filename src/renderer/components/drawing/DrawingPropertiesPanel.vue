@@ -85,12 +85,12 @@ void props;
     <transition name="panel-fade">
         <aside
             v-if="visible"
-            class="properties-panel"
+            class="properties-panel floating"
             :aria-label="t('drawing.properties_panel')"
             @mousedown.prevent>
             <!-- Stroke Color -->
             <section class="prop-section">
-                <h3 class="prop-label">{{ t('drawing.stroke') }}</h3>
+                <h3 class="prop-label panel-label">{{ t('drawing.stroke') }}</h3>
                 <div
                     class="color-grid"
                     role="group"
@@ -111,7 +111,7 @@ void props;
             <section
                 v-if="showFillOption"
                 class="prop-section">
-                <h3 class="prop-label">{{ t('drawing.fill') }}</h3>
+                <h3 class="prop-label panel-label">{{ t('drawing.fill') }}</h3>
                 <div
                     class="color-grid"
                     role="group"
@@ -151,15 +151,15 @@ void props;
 
             <!-- Stroke Width -->
             <section class="prop-section">
-                <h3 class="prop-label">{{ t('drawing.stroke_width') }}</h3>
+                <h3 class="prop-label panel-label">{{ t('drawing.stroke_width') }}</h3>
                 <div
-                    class="stroke-width-row"
+                    class="stroke-width-row opt-btns"
                     role="group"
                     :aria-label="t('drawing.stroke_width_options')">
                     <button
                         v-for="w in strokeWidthOptions"
                         :key="w"
-                        class="stroke-width-btn"
+                        class="stroke-width-btn opt-btn"
                         :class="{ active: activeStrokeWidth === w }"
                         :aria-label="`${t('drawing.stroke_width_options')} ${w}px`"
                         :aria-pressed="activeStrokeWidth === w"
@@ -174,15 +174,15 @@ void props;
 
             <!-- Stroke Style -->
             <section class="prop-section">
-                <h3 class="prop-label">{{ t('drawing.stroke_style') }}</h3>
+                <h3 class="prop-label panel-label">{{ t('drawing.stroke_style') }}</h3>
                 <div
-                    class="stroke-style-row"
+                    class="stroke-style-row opt-btns"
                     role="group"
                     :aria-label="t('drawing.stroke_style_options')">
                     <button
                         v-for="s in strokeStyleOptions"
                         :key="s.value"
-                        class="stroke-style-btn"
+                        class="stroke-style-btn opt-btn"
                         :class="{ active: activeStrokeStyle === s.value }"
                         :aria-label="s.label"
                         :aria-pressed="activeStrokeStyle === s.value"
@@ -210,15 +210,15 @@ void props;
             <section
                 v-if="showRoundnessOption"
                 class="prop-section">
-                <h3 class="prop-label">{{ t('drawing.roundness') }}</h3>
+                <h3 class="prop-label panel-label">{{ t('drawing.roundness') }}</h3>
                 <div
-                    class="roundness-row"
+                    class="roundness-row opt-btns"
                     role="group"
                     :aria-label="t('drawing.roundness_options')">
                     <button
                         v-for="r in borderRadiusOptions"
                         :key="r.value"
-                        class="roundness-btn"
+                        class="roundness-btn opt-btn"
                         :class="{ active: activeBorderRadius === r.value }"
                         :aria-label="r.label"
                         :aria-pressed="activeBorderRadius === r.value"
@@ -281,7 +281,7 @@ void props;
             <section
                 v-if="showFontSizeOption"
                 class="prop-section">
-                <h3 class="prop-label">
+                <h3 class="prop-label panel-label">
                     {{ t('drawing.font_size') }}
                     <span
                         class="font-size-value"
@@ -290,13 +290,13 @@ void props;
                     >
                 </h3>
                 <div
-                    class="font-size-row"
+                    class="font-size-row opt-btns"
                     role="group"
                     :aria-label="t('drawing.font_size_options')">
                     <button
                         v-for="fs in fontSizeOptions"
                         :key="fs.value"
-                        class="font-size-btn"
+                        class="font-size-btn opt-btn"
                         :class="{ active: activeFontSize === fs.value }"
                         :aria-label="`${t('drawing.font_size_options')} ${fs.label}`"
                         :aria-pressed="activeFontSize === fs.value"
@@ -311,11 +311,11 @@ void props;
                 v-if="hasSelection"
                 class="prop-section">
                 <div
-                    class="prop-actions"
+                    class="prop-actions stack"
                     role="group"
                     :aria-label="t('drawing.element_actions')">
                     <button
-                        class="action-btn"
+                        class="action-btn menu-item"
                         :aria-label="t('drawing.copy')"
                         @click="emit('copy')">
                         <svg
@@ -340,7 +340,7 @@ void props;
                         {{ t('drawing.copy') }}
                     </button>
                     <button
-                        class="action-btn"
+                        class="action-btn menu-item"
                         :aria-label="t('drawing.duplicate')"
                         @click="emit('duplicate')">
                         <svg
@@ -370,7 +370,7 @@ void props;
                         {{ t('drawing.duplicate') }}
                     </button>
                     <button
-                        class="action-btn action-btn-delete"
+                        class="action-btn action-btn-delete menu-item menu-item-danger"
                         :aria-label="t('drawing.delete')"
                         @click="emit('delete')">
                         <svg
@@ -399,32 +399,14 @@ void props;
 <style scoped lang="scss">
 /* ––– Properties Panel Container ––– */
 
+// The surface is `.floating`; this is only where it sits, and how wide.
 .properties-panel {
     position: absolute;
     top: $space-10;
     left: $space-3;
     width: $size-24;
-    background: $bg-primary;
-    border: $border-width-thin $border-color;
-    border-radius: $border-radius-xl;
-    box-shadow: $shadow-float;
     padding: $space-3;
     z-index: $z-mid;
-}
-
-/* ––– Panel Transition Animation ––– */
-
-.panel-fade-enter-active,
-.panel-fade-leave-active {
-    transition:
-        opacity $transition-base,
-        transform $transition-base;
-}
-
-.panel-fade-enter-from,
-.panel-fade-leave-to {
-    opacity: 0;
-    transform: translateX(-$space-2);
 }
 
 /* ––– Section Layout & Labels ––– */
@@ -438,48 +420,13 @@ void props;
 }
 
 .prop-label {
-    font-size: $font-size-xs;
-    font-weight: $font-weight-semibold;
-    color: $text-muted;
-    text-transform: uppercase;
-    letter-spacing: $letter-spacing-wider;
     margin-bottom: $space-2;
 }
 
 /* ––– Action Buttons ––– */
 
 .prop-actions {
-    display: flex;
-    flex-direction: column;
     gap: $space-1;
-}
-
-.action-btn {
-    display: flex;
-    align-items: center;
-    gap: $space-2;
-    width: 100%;
-    padding: $space-2 $space-3;
-    border-radius: $border-radius;
-    border: none;
-    background: transparent;
-    color: $text1;
-    font-size: $font-size-xs;
-    cursor: pointer;
-    transition: background $transition-fast;
-    text-align: left;
-
-    &:hover {
-        background: $bg-hover;
-    }
-
-    &.action-btn-delete {
-        color: $danger-color;
-
-        &:hover {
-            background: $danger-color-alpha;
-        }
-    }
 }
 
 /* ––– Color Selection ––– */
@@ -490,6 +437,8 @@ void props;
     gap: $space-1;
 }
 
+// Scoped because nothing else in the app picks a colour: the swatch is the value
+// it sets, so it carries no border or label of its own and grows to say it is on.
 .color-swatch {
     width: $size-10;
     height: $size-10;
@@ -531,140 +480,15 @@ void props;
     }
 }
 
-/* ––– Stroke Width Controls ––– */
+/* ––– Option Button Contents ––– */
 
-.stroke-width-row {
-    display: flex;
-    gap: $space-1;
-}
-
-.stroke-width-btn {
-    flex: 1;
-    height: $size-12;
-    border: $border-width-thin $border-color;
-    border-radius: $border-radius;
-    background: transparent;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition:
-        background $transition-fast,
-        border-color $transition-fast;
-
-    &:hover {
-        background: $bg-hover;
-    }
-
-    &.active {
-        background: $accent-color-alpha;
-        border-color: $accent-color;
-    }
-
-    .stroke-preview {
-        width: 60%;
-        background: $text1;
-        border-radius: $border-radius-sm;
-        min-height: $size-0;
-    }
-}
-
-/* ––– Stroke Style Controls ––– */
-
-.stroke-style-row {
-    display: flex;
-    gap: $space-1;
-}
-
-.stroke-style-btn {
-    flex: 1;
-    height: $size-12;
-    border: $border-width-thin $border-color;
-    border-radius: $border-radius;
-    background: transparent;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: $text1;
-    transition:
-        background $transition-fast,
-        border-color $transition-fast;
-
-    &:hover {
-        background: $bg-hover;
-    }
-
-    &.active {
-        background: $accent-color-alpha;
-        border-color: $accent-color;
-    }
-}
-
-/* ––– Roundness Controls ––– */
-
-.roundness-row {
-    display: flex;
-    gap: $space-1;
-}
-
-.roundness-btn {
-    flex: 1;
-    height: $size-12;
-    border: $border-width-thin $border-color;
-    border-radius: $border-radius;
-    background: transparent;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: $text1;
-    transition:
-        background $transition-fast,
-        border-color $transition-fast;
-
-    &:hover {
-        background: $bg-hover;
-    }
-
-    &.active {
-        background: $accent-color-alpha;
-        border-color: $accent-color;
-    }
-}
-
-/* ––– Font Size Controls ––– */
-
-.font-size-row {
-    display: flex;
-    gap: $space-1;
-}
-
-.font-size-btn {
-    flex: 1;
-    height: $size-12;
-    border: $border-width-thin $border-color;
-    border-radius: $border-radius;
-    background: transparent;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: $text1;
-    font-size: $font-size-xs;
-    font-weight: $font-weight-medium;
-    transition:
-        background $transition-fast,
-        border-color $transition-fast;
-
-    &:hover {
-        background: $bg-hover;
-    }
-
-    &.active {
-        background: $accent-color-alpha;
-        border-color: $accent-color;
-    }
+// The rule the stroke-width option previews, rather than a glyph — it is drawn at
+// the width it selects.
+.stroke-preview {
+    width: 60%;
+    background: $text1;
+    border-radius: $border-radius-sm;
+    min-height: $size-0;
 }
 
 .font-size-value {

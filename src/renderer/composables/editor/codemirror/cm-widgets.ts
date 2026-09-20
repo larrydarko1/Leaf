@@ -185,9 +185,10 @@ export class EmbedWidget extends WidgetType {
             case 'video':
             case 'audio': {
                 const isVideo = this.mediaType === 'video';
-                const wrapper = document.createElement('div');
-                wrapper.className = isVideo ? 'cm-embed-video-wrapper' : 'cm-embed-audio-wrapper';
+                const el = (tag: string, className: string): HTMLElement =>
+                    Object.assign(document.createElement(tag), { className });
 
+                const wrapper = el('div', isVideo ? 'cm-embed-video-wrapper media-frame' : 'cm-embed-audio-wrapper');
                 const media = isVideo
                     ? Object.assign(document.createElement('video'), {
                           src: fileUrl,
@@ -196,53 +197,57 @@ export class EmbedWidget extends WidgetType {
                       })
                     : Object.assign(document.createElement('audio'), { src: fileUrl, preload: 'auto' });
 
-                const ctrlBar = document.createElement('div');
-                ctrlBar.className = 'cm-embed-controls' + (isVideo ? '' : ' cm-embed-audio-controls');
+                // The app's shared `.media-*` transport; the `cm-embed-*` names stay as this file's hooks.
+                const joined = isVideo ? ' media-controls-joined' : '';
+                const ctrlBar = el('div', 'cm-embed-controls media-controls' + joined);
 
-                const playBtn = document.createElement('button');
-                playBtn.className = 'cm-embed-play-btn';
+                const playBtn = el('button', 'cm-embed-play-btn media-ctrl-btn');
                 const playSvg =
                     '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
                 const pauseSvg =
                     '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
                 playBtn.innerHTML = playSvg;
 
-                const timeEl = document.createElement('span');
-                timeEl.className = 'cm-embed-time';
+                const timeEl = el('span', 'cm-embed-time media-time');
                 timeEl.textContent = '0:00';
 
-                const progressWrap = document.createElement('div');
-                progressWrap.className = 'cm-embed-progress-wrapper';
-                const progressTrack = document.createElement('div');
-                progressTrack.className = 'cm-embed-progress-track';
-                const progressFill = document.createElement('div');
-                progressFill.className = 'cm-embed-progress-fill';
+                const progressWrap = el('div', 'cm-embed-progress-wrapper media-progress');
+                const progressTrack = el('div', 'cm-embed-progress-track media-progress-track');
+                const progressFill = el('div', 'cm-embed-progress-fill media-progress-fill');
                 progressTrack.appendChild(progressFill);
                 progressWrap.appendChild(progressTrack);
 
-                const durEl = document.createElement('span');
-                durEl.className = 'cm-embed-time';
+                const durEl = el('span', 'cm-embed-time media-time');
                 durEl.textContent = '0:00';
 
-                // Volume controls
+                const volIcon =
+                    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">';
                 const volSvg =
-                    '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0014 8.5v7a4.49 4.49 0 002.5-3.5zM14 3.23v2.06a6.5 6.5 0 010 13.42v2.06A8.5 8.5 0 0014 3.23z"/></svg>';
+                    volIcon +
+                    '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>';
                 const muteSvg =
-                    '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12A4.5 4.5 0 0014 8.5v2.09l2.44 2.44c.03-.31.06-.63.06-.97zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.8 8.8 0 0021 12a8.5 8.5 0 00-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.4 8.4 0 003.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>';
+                    volIcon +
+                    '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>';
 
-                const volBtn = document.createElement('button');
-                volBtn.className = 'cm-embed-vol-btn';
-                volBtn.innerHTML = volSvg;
+                const volWrap = el('div', 'cm-embed-vol-wrapper media-volume');
+                const volBtn = el('button', 'cm-embed-vol-btn media-volume-btn');
 
-                const volWrap = document.createElement('div');
-                volWrap.className = 'cm-embed-vol-wrapper';
-                const volTrack = document.createElement('div');
-                volTrack.className = 'cm-embed-vol-track';
-                const volFill = document.createElement('div');
-                volFill.className = 'cm-embed-vol-fill';
-                volFill.style.width = '100%';
-                volTrack.appendChild(volFill);
-                volWrap.appendChild(volTrack);
+                // A native range, so the level is reachable from the keyboard rather than by aiming at a bar.
+                const volSlider = document.createElement('input');
+                volSlider.type = 'range';
+                volSlider.min = '0';
+                volSlider.max = '1';
+                volSlider.step = '0.01';
+                volSlider.className = 'cm-embed-vol-slider media-volume-slider';
+                volWrap.append(volBtn, volSlider);
+
+                const setVolume = (volume: number): void => {
+                    media.volume = volume;
+                    volSlider.value = String(volume);
+                    volSlider.style.setProperty('--volume', String(volume));
+                    volBtn.innerHTML = volume === 0 ? muteSvg : volSvg;
+                };
+                setVolume(1);
 
                 const fmt = (totalSeconds: number): string => {
                     if (!isFinite(totalSeconds) || isNaN(totalSeconds) || totalSeconds <= 0) return '0:00';
@@ -252,9 +257,8 @@ export class EmbedWidget extends WidgetType {
                         .padStart(2, '0')}`;
                 };
 
-                // Duration resolution: some formats report Infinity via custom protocol.
-                // Probe by seeking to a huge value — Chromium clamps to actual end and
-                // fires durationchange with the real value.
+                // Some formats report Infinity over the custom protocol. Seeking to a huge value
+                // makes Chromium clamp to the real end and fire durationchange with it.
                 let realDuration = 0;
                 let probing = false;
 
@@ -329,25 +333,20 @@ export class EmbedWidget extends WidgetType {
                     e.stopPropagation();
                     if (media.volume > 0) {
                         savedVol = media.volume;
-                        media.volume = 0;
-                        volFill.style.width = '0%';
-                        volBtn.innerHTML = muteSvg;
+                        setVolume(0);
                     } else {
-                        media.volume = savedVol;
-                        volFill.style.width = `${savedVol * 100}%`;
-                        volBtn.innerHTML = volSvg;
+                        setVolume(savedVol);
                     }
                 };
-                volWrap.onclick = (e): void => {
+                // The editor owns mousedown on its content; without this the drag never
+                // reaches the thumb.
+                volSlider.onmousedown = (e): void => e.stopPropagation();
+                volSlider.oninput = (e): void => {
                     e.stopPropagation();
-                    const rect = volTrack.getBoundingClientRect();
-                    const volume = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-                    media.volume = volume;
-                    volFill.style.width = `${volume * 100}%`;
-                    volBtn.innerHTML = volume === 0 ? muteSvg : volSvg;
+                    setVolume(parseFloat(volSlider.value));
                 };
 
-                ctrlBar.append(playBtn, timeEl, progressWrap, durEl, volBtn, volWrap);
+                ctrlBar.append(playBtn, timeEl, progressWrap, durEl, volWrap);
                 wrapper.append(media, ctrlBar);
                 return wrapper;
             }

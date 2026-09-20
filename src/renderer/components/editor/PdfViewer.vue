@@ -25,7 +25,7 @@ watch(
 
 <template>
     <div
-        class="pdf-viewer"
+        class="pdf-viewer media-stage"
         role="region"
         :aria-label="t('editor.pdf_viewer')">
         <!-- PDF preview area -->
@@ -40,59 +40,30 @@ watch(
         <!-- Error state fallback -->
         <section
             v-if="hasError"
-            class="pdf-error"
+            class="pdf-error media-message"
             role="alert"
             aria-live="polite">
-            <h2>{{ t('editor.pdf_load_error') }}</h2>
+            <h2 class="media-message-title">{{ t('editor.pdf_load_error') }}</h2>
             <p>{{ t('editor.failed_to_load_pdf') }}</p>
-            <p class="pdf-error-hint">{{ t('editor.pdf_format_not_supported') }}</p>
+            <p class="pdf-error-hint hint">{{ t('editor.pdf_format_not_supported') }}</p>
         </section>
     </div>
 </template>
 
 <style lang="scss" scoped>
-/* ––– PDF Viewer Container ––– */
-
+// The stage is `.media-stage`; this one fills it rather than sitting on it, because
+// the iframe is the whole page and there is nothing to centre around it.
 .pdf-viewer {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     padding: 0;
     overflow: hidden;
-    background: $base1;
-    position: relative;
 }
 
-/* ––– PDF Preview ––– */
-
+// Above the stage's wash, like everything else the stage holds.
 .pdf-preview {
     width: 100%;
     height: 100%;
     border: none;
     position: relative;
     z-index: $z-normal;
-}
-
-/* ––– Error State ––– */
-
-.pdf-error {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: $text2;
-    position: relative;
-    z-index: $z-normal;
-
-    p {
-        margin: $space-2 0;
-        font-size: $font-size-base;
-    }
-
-    .pdf-error-hint {
-        font-size: $font-size-sm;
-        opacity: $opacity-mid-high;
-    }
 }
 </style>

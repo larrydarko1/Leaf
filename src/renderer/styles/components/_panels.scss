@@ -1,0 +1,83 @@
+// Side panel shells: a full-height column, a header that does not scroll, and a scrolling body,
+// sometimes over a footer.
+
+@use '@/renderer/styles/variables' as *;
+
+// –– Panel shell ––––––––––––––––––––
+
+// Every panel sits on the app's base surface and declares no fill of its own — its border is what
+// separates it from the editor.
+.panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+// The picker panels (themes, languages) sit to the right of the editor instead: bordered against
+// it, at a fixed width.
+.panel-aside {
+    width: $size-28;
+    min-width: $size-27;
+    border-left: $border-width-thin $text3;
+    color: $text1;
+}
+
+// –– Panel header ––––––––––––––––––––
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $space-3 $space-4;
+    border-bottom: $border-width-thin $text3;
+    flex-shrink: 0;
+}
+
+// The panel's own name.
+.panel-title {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $text1;
+}
+
+// The quieter, uppercase variant the rail panels use, where the title labels a section above a
+// search field.
+.panel-label {
+    margin: 0;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+    text-transform: uppercase;
+    letter-spacing: $letter-spacing-wider;
+}
+
+// The cluster of icon buttons at the end of a header.
+.panel-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
+}
+
+// –– Panel footer ––––––––––––––––––––
+
+.panel-footer {
+    border-top: $border-width-thin $text3;
+    padding: $space-2 $space-4 $space-3;
+    flex-shrink: 0;
+}
+
+// The delta over `.hint` for the line under a footer button; it sits flush against the footer edge,
+// so it drops its trailing margin.
+.panel-hint {
+    margin-bottom: 0;
+    line-height: $line-height;
+
+    code {
+        background: $bg-primary;
+        color: $accent-color;
+        padding: 0 $space-1;
+        border-radius: $border-radius-xs;
+        font-family: $font-family-mono;
+    }
+}

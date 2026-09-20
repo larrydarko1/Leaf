@@ -118,27 +118,27 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
 
 <template>
     <div
-        class="ai-model-bar"
+        class="ai-model-bar row"
         role="toolbar"
         :aria-label="t('ai.model_controls')">
         <!-- Model selection and status pill -->
-        <div class="ai-model-pill">
+        <div class="ai-model-pill well row fill">
             <!-- Model selector (when not loaded) -->
             <div
                 v-if="!status.isModelLoaded"
-                class="ai-model-selector">
+                class="ai-model-selector row fill">
                 <div
                     ref="dropdownRef"
-                    class="ai-dropdown">
+                    class="ai-dropdown fill">
                     <button
-                        class="ai-dropdown-trigger"
+                        class="ai-dropdown-trigger menu-trigger"
                         :disabled="isLoading"
                         aria-haspopup="listbox"
                         :aria-expanded="showDropdown"
                         @click="toggleDropdown()">
-                        <span class="ai-dropdown-label">{{ selectedModelLabel }}</span>
+                        <span class="ai-dropdown-label menu-trigger-label">{{ selectedModelLabel }}</span>
                         <svg
-                            class="ai-dropdown-chevron"
+                            class="ai-dropdown-chevron menu-chevron"
                             :class="{ open: showDropdown }"
                             width="10"
                             height="10"
@@ -155,12 +155,12 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
                     <Teleport to="body">
                         <div
                             v-if="showDropdown"
-                            class="ai-dropdown-menu"
+                            class="ai-dropdown-menu menu"
                             role="listbox"
                             :style="dropdownPosition">
                             <div
                                 v-if="availableModels.length === 0"
-                                class="ai-dropdown-empty">
+                                class="ai-dropdown-empty menu-empty">
                                 {{ t('ai.no_models_found') }}
                             </div>
                             <!-- eslint-disable-next-line a11y/click-events-have-key-events a11y/interactive-supports-focus -->
@@ -168,19 +168,19 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
                                 v-for="model in availableModels"
                                 :key="model.path"
                                 v-memo="[model.path, selectedModelPath]"
-                                class="ai-dropdown-item"
+                                class="ai-dropdown-item menu-item"
                                 :class="{ selected: selectedModelPath === model.path }"
                                 role="option"
                                 :aria-selected="selectedModelPath === model.path"
                                 @click="handleSelectModel(model)">
-                                <span class="ai-dropdown-item-name">{{ truncate(model.name, 30) }}</span>
-                                <span class="ai-dropdown-item-size">{{ model.sizeFormatted }}</span>
+                                <span class="ai-dropdown-item-name menu-item-name">{{ truncate(model.name, 30) }}</span>
+                                <span class="ai-dropdown-item-size menu-item-meta">{{ model.sizeFormatted }}</span>
                             </div>
                         </div>
                     </Teleport>
                 </div>
                 <button
-                    class="ai-btn-small"
+                    class="ai-btn-small btn-accent"
                     :disabled="selectedModelPath === null || selectedModelPath === '' || isLoading"
                     @click="$emit('load-model')">
                     {{ isLoading ? t('ai.loading') : t('ai.load') }}
@@ -190,13 +190,13 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
             <!-- Model status (when loaded) -->
             <div
                 v-else
-                class="ai-model-status">
+                class="ai-model-status row fill">
                 <span
                     class="ai-model-indicator"
                     aria-hidden="true"></span>
-                <span class="ai-model-name">{{ status.currentModelName }}</span>
+                <span class="ai-model-name truncate">{{ status.currentModelName }}</span>
                 <button
-                    class="ai-btn-icon ai-btn-danger"
+                    class="ai-btn-icon ai-btn-danger icon-btn icon-btn-lg icon-btn-danger"
                     :title="t('ai.unload_model')"
                     :aria-label="t('ai.unload_current_model')"
                     :disabled="status.isGenerating"
@@ -224,10 +224,10 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
         </div>
 
         <!-- Action buttons -->
-        <div class="ai-bar-actions">
+        <div class="ai-bar-actions well row">
             <!-- Open models folder -->
             <button
-                class="ai-btn-icon"
+                class="ai-btn-icon icon-btn icon-btn-lg"
                 :title="t('ai.open_models_folder')"
                 :aria-label="t('ai.open_models_folder')"
                 @click="$emit('open-models-folder')">
@@ -245,10 +245,10 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
             <!-- System prompt picker -->
             <div
                 ref="promptDropdownRef"
-                class="ai-prompt-picker">
+                class="ai-prompt-picker row">
                 <button
-                    class="ai-btn-icon"
-                    :class="{ 'ai-btn-active': showPromptDropdown }"
+                    class="ai-btn-icon icon-btn icon-btn-lg"
+                    :class="{ 'ai-btn-active icon-btn-accent': showPromptDropdown }"
                     :title="`${t('ai.system_prompt')}: ${activePromptName}`"
                     :aria-label="`${t('ai.system_prompt')}: ${activePromptName}`"
                     aria-haspopup="listbox"
@@ -270,13 +270,13 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
                 <Teleport to="body">
                     <div
                         v-if="showPromptDropdown"
-                        class="ai-dropdown-menu ai-prompt-menu"
+                        class="ai-dropdown-menu ai-prompt-menu menu"
                         role="listbox"
                         :style="promptDropdownPosition">
-                        <div class="ai-prompt-menu-header">{{ t('ai.system_prompt') }}</div>
+                        <div class="ai-prompt-menu-header menu-header">{{ t('ai.system_prompt') }}</div>
                         <div
                             v-if="prompts.length === 0"
-                            class="ai-dropdown-empty">
+                            class="ai-dropdown-empty menu-empty">
                             {{ t('ai.no_prompts_found') }}
                         </div>
                         <!-- eslint-disable-next-line a11y/click-events-have-key-events a11y/interactive-supports-focus -->
@@ -284,16 +284,16 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
                             v-for="prompt in prompts"
                             :key="prompt.id"
                             v-memo="[prompt.id, activeId]"
-                            class="ai-dropdown-item ai-prompt-item"
+                            class="ai-dropdown-item ai-prompt-item menu-item menu-item-stacked"
                             :class="{ selected: prompt.id === activeId }"
                             role="option"
                             :aria-selected="prompt.id === activeId"
                             @click="handleSelectPrompt(prompt.id)">
-                            <div class="ai-prompt-item-main">
-                                <span class="ai-prompt-item-name">{{ prompt.name }}</span>
+                            <div class="ai-prompt-item-main stack fill">
+                                <span class="ai-prompt-item-name menu-item-name">{{ prompt.name }}</span>
                                 <span
                                     v-if="prompt.description"
-                                    class="ai-prompt-item-desc">
+                                    class="ai-prompt-item-desc menu-item-desc">
                                     {{ prompt.description }}
                                 </span>
                             </div>
@@ -304,7 +304,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
 
             <!-- Refresh models folder -->
             <button
-                class="ai-btn-icon"
+                class="ai-btn-icon icon-btn icon-btn-lg"
                 :title="t('ai.refresh_models_folder')"
                 :aria-label="t('ai.refresh_models_folder')"
                 @click="handleRefresh()">
@@ -325,8 +325,8 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
 
             <!-- Conversation history -->
             <button
-                class="ai-btn-icon"
-                :class="{ 'ai-btn-active': showHistory }"
+                class="ai-btn-icon icon-btn icon-btn-lg"
+                :class="{ 'ai-btn-active icon-btn-accent': showHistory }"
                 :title="t('ai.conversation_history')"
                 :aria-label="t('ai.conversation_history')"
                 :aria-pressed="showHistory"
@@ -351,7 +351,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
 
             <!-- New conversation -->
             <button
-                class="ai-btn-icon"
+                class="ai-btn-icon icon-btn icon-btn-lg"
                 :title="t('ai.new_conversation')"
                 :aria-label="t('ai.new_conversation')"
                 @click="$emit('new-conversation')">
@@ -380,7 +380,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
 
             <!-- Close -->
             <button
-                class="ai-btn-icon"
+                class="ai-btn-icon icon-btn icon-btn-lg"
                 :title="t('ai.close')"
                 :aria-label="t('ai.close')"
                 @click="$emit('close')">
@@ -411,290 +411,85 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
 </template>
 
 <style lang="scss" scoped>
-/* ––– Root Container ––– */
-
 .ai-model-bar {
-    display: flex;
-    align-items: center;
+    flex-shrink: 0;
     gap: $space-2;
     padding: $space-2 $space-3;
-    flex-shrink: 0;
 }
 
-/* ––– Model Pill (Selector + Status) ––– */
-
+// The model name and its status share one `.well`, so the bar reads as two objects
+// — what is loaded, and what can be done — rather than as six loose controls.
 .ai-model-pill {
-    flex: 1;
-    min-width: 0;
-    background: $bg-primary;
-    border: $border-width-thin $text3;
-    border-radius: $border-radius-lg;
     padding: $space-1 $space-2;
-    display: flex;
-    align-items: center;
+    border-radius: $border-radius-lg;
 }
 
 .ai-model-selector {
-    display: flex;
-    align-items: center;
     gap: $space-2;
-    flex: 1;
-    min-width: 0;
 }
 
+// Flex, not block: the trigger is an inline-flex button, and a block wrapper gives
+// it a line box whose descender space made the trigger sit high of the Load button.
 .ai-dropdown {
-    flex: 1;
-    min-width: 0;
+    display: flex;
     position: relative;
 }
 
-.ai-dropdown-trigger {
-    display: flex;
-    align-items: center;
-    gap: $space-2;
-    width: 100%;
-    padding: $space-1 $space-2;
-    background: transparent;
-    color: $text1;
-    border: none;
-    font-size: $font-size-xs;
-    cursor: pointer;
-    text-align: left;
-    border-radius: $border-radius;
-    transition: background $transition-fast;
-
-    &:hover:not(:disabled) {
-        background: $bg-hover;
-    }
-
-    &:disabled {
-        opacity: $opacity-mid-low;
-        cursor: not-allowed;
-    }
-}
-
-.ai-dropdown-label {
-    flex: 1;
-    min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: $text2;
-}
-
-.ai-dropdown-chevron {
-    flex-shrink: 0;
-    color: $text2;
-    transition: transform $transition-base;
-
-    &.open {
-        transform: rotate(180deg);
-    }
-}
-
+// Teleported to the body and positioned against the trigger by script, so unlike the other menus it
+// is fixed rather than absolute, and must clear the editor's stacking contexts.
 .ai-dropdown-menu {
     position: fixed;
-    background: var(--bg-secondary, $bg-primary);
-    border: $border-width-thin $text3;
-    border-radius: $border-radius-lg;
-    box-shadow: $shadow-md;
-    padding: $space-2;
     z-index: $z-extreme;
-    backdrop-filter: blur($backdrop-blur-md);
-    max-height: $size-24;
-    max-width: calc(100vw - $size-11);
-    overflow: hidden auto;
-    display: flex;
-    flex-direction: column;
-    gap: $space-0;
-}
-
-.ai-dropdown-empty {
-    padding: $space-2 $space-3;
-    font-size: $font-size-xs;
-    color: $text2;
-    text-align: center;
-}
-
-.ai-dropdown-item {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: $space-2;
-    padding: $space-2 $space-3;
-    border-radius: $border-radius;
-    cursor: pointer;
-    font-size: $font-size-xs;
-    color: $text1;
-    transition: background $transition-fast;
-
-    &:hover {
-        background: $bg-hover;
-    }
-
-    &.selected {
-        background: $bg-hover;
-        color: $accent-color;
-    }
-}
-
-.ai-dropdown-item-name {
-    flex: 1;
-    min-width: 0;
-    overflow-wrap: break-word;
-    line-height: $line-height;
-}
-
-.ai-dropdown-item-size {
-    flex-shrink: 0;
-    font-size: $font-size-xs;
-    color: $text2;
-    opacity: $opacity-mid-high;
 }
 
 .ai-model-status {
-    display: flex;
-    align-items: center;
-    gap: $space-2;
-    flex: 1;
-    min-width: 0;
     padding: 0 $space-1;
 }
 
+// The lit dot that says a model is resident. The glow is what separates "loaded"
+// from "selected" at this size.
 .ai-model-indicator {
+    flex-shrink: 0;
     width: $size-4;
     height: $size-4;
     background: $accent-color;
     border-radius: $border-radius-round;
-    flex-shrink: 0;
     box-shadow: $accent-shadow;
 }
 
 .ai-model-name {
-    font-size: $font-size-xs;
     color: $text2;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: $font-size-xs;
 }
 
-/* ––– Action Buttons Container ––– */
-
+// The action cluster is the bar's second `.well`, tighter than `.panel-actions`
+// because the buttons are the row rather than trailing a title.
 .ai-bar-actions {
-    display: flex;
-    align-items: center;
+    flex-shrink: 0;
     gap: $space-0;
-    flex-shrink: 0;
-    background: $bg-primary;
-    border: $border-width-thin $text3;
-    border-radius: $border-radius-xl;
     padding: $space-0 $space-1;
+    border-radius: $border-radius-xl;
 }
 
-.ai-btn-icon {
-    background: none;
-    border: none;
-    color: $text2;
-    cursor: pointer;
-    padding: $space-2;
-    border-radius: $border-radius;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all $transition-base;
-    flex-shrink: 0;
-
-    &:hover:not(:disabled) {
-        background: $bg-hover;
-        color: $text1;
-    }
-
-    &:disabled {
-        opacity: $opacity-lowest;
-        cursor: not-allowed;
-    }
-}
-
-.ai-btn-danger {
-    &:hover:not(:disabled) {
-        color: $danger-color;
-    }
-}
-
-.ai-btn-active {
-    color: $accent-color;
-    background: $bg-hover;
-}
-
-.ai-btn-small {
-    padding: $space-1 $space-2;
-    background: $accent-color;
-    color: $base1;
-    border: none;
-    border-radius: $border-radius-lg;
-    font-size: $font-size-xs;
-    font-weight: $font-weight-medium;
-    cursor: pointer;
-    white-space: nowrap;
-    flex-shrink: 0;
-    transition:
-        opacity $transition-base,
-        transform $transition-fast;
-
-    &:hover:not(:disabled) {
-        opacity: $opacity-highest;
-        transform: scale($scale-hover);
-    }
-
-    &:disabled {
-        opacity: $opacity-low;
-        cursor: not-allowed;
-    }
-}
-
-/* ––– System Prompt Picker ––– */
+// –– System prompt picker ––––––––––––––––––––
 
 .ai-prompt-picker {
     position: relative;
-    display: flex;
-    align-items: center;
 }
 
+// Held open to a minimum height so the list does not resize under the pointer as
+// the descriptions wrap.
 .ai-prompt-menu {
-    padding: $space-2;
     min-height: $size-26;
 }
 
-.ai-prompt-menu-header {
-    padding: $space-1 $space-2 $space-1;
-    font-size: $font-size-xs;
-    font-weight: $font-weight-medium;
-    text-transform: uppercase;
-    letter-spacing: $letter-spacing-wider;
-    color: $text2;
-}
-
 .ai-prompt-item {
-    align-items: flex-start;
     margin-bottom: $space-1;
 }
 
+// The column holding the two lines, which are `.menu-item-name` over
+// `.menu-item-desc` — the same pair the context-file picker uses.
 .ai-prompt-item-main {
-    display: flex;
-    flex-direction: column;
     gap: $space-0;
-    min-width: 0;
-    flex: 1;
-}
-
-.ai-prompt-item-name {
-    font-size: $font-size-xs;
-    line-height: $line-height;
-}
-
-.ai-prompt-item-desc {
-    font-size: $font-size-xs;
-    color: $text2;
-    line-height: $line-height;
 }
 </style>

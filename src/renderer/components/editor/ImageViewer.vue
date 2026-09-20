@@ -42,13 +42,13 @@ watch(
 
 <template>
     <div
-        class="image-viewer"
+        class="image-viewer media-stage"
         role="region"
         :aria-label="t('editor.image_viewer')">
         <!-- Loading state -->
         <div
             v-if="isLoading"
-            class="image-loading"
+            class="image-loading media-message"
             aria-live="polite"
             aria-busy="true">
             <p>{{ t('editor.loading_image') }}</p>
@@ -66,42 +66,18 @@ watch(
         <!-- Error state fallback -->
         <section
             v-if="hasError"
-            class="image-error"
+            class="image-error media-message"
             role="alert"
             aria-live="polite">
-            <h2>{{ t('editor.image_load_error') }}</h2>
+            <h2 class="media-message-title">{{ t('editor.image_load_error') }}</h2>
             <p>{{ t('editor.failed_to_load_image') }}</p>
         </section>
     </div>
 </template>
 
 <style lang="scss" scoped>
-/* ––– Image Viewer Container ––– */
-
-.image-viewer {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: $space-7;
-    overflow: auto;
-    background: $base1;
-    position: relative;
-
-    &::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: url('../../assets/images/pattern.png');
-        background-size: cover;
-        background-position: center;
-        opacity: 0.01;
-        pointer-events: none;
-    }
-}
-
-/* ––– Image Preview ––– */
-
+// The stage and the messages are `media-*` classes. What is left is the image itself: it fits the
+// pane rather than filling it.
 .image-preview {
     max-width: 100%;
     max-height: 100%;
@@ -109,39 +85,5 @@ watch(
     border-radius: $border-radius-lg;
     position: relative;
     z-index: $z-normal;
-}
-
-/* ––– Loading State ––– */
-
-.image-loading {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: $text2;
-    position: relative;
-    z-index: $z-normal;
-
-    p {
-        margin: $space-2 0;
-        font-size: $font-size-base;
-    }
-}
-
-/* ––– Error State ––– */
-
-.image-error {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: $text2;
-    position: relative;
-    z-index: $z-normal;
-
-    p {
-        margin: $space-2 0;
-        font-size: $font-size-base;
-    }
 }
 </style>

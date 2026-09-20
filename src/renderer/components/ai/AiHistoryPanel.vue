@@ -53,21 +53,21 @@ watch(
 
 <template>
     <nav
-        class="ai-history-panel"
+        class="ai-history-panel stack"
         :aria-label="t('ai.conversation_history')">
         <!-- Header -->
-        <header class="ai-history-header">
-            <h2 class="ai-history-title">{{ t('ai.history') }}</h2>
+        <header class="ai-history-header row">
+            <h2 class="ai-history-title panel-label">{{ t('ai.history') }}</h2>
         </header>
 
         <!-- Conversation list -->
         <section
-            class="ai-history-list"
+            class="ai-history-list fill scroll-y"
             aria-live="polite"
             :aria-label="t('ai.saved_conversations')">
             <div
                 v-if="conversationList.length === 0"
-                class="ai-history-empty"
+                class="ai-history-empty list-empty"
                 role="status">
                 {{ t('ai.no_conversations_yet') }}
             </div>
@@ -84,23 +84,23 @@ watch(
                         renamingConversationId === conv.id,
                         renamingConversationId === conv.id && renameValue,
                     ]"
-                    class="ai-history-item"
+                    class="ai-history-item row"
                     :class="{ active: currentConversationId === conv.id }">
                     <button
-                        class="ai-history-item-button"
+                        class="ai-history-item-button row fill"
                         :aria-current="currentConversationId === conv.id ? 'page' : false"
                         :aria-label="t('ai.open_conversation', { title: conv.title })"
                         @click="$emit('load', conv.id)">
                         <!-- Item content area -->
-                        <div class="ai-history-item-content">
+                        <div class="ai-history-item-content stack fill">
                             <span
                                 v-if="renamingConversationId === conv.id"
-                                class="ai-history-item-title">
+                                class="ai-history-item-title truncate">
                                 <input
                                     ref="renameInputRef"
                                     :value="renameValue"
                                     type="text"
-                                    class="ai-history-rename-input"
+                                    class="ai-history-rename-input field field-sm"
                                     :aria-label="t('ai.rename_conversation')"
                                     @input="$emit('update:renameValue', ($event.target as HTMLInputElement).value)"
                                     @keydown.enter.prevent="$emit('confirm-rename', conv.id)"
@@ -110,7 +110,7 @@ watch(
                             </span>
                             <span
                                 v-else
-                                class="ai-history-item-title"
+                                class="ai-history-item-title truncate"
                                 >{{ conv.title }}</span
                             >
                             <span
@@ -128,11 +128,11 @@ watch(
 
                     <!-- Item actions -->
                     <div
-                        class="ai-history-item-actions"
+                        class="ai-history-item-actions actions-on-hover"
                         role="group"
                         :aria-label="t('ai.conversation_actions')">
                         <button
-                            class="ai-btn-icon ai-btn-tiny"
+                            class="ai-btn-icon ai-btn-tiny icon-btn"
                             type="button"
                             :title="t('ai.rename_conversation')"
                             :aria-label="t('ai.rename_conversation')"
@@ -152,7 +152,7 @@ watch(
                             </svg>
                         </button>
                         <button
-                            class="ai-btn-icon ai-btn-tiny ai-btn-danger"
+                            class="ai-btn-icon ai-btn-tiny ai-btn-danger icon-btn icon-btn-danger"
                             type="button"
                             :title="t('ai.delete_conversation')"
                             :aria-label="t('ai.delete_conversation')"
@@ -180,39 +180,22 @@ watch(
 </template>
 
 <style lang="scss" scoped>
-/* ––– Root Container ––– */
-
+// The history shares the AI panel's column with the message list, so it is capped
+// as a fraction of it and scrolls inside that cap rather than pushing it.
 .ai-history-panel {
     flex-shrink: 0;
     max-height: 45%;
-    display: flex;
-    flex-direction: column;
     border-bottom: $border-width-thin $text3;
 }
 
-/* ––– Header Section ––– */
-
+// Tighter than `.panel-header`: this labels a section inside a panel rather than
+// the panel itself, so it sits closer to the list beneath it.
 .ai-history-header {
-    display: flex;
-    align-items: center;
     justify-content: space-between;
     padding: $space-2 $space-3 $space-1;
 }
 
-.ai-history-title {
-    font-size: $font-size-xs;
-    font-weight: $font-weight-semibold;
-    color: $text2;
-    text-transform: uppercase;
-    letter-spacing: $letter-spacing-wider;
-    margin: 0;
-}
-
-/* ––– List Container ––– */
-
 .ai-history-list {
-    flex: 1;
-    overflow-y: auto;
     padding: 0 $space-2 $space-2;
 }
 
@@ -222,18 +205,9 @@ watch(
     padding: 0;
 }
 
-.ai-history-empty {
-    font-size: $font-size-xs;
-    color: $text2;
-    text-align: center;
-    padding: $space-4 0;
-}
-
-/* ––– List Item Container ––– */
-
+// Not `.result-item`: the row holds a button and an action cluster side by side,
+// and hovering it reveals the cluster — a relationship the row has to own.
 .ai-history-item {
-    display: flex;
-    align-items: center;
     gap: $space-1;
     margin: $space-1 0;
     padding: $space-2;
@@ -257,115 +231,38 @@ watch(
     }
 }
 
+// A button that is only a hit area: the row around it draws everything.
 .ai-history-item-button {
-    flex: 1;
-    min-width: 0;
+    gap: $space-1;
+    padding: 0;
     background: none;
     border: none;
-    padding: 0;
-    cursor: pointer;
-    text-align: left;
-    font-family: inherit;
     color: inherit;
-    display: flex;
-    align-items: center;
-    gap: $space-1;
-
-    &:focus-visible {
-        outline: $border-width-thick $accent-color;
-        outline-offset: $size-0;
-        border-radius: $border-radius-sm;
-    }
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
 }
 
-/* ––– Item Content Area ––– */
-
 .ai-history-item-content {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
     gap: $space-0;
 }
 
 .ai-history-item-title {
-    font-size: $font-size-xs;
     color: $text1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: $font-size-xs;
     line-height: $line-height;
 }
 
 .ai-history-item-meta {
-    font-size: $font-size-xxs;
     color: $text2;
+    font-size: $font-size-xxs;
     opacity: $opacity-mid-high;
 }
 
-.ai-history-rename-input {
-    width: 100%;
-    background: $bg-primary;
-    color: $text1;
-    border: $border-width-thin $accent-color;
-    border-radius: $border-radius-sm;
-    padding: $space-0 $space-1;
-    font-size: $font-size-xs;
-    font-family: inherit;
-    outline: none;
-
-    &:focus {
-        box-shadow: $accent-shadow;
-    }
-}
-
-/* ––– Item Actions ––– */
-
+// The cluster is `.actions-on-hover`; the row above owns when it appears.
 .ai-history-item-actions {
     display: flex;
+    flex-shrink: 0;
     gap: $space-2;
-    opacity: 0;
-    transition: opacity $transition-fast;
-    flex-shrink: 0;
-}
-
-.ai-btn-icon {
-    background: none;
-    border: none;
-    color: $text2;
-    cursor: pointer;
-    padding: $space-1;
-    border-radius: $border-radius-sm;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all $transition-base;
-    flex-shrink: 0;
-    font-size: 0;
-
-    &:hover:not(:disabled) {
-        background: $bg-hover;
-        color: $text1;
-    }
-
-    &:focus-visible {
-        outline: $border-width-thick $accent-color;
-        outline-offset: $size-0;
-    }
-
-    &:disabled {
-        opacity: $opacity-lowest;
-        cursor: not-allowed;
-    }
-}
-
-.ai-btn-tiny {
-    padding: $space-1;
-}
-
-.ai-btn-danger {
-    &:hover:not(:disabled) {
-        color: $danger-color;
-    }
 }
 </style>

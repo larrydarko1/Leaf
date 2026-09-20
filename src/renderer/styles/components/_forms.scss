@@ -1,0 +1,100 @@
+// Text entry: a bordered field that owns its focus treatment, and a bare one that inherits the
+// row's.
+
+@use '@/renderer/styles/variables' as *;
+@use '@/renderer/styles/components/placeholders' as *;
+
+// –– Bordered fields ––––––––––––––––––––
+
+// A field standing on its own: the message editor, the inline rename. The accent border is the
+// resting state — these appear only when something is already being edited.
+.field {
+    width: 100%;
+    padding: $space-2 $space-3;
+    background: $bg-primary;
+    color: $text1;
+    border: $border-width-thin $accent-color;
+    border-radius: $border-radius-lg;
+    font-family: inherit;
+    font-size: $font-size-sm;
+    line-height: $line-height;
+    outline: none;
+
+    &:focus {
+        box-shadow: $accent-shadow;
+    }
+
+    &:disabled {
+        opacity: $opacity-mid-low;
+        cursor: not-allowed;
+    }
+}
+
+// The one-line variant that replaces a label in place, so it fits the row it took over.
+.field-sm {
+    padding: $space-0 $space-1;
+    border-radius: $border-radius-sm;
+    font-size: $font-size-xs;
+}
+
+// A textarea the user is allowed to drag taller.
+.field-resize-y {
+    resize: vertical;
+}
+
+// –– Bare fields ––––––––––––––––––––
+
+// A field inside a container that draws the border and takes the focus; its own ring would read as
+// a second edge.
+.field-bare {
+    padding: $space-2;
+    background: transparent;
+    color: $text1;
+    border: none;
+    font-family: inherit;
+    font-size: $font-size-sm;
+    line-height: $line-height;
+
+    &::placeholder {
+        color: $text2;
+    }
+
+    &:focus {
+        outline: none;
+    }
+
+    &:disabled {
+        opacity: $opacity-mid-low;
+        cursor: not-allowed;
+    }
+}
+
+// The composer's own textarea: it grows by script, so it must not be draggable.
+.field-bare-grow {
+    flex: 1;
+    min-width: 0;
+    resize: none;
+    overflow-y: auto;
+}
+
+// –– Field rows ––––––––––––––––––––
+
+// The bordered row a `.field-bare` sits inside and which takes the focus on its behalf: the AI
+// composer and the search line.
+.field-well {
+    @extend %well;
+
+    display: flex;
+    align-items: center;
+    border-radius: $border-radius-lg;
+    transition: border-color $transition-base;
+
+    &:focus-within {
+        border-color: $accent-color;
+    }
+}
+
+// Height pinned, so a clear button appearing on input cannot jog the row taller.
+.field-well-single {
+    height: $size-14;
+}

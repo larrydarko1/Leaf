@@ -15,9 +15,9 @@
  *   3. NO REMOTE SUBRESOURCES. Leaf's claim is that nothing leaves the device.
  *      A single remote `<script>`/`<link>` in the shell breaks that claim, at
  *      the one point where CSP is also the only guard.
- *   4. THE REDUCED-MOTION ESCAPE HATCH. 84 transition/animation declarations are
- *      spread across 26 SFCs; one global override is what makes all of them
- *      honour `prefers-reduced-motion`. Stylelint can police how a rule is
+ *   4. THE REDUCED-MOTION ESCAPE HATCH. Transitions and animations are spread
+ *      across the stylesheets and the SFCs; one global override is what makes all
+ *      of them honour `prefers-reduced-motion`. Stylelint can police how a rule is
  *      written but not that a rule still EXISTS, and deleting it would be
  *      invisible in review and silent at runtime.
  * NOT CHECKED, deliberately — this is a packaged desktop app, not a web page:
@@ -34,7 +34,7 @@ import path from 'node:path';
 import { REPO_ROOT as ROOT } from '../lib/repo-root.mjs';
 
 const INDEX_HTML = 'src/renderer/index.html';
-const BASE_SCSS = 'src/renderer/styles/base.scss';
+const BASE_SCSS = 'src/renderer/styles/_base.scss';
 
 const failures = [];
 const fail = (file, what, why) => failures.push({ file, what, why });
@@ -168,13 +168,13 @@ if (reducedMotionBlocks.length === 0) {
     fail(
         BASE_SCSS,
         'has no `@media (prefers-reduced-motion: reduce)` block',
-        'It is the only place the 84 transition/animation declarations across 26 SFCs can be switched off at once.',
+        'It is the only place every transition and animation in the app can be switched off at once.',
     );
 } else if (!hasGlobalOverride) {
     fail(
         BASE_SCSS,
         'has a reduced-motion block, but none of them neutralises transitions/animations',
-        'Guarding only `scroll-behavior` leaves the other 84 declarations running. The block needs a global rule zeroing animation and transition duration.',
+        'Guarding only `scroll-behavior` leaves every other declaration running. The block needs a global rule zeroing animation and transition duration.',
     );
 }
 

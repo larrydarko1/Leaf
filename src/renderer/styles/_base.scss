@@ -1,5 +1,5 @@
-// Global reset and base styles
-// Resets, universal styles, animations, and element defaults
+// Resets, universal styles, animations and element defaults. Emits rules, so it is reached only
+// through index.scss — never injected.
 
 @use '@/renderer/styles/variables' as *;
 
@@ -46,11 +46,8 @@ html,
 
 // –– Reduced motion ––––––––––––––––––––
 
-// The single escape hatch for every transition and animation in the app. The
-// SFCs declare motion freely; this is what makes all of it opt-out in one place
-// for users who asked the OS for less of it.
-// Kept at 0.01ms rather than `none` so animationend/transitionend still fire —
-// anything that waits on one keeps working instead of hanging.
+// The single opt-out for every transition and animation in the app. Kept at 0.01ms rather than
+// `none` so animationend/transitionend still fire.
 @media (prefers-reduced-motion: reduce) {
     /* stylelint-disable declaration-no-important -- a global override has to beat the scoped SFC rules it is overriding; specificity alone cannot reach them. */
     *,
@@ -74,6 +71,15 @@ a,
 [role='button'],
 .clickable {
     cursor: pointer;
+}
+
+// –– Grouping elements ––––––––––––––––––––
+
+// A fieldset is only ever a grouping for the screen reader here, never a visible box.
+fieldset {
+    margin: 0;
+    padding: 0;
+    border: none;
 }
 
 // –– Scrollbar ––––––––––––––––––––
@@ -121,6 +127,37 @@ a,
     clip-path: inset(50%);
     white-space: nowrap;
     border-width: 0;
+}
+
+// –– Transitions ––––––––––––––––––––
+
+// The classes `<transition>` applies. A transition name is a global contract — Vue writes
+// `panel-fade-enter-from` onto the element wherever it lives — so defining one inside an SFC only
+// hides it.
+
+// The panel that slides in from the left edge it is anchored to.
+.panel-fade-enter-active,
+.panel-fade-leave-active {
+    transition:
+        opacity $transition-base,
+        transform $transition-base;
+}
+
+.panel-fade-enter-from,
+.panel-fade-leave-to {
+    opacity: 0;
+    transform: translateX(-$space-2);
+}
+
+// The plain crossfade, for anything that appears in place: the export dialog.
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity $transition-base;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
 }
 
 // –– Animations ––––––––––––––––––––

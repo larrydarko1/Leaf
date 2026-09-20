@@ -162,10 +162,10 @@ onMounted(() => {
 
 <template>
     <section
-        class="search-panel"
+        class="search-panel panel"
         :aria-label="t('search.search_panel')">
-        <header class="search-header">
-            <div class="search-input-wrapper">
+        <header class="panel-header search-header">
+            <div class="search-input-wrapper field-well field-well-single">
                 <svg
                     class="search-icon"
                     width="16"
@@ -186,14 +186,14 @@ onMounted(() => {
                     v-model="searchQuery"
                     type="text"
                     :placeholder="t('search.search_placeholder')"
-                    class="search-input"
+                    class="search-input field-bare"
                     :aria-label="t('search.search_placeholder')"
                     aria-describedby="search-results-count"
                     @keydown.escape="clearSearch"
                     @keydown.enter="openSelectedResult" />
                 <button
                     v-if="searchQuery"
-                    class="clear-button"
+                    class="clear-button icon-btn-subtle"
                     :title="t('search.clear_search')"
                     :aria-label="t('search.clear_search')"
                     @click="clearSearch">
@@ -216,31 +216,31 @@ onMounted(() => {
             <div
                 v-if="searchQuery"
                 id="search-results-count"
-                class="search-info"
+                class="hint"
                 aria-live="polite"
                 aria-atomic="true">
                 {{ searchResults.length }} {{ searchResults.length === 1 ? t('search.result') : t('search.results') }}
             </div>
         </header>
 
-        <main class="search-results">
+        <main class="search-results scroll-y">
             <div
                 v-if="!searchQuery"
-                class="search-empty-state"
+                class="search-empty-state empty-state"
                 role="status"
                 :aria-label="t('search.clear_search')">
                 <p>{{ t('search.clear_search') }}</p>
             </div>
             <div
                 v-else-if="searchResults.length === 0"
-                class="search-empty-state"
+                class="search-empty-state empty-state"
                 role="status"
                 :aria-label="t('search.no_results')">
                 <p>{{ t('search.no_results') }}</p>
             </div>
             <ul
                 v-else
-                class="search-results-list"
+                class="search-results-list list-body"
                 role="listbox"
                 :aria-label="t('search.search_results')">
                 <!-- eslint-disable-next-line a11y/click-events-have-key-events a11y/interactive-supports-focus -->
@@ -248,7 +248,7 @@ onMounted(() => {
                     v-for="(file, index) in searchResults"
                     :key="file.path"
                     v-memo="[file.path, selectedIndex === index, activeFile?.path === file.path]"
-                    class="search-result-item"
+                    class="search-result-item result-item"
                     :class="{
                         'active': activeFile?.path === file.path,
                         'selected': isFileSelected(file),
@@ -282,7 +282,7 @@ onMounted(() => {
                                 stroke-linejoin="round" />
                         </svg>
                         <div class="file-details">
-                            <div class="file-name">
+                            <div class="file-name truncate">
                                 <span
                                     v-for="(part, idx) in splitHighlightedText(file.name)"
                                     :key="idx"
@@ -290,7 +290,7 @@ onMounted(() => {
                                     {{ part.text }}
                                 </span>
                             </div>
-                            <div class="file-path">{{ file.folder === '.' ? '' : file.folder }}</div>
+                            <div class="file-path truncate">{{ file.folder === '.' ? '' : file.folder }}</div>
                         </div>
                     </div>
                 </li>
@@ -300,180 +300,45 @@ onMounted(() => {
 </template>
 
 <style scoped lang="scss">
-/* ––– Search Panel Container ––– */
-
-.search-panel {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    background: $bg-secondary;
-}
-
 /* ––– Search Header ––– */
 
+// Holds a field, not a title row — back to normal flow.
 .search-header {
-    padding: $space-3 $space-4;
-    border-bottom: $border-width-thin $text3;
+    display: block;
 }
 
-/* ––– Search Input Wrapper ––– */
+/* ––– Search Field ––– */
 
+// `.field-well .field-well-single`, shared with the AI composer — inset only.
 .search-input-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    background: $bg-primary;
-    border: $border-width-thin $text3;
-    border-radius: $border-radius-lg;
     padding: $space-2 $space-3;
-    transition: border-color $transition-base;
-
-    &:focus-within {
-        border-color: $accent-color;
-    }
 }
 
 .search-icon {
-    color: $text-muted;
+    color: $text2;
     flex-shrink: 0;
     margin-right: $space-2;
 }
 
+// `.field-bare` minus its inset: the well is already padded.
 .search-input {
     flex: 1;
-    border: none;
-    background: none;
-    color: $text-primary;
-    font-size: $font-size-sm;
-    outline: none;
-    font-family: inherit;
-
-    &::placeholder {
-        color: $text-muted;
-    }
-}
-
-.clear-button {
-    background: none;
-    border: none;
-    padding: $space-1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: $text-muted;
-    border-radius: $border-radius-sm;
-    cursor: pointer;
-    transition: all $transition-base;
-    margin-left: $space-1;
-
-    &:hover {
-        background: $bg-tertiary;
-        color: $text-primary;
-    }
-}
-
-.search-info {
-    margin-top: $space-2;
-    font-size: $font-size-xs;
-    color: $text-muted;
+    padding: 0;
 }
 
 /* ––– Search Results ––– */
 
 .search-results {
     flex: 1;
-    overflow: hidden auto;
 }
 
-.search-empty-state {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: $space-9 $space-6;
-    text-align: center;
-    color: $text-muted;
-    font-size: $font-size-sm;
-}
-
-.search-results-list {
-    padding: $space-1;
-}
-
-/* ––– Result Items ––– */
-
-.search-result-item {
-    padding: $space-2 $space-3;
-    border-radius: $border-radius-lg;
-    cursor: pointer;
-    transition: background $transition-fast;
-    margin-bottom: $space-0;
-    user-select: none;
-
-    &:hover {
-        background: $bg-hover;
-    }
-
-    &.selected {
-        background: $bg-selected;
-    }
-
-    &.active {
-        background: $bg-selected;
-        color: $text1;
-
-        .file-path,
-        .file-icon {
-            color: $text1;
-        }
-    }
-}
-
-.file-info {
-    display: flex;
-    align-items: center;
-    gap: $space-3;
-}
-
-.file-icon {
-    flex-shrink: 0;
-    color: $text-muted;
-}
-
-.file-details {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: $space-0;
-}
-
-.file-name {
-    font-size: $font-size-sm;
-    font-weight: $font-weight-medium;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-
-    :deep(mark) {
-        background: $accent-color-alpha;
-        color: $accent-color;
-        padding: $space-0 $space-1;
-        border-radius: $border-radius-xs;
-        font-weight: $font-weight-semibold;
-    }
-}
-
-.file-path {
-    font-size: $font-size-xs;
-    color: $text-muted;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* ––– Scrollbar Styling ––– */
-
-.search-results {
-    @include scrollbar;
+// The matched substring inside a result's name.
+.file-name :deep(mark),
+.highlighted {
+    background: $accent-color-alpha;
+    color: $accent-color;
+    padding: $space-0 $space-1;
+    border-radius: $border-radius-xs;
+    font-weight: $font-weight-semibold;
 }
 </style>

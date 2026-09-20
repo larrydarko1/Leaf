@@ -1,21 +1,26 @@
 #!/usr/bin/env node
 /**
  * SCSS architecture gate.
- *   1. THE BARREL. index.scss @forwards the token modules and @uses the ones that
+ *   1. THE BARREL. index.scss @forwards the token module and @uses the ones that
  *      emit rules, and main.ts imports it exactly once. Import it twice and every
  *      global rule is emitted twice; drop the @forward and `@use '@/renderer/styles'`
  *      silently stops resolving the tokens.
  *   2. THE VITE INJECTION. `css.preprocessorOptions.scss.additionalData` in
- *      electron.vite.config.ts is what makes `$color-*` available inside every SFC
+ *      electron.vite.config.ts is what makes `$size-*` available inside every SFC
  *      without an import. Lose it and all 26 components fail to compile at once —
  *      yet nothing in the style files themselves records that they depend on it.
- *      The `index.scss` guard in that function matters too: without it the barrel
+ *      The styles/ guard in that function matters too: without it the barrel
  *      @uses itself and sass fails on a circular load.
+ *   2b. THE INJECTED MODULE EMITS NOTHING. Each SFC style block is a separate sass
+ *      compilation, so an injected module that emits rules ships one copy per
+ *      component and nothing warns. It is why _theme.scss is a separate file from
+ *      _variables.scss — the palette emits, the tokens do not. A declaration added
+ *      to the injected module is 26 invisible duplicates.
  *   3. THEME TOKEN PARITY, THREE WAYS. Theme presets are JSON under assets/themes/,
  *      seeded into ~/.leaf/themes/ where users hand-edit them, and applied by
  *      useTheme.ts as `--<key>` custom properties on <html>. So a token has three
  *      places it must agree:
- *        • the `:root` block in variables.scss — the compiled-in fallback;
+ *        • the `:root` block in _theme.scss — the compiled-in fallback;
  *        • every theme JSON's `colors` map;
  *        • every `var(--token)` in a stylesheet or SFC.
  *      Each mismatch fails silently and differently. A key missing from ONE theme
@@ -34,7 +39,8 @@ import path from 'node:path';
 import { REPO_ROOT as ROOT } from '../lib/repo-root.mjs';
 
 const STYLES = 'src/renderer/styles';
-const VARIABLES = `${STYLES}/variables.scss`;
+const VARIABLES = `${STYLES}/_variables.scss`;
+const THEME = `${STYLES}/_theme.scss`;
 const INDEX = `${STYLES}/index.scss`;
 const MAIN_TS = 'src/renderer/main.ts';
 const VITE_CONFIG = 'electron.vite.config.ts';
@@ -48,7 +54,7 @@ const REFERENCE_THEME = 'dark';
 const COMPONENT_LOCAL_VARS = new Map([
     ['scroll-distance', 'FolderNode.vue — marquee offset for a truncated name'],
     ['scroll-duration', 'FolderNode.vue — marquee duration, proportional to the name length'],
-    ['volume', 'AudioViewer.vue / VideoViewer.vue — volume slider fill width'],
+    ['volume', 'components/_media.scss — volume slider fill width, set by AudioViewer.vue / VideoViewer.vue'],
 ]);
 
 const failures = [];
@@ -63,8 +69,14 @@ const mainTs = read(MAIN_TS);
 if (!/@forward\s+['"][^'"]*variables['"]/.test(index)) {
     fail(INDEX, 'does not `@forward` variables', "SFCs reach the tokens through `@use '@/renderer/styles'`, which only resolves what the barrel forwards.");
 }
-if (!/@use\s+['"][^'"]*base['"]/.test(index)) {
-    fail(INDEX, 'does not `@use` base', 'base.scss is the only module that EMITS global rules — the reset, :root and the reduced-motion override. Un-@used, none of it reaches the bundle.');
+for (const emitter of ['theme', 'base', 'components', 'layout']) {
+    if (!new RegExp(`@use\\s+['"][^'"]*${emitter}['"]`).test(index)) {
+        fail(
+            INDEX,
+            `does not \`@use\` ${emitter}`,
+            'The emitting modules reach the bundle only through this barrel — they are deliberately kept out of the SFC injection, so nothing else can pull them in. Un-@used, none of their rules ship at all.',
+        );
+    }
 }
 
 const styleImports = [...mainTs.matchAll(/import\s+['"][^'"]*\.scss['"]/g)];
@@ -85,26 +97,50 @@ if (!/additionalData:/.test(viteConfig)) {
         'It is what prepends the token @use to every SFC style block. Without it every `$`-variable in all 26 components is an undefined-variable error.',
     );
 } else {
-    if (!/@use\s+['"]@\/renderer\/styles['"]\s+as\s+\*/.test(viteConfig)) {
-        fail(VITE_CONFIG, 'additionalData does not inject `@use \'@/renderer/styles\' as *`', 'The `as *` is what puts the tokens in the SFC’s own namespace; without it every reference needs a prefix.');
-    }
-    if (additionalData !== null && !/index\.scss/.test(additionalData[1])) {
+    if (!/@use\s+['"]@\/renderer\/styles\/variables['"]\s+as\s+\*/.test(viteConfig)) {
         fail(
             VITE_CONFIG,
-            'additionalData does not exempt index.scss',
-            'The barrel would be given a @use of itself. Sass fails the whole build on the circular load, and the message points at the wrong file.',
+            "additionalData does not inject `@use '@/renderer/styles/variables' as *`",
+            'It must inject the TOKEN module, not the barrel: the barrel @uses the modules that emit rules, and an injected emitter ships one copy per SFC. The `as *` is what puts the tokens in the SFC’s own namespace; without it every reference needs a prefix.',
+        );
+    }
+    if (additionalData !== null && !/styles/.test(additionalData[1])) {
+        fail(
+            VITE_CONFIG,
+            'additionalData does not exempt the styles/ folder',
+            'The token module would be given a @use of itself. Sass fails the whole build on the circular load, and the message points at the wrong file.',
         );
     }
 }
 
-// ── 3. Theme token parity, three ways ────────────────────────────────────────
-const variables = read(VARIABLES);
+// ── 2b. The injected module emits nothing ────────────────────────────────────
+// Strip comments, then strings, then every `$var: …` / `@use` / `@forward`
+// statement. What is left of the token module should be nothing at all: a
+// surviving `{` is a rule, and a rule here is 26 copies in the bundle.
+const injectable = read(VARIABLES)
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/^\s*\/\/.*$/gm, '')
+    .replace(/(['"])(?:\\.|(?!\1)[^\\])*\1/g, "''")
+    .replace(/^\s*\$[a-z0-9-]+\s*:[\s\S]*?;\s*$/gim, '')
+    .replace(/^\s*@(?:use|forward)[^;]*;\s*$/gim, '');
 
-/** The `:root` block in variables.scss — the compiled-in fallback layer. */
-const rootBlock = variables.match(/:root\s*\{([\s\S]*?)\n\}/);
+if (/\{/.test(injectable)) {
+    const selector = injectable.match(/^\s*([^\s@{][^{]*?)\s*\{/m);
+    fail(
+        VARIABLES,
+        `emits a rule (\`${(selector?.[1] ?? '?').trim().slice(0, 40)}…\`)`,
+        'This is the one module electron.vite.config.ts injects into all 26 SFC style blocks, and each block compiles separately — so this rule is emitted 27 times, once per component plus once for the barrel. Move it to _theme.scss, _base.scss or a components/ partial, which only the barrel reaches.',
+    );
+}
+
+// ── 3. Theme token parity, three ways ────────────────────────────────────────
+const theme = read(THEME);
+
+/** The `:root` block in _theme.scss — the compiled-in fallback layer. */
+const rootBlock = theme.match(/:root\s*\{([\s\S]*?)\n\}/);
 const rootTokens = new Set();
 if (rootBlock === null) {
-    fail(VARIABLES, 'has no `:root` block', 'It is the fallback layer every `var(--token)` resolves against before a theme is applied.');
+    fail(THEME, 'has no `:root` block', 'It is the fallback layer every `var(--token)` resolves against before a theme is applied.');
 } else {
     for (const m of rootBlock[1].matchAll(/^\s*--([a-z0-9-]+)\s*:/gim)) rootTokens.add(m[1]);
 }
@@ -154,14 +190,14 @@ if (reference === undefined) {
             fail(
                 `${THEMES_DIR}/${id}.json`,
                 `is missing ${missing.length} colour(s): ${missing.join(', ')}`,
-                `Each one falls back to the ${VARIABLES} default, so those elements are off-palette in this theme only — visible solely to whoever selected it.`,
+                `Each one falls back to the ${THEME} default, so those elements are off-palette in this theme only — visible solely to whoever selected it.`,
             );
         }
         if (extra.length > 0) {
             fail(
                 `${THEMES_DIR}/${id}.json`,
                 `defines ${extra.length} colour(s) no other theme has: ${extra.join(', ')}`,
-                `Either every preset needs the token (and ${VARIABLES} a fallback), or nothing reads it and it is dead weight users will try to edit.`,
+                `Either every preset needs the token (and ${THEME} a fallback), or nothing reads it and it is dead weight users will try to edit.`,
             );
         }
     }
@@ -171,14 +207,14 @@ if (reference === undefined) {
     const orphanFallback = [...rootTokens].filter((k) => !reference.has(k));
     if (missingFallback.length > 0) {
         fail(
-            VARIABLES,
+            THEME,
             `:root has no fallback for ${missingFallback.join(', ')}`,
             'A theme that fails to load, or an older hand-edited preset in ~/.leaf/themes/ that predates the token, leaves these resolving to nothing.',
         );
     }
     if (orphanFallback.length > 0) {
         fail(
-            VARIABLES,
+            THEME,
             `:root defines ${orphanFallback.join(', ')}, which no theme preset overrides`,
             'The token is permanently stuck at its fallback — a theme switch cannot change it, which is exactly the bug that is hardest to see.',
         );

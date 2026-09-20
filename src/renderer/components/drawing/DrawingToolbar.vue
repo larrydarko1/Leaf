@@ -97,12 +97,12 @@ function handleClickOutside(e: MouseEvent): void {
         class="floating-toolbar"
         :aria-label="t('drawing.toolbar')">
         <div
-            class="toolbar-inner"
+            class="toolbar-inner floating"
             role="toolbar"
             :aria-label="t('drawing.tool_selection')">
             <!-- Selection -->
             <button
-                class="toolbar-btn"
+                class="toolbar-btn icon-btn-square icon-btn-square-lg icon-btn-toggle"
                 :class="{ active: currentTool === 'select' }"
                 :aria-label="t('drawing.selection_tool', { shortcut: 'V' })"
                 :aria-pressed="currentTool === 'select'"
@@ -121,7 +121,7 @@ function handleClickOutside(e: MouseEvent): void {
 
             <!-- Hand -->
             <button
-                class="toolbar-btn"
+                class="toolbar-btn icon-btn-square icon-btn-square-lg icon-btn-toggle"
                 :class="{ active: currentTool === 'hand' }"
                 :aria-label="t('drawing.hand_tool', { shortcut: 'H' })"
                 :aria-pressed="currentTool === 'hand'"
@@ -150,7 +150,7 @@ function handleClickOutside(e: MouseEvent): void {
 
             <!-- Rectangle -->
             <button
-                class="toolbar-btn"
+                class="toolbar-btn icon-btn-square icon-btn-square-lg icon-btn-toggle"
                 :class="{ active: currentTool === 'rectangle' }"
                 :aria-label="t('drawing.rectangle_tool', { shortcut: 'R' })"
                 :aria-pressed="currentTool === 'rectangle'"
@@ -175,7 +175,7 @@ function handleClickOutside(e: MouseEvent): void {
 
             <!-- Diamond -->
             <button
-                class="toolbar-btn"
+                class="toolbar-btn icon-btn-square icon-btn-square-lg icon-btn-toggle"
                 :class="{ active: currentTool === 'diamond' }"
                 :aria-label="t('drawing.diamond_tool', { shortcut: 'D' })"
                 :aria-pressed="currentTool === 'diamond'"
@@ -195,7 +195,7 @@ function handleClickOutside(e: MouseEvent): void {
 
             <!-- Ellipse -->
             <button
-                class="toolbar-btn"
+                class="toolbar-btn icon-btn-square icon-btn-square-lg icon-btn-toggle"
                 :class="{ active: currentTool === 'ellipse' }"
                 :aria-label="t('drawing.ellipse_tool', { shortcut: 'O' })"
                 :aria-pressed="currentTool === 'ellipse'"
@@ -218,7 +218,7 @@ function handleClickOutside(e: MouseEvent): void {
 
             <!-- Triangle -->
             <button
-                class="toolbar-btn"
+                class="toolbar-btn icon-btn-square icon-btn-square-lg icon-btn-toggle"
                 :class="{ active: currentTool === 'triangle' }"
                 :aria-label="t('drawing.triangle_tool', { shortcut: 'T' })"
                 :aria-pressed="currentTool === 'triangle'"
@@ -238,7 +238,7 @@ function handleClickOutside(e: MouseEvent): void {
 
             <!-- Arrow -->
             <button
-                class="toolbar-btn"
+                class="toolbar-btn icon-btn-square icon-btn-square-lg icon-btn-toggle"
                 :class="{ active: currentTool === 'arrow' }"
                 :aria-label="t('drawing.arrow_tool', { shortcut: 'A' })"
                 :aria-pressed="currentTool === 'arrow'"
@@ -265,7 +265,7 @@ function handleClickOutside(e: MouseEvent): void {
 
             <!-- Line -->
             <button
-                class="toolbar-btn"
+                class="toolbar-btn icon-btn-square icon-btn-square-lg icon-btn-toggle"
                 :class="{ active: currentTool === 'line' }"
                 :aria-label="t('drawing.line_tool', { shortcut: 'L' })"
                 :aria-pressed="currentTool === 'line'"
@@ -294,7 +294,7 @@ function handleClickOutside(e: MouseEvent): void {
 
             <!-- Freedraw -->
             <button
-                class="toolbar-btn"
+                class="toolbar-btn icon-btn-square icon-btn-square-lg icon-btn-toggle"
                 :class="{ active: currentTool === 'freedraw' }"
                 :aria-label="t('drawing.freedraw_tool', { shortcut: 'P' })"
                 :aria-pressed="currentTool === 'freedraw'"
@@ -316,7 +316,7 @@ function handleClickOutside(e: MouseEvent): void {
 
             <!-- Text -->
             <button
-                class="toolbar-btn"
+                class="toolbar-btn icon-btn-square icon-btn-square-lg icon-btn-toggle"
                 :class="{ active: currentTool === 'text' }"
                 :aria-label="t('drawing.text_tool', { shortcut: 'X' })"
                 :aria-pressed="currentTool === 'text'"
@@ -348,7 +348,7 @@ function handleClickOutside(e: MouseEvent): void {
 
             <!-- Eraser -->
             <button
-                class="toolbar-btn"
+                class="toolbar-btn icon-btn-square icon-btn-square-lg icon-btn-toggle"
                 :class="{ active: currentTool === 'eraser' }"
                 :aria-label="t('drawing.eraser_tool', { shortcut: 'E' })"
                 :aria-pressed="currentTool === 'eraser'"
@@ -377,7 +377,7 @@ function handleClickOutside(e: MouseEvent): void {
                 ref="archDropdownEl"
                 class="arch-dropdown">
                 <button
-                    class="toolbar-btn"
+                    class="toolbar-btn icon-btn-square icon-btn-square-lg icon-btn-toggle"
                     :class="{ active: isArchTool }"
                     :aria-label="t('drawing.architecture_shapes')"
                     :aria-pressed="isArchTool"
@@ -407,13 +407,13 @@ function handleClickOutside(e: MouseEvent): void {
                 <transition name="panel-fade">
                     <div
                         v-if="archDropdownOpen"
-                        class="arch-dropdown-menu"
+                        class="arch-dropdown-menu floating"
                         role="menu"
                         :aria-label="t('drawing.architecture_shape_options')">
                         <button
                             v-for="shape in archShapes"
                             :key="shape.tool"
-                            class="arch-shape-btn"
+                            class="arch-shape-btn menu-item"
                             :class="{ active: currentTool === shape.tool }"
                             :aria-label="shape.label"
                             :aria-pressed="currentTool === shape.tool"
@@ -443,52 +443,12 @@ function handleClickOutside(e: MouseEvent): void {
     z-index: $z-mid;
 }
 
+// The surface is `.floating`; what is left is where the toolbar floats.
 .toolbar-inner {
     display: flex;
     align-items: center;
     gap: $space-0;
     padding: $space-1;
-    background: $bg-primary;
-    border: $border-width-thin solid $border-color;
-    border-radius: $border-radius-xl;
-    box-shadow: $shadow-float;
-}
-
-/* ––– Toolbar Buttons & Controls ––– */
-
-.toolbar-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: $size-13;
-    height: $size-13;
-    border: none;
-    border-radius: $border-radius-lg;
-    background: transparent;
-    color: $text2;
-    cursor: pointer;
-    transition:
-        background $transition-fast,
-        color $transition-fast;
-    flex-shrink: 0;
-
-    &:hover {
-        background: $bg-hover;
-        color: $text1;
-    }
-
-    &.active {
-        background: $accent-color-alpha;
-        color: $accent-color;
-    }
-}
-
-.toolbar-sep {
-    width: $size-0;
-    height: $size-11;
-    background: $border-color;
-    margin: 0 $space-0;
-    flex-shrink: 0;
 }
 
 /* ––– Architecture Dropdown Menu ––– */
@@ -497,6 +457,8 @@ function handleClickOutside(e: MouseEvent): void {
     position: relative;
 }
 
+// Two columns rather than `.menu`'s single one: these are short labels beside a
+// glyph, and a one-column list of them would be twice as tall as the toolbar.
 .arch-dropdown-menu {
     position: absolute;
     top: calc(100% + $space-2);
@@ -506,35 +468,15 @@ function handleClickOutside(e: MouseEvent): void {
     grid-template-columns: 1fr 1fr;
     gap: $space-0;
     padding: $space-2;
-    background: $bg-primary;
-    border: $border-width-thin solid $border-color;
-    border-radius: $border-radius-xl;
-    box-shadow: $shadow-dropdown;
     z-index: $z-mid;
     min-width: $size-24;
 }
 
 .arch-shape-btn {
-    display: flex;
-    align-items: center;
-    gap: $space-2;
-    padding: $space-2 $space-3;
-    border: none;
-    border-radius: $border-radius;
-    background: transparent;
-    color: $text2;
-    cursor: pointer;
-    transition:
-        background $transition-fast,
-        color $transition-fast;
-    font-size: $font-size-xs;
     white-space: nowrap;
 
-    &:hover {
-        background: $bg-hover;
-        color: $text1;
-    }
-
+    // The toolbar names this state `.active` and tints it the way `.icon-btn-toggle` does rather
+    // than the way a dropdown row does: this menu chooses a tool, so it matches the buttons beside it.
     &.active {
         background: $accent-color-alpha;
         color: $accent-color;
@@ -557,20 +499,5 @@ function handleClickOutside(e: MouseEvent): void {
 
 .arch-shape-label {
     font-weight: $font-weight-medium;
-}
-
-/* ––– Panel Transition Animation ––– */
-
-.panel-fade-enter-active,
-.panel-fade-leave-active {
-    transition:
-        opacity $transition-base,
-        transform $transition-base;
-}
-
-.panel-fade-enter-from,
-.panel-fade-leave-to {
-    opacity: 0;
-    transform: translateX(-$space-2);
 }
 </style>

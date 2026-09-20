@@ -29,12 +29,12 @@ onMounted(() => {
 
 <template>
     <aside
-        class="theme-panel"
+        class="theme-panel panel panel-aside"
         :aria-label="t('theme.selection_panel')">
-        <header class="theme-header">
-            <span class="theme-title">{{ t('theme.title') }}</span>
+        <header class="panel-header">
+            <span class="panel-title">{{ t('theme.title') }}</span>
             <div
-                class="header-actions"
+                class="panel-actions"
                 role="toolbar"
                 :aria-label="t('theme.panel_controls')">
                 <button
@@ -76,13 +76,13 @@ onMounted(() => {
         </header>
 
         <div
-            class="theme-list"
+            class="theme-list scroll-y"
             role="listbox"
             :aria-label="t('theme.available_themes')">
             <button
                 v-for="theme in themes"
                 :key="theme.id"
-                class="theme-item"
+                class="list-item theme-item"
                 :class="{ active: theme.id === activeId }"
                 role="option"
                 :aria-selected="theme.id === activeId"
@@ -105,16 +105,16 @@ onMounted(() => {
                         :style="{ background: theme.colors['text1'] || '#fff' }"></span>
                 </span>
                 <span class="theme-meta">
-                    <span class="theme-name">{{ theme.name }}</span>
+                    <span class="theme-name truncate">{{ theme.name }}</span>
                     <span
                         v-if="theme.description"
-                        class="theme-desc"
+                        class="theme-desc truncate"
                         >{{ theme.description }}</span
                     >
                 </span>
                 <svg
                     v-if="theme.id === activeId"
-                    class="check"
+                    class="list-check"
                     width="14"
                     height="14"
                     viewBox="0 0 24 24"
@@ -130,20 +130,20 @@ onMounted(() => {
 
             <div
                 v-if="!themes.length"
-                class="theme-empty"
+                class="theme-empty list-empty"
                 role="status"
                 >{{ t('theme.no_themes_found') }}</div
             >
         </div>
 
-        <footer class="theme-footer">
+        <footer class="panel-footer">
             <button
-                class="footer-btn"
+                class="btn-block"
                 :aria-label="t('theme.open_folder')"
                 @click="handleOpenFolder">
                 {{ t('theme.open_folder') }}
             </button>
-            <p class="footer-hint">
+            <p class="hint panel-hint">
                 {{ t('theme.footer_hint_intro') }}
                 <code>{{ t('theme.footer_hint_file_type') }}</code>
                 {{ t('theme.footer_hint_files_in') }}
@@ -155,88 +155,11 @@ onMounted(() => {
 </template>
 
 <style scoped lang="scss">
-/* ––– Theme Panel Container ––– */
-
-.theme-panel {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    background: $base1;
-    border-left: $border-width-thin $text3;
-    width: $size-28;
-    min-width: $size-27;
-}
-
-/* ––– Header ––– */
-
-.theme-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: $space-3 $space-4;
-    border-bottom: $border-width-thin $text3;
-    flex-shrink: 0;
-}
-
-.theme-title {
-    font-size: $font-size-sm;
-    font-weight: $font-weight-semibold;
-    color: $text1;
-}
-
-.header-actions {
-    display: inline-flex;
-    gap: $space-0;
-}
-
-.icon-btn {
-    background: none;
-    border: none;
-    padding: $space-1;
-    border-radius: $border-radius;
-    color: $text-muted;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-
-    &:hover {
-        background: $bg-hover;
-        color: $text1;
-    }
-}
-
 /* ––– Theme List ––– */
 
 .theme-list {
     flex: 1;
-    overflow-y: auto;
-    padding: $border-radius;
-}
-
-.theme-item {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: $space-3;
-    padding: $space-2 $space-3;
-    background: none;
-    border: $border-width-thin transparent;
-    border-radius: $border-radius-lg;
-    color: $text1;
-    text-align: left;
-    cursor: pointer;
-    margin-bottom: $space-1;
-    transition: background $transition-fast;
-
-    &:hover {
-        background: $bg-hover;
-    }
-
-    &.active {
-        background: $accent-color-alpha;
-        border-color: color-mix(in srgb, $accent-color 35%, transparent);
-    }
+    padding: $space-1;
 }
 
 /* ––– Theme Swatches ––– */
@@ -269,73 +192,10 @@ onMounted(() => {
     font-size: $font-size-sm;
     font-weight: $font-weight-medium;
     color: $text1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .theme-desc {
     font-size: $font-size-xs;
     color: $text-muted;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.check {
-    color: $accent-color;
-    flex-shrink: 0;
-}
-
-.theme-empty {
-    padding: $space-6 $space-2;
-    text-align: center;
-    color: $text-muted;
-    font-size: $font-size-sm;
-}
-
-/* ––– Footer ––– */
-
-.theme-footer {
-    border-top: $border-width-thin $text3;
-    padding: $space-2 $space-4 $space-3;
-    flex-shrink: 0;
-}
-
-.footer-btn {
-    width: 100%;
-    background: none;
-    border: $border-width-thin $border-color;
-    border-radius: $border-radius;
-    padding: $border-radius $border-radius-lg;
-    font-size: $space-3;
-    color: $text1;
-    cursor: pointer;
-
-    &:hover {
-        background: $bg-hover;
-        border-color: $text2;
-    }
-}
-
-.footer-hint {
-    margin: $space-2 0 0 0;
-    font-size: $font-size-xs;
-    color: $text-muted;
-    line-height: $line-height;
-
-    code {
-        background: $bg-primary;
-        color: $accent-color;
-        padding: 0 $space-1;
-        border-radius: $border-radius-xs;
-        font-family: $font-family-mono;
-    }
-}
-
-/* ––– Scrollbar Styling ––– */
-
-.theme-list {
-    @include scrollbar;
 }
 </style>

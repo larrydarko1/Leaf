@@ -1,0 +1,121 @@
+// List rows and the panels' result lists: the selectable row, the file row inside it, and the
+// empty-list message.
+
+@use '@/renderer/styles/variables' as *;
+@use '@/renderer/styles/components/placeholders' as *;
+
+// –– Selectable row ––––––––––––––––––––
+
+// A full-width button acting as a list row; the active state carries a border as well as a fill,
+// which alone is too close to the hover tint.
+.list-item {
+    @extend %btn-base;
+
+    width: 100%;
+    justify-content: flex-start;
+    gap: $space-3;
+    padding: $space-2 $space-3;
+    margin-bottom: $space-1;
+    border-radius: $border-radius-lg;
+    color: $text1;
+    text-align: left;
+
+    &:hover {
+        background: $bg-hover;
+    }
+
+    &.active {
+        background: $accent-color-alpha;
+        border-color: color-mix(in srgb, $accent-color 35%, transparent);
+    }
+}
+
+// The accent tick at the end of the selected row.
+.list-check {
+    flex-shrink: 0;
+    color: $accent-color;
+}
+
+// –– Result row ––––––––––––––––––––
+
+// The rail panels' result row. Unlike `.list-item` this is a div: it carries both a `.selected`
+// (keyboard cursor) and an `.active` (open file) state, and the two may coincide.
+.result-item {
+    padding: $space-2 $space-3;
+    border-radius: $border-radius-lg;
+    margin-bottom: $space-0;
+    cursor: pointer;
+    user-select: none;
+    transition: background $transition-fast;
+
+    &:hover {
+        background: $bg-hover;
+    }
+
+    &.selected {
+        background: $bg-selected;
+    }
+
+    // The open file. Lifts the muted secondary text too, so the path under an active row is not as
+    // dim as an inactive one.
+    &.active {
+        background: $bg-selected;
+        color: $text1;
+
+        .file-path,
+        .file-icon {
+            color: $text1;
+        }
+    }
+}
+
+// The padded well the rows sit in.
+.list-body {
+    padding: $space-1;
+}
+
+// –– File row ––––––––––––––––––––
+
+// An icon, then a name over its path. Shared by the search results and the bookmarks list.
+.file-info {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+}
+
+.file-icon {
+    flex-shrink: 0;
+    color: $text-muted;
+}
+
+.file-details {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: $space-0;
+}
+
+.file-name {
+    @extend %truncate;
+
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+}
+
+.file-path {
+    @extend %truncate;
+
+    font-size: $font-size-xs;
+    color: $text-muted;
+}
+
+// –– Empty list ––––––––––––––––––––
+
+// The message in place of a list with nothing in it.
+.list-empty {
+    padding: $space-4 $space-3;
+    text-align: center;
+    font-size: $font-size-xs;
+    color: $text-muted;
+}

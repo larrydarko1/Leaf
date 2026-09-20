@@ -130,54 +130,28 @@ watch(
     <!-- Chat messages container -->
     <section
         ref="messagesContainer"
-        class="ai-messages"
+        class="ai-messages stack fill scroll-y"
         :aria-label="t('ai.chat_messages')"
         aria-live="polite"
         @scroll="$emit('scroll')">
         <!-- Empty state -->
         <div
             v-if="messages.length === 0"
-            class="ai-empty-state"
+            class="ai-empty-state empty-state fill"
             role="status">
-            <div
-                class="ai-empty-icon"
-                aria-hidden="true">
-                <svg
-                    width="32"
-                    height="32"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <path
-                        d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" />
-                    <line
-                        x1="9"
-                        y1="21"
-                        x2="15"
-                        y2="21" />
-                    <line
-                        x1="10"
-                        y1="24"
-                        x2="14"
-                        y2="24" />
-                </svg>
-            </div>
             <p class="ai-empty-text">
                 {{ status.isModelLoaded ? t('ai.ask_anything') : t('ai.load_model_hint') }}
             </p>
             <button
                 v-if="!status.isModelLoaded && availableModels.length === 0"
-                class="ai-btn-secondary"
+                class="ai-btn-secondary btn-secondary"
                 :aria-label="t('ai.open_models_folder')"
                 @click="$emit('open-models-folder')">
                 {{ t('ai.open_models_folder') }}
             </button>
             <button
                 v-if="!status.isModelLoaded && availableModels.length > 0"
-                class="ai-btn-secondary"
+                class="ai-btn-secondary btn-secondary"
                 :aria-label="t('ai.browse_history')"
                 @click="$emit('open-history')">
                 {{ t('ai.browse_history') }}
@@ -206,20 +180,20 @@ watch(
                 <!-- User message: edit mode -->
                 <div
                     v-if="msg.role === 'user' && editingIndex === index"
-                    class="ai-message-edit">
+                    class="ai-message-edit stack">
                     <textarea
                         id="edit-input-user-msg"
                         ref="editInputRef"
                         :value="editContent"
-                        class="ai-edit-input"
+                        class="ai-edit-input field field-resize-y"
                         rows="2"
                         aria-label="Edit user message"
                         @input="$emit('update:editContent', ($event.target as HTMLTextAreaElement).value)"
                         @keydown.enter.exact.prevent="$emit('confirm-edit', index)"
                         @keydown.escape.prevent="$emit('cancel-edit')" />
-                    <div class="ai-edit-actions">
+                    <div class="ai-edit-actions row">
                         <button
-                            class="ai-btn-icon ai-btn-tiny"
+                            class="ai-btn-icon ai-btn-tiny icon-btn"
                             :aria-label="t('ai.cancel_editing')"
                             @click="$emit('cancel-edit')">
                             <svg
@@ -244,7 +218,7 @@ watch(
                             </svg>
                         </button>
                         <button
-                            class="ai-btn-icon ai-btn-tiny"
+                            class="ai-btn-icon ai-btn-tiny icon-btn"
                             :aria-label="t('ai.save_changes_and_resend')"
                             @click="$emit('confirm-edit', index)">
                             <svg
@@ -316,7 +290,7 @@ watch(
                     </div>
                     <!-- eslint-disable-next-line a11y/click-events-have-key-events a11y/no-static-element-interactions -->
                     <div
-                        class="ai-message-content ai-markdown"
+                        class="ai-message-content ai-markdown prose"
                         role="article"
                         @click="onMarkdownClick(msg.content, $event)">
                         <div v-html="renderWithCopyBtns(msg.content)"></div>
@@ -339,11 +313,11 @@ watch(
                         !(isStreaming && index >= messages.length - 2) &&
                         editingIndex !== index
                     "
-                    class="ai-message-actions"
+                    class="ai-message-actions row actions-on-hover"
                     role="toolbar"
                     :aria-label="t('ai.message_actions', { role: msg.role, index: index + 1 })">
                     <button
-                        class="ai-btn-action"
+                        class="ai-btn-action icon-btn-subtle"
                         :aria-label="copiedIndex === index ? t('ai.copied') : t('ai.copy_message')"
                         @click="$emit('copy', msg.content, index)">
                         <svg
@@ -382,7 +356,7 @@ watch(
                     </button>
                     <button
                         v-if="msg.role === 'user'"
-                        class="ai-btn-action"
+                        class="ai-btn-action icon-btn-subtle"
                         :aria-label="t('ai.edit_message')"
                         @click="$emit('start-edit', index)">
                         <svg
@@ -401,7 +375,7 @@ watch(
                     </button>
                     <button
                         v-if="msg.role === 'user' && index === messages.length - 1 && isReady"
-                        class="ai-btn-action"
+                        class="ai-btn-action icon-btn-subtle"
                         :aria-label="t('ai.resend_message')"
                         @click="$emit('resend', index)">
                         <svg
@@ -420,7 +394,7 @@ watch(
                     </button>
                     <button
                         v-if="msg.role === 'assistant' && index === messages.length - 1 && isReady"
-                        class="ai-btn-action"
+                        class="ai-btn-action icon-btn-subtle"
                         :aria-label="t('ai.regenerate_assistant_response')"
                         @click="$emit('regenerate')">
                         <svg
@@ -439,7 +413,7 @@ watch(
                     </button>
                     <button
                         v-if="index === messages.length - 1"
-                        class="ai-btn-action ai-btn-action-danger"
+                        class="ai-btn-action ai-btn-action-danger icon-btn-subtle icon-btn-danger"
                         :aria-label="t('ai.delete_last_message_pair')"
                         @click="$emit('delete-last-pair')">
                         <svg
@@ -464,10 +438,10 @@ watch(
     <!-- Load model banner -->
     <aside
         v-if="!status.isModelLoaded && messages.length > 0"
-        class="ai-load-model-banner"
+        class="ai-load-model-banner row"
         role="status"
         :aria-label="t('ai.model_status')">
-        <div class="ai-load-model-banner-content">
+        <div class="ai-load-model-banner-content row">
             <svg
                 width="14"
                 height="14"
@@ -497,7 +471,7 @@ watch(
         </div>
         <button
             v-if="previousModelMatch"
-            class="ai-load-model-btn"
+            class="ai-load-model-btn btn-accent row"
             :disabled="isLoading"
             :aria-label="t('ai.load_model', { model: previousModelMatch.name })"
             @click="$emit('load-previous-model')">
@@ -521,15 +495,15 @@ watch(
     <!-- Token counter progress bar -->
     <div
         v-if="status.isModelLoaded && status.contextSize > 0"
-        class="ai-token-bar"
+        class="ai-token-bar row"
         role="progressbar"
         :aria-valuenow="tokenUsagePercent"
         aria-valuemin="0"
         aria-valuemax="100"
         :aria-label="`Context tokens: ${formatTokenCount(conversationTokenCount)} of ${formatTokenCount(status.contextSize)}`">
-        <div class="ai-token-bar-track">
+        <div class="ai-token-bar-track progress-track">
             <div
-                class="ai-token-bar-fill"
+                class="ai-token-bar-fill progress-fill"
                 :class="{ warning: tokenUsagePercent > 75, danger: tokenUsagePercent > 90 }"
                 :style="{ width: tokenUsagePercent + '%' }"></div>
         </div>
@@ -541,65 +515,37 @@ watch(
 </template>
 
 <style lang="scss" scoped>
-/* ––– Messages Container ––– */
-
 .ai-messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: $space-3;
-    display: flex;
-    flex-direction: column;
     gap: $space-3;
+    padding: $space-3;
 }
 
-/* ––– Empty State ––– */
+// –– Empty state ––––––––––––––––––––
 
+// Tighter than `.empty-state`: this one fills the whole conversation pane, so the
+// rail panels' generous inset would push the call to action off-centre.
 .ai-empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    flex: 1;
-    text-align: center;
     padding: $space-4;
+    gap: $space-4;
 }
 
 .ai-empty-icon {
-    color: $text3;
     margin-bottom: $space-3;
+    color: $text3;
 }
 
 .ai-empty-text {
-    font-size: $font-size-sm;
-    color: $text2;
-    line-height: $line-height;
     margin: 0;
-}
-
-.ai-btn-secondary {
-    padding: $space-2 $space-4;
-    background: transparent;
     color: $text2;
-    border: $border-width-thin $text3;
-    border-radius: $border-radius;
     font-size: $font-size-sm;
-    cursor: pointer;
-    transition: all $transition-base;
-    margin-top: $space-5;
-
-    &:hover {
-        color: $text1;
-        border-color: $text2;
-    }
-
-    &:focus-visible {
-        outline: $border-width-thick $accent-color;
-        outline-offset: $size-0;
-    }
+    line-height: $line-height;
 }
 
-/* ––– Message Items ––– */
+// –– Message bubbles ––––––––––––––––––––
 
+// The role decides the side, the width, the fill and which corner stays square —
+// the squared corner is the one nearest its own side, so the bubble points back
+// at whoever said it.
 .ai-message {
     display: flex;
 
@@ -616,8 +562,10 @@ watch(
 
         .ai-message-content {
             background: $accent-color;
-            color: $text3;
             border-radius: $border-radius-xl $border-radius-xl $border-radius-xs $border-radius-xl;
+
+            // On-accent text is $base1, as in `.btn-accent` — $text3 is the hairline.
+            color: $base1;
         }
 
         .ai-message-actions {
@@ -634,8 +582,8 @@ watch(
 
         .ai-message-content {
             background: $bg-primary;
-            color: $text1;
             border-radius: $border-radius-xl $border-radius-xl $border-radius-xl $border-radius-xs;
+            color: $text1;
         }
 
         .ai-message-actions {
@@ -652,30 +600,32 @@ watch(
     }
 }
 
+// Positioned so the thinking label can sit in the bubble's corner.
 .ai-message-wrapper {
     position: relative;
 }
 
+// `pre-wrap` is for plain text; the markdown layer resets it to `normal`.
 .ai-message-content {
     padding: $space-3 $space-4;
     font-size: $font-size-sm;
     line-height: $line-height;
-    overflow-wrap: break-word;
     white-space: pre-wrap;
+    overflow-wrap: break-word;
 }
 
-/* ––– System Message ––– */
-
+// A note from the app rather than from either party, so it is bordered instead of
+// filled and centred instead of sided.
 .ai-system-notice {
     display: flex;
     align-items: center;
     gap: $space-2;
+    padding: $space-2 $space-3;
     background: $bg-secondary;
     border: $border-width-thin $border-color;
     border-radius: $border-radius-lg;
-    padding: $space-2 $space-3;
-    font-size: $font-size-xs;
     color: $text2;
+    font-size: $font-size-xs;
     font-style: italic;
     white-space: normal;
 
@@ -685,202 +635,26 @@ watch(
     }
 }
 
-/* ––– Markdown Content ––– */
-
-.ai-markdown {
-    white-space: normal;
-    position: relative;
-
-    :deep(p) {
-        margin: 0 0 $space-2;
-
-        &:last-child {
-            margin-bottom: 0;
-        }
-    }
-
-    :deep(h1),
-    :deep(h2),
-    :deep(h3),
-    :deep(h4) {
-        margin: $space-3 0 $space-1 0;
-        line-height: $line-height;
-
-        &:first-child {
-            margin-top: 0;
-        }
-    }
-
-    :deep(h1) {
-        font-size: $font-size-lg;
-    }
-
-    :deep(h2) {
-        font-size: $font-size-base;
-    }
-
-    :deep(h3) {
-        font-size: $font-size-sm;
-    }
-
-    :deep(ul),
-    :deep(ol) {
-        margin: $space-1 0;
-        padding-left: $space-6;
-    }
-
-    :deep(li) {
-        margin: $space-1 0;
-    }
-
-    :deep(code) {
-        background: color-mix(in srgb, $bg-primary 15%, transparent);
-        padding: $space-0 $space-1;
-        border-radius: $border-radius-xs;
-        font-size: $font-size-sm;
-        font-family: $font-family-mono;
-    }
-
-    :deep(pre) {
-        background: color-mix(in srgb, $bg-primary 20%, transparent);
-        padding: $space-2 $space-3;
-        border-radius: $border-radius;
-        overflow-x: auto;
-        margin: $space-2 0;
-        position: relative;
-
-        code {
-            background: none;
-            padding: 0;
-            font-size: $font-size-sm;
-        }
-    }
-
-    :deep(blockquote) {
-        border-left: $border-width-thick $accent-color;
-        margin: $space-2 0;
-        padding: $space-1 $space-2;
-        color: $text2;
-    }
-
-    :deep(table) {
-        border-collapse: collapse;
-        margin: $space-2 0;
-        width: 100%;
-        font-size: $font-size-sm;
-
-        th,
-        td {
-            border: $border-width-thin $text3;
-            padding: $space-1 $space-2;
-            text-align: left;
-        }
-
-        th {
-            background: color-mix(in srgb, $bg-primary 10%, transparent);
-        }
-    }
-
-    :deep(hr) {
-        border: none;
-        border-top: $border-width-thin $text3;
-        margin: $space-2 0;
-    }
-
-    :deep(a) {
-        color: $accent-color;
-        text-decoration: underline;
-
-        &:focus-visible {
-            outline: $border-width-thick $accent-color;
-            outline-offset: $size-0;
-        }
-    }
-
-    :deep(strong) {
-        font-weight: $font-weight-semibold;
-    }
-}
-
-.ai-markdown :deep(.ai-pre-wrapper) {
-    position: relative;
-
-    &:hover .ai-code-copy-btn,
-    &:focus-within .ai-code-copy-btn {
-        opacity: 1;
-    }
-}
-
-.ai-markdown :deep(.ai-code-copy-btn) {
-    position: absolute;
-    top: $space-2;
-    right: $space-2;
-    background: color-mix(in srgb, $bg-primary 35%, transparent);
-    border: none;
-    border-radius: $border-radius-sm;
-    color: $text2;
-    cursor: pointer;
-    padding: $space-0 $space-1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition:
-        opacity $transition-fast,
-        color $transition-fast,
-        background $transition-fast;
-    z-index: $z-normal;
-
-    &:hover {
-        color: $text1;
-        background: color-mix(in srgb, $bg-primary 55%, transparent);
-        opacity: 1;
-    }
-
-    &:focus-visible {
-        opacity: 1;
-        outline: $border-width-thick $accent-color;
-        outline-offset: $size-0;
-    }
-}
-
-/* ––– Message Editing ––– */
+// –– Editing a sent message ––––––––––––––––––––
 
 .ai-message-edit {
-    display: flex;
-    flex-direction: column;
     gap: $space-1;
     width: 100%;
 }
 
+// Bounded rather than free: the field replaces a bubble in the flow, so it may not
+// grow past the height of the conversation around it.
 .ai-edit-input {
-    width: 100%;
     min-height: $size-14;
     max-height: $size-21;
-    padding: $space-2 $space-3;
-    background: $bg-primary;
-    color: $text1;
-    border: $border-width-thin $accent-color;
-    border-radius: $border-radius-lg;
-    font-size: $font-size-sm;
-    font-family: inherit;
-    line-height: $line-height;
-    resize: vertical;
-    outline: none;
-
-    &:focus {
-        border-color: $accent-color;
-        box-shadow: $accent-shadow;
-    }
 }
 
 .ai-edit-actions {
-    display: flex;
     justify-content: flex-end;
     gap: $space-1;
 }
 
-/* ––– Streaming Cursor ––– */
+// –– Streaming ––––––––––––––––––––
 
 .ai-cursor {
     animation: blink 0.8s step-end infinite;
@@ -888,102 +662,46 @@ watch(
     font-size: $font-size-sm;
 }
 
-/* ––– Message Actions ––– */
+// –– Message actions ––––––––––––––––––––
 
+// The cluster is `.actions-on-hover`; what is left is its inset. The reveal is
+// hung on the message rather than on the row, so the buttons do not appear under a
+// pointer that is only passing through.
 .ai-message-actions {
-    display: flex;
-    align-items: center;
     gap: $space-0;
-    opacity: 0;
-    transition: opacity $transition-fast;
     margin-top: $space-0;
     padding: 0 $space-0;
 }
 
-.ai-btn-action {
-    background: none;
-    border: none;
-    color: $text2;
-    cursor: pointer;
-    padding: $space-0 $space-1;
-    border-radius: $border-radius-sm;
-    transition:
-        color $transition-fast,
-        background $transition-fast;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+// –– Thinking block ––––––––––––––––––––
 
-    &:hover {
-        color: $text1;
-        background: $bg-hover;
-    }
-
-    &:focus-visible {
-        outline: $border-width-thick $accent-color;
-        outline-offset: $size-0;
-    }
-
-    &.ai-btn-action-danger:hover {
-        color: $danger-color;
-    }
-}
-
-.ai-btn-icon {
-    background: none;
-    border: none;
-    color: $text2;
-    cursor: pointer;
-    padding: $space-1;
-    border-radius: $border-radius-sm;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all $transition-base;
-    flex-shrink: 0;
-
-    &:hover:not(:disabled) {
-        background: $bg-hover;
-        color: $text1;
-    }
-
-    &:focus-visible {
-        outline: $border-width-thick $accent-color;
-        outline-offset: $size-0;
-    }
-}
-
-.ai-btn-tiny {
-    padding: $space-1;
-}
-
-/* ––– Thinking Block ––– */
-
+// The model's reasoning, kept visually subordinate to the answer: bordered, italic
+// and capped, so a long chain of thought cannot bury the reply under it.
 .ai-thinking-block {
+    max-height: $size-24;
+    margin-bottom: $space-2;
+    padding: $space-2 $space-3;
     background: $bg-secondary;
     border: $border-width-thin $text3;
     border-radius: $border-radius;
-    padding: $space-2 $space-3;
-    margin-bottom: $space-2;
-    font-size: $font-size-xs;
     color: $text2;
+    font-size: $font-size-xs;
     font-style: italic;
     white-space: pre-wrap;
-    overflow-wrap: break-word;
-    max-height: $size-24;
     overflow-y: auto;
+    overflow-wrap: break-word;
 }
 
 .ai-thinking-label {
     position: absolute;
     top: $space-3;
     right: $space-3;
+    margin-bottom: $space-1;
+    color: $text-muted;
     font-size: $font-size-xs;
     font-weight: $font-weight-semibold;
-    color: $text-muted;
-    opacity: $opacity-mid-high;
     font-style: normal;
-    margin-bottom: $space-1;
+    opacity: $opacity-mid-high;
     cursor: default;
 }
 
@@ -991,25 +709,21 @@ watch(
     animation: thinking-pulse 1.5s infinite;
 }
 
-/* ––– Load Model Banner ––– */
+// –– Load model banner ––––––––––––––––––––
 
 .ai-load-model-banner {
-    display: flex;
-    align-items: center;
+    flex-shrink: 0;
     justify-content: space-between;
     gap: $space-2;
     padding: $space-2 $space-3;
     background: $bg-primary;
     border-top: $border-width-thin $text3;
-    flex-shrink: 0;
 }
 
 .ai-load-model-banner-content {
-    display: flex;
-    align-items: center;
     gap: $space-2;
-    font-size: $font-size-xs;
     color: $text2;
+    font-size: $font-size-xs;
 
     svg {
         flex-shrink: 0;
@@ -1018,36 +732,12 @@ watch(
 }
 
 .ai-load-model-btn {
-    display: flex;
-    align-items: center;
     gap: $space-1;
-    padding: $space-1 $space-2;
-    background: $accent-color;
-    color: $base1;
-    border: none;
-    border-radius: $border-radius;
-    font-size: $font-size-xs;
-    font-weight: $font-weight-semibold;
-    cursor: pointer;
-    white-space: nowrap;
-    transition:
-        opacity 0.15s,
-        transform 0.1s;
-    flex-shrink: 0;
 
-    &:hover:not(:disabled) {
-        opacity: $opacity-highest;
-        transform: scale($scale-hover);
-    }
-
+    // The global ring is the accent colour, which is also this button's fill — so
+    // on this one control it has to invert to stay visible.
     &:focus-visible {
-        outline: $border-width-thick $base1;
-        outline-offset: $size-0;
-    }
-
-    &:disabled {
-        opacity: $opacity-mid-low;
-        cursor: not-allowed;
+        outline-color: $base1;
     }
 
     svg {
@@ -1055,44 +745,27 @@ watch(
     }
 }
 
-/* ––– Token Counter ––– */
+// –– Token counter ––––––––––––––––––––
 
 .ai-token-bar {
-    display: flex;
-    align-items: center;
+    flex-shrink: 0;
     gap: $space-2;
     padding: 0 $space-3;
-    flex-shrink: 0;
 }
 
+// The groove and the fill are `.progress-track` / `.progress-fill`, shared with the media scrubber.
+// A line thinner, because this one is only read, never aimed at.
 .ai-token-bar-track {
     flex: 1;
     height: $size-1;
-    background: $text3;
-    border-radius: $border-radius-xs;
-    overflow: hidden;
 }
 
-.ai-token-bar-fill {
-    height: 100%;
-    background: $accent-color;
-    border-radius: $border-radius-xs;
-    transition: width $transition-slow;
-
-    &.warning {
-        background: $warning-color;
-    }
-
-    &.danger {
-        background: $danger-color;
-    }
-}
-
+// Tabular figures so the count does not jitter as it climbs.
 .ai-token-label {
-    font-size: $font-size-xs;
-    color: $text2;
-    white-space: nowrap;
     flex-shrink: 0;
+    color: $text2;
+    font-size: $font-size-xs;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 </style>

@@ -1,0 +1,93 @@
+// Shared placeholders: they emit nothing and exist only to be `@extend`ed. Kept in one file because
+// `@extend` cannot cross module boundaries — nor the SFC boundary, so SFCs compose the classes
+// instead.
+
+@use '@/renderer/styles/variables' as *;
+
+// –– Interaction bases ––––––––––––––––––––
+
+// Every button-shaped control in the app starts here: chrome stripped, icon centred, disabled
+// settled once.
+%btn-base {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: $border-width-thin transparent;
+    background: transparent;
+    color: $text2;
+    cursor: pointer;
+    transition:
+        background $transition-base,
+        border-color $transition-base,
+        color $transition-base,
+        opacity $transition-base,
+        transform $transition-fast;
+
+    &:disabled,
+    &.disabled {
+        opacity: $opacity-mid-low;
+        cursor: not-allowed;
+    }
+}
+
+// The neutral hover every quiet control shares. Split from `%btn-base` because the transport
+// controls and the canvas toolbar suppress it in favour of their own.
+%btn-hover-tint {
+    &:hover:not(:disabled, .disabled) {
+        background: $bg-hover;
+        color: $text1;
+    }
+}
+
+// –– Surfaces ––––––––––––––––––––
+
+// A raised, blurred panel that floats over content: the context menu, the model dropdown, the file
+// picker, the canvas toolbar.
+%floating-surface {
+    background: color-mix(in srgb, $bg-primary $opacity-almost-opaque * 100%, transparent);
+    backdrop-filter: blur($backdrop-blur-sm);
+    border: $border-width-thin $border-color;
+    border-radius: $border-radius-lg;
+    box-shadow: $shadow-dropdown;
+}
+
+// The recessed surface a group of controls sits IN rather than on — the rail's button pill, the
+// model pill, the composer row, the search line.
+%well {
+    background: $bg-primary;
+
+    // Softened: this edge only groups, so it is held under the dividers that
+    // use $text3 at full strength.
+    border: $border-width-thin color-mix(in srgb, $text3 20%, transparent);
+}
+
+// –– Text ––––––––––––––––––––
+
+// Single-line clipping, with the `min-width: 0` that makes it work inside a flex row.
+%truncate {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+// –– Bars ––––––––––––––––––––
+
+// A bar that reports a proportion: the media scrubber's groove and the AI panel's context meter.
+// The height stays each caller's, because one is a hit target and the other is only read.
+%progress-track {
+    position: relative;
+    height: $size-2;
+    background: $bg-hover;
+    border-radius: $border-radius-xs;
+    overflow: hidden;
+}
+
+// The painted part. `width` is set by the component, which is why the transition is on `width`
+// alone.
+%progress-fill {
+    height: 100%;
+    background: $accent-color;
+    border-radius: $border-radius-xs;
+    transition: width $transition-base;
+}

@@ -1,0 +1,27 @@
+// Bars that report a proportion. The shape is `%progress-track` / `%progress-fill`; these are the
+// classes an SFC composes, since `@extend` cannot cross that boundary.
+
+@use '@/renderer/styles/variables' as *;
+@use '@/renderer/styles/components/placeholders' as *;
+
+// –– Track and fill ––––––––––––––––––––
+
+.progress-track {
+    @extend %progress-track;
+}
+
+.progress-fill {
+    @extend %progress-fill;
+}
+
+// –– Thresholds ––––––––––––––––––––
+
+// Applied beside `.progress-fill` when the proportion itself is the warning: the context window
+// filling up.
+.progress-fill.warning {
+    background: $warning-color;
+}
+
+.progress-fill.danger {
+    background: $danger-color;
+}

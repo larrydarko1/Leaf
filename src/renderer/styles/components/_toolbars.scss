@@ -1,0 +1,26 @@
+// Bar chrome — the surface a group of controls sits in, and the rule between two
+// such groups.
+
+@use '@/renderer/styles/variables' as *;
+@use '@/renderer/styles/components/placeholders' as *;
+
+// –– Wells ––––––––––––––––––––
+
+// The surface a cluster of controls shares, so a bar reads as two or three objects rather than
+// eight loose buttons. Each caller keeps its own radius and inset.
+.well {
+    @extend %well;
+}
+
+// –– Separators ––––––––––––––––––––
+
+// The hairline between two groups of toolbar buttons. A tint of $text2 rather than a flat
+// $border-color, which is nearly the toolbar's own background in the light themes.
+.toolbar-sep {
+    width: $size-0;
+    height: $size-11;
+    margin: 0 $space-1;
+    background: color-mix(in srgb, $text2 20%, transparent);
+    border-radius: $border-radius-xs;
+    flex-shrink: 0;
+}

@@ -117,10 +117,10 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="ai-input-area">
+    <div class="ai-input-area stack">
         <!-- eslint-disable-next-line a11y/no-static-element-interactions -->
         <div
-            class="ai-resize-handle"
+            class="ai-resize-handle row"
             :class="{ 'ai-resize-active': isResizing }"
             :title="t('ai.drag_to_resize_input_area')"
             @mousedown="startResize">
@@ -130,11 +130,11 @@ onMounted(() => {
         <!-- Attached context files -->
         <div
             v-if="contextFiles.length > 0"
-            class="ai-context-files">
+            class="ai-context-files stack">
             <span class="ai-context-files-label"
                 >{{ t('ai.context_files') }} ({{ contextFiles.length }}/{{ maxContextFiles }})</span
             >
-            <div class="ai-context-chips">
+            <div class="ai-context-chips row">
                 <span
                     v-for="file in contextFiles"
                     :key="file.path"
@@ -148,10 +148,10 @@ onMounted(() => {
                         aria-hidden="true">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z" />
                     </svg>
-                    <span class="ai-context-chip-name">{{ file.name }}</span>
+                    <span class="ai-context-chip-name truncate">{{ file.name }}</span>
                     <button
                         type="button"
-                        class="ai-context-chip-remove"
+                        class="ai-context-chip-remove icon-btn icon-btn-danger"
                         :title="t('ai.remove_from_context')"
                         :aria-label="t('ai.remove_file_from_context', { file: file.name })"
                         @click="$emit('remove-context-file', file.path)">
@@ -181,211 +181,204 @@ onMounted(() => {
         </div>
 
         <div
-            class="ai-input-row"
+            class="ai-input-row field-well"
             :class="{ 'ai-input-activated': isStreaming }">
-            <!-- Add files to context -->
-            <div class="ai-context-picker">
-                <button
-                    type="button"
-                    class="ai-context-toggle ai-add-context-btn"
-                    :class="{ 'ai-context-active': showFilePicker }"
-                    :title="t('ai.add_files_to_context')"
-                    :aria-label="t('ai.add_files_to_context')"
-                    :disabled="!canAddMore && !showFilePicker"
-                    @click="toggleFilePicker">
-                    <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true">
-                        <path
-                            d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-                    </svg>
-                </button>
-                <!-- eslint-disable-next-line a11y/no-static-element-interactions, a11y/click-events-have-key-events -->
-                <div
-                    v-if="showFilePicker"
-                    class="ai-file-picker-overlay"
-                    @click="showFilePicker = false" />
-                <div
-                    v-if="showFilePicker"
-                    class="ai-file-picker">
-                    <input
-                        ref="fileSearchInput"
-                        v-model="fileSearch"
-                        type="text"
-                        class="ai-file-picker-search"
-                        :placeholder="t('ai.search_files')"
-                        :aria-label="t('ai.search_files')" />
-                    <ul class="ai-file-picker-list">
-                        <li
-                            v-if="filteredAvailableFiles.length === 0"
-                            class="ai-file-picker-empty">
-                            {{ t('ai.no_files_to_add') }}
-                        </li>
-                        <li
-                            v-for="file in filteredAvailableFiles"
-                            :key="file.path">
-                            <button
-                                type="button"
-                                class="ai-file-picker-item"
-                                @click="selectContextFile(file)">
-                                <span class="ai-file-picker-item-name">{{ file.name }}</span>
-                                <span class="ai-file-picker-item-path">{{ file.relativePath }}</span>
-                            </button>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
-            <button
-                type="button"
-                class="ai-context-toggle"
-                :class="{ 'ai-context-active': showThinking }"
-                :title="t('ai.show_thinking')"
-                :aria-label="t('ai.show_thinking')"
-                :aria-pressed="showThinking"
-                @click="$emit('update:showThinking', !showThinking)">
-                <svg
-                    id="_x32_"
-                    aria-hidden="true"
-                    height="14"
-                    width="14"
-                    viewBox="0 0 512 512"
-                    version="1.1"
-                    xmlns="http://www.w3.org/2000/svg"
-                    xmlns:xlink="http://www.w3.org/1999/xlink"
-                    xml:space="preserve"
-                    fill="currentColor">
-                    <g
-                        id="SVGRepo_bgCarrier"
-                        stroke-width="0"></g>
-                    <g
-                        id="SVGRepo_tracerCarrier"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"></g>
-                    <g id="SVGRepo_iconCarrier">
-                        <g>
-                            <path
-                                class="st0"
-                                d="M504.556,297.257c-4.745-7.638-11.463-13.868-19.446-18.003c-1.687-0.89-3.531-1.694-5.498-2.426h-0.28 c-2.326,0-4.551-0.703-6.424-2.003c-3.504-0.768-7.1-1.156-10.711-1.156c-11.499,0-22.288,3.804-31.211,10.997 c-2.002,1.615-4.515,2.505-7.084,2.505c-3.439,0-6.647-1.529-8.801-4.2c-1.895-2.347-2.764-5.29-2.44-8.291 c0.315-3.008,1.787-5.7,4.134-7.602c12.792-10.322,28.907-16.007,45.381-16.007c5.255,0,10.509,0.574,15.663,1.723 c9.648-7.638,15.749-18.47,17.271-30.759c0.244-1.938,0.366-3.891,0.366-5.822c0-11.255-4.121-22.166-11.607-30.694 c-7.545-8.585-17.946-14.098-29.295-15.506c-1.378-0.172-2.77-0.286-4.156-0.33c-1.02,1.156-2.082,2.297-3.18,3.403 c-4.451,4.479-9.935,8.542-16.775,12.44c-5.154,2.922-10.998,5.678-17.365,8.191c-11.032,4.343-19.675,6.417-19.761,6.432 c-0.833,0.201-1.723,0.302-2.613,0.302c-5.233,0-9.741-3.546-10.982-8.629c-0.711-2.942-0.23-5.972,1.342-8.542 c1.529-2.519,3.919-4.299,6.762-5.046l0.222-0.05l2.053,5.334l-1.414-5.506l2.032-0.553c1.823-0.517,4.407-1.299,7.465-2.332 c5.527-1.888,13.674-5.025,21.097-9.246c4.896-2.778,9.009-5.786,11.88-8.685c1.644-1.666,3.252-3.503,4.788-5.477l0.732-0.905 c7.056-9.324,11.14-21.046,11.133-32.582c-0.014-11.916-4.221-22.92-12.167-31.836c-9.44-10.566-22.985-16.632-37.17-16.632 c-12.239,0-24.012,4.493-33.142,12.648c-2.074,1.852-4.745,2.871-7.523,2.871c-3.223,0-6.296-1.378-8.435-3.782 c-2.002-2.247-3.014-5.147-2.85-8.155c0.173-3.015,1.508-5.779,3.755-7.789c4.895-4.371,10.315-8.033,16.15-10.918 c-1.436-10.789-6.374-20.824-14.141-28.591c-9.411-9.411-21.915-14.587-35.21-14.593c-13.302,0.006-25.806,5.182-35.216,14.593 c-9.404,9.404-14.579,21.916-14.586,35.209v81.187h46.4c6.23,0,11.298,5.075,11.298,11.298c0,6.23-5.068,11.299-11.298,11.299 h-46.4v55.74c13.459,0.631,24.844,2.434,34.685,5.477c11.736,3.61,21.377,9.167,28.634,16.496c4.286,4.328,7.903,9.439,10.76,15.19 c3.712,7.515,5.7,15.167,7.021,20.996c0.725,3.231,1.357,6.424,1.967,9.54c1.048,5.276,2.031,10.258,3.338,14.672 c1.199,4.063,2.562,7.321,4.185,9.97c2.003,3.302,4.422,5.786,7.594,7.839c4.516,2.886,10.473,4.781,18.205,5.786 c2.972,0.373,5.635,1.895,7.486,4.278c1.852,2.398,2.656,5.37,2.276,8.356c-0.732,5.628-5.549,9.863-11.198,9.863l-1.465-0.101 c-9.454-1.214-17.314-3.553-24.04-7.142c-6.403-3.403-11.751-8.026-15.885-13.718c-2.412-3.288-4.422-6.927-6.152-11.098 c-1.788-4.307-3.202-8.951-4.594-15.06c-0.711-3.158-1.328-6.317-1.946-9.447c-0.632-3.187-1.256-6.352-1.974-9.439 c-2.068-9.03-4.516-15.24-7.947-20.135c-2.326-3.338-5.132-6.138-8.592-8.557c-4.695-3.273-10.488-5.778-17.709-7.659 c-6.97-1.816-15.239-2.994-24.65-3.489v207.346c0.007,13.294,5.183,25.806,14.579,35.217c9.418,9.404,21.922,14.579,35.224,14.586 c13.294-0.006,25.798-5.182,35.21-14.586c9.404-9.418,14.586-21.923,14.586-35.217c0.007-7.2-1.967-15.103-5.427-21.686 c-3.934-7.531-9.411-13.086-16.266-16.532c-5.298-2.641-11.162-3.933-17.931-3.948c-6.224,0-11.292-5.061-11.292-11.284 c0-6.239,5.068-11.306,11.298-11.306c7.717,0,15.039,1.228,21.765,3.654c6.295,2.261,12.096,5.584,17.235,9.863 c8.973,7.501,15.786,17.788,19.705,29.746c2.297,7.028,3.503,14.457,3.503,21.492c0.007,5.613-0.639,11.183-1.916,16.625 c5.212,1.78,10.732,2.713,16.187,2.713c12.188-0.007,23.933-4.48,33.049-12.591c10.61-9.44,16.697-23.007,16.704-37.226 c0-6.023-1.077-11.923-3.18-17.544c-2.139-5.693-5.312-10.926-9.411-15.541c-4.135-4.659-3.712-11.809,0.933-15.95 c2.082-1.845,4.745-2.85,7.508-2.85c3.23,0,6.31,1.378,8.456,3.797l0.783,0.897l0.517,0.087c0.352,0.05,0.574,0.071,1.098,0.093 c0.459,0.007,1.098,0.014,1.981,0.014c13.294-0.007,25.806-5.183,35.218-14.586c9.403-9.418,14.579-21.922,14.586-35.217 C511.994,314.169,509.416,305.103,504.556,297.257z"></path>
-                            <path
-                                class="st0"
-                                d="M194.906,11.453c-13.302,0.006-25.806,5.182-35.217,14.593c-7.767,7.767-12.706,17.81-14.141,28.584 c5.822,2.886,11.241,6.539,16.144,10.918l0.797,0.783l0.826,0.947l1.658,1.823c1.5,1.622,3.682,3.948,6.352,6.618 c4.831,4.853,12.232,11.845,20.078,17.637c5.204,3.848,10.078,6.762,14.112,8.435c2.8,1.163,4.752,1.557,5.9,1.687 c3.008,0.337,5.7,1.823,7.58,4.177c1.888,2.355,2.742,5.305,2.404,8.306c-0.639,5.728-5.462,10.05-11.219,10.05l-1.249-0.071 c-3.862-0.431-7.81-1.508-12.074-3.281c-3.546-1.472-7.164-3.366-11.077-5.8c-6.137-3.826-12.763-8.88-19.69-15.01 c-10.142-8.987-17.902-17.587-19.898-19.841c-9.08-7.903-20.674-12.253-32.697-12.253c-14.178,0.007-27.723,6.066-37.155,16.632 c-8.162,9.124-12.648,20.903-12.655,33.142c0,8.312,2.074,16.453,6.022,23.739h0.136c3.726,0,7.473,0.28,11.127,0.847 c6.166,0.962,10.394,6.74,9.446,12.892c-0.869,5.549-5.556,9.576-11.155,9.576c-0.574,0-1.163-0.044-1.751-0.13 c-2.498-0.394-5.083-0.588-7.667-0.588c-0.596,0-1.184,0.007-1.788,0.021c-12.964,0.467-25.081,5.872-34.097,15.225 c-8.987,9.332-13.933,21.592-13.933,34.513c0,0.596,0.007,1.199,0.022,1.802c0.473,13.345,6.324,25.936,16.151,34.944 c4.508-0.861,9.073-1.299,13.603-1.299c16.496,0,32.611,5.685,45.396,16.007l1.12,1.02l0.855,0.962 c0.388,0.423,0.983,1.047,1.766,1.838c2.218,2.239,4.616,4.436,7.121,6.539c5.549,4.652,14.342,11.062,24.773,15.204 c7.113,2.821,14.112,4.25,20.796,4.25c6.23,0,11.298,5.067,11.298,11.298s-5.068,11.299-11.298,11.299 c-9.584-0.008-19.382-1.974-29.13-5.85c-7.581-3.014-15.154-7.179-22.518-12.383c-10.229-7.242-17.25-14.514-19.604-17.092 c-8.807-6.862-19.367-10.494-30.572-10.494c-8.075,0-15.785,1.874-22.913,5.585c-7.975,4.135-14.701,10.365-19.446,18.003 c-4.86,7.846-7.436,16.912-7.444,26.215c0.008,13.287,5.183,25.792,14.586,35.209c9.411,9.404,21.922,14.579,35.217,14.586 c1.644,0,2.434-0.007,3.094-0.078l0.445-0.058l0.84-0.955c2.146-2.419,5.226-3.797,8.456-3.797c2.764,0,5.427,1.005,7.501,2.85 c2.254,2.002,3.597,4.766,3.776,7.788c0.172,3.008-0.833,5.908-2.842,8.162c-4.092,4.615-7.264,9.856-9.404,15.548 c-2.11,5.621-3.18,11.514-3.18,17.537c0.006,14.213,6.094,27.78,16.696,37.226c9.124,8.111,20.868,12.584,33.056,12.591 c5.456,0,10.976-0.933,16.187-2.713c-1.278-5.427-1.917-10.997-1.917-16.625c0-8.995,1.91-18.276,5.513-26.868 c4.049-9.662,10.164-18.083,17.688-24.356c2.031-1.694,4.601-2.627,7.235-2.627c3.368,0,6.525,1.479,8.679,4.063 c3.977,4.781,3.338,11.916-1.435,15.908c-4.76,3.962-8.679,9.404-11.342,15.756c-2.419,5.764-3.754,12.203-3.747,18.126 c0,13.294,5.182,25.798,14.586,35.217c9.411,9.404,21.916,14.579,35.217,14.586c13.294-0.006,25.806-5.182,35.217-14.586 c9.396-9.411,14.572-21.923,14.579-35.217v-90.54h-42.166c-6.223,0-11.291-5.061-11.291-11.292c0-6.23,5.068-11.299,11.291-11.299 h42.166v-68.668c-4.796-2.21-10.036-3.374-15.334-3.38c-3.718,0-7.436,0.574-11.047,1.694c-9.447,3.266-18.972,4.96-28.139,4.96 c-17.45,0-33.35-6.202-44.864-17.458c-10.948-10.681-17.236-25.411-17.242-40.421c-0.007-13.344,4.751-26.1,13.782-36.889 c2.153-2.585,5.312-4.056,8.671-4.056c2.642,0,5.212,0.934,7.236,2.627c4.781,3.999,5.42,11.127,1.436,15.908 c-5.642,6.776-8.513,14.32-8.52,22.418c0,8.937,3.797,17.78,10.422,24.248c7.408,7.2,17.465,11.012,29.087,11.026 c6.676,0,13.76-1.285,21.046-3.811c6.123-1.924,12.11-2.836,18.14-2.836c5.204,0,10.33,0.675,15.326,2.032V61.256 c-0.008-13.294-5.183-25.806-14.579-35.209C220.712,16.635,208.2,11.46,194.906,11.453z"></path>
-                        </g>
-                    </g>
-                </svg>
-            </button>
             <textarea
                 ref="inputField"
                 :value="inputMessage"
                 :placeholder="t('ai.ask_something')"
-                class="ai-input"
+                class="ai-input field-bare field-bare-grow"
                 :style="{ height: maxHeightPx + 'px' }"
                 :disabled="!isReady || isAnyGenerating"
                 rows="1"
                 aria-label="AI message input"
                 @input="$emit('update:inputMessage', ($event.target as HTMLTextAreaElement).value)"
                 @keydown.enter.exact.prevent="$emit('send')" />
-            <button
-                v-if="isStreaming"
-                class="ai-btn-send ai-btn-stop"
-                :title="t('ai.stop_generating')"
-                :aria-label="t('ai.stop_generating')"
-                @click="$emit('stop')">
-                <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="var(--text3)"
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true">
-                    <rect
-                        x="6"
-                        y="6"
-                        width="12"
-                        height="12"
-                        rx="2"
-                        ry="2" />
-                </svg>
-            </button>
-            <button
-                v-else
-                class="ai-btn-send"
-                :disabled="!inputMessage.trim() || !isReady || isStreaming"
-                :title="t('ai.send_message')"
-                :aria-label="t('ai.send_message')"
-                @click="$emit('send')">
-                <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true">
-                    <g
-                        id="SVGRepo_bgCarrier"
-                        stroke-width="0"></g>
-                    <g
-                        id="SVGRepo_tracerCarrier"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"></g>
-                    <g id="SVGRepo_iconCarrier">
-                        <path
-                            d="M10 14L13 21L20 4L3 11L6.5 12.5"
-                            stroke="var(--text3)"
-                            stroke-width="1.5"
+            <div class="ai-input-controls row">
+                <div class="ai-input-tools row">
+                    <!-- Add files to context -->
+                    <div class="ai-context-picker row">
+                        <button
+                            type="button"
+                            class="ai-context-toggle ai-add-context-btn icon-btn"
+                            :class="{ 'ai-context-active': showFilePicker }"
+                            :title="t('ai.add_files_to_context')"
+                            :aria-label="t('ai.add_files_to_context')"
+                            :disabled="!canAddMore && !showFilePicker"
+                            @click="toggleFilePicker">
+                            <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                aria-hidden="true">
+                                <path
+                                    d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                            </svg>
+                        </button>
+                        <!-- eslint-disable-next-line a11y/no-static-element-interactions, a11y/click-events-have-key-events -->
+                        <div
+                            v-if="showFilePicker"
+                            class="ai-file-picker-overlay menu-overlay"
+                            @click="showFilePicker = false" />
+                        <div
+                            v-if="showFilePicker"
+                            class="ai-file-picker stack floating">
+                            <input
+                                ref="fileSearchInput"
+                                v-model="fileSearch"
+                                type="text"
+                                class="ai-file-picker-search field-bare"
+                                :placeholder="t('ai.search_files')"
+                                :aria-label="t('ai.search_files')" />
+                            <ul class="ai-file-picker-list scroll-y">
+                                <li
+                                    v-if="filteredAvailableFiles.length === 0"
+                                    class="ai-file-picker-empty menu-empty">
+                                    {{ t('ai.no_files_to_add') }}
+                                </li>
+                                <li
+                                    v-for="file in filteredAvailableFiles"
+                                    :key="file.path">
+                                    <button
+                                        type="button"
+                                        class="ai-file-picker-item menu-item menu-item-stacked"
+                                        @click="selectContextFile(file)">
+                                        <span class="ai-file-picker-item-name menu-item-name truncate">{{
+                                            file.name
+                                        }}</span>
+                                        <span class="ai-file-picker-item-path menu-item-desc truncate">{{
+                                            file.relativePath
+                                        }}</span>
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="ai-context-toggle icon-btn"
+                        :class="{ 'ai-context-active': showThinking }"
+                        :title="t('ai.show_thinking')"
+                        :aria-label="t('ai.show_thinking')"
+                        :aria-pressed="showThinking"
+                        @click="$emit('update:showThinking', !showThinking)">
+                        <svg
+                            id="_x32_"
+                            aria-hidden="true"
+                            height="14"
+                            width="14"
+                            viewBox="0 0 512 512"
+                            version="1.1"
+                            xmlns="http://www.w3.org/2000/svg"
+                            xmlns:xlink="http://www.w3.org/1999/xlink"
+                            xml:space="preserve"
+                            fill="currentColor">
+                            <g
+                                id="SVGRepo_bgCarrier"
+                                stroke-width="0"></g>
+                            <g
+                                id="SVGRepo_tracerCarrier"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"></g>
+                            <g id="SVGRepo_iconCarrier">
+                                <g>
+                                    <path
+                                        class="st0"
+                                        d="M504.556,297.257c-4.745-7.638-11.463-13.868-19.446-18.003c-1.687-0.89-3.531-1.694-5.498-2.426h-0.28 c-2.326,0-4.551-0.703-6.424-2.003c-3.504-0.768-7.1-1.156-10.711-1.156c-11.499,0-22.288,3.804-31.211,10.997 c-2.002,1.615-4.515,2.505-7.084,2.505c-3.439,0-6.647-1.529-8.801-4.2c-1.895-2.347-2.764-5.29-2.44-8.291 c0.315-3.008,1.787-5.7,4.134-7.602c12.792-10.322,28.907-16.007,45.381-16.007c5.255,0,10.509,0.574,15.663,1.723 c9.648-7.638,15.749-18.47,17.271-30.759c0.244-1.938,0.366-3.891,0.366-5.822c0-11.255-4.121-22.166-11.607-30.694 c-7.545-8.585-17.946-14.098-29.295-15.506c-1.378-0.172-2.77-0.286-4.156-0.33c-1.02,1.156-2.082,2.297-3.18,3.403 c-4.451,4.479-9.935,8.542-16.775,12.44c-5.154,2.922-10.998,5.678-17.365,8.191c-11.032,4.343-19.675,6.417-19.761,6.432 c-0.833,0.201-1.723,0.302-2.613,0.302c-5.233,0-9.741-3.546-10.982-8.629c-0.711-2.942-0.23-5.972,1.342-8.542 c1.529-2.519,3.919-4.299,6.762-5.046l0.222-0.05l2.053,5.334l-1.414-5.506l2.032-0.553c1.823-0.517,4.407-1.299,7.465-2.332 c5.527-1.888,13.674-5.025,21.097-9.246c4.896-2.778,9.009-5.786,11.88-8.685c1.644-1.666,3.252-3.503,4.788-5.477l0.732-0.905 c7.056-9.324,11.14-21.046,11.133-32.582c-0.014-11.916-4.221-22.92-12.167-31.836c-9.44-10.566-22.985-16.632-37.17-16.632 c-12.239,0-24.012,4.493-33.142,12.648c-2.074,1.852-4.745,2.871-7.523,2.871c-3.223,0-6.296-1.378-8.435-3.782 c-2.002-2.247-3.014-5.147-2.85-8.155c0.173-3.015,1.508-5.779,3.755-7.789c4.895-4.371,10.315-8.033,16.15-10.918 c-1.436-10.789-6.374-20.824-14.141-28.591c-9.411-9.411-21.915-14.587-35.21-14.593c-13.302,0.006-25.806,5.182-35.216,14.593 c-9.404,9.404-14.579,21.916-14.586,35.209v81.187h46.4c6.23,0,11.298,5.075,11.298,11.298c0,6.23-5.068,11.299-11.298,11.299 h-46.4v55.74c13.459,0.631,24.844,2.434,34.685,5.477c11.736,3.61,21.377,9.167,28.634,16.496c4.286,4.328,7.903,9.439,10.76,15.19 c3.712,7.515,5.7,15.167,7.021,20.996c0.725,3.231,1.357,6.424,1.967,9.54c1.048,5.276,2.031,10.258,3.338,14.672 c1.199,4.063,2.562,7.321,4.185,9.97c2.003,3.302,4.422,5.786,7.594,7.839c4.516,2.886,10.473,4.781,18.205,5.786 c2.972,0.373,5.635,1.895,7.486,4.278c1.852,2.398,2.656,5.37,2.276,8.356c-0.732,5.628-5.549,9.863-11.198,9.863l-1.465-0.101 c-9.454-1.214-17.314-3.553-24.04-7.142c-6.403-3.403-11.751-8.026-15.885-13.718c-2.412-3.288-4.422-6.927-6.152-11.098 c-1.788-4.307-3.202-8.951-4.594-15.06c-0.711-3.158-1.328-6.317-1.946-9.447c-0.632-3.187-1.256-6.352-1.974-9.439 c-2.068-9.03-4.516-15.24-7.947-20.135c-2.326-3.338-5.132-6.138-8.592-8.557c-4.695-3.273-10.488-5.778-17.709-7.659 c-6.97-1.816-15.239-2.994-24.65-3.489v207.346c0.007,13.294,5.183,25.806,14.579,35.217c9.418,9.404,21.922,14.579,35.224,14.586 c13.294-0.006,25.798-5.182,35.21-14.586c9.404-9.418,14.586-21.923,14.586-35.217c0.007-7.2-1.967-15.103-5.427-21.686 c-3.934-7.531-9.411-13.086-16.266-16.532c-5.298-2.641-11.162-3.933-17.931-3.948c-6.224,0-11.292-5.061-11.292-11.284 c0-6.239,5.068-11.306,11.298-11.306c7.717,0,15.039,1.228,21.765,3.654c6.295,2.261,12.096,5.584,17.235,9.863 c8.973,7.501,15.786,17.788,19.705,29.746c2.297,7.028,3.503,14.457,3.503,21.492c0.007,5.613-0.639,11.183-1.916,16.625 c5.212,1.78,10.732,2.713,16.187,2.713c12.188-0.007,23.933-4.48,33.049-12.591c10.61-9.44,16.697-23.007,16.704-37.226 c0-6.023-1.077-11.923-3.18-17.544c-2.139-5.693-5.312-10.926-9.411-15.541c-4.135-4.659-3.712-11.809,0.933-15.95 c2.082-1.845,4.745-2.85,7.508-2.85c3.23,0,6.31,1.378,8.456,3.797l0.783,0.897l0.517,0.087c0.352,0.05,0.574,0.071,1.098,0.093 c0.459,0.007,1.098,0.014,1.981,0.014c13.294-0.007,25.806-5.183,35.218-14.586c9.403-9.418,14.579-21.922,14.586-35.217 C511.994,314.169,509.416,305.103,504.556,297.257z"></path>
+                                    <path
+                                        class="st0"
+                                        d="M194.906,11.453c-13.302,0.006-25.806,5.182-35.217,14.593c-7.767,7.767-12.706,17.81-14.141,28.584 c5.822,2.886,11.241,6.539,16.144,10.918l0.797,0.783l0.826,0.947l1.658,1.823c1.5,1.622,3.682,3.948,6.352,6.618 c4.831,4.853,12.232,11.845,20.078,17.637c5.204,3.848,10.078,6.762,14.112,8.435c2.8,1.163,4.752,1.557,5.9,1.687 c3.008,0.337,5.7,1.823,7.58,4.177c1.888,2.355,2.742,5.305,2.404,8.306c-0.639,5.728-5.462,10.05-11.219,10.05l-1.249-0.071 c-3.862-0.431-7.81-1.508-12.074-3.281c-3.546-1.472-7.164-3.366-11.077-5.8c-6.137-3.826-12.763-8.88-19.69-15.01 c-10.142-8.987-17.902-17.587-19.898-19.841c-9.08-7.903-20.674-12.253-32.697-12.253c-14.178,0.007-27.723,6.066-37.155,16.632 c-8.162,9.124-12.648,20.903-12.655,33.142c0,8.312,2.074,16.453,6.022,23.739h0.136c3.726,0,7.473,0.28,11.127,0.847 c6.166,0.962,10.394,6.74,9.446,12.892c-0.869,5.549-5.556,9.576-11.155,9.576c-0.574,0-1.163-0.044-1.751-0.13 c-2.498-0.394-5.083-0.588-7.667-0.588c-0.596,0-1.184,0.007-1.788,0.021c-12.964,0.467-25.081,5.872-34.097,15.225 c-8.987,9.332-13.933,21.592-13.933,34.513c0,0.596,0.007,1.199,0.022,1.802c0.473,13.345,6.324,25.936,16.151,34.944 c4.508-0.861,9.073-1.299,13.603-1.299c16.496,0,32.611,5.685,45.396,16.007l1.12,1.02l0.855,0.962 c0.388,0.423,0.983,1.047,1.766,1.838c2.218,2.239,4.616,4.436,7.121,6.539c5.549,4.652,14.342,11.062,24.773,15.204 c7.113,2.821,14.112,4.25,20.796,4.25c6.23,0,11.298,5.067,11.298,11.298s-5.068,11.299-11.298,11.299 c-9.584-0.008-19.382-1.974-29.13-5.85c-7.581-3.014-15.154-7.179-22.518-12.383c-10.229-7.242-17.25-14.514-19.604-17.092 c-8.807-6.862-19.367-10.494-30.572-10.494c-8.075,0-15.785,1.874-22.913,5.585c-7.975,4.135-14.701,10.365-19.446,18.003 c-4.86,7.846-7.436,16.912-7.444,26.215c0.008,13.287,5.183,25.792,14.586,35.209c9.411,9.404,21.922,14.579,35.217,14.586 c1.644,0,2.434-0.007,3.094-0.078l0.445-0.058l0.84-0.955c2.146-2.419,5.226-3.797,8.456-3.797c2.764,0,5.427,1.005,7.501,2.85 c2.254,2.002,3.597,4.766,3.776,7.788c0.172,3.008-0.833,5.908-2.842,8.162c-4.092,4.615-7.264,9.856-9.404,15.548 c-2.11,5.621-3.18,11.514-3.18,17.537c0.006,14.213,6.094,27.78,16.696,37.226c9.124,8.111,20.868,12.584,33.056,12.591 c5.456,0,10.976-0.933,16.187-2.713c-1.278-5.427-1.917-10.997-1.917-16.625c0-8.995,1.91-18.276,5.513-26.868 c4.049-9.662,10.164-18.083,17.688-24.356c2.031-1.694,4.601-2.627,7.235-2.627c3.368,0,6.525,1.479,8.679,4.063 c3.977,4.781,3.338,11.916-1.435,15.908c-4.76,3.962-8.679,9.404-11.342,15.756c-2.419,5.764-3.754,12.203-3.747,18.126 c0,13.294,5.182,25.798,14.586,35.217c9.411,9.404,21.916,14.579,35.217,14.586c13.294-0.006,25.806-5.182,35.217-14.586 c9.396-9.411,14.572-21.923,14.579-35.217v-90.54h-42.166c-6.223,0-11.291-5.061-11.291-11.292c0-6.23,5.068-11.299,11.291-11.299 h42.166v-68.668c-4.796-2.21-10.036-3.374-15.334-3.38c-3.718,0-7.436,0.574-11.047,1.694c-9.447,3.266-18.972,4.96-28.139,4.96 c-17.45,0-33.35-6.202-44.864-17.458c-10.948-10.681-17.236-25.411-17.242-40.421c-0.007-13.344,4.751-26.1,13.782-36.889 c2.153-2.585,5.312-4.056,8.671-4.056c2.642,0,5.212,0.934,7.236,2.627c4.781,3.999,5.42,11.127,1.436,15.908 c-5.642,6.776-8.513,14.32-8.52,22.418c0,8.937,3.797,17.78,10.422,24.248c7.408,7.2,17.465,11.012,29.087,11.026 c6.676,0,13.76-1.285,21.046-3.811c6.123-1.924,12.11-2.836,18.14-2.836c5.204,0,10.33,0.675,15.326,2.032V61.256 c-0.008-13.294-5.183-25.806-14.579-35.209C220.712,16.635,208.2,11.46,194.906,11.453z"></path>
+                                </g>
+                            </g>
+                        </svg>
+                    </button>
+                </div>
+                <button
+                    v-if="isStreaming"
+                    class="ai-btn-send ai-btn-stop btn-accent btn-accent-square btn-danger"
+                    :title="t('ai.stop_generating')"
+                    :aria-label="t('ai.stop_generating')"
+                    @click="$emit('stop')">
+                    <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true">
+                        <rect
+                            x="6"
+                            y="6"
+                            width="12"
+                            height="12"
+                            rx="2"
+                            ry="2" />
+                    </svg>
+                </button>
+                <button
+                    v-else
+                    class="ai-btn-send btn-accent btn-accent-square"
+                    :disabled="!inputMessage.trim() || !isReady || isStreaming"
+                    :title="t('ai.send_message')"
+                    :aria-label="t('ai.send_message')"
+                    @click="$emit('send')">
+                    <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true">
+                        <g
+                            id="SVGRepo_bgCarrier"
+                            stroke-width="0"></g>
+                        <g
+                            id="SVGRepo_tracerCarrier"
                             stroke-linecap="round"
-                            stroke-linejoin="round"></path>
-                    </g>
-                </svg>
-            </button>
+                            stroke-linejoin="round"></g>
+                        <g id="SVGRepo_iconCarrier">
+                            <path
+                                d="M10 14L13 21L20 4L3 11L6.5 12.5"
+                                stroke="currentColor"
+                                stroke-width="1.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"></path>
+                        </g>
+                    </svg>
+                </button>
+            </div>
         </div>
     </div>
 </template>
 
 <style lang="scss" scoped>
-/* ––– Root Container ––– */
-
 .ai-input-area {
-    display: flex;
-    flex-direction: column;
-    padding: $space-2 $space-3 $space-3;
     flex-shrink: 0;
+    padding: $space-2 $space-3 $space-3;
     user-select: none;
 }
 
-/* ––– Resize Handle ––– */
+// –– Resize handle ––––––––––––––––––––
 
+// A drag target with no appearance of its own: the grip inside it is what the
+// pointer sees, and the handle is only the area that catches the drag.
 .ai-resize-handle {
-    display: flex;
-    align-items: center;
     justify-content: center;
     height: $size-6;
     margin-top: $space-1;
     cursor: ns-resize;
-    transition: background-color $transition-base;
     user-select: none;
-    pointer-events: auto;
 
-    &:hover,
-    &.ai-resize-active {
-        background: transparent;
-
-        .ai-resize-grip {
-            background-color: $accent-color;
-            opacity: 1;
-        }
-    }
-
-    &.ai-resize-active {
-        user-select: none;
-        background: transparent;
+    &:hover .ai-resize-grip,
+    &.ai-resize-active .ai-resize-grip {
+        background-color: $accent-color;
+        opacity: 1;
     }
 }
 
@@ -400,32 +393,29 @@ onMounted(() => {
         background-color $transition-base;
 }
 
-/* ––– Input Row ––– */
+// –– Composer ––––––––––––––––––––
 
+// The composer is a `.field-well` turned on its side: the field takes the full width and the
+// controls sit under it. A column, so the buttons stay put as the textarea grows.
 .ai-input-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 0;
-    background: $bg-primary;
-    border: $border-width-thin $text3;
+    flex-direction: column;
+    align-items: stretch;
+    padding: $space-1;
     border-radius: $border-radius-xl;
-    padding: $space-1 $space-1 $space-1 $space-2;
-    transition: border-color $transition-base;
 
-    &:focus-within {
-        border-color: $accent-color;
-    }
-
+    // While a reply is streaming the border becomes a rotating conic gradient: the ::before is the
+    // wheel and the ::after masks all but its edge, so the row needs its own stacking context.
     &.ai-input-activated {
-        border-color: transparent;
         position: relative;
         overflow: hidden;
         isolation: isolate;
+        border-color: transparent;
 
         &::before {
             content: '';
             position: absolute;
             inset: -50%;
+            z-index: -2;
             background: conic-gradient(
                 from 0deg,
                 transparent 0deg,
@@ -435,44 +425,46 @@ onMounted(() => {
                 transparent 360deg
             );
             animation: ai-border-spin 2s linear infinite;
-            z-index: -2;
         }
 
         &::after {
             content: '';
             position: absolute;
             inset: $size-0;
+            z-index: $z-negative;
             background: $bg-primary;
             border-radius: $border-radius-xl;
-            z-index: $z-negative;
         }
     }
 }
 
-/* ––– Context Toggle ––– */
+// The field's height is the one the drag handle stored, so it must refuse the `flex: 1` that
+// `.field-bare-grow` gives NoteEditor's full-height editor.
+.ai-input {
+    flex: none;
+}
 
+// –– Control row ––––––––––––––––––––
+
+// The composer's own footer: what the message is made of on the left, what sends
+// it on the right.
+.ai-input-controls {
+    justify-content: space-between;
+    gap: $space-1;
+    padding: 0 $space-0 $space-0 $space-1;
+}
+
+.ai-input-tools {
+    gap: $space-0;
+}
+
+// –– Context toggles ––––––––––––––––––––
+
+// The two switches at the left of the control row — attach files, show thinking. Their state is a
+// colour rather than a fill, because a fill here reads as a second row of chrome.
 .ai-context-toggle {
-    display: flex;
-    border: none;
-    background: transparent;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    padding: $space-3 $space-1;
-    color: $text2;
-    flex-shrink: 0;
-    border-radius: $border-radius;
-    transition:
-        color $transition-fast,
-        background $transition-fast;
-
     input {
         display: none;
-    }
-
-    &:hover {
-        color: $text1;
-        background: $bg-hover;
     }
 }
 
@@ -480,38 +472,40 @@ onMounted(() => {
     color: $accent-color;
 }
 
-/* ––– Context Files (attached) ––– */
+.ai-add-context-btn {
+    &:disabled:hover {
+        background: transparent;
+        color: $text2;
+    }
+}
+
+// –– Attached context files ––––––––––––––––––––
 
 .ai-context-files {
-    display: flex;
-    flex-direction: column;
     gap: $space-1;
     padding: 0 $space-1 $space-2;
 }
 
 .ai-context-files-label {
-    font-size: $font-size-xs;
     color: $text2;
+    font-size: $font-size-xs;
     font-weight: $font-weight-semibold;
 }
 
 .ai-context-chips {
-    display: flex;
     flex-wrap: wrap;
     gap: $space-1;
 }
 
 .ai-context-chip {
-    display: inline-flex;
-    align-items: center;
     gap: $space-1;
     max-width: 100%;
     padding: $space-0 $space-1 $space-0 $space-2;
     background: $bg-hover;
     border: $border-width-thin $text3;
     border-radius: $border-radius;
-    font-size: $font-size-xs;
     color: $text1;
+    font-size: $font-size-xs;
 
     svg {
         flex-shrink: 0;
@@ -520,63 +514,25 @@ onMounted(() => {
 }
 
 .ai-context-chip-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
     max-width: $size-22;
 }
 
 .ai-context-chip-remove {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     padding: $space-0;
-    background: transparent;
-    border: none;
     border-radius: $border-radius-xs;
-    color: $text2;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition:
-        color $transition-fast,
-        background $transition-fast;
-
-    &:hover {
-        color: $danger-color;
-        background: $bg-primary;
-    }
 }
 
-/* ––– Context File Picker ––– */
+// –– Context file picker ––––––––––––––––––––
 
+// The containing block for the picker below, which is positioned against this button rather than
+// against the panel.
 .ai-context-picker {
     position: relative;
-    display: flex;
-    align-items: center;
     flex-shrink: 0;
 }
 
-.ai-add-context-btn {
-    background: transparent;
-    border: none;
-
-    &:disabled {
-        opacity: $opacity-low;
-        cursor: not-allowed;
-
-        &:hover {
-            color: $text2;
-            background: transparent;
-        }
-    }
-}
-
-.ai-file-picker-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: $z-dropdown;
-}
-
+// Opens upward, because the composer is at the bottom of the panel. `overflow:
+// hidden` is what keeps the search field's own corners inside the rounded edge.
 .ai-file-picker {
     position: absolute;
     bottom: calc(100% + #{$space-1});
@@ -584,147 +540,24 @@ onMounted(() => {
     z-index: $z-overlay;
     width: $size-27;
     max-width: 80vw;
-    display: flex;
-    flex-direction: column;
-    background: $bg-primary;
-    border: $border-width-thin $text3;
-    border-radius: $border-radius-lg;
-    box-shadow: $shadow-md;
     overflow: hidden;
 }
 
 .ai-file-picker-search {
-    padding: $space-2;
-    background: transparent;
-    border: none;
     border-bottom: $border-width-thin $text3;
-    color: $text1;
-    font-size: $font-size-sm;
-    font-family: inherit;
-
-    &::placeholder {
-        color: $text2;
-    }
-
-    &:focus {
-        outline: none;
-    }
 }
 
 .ai-file-picker-list {
-    list-style: none;
     margin: 0;
     padding: $space-1;
     max-height: $size-25;
-    overflow-y: auto;
+    list-style: none;
 }
 
-.ai-file-picker-empty {
-    padding: $space-2;
-    font-size: $font-size-xs;
-    color: $text2;
-    text-align: center;
-}
-
+// The two lines are `.menu-item-name` over `.menu-item-desc`, as in the system-prompt list.
 .ai-file-picker-item {
-    display: flex;
     flex-direction: column;
     gap: $space-0;
-    width: 100%;
     padding: $space-1 $space-2;
-    background: transparent;
-    border: none;
-    border-radius: $border-radius;
-    text-align: left;
-    cursor: pointer;
-    transition: background $transition-fast;
-
-    &:hover {
-        background: $bg-hover;
-    }
-}
-
-.ai-file-picker-item-name {
-    font-size: $font-size-sm;
-    color: $text1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.ai-file-picker-item-path {
-    font-size: $font-size-xs;
-    color: $text2;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-/* ––– Message Input ––– */
-
-.ai-input {
-    flex: 1;
-    min-width: 0;
-    padding: $space-2;
-    background: transparent;
-    color: $text1;
-    border: none;
-    font-size: $font-size-sm;
-    font-family: inherit;
-    line-height: $line-height;
-    resize: none;
-    overflow-y: auto;
-
-    &::placeholder {
-        color: $text2;
-    }
-
-    &:focus {
-        outline: none;
-    }
-
-    &:disabled {
-        opacity: $opacity-mid-low;
-        cursor: not-allowed;
-    }
-}
-
-/* ––– Send / Stop Button ––– */
-
-.ai-btn-send {
-    background: $accent-color;
-    color: $text1;
-    border: none;
-    border-radius: $border-radius-lg;
-    width: $size-14;
-    height: $size-14;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition:
-        opacity $transition-base,
-        transform $transition-fast,
-        color $transition-fast;
-
-    &:hover:not(:disabled) {
-        opacity: $opacity-highest;
-        transform: scale($scale-hover);
-    }
-
-    &:disabled {
-        opacity: $opacity-lowest;
-        cursor: not-allowed;
-    }
-
-    &.ai-btn-stop {
-        background: $danger-color;
-
-        &:hover {
-            opacity: $opacity-highest;
-            transform: scale($scale-hover);
-        }
-    }
 }
 </style>

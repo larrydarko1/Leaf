@@ -1,0 +1,165 @@
+// Rendered prose — markdown arrives through `v-html`, so it is global: its elements carry no scope
+// attribute.
+
+@use '@/renderer/styles/variables' as *;
+
+// –– Prose ––––––––––––––––––––
+
+// Addressed by element, because the content is generated and has no classes to hook.
+.prose {
+    position: relative;
+    white-space: normal;
+
+    p {
+        margin: 0 0 $space-2;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+        margin: $space-3 0 $space-1;
+        line-height: $line-height;
+
+        &:first-child {
+            margin-top: 0;
+        }
+    }
+
+    h1 {
+        font-size: $font-size-lg;
+    }
+
+    h2 {
+        font-size: $font-size-base;
+    }
+
+    h3,
+    h4 {
+        font-size: $font-size-sm;
+    }
+
+    ul,
+    ol {
+        margin: $space-1 0;
+        padding-left: $space-6;
+    }
+
+    li {
+        margin: $space-1 0;
+    }
+
+    strong {
+        font-weight: $font-weight-semibold;
+    }
+
+    a {
+        color: $accent-color;
+        text-decoration: underline;
+    }
+
+    blockquote {
+        margin: $space-2 0;
+        padding: $space-1 $space-2;
+        border-left: $border-width-thick $accent-color;
+        color: $text2;
+    }
+
+    hr {
+        margin: $space-2 0;
+        border: none;
+        border-top: $border-width-thin $text3;
+    }
+
+    // Tints are mixed from $bg-primary: prose sits on either the accent bubble or the surface, and
+    // a fixed fill reads as a hole in one of them.
+    code {
+        padding: $space-0 $space-1;
+        background: color-mix(in srgb, $bg-primary 15%, transparent);
+        border-radius: $border-radius-xs;
+        font-family: $font-family-mono;
+        font-size: $font-size-sm;
+    }
+
+    pre {
+        position: relative;
+        margin: $space-2 0;
+        padding: $space-2 $space-3;
+        background: color-mix(in srgb, $bg-primary 20%, transparent);
+        border-radius: $border-radius;
+        overflow-x: auto;
+
+        code {
+            padding: 0;
+            background: none;
+            font-size: $font-size-sm;
+        }
+    }
+
+    table {
+        width: 100%;
+        margin: $space-2 0;
+        border-collapse: collapse;
+        font-size: $font-size-sm;
+
+        th,
+        td {
+            padding: $space-1 $space-2;
+            border: $border-width-thin $text3;
+            text-align: left;
+        }
+
+        th {
+            background: color-mix(in srgb, $bg-primary 10%, transparent);
+        }
+    }
+}
+
+// –– Code block copy affordance ––––––––––––––––––––
+
+// The wrapper the markdown renderer puts around every `<pre>`, so the copy button has something to
+// sit in.
+.prose .ai-pre-wrapper {
+    position: relative;
+
+    &:hover .ai-code-copy-btn,
+    &:focus-within .ai-code-copy-btn {
+        opacity: 1;
+    }
+}
+
+// Hidden until the block is hovered or focused, so a wall of code is not also a wall of buttons.
+.prose .ai-code-copy-btn {
+    position: absolute;
+    top: $space-2;
+    right: $space-2;
+    z-index: $z-normal;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $space-0 $space-1;
+    background: color-mix(in srgb, $bg-primary 35%, transparent);
+    border: none;
+    border-radius: $border-radius-sm;
+    color: $text2;
+    cursor: pointer;
+    opacity: 0;
+    transition:
+        opacity $transition-fast,
+        color $transition-fast,
+        background $transition-fast;
+
+    &:hover {
+        background: color-mix(in srgb, $bg-primary 55%, transparent);
+        color: $text1;
+        opacity: 1;
+    }
+
+    &:focus-visible {
+        opacity: 1;
+    }
+}

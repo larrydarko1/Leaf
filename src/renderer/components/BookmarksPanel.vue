@@ -58,9 +58,9 @@ useListKeyboardNavigation(
 
 <template>
     <section
-        class="bookmarks-panel"
+        class="bookmarks-panel panel"
         :aria-label="t('bookmarks.bookmarks_panel')">
-        <header class="bookmarks-header">
+        <header class="bookmarks-header panel-header">
             <div class="header-title">
                 <svg
                     class="star-icon"
@@ -77,7 +77,7 @@ useListKeyboardNavigation(
                         stroke-linecap="round"
                         stroke-linejoin="round" />
                 </svg>
-                <h2>{{ t('bookmarks.title') }}</h2>
+                <h2 class="panel-label">{{ t('bookmarks.title') }}</h2>
             </div>
             <div
                 v-if="bookmarkedFiles.length > 0"
@@ -88,12 +88,12 @@ useListKeyboardNavigation(
             </div>
         </header>
 
-        <div class="bookmarks-results">
+        <div class="bookmarks-results scroll-y">
             <div
                 v-if="bookmarkedFiles.length === 0"
-                class="bookmarks-empty-state">
+                class="bookmarks-empty-state empty-state">
                 <svg
-                    class="empty-icon"
+                    class="empty-state-icon"
                     width="48"
                     height="48"
                     viewBox="0 0 24 24"
@@ -112,13 +112,13 @@ useListKeyboardNavigation(
             </div>
             <ul
                 v-else
-                class="bookmarks-results-list">
+                class="bookmarks-results-list list-body">
                 <!-- eslint-disable-next-line a11y/no-static-element-interactions -->
                 <li
                     v-for="file in bookmarkedFiles"
                     :key="file.path"
                     v-memo="[file.path, activeFile?.path, selectedFiles.some((f) => f.path === file.path)]"
-                    class="bookmark-item"
+                    class="bookmark-item result-item"
                     :class="{
                         active: activeFile?.path === file.path,
                         selected: isFileSelected(file),
@@ -153,13 +153,13 @@ useListKeyboardNavigation(
                                 stroke-linejoin="round" />
                         </svg>
                         <div class="file-details">
-                            <div class="file-name">{{ file.name }}</div>
-                            <div class="file-path">{{
+                            <div class="file-name truncate">{{ file.name }}</div>
+                            <div class="file-path truncate">{{
                                 file.folder === '.' ? t('bookmarks.root_folder') : file.folder
                             }}</div>
                         </div>
                         <button
-                            class="unbookmark-btn"
+                            class="unbookmark-btn icon-btn-subtle icon-btn-on-hover"
                             :aria-label="t('bookmarks.remove_file_bookmark', { file: file.name })"
                             @click.stop="removeBookmark(file)">
                             <svg
@@ -185,20 +185,11 @@ useListKeyboardNavigation(
 </template>
 
 <style scoped lang="scss">
-/* ––– Container ––– */
-
-.bookmarks-panel {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    background: $bg-secondary;
-}
-
 /* ––– Header ––– */
 
+// Stacks a label row over a count, not a title row — back to normal flow.
 .bookmarks-header {
-    padding: $space-2 $space-3;
-    border-bottom: $border-width-thin $text3;
+    display: block;
 }
 
 .header-title {
@@ -206,19 +197,10 @@ useListKeyboardNavigation(
     align-items: center;
     gap: $space-2;
     margin-bottom: $space-2;
+}
 
-    h2 {
-        margin: 0;
-        font-size: $font-size-xs;
-        font-weight: $font-weight-semibold;
-        color: $text-primary;
-        text-transform: uppercase;
-        letter-spacing: $letter-spacing-wider;
-    }
-
-    .star-icon {
-        color: $accent-color;
-    }
+.star-icon {
+    color: $accent-color;
 }
 
 .bookmarks-info {
@@ -230,143 +212,33 @@ useListKeyboardNavigation(
 
 .bookmarks-results {
     flex: 1;
-    overflow: hidden auto;
 }
 
-/* ––– Empty State ––– */
-
-.bookmarks-empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: $space-9 $space-6;
-    text-align: center;
-    color: $text-muted;
-
-    .empty-icon {
-        opacity: $opacity-lowest;
-        margin-bottom: $space-4;
-    }
-
-    p {
-        margin: $space-1 0;
-        font-size: $font-size-sm;
-
-        &:first-of-type {
-            font-weight: $font-weight-medium;
-            color: $text-primary;
-        }
-    }
-
-    .hint {
-        font-size: $font-size-xs;
-        color: $text-muted;
-        margin-top: $space-2;
-    }
-}
-
-/* ––– List Items ––– */
-
-.bookmarks-results-list {
-    padding: $space-1;
-}
-
-.bookmark-item {
-    padding: $space-2 $space-3;
-    border-radius: $border-radius-lg;
-    cursor: pointer;
-    transition: background $transition-fast;
-    margin-bottom: $space-0;
-    user-select: none;
-
-    &:hover {
-        background: $bg-hover;
-
-        .unbookmark-btn {
-            opacity: 1;
-        }
-    }
-
-    &.selected {
-        background: $bg-selected;
-    }
-
-    &.active {
-        background: $bg-selected;
-        color: $text1;
-
-        .unbookmark-btn {
-            color: $text1;
-            opacity: $opacity-mid-high;
-
-            &:hover {
-                opacity: 1;
-            }
-        }
-    }
-}
-
-.file-info {
-    display: flex;
-    align-items: center;
-    gap: $space-3;
-}
-
-.file-icon {
-    flex-shrink: 0;
-    color: $text-muted;
-}
-
-.file-details {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: $space-0;
-}
-
-.file-name {
+.bookmarks-empty-state p {
+    margin: $space-1 0;
     font-size: $font-size-sm;
-    font-weight: $font-weight-medium;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
 
-.file-path {
-    font-size: $font-size-xs;
-    color: $text-muted;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* ––– Unbookmark Button ––– */
-
-.unbookmark-btn {
-    flex-shrink: 0;
-    background: none;
-    border: none;
-    padding: $space-1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: $text-muted;
-    border-radius: $border-radius-sm;
-    cursor: pointer;
-    transition: all $transition-base;
-    opacity: 0;
-
-    &:hover {
-        background: $bg-tertiary;
+    &:first-of-type {
+        font-weight: $font-weight-medium;
         color: $text-primary;
     }
 }
 
-/* ––– Scrollbar ––– */
+/* ––– Bookmark Row ––– */
 
-.bookmarks-results {
-    @include scrollbar;
+// The remove button is revealed by its row, so the rule belongs to the row.
+.bookmark-item {
+    &:hover .unbookmark-btn {
+        opacity: 1;
+    }
+
+    &.active .unbookmark-btn {
+        color: $text1;
+        opacity: $opacity-mid-high;
+
+        &:hover {
+            opacity: 1;
+        }
+    }
 }
 </style>
