@@ -4,6 +4,9 @@ If you find Leaf useful, consider [giving it a star ⭐](https://github.com/larr
 
 Leaf is a **local-first, privacy-focused note-taking app** for desktop built with **Electron**, **Vue 3**, and TypeScript. Inspired by [Obsidian](https://obsidian.md) and [LM Studio](https://lmstudio.ai), Leaf provides a clean, distraction-free environment for managing your notes with local AI capabilities. All your data stays on your device - no cloud, no database, no tracking.
 
+> **Prebuilt binaries are published for Linux only.** macOS and Windows build fine from source —
+> see [Other platforms](#other-platforms) for why they aren't shipped and how to build your own.
+
 # Demo
 
 ![Leaf Demo](./public/demo.png)
@@ -271,6 +274,7 @@ Leaf stores minimal app preferences (like your last opened folder path) automati
 AI conversations are automatically saved as JSON files in Electron's standard `userData` directory:
 
 - **macOS:** `~/Library/Application Support/Leaf/conversations/`
+- **Windows:** `%APPDATA%\Leaf\conversations\`
 - **Linux:** `~/.config/Leaf/conversations/`
 
 Each conversation is stored as a separate `.json` file containing the model used, timestamps, and the full message history. Conversations are auto-titled from the first message and can be renamed or deleted from the history panel.
@@ -335,17 +339,23 @@ Tests live in the `tests/` directory and mirror the `src/` structure. The CI pip
 # Build for your current platform
 npm run build:electron
 
-# Build specifically for macOS
-npm run build:mac
-
-# Build for Linux
+# Build for Linux — the platform this project releases
 npm run build:linux
+
+# Build for macOS or Windows — not released, self-build only (see Other platforms)
+npm run build:mac
+npm run build:win
 ```
 
 The built installers will be in the `dist-electron/` directory:
 
-- **macOS:** `.dmg` installer
-- **Linux:** `.AppImage` file
+- **Linux:** `.AppImage`, `.deb`, `.rpm` and `.tar.gz` packages
+- **macOS:** `.dmg` installer (Apple Silicon / arm64)
+- **Windows:** `.exe` NSIS installer
+
+Building the `.rpm` needs the `rpm` tool on the build machine (`sudo apt-get install rpm` on
+Debian/Ubuntu); the other Linux targets have no extra prerequisite. `build:mac` has to run on a
+Mac and `build:win` on Windows.
 
 ### Installing the App
 
@@ -354,11 +364,34 @@ After building:
 1. Navigate to `dist-electron/`
 2. Double-click the installer for your platform
 3. Follow installation prompts
-4. Launch "Leaf" from your Applications folder
+4. Launch "Leaf" from your applications menu
+
+## Other platforms
+
+Releases carry Linux packages only. Shipping macOS and Windows binaries properly means paying for
+signing certificates — an Apple Developer ID and a Windows code-signing certificate — and without
+them every download either warns people off or gets blocked outright: Gatekeeper calls an unsigned
+app "damaged", SmartScreen hides the installer behind "More info". I'd rather not publish binaries
+that make you fight your OS to open them. Linux doesn't gatekeep downloads that way, so that's
+where releases go.
+
+Building it yourself sidesteps all of that: an app you compiled on your own machine isn't a
+download, so neither OS quarantines it and no signature is needed.
+
+```sh
+git clone https://github.com/larrydarko1/leaf.git
+cd leaf && npm ci
+
+npm run build:mac   # on a Mac — .dmg in dist-electron/
+npm run build:win   # on Windows — .exe in dist-electron/
+```
+
+This is a solo project, and it's a matter of resources rather than intent — as Leaf grows, proper
+signed macOS and Windows releases are on the list.
 
 ## Tech Stack
 
-- **Desktop:** [Electron](https://www.electronjs.org) (Native macOS and Linux app)
+- **Desktop:** [Electron](https://www.electronjs.org) (Linux releases; macOS and Windows build from source)
 - **Frontend:** [Vue 3](https://vuejs.org), TypeScript, SCSS
 - **Editor:** [CodeMirror 6](https://codemirror.net) with [Lezer](https://lezer.codemirror.net) markdown grammar (live preview, inline widgets, keyboard shortcuts)
 - **AI:** [node-llama-cpp](https://github.com/withcatai/node-llama-cpp) + [llama.cpp](https://github.com/ggml-org/llama.cpp) (local LLM inference)
@@ -531,7 +564,7 @@ leaf/
 │   └── workflows/
 │       ├── ci.yml                  # Audit, lint, type-check, build, test on every push/PR
 │       ├── pr-title.yml            # Conventional-commit check on PR titles
-│       └── release.yml             # macOS & Linux build & GitHub Release
+│       └── release.yml             # Build & GitHub Release
 ├── electron.vite.config.ts         # electron-vite config (main, preload, renderer)
 ├── vitest.config.ts                # Test runner config (jsdom environment)
 ├── eslint.config.js                # ESLint flat config (TypeScript + Vue + Prettier)

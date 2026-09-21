@@ -6,14 +6,8 @@
  * 2. Drop the @node-llama-cpp backend packages we are not building. npm resolves these by `cpu`
  *    field, and on linux-x64 that pulls six of them (~696 MB) — including 593 MB of CUDA runtime —
  *    when getLlama() only ever loads one. See LLAMA_KEEP for what each platform keeps.
- * 3. Ad-hoc code sign macOS app bundles. Without this, unsigned apps downloaded from the internet
- *    are rejected as "corrupted" by Gatekeeper on macOS Ventura+ (13+). Ad-hoc signing makes macOS
- *    show "unidentified developer" instead, which users can bypass with right-click → Open.
- * Order matters: pruning has to happen before signing, or the signature covers files that are no
- * longer there and macOS rejects the bundle.
  */
 
-const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
@@ -22,6 +16,7 @@ const ARCH_NAMES = { 0: 'ia32', 1: 'x64', 2: 'armv7l', 3: 'arm64', 4: 'universal
 const LLAMA_KEEP = {
     'darwin-arm64': ['mac-arm64-metal'],
     'linux-x64': ['linux-x64', 'linux-x64-vulkan'],
+    'win32-x64': ['win-x64', 'win-x64-vulkan'],
 };
 
 // @huggingface/transformers pins onnxruntime-node exactly, so npm nests a second copy beside the
@@ -168,30 +163,7 @@ function sizeOf(dir) {
     return total;
 }
 
-function adhocSign(context) {
-    const appName = context.packager.appInfo.productFilename;
-    const appPath = path.join(context.appOutDir, `${appName}.app`);
-
-    console.log(`[afterPack] Ad-hoc signing: ${appPath}`);
-
-    try {
-        // --force: replace any existing signature
-        // --deep:  recursively sign nested code (frameworks, helpers)
-        // --sign -: ad-hoc identity (no certificate required)
-        execSync(`codesign --force --deep --sign - "${appPath}"`, {
-            stdio: 'inherit',
-        });
-        console.log('[afterPack] Ad-hoc signing complete');
-    } catch (error) {
-        console.warn('[afterPack] Ad-hoc signing failed (non-fatal):', error.message);
-        // Don't fail the build — the app will still work locally,
-        // just won't pass Gatekeeper when downloaded from the internet.
-    }
-}
-
 exports.default = async function (context) {
     pruneOnnxRuntime(context);
     pruneLlamaBackends(context);
-
-    if (context.electronPlatformName === 'darwin') adhocSign(context);
 };

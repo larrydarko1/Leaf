@@ -4,7 +4,14 @@ Thank you for considering contributing to Leaf! This is a desktop note-taking ap
 
 ## Platform support
 
-Leaf targets **macOS and Linux only**, and it is developed on those two as well.
+**Releases carry Linux packages only.** macOS and Windows are not shipped because signed binaries
+need paid certificates, and unsigned ones get warned about or blocked by the OS. Both targets stay
+in `package.json` (`build:mac`, `build:win`) and build fine from source, where no signature is
+needed — they are just untested. See [Other platforms](../README.md#other-platforms).
+
+Bug reports from a self-built macOS or Windows copy are welcome and will be read, but they are
+fixed on a best-effort basis, and CI never builds or tests them. Proper support for both is planned
+once the project has the resources for it.
 
 ## Development Setup
 
@@ -244,8 +251,8 @@ Releases are batched, not automatic. The maintainer decides when one is worth cu
 
 CI takes it from there. `release.yml` watches for a green CI run on `main`, reads the version out of
 `package.json`, and stops if that tag already exists — so ordinary commits are a no-op and only the
-bump commit triggers anything. When the version is new it tags the commit, builds the macOS and
-Linux installers in parallel, and publishes them as a GitHub release.
+bump commit triggers anything. When the version is new it tags the commit, builds the Linux
+packages, and publishes them as a GitHub release.
 
 Nothing about that is manual, which is why the bump commit has to be correct: it is the only human
 input into the release.

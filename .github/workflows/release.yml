@@ -112,16 +112,23 @@ jobs:
 
                       ## Installing
 
-                      These builds are not signed with a paid developer certificate, so your OS will warn
-                      you the first time you open the app.
+                      Releases carry Linux packages only.
 
-                      - **macOS** — right-click the app → **Open**, then click **Open** in the dialog.
-                        If macOS calls the app "damaged", run: `xattr -cr /Applications/Leaf.app`
-                      - **Linux, AppImage** — `chmod +x` the file, then run it.
-                      - **Linux, deb / rpm** — install with your package manager.
-                      - **Linux, tar.gz** — extract anywhere and run the `leaf` binary inside.
+                      - **AppImage** — `chmod +x` the file, then run it.
+                      - **deb / rpm** — install with your package manager.
+                      - **tar.gz** — extract anywhere and run the `leaf` binary inside.
 
-    # ── Installers, one job per platform ──────────────────
+                      ## macOS and Windows
+
+                      Not shipped: signed binaries need paid certificates, and unsigned ones get
+                      warned about or blocked by the OS. Both build fine from source with no
+                      signature needed — `npm ci && npm run build:mac` or `npm run build:win` —
+                      but are untested. Proper support is planned as the project grows. See the
+                      [README](https://github.com/larrydarko1/leaf#other-platforms).
+
+    # ── Installers ────────────────────────────────────────
+    # Linux only: macOS and Windows need paid signing certificates to ship without OS warnings. Their
+    # targets stay in package.json for self-builds. Still a matrix so adding one back is one entry.
     build:
         name: Build ${{ matrix.name }}
         needs: [version, prepare]
@@ -134,11 +141,6 @@ jobs:
             fail-fast: false
             matrix:
                 include:
-                    - name: macOS DMG (ad-hoc signed)
-                      os: macos-26
-                      script: build:mac
-                      assets: dist-electron/*.dmg
-
                     - name: Linux packages
                       os: ubuntu-24.04
                       script: build:linux
