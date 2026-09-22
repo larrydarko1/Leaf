@@ -28,7 +28,7 @@
  *      theme only, for whoever picked it. A key in the themes but not in `:root`
  *      has no fallback at all if a theme fails to load. A `var()` in neither
  *      renders as nothing. This is the CSS analogue of the locale parity in
- *      check-i18n.mjs, and it is the reason that gate exists.
+ *      check-i18n.ts, and it is the reason that gate exists.
  *   4. SELF-HOSTED EVERYTHING. No CDN `@import url()`, no remote font. Zero
  *      third-party requests is a claim about what is ABSENT from the repo, which
  *      only a sweep can check — and in a local-first app it is a privacy
@@ -36,7 +36,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { REPO_ROOT as ROOT } from '../lib/repo-root.mjs';
+import { REPO_ROOT as ROOT } from '../lib/repo-root.ts';
 
 const STYLES = 'src/renderer/styles';
 const VARIABLES = `${STYLES}/_variables.scss`;
@@ -51,23 +51,31 @@ const REFERENCE_THEME = 'dark';
  * Custom properties a component sets itself through a `:style` binding, so they
  * are deliberately absent from the theme palette. Keep the reason with the name.
  */
-const COMPONENT_LOCAL_VARS = new Map([
+const COMPONENT_LOCAL_VARS = new Map<string, string>([
     ['scroll-distance', 'FolderNode.vue — marquee offset for a truncated name'],
     ['scroll-duration', 'FolderNode.vue — marquee duration, proportional to the name length'],
     ['volume', 'components/_media.scss — volume slider fill width, set by AudioViewer.vue / VideoViewer.vue'],
 ]);
 
-const failures = [];
-const fail = (file, what, why) => failures.push({ file, what, why });
-const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
-const exists = (rel) => fs.existsSync(path.join(ROOT, rel));
+type Failure = { file: string; what: string; why: string };
+
+const failures: Failure[] = [];
+const fail = (file: string, what: string, why: string): void => {
+    failures.push({ file, what, why });
+};
+const read = (rel: string): string => fs.readFileSync(path.join(ROOT, rel), 'utf8');
+const exists = (rel: string): boolean => fs.existsSync(path.join(ROOT, rel));
 
 // ── 1. The barrel ────────────────────────────────────────────────────────────
 const index = read(INDEX);
 const mainTs = read(MAIN_TS);
 
 if (!/@forward\s+['"][^'"]*variables['"]/.test(index)) {
-    fail(INDEX, 'does not `@forward` variables', "SFCs reach the tokens through `@use '@/renderer/styles'`, which only resolves what the barrel forwards.");
+    fail(
+        INDEX,
+        'does not `@forward` variables',
+        "SFCs reach the tokens through `@use '@/renderer/styles'`, which only resolves what the barrel forwards.",
+    );
 }
 for (const emitter of ['theme', 'base', 'components', 'layout']) {
     if (!new RegExp(`@use\\s+['"][^'"]*${emitter}['"]`).test(index)) {
@@ -81,9 +89,17 @@ for (const emitter of ['theme', 'base', 'components', 'layout']) {
 
 const styleImports = [...mainTs.matchAll(/import\s+['"][^'"]*\.scss['"]/g)];
 if (styleImports.length === 0) {
-    fail(MAIN_TS, 'imports no stylesheet', `The barrel has exactly one importer, and it is this file: \`import '@/renderer/styles/index.scss'\`.`);
+    fail(
+        MAIN_TS,
+        'imports no stylesheet',
+        `The barrel has exactly one importer, and it is this file: \`import '@/renderer/styles/index.scss'\`.`,
+    );
 } else if (styleImports.length > 1) {
-    fail(MAIN_TS, `imports ${styleImports.length} stylesheets`, 'The barrel is the single entry point. A second import emits every global rule twice.');
+    fail(
+        MAIN_TS,
+        `imports ${styleImports.length} stylesheets`,
+        'The barrel is the single entry point. A second import emits every global rule twice.',
+    );
 }
 
 // ── 2. The Vite injection ────────────────────────────────────────────────────
@@ -104,7 +120,7 @@ if (!/additionalData:/.test(viteConfig)) {
             'It must inject the TOKEN module, not the barrel: the barrel @uses the modules that emit rules, and an injected emitter ships one copy per SFC. The `as *` is what puts the tokens in the SFC’s own namespace; without it every reference needs a prefix.',
         );
     }
-    if (additionalData !== null && !/styles/.test(additionalData[1])) {
+    if (additionalData !== null && !/styles/.test(additionalData[1] ?? '')) {
         fail(
             VITE_CONFIG,
             'additionalData does not exempt the styles/ folder',
@@ -138,11 +154,15 @@ const theme = read(THEME);
 
 /** The `:root` block in _theme.scss — the compiled-in fallback layer. */
 const rootBlock = theme.match(/:root\s*\{([\s\S]*?)\n\}/);
-const rootTokens = new Set();
+const rootTokens = new Set<string>();
 if (rootBlock === null) {
-    fail(THEME, 'has no `:root` block', 'It is the fallback layer every `var(--token)` resolves against before a theme is applied.');
+    fail(
+        THEME,
+        'has no `:root` block',
+        'It is the fallback layer every `var(--token)` resolves against before a theme is applied.',
+    );
 } else {
-    for (const m of rootBlock[1].matchAll(/^\s*--([a-z0-9-]+)\s*:/gim)) rootTokens.add(m[1]);
+    for (const m of (rootBlock[1] ?? '').matchAll(/^\s*--([a-z0-9-]+)\s*:/gim)) rootTokens.add(m[1] ?? '');
 }
 
 /** Every theme preset's `colors` map. */
@@ -154,24 +174,40 @@ const themeFiles = exists(THEMES_DIR)
     : [];
 
 if (themeFiles.length === 0) {
-    fail(THEMES_DIR, 'contains no theme presets', 'These are the bundled defaults seeded into ~/.leaf/themes/ on first launch.');
+    fail(
+        THEMES_DIR,
+        'contains no theme presets',
+        'These are the bundled defaults seeded into ~/.leaf/themes/ on first launch.',
+    );
 }
 
-const themeTokens = new Map();
+const themeTokens = new Map<string, Set<string>>();
 for (const file of themeFiles) {
     const id = file.replace(/\.json$/, '');
-    let parsed;
+    let parsed: { name?: unknown; colors?: unknown };
     try {
-        parsed = JSON.parse(read(`${THEMES_DIR}/${file}`));
+        parsed = JSON.parse(read(`${THEMES_DIR}/${file}`)) as { name?: unknown; colors?: unknown };
     } catch (err) {
-        fail(`${THEMES_DIR}/${file}`, `is not valid JSON — ${err.message}`, 'It is copied verbatim into ~/.leaf/themes/, so a malformed preset ships broken.');
+        fail(
+            `${THEMES_DIR}/${file}`,
+            `is not valid JSON — ${(err as Error).message}`,
+            'It is copied verbatim into ~/.leaf/themes/, so a malformed preset ships broken.',
+        );
         continue;
     }
     if (typeof parsed.name !== 'string' || parsed.name === '') {
-        fail(`${THEMES_DIR}/${file}`, 'has no `name`', 'The ThemePicker lists presets by `name`; without one the entry renders blank.');
+        fail(
+            `${THEMES_DIR}/${file}`,
+            'has no `name`',
+            'The ThemePicker lists presets by `name`; without one the entry renders blank.',
+        );
     }
-    if (parsed.colors === undefined || typeof parsed.colors !== 'object') {
-        fail(`${THEMES_DIR}/${file}`, 'has no `colors` map', 'useTheme.ts applies `colors` as `--<key>` custom properties — a preset without it changes nothing when selected.');
+    if (parsed.colors === undefined || typeof parsed.colors !== 'object' || parsed.colors === null) {
+        fail(
+            `${THEMES_DIR}/${file}`,
+            'has no `colors` map',
+            'useTheme.ts applies `colors` as `--<key>` custom properties — a preset without it changes nothing when selected.',
+        );
         continue;
     }
     themeTokens.set(id, new Set(Object.keys(parsed.colors)));
@@ -179,7 +215,11 @@ for (const file of themeFiles) {
 
 const reference = themeTokens.get(REFERENCE_THEME);
 if (reference === undefined) {
-    fail(THEMES_DIR, `has no ${REFERENCE_THEME}.json`, `${REFERENCE_THEME} is the reference preset and the default id in theme.ts — every other preset is compared against its key set.`);
+    fail(
+        THEMES_DIR,
+        `has no ${REFERENCE_THEME}.json`,
+        `${REFERENCE_THEME} is the reference preset and the default id in theme.ts — every other preset is compared against its key set.`,
+    );
 } else {
     // 3a. Every preset carries exactly the reference key set.
     for (const [id, tokens] of themeTokens) {
@@ -222,8 +262,8 @@ if (reference === undefined) {
 }
 
 // 3c. Every `var(--token)` resolves to something.
-const styleFiles = [];
-const collect = (dir) => {
+const styleFiles: string[] = [];
+const collect = (dir: string): void => {
     for (const entry of fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true })) {
         const rel = `${dir}/${entry.name}`;
         if (entry.isDirectory()) collect(rel);
@@ -233,12 +273,13 @@ const collect = (dir) => {
 collect('src/renderer');
 
 const declaredTokens = new Set([...rootTokens, ...(reference ?? []), ...COMPONENT_LOCAL_VARS.keys()]);
-const unresolved = new Map();
+const unresolved = new Map<string, string>();
 
 for (const rel of styleFiles) {
     const source = read(rel);
     for (const m of source.matchAll(/var\(\s*--([a-z0-9-]+)/gi)) {
-        if (!declaredTokens.has(m[1]) && !unresolved.has(m[1])) unresolved.set(m[1], rel);
+        const token = m[1] ?? '';
+        if (!declaredTokens.has(token) && !unresolved.has(token)) unresolved.set(token, rel);
     }
 }
 
@@ -253,7 +294,9 @@ for (const [token, rel] of unresolved) {
 // ── 4. Self-hosted everything ────────────────────────────────────────────────
 for (const rel of [...styleFiles, INDEX]) {
     const source = read(rel);
-    for (const m of source.matchAll(/@import\s+url\(|https?:\/\/fonts\.(googleapis|gstatic)\.com|@font-face[\s\S]{0,300}?url\(\s*['"]?https?:/gi)) {
+    for (const m of source.matchAll(
+        /@import\s+url\(|https?:\/\/fonts\.(googleapis|gstatic)\.com|@font-face[\s\S]{0,300}?url\(\s*['"]?https?:/gi,
+    )) {
         fail(
             rel,
             `pulls a remote stylesheet or font (\`${m[0].slice(0, 40)}…\`)`,

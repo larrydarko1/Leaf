@@ -31,29 +31,35 @@ const LOCALE_DIR = path.resolve(ROOT, 'assets/locales');
 const I18N_CONFIG = path.resolve(ROOT, 'src/renderer/i18n.ts');
 const REFERENCE = 'en';
 
-function flatten(node, prefix = '', out = {}) {
-    if (Array.isArray(node)) {
-        out[`${prefix}[]`] = `__array:${node.length}`;
-        node.forEach((v, i) => flatten(v, `${prefix}[${i}]`, out));
-    } else if (node && typeof node === 'object') {
-        for (const [k, v] of Object.entries(node)) {
-            flatten(v, prefix ? `${prefix}.${k}` : k, out);
+function flatten(root: unknown): Record<string, string> {
+    const out: Record<string, string> = {};
+    const visit = (node: unknown, prefix: string): void => {
+        if (Array.isArray(node)) {
+            out[`${prefix}[]`] = `__array:${node.length}`;
+            node.forEach((v, i) => {
+                visit(v, `${prefix}[${i}]`);
+            });
+        } else if (node !== null && typeof node === 'object') {
+            for (const [k, v] of Object.entries(node)) {
+                visit(v, prefix === '' ? k : `${prefix}.${k}`);
+            }
+        } else if (typeof node === 'string') {
+            out[prefix] = node;
         }
-    } else if (typeof node === 'string') {
-        out[prefix] = node;
-    }
+    };
+    visit(root, '');
     return out;
 }
 
-function placeholders(str) {
-    return [...new Set((str.match(/\{[^}]+\}/g) || []).filter((t) => t !== "{'@'}"))].sort();
+function placeholders(str: string): string[] {
+    return [...new Set((str.match(/\{[^}]+\}/g) ?? []).filter((t) => t !== "{'@'}"))].sort();
 }
 
-function pluralSegments(str) {
+function pluralSegments(str: string): number {
     return str.split('|').length;
 }
 
-function fail(message) {
+function fail(message: string): never {
     console.error(`✗ ${message}`);
     process.exit(1);
 }
@@ -67,23 +73,23 @@ if (!files.includes(REFERENCE)) {
     fail(`Reference locale "${REFERENCE}.json" not found in ${LOCALE_DIR}`);
 }
 
-const flat = {};
+const flat: Record<string, Record<string, string>> = {};
 for (const loc of files) {
     const file = path.join(LOCALE_DIR, `${loc}.json`);
     try {
-        flat[loc] = flatten(JSON.parse(fs.readFileSync(file, 'utf8')));
+        flat[loc] = flatten(JSON.parse(fs.readFileSync(file, 'utf8')) as unknown);
     } catch (err) {
-        fail(`${loc}.json could not be read as JSON — ${err.message}`);
+        fail(`${loc}.json could not be read as JSON — ${(err as Error).message}`);
     }
 }
 
-const ref = flat[REFERENCE];
+const ref = flat[REFERENCE] ?? {};
 const others = files.filter((l) => l !== REFERENCE);
 const errors = [];
 
 // ── 1–3. Cross-locale value-shape parity vs the reference locale ─────────────
 for (const loc of others) {
-    const cur = flat[loc];
+    const cur = flat[loc] ?? {};
     for (const [key, refVal] of Object.entries(ref)) {
         const curVal = cur[key];
 
@@ -163,7 +169,7 @@ for (const { what, re, why } of REQUIRED_OPTIONS) {
 
 // ── Report ───────────────────────────────────────────────────────────────────
 const refKeyCount = Object.keys(ref).filter((k) => !k.endsWith('[]')).length;
-if (errors.length) {
+if (errors.length > 0) {
     console.error(`✗ i18n check failed — ${errors.length} problem(s):\n`);
     for (const e of errors) console.error(`  ${e}`);
     console.error(`\nLocales checked: ${files.join(', ')} (${refKeyCount} keys, ${REFERENCE} = reference)`);

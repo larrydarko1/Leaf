@@ -551,7 +551,7 @@ leaf/
 ├── design/                         # Source design files (PSD, SVG)
 ├── scripts/
 │   └── check/                      # CI gate scripts
-│       └── check-audit.mjs         # npm audit gate with a reviewed advisory allowlist
+│       └── check-audit.ts          # npm audit gate with a reviewed advisory allowlist
 ├── .github/
 │   ├── CONTRIBUTING.md             # Contributor guide (setup, testing, releases)
 │   ├── SECURITY.md                 # Vulnerability reporting policy

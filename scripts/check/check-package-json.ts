@@ -24,7 +24,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { REPO_ROOT as ROOT } from '../lib/repo-root.mjs';
+import { REPO_ROOT as ROOT } from '../lib/repo-root.ts';
 
 const MANIFEST = 'package.json';
 
@@ -100,24 +100,50 @@ const REQUIRED = [
  * Packages allowed a `~` (patch-only) range, and why. Anything else must be `^`.
  */
 const TILDE_ALLOWED = new Map([
-    ['typescript', 'Its minor releases introduce new type errors, so a minor bump is a code change, not a dependency bump.'],
+    [
+        'typescript',
+        'Its minor releases introduce new type errors, so a minor bump is a code change, not a dependency bump.',
+    ],
     [
         'electron-log',
         'Deliberate patch-pin — the reason is not recorded. Replace this note with it the next time you touch the range, or move the dep to `^`.',
     ],
 ]);
 
-const failures = [];
-const fail = (what, why) => failures.push({ what, why });
+type Failure = { what: string; why: string };
 
-const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, MANIFEST), 'utf8'));
+const failures: Failure[] = [];
+const fail = (what: string, why: string): void => {
+    failures.push({ what, why });
+};
+
+/**
+ * The manifest as this gate reads it. Only the dependency maps are typed as what
+ * npm guarantees; everything else stays `unknown`, because checking its shape is
+ * the point of the gate.
+ */
+type Manifest = {
+    [field: string]: unknown;
+    version?: unknown;
+    private?: unknown;
+    main?: unknown;
+    os?: unknown;
+    dependencies?: Record<string, string>;
+    devDependencies?: Record<string, string>;
+    build?: { [key: string]: unknown; files?: unknown };
+};
+
+const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, MANIFEST), 'utf8')) as Manifest;
 const keys = Object.keys(pkg);
 
 // ── 1. Required metadata ─────────────────────────────────────────────────────
 for (const field of REQUIRED) {
     const value = pkg[field];
     if (value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) {
-        fail(`is missing the required field \`${field}\``, 'Identity, provenance and toolchain facts — the fields a reader or a build tool has no other source for.');
+        fail(
+            `is missing the required field \`${field}\``,
+            'Identity, provenance and toolchain facts — the fields a reader or a build tool has no other source for.',
+        );
     }
 }
 
@@ -126,11 +152,14 @@ if (pkg.private !== true) {
 }
 
 if (typeof pkg.version === 'string' && !/^\d+\.\d+\.\d+(-[\w.]+)?$/.test(pkg.version)) {
-    fail(`\`version\` ("${pkg.version}") is not semver`, 'The release workflow reads it to build the tag and the installer filenames; a non-semver value produces a tag nobody can order.');
+    fail(
+        `\`version\` ("${pkg.version}") is not semver`,
+        'The release workflow reads it to build the tag and the installer filenames; a non-semver value produces a tag nobody can order.',
+    );
 }
 
 // ── 2. Semver prefixes ───────────────────────────────────────────────────────
-for (const field of ['dependencies', 'devDependencies']) {
+for (const field of ['dependencies', 'devDependencies'] as const) {
     for (const [name, range] of Object.entries(pkg[field] ?? {})) {
         if (/^(workspace:|file:|link:|npm:|git\+|\*)/.test(range)) continue;
 
@@ -145,7 +174,7 @@ for (const field of ['dependencies', 'devDependencies']) {
         }
 
         if (name === 'typescript') {
-            fail(`${field}.typescript is "${range}" — it must be "~"`, TILDE_ALLOWED.get('typescript'));
+            fail(`${field}.typescript is "${range}" — it must be "~"`, TILDE_ALLOWED.get('typescript') ?? '');
             continue;
         }
 
@@ -182,7 +211,10 @@ const viteConfig = fs.readFileSync(path.join(ROOT, 'electron.vite.config.ts'), '
 const mainInput = viteConfig.match(/main:\s*\{[\s\S]*?input:\s*\{\s*index:\s*resolve\(__dirname,\s*'([^']+)'/);
 
 if (typeof pkg.main !== 'string') {
-    fail('`main` is not a string', 'Electron resolves the main process from it; without it the app has no entry point.');
+    fail(
+        '`main` is not a string',
+        'Electron resolves the main process from it; without it the app has no entry point.',
+    );
 } else {
     if (!/^out\//.test(pkg.main)) {
         fail(
@@ -191,7 +223,7 @@ if (typeof pkg.main !== 'string') {
         );
     }
     if (mainInput !== null) {
-        const expected = `out/${mainInput[1].replace(/^src\//, '').replace(/\.ts$/, '.js')}`;
+        const expected = `out/${(mainInput[1] ?? '').replace(/^src\//, '').replace(/\.ts$/, '.js')}`;
         if (pkg.main !== expected) {
             fail(
                 `\`main\` is "${pkg.main}" but electron-vite emits "${expected}"`,
@@ -204,9 +236,14 @@ if (typeof pkg.main !== 'string') {
 // ── 5. build.files ships the build output ────────────────────────────────────
 const buildFiles = pkg.build?.files;
 if (!Array.isArray(buildFiles)) {
-    fail('`build.files` is not an array', 'Without an explicit allowlist electron-builder packages the whole tree, including node_modules and src.');
+    fail(
+        '`build.files` is not an array',
+        'Without an explicit allowlist electron-builder packages the whole tree, including node_modules and src.',
+    );
 } else {
-    const shipsOut = buildFiles.some((entry) => (typeof entry === 'string' ? /(^|\/)out/.test(entry) : entry?.from === 'out'));
+    const shipsOut = buildFiles.some((entry) =>
+        typeof entry === 'string' ? /(^|\/)out/.test(entry) : (entry as { from?: unknown } | null)?.from === 'out',
+    );
     if (!shipsOut) {
         fail(
             '`build.files` does not include the `out` directory',
@@ -214,13 +251,16 @@ if (!Array.isArray(buildFiles)) {
         );
     }
     if (!buildFiles.includes('package.json')) {
-        fail('`build.files` does not include `package.json`', 'Electron reads `main` from the packaged manifest at launch; omit it and the app has no entry point.');
+        fail(
+            '`build.files` does not include `package.json`',
+            'Electron reads `main` from the packaged manifest at launch; omit it and the app has no entry point.',
+        );
     }
 }
 
 // ── 6. `os` agrees with the build targets ────────────────────────────────────
-const OS_TO_TARGET = { darwin: 'mac', linux: 'linux', win32: 'win' };
-const declaredOs = Array.isArray(pkg.os) ? pkg.os : [];
+const OS_TO_TARGET: Record<string, string> = { darwin: 'mac', linux: 'linux', win32: 'win' };
+const declaredOs = Array.isArray(pkg.os) ? pkg.os.filter((entry): entry is string => typeof entry === 'string') : [];
 
 for (const osName of declaredOs) {
     const target = OS_TO_TARGET[osName];

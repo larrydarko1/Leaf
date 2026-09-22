@@ -17,7 +17,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { REPO_ROOT as ROOT } from '../lib/repo-root.mjs';
+import { REPO_ROOT as ROOT } from '../lib/repo-root.ts';
 
 /**
  * Deferral markers, shouted. Kept in sync by hand with the `terms` list in
@@ -38,7 +38,7 @@ const EXEMPT = new Set(['todo.md']);
 
 const NOISE = /^(node_modules|dist|dist-electron|out|coverage|package-lock\.json)/;
 
-const findings = [];
+const findings: { file: string; line: number; marker: string; text: string }[] = [];
 
 /** Tracked plus untracked-but-not-ignored, so .gitignore is honoured for free. */
 const files = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard'], {
@@ -53,14 +53,14 @@ const files = execFileSync('git', ['ls-files', '--cached', '--others', '--exclud
     });
 
 /** Remove fenced blocks and inline code spans — a backticked word is named, not used. */
-function stripMarkdownCode(source) {
+function stripMarkdownCode(source: string): string {
     return source
         .replace(/^```[\s\S]*?^```/gm, (block) => block.replace(/[^\n]/g, ' '))
         .replace(/`[^`\n]*`/g, (span) => ' '.repeat(span.length));
 }
 
 /** An SFC's <template> block only — <script> is ESLint's, <style> is scanned as CSS. */
-function templateBlock(source) {
+function templateBlock(source: string): string | null {
     const start = source.search(/^<template[\s>]/m);
     if (start === -1) return null;
     const end = source.lastIndexOf('\n</template>');
@@ -90,7 +90,7 @@ for (const rel of files) {
             findings.push({
                 file: rel,
                 line: i + 1 + offset,
-                marker: match[1].toUpperCase(),
+                marker: (match[1] ?? '').toUpperCase(),
                 text: line.trim().slice(0, 90),
             });
         }

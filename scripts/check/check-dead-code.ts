@@ -6,9 +6,11 @@
  */
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
-import { REPO_ROOT as ROOT } from '../lib/repo-root.mjs';
+import { REPO_ROOT as ROOT } from '../lib/repo-root.ts';
 
-const CATEGORIES = {
+type Category = { label: string; fix: string };
+
+const CATEGORIES: Record<string, Category> = {
     files: {
         label: 'Unused files',
         fix: 'No entry point reaches this module. Delete it, or import it from something that is reached.',
@@ -87,10 +89,17 @@ if (process.argv.includes('--all')) {
 }
 
 /** One knip run, bucketed by category. `extra` is what separates the two passes. */
-function knip(include, extra = []) {
+type Hit = { file: string; name: string; line: number | undefined };
+
+type KnipItem = { name: string; line?: number };
+
+/** knip --reporter json, reduced to what this gate reads. */
+type KnipReport = { issues?: (Record<string, (KnipItem | KnipItem[])[] | undefined> & { file: string })[] };
+
+function knip(include: string[], extra: string[] = []): Record<string, Hit[]> {
     const args = ['--no-progress', '--reporter', 'json', '--tags=-public', '--include', include.join(','), ...extra];
 
-    let raw;
+    let raw: string;
     try {
         raw = execFileSync(bin, args, {
             cwd: ROOT,
@@ -99,28 +108,32 @@ function knip(include, extra = []) {
             stdio: ['ignore', 'pipe', 'ignore'],
         });
     } catch (err) {
-        raw = err.stdout ?? '';
-        if (!raw.trim()) {
+        // knip exits non-zero whenever it finds anything, but still prints the report.
+        const { stdout, stderr } = err as { stdout?: string; stderr?: string | Buffer };
+        raw = stdout ?? '';
+        if (raw.trim() === '') {
             console.error('✘ check-dead-code: knip produced no output. Is `knip` installed?');
-            if (err.stderr) console.error(err.stderr.toString().trim());
+            if (stderr !== undefined) console.error(stderr.toString().trim());
             process.exit(1);
         }
     }
 
-    let report;
+    let report: KnipReport;
     try {
-        report = JSON.parse(raw);
+        report = JSON.parse(raw) as KnipReport;
     } catch {
         console.error("✘ check-dead-code: could not parse knip's JSON report.");
         console.error(raw.slice(0, 500));
         process.exit(1);
     }
 
-    const found = Object.fromEntries(include.map((k) => [k, []]));
+    const found: Record<string, Hit[]> = Object.fromEntries(include.map((k) => [k, []]));
     for (const entry of report.issues ?? []) {
         for (const category of include) {
+            const hits = found[category] ?? [];
+            found[category] = hits;
             for (const item of entry[category] ?? []) {
-                found[category].push(
+                hits.push(
                     Array.isArray(item)
                         ? { file: entry.file, name: item.map((s) => s.name).join(' = '), line: item[0]?.line }
                         : { file: entry.file, name: item.name, line: item.line },
@@ -134,22 +147,26 @@ function knip(include, extra = []) {
 const found = knip(GATED);
 
 /** Anything the first pass named is dead outright and reported there; the remainder is alive only because a test imports it. */
-const id = ({ file, name }) => `${file}::${name}`;
+const id = ({ file, name }: Hit): string => `${file}::${name}`;
 const alreadyReported = new Set(Object.values(found).flat().map(id));
 found[TEST_ONLY.key] = Object.values(knip(PROD_INCLUDE, PROD_ARGS))
     .flat()
     .filter((hit) => !alreadyReported.has(id(hit)));
 
-const where = ({ file, name, line }) => (name === file ? file : `${file}${line ? `:${line}` : ''} — ${name}`);
+const where = ({ file, name, line }: Hit): string =>
+    name === file ? file : `${file}${line !== undefined ? `:${line}` : ''} — ${name}`;
 
 let failed = false;
 
-for (const [category, { label, fix }] of [...Object.entries(CATEGORIES), [TEST_ONLY.key, TEST_ONLY]]) {
-    const hits = found[category];
-    if (hits.length <= BUDGET[category]) continue;
+const REPORTED: [string, Category][] = [...Object.entries(CATEGORIES), [TEST_ONLY.key, TEST_ONLY]];
+
+for (const [category, { label, fix }] of REPORTED) {
+    const hits = found[category] ?? [];
+    const budget = BUDGET[category] ?? 0;
+    if (hits.length <= budget) continue;
 
     failed = true;
-    console.error(`\n✘ ${label}: ${hits.length} exceeds the budget of ${BUDGET[category]}.\n`);
+    console.error(`\n✘ ${label}: ${hits.length} exceeds the budget of ${budget}.\n`);
     for (const hit of hits.sort((a, b) => a.file.localeCompare(b.file))) {
         console.error(`  • ${where(hit)}`);
     }
@@ -158,7 +175,7 @@ for (const [category, { label, fix }] of [...Object.entries(CATEGORIES), [TEST_O
 
 if (failed) {
     console.error(
-        'Budgets live in scripts/check/check-dead-code.mjs and only ever go down.\n' +
+        'Budgets live in scripts/check/check-dead-code.ts and only ever go down.\n' +
             'If an export is public by design, tag it `/** @public */` rather than raising one.\n',
     );
     process.exit(1);

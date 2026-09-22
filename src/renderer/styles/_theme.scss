@@ -1,7 +1,7 @@
 // The compiled-in palette, applied on first paint before useTheme.ts overrides these custom
 // properties from the user's active theme.
 
-// Matches assets/themes/dark.json and must stay in sync — check-scss-standards.mjs compares this
+// Matches assets/themes/dark.json and must stay in sync — check-scss-standards.ts compares this
 // block against every preset in both directions.
 
 // Kept out of _variables.scss because it emits a rule, and that file is injected into every SFC.

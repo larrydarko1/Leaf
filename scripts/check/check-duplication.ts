@@ -26,9 +26,20 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { REPO_ROOT as ROOT } from '../lib/repo-root.mjs';
+import { REPO_ROOT as ROOT } from '../lib/repo-root.ts';
 
 const SCAN = 'src';
+
+/** The slice of jscpd's JSON report this gate reads. */
+type CloneLocation = { name: string; start: number; end: number };
+type Clone = { format: string; tokens: number; firstFile: CloneLocation; secondFile: CloneLocation };
+type JscpdReport = {
+    statistics: {
+        formats: Record<string, { percentageTokens: number; clones: number }>;
+        total: { clones: number };
+    };
+    duplicates: Clone[];
+};
 
 /**
  * Ceiling on duplicated TOKENS per format, as a percentage. Tokens rather than
@@ -82,11 +93,11 @@ if (!fs.existsSync(reportPath)) {
     process.exit(1);
 }
 
-const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+const report = JSON.parse(fs.readFileSync(reportPath, 'utf8')) as JscpdReport;
 fs.rmSync(outDir, { recursive: true, force: true });
 
-const failures = [];
-const loc = (f) => `${f.name}:${f.start}-${f.end}`;
+const failures: { what: string; why: string; clones: Clone[] }[] = [];
+const loc = (f: CloneLocation): string => `${f.name}:${f.start}-${f.end}`;
 
 // ── 1. Per-format ceilings ───────────────────────────────────────────────────
 for (const [format, { limit, note }] of Object.entries(CEILINGS)) {
@@ -124,16 +135,20 @@ if (failures.length > 0) {
         console.error(`  • ${what}`);
         console.error(`    ${why}`);
         for (const c of clones) {
-            console.error(`      ${String(c.tokens).padStart(4)} tokens  ${loc(c.firstFile)}  <=>  ${loc(c.secondFile)}`);
+            console.error(
+                `      ${String(c.tokens).padStart(4)} tokens  ${loc(c.firstFile)}  <=>  ${loc(c.secondFile)}`,
+            );
         }
         console.error('');
     }
     process.exit(1);
 }
 
-const summary = Object.keys(CEILINGS)
-    .filter((f) => report.statistics.formats[f] !== undefined)
-    .map((f) => `${f} ${report.statistics.formats[f].percentageTokens.toFixed(2)}%/${CEILINGS[f].limit}%`)
+const summary = Object.entries(CEILINGS)
+    .flatMap(([format, { limit }]) => {
+        const stats = report.statistics.formats[format];
+        return stats === undefined ? [] : [`${format} ${stats.percentageTokens.toFixed(2)}%/${limit}%`];
+    })
     .join(', ');
 
 const largest = report.duplicates.reduce((n, d) => Math.max(n, d.tokens), 0);

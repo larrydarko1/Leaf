@@ -48,8 +48,8 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { REPO_ROOT as ROOT } from '../lib/repo-root.mjs';
-import { stripComments } from '../lib/strip-comments.mjs';
+import { REPO_ROOT as ROOT } from '../lib/repo-root.ts';
+import { stripComments } from '../lib/strip-comments.ts';
 
 const MAIN_DIR = 'src/main';
 const RENDERER_DIR = 'src/renderer';
@@ -58,7 +58,7 @@ const RENDERER_DIR = 'src/renderer';
  * The `v-html` bindings that exist, and why each is safe. A new one fails this
  * gate on purpose: the judgement is human, so it should cost a line of prose.
  */
-const VHTML_ALLOWED = new Map([
+const VHTML_ALLOWED = new Map<string, string>([
     [
         'src/renderer/components/drawing/DrawingToolbar.vue',
         '`shape.icon` is a static internal SVG table defined in the component — never user input.',
@@ -75,10 +75,14 @@ const SAFE_WRAPPERS = /\b(escapeHtml|DOMPurify\.sanitize|sanitize|renderInline)\
 /** The metacharacter escape that makes a string safe to embed in a RegExp. */
 const REGEX_ESCAPE = /\.replace\(\s*\/\[\.\*\+\?\^\$\{\}\(\)\|\[\\\]\\\\\]\/g/;
 
-const failures = [];
-const fail = (file, what, why) => failures.push({ file, what, why });
+type Failure = { file: string; what: string; why: string };
 
-function walk(dir, exts, out = []) {
+const failures: Failure[] = [];
+const fail = (file: string, what: string, why: string): void => {
+    failures.push({ file, what, why });
+};
+
+function walk(dir: string, exts: RegExp, out: string[] = []): string[] {
     for (const entry of fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true })) {
         const rel = `${dir}/${entry.name}`;
         if (entry.isDirectory()) walk(rel, exts, out);
@@ -89,7 +93,10 @@ function walk(dir, exts, out = []) {
 
 const mainFiles = walk(MAIN_DIR, /\.ts$/);
 const rendererFiles = walk(RENDERER_DIR, /\.(ts|vue)$/);
-const mainSource = mainFiles.map((rel) => [rel, stripComments(fs.readFileSync(path.join(ROOT, rel), 'utf8'))]);
+const mainSource = mainFiles.map((rel): [string, string] => [
+    rel,
+    stripComments(fs.readFileSync(path.join(ROOT, rel), 'utf8')),
+]);
 const allMain = mainSource.map(([, code]) => code).join('\n');
 
 // ── 1/2/3. webPreferences on every BrowserWindow ─────────────────────────────
@@ -112,27 +119,51 @@ const REQUIRED_PREFS = [
 ];
 
 const BANNED_PREFS = [
-    { key: 'webviewTag', why: '<webview> creates a nested renderer whose webPreferences this configuration does not govern.' },
-    { key: 'allowRunningInsecureContent', why: 'Permits http subresources inside the app document, which is a downgrade path for everything CSP protects.' },
-    { key: 'experimentalFeatures', why: 'Enables unshipped Blink features — code paths that have not been through Chromium’s security review.' },
-    { key: 'enableRemoteModule', why: 'The old `remote` module hands the renderer live main-process objects. Removed in modern Electron; its presence means someone was following a pre-Electron-14 guide.' },
-    { key: 'nodeIntegrationInWorker', why: 'Grants Node to Web Workers, bypassing the main window’s nodeIntegration: false.' },
-    { key: 'nodeIntegrationInSubFrames', why: 'Grants Node to iframes — including the leaf:// PDF preview frame.' },
+    {
+        key: 'webviewTag',
+        why: '<webview> creates a nested renderer whose webPreferences this configuration does not govern.',
+    },
+    {
+        key: 'allowRunningInsecureContent',
+        why: 'Permits http subresources inside the app document, which is a downgrade path for everything CSP protects.',
+    },
+    {
+        key: 'experimentalFeatures',
+        why: 'Enables unshipped Blink features — code paths that have not been through Chromium’s security review.',
+    },
+    {
+        key: 'enableRemoteModule',
+        why: 'The old `remote` module hands the renderer live main-process objects. Removed in modern Electron; its presence means someone was following a pre-Electron-14 guide.',
+    },
+    {
+        key: 'nodeIntegrationInWorker',
+        why: 'Grants Node to Web Workers, bypassing the main window’s nodeIntegration: false.',
+    },
+    {
+        key: 'nodeIntegrationInSubFrames',
+        why: 'Grants Node to iframes — including the leaf:// PDF preview frame.',
+    },
 ];
 
 const windowBlocks = [...allMain.matchAll(/new BrowserWindow\(\s*\{([\s\S]*?)\n\s{4}\}\)/g)];
 
 if (windowBlocks.length === 0) {
-    fail(`${MAIN_DIR}/index.ts`, 'no `new BrowserWindow({...})` call found', 'This gate reads its webPreferences. If the window is constructed some other way, update the matcher here — do not leave it reading nothing.');
+    fail(
+        `${MAIN_DIR}/index.ts`,
+        'no `new BrowserWindow({...})` call found',
+        'This gate reads its webPreferences. If the window is constructed some other way, update the matcher here — do not leave it reading nothing.',
+    );
 }
 
-for (const [, block] of windowBlocks) {
+for (const [, block = ''] of windowBlocks) {
     for (const { key, re, why } of REQUIRED_PREFS) {
         if (!re.test(block)) {
             const present = new RegExp(`${key}:`).test(block);
             fail(
                 `${MAIN_DIR}/index.ts`,
-                present ? `webPreferences.${key} is not set to the required value` : `webPreferences is missing \`${key}\``,
+                present
+                    ? `webPreferences.${key} is not set to the required value`
+                    : `webPreferences is missing \`${key}\``,
                 why,
             );
         }
@@ -150,28 +181,48 @@ for (const [, block] of windowBlocks) {
         );
     }
     if (!/preload:/.test(block)) {
-        fail(`${MAIN_DIR}/index.ts`, 'a BrowserWindow declares no `preload`', 'A window with no preload has no vetted API surface, and it inherits none of the review the main window got.');
+        fail(
+            `${MAIN_DIR}/index.ts`,
+            'a BrowserWindow declares no `preload`',
+            'A window with no preload has no vetted API surface, and it inherits none of the review the main window got.',
+        );
     }
 }
 
 // ── 4/5/6. Navigation containment ────────────────────────────────────────────
 if (!/setWindowOpenHandler\(/.test(allMain)) {
-    fail(`${MAIN_DIR}/index.ts`, 'registers no `setWindowOpenHandler`', 'Without it `target="_blank"` in rendered markdown opens a real Electron window on a remote origin.');
+    fail(
+        `${MAIN_DIR}/index.ts`,
+        'registers no `setWindowOpenHandler`',
+        'Without it `target="_blank"` in rendered markdown opens a real Electron window on a remote origin.',
+    );
 } else {
     const handler = allMain.match(/setWindowOpenHandler\(([\s\S]*?)\n\s{4}\}\)/);
     // Matched on the `return` itself: the handler's TYPE annotation also reads
     // `{ action: 'deny' }`, so a looser match passes even when the value changed.
-    if (handler !== null && !/return\s*\{\s*action:\s*'deny'\s*\}/.test(handler[1])) {
-        fail(`${MAIN_DIR}/index.ts`, 'setWindowOpenHandler does not return `action: \'deny\'`', 'Anything but deny creates a window whose webPreferences this file did not configure. External links belong in the OS browser via shell.openExternal.');
+    if (handler !== null && !/return\s*\{\s*action:\s*'deny'\s*\}/.test(handler[1] ?? '')) {
+        fail(
+            `${MAIN_DIR}/index.ts`,
+            "setWindowOpenHandler does not return `action: 'deny'`",
+            'Anything but deny creates a window whose webPreferences this file did not configure. External links belong in the OS browser via shell.openExternal.',
+        );
     }
 }
 
 if (!/on\(\s*'will-navigate'/.test(allMain)) {
-    fail(`${MAIN_DIR}/index.ts`, 'has no `will-navigate` handler', 'A link that navigates the app window away replaces the app with a remote page in a process that still has the preload bridge attached.');
+    fail(
+        `${MAIN_DIR}/index.ts`,
+        'has no `will-navigate` handler',
+        'A link that navigates the app window away replaces the app with a remote page in a process that still has the preload bridge attached.',
+    );
 } else {
     const nav = allMain.match(/on\(\s*'will-navigate'[\s\S]*?\n\s{4}\}\)/);
     if (nav !== null && !/preventDefault\(\)/.test(nav[0])) {
-        fail(`${MAIN_DIR}/index.ts`, 'the `will-navigate` handler never calls `preventDefault()`', 'Observing a navigation without cancelling it lets it proceed. The handler reads like a guard and stops nothing.');
+        fail(
+            `${MAIN_DIR}/index.ts`,
+            'the `will-navigate` handler never calls `preventDefault()`',
+            'Observing a navigation without cancelling it lets it proceed. The handler reads like a guard and stops nothing.',
+        );
     }
 }
 
@@ -185,15 +236,21 @@ if (/on\(\s*'new-window'/.test(allMain)) {
 
 // ── 7. Permission handlers, defaulting to deny ───────────────────────────────
 for (const [name, why] of [
-    ['setPermissionRequestHandler', 'Handles a live request (the microphone prompt for dictation). Absent, Electron’s file:// default denies everything — so adding one makes it the entire policy.'],
-    ['setPermissionCheckHandler', 'Answers `navigator.permissions.query`. Without it a renderer can be told it holds a permission the request handler would refuse, and the two answers disagree.'],
-]) {
+    [
+        'setPermissionRequestHandler',
+        'Handles a live request (the microphone prompt for dictation). Absent, Electron’s file:// default denies everything — so adding one makes it the entire policy.',
+    ],
+    [
+        'setPermissionCheckHandler',
+        'Answers `navigator.permissions.query`. Without it a renderer can be told it holds a permission the request handler would refuse, and the two answers disagree.',
+    ],
+] as const) {
     if (!new RegExp(`${name}\\(`).test(allMain)) {
         fail(`${MAIN_DIR}/index.ts`, `registers no \`${name}\``, why);
         continue;
     }
     const body = allMain.match(new RegExp(`${name}\\(([\\s\\S]*?)\\n\\s{4}\\}\\)`));
-    if (body !== null && !/callback\(false\)|return false/.test(body[1])) {
+    if (body !== null && !/callback\(false\)|return false/.test(body[1] ?? '')) {
         fail(
             `${MAIN_DIR}/index.ts`,
             `\`${name}\` has no deny path`,
@@ -205,7 +262,7 @@ for (const [name, why] of [
 // ── 8/9. The custom protocol ─────────────────────────────────────────────────
 const protocolHandler = allMain.match(/protocol\.handle\(\s*'([a-z]+)'\s*,([\s\S]*?)\n\s{4}\}\)/);
 if (protocolHandler !== null) {
-    const [, scheme, body] = protocolHandler;
+    const [, scheme = '', body = ''] = protocolHandler;
     if (!/isInsideBoundary|isInside|withinRoot|startsWith\(\s*root/.test(body)) {
         fail(
             `${MAIN_DIR}/index.ts`,
@@ -223,7 +280,7 @@ if (protocolHandler !== null) {
 }
 
 const privileged = allMain.match(/registerSchemesAsPrivileged\(([\s\S]*?)\n\]\)/);
-if (privileged !== null && /bypassCSP:\s*true/.test(privileged[1])) {
+if (privileged !== null && /bypassCSP:\s*true/.test(privileged[1] ?? '')) {
     fail(
         `${MAIN_DIR}/index.ts`,
         'a privileged scheme sets `bypassCSP: true`',
@@ -239,7 +296,7 @@ for (const [rel, code] of mainSource) {
         if (!/https?:\/\//.test(context) && !/startsWith\(\s*'https?:/.test(context)) {
             fail(
                 `${rel}:${line}`,
-                `calls shell.openExternal(${m[1].trim().slice(0, 30)}) with no visible http/https check`,
+                `calls shell.openExternal(${(m[1] ?? '').trim().slice(0, 30)}) with no visible http/https check`,
                 'openExternal hands the string to the OS. A `file://` or `smb://` URL from a note becomes local execution reached by clicking a link.',
             );
         }
@@ -263,13 +320,13 @@ for (const rel of rendererFiles) {
 
     // An innerHTML assignment may not interpolate anything unescaped.
     for (const m of code.matchAll(/\.innerHTML\s*=\s*`([^`]*)`/g)) {
-        const template = m[1];
-        for (const interp of template.matchAll(/\$\{([^}]*)\}/g)) {
-            if (!SAFE_WRAPPERS.test(interp[1])) {
+        const template = m[1] ?? '';
+        for (const [, expr = ''] of template.matchAll(/\$\{([^}]*)\}/g)) {
+            if (!SAFE_WRAPPERS.test(expr)) {
                 const line = code.slice(0, m.index).split('\n').length;
                 fail(
                     `${rel}:${line}`,
-                    `interpolates \`${interp[1].trim().slice(0, 40)}\` into innerHTML without escaping`,
+                    `interpolates \`${expr.trim().slice(0, 40)}\` into innerHTML without escaping`,
                     'Note and file names reach these widgets. Wrap it in escapeHtml() — or add the helper to SAFE_WRAPPERS in this gate if it already escapes.',
                 );
             }
@@ -293,7 +350,11 @@ for (const rel of rendererFiles.filter((f) => f.endsWith('.vue'))) {
 for (const rel of VHTML_ALLOWED.keys()) {
     const full = path.join(ROOT, rel);
     if (!fs.existsSync(full) || !/\bv-html\b/.test(fs.readFileSync(full, 'utf8'))) {
-        fail(rel, 'is listed in VHTML_ALLOWED but no longer uses `v-html`', 'Drop the entry. A stale exemption is one that silently covers the next binding added to this file.');
+        fail(
+            rel,
+            'is listed in VHTML_ALLOWED but no longer uses `v-html`',
+            'Drop the entry. A stale exemption is one that silently covers the next binding added to this file.',
+        );
     }
 }
 
@@ -301,16 +362,20 @@ for (const rel of VHTML_ALLOWED.keys()) {
 for (const rel of [...mainFiles, ...rendererFiles]) {
     const code = stripComments(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
     for (const m of code.matchAll(/new RegExp\(\s*`([^`]*)`/g)) {
-        for (const interp of m[1].matchAll(/\$\{([^}]*)\}/g)) {
-            const name = interp[1].trim();
+        for (const [, expr = ''] of (m[1] ?? '').matchAll(/\$\{([^}]*)\}/g)) {
+            const name = expr.trim();
             if (/^\\\\/.test(name)) continue;
-            const escapedHere = REGEX_ESCAPE.test(code) && new RegExp(`${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*=[\\s\\S]{0,120}?\\.replace\\(`).test(code);
+            const escapedHere =
+                REGEX_ESCAPE.test(code) &&
+                new RegExp(`${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*=[\\s\\S]{0,120}?\\.replace\\(`).test(
+                    code,
+                );
             if (!escapedHere) {
                 const line = code.slice(0, m.index).split('\n').length;
                 fail(
                     `${rel}:${line}`,
                     `builds a RegExp from \`${name.slice(0, 30)}\` with no metacharacter escape`,
-                    'A file name containing `(` throws at runtime; one containing `(a+)+` is a ReDoS that hangs the process. Escape it with `.replace(/[.*+?^${}()|[\\]\\\\]/g, \'\\\\$&\')` first.',
+                    "A file name containing `(` throws at runtime; one containing `(a+)+` is a ReDoS that hangs the process. Escape it with `.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')` first.",
                 );
             }
         }

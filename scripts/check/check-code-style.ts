@@ -40,8 +40,8 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { REPO_ROOT as ROOT } from '../lib/repo-root.mjs';
-import { stripComments } from '../lib/strip-comments.mjs';
+import { REPO_ROOT as ROOT } from '../lib/repo-root.ts';
+import { stripComments } from '../lib/strip-comments.ts';
 
 const SOURCE_ROOT = 'src';
 const LINE_CAP = 400;
@@ -51,7 +51,7 @@ const LINE_CAP = 400;
  * A file may shrink freely; growing past its entry, or a new file crossing the
  * cap, fails. Lower a number when you refactor.
  */
-const LENGTH_BASELINE = {
+const LENGTH_BASELINE: Record<string, number> = {
     'src/renderer/components/ai/AiMessageList.vue': 1098,
     'src/renderer/App.vue': 915,
     'src/renderer/composables/drawing/useDrawingInteraction.ts': 813,
@@ -86,11 +86,15 @@ const DECLARATION = /\.d\.ts$/;
 const PASCAL_CASE = /^[A-Z][A-Za-z0-9]*$/;
 const CAMEL_CASE = /^[a-z][A-Za-z0-9]*$/;
 
-const failures = [];
-const fail = (file, what, why) => failures.push({ file, what, why });
+type Failure = { file: string; what: string; why: string };
+
+const failures: Failure[] = [];
+const fail = (file: string, what: string, why: string): void => {
+    failures.push({ file, what, why });
+};
 
 /** Every tracked source file under src/, as repo-relative POSIX paths. */
-function walk(dir, out = []) {
+function walk(dir: string, out: string[] = []): string[] {
     for (const entry of fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true })) {
         const rel = `${dir}/${entry.name}`;
         if (entry.isDirectory()) walk(rel, out);
@@ -112,12 +116,20 @@ for (const rel of files) {
     // ── 1. Filename casing ───────────────────────────────────────────────────
     if (base.endsWith('.vue')) {
         if (!PASCAL_CASE.test(stem)) {
-            fail(rel, `filename "${base}" is not PascalCase`, 'An SFC filename is the component name you write as a tag; Vue resolves and devtools label it by that name.');
+            fail(
+                rel,
+                `filename "${base}" is not PascalCase`,
+                'An SFC filename is the component name you write as a tag; Vue resolves and devtools label it by that name.',
+            );
         }
     } else if (!DECLARATION.test(base)) {
         const exempt = CASING_EXEMPT.test(base) && rel.startsWith(CODEMIRROR_DIR);
         if (!exempt && !CAMEL_CASE.test(stem)) {
-            fail(rel, `filename "${base}" is not camelCase`, `TypeScript modules under ${SOURCE_ROOT}/ are camelCase (the \`cm-*\` kebab exception is only for ${CODEMIRROR_DIR}).`);
+            fail(
+                rel,
+                `filename "${base}" is not camelCase`,
+                `TypeScript modules under ${SOURCE_ROOT}/ are camelCase (the \`cm-*\` kebab exception is only for ${CODEMIRROR_DIR}).`,
+            );
         }
     }
 
@@ -125,7 +137,11 @@ for (const rel of files) {
     if (/^use[A-Z]/.test(stem) && base.endsWith('.ts')) {
         const exported = new RegExp(`export\\s+(?:async\\s+)?(?:function|const|let)\\s+${stem}`).test(code);
         if (!exported) {
-            fail(rel, `exports nothing named \`${stem}*\``, 'A composable renamed without renaming its file leaves a filename that lies about its contents, and every import site still reads correctly. A helpers module satisfies this with a prefixed export (useDebounce.ts → `useDebounceFn`).');
+            fail(
+                rel,
+                `exports nothing named \`${stem}*\``,
+                'A composable renamed without renaming its file leaves a filename that lies about its contents, and every import site still reads correctly. A helpers module satisfies this with a prefixed export (useDebounce.ts → `useDebounceFn`).',
+            );
         }
     }
 
@@ -134,10 +150,18 @@ for (const rel of files) {
     const baseline = LENGTH_BASELINE[rel];
     if (baseline === undefined) {
         if (count > LINE_CAP) {
-            fail(rel, `${count} lines exceeds the ${LINE_CAP}-line softcap`, 'Split it, or add it to LENGTH_BASELINE in this gate with a note saying why it earns an exception.');
+            fail(
+                rel,
+                `${count} lines exceeds the ${LINE_CAP}-line softcap`,
+                'Split it, or add it to LENGTH_BASELINE in this gate with a note saying why it earns an exception.',
+            );
         }
     } else if (count > baseline) {
-        fail(rel, `grew to ${count} lines (baseline ${baseline})`, `Already over the ${LINE_CAP}-line softcap — the ratchet only allows it to shrink. Lower its LENGTH_BASELINE entry when you refactor.`);
+        fail(
+            rel,
+            `grew to ${count} lines (baseline ${baseline})`,
+            `Already over the ${LINE_CAP}-line softcap — the ratchet only allows it to shrink. Lower its LENGTH_BASELINE entry when you refactor.`,
+        );
     }
 
     // ── 4. Public before private (.ts only — an SFC has one script block) ────
@@ -150,7 +174,11 @@ for (const rel of files) {
         if (firstPrivate !== -1) {
             const lateExport = declarations.slice(firstPrivate).find((d) => d.exported);
             if (lateExport !== undefined) {
-                fail(rel, `exported \`${lateExport.name}()\` is declared after the private \`${declarations[firstPrivate].name}()\``, 'Public API first, machinery below, so a reader meets what the module offers before how it works.');
+                fail(
+                    rel,
+                    `exported \`${lateExport.name}()\` is declared after the private \`${declarations[firstPrivate]?.name ?? ''}()\``,
+                    'Public API first, machinery below, so a reader meets what the module offers before how it works.',
+                );
             }
         }
     }
@@ -161,14 +189,26 @@ for (const rel of files) {
 
     if (/^src\/main\/(lib|services)\//.test(rel) && !DECLARATION.test(base)) {
         if (!opensWithJsdoc) {
-            fail(rel, 'has no JSDoc header block', 'A main-process module owns an external concern — the filesystem, a model handle, a config file — and which one, plus what it guarantees callers, is not derivable from its exports.');
+            fail(
+                rel,
+                'has no JSDoc header block',
+                'A main-process module owns an external concern — the filesystem, a model handle, a config file — and which one, plus what it guarantees callers, is not derivable from its exports.',
+            );
         }
     }
     if (/^src\/renderer\/composables\//.test(rel) && !opensWithComment) {
-        fail(rel, 'has no header comment', 'A composable owes at least a `//` line saying what state it owns — that is the thing its signature cannot say.');
+        fail(
+            rel,
+            'has no header comment',
+            'A composable owes at least a `//` line saying what state it owns — that is the thing its signature cannot say.',
+        );
     }
     if (base.endsWith('.vue') && opensWithJsdoc) {
-        fail(rel, 'opens with a JSDoc header block', 'SFCs owe no prose header: `defineProps`/`defineEmits` are the contract, and a header above them is the one part nothing checks, so it is the part that goes stale.');
+        fail(
+            rel,
+            'opens with a JSDoc header block',
+            'SFCs owe no prose header: `defineProps`/`defineEmits` are the contract, and a header above them is the one part nothing checks, so it is the part that goes stale.',
+        );
     }
 
     // ── 6/7. SFC block order and comment format ──────────────────────────────
@@ -177,7 +217,11 @@ for (const rel of files) {
         const order = blocks.filter((b, i) => blocks.indexOf(b) === i);
         const expected = ['script', 'template', 'style'].filter((b) => order.includes(b));
         if (order.join(',') !== expected.join(',')) {
-            fail(rel, `block order is <${order.join('>, <')}>`, 'Every SFC opens `<script setup>` → `<template>` → `<style>`: logic, then markup, then presentation. All 26 agree, so you never hunt for the script block.');
+            fail(
+                rel,
+                `block order is <${order.join('>, <')}>`,
+                'Every SFC opens `<script setup>` → `<template>` → `<style>`: logic, then markup, then presentation. All 26 agree, so you never hunt for the script block.',
+            );
         }
 
         const templateStart = source.indexOf('\n<template');
@@ -187,7 +231,11 @@ for (const rel of files) {
             const template = source.slice(templateStart, styleStart === -1 ? undefined : styleStart);
             for (const m of template.matchAll(/^\s*\/\*|^\s*\/\//gm)) {
                 void m;
-                fail(rel, 'uses a JS-style comment inside <template>', 'Markup comments are `<!-- Section -->`. A `//` in a template is not a comment at all — Vue renders it as text.');
+                fail(
+                    rel,
+                    'uses a JS-style comment inside <template>',
+                    'Markup comments are `<!-- Section -->`. A `//` in a template is not a comment at all — Vue renders it as text.',
+                );
                 break;
             }
         }
@@ -195,9 +243,13 @@ for (const rel of files) {
         if (styleStart !== -1) {
             const style = source.slice(styleStart);
             for (const m of style.matchAll(/^[ \t]*\/\*(?!\s*–)([^*]*)\*\//gm)) {
-                const text = m[1].trim();
+                const text = (m[1] ?? '').trim();
                 if (text === '' || /^stylelint-/.test(text)) continue;
-                fail(rel, `style section comment "${text.slice(0, 40)}" is not in the decorated form`, 'Style sections are written `/* ––– Section ––– */` (en-dashes). The decoration is what makes them scannable in a 700-line SFC.');
+                fail(
+                    rel,
+                    `style section comment "${text.slice(0, 40)}" is not in the decorated form`,
+                    'Style sections are written `/* ––– Section ––– */` (en-dashes). The decoration is what makes them scannable in a 700-line SFC.',
+                );
                 break;
             }
         }
@@ -206,7 +258,11 @@ for (const rel of files) {
     // ── 8. JSDoc type tags in TypeScript ─────────────────────────────────────
     const typeTag = source.match(/@(param|returns?|type)\s*\{/);
     if (typeTag !== null) {
-        fail(rel, `JSDoc carries a type annotation (\`@${typeTag[1]} {…}\`)`, 'The signature already states the type and is actually checked; the tag is a copy that nothing verifies, so it drifts. Describe meaning, not types.');
+        fail(
+            rel,
+            `JSDoc carries a type annotation (\`@${typeTag[1]} {…}\`)`,
+            'The signature already states the type and is actually checked; the tag is a copy that nothing verifies, so it drifts. Describe meaning, not types.',
+        );
     }
 }
 
