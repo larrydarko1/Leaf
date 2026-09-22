@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+
 import { useAIModel } from '@/renderer/composables/ai/useAIModel';
 import type { AiModelInfo, AiStatus } from '@/schemas/ai';
 

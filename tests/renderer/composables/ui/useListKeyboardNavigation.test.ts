@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { defineComponent, createApp } from 'vue';
+
 import { useListKeyboardNavigation } from '@/renderer/composables/ui/useListKeyboardNavigation';
 
 function withSetup<T>(composable: () => T): [T, () => void] {

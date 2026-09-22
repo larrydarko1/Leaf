@@ -3,8 +3,8 @@
  * ordered/unordered lists and task items on Enter.
  */
 
-import { type EditorView, keymap } from '@codemirror/view';
 import { EditorSelection } from '@codemirror/state';
+import { type EditorView, keymap } from '@codemirror/view';
 
 export const listContinuationKeymap = keymap.of([
     {

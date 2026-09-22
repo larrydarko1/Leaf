@@ -5,6 +5,7 @@
 
 import { ref, computed, watch, type ComputedRef, type Ref } from 'vue';
 import { z } from 'zod';
+
 import type { FileInfo, FolderInfo, TreeNode } from '@/schemas/vault';
 
 export type UseFolderTreeReturn = {

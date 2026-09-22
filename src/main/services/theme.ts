@@ -23,13 +23,15 @@
  * custom properties.
  */
 
-import { type IpcMain, shell } from 'electron';
-import path from 'path';
-import fs from 'fs/promises';
 import { existsSync } from 'fs';
-import { THEMES_DIR, getBundledThemesDir } from '@/main/lib/paths';
+import fs from 'fs/promises';
+import path from 'path';
+
+import { type IpcMain, shell } from 'electron';
+
 import { readState as readRawState, updateState } from '@/main/lib/appState';
 import { log } from '@/main/lib/logger';
+import { THEMES_DIR, getBundledThemesDir } from '@/main/lib/paths';
 import { type ThemeInfo, type ThemeState, ThemeStateSchema } from '@/schemas/vault';
 
 const DEFAULT_THEME_ID = 'dark';

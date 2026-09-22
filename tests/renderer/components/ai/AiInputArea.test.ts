@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+
 import AiInputArea from '@/renderer/components/ai/AiInputArea.vue';
 import { mountWithI18n } from '@test-utils';
 

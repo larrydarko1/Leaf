@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref, shallowRef } from 'vue';
+
 import { useEditorDrop } from '@/renderer/composables/editor/useEditorDrop';
 
 const mockElectronAPI = {

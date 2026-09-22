@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ref } from 'vue';
+
 import { useConversationHistory } from '@/renderer/composables/ai/useConversationHistory';
 import type { AiStatus, Conversation } from '@/schemas/ai';
 import type { ChatMessage } from '@/schemas/chat';

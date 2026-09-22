@@ -3,14 +3,15 @@
  * Owns: send/stop, token streaming, markdown rendering, message CRUD.
  */
 
-import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
-import { useThrottleFn } from '@/renderer/composables/useThrottle';
-import type { Ref } from 'vue';
-import { marked } from 'marked';
 import DOMPurify from 'dompurify';
-import type { FileInfo } from '@/schemas/vault';
+import { marked } from 'marked';
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
+import type { Ref } from 'vue';
+
+import { useThrottleFn } from '@/renderer/composables/useThrottle';
 import type { AiStatus } from '@/schemas/ai';
 import type { ChatMessage } from '@/schemas/chat';
+import type { FileInfo } from '@/schemas/vault';
 
 type AiChatDeps = {
     messages: Ref<ChatMessage[]>;

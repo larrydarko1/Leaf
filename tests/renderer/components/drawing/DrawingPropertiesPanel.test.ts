@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { mountWithI18n } from '@test-utils';
+
 import DrawingPropertiesPanel from '@/renderer/components/drawing/DrawingPropertiesPanel.vue';
+import { mountWithI18n } from '@test-utils';
 
 const baseProps = {
     visible: true,

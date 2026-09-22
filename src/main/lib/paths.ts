@@ -3,9 +3,10 @@
  * Used by ai-service, speech-service, and systemPrompt-service.
  */
 
-import path from 'path';
-import os from 'os';
 import fs from 'fs';
+import os from 'os';
+import path from 'path';
+
 import { log } from '@/main/lib/logger';
 
 // ─── Leaf user directory: ~/.leaf/ ───────────────────────────────────────────

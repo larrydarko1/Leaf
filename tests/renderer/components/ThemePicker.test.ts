@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { mountWithI18n } from '@test-utils';
+
 import ThemePicker from '@/renderer/components/ThemePicker.vue';
+import { mountWithI18n } from '@test-utils';
 
 const mockElectronAPI = {
     themeList: vi.fn(),

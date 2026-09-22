@@ -4,6 +4,7 @@
 
 import { ref, shallowRef, nextTick, type ShallowRef } from 'vue';
 import type { Ref } from 'vue';
+
 import type { AiStatus, ConversationMeta } from '@/schemas/ai';
 import type { ChatMessage } from '@/schemas/chat';
 

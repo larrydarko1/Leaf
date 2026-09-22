@@ -1,17 +1,18 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
-import { useThrottleFn } from '@/renderer/composables/useThrottle';
-import type { FileInfo } from '@/schemas/vault';
-import type { ChatMessage } from '@/schemas/chat';
-import { useAIModel } from '@/renderer/composables/ai/useAIModel';
-import { useConversationHistory } from '@/renderer/composables/ai/useConversationHistory';
+import { useI18n } from 'vue-i18n';
+
+import AiHistoryPanel from '@/renderer/components/ai/AiHistoryPanel.vue';
+import AiInputArea from '@/renderer/components/ai/AiInputArea.vue';
+import AiMessageList from '@/renderer/components/ai/AiMessageList.vue';
+import AiModelBar from '@/renderer/components/ai/AiModelBar.vue';
 import { useAIChat } from '@/renderer/composables/ai/useAIChat';
 import { MAX_CONTEXT_FILES } from '@/renderer/composables/ai/useAIChat';
-import AiModelBar from '@/renderer/components/ai/AiModelBar.vue';
-import AiHistoryPanel from '@/renderer/components/ai/AiHistoryPanel.vue';
-import AiMessageList from '@/renderer/components/ai/AiMessageList.vue';
-import AiInputArea from '@/renderer/components/ai/AiInputArea.vue';
-import { useI18n } from 'vue-i18n';
+import { useAIModel } from '@/renderer/composables/ai/useAIModel';
+import { useConversationHistory } from '@/renderer/composables/ai/useConversationHistory';
+import { useThrottleFn } from '@/renderer/composables/useThrottle';
+import type { ChatMessage } from '@/schemas/chat';
+import type { FileInfo } from '@/schemas/vault';
 
 type Props = {
     files?: FileInfo[];

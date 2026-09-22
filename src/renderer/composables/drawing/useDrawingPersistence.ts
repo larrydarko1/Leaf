@@ -4,6 +4,7 @@
  */
 
 import { ref, nextTick, type Ref } from 'vue';
+
 import { type CanvasElement, type DrawingDataV2, type ElementType, DrawingDataV2Schema } from '@/schemas/drawing';
 
 export type UseDrawingPersistenceReturn = {

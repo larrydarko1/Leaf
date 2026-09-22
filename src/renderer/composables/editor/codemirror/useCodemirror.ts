@@ -3,16 +3,16 @@
  * with extensions, themes, and lifecycle cleanup.
  */
 
-import { onUnmounted, watch, type Ref, shallowRef, nextTick, type ShallowRef } from 'vue';
+import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
+import { defaultKeymap, indentWithTab, history, historyKeymap } from '@codemirror/commands';
+import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
+import { syntaxHighlighting, HighlightStyle, indentOnInput } from '@codemirror/language';
+import { languages } from '@codemirror/language-data';
+import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
 import { EditorState, type Extension } from '@codemirror/state';
 import { EditorView, keymap, placeholder as cmPlaceholder, drawSelection } from '@codemirror/view';
-import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
-import { defaultKeymap, indentWithTab, history, historyKeymap } from '@codemirror/commands';
-import { syntaxHighlighting, HighlightStyle, indentOnInput } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
-import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
-import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
-import { languages } from '@codemirror/language-data';
+import { onUnmounted, watch, type Ref, shallowRef, nextTick, type ShallowRef } from 'vue';
 
 /**
  * Custom syntax highlight style that uses the app's accent color for links

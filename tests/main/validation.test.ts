@@ -1,5 +1,7 @@
-import { describe, it, expect } from 'vitest';
 import path from 'path';
+
+import { describe, it, expect } from 'vitest';
+
 import { resolveInsideBoundary, assertSafeFileName, isInsideBoundary } from '@/main/lib/validation';
 
 describe('validation', () => {

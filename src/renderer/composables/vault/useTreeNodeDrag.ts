@@ -4,6 +4,7 @@
  */
 
 import { ref, type Ref } from 'vue';
+
 import type { TreeNode, FileInfo } from '@/schemas/vault';
 
 export type UseTreeNodeDragReturn = {

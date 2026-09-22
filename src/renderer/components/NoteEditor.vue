@@ -1,5 +1,28 @@
 <script setup lang="ts">
+import { keymap, EditorView } from '@codemirror/view';
 import { ref, watch, onMounted, onUnmounted, computed, shallowRef } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+import DrawingCanvas from '@/renderer/components/DrawingCanvas.vue';
+import AudioViewer from '@/renderer/components/editor/AudioViewer.vue';
+import ImageViewer from '@/renderer/components/editor/ImageViewer.vue';
+import MarkdownToolbar from '@/renderer/components/editor/MarkdownToolbar.vue';
+import PdfViewer from '@/renderer/components/editor/PdfViewer.vue';
+import VideoViewer from '@/renderer/components/editor/VideoViewer.vue';
+import { listContinuationKeymap } from '@/renderer/composables/editor/codemirror/cm-list-continuation';
+import {
+    createMarkdownWidgetsPlugin,
+    interactiveExtension,
+} from '@/renderer/composables/editor/codemirror/cm-markdown-widgets';
+import { taskFoldExtension } from '@/renderer/composables/editor/codemirror/cm-task-fold';
+import { leafEditorTheme } from '@/renderer/composables/editor/codemirror/cm-theme';
+import { useCodemirrorToolbar, markdownKeymap } from '@/renderer/composables/editor/codemirror/cm-toolbar';
+import { useCodeEditor } from '@/renderer/composables/editor/codemirror/useCodeEditor';
+import { useCodemirror } from '@/renderer/composables/editor/codemirror/useCodemirror';
+import { useDictation } from '@/renderer/composables/editor/useDictation';
+import { useEditorDrop } from '@/renderer/composables/editor/useEditorDrop';
+import { useEmbedResolver } from '@/renderer/composables/editor/useEmbedResolver';
+import { useNotePersistence } from '@/renderer/composables/editor/useNotePersistence';
 import { useDebounceFn } from '@/renderer/composables/useDebounce';
 import {
     isImageFile as checkImage,
@@ -10,29 +33,7 @@ import {
     isMarkdownFile as checkMarkdown,
     isDrawingFile as checkDrawing,
 } from '@/renderer/utils/fileTypes';
-import DrawingCanvas from '@/renderer/components/DrawingCanvas.vue';
-import ImageViewer from '@/renderer/components/editor/ImageViewer.vue';
-import VideoViewer from '@/renderer/components/editor/VideoViewer.vue';
-import AudioViewer from '@/renderer/components/editor/AudioViewer.vue';
-import PdfViewer from '@/renderer/components/editor/PdfViewer.vue';
-import MarkdownToolbar from '@/renderer/components/editor/MarkdownToolbar.vue';
 import type { FileInfo } from '@/schemas/vault';
-import { useEmbedResolver } from '@/renderer/composables/editor/useEmbedResolver';
-import { useEditorDrop } from '@/renderer/composables/editor/useEditorDrop';
-import { useDictation } from '@/renderer/composables/editor/useDictation';
-import { useNotePersistence } from '@/renderer/composables/editor/useNotePersistence';
-import { useCodemirror } from '@/renderer/composables/editor/codemirror/useCodemirror';
-import { useCodemirrorToolbar, markdownKeymap } from '@/renderer/composables/editor/codemirror/cm-toolbar';
-import {
-    createMarkdownWidgetsPlugin,
-    interactiveExtension,
-} from '@/renderer/composables/editor/codemirror/cm-markdown-widgets';
-import { leafEditorTheme } from '@/renderer/composables/editor/codemirror/cm-theme';
-import { listContinuationKeymap } from '@/renderer/composables/editor/codemirror/cm-list-continuation';
-import { taskFoldExtension } from '@/renderer/composables/editor/codemirror/cm-task-fold';
-import { useCodeEditor } from '@/renderer/composables/editor/codemirror/useCodeEditor';
-import { keymap, EditorView } from '@codemirror/view';
-import { useI18n } from 'vue-i18n';
 
 type Props = {
     file: FileInfo | null;

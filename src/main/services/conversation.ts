@@ -3,14 +3,16 @@
  * Stored in the app's userData directory (e.g. ~/Library/Application Support/Leaf/conversations/).
  */
 
-import type { IpcMain } from 'electron';
-import path from 'path';
-import fs from 'fs/promises';
-import { existsSync, mkdirSync } from 'fs';
 import { randomUUID } from 'crypto';
-import { assertSafeFileName, resolveInsideBoundary } from '@/main/lib/validation';
-import { log } from '@/main/lib/logger';
+import { existsSync, mkdirSync } from 'fs';
+import fs from 'fs/promises';
+import path from 'path';
+
+import type { IpcMain } from 'electron';
 import { z } from 'zod';
+
+import { log } from '@/main/lib/logger';
+import { assertSafeFileName, resolveInsideBoundary } from '@/main/lib/validation';
 import {
     type Conversation,
     type ConversationMessage,

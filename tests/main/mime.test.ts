@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+
 import { IMAGE_MIMETYPES, AUDIO_MIMETYPES } from '@/main/lib/mime';
 
 describe('mime', () => {

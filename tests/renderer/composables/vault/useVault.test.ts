@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import { useVault } from '@/renderer/composables/vault/useVault';
 import type { FileInfo, FolderInfo } from '@/schemas/vault';
 

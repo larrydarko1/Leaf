@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import fs from 'fs';
 import path from 'path';
+
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const PATHS = vi.hoisted(() => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports

@@ -21,14 +21,16 @@
  *   }
  */
 
-import { shell, type IpcMain } from 'electron';
-import path from 'path';
-import fs from 'fs/promises';
-import { existsSync } from 'fs';
 import { createHash } from 'crypto';
-import { LOCALES_DIR, getBundledLocalesDir } from '@/main/lib/paths';
+import { existsSync } from 'fs';
+import fs from 'fs/promises';
+import path from 'path';
+
+import { shell, type IpcMain } from 'electron';
+
 import { readState as readRawState, updateState } from '@/main/lib/appState';
 import { log } from '@/main/lib/logger';
+import { LOCALES_DIR, getBundledLocalesDir } from '@/main/lib/paths';
 import { type LanguageInfo, type LanguageState, LanguageStateSchema } from '@/schemas/vault';
 
 /** Maps locale id -> sha256 of the bundled content it was last synced to. */

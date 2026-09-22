@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue';
-import type { ChatMessage } from '@/schemas/chat';
-import type { AiModelInfo, AiStatus } from '@/schemas/ai';
 import { useI18n } from 'vue-i18n';
+
+import type { AiModelInfo, AiStatus } from '@/schemas/ai';
+import type { ChatMessage } from '@/schemas/chat';
 
 type Props = {
     messages: ChatMessage[];

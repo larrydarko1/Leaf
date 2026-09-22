@@ -1,8 +1,9 @@
-import { describe, it, expect, vi } from 'vitest';
-import { EditorState } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { foldable } from '@codemirror/language';
+import { EditorState } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
+import { describe, it, expect, vi } from 'vitest';
+
 import { taskFoldExtension } from '@/renderer/composables/editor/codemirror/cm-task-fold';
 
 function makeState(doc: string): EditorState {

@@ -3,6 +3,8 @@
  * in markdown documents.
  */
 
+import { codeFolding, foldEffect, unfoldEffect, foldedRanges, foldService } from '@codemirror/language';
+import { type EditorState, type Range, type Extension, type StateEffect } from '@codemirror/state';
 import {
     Decoration,
     type DecorationSet,
@@ -11,14 +13,8 @@ import {
     type ViewUpdate,
     WidgetType,
 } from '@codemirror/view';
-import { type EditorState, type Range, type Extension, type StateEffect } from '@codemirror/state';
-import { codeFolding, foldEffect, unfoldEffect, foldedRanges, foldService } from '@codemirror/language';
-
-// ── Fold range detection ──────────────────────────────────────────────────────
 
 const taskLineRegex = /^(\s*)- \[[ x/]\] /i;
-
-// ── Fold toggle widget ────────────────────────────────────────────────────────
 
 class TaskFoldToggleWidget extends WidgetType {
     folded: boolean;
@@ -44,13 +40,9 @@ class TaskFoldToggleWidget extends WidgetType {
     }
 }
 
-// ── Fold service ──────────────────────────────────────────────────────────────
-
 const taskFold = foldService.of((state, lineStart, _lineEnd): { from: number; to: number } | null => {
     return taskFoldRange(state, lineStart);
 });
-
-// ── Fold toggle ViewPlugin ────────────────────────────────────────────────────
 
 const taskFoldTogglePlugin = ViewPlugin.fromClass(
     class {
@@ -146,8 +138,6 @@ const taskFoldTogglePlugin = ViewPlugin.fromClass(
         },
     },
 );
-
-// ── Combined extension ────────────────────────────────────────────────────────
 
 /**
  * Extension that adds Obsidian-style collapsible nested task lists.

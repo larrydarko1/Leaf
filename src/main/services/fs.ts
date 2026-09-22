@@ -4,18 +4,20 @@
  * focused on app bootstrap only.
  */
 
-import type { IpcMain, BrowserWindow } from 'electron';
-import { app, dialog, shell } from 'electron';
-import path from 'path';
-import fs from 'fs/promises';
 import { watch, existsSync } from 'fs';
 import type { FSWatcher } from 'fs';
+import fs from 'fs/promises';
+import path from 'path';
+
+import type { IpcMain, BrowserWindow } from 'electron';
+import { app, dialog, shell } from 'electron';
 import { z } from 'zod';
+
+import { readState, updateState } from '@/main/lib/appState';
 import { ALLOWED_EXTENSIONS } from '@/main/lib/extensions';
+import { log } from '@/main/lib/logger';
 import { IMAGE_MIMETYPES, AUDIO_MIMETYPES } from '@/main/lib/mime';
 import { resolveInsideBoundary } from '@/main/lib/validation';
-import { readState, updateState } from '@/main/lib/appState';
-import { log } from '@/main/lib/logger';
 import type { FileInfo, FolderInfo, ScanResult } from '@/schemas/vault';
 import {
     SaveDialogOptionsSchema,

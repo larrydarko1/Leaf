@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import type { AiModelInfo, AiStatus } from '@/schemas/ai';
-import { useSystemPrompt } from '@/renderer/composables/ai/useSystemPrompt';
 import { useI18n } from 'vue-i18n';
+
+import { useSystemPrompt } from '@/renderer/composables/ai/useSystemPrompt';
+import type { AiModelInfo, AiStatus } from '@/schemas/ai';
 
 type Props = {
     status: AiStatus;

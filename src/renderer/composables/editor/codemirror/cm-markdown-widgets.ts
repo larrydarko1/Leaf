@@ -3,10 +3,11 @@
  * Assembles the interactive extension and decoration plugin from cm-widgets and cm-deco-builders.
  */
 
-import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
-import { type EditorState, type Extension, type Range } from '@codemirror/state';
 import { syntaxTree } from '@codemirror/language';
+import { type EditorState, type Extension, type Range } from '@codemirror/state';
+import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 import type { Ref } from 'vue';
+
 import {
     activeLinesSet,
     buildEmbedDecos,
@@ -15,8 +16,6 @@ import {
     buildTaskDecos,
     mergeVisibleRanges,
 } from '@/renderer/composables/editor/codemirror/cm-deco-builders';
-
-// ── Interactive extension (links + media controls) ───────────────────────────
 
 export const interactiveExtension = EditorView.domEventHandlers({
     mousedown(event: MouseEvent, view: EditorView): boolean {
@@ -45,8 +44,6 @@ export const interactiveExtension = EditorView.domEventHandlers({
         return false;
     },
 });
-
-// ── Combined plugin ───────────────────────────────────────────────────────────
 
 /**
  * Single unified ViewPlugin for ALL markdown live-preview decorations:

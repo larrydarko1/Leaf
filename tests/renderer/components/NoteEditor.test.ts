@@ -1,12 +1,13 @@
+import { shallowMount } from '@vue/test-utils';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref, shallowRef } from 'vue';
-import { shallowMount } from '@vue/test-utils';
-import { i18n } from '@/renderer/i18n';
+
 import NoteEditor from '@/renderer/components/NoteEditor.vue';
 import { useDictation } from '@/renderer/composables/editor/useDictation';
-import { useNotePersistence } from '@/renderer/composables/editor/useNotePersistence';
-import { useEmbedResolver } from '@/renderer/composables/editor/useEmbedResolver';
 import { useEditorDrop } from '@/renderer/composables/editor/useEditorDrop';
+import { useEmbedResolver } from '@/renderer/composables/editor/useEmbedResolver';
+import { useNotePersistence } from '@/renderer/composables/editor/useNotePersistence';
+import { i18n } from '@/renderer/i18n';
 import type { FileInfo } from '@/schemas/vault';
 
 vi.mock('@codemirror/view', () => ({

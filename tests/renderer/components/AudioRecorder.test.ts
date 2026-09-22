@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref } from 'vue';
-import { mountWithI18n } from '@test-utils';
+
 import AudioRecorder from '@/renderer/components/AudioRecorder.vue';
 import { useAudioRecorder } from '@/renderer/composables/useAudioRecorder';
+import { mountWithI18n } from '@test-utils';
 
 const mockToggle = vi.fn();
 const mockIsRecording = ref(false);

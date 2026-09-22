@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+
 import { useDrawingElements } from '@/renderer/composables/drawing/useDrawingElements';
 import type { CanvasElement } from '@/schemas/drawing';
 

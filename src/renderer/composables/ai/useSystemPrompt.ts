@@ -7,6 +7,7 @@
  */
 
 import { ref, type Ref } from 'vue';
+
 import type { PromptInfo } from '@/schemas/ai';
 
 export type UseSystemPromptReturn = {

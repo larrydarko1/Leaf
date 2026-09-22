@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { watch, onMounted, onUnmounted } from 'vue';
-import { useVideoPlayer } from '@/renderer/composables/editor/useVideoPlayer';
 import { useI18n } from 'vue-i18n';
+
+import { useVideoPlayer } from '@/renderer/composables/editor/useVideoPlayer';
 
 type Props = {
     filePath: string;

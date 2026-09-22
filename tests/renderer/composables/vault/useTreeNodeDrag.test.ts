@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import { useTreeNodeDrag } from '@/renderer/composables/vault/useTreeNodeDrag';
 import type { TreeNode, FileInfo } from '@/schemas/vault';
 

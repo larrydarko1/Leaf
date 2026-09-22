@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { mountWithI18n } from '@test-utils';
+
 import BookmarksPanel from '@/renderer/components/BookmarksPanel.vue';
 import type { FileInfo } from '@/schemas/vault';
+import { mountWithI18n } from '@test-utils';
 
 const fileA = makeFile('notes.md', '/vault/notes.md');
 const fileB = makeFile('ideas.md', '/vault/ideas.md');

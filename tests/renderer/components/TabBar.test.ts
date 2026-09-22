@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
-import { mountWithI18n } from '@test-utils';
+
 import TabBar from '@/renderer/components/TabBar.vue';
 import type { TabState } from '@/schemas/vault';
+import { mountWithI18n } from '@test-utils';
 
 const defaultTabs: TabState[] = [
     makeTab('notes.md', '/vault/notes.md'),

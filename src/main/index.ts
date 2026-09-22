@@ -20,25 +20,23 @@
  *   main (inline)        → log:*, clipboard:write, shell:openExternal
  */
 
-import { app, BrowserWindow, ipcMain, shell, Menu, screen, protocol, net, session, clipboard } from 'electron';
 import path from 'path';
 import { pathToFileURL } from 'url';
 
-// ─── Service modules ─────────────────────────────────────────────────────────
-import * as fsService from '@/main/services/fs';
-import * as mediaService from '@/main/services/media';
+import { app, BrowserWindow, ipcMain, shell, Menu, screen, protocol, net, session, clipboard } from 'electron';
+
+import { config } from '@/main/lib/config';
+import { log } from '@/main/lib/logger';
+import { migrateLegacyPaths } from '@/main/lib/paths';
+import { isInsideBoundary } from '@/main/lib/validation';
 import * as aiService from '@/main/services/ai';
 import * as conversationService from '@/main/services/conversation';
+import * as fsService from '@/main/services/fs';
+import * as languageService from '@/main/services/language';
+import * as mediaService from '@/main/services/media';
 import * as speechService from '@/main/services/speech';
 import * as systemPromptService from '@/main/services/systemPrompt';
 import * as themeService from '@/main/services/theme';
-import * as languageService from '@/main/services/language';
-import { migrateLegacyPaths } from '@/main/lib/paths';
-import { isInsideBoundary } from '@/main/lib/validation';
-import { log } from '@/main/lib/logger';
-import { config } from '@/main/lib/config';
-
-// ─── Window ──────────────────────────────────────────────────────────────────
 
 let mainWindow: BrowserWindow | null = null;
 

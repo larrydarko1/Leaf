@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
 import { useListKeyboardNavigation } from '@/renderer/composables/ui/useListKeyboardNavigation';
 import type { FileInfo } from '@/schemas/vault';
-import { useI18n } from 'vue-i18n';
 
 type Props = {
     files: FileInfo[];

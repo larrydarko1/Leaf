@@ -9,6 +9,7 @@
 
 import { ref, type Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+
 import { i18n, type MessageSchema } from '@/renderer/i18n';
 import type { LanguageInfo } from '@/schemas/vault';
 

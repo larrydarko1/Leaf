@@ -1,8 +1,9 @@
+import { shallowMount } from '@vue/test-utils';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref, computed } from 'vue';
-import { shallowMount } from '@vue/test-utils';
-import { i18n } from '@/renderer/i18n';
+
 import AiPanel from '@/renderer/components/AiPanel.vue';
+import { i18n } from '@/renderer/i18n';
 import type { FileInfo } from '@/schemas/vault';
 
 vi.mock('@/renderer/composables/useThrottle', () => ({

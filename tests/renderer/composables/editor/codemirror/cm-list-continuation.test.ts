@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
 import { EditorState, EditorSelection } from '@codemirror/state';
 import { EditorView, runScopeHandlers } from '@codemirror/view';
+import { describe, it, expect } from 'vitest';
+
 import { listContinuationKeymap } from '@/renderer/composables/editor/codemirror/cm-list-continuation';
 
 function makeView(doc: string, cursorPos?: number): EditorView {

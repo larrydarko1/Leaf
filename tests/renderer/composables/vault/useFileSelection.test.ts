@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import { useFileSelection } from '@/renderer/composables/vault/useFileSelection';
 import type { FileInfo } from '@/schemas/vault';
 

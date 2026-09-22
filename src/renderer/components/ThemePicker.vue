@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
-import { useTheme } from '@/renderer/composables/ui/useTheme';
 import { useI18n } from 'vue-i18n';
+
+import { useTheme } from '@/renderer/composables/ui/useTheme';
 
 const emit = defineEmits<{ close: [] }>();
 

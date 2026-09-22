@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref, nextTick } from 'vue';
+
 import { useTextEditing } from '@/renderer/composables/drawing/useTextEditing';
 import type { CanvasElement, DefaultStyle } from '@/schemas/drawing';
 

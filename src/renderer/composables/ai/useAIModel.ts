@@ -3,8 +3,9 @@
  */
 
 import { ref, shallowRef, computed, onMounted, onUnmounted, type ComputedRef, type Ref, type ShallowRef } from 'vue';
-import type { AiModelInfo, AiStatus } from '@/schemas/ai';
 import { useI18n } from 'vue-i18n';
+
+import type { AiModelInfo, AiStatus } from '@/schemas/ai';
 
 export type UseAIModelReturn = {
     status: Ref<AiStatus>;

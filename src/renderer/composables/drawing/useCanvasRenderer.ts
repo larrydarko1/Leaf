@@ -4,6 +4,7 @@
  */
 
 import { computed, type Ref } from 'vue';
+
 import type { CanvasElement } from '@/schemas/drawing';
 
 export type UseCanvasRendererReturn = {

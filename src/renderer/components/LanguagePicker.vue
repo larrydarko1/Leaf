@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
-import { useLanguage } from '@/renderer/composables/ui/useLanguage';
 import { useI18n } from 'vue-i18n';
+
+import { useLanguage } from '@/renderer/composables/ui/useLanguage';
 
 const emit = defineEmits<{ close: [] }>();
 

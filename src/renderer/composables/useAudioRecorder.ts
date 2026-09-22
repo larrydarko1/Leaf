@@ -5,6 +5,7 @@
  */
 
 import { ref, computed, onUnmounted, type ComputedRef, type Ref } from 'vue';
+
 import { convertWebMToWav, arrayBufferToBase64 } from '@/renderer/utils/audio';
 
 export function useAudioRecorder(

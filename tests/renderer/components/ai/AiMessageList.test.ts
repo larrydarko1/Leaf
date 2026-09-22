@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { mountWithI18n } from '@test-utils';
+
 import AiMessageList from '@/renderer/components/ai/AiMessageList.vue';
-import type { ChatMessage } from '@/schemas/chat';
 import type { AiStatus, AiModelInfo } from '@/schemas/ai';
+import type { ChatMessage } from '@/schemas/chat';
+import { mountWithI18n } from '@test-utils';
 
 const mockWriteClipboard = vi.fn().mockResolvedValue(undefined);
 const mockLogError = vi.fn();

@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+
 import AiPanel from '@/renderer/components/AiPanel.vue';
 import { mountWithI18n } from '@test-utils';
 

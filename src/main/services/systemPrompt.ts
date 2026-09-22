@@ -13,14 +13,16 @@
  *     so OS-level edits take effect on the next reset.
  */
 
+import { existsSync } from 'fs';
+import fs from 'fs/promises';
+import path from 'path';
+
 import type { IpcMain } from 'electron';
 import { shell } from 'electron';
-import path from 'path';
-import fs from 'fs/promises';
-import { existsSync } from 'fs';
-import { LEAF_HOME, PROMPTS_DIR, getBundledPromptsDir } from '@/main/lib/paths';
+
 import { readState as readRawState, updateState } from '@/main/lib/appState';
 import { log } from '@/main/lib/logger';
+import { LEAF_HOME, PROMPTS_DIR, getBundledPromptsDir } from '@/main/lib/paths';
 import { type PromptInfo, type PromptState, PromptStateSchema } from '@/schemas/ai';
 
 const DEFAULT_PROMPT_ID = 'default';

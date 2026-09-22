@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ref, createApp, defineComponent, h } from 'vue';
+
 import { useAIChat, MAX_CONTEXT_FILES } from '@/renderer/composables/ai/useAIChat';
-import type { ChatMessage } from '@/schemas/chat';
 import type { AiStatus } from '@/schemas/ai';
+import type { ChatMessage } from '@/schemas/chat';
 
 const mockAiResetChat = vi.fn().mockResolvedValue({ success: true });
 const mockAiRestoreChatHistory = vi.fn().mockResolvedValue({ success: true });

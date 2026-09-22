@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { mountWithI18n } from '@test-utils';
+
 import FileExplorer from '@/renderer/components/FileExplorer.vue';
 import type { FileInfo, FolderInfo } from '@/schemas/vault';
+import { mountWithI18n } from '@test-utils';
 
 const noteFile = makeFile('notes.md', '.');
 const ideaFile = makeFile('ideas.md', 'work');

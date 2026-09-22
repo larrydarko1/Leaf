@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref, computed } from 'vue';
+
 import { useDrawingInteraction } from '@/renderer/composables/drawing/useDrawingInteraction';
 import type { CanvasElement, DefaultStyle, ToolType } from '@/schemas/drawing';
 

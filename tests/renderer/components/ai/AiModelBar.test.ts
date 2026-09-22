@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref } from 'vue';
-import { mountWithI18n } from '@test-utils';
+
 import AiModelBar from '@/renderer/components/ai/AiModelBar.vue';
 import type { AiModelInfo, AiStatus, PromptInfo } from '@/schemas/ai';
+import { mountWithI18n } from '@test-utils';
 
 const mockRefresh = vi.fn().mockResolvedValue(undefined);
 const mockSetActive = vi.fn().mockResolvedValue(undefined);

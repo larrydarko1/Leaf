@@ -5,6 +5,7 @@
 
 import { ref, computed, nextTick, type ComputedRef } from 'vue';
 import type { Ref } from 'vue';
+
 import type { CanvasElement, DefaultStyle } from '@/schemas/drawing';
 
 export type UseTextEditingReturn = {

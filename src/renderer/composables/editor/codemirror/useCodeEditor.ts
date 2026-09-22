@@ -2,7 +2,11 @@
  * useCodeEditor — creates a read-only CodeMirror 6 instance for code file viewing.
  */
 
-import { onUnmounted, watch, type Ref, shallowRef, nextTick, type ShallowRef } from 'vue';
+import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
+import { defaultKeymap, indentWithTab, history, historyKeymap } from '@codemirror/commands';
+import { syntaxHighlighting, indentOnInput, foldGutter, bracketMatching } from '@codemirror/language';
+import { languages } from '@codemirror/language-data';
+import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
 import { EditorState, type Extension } from '@codemirror/state';
 import {
     EditorView,
@@ -13,13 +17,10 @@ import {
     highlightActiveLineGutter,
     highlightActiveLine,
 } from '@codemirror/view';
-import { defaultKeymap, indentWithTab, history, historyKeymap } from '@codemirror/commands';
-import { syntaxHighlighting, indentOnInput, foldGutter, bracketMatching } from '@codemirror/language';
-import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
-import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
-import { languages } from '@codemirror/language-data';
-import { leafHighlightStyle } from '@/renderer/composables/editor/codemirror/useCodemirror';
+import { onUnmounted, watch, type Ref, shallowRef, nextTick, type ShallowRef } from 'vue';
+
 import { leafCodeEditorTheme } from '@/renderer/composables/editor/codemirror/cm-theme';
+import { leafHighlightStyle } from '@/renderer/composables/editor/codemirror/useCodemirror';
 
 /**
  * Map file extensions to CodeMirror language names for lookup in @codemirror/language-data.

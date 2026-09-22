@@ -3,6 +3,7 @@
  */
 
 import { ref, type Ref } from 'vue';
+
 import type { FileInfo } from '@/schemas/vault';
 
 export type UseFileSelectionReturn = {

@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ref } from 'vue';
+import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { ref } from 'vue';
 
 import {
     interactiveExtension,

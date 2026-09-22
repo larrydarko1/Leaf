@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { mountWithI18n } from '@test-utils';
+
 import ImageViewer from '@/renderer/components/editor/ImageViewer.vue';
+import { mountWithI18n } from '@test-utils';
 
 const mockReadImage = vi.fn();
 

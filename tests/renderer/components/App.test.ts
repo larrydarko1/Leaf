@@ -1,8 +1,9 @@
+import { shallowMount } from '@vue/test-utils';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref } from 'vue';
-import { shallowMount } from '@vue/test-utils';
-import { i18n } from '@/renderer/i18n';
+
 import App from '@/renderer/App.vue';
+import { i18n } from '@/renderer/i18n';
 import type { FileInfo } from '@/schemas/vault';
 
 const mockCurrentFolder = ref<string | null>(null);

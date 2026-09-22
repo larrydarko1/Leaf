@@ -4,9 +4,10 @@
  */
 
 import { ref, computed } from 'vue';
-import { useThrottleFn } from '@/renderer/composables/useThrottle';
-import { measureTextBox } from '@/renderer/composables/drawing/textMetrics';
 import type { Ref, ComputedRef } from 'vue';
+
+import { measureTextBox } from '@/renderer/composables/drawing/textMetrics';
+import { useThrottleFn } from '@/renderer/composables/useThrottle';
 import type { ToolType, ElementType, DragAction, CanvasElement, DefaultStyle } from '@/schemas/drawing';
 
 export type UseDrawingInteractionReturn = {

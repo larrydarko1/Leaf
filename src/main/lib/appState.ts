@@ -15,6 +15,7 @@
  */
 
 import fs from 'fs/promises';
+
 import { LEAF_HOME, STATE_FILE } from '@/main/lib/paths';
 
 type State = Record<string, unknown>;

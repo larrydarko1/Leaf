@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { mountWithI18n } from '@test-utils';
+
 import AiHistoryPanel from '@/renderer/components/ai/AiHistoryPanel.vue';
 import type { ConversationMeta } from '@/schemas/ai';
+import { mountWithI18n } from '@test-utils';
 
 const defaultProps = {
     conversationList: [] as ConversationMeta[],

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { watch, onMounted, onUnmounted } from 'vue';
-import { useAudioPlayer } from '@/renderer/composables/editor/useAudioPlayer';
 import { useI18n } from 'vue-i18n';
+
+import { useAudioPlayer } from '@/renderer/composables/editor/useAudioPlayer';
 
 type Props = {
     filePath: string;

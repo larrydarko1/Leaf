@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { mountWithI18n } from '@test-utils';
+
 import DrawingFooter from '@/renderer/components/drawing/DrawingFooter.vue';
+import { mountWithI18n } from '@test-utils';
 
 const baseProps = {
     zoom: 1,

@@ -1,8 +1,9 @@
+import { shallowMount } from '@vue/test-utils';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref } from 'vue';
-import { shallowMount } from '@vue/test-utils';
-import { i18n } from '@/renderer/i18n';
+
 import FileExplorer from '@/renderer/components/FileExplorer.vue';
+import { i18n } from '@/renderer/i18n';
 import type { FileInfo, FolderInfo } from '@/schemas/vault';
 
 const mockExpandedFolders = ref(new Set<string>());

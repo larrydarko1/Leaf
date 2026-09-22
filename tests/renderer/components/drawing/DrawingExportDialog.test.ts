@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { mountWithI18n } from '@test-utils';
+
 import DrawingExportDialog from '@/renderer/components/drawing/DrawingExportDialog.vue';
 import type { CanvasElement } from '@/schemas/drawing';
+import { mountWithI18n } from '@test-utils';
 
 const fakeBlob = new Blob(['fake'], { type: 'image/png' });
 const mockExportToBlob = vi.fn().mockResolvedValue(fakeBlob);

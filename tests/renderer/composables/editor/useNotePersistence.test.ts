@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import { useNotePersistence } from '@/renderer/composables/editor/useNotePersistence';
 import type { FileInfo } from '@/schemas/vault';
 

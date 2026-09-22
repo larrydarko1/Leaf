@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
-import { EditorState, EditorSelection } from '@codemirror/state';
 import { markdown } from '@codemirror/lang-markdown';
+import { EditorState, EditorSelection } from '@codemirror/state';
+import { describe, it, expect } from 'vitest';
+
 import {
     activeLinesSet,
     buildHighlightDecos,

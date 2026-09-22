@@ -1,6 +1,8 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import fs from 'fs';
 import path from 'path';
+
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
 import { register, cleanup } from '@/main/services/ai';
 
 const PATHS = vi.hoisted(() => {

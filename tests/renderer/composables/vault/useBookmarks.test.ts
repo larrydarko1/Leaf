@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { isReactive } from 'vue';
+
 import { useBookmarks } from '@/renderer/composables/vault/useBookmarks';
 
 const mockAPI = {

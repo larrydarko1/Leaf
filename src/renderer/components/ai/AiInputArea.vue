@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, nextTick } from 'vue';
+import { useI18n } from 'vue-i18n';
+
 import { useThrottleFn } from '@/renderer/composables/useThrottle';
 import type { FileInfo } from '@/schemas/vault';
-import { useI18n } from 'vue-i18n';
 
 type Props = {
     showThinking: boolean;

@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { mountWithI18n } from '@test-utils';
+
 import SearchPanel from '@/renderer/components/SearchPanel.vue';
 import type { FileInfo } from '@/schemas/vault';
+import { mountWithI18n } from '@test-utils';
 
 const files: FileInfo[] = [
     makeFile('notes.md', 'docs'),

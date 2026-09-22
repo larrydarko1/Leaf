@@ -4,17 +4,19 @@
  * and chat inference with streaming token support.
  */
 
-import type { IpcMain, BrowserWindow } from 'electron';
-import { z } from 'zod';
-import { shell } from 'electron';
-import path from 'path';
-import fs from 'fs/promises';
 import { existsSync } from 'fs';
-import { type AiModelInfo, ConversationMessageSchema } from '@/schemas/ai';
+import fs from 'fs/promises';
+import path from 'path';
+
+import type { IpcMain, BrowserWindow } from 'electron';
+import { shell } from 'electron';
+import type { Llama, LlamaModel, LlamaContext, LlamaChatSession, LlamaContextSequence } from 'node-llama-cpp';
+import { z } from 'zod';
+
+import { log } from '@/main/lib/logger';
 import { DEFAULT_MODELS_DIR, LEAF_HOME } from '@/main/lib/paths';
 import { getActiveSystemPrompt } from '@/main/services/systemPrompt';
-import { log } from '@/main/lib/logger';
-import type { Llama, LlamaModel, LlamaContext, LlamaChatSession, LlamaContextSequence } from 'node-llama-cpp';
+import { type AiModelInfo, ConversationMessageSchema } from '@/schemas/ai';
 
 type ModelEntry = AiModelInfo;
 

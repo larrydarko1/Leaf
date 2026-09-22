@@ -4,6 +4,7 @@
  */
 
 import { ref, shallowRef, type Ref, type ShallowRef } from 'vue';
+
 import type { FileInfo, FolderInfo } from '@/schemas/vault';
 
 type MovedFile = { from: string; to: string };

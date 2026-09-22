@@ -4,6 +4,7 @@
  */
 
 import { contextBridge, ipcRenderer } from 'electron';
+
 import type { ElectronAPI } from '@/schemas/electron';
 import type { SpeechStatusEvent } from '@/schemas/speech';
 

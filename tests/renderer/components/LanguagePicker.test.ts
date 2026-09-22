@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { mountWithI18n } from '@test-utils';
+
 import LanguagePicker from '@/renderer/components/LanguagePicker.vue';
+import { mountWithI18n } from '@test-utils';
 
 const mockElectronAPI = {
     languageList: vi.fn(),

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import type { StrokeStyle, StyleKey } from '@/schemas/drawing';
 import { useI18n } from 'vue-i18n';
+
+import type { StrokeStyle, StyleKey } from '@/schemas/drawing';
 
 type Props = {
     visible: boolean;

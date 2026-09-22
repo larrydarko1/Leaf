@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { mountWithI18n } from '@test-utils';
+
 import VideoViewer from '@/renderer/components/editor/VideoViewer.vue';
+import { mountWithI18n } from '@test-utils';
 
 beforeEach(() => {
     vi.stubGlobal('requestAnimationFrame', vi.fn());

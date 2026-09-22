@@ -1,8 +1,9 @@
+import { shallowMount } from '@vue/test-utils';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref, computed } from 'vue';
-import { shallowMount } from '@vue/test-utils';
-import { i18n } from '@/renderer/i18n';
+
 import DrawingCanvas from '@/renderer/components/DrawingCanvas.vue';
+import { i18n } from '@/renderer/i18n';
 
 const mockElements = ref<unknown[]>([]);
 const mockSelectedId = ref<string | null>(null);

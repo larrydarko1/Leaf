@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import type { ToolType } from '@/schemas/drawing';
 import { useI18n } from 'vue-i18n';
+
+import type { ToolType } from '@/schemas/drawing';
 
 type Props = {
     currentTool: ToolType;

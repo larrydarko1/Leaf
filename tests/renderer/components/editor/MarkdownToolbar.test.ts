@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { mountWithI18n } from '@test-utils';
+
 import MarkdownToolbar from '@/renderer/components/editor/MarkdownToolbar.vue';
+import { mountWithI18n } from '@test-utils';
 
 function mount() {
     return mountWithI18n(MarkdownToolbar, {});

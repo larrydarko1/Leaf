@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { mountWithI18n } from '@test-utils';
+
 import ContextMenu from '@/renderer/components/explorer/ContextMenu.vue';
+import { mountWithI18n } from '@test-utils';
 
 const baseItems = [
     { label: 'Rename', action: 'rename' },

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref } from 'vue';
+
 import { useDictation } from '@/renderer/composables/editor/useDictation';
 
 class FakeAudioWorkletNode {

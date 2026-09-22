@@ -3,6 +3,7 @@
  */
 
 import { ref, computed, type ComputedRef, type Ref } from 'vue';
+
 import { type FileInfo, type TabState, type PersistedTabState, PersistedTabStateSchema } from '@/schemas/vault';
 
 export type UseEditorTabsReturn = {

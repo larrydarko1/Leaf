@@ -3,10 +3,11 @@
  * inserting markdown embed syntax for images, audio, video, and PDFs.
  */
 
-import { ref } from 'vue';
-import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS, AUDIO_EXTENSIONS, PDF_EXTENSIONS } from '@/renderer/utils/fileTypes';
-import type { Ref, ShallowRef } from 'vue';
 import type { EditorView } from '@codemirror/view';
+import { ref } from 'vue';
+import type { Ref, ShallowRef } from 'vue';
+
+import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS, AUDIO_EXTENSIONS, PDF_EXTENSIONS } from '@/renderer/utils/fileTypes';
 
 export type UseEditorDropReturn = {
     isDragOverEditor: Ref<boolean>;

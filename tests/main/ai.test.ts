@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import { register, cleanup } from '@/main/services/ai';
 
 vi.mock('fs/promises', async () => {

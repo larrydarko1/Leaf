@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { mountWithI18n } from '@test-utils';
+
 import AudioViewer from '@/renderer/components/editor/AudioViewer.vue';
+import { mountWithI18n } from '@test-utils';
 
 const mockElectronAPI = {
     readAudio: vi.fn(),

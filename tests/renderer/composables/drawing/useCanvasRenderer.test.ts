@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ref } from 'vue';
+
 import { useCanvasRenderer } from '@/renderer/composables/drawing/useCanvasRenderer';
 import type { CanvasElement } from '@/schemas/drawing';
 

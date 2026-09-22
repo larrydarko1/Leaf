@@ -2,9 +2,11 @@
  * Media Service — owns IPC handlers for audio recording saves and spellcheck suggestions.
  */
 
-import type { IpcMain } from 'electron';
-import path from 'path';
 import fs from 'fs/promises';
+import path from 'path';
+
+import type { IpcMain } from 'electron';
+
 import { assertSafeFileName } from '@/main/lib/validation';
 
 // The vault root is passed in from the register call so media-service

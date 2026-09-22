@@ -4,6 +4,7 @@
  */
 
 import { ref, computed, shallowRef, type ComputedRef, type Ref, type ShallowRef, type WritableComputedRef } from 'vue';
+
 import type { CanvasElement, ElementType } from '@/schemas/drawing';
 
 export type UseDrawingElementsReturn = {

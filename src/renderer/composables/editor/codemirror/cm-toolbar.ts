@@ -2,8 +2,8 @@
  * cm-toolbar — CodeMirror-based markdown toolbar commands and keyboard shortcuts.
  */
 
-import { type EditorView } from '@codemirror/view';
 import { EditorSelection } from '@codemirror/state';
+import { type EditorView } from '@codemirror/view';
 import type { Ref } from 'vue';
 
 export function useCodemirrorToolbar(view: Ref<EditorView | null>): {

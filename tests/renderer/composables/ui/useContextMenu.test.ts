@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ref, nextTick, defineComponent, createApp } from 'vue';
+
 import { useContextMenu } from '@/renderer/composables/ui/useContextMenu';
 
 function withSetup<T>(composable: () => T): [T, () => void] {

@@ -1,22 +1,23 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
-import FileExplorer from '@/renderer/components/FileExplorer.vue';
-import NoteEditor from '@/renderer/components/NoteEditor.vue';
-import TabBar from '@/renderer/components/TabBar.vue';
-import SearchPanel from '@/renderer/components/SearchPanel.vue';
-import BookmarksPanel from '@/renderer/components/BookmarksPanel.vue';
-import AudioRecorder from '@/renderer/components/AudioRecorder.vue';
+
 import AiPanel from '@/renderer/components/AiPanel.vue';
-import ThemePicker from '@/renderer/components/ThemePicker.vue';
+import AudioRecorder from '@/renderer/components/AudioRecorder.vue';
+import BookmarksPanel from '@/renderer/components/BookmarksPanel.vue';
+import FileExplorer from '@/renderer/components/FileExplorer.vue';
 import LanguagePicker from '@/renderer/components/LanguagePicker.vue';
-import type { FileInfo } from '@/schemas/vault';
-import { useVault } from '@/renderer/composables/vault/useVault';
-import { useFileSelection } from '@/renderer/composables/vault/useFileSelection';
-import { useBookmarks } from '@/renderer/composables/vault/useBookmarks';
+import NoteEditor from '@/renderer/components/NoteEditor.vue';
+import SearchPanel from '@/renderer/components/SearchPanel.vue';
+import TabBar from '@/renderer/components/TabBar.vue';
+import ThemePicker from '@/renderer/components/ThemePicker.vue';
 import { useEditorTabs } from '@/renderer/composables/editor/useEditorTabs';
-import { useTheme } from '@/renderer/composables/ui/useTheme';
 import { useLanguage } from '@/renderer/composables/ui/useLanguage';
+import { useTheme } from '@/renderer/composables/ui/useTheme';
+import { useBookmarks } from '@/renderer/composables/vault/useBookmarks';
+import { useFileSelection } from '@/renderer/composables/vault/useFileSelection';
+import { useVault } from '@/renderer/composables/vault/useVault';
+import type { FileInfo } from '@/schemas/vault';
 
 const { t } = useI18n();
 

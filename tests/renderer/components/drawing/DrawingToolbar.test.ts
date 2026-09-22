@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { mountWithI18n } from '@test-utils';
+
 import DrawingToolbar from '@/renderer/components/drawing/DrawingToolbar.vue';
 import type { ToolType } from '@/schemas/drawing';
+import { mountWithI18n } from '@test-utils';
 
 const tools: ToolType[] = ['select', 'hand', 'rectangle', 'diamond', 'ellipse', 'line', 'arrow', 'text', 'freedraw'];
 

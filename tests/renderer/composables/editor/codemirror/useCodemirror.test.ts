@@ -1,9 +1,10 @@
 /* eslint-disable vue/one-component-per-file */
+import { undo } from '@codemirror/commands';
+import { EditorView } from '@codemirror/view';
+import { mount } from '@vue/test-utils';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { ref, nextTick, defineComponent, h } from 'vue';
-import { mount } from '@vue/test-utils';
-import { EditorView } from '@codemirror/view';
-import { undo } from '@codemirror/commands';
+
 import { useCodemirror, leafHighlightStyle } from '@/renderer/composables/editor/codemirror/useCodemirror';
 
 class FakeResizeObserver {

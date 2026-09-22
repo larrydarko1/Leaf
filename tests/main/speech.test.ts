@@ -1,6 +1,8 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import fs from 'fs';
 import path from 'path';
+
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
 import { cleanup, register } from '@/main/services/speech';
 
 type SpeechHandlers = {

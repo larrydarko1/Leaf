@@ -1,8 +1,9 @@
 /* eslint-disable vue/one-component-per-file */
+import { EditorView } from '@codemirror/view';
+import { mount } from '@vue/test-utils';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { ref, nextTick, defineComponent, h } from 'vue';
-import { mount } from '@vue/test-utils';
-import { EditorView } from '@codemirror/view';
+
 import { useCodeEditor } from '@/renderer/composables/editor/codemirror/useCodeEditor';
 
 class FakeResizeObserver {

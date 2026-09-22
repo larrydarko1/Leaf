@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import { useLanguage } from '@/renderer/composables/ui/useLanguage';
 
 vi.mock('vue-i18n', () => ({

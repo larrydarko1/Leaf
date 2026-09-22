@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+
 import { measureTextBox } from '@/renderer/composables/drawing/textMetrics';
 
 const FONT_FAMILY = '"Helvetica", "Segoe UI", sans-serif';

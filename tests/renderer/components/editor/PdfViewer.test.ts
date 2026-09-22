@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { mountWithI18n } from '@test-utils';
+
 import PdfViewer from '@/renderer/components/editor/PdfViewer.vue';
+import { mountWithI18n } from '@test-utils';
 
 describe('PdfViewer', () => {
     it('renders an iframe with the correct leaf:// URL', async () => {

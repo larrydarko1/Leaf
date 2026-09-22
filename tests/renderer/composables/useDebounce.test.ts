@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ref, effectScope } from 'vue';
+
 import { useDebounceFn, watchDebounced } from '@/renderer/composables/useDebounce';
 
 beforeEach(() => {

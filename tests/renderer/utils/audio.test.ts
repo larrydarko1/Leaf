@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+
 import { convertWebMToWav, arrayBufferToBase64 } from '@/renderer/utils/audio';
 
 function makeAudioBuffer(channels: Float32Array[], sampleRate: number): AudioBuffer {

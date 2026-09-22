@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { type Ref, shallowRef } from 'vue';
 import { EditorState, EditorSelection } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { type Ref, shallowRef } from 'vue';
+
 import { useCodemirrorToolbar } from '@/renderer/composables/editor/codemirror/cm-toolbar';
 
 function createView(doc: string, from?: number, to?: number): EditorView {

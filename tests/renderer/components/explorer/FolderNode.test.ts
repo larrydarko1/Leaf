@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
-import { mountWithI18n } from '@test-utils';
+
 import FolderNode from '@/renderer/components/explorer/FolderNode.vue';
 import type { FileInfo, TreeNode } from '@/schemas/vault';
+import { mountWithI18n } from '@test-utils';
 
 const noteFile = makeFile('notes.md', '/vault/notes.md');
 const imageFile = makeFile('photo.png', '/vault/photo.png', 'png');

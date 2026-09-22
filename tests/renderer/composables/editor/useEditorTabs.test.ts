@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+
 import { useEditorTabs } from '@/renderer/composables/editor/useEditorTabs';
 import type { FileInfo } from '@/schemas/vault';
 

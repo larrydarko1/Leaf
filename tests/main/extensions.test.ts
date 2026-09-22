@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+
 import { ALLOWED_EXTENSIONS } from '@/main/lib/extensions';
 
 describe('extensions', () => {

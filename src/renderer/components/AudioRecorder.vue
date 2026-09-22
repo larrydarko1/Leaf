@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { useAudioRecorder } from '@/renderer/composables/useAudioRecorder';
 import { useI18n } from 'vue-i18n';
+
+import { useAudioRecorder } from '@/renderer/composables/useAudioRecorder';
 
 type Props = {
     currentFolder: string | null;

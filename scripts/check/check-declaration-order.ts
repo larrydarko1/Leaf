@@ -48,24 +48,36 @@
  *     all expression statements, so it bins all three as side-effects and sorts
  *     the mocks LAST. See TEST_CATEGORIES in ../lib/declaration-order.ts.
  *
+ * INSIDE LAYER 1. Imports are the one category whose internal order is
+ * mechanical, so a third pass sorts them: builtin → external → local,
+ * one blank line between groups, alphabetical inside each. See the header of
+ * ../lib/import-order.ts for why the groups are by source and not by kind. That
+ * pass is the only one `--fix` touches — `node scripts/check/check-declaration-order.ts --fix`
+ * rewrites the import block in place — because it is the only one whose fix
+ * cannot change what the module does: side-effect imports never move.
+ *
  * WHAT THIS CANNOT SEE. Whether two statements in the SAME category are in a
- * sensible order relative to each other. The table says private functions are
- * "grouped by concern"; grouping is a judgement about meaning, and the sort
- * preserves existing relative order within a category rather than inventing one.
+ * sensible order relative to each other, imports aside. The table says private
+ * functions are "grouped by concern"; grouping is a judgement about meaning, and
+ * the sort preserves existing relative order within a category rather than
+ * inventing one.
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import { REPO_ROOT as ROOT } from '../lib/repo-root.ts';
 import { CATEGORIES, TEST_CATEGORIES, analyzeFile, isTestPath } from '../lib/declaration-order.ts';
+import { IMPORT_GROUPS, checkImportsInFile, fixImportsInFile } from '../lib/import-order.ts';
 
 const SOURCE_ROOTS = ['src', 'tests'];
 
 type Failure = {
     file: string;
     headline: string;
-    misplaced: { cat: string; name: string; line: number; belongsAfter: string }[];
+    misplaced: ({ cat: string; name: string; line: number; belongsAfter: string } | { line: number; text: string })[];
     why: string;
 };
+
+const FIX = process.argv.includes('--fix');
 
 const failures: Failure[] = [];
 
@@ -109,6 +121,25 @@ for (const rel of [...files, ...testFiles]) {
     }
 }
 
+// Imports get their own pass over the same files, since a suite's imports follow
+// the same rule as a module's.
+let importsChecked = 0;
+let filesFixed = 0;
+for (const rel of [...files, ...testFiles]) {
+    if (FIX && fixImportsInFile(rel, ROOT)) filesFixed++;
+    const result = checkImportsInFile(rel, ROOT);
+    if (result === null) continue;
+    importsChecked += result.count;
+    if (result.problems.length === 0) continue;
+    failures.push({
+        file: rel,
+        headline: `${result.problems.length} import(s) out of order`,
+        misplaced: result.problems.map((p) => ({ line: p.line, text: p.message })),
+        why: `Imports go ${IMPORT_GROUPS.join(' → ')}, one blank line between groups, alphabetical inside each. \`--fix\` rewrites them.`,
+    });
+}
+if (FIX) console.log(`Import order: rewrote ${filesFixed} file(s).`);
+
 // ── Report ───────────────────────────────────────────────────────────────────
 if (failures.length > 0) {
     const total = failures.reduce((n, f) => n + f.misplaced.length, 0);
@@ -117,14 +148,13 @@ if (failures.length > 0) {
         console.error(`  ${file} — ${headline}`);
         console.error(`    ${why}`);
         for (const m of misplaced) {
-            console.error(
-                `      L${String(m.line).padStart(4)}  ${m.cat} "${m.name.slice(0, 40)}" belongs after ${m.belongsAfter}`,
-            );
+            const text = 'text' in m ? m.text : `${m.cat} "${m.name.slice(0, 40)}" belongs after ${m.belongsAfter}`;
+            console.error(`      L${String(m.line).padStart(4)}  ${text}`);
         }
         console.error('');
     }
     console.error(
-        'Every position reported here is reachable: the target order is computed as a\n' +
+        'Every declaration position reported here is reachable: the target order is computed as a\n' +
             'topological sort, so it already respects every load-time dependency. If a move\n' +
             'looks unsafe, the dependency is missing from the analysis — say so rather than\n' +
             'reordering blindly.',
@@ -134,5 +164,6 @@ if (failures.length > 0) {
 
 console.log(
     `✓ Declaration order check passed — ${files.length} modules + ${testFiles.length} suites, ` +
-        `${statementsChecked} top-level statements, all in canonical order (or held by a load-time dependency).`,
+        `${statementsChecked} top-level statements, all in canonical order (or held by a load-time dependency); ` +
+        `${importsChecked} imports grouped and sorted.`,
 );

@@ -4,6 +4,7 @@
  */
 
 import { ref, type Ref } from 'vue';
+
 import {
     isImageFile as checkImage,
     isVideoFile as checkVideo,

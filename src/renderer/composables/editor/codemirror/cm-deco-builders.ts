@@ -2,17 +2,16 @@
  * cm-deco-builders — Decoration builder functions for markdown live-preview.
  */
 
-import { Decoration } from '@codemirror/view';
-import { type EditorState, type Range } from '@codemirror/state';
 import { syntaxTree } from '@codemirror/language';
+import { type EditorState, type Range } from '@codemirror/state';
+import { Decoration } from '@codemirror/view';
+
 import {
     EmbedWidget,
     HorizontalRuleWidget,
     TableWidget,
     TaskCheckboxWidget,
 } from '@/renderer/composables/editor/codemirror/cm-widgets';
-
-// ── Regex-based decoration builders ───────────────────────────────────────────
 
 const highlightRegex = /==((?!=).+?)==/g;
 const embedRegex = /!\[\[([^\]]+)\]\]/g;

@@ -1,19 +1,20 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
-import { useThrottleFn } from '@/renderer/composables/useThrottle';
-import type { ToolType, StrokeStyle, DefaultStyle, StyleKey } from '@/schemas/drawing';
-import { useDrawingElements, genId } from '@/renderer/composables/drawing/useDrawingElements';
+import { useI18n } from 'vue-i18n';
+
+import DrawingExportDialog from '@/renderer/components/drawing/DrawingExportDialog.vue';
+import DrawingFooter from '@/renderer/components/drawing/DrawingFooter.vue';
+import DrawingPropertiesPanel from '@/renderer/components/drawing/DrawingPropertiesPanel.vue';
+import DrawingToolbar from '@/renderer/components/drawing/DrawingToolbar.vue';
 import { measureTextBox } from '@/renderer/composables/drawing/textMetrics';
 import { useCanvasRenderer } from '@/renderer/composables/drawing/useCanvasRenderer';
-import { useDrawingInteraction } from '@/renderer/composables/drawing/useDrawingInteraction';
-import { useTextEditing } from '@/renderer/composables/drawing/useTextEditing';
+import { useDrawingElements, genId } from '@/renderer/composables/drawing/useDrawingElements';
 import { useDrawingHistory } from '@/renderer/composables/drawing/useDrawingHistory';
+import { useDrawingInteraction } from '@/renderer/composables/drawing/useDrawingInteraction';
 import { useDrawingPersistence } from '@/renderer/composables/drawing/useDrawingPersistence';
-import DrawingToolbar from '@/renderer/components/drawing/DrawingToolbar.vue';
-import DrawingPropertiesPanel from '@/renderer/components/drawing/DrawingPropertiesPanel.vue';
-import DrawingFooter from '@/renderer/components/drawing/DrawingFooter.vue';
-import DrawingExportDialog from '@/renderer/components/drawing/DrawingExportDialog.vue';
-import { useI18n } from 'vue-i18n';
+import { useTextEditing } from '@/renderer/composables/drawing/useTextEditing';
+import { useThrottleFn } from '@/renderer/composables/useThrottle';
+import type { ToolType, StrokeStyle, DefaultStyle, StyleKey } from '@/schemas/drawing';
 
 type Props = {
     filePath: string;

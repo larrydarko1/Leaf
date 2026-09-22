@@ -4,13 +4,15 @@
  * Model is pre-downloaded and bundled; 100% offline at runtime.
  */
 
-import type { IpcMain, BrowserWindow } from 'electron';
-import type { pipeline as PipelineFn } from '@huggingface/transformers';
-import path from 'path';
 import { existsSync } from 'fs';
+import path from 'path';
+
+import type { pipeline as PipelineFn } from '@huggingface/transformers';
+import type { IpcMain, BrowserWindow } from 'electron';
+
+import { log } from '@/main/lib/logger';
 import { getWhisperModelDir } from '@/main/lib/paths';
 import { findActiveDictationLanguage } from '@/main/services/language';
-import { log } from '@/main/lib/logger';
 import type { Transcriber, TranscriptionResult, TransformersModule } from '@/schemas/vault';
 
 // Minimal shape of the pipeline internals we need for language detection

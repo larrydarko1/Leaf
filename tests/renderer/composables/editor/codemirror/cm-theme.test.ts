@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+
 import { leafEditorTheme, leafCodeEditorTheme } from '@/renderer/composables/editor/codemirror/cm-theme';
 
 describe('cm-theme exports', () => {
