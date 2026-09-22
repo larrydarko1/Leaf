@@ -32,22 +32,26 @@
  *      whatever actually came over the wire. These handlers join paths and read
  *      files; an unchecked argument is a path-traversal parameter.
  *   8. CHANNEL NAMING: `domain:action`, lowercase domain, camelCase action, and
- *      no verb that merely repeats the domain.                             → check-error-handling.mjs
+ *      no verb that merely repeats the domain.                             → check-error-handling.ts
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { REPO_ROOT as ROOT } from '../lib/repo-root.mjs';
-import { stripComments } from '../lib/strip-comments.mjs';
+import { REPO_ROOT as ROOT } from '../lib/repo-root.ts';
+import { stripComments } from '../lib/strip-comments.ts';
 
 const MAIN_INDEX = 'src/main/index.ts';
 const SERVICES_DIR = 'src/main/services';
 const PRELOAD = 'src/preload/index.ts';
 const API_CONTRACT = 'src/schemas/electron.d.ts';
 
-const failures = [];
-const fail = (file, what, why) => failures.push({ file, what, why });
-const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
-const code = (rel) => stripComments(read(rel));
+type Failure = { file: string; what: string; why: string };
+
+const failures: Failure[] = [];
+const fail = (file: string, what: string, why: string): void => {
+    failures.push({ file, what, why });
+};
+const read = (rel: string): string => fs.readFileSync(path.join(ROOT, rel), 'utf8');
+const code = (rel: string): string => stripComments(read(rel));
 
 // ── Collect the real surface ──────────────────────────────────────────────────
 // The raw source, because rule 1 reads the ownership table out of its header comment.
@@ -60,53 +64,77 @@ const serviceFiles = fs
     .map((f) => `${SERVICES_DIR}/${f}`);
 
 /** channel → owning file, for everything registered with handle() or on(). */
-const handlers = new Map();
+const handlers = new Map<string, string>();
 /** channel → owning file, for everything pushed with webContents.send(). */
-const events = new Map();
+const events = new Map<string, string>();
 
 for (const rel of [MAIN_INDEX, ...serviceFiles]) {
     const source = code(rel);
-    for (const m of source.matchAll(/\b(?:ipcMain|ipc)\.(?:handle|on)\(\s*'([^']+)'/g)) {
-        if (handlers.has(m[1])) {
-            fail(rel, `registers \`${m[1]}\`, which ${handlers.get(m[1])} already registers`, 'The second registration throws at startup for handle(), or silently double-fires for on().');
+    for (const [, channel = ''] of source.matchAll(/\b(?:ipcMain|ipc)\.(?:handle|on)\(\s*'([^']+)'/g)) {
+        const owner = handlers.get(channel);
+        if (owner !== undefined) {
+            fail(
+                rel,
+                `registers \`${channel}\`, which ${owner} already registers`,
+                'The second registration throws at startup for handle(), or silently double-fires for on().',
+            );
         }
-        handlers.set(m[1], rel);
+        handlers.set(channel, rel);
     }
-    for (const m of source.matchAll(/\.send\(\s*'([^']+)'/g)) events.set(m[1], rel);
+    for (const [, channel = ''] of source.matchAll(/\.send\(\s*'([^']+)'/g)) events.set(channel, rel);
 }
 
 const preloadCode = code(PRELOAD);
 
 /** channel → 'invoke' | 'send' | 'on', as the preload uses it. */
-const preloadChannels = new Map();
-for (const m of preloadCode.matchAll(/ipcRenderer\.(invoke|send|on)\(\s*'([^']+)'/g)) {
-    preloadChannels.set(m[2], m[1]);
+const preloadChannels = new Map<string, string>();
+for (const [, kind = '', channel = ''] of preloadCode.matchAll(/ipcRenderer\.(invoke|send|on)\(\s*'([^']+)'/g)) {
+    preloadChannels.set(channel, kind);
 }
 
 // ── 1. Channel documentation parity ───────────────────────────────────────────
 const ownershipBlock = mainIndexRaw.match(/IPC handler ownership:([\s\S]*?)\n \*\//);
 
 if (ownershipBlock === null) {
-    fail(MAIN_INDEX, 'has no "IPC handler ownership:" table in its header', 'It is the only map of which service owns which channels. Without it, finding the owner of a channel means grepping five files.');
+    fail(
+        MAIN_INDEX,
+        'has no "IPC handler ownership:" table in its header',
+        'It is the only map of which service owns which channels. Without it, finding the owner of a channel means grepping five files.',
+    );
 } else {
     /** `fs-service → file:*, folder:*` → { file: services/fs.ts, patterns: [...] } */
-    const documented = new Map();
-    for (const line of ownershipBlock[1].split('\n')) {
+    const documented = new Map<string, string[]>();
+    for (const line of (ownershipBlock[1] ?? '').split('\n')) {
         // Label, then an optional parenthetical qualifier, then the channel list.
         const m = line.match(/^\s*\*\s+([a-zA-Z]+)(?:-service)?(?:\s+\([^)]*\))?\s+→\s+(.+?)\s*$/);
         if (m === null) continue;
-        const owner = m[1] === 'main' ? MAIN_INDEX : `${SERVICES_DIR}/${m[1]}.ts`;
-        documented.set(owner, m[2].split(',').map((p) => p.trim()).filter((p) => p !== ''));
+        const [, label = '', list = ''] = m;
+        const owner = label === 'main' ? MAIN_INDEX : `${SERVICES_DIR}/${label}.ts`;
+        documented.set(
+            owner,
+            list
+                .split(',')
+                .map((p) => p.trim())
+                .filter((p) => p !== ''),
+        );
     }
 
     for (const [owner, patterns] of documented) {
         if (!fs.existsSync(path.join(ROOT, owner))) {
-            fail(MAIN_INDEX, `the ownership table names \`${owner}\`, which does not exist`, 'The table documents a service that was renamed or removed.');
+            fail(
+                MAIN_INDEX,
+                `the ownership table names \`${owner}\`, which does not exist`,
+                'The table documents a service that was renamed or removed.',
+            );
         }
         // Every documented pattern must match at least one live channel.
         for (const pattern of patterns) {
-            const re = pattern.endsWith('*') ? new RegExp(`^${pattern.slice(0, -1).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`) : null;
-            const matched = [...handlers.entries()].some(([channel, file]) => file === owner && (re !== null ? re.test(channel) : channel === pattern));
+            const re = pattern.endsWith('*')
+                ? new RegExp(`^${pattern.slice(0, -1).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`)
+                : null;
+            const matched = [...handlers.entries()].some(
+                ([channel, file]) => file === owner && (re !== null ? re.test(channel) : channel === pattern),
+            );
             if (!matched) {
                 fail(
                     MAIN_INDEX,
@@ -170,7 +198,11 @@ for (const [channel, owner] of handlers) {
 }
 for (const [channel, owner] of events) {
     if (!preloadChannels.has(channel)) {
-        fail(owner, `sends \`${channel}\`, which the preload never listens for`, 'The push has no receiver. Whatever it was feeding stopped being wired up.');
+        fail(
+            owner,
+            `sends \`${channel}\`, which the preload never listens for`,
+            'The push has no receiver. Whatever it was feeding stopped being wired up.',
+        );
     }
 }
 
@@ -178,7 +210,11 @@ for (const [channel, owner] of events) {
 const exposeCalls = [...preloadCode.matchAll(/contextBridge\.exposeInMainWorld\(\s*'([^']+)'/g)];
 
 if (/exposeInMainWorld\(\s*'[^']+'\s*,\s*ipcRenderer\s*\)/.test(preloadCode)) {
-    fail(PRELOAD, 'exposes `ipcRenderer` itself', 'That hands the renderer every channel at once, plus `removeAllListeners`. The allowlist becomes decoration.');
+    fail(
+        PRELOAD,
+        'exposes `ipcRenderer` itself',
+        'That hands the renderer every channel at once, plus `removeAllListeners`. The allowlist becomes decoration.',
+    );
 }
 
 for (const m of preloadCode.matchAll(/ipcRenderer\.(?:invoke|send|on)\(\s*([A-Za-z_$][\w$]*)\s*[,)]/g)) {
@@ -191,7 +227,11 @@ for (const m of preloadCode.matchAll(/ipcRenderer\.(?:invoke|send|on)\(\s*([A-Za
 
 // ── 6. One bridge, typed against the shared contract ──────────────────────────
 if (exposeCalls.length === 0) {
-    fail(PRELOAD, 'never calls `contextBridge.exposeInMainWorld`', 'With contextIsolation on, this is the only way the renderer gets an API at all.');
+    fail(
+        PRELOAD,
+        'never calls `contextBridge.exposeInMainWorld`',
+        'With contextIsolation on, this is the only way the renderer gets an API at all.',
+    );
 } else if (exposeCalls.length > 1) {
     fail(
         PRELOAD,
@@ -216,7 +256,7 @@ for (const rel of [MAIN_INDEX, ...serviceFiles]) {
         const signature = body.match(/^(?:async\s*)?\(([^)]*)\)/);
         if (signature === null) continue;
 
-        const params = signature[1]
+        const params = (signature[1] ?? '')
             .split(',')
             .map((p) => p.trim())
             .filter((p) => p !== '' && !p.startsWith('_'));
@@ -237,19 +277,36 @@ for (const rel of [MAIN_INDEX, ...serviceFiles]) {
 // ── 8. Channel naming ─────────────────────────────────────────────────────────
 for (const channel of [...handlers.keys(), ...events.keys()]) {
     const parts = channel.split(':');
+    const owner = handlers.get(channel) ?? events.get(channel) ?? '';
     if (parts.length !== 2) {
-        fail(handlers.get(channel) ?? events.get(channel), `channel \`${channel}\` is not \`domain:action\``, 'One colon, two parts. The domain is what groups the channel with its service; without it the surface is a flat list of 60 names.');
+        fail(
+            owner,
+            `channel \`${channel}\` is not \`domain:action\``,
+            'One colon, two parts. The domain is what groups the channel with its service; without it the surface is a flat list of 60 names.',
+        );
         continue;
     }
-    const [domain, action] = parts;
+    const [domain = '', action = ''] = parts;
     if (!/^[a-z][a-zA-Z]*$/.test(domain)) {
-        fail(handlers.get(channel) ?? events.get(channel), `channel \`${channel}\` has a non-camelCase domain`, 'Domains are lowercase-initial camelCase (`file`, `systemPrompt`) so they sort and group predictably.');
+        fail(
+            owner,
+            `channel \`${channel}\` has a non-camelCase domain`,
+            'Domains are lowercase-initial camelCase (`file`, `systemPrompt`) so they sort and group predictably.',
+        );
     }
     if (!/^[a-z][a-zA-Z]*$/.test(action)) {
-        fail(handlers.get(channel) ?? events.get(channel), `channel \`${channel}\` has a non-camelCase action`, 'Actions are lowercase-initial camelCase (`read`, `openLeafDir`).');
+        fail(
+            owner,
+            `channel \`${channel}\` has a non-camelCase action`,
+            'Actions are lowercase-initial camelCase (`read`, `openLeafDir`).',
+        );
     }
     if (action.toLowerCase().startsWith(domain.toLowerCase()) && action.length > domain.length) {
-        fail(handlers.get(channel) ?? events.get(channel), `channel \`${channel}\` repeats its domain in the action`, `\`${domain}:${action.slice(domain.length).replace(/^./, (c) => c.toLowerCase())}\` says the same thing.`);
+        fail(
+            owner,
+            `channel \`${channel}\` repeats its domain in the action`,
+            `\`${domain}:${action.slice(domain.length).replace(/^./, (c) => c.toLowerCase())}\` says the same thing.`,
+        );
     }
 }
 

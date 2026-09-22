@@ -23,8 +23,8 @@ import refactoringStandards from './eslint/refactoring.js';
 import testingStandards from './eslint/testing.js';
 import { functionContractsPlugin } from './eslint/function-contracts.js';
 
-const SOURCE = ['src/**/*.{ts,vue}'];
-const TYPED_SOURCE = ['src/**/*.{ts,vue}', 'tests/**/*.ts', 'vitest.setup.ts'];
+const SOURCE = ['src/**/*.{ts,vue}', 'scripts/**/*.ts'];
+const TYPED_SOURCE = ['src/**/*.{ts,vue}', 'tests/**/*.ts', 'vitest.setup.ts', 'scripts/**/*.ts'];
 const TEST_FILES = ['tests/**/*.ts', 'vitest.setup.ts'];
 
 // Type-aware presets only reach files a tsconfig covers — locale JSON and config files are not.
@@ -65,9 +65,9 @@ export default [
         languageOptions: { globals: globals.browser },
     },
 
-    // Main and preload run in Node
+    // Main, preload and the repo scripts run in Node
     {
-        files: ['src/main/**/*.ts', 'src/preload/**/*.ts', 'scripts/**/*.mjs'],
+        files: ['src/main/**/*.ts', 'src/preload/**/*.ts', 'scripts/**/*.ts'],
         languageOptions: { globals: globals.node, sourceType: 'module' },
     },
 
@@ -223,6 +223,15 @@ export default [
                 'never',
                 { ignorePackages: true, pattern: { vue: 'always', json: 'always' } },
             ],
+        },
+    },
+    {
+        // The scripts are run by Node directly, with no bundler in front. Node strips
+        // the types and resolves the specifier exactly as written, so an import has to
+        // name the real `.ts` file or it fails with ERR_MODULE_NOT_FOUND.
+        files: ['scripts/**/*.ts'],
+        rules: {
+            'import-x/extensions': ['error', 'always', { ignorePackages: true }],
         },
     },
 

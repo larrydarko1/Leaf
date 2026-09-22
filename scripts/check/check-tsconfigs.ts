@@ -34,8 +34,8 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { REPO_ROOT as ROOT } from '../lib/repo-root.mjs';
-import { stripComments } from '../lib/strip-comments.mjs';
+import { REPO_ROOT as ROOT } from '../lib/repo-root.ts';
+import { stripComments } from '../lib/strip-comments.ts';
 
 const BASE = 'tsconfig.base.json';
 const RENDERER = 'tsconfig.app.json';
@@ -49,7 +49,7 @@ const IGNORED_DIRS = new Set(['node_modules', 'out', 'dist-electron', 'coverage'
  * project may differ — with a reason — but the base may not be missing any of
  * them, or strictness becomes something each project decides for itself.
  */
-const BASE_FLAGS = {
+const BASE_FLAGS: Record<string, boolean> = {
     strict: true,
     exactOptionalPropertyTypes: true,
     noImplicitOverride: true,
@@ -86,11 +86,24 @@ const SECTIONS = [
     'Library & Syntax',
 ];
 
-const errors = [];
-const fail = (rel, problem, why) => errors.push({ rel, problem, why });
-const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
+type CompilerOptions = Record<string, unknown> & { target?: string; lib?: string[]; types?: string[] };
+type TsconfigData = {
+    extends?: string | string[];
+    compilerOptions?: CompilerOptions;
+    files?: unknown[];
+    references?: { path: string }[];
+};
+type Config = { raw: string; data: TsconfigData; own: CompilerOptions; options: CompilerOptions | undefined };
 
-const configs = new Map(findConfigs('.').map((rel) => [rel, parse(rel)]));
+type Failure = { rel: string; problem: string; why: string };
+
+const errors: Failure[] = [];
+const fail = (rel: string, problem: string, why: string): void => {
+    errors.push({ rel, problem, why });
+};
+const read = (rel: string): string => fs.readFileSync(path.join(ROOT, rel), 'utf8');
+
+const configs = new Map(listConfigs('.').map((rel) => [rel, parse(rel)]));
 const base = configs.get(BASE);
 
 if (base === undefined) {
@@ -134,7 +147,7 @@ for (const [rel, cfg] of projects) {
 
 // ── 2. The base holds every checking flag and no environment ────────────────
 for (const [flag, strictValue] of Object.entries(BASE_FLAGS)) {
-    const actual = base.options[flag];
+    const actual = base.options?.[flag];
     if (actual === undefined) {
         fail(
             BASE,
@@ -144,13 +157,13 @@ for (const [flag, strictValue] of Object.entries(BASE_FLAGS)) {
     } else if (actual !== strictValue) {
         fail(
             BASE,
-            `sets \`${flag}: ${actual}\``,
+            `sets \`${flag}: ${JSON.stringify(actual)}\``,
             `The base carries the strict value (${strictValue}). A project that genuinely cannot hold this overrides it locally, with the reason next to it — rule 3.`,
         );
     }
 }
 for (const setting of ENVIRONMENTAL) {
-    if (base.options[setting] !== undefined) {
+    if (base.options?.[setting] !== undefined) {
         fail(
             BASE,
             `sets \`${setting}\``,
@@ -168,7 +181,7 @@ for (const [rel, cfg] of projects) {
         if (!hasReason(cfg.raw, flag)) {
             fail(
                 rel,
-                `overrides \`${flag}: ${cfg.own[flag]}\` with no reason`,
+                `overrides \`${flag}: ${JSON.stringify(cfg.own[flag])}\` with no reason`,
                 'Write what forces it and what would let it be removed.',
             );
         }
@@ -188,7 +201,7 @@ for (const [rel, cfg] of projects) {
     } else if (String(lib[0]).toLowerCase() !== String(target).toLowerCase()) {
         fail(
             rel,
-            `targets ${target} but its lib starts at ${lib[0]}`,
+            `targets ${target} but its lib starts at ${String(lib[0])}`,
             'A lib behind the target types the old standard library while the emit uses the new syntax; a lib ahead of it types methods the runtime floor does not have. The first lib entry is the ES year and must match.',
         );
     }
@@ -296,11 +309,11 @@ for (const [rel, cfg] of configs) {
 }
 
 /** Every tsconfig in the repo, minus node_modules, build output and dotted directories. */
-function findConfigs(rel, out = []) {
+function listConfigs(rel: string, out: string[] = []): string[] {
     for (const entry of fs.readdirSync(path.join(ROOT, rel), { withFileTypes: true })) {
         if (IGNORED_DIRS.has(entry.name) || entry.name.startsWith('.')) continue;
         const child = rel === '.' ? entry.name : `${rel}/${entry.name}`;
-        if (entry.isDirectory()) findConfigs(child, out);
+        if (entry.isDirectory()) listConfigs(child, out);
         else if (/^tsconfig(\..+)?\.json$/.test(entry.name)) out.push(child);
     }
     return out;
@@ -311,15 +324,15 @@ function findConfigs(rel, out = []) {
  * decide; `own` is only what this file states, which is what rules 3 to 6 are
  * about — inheriting a setting is not the same as choosing it.
  */
-function parse(rel) {
+function parse(rel: string): Config {
     const raw = read(rel);
-    let data;
+    let data: TsconfigData;
     try {
-        data = JSON.parse(stripComments(raw));
+        data = JSON.parse(stripComments(raw)) as TsconfigData;
     } catch (e) {
         fail(
             rel,
-            `is not parseable JSON (${e.message})`,
+            `is not parseable JSON (${(e as Error).message})`,
             'tsc reads JSONC — comments are fine, a trailing comma is not.',
         );
         data = {};
@@ -328,16 +341,19 @@ function parse(rel) {
 }
 
 /** compilerOptions merged down the `extends` chain, nearest file winning. */
-function effective(rel, data, seen = new Set()) {
+function effective(rel: string, data: TsconfigData, seen = new Set<string>()): CompilerOptions | undefined {
     if (seen.has(rel)) return {}; // cyclic extends: tsc's error to report, not ours
     seen.add(rel);
 
-    let inherited = {};
+    let inherited: CompilerOptions = {};
     for (const specifier of data.extends === undefined ? [] : [data.extends].flat()) {
         const parent = resolveExtends(specifier, rel);
         if (parent === null) continue; // an unresolvable parent is tsc's complaint
         try {
-            inherited = { ...inherited, ...effective(parent, JSON.parse(stripComments(read(parent))), seen) };
+            inherited = {
+                ...inherited,
+                ...effective(parent, JSON.parse(stripComments(read(parent))) as TsconfigData, seen),
+            };
         } catch {
             continue;
         }
@@ -348,7 +364,7 @@ function effective(rel, data, seen = new Set()) {
 }
 
 /** Resolve one `extends` entry to a repo-relative path, or null for a package outside the tree. */
-function resolveExtends(specifier, fromRel) {
+function resolveExtends(specifier: string, fromRel: string): string | null {
     if (!specifier.startsWith('.')) return null; // a published preset — not ours to check
     const from = path.resolve(path.dirname(path.join(ROOT, fromRel)), specifier);
     const hit = [from, `${from}.json`, path.join(from, 'tsconfig.json')].find(
@@ -358,17 +374,20 @@ function resolveExtends(specifier, fromRel) {
 }
 
 /** Is there a comment on this setting's line, or on the lines immediately above it? */
-function hasReason(raw, flag) {
+function hasReason(raw: string, flag: string): boolean {
     const lines = raw.split('\n');
     const at = lines.findIndex((line) => new RegExp(`^\\s*"${flag}"\\s*:`).test(line));
     if (at === -1) return false;
-    if (/\/\/|\/\*/.test(lines[at].replace(new RegExp(`^\\s*"${flag}"\\s*:.*?(?=//|/\\*|$)`), ''))) return true;
+    if (/\/\/|\/\*/.test((lines[at] ?? '').replace(new RegExp(`^\\s*"${flag}"\\s*:.*?(?=//|/\\*|$)`), ''))) return true;
 
     for (let i = at - 1; i >= 0; i--) {
-        const above = lines[i].trim();
+        const above = (lines[i] ?? '').trim();
         if (above === '') continue;
         // A section divider is a label, not a reason — keep walking past it.
-        if (/^\/\*.*\*\/$/.test(above) && SECTIONS.includes(above.replace(/^\/\*\s*|\s*\*\/$/g, '').split(' — ')[0]))
+        if (
+            /^\/\*.*\*\/$/.test(above) &&
+            SECTIONS.includes(above.replace(/^\/\*\s*|\s*\*\/$/g, '').split(' — ')[0] ?? '')
+        )
             continue;
         return above.startsWith('//') || above.startsWith('*') || above.endsWith('*/');
     }
@@ -380,17 +399,14 @@ function hasReason(raw, flag) {
  * multi-line block is prose about the setting under it and is left alone; a
  * divider may carry a trailing ` — reason`, and sorts on the label before it.
  */
-function sectionsOf(raw) {
+function sectionsOf(raw: string): { line: number; name: string }[] {
     return raw
         .split('\n')
         .map((line, i) => ({ line: i + 1, text: line.trim() }))
         .filter(({ text }) => /^\/\*[^*].*\*\/$/.test(text))
         .map(({ line, text }) => ({
             line,
-            name: text
-                .replace(/^\/\*\s*|\s*\*\/$/g, '')
-                .split(' — ')[0]
-                .trim(),
+            name: (text.replace(/^\/\*\s*|\s*\*\/$/g, '').split(' — ')[0] ?? '').trim(),
         }));
 }
 
@@ -410,11 +426,11 @@ function sectionsOf(raw) {
  * `reached` is every config a compiler ends up loading; `pointed` is the subset
  * a script names WITHOUT build mode, which is what rule 8 judges.
  */
-function reachableConfigs() {
-    const reached = new Set();
-    const pointed = new Set();
+function reachableConfigs(): { reached: Set<string>; pointed: Set<string> } {
+    const reached = new Set<string>();
+    const pointed = new Set<string>();
 
-    const scripts = JSON.parse(read('package.json')).scripts ?? {};
+    const scripts = (JSON.parse(read('package.json')) as { scripts?: Record<string, string> }).scripts ?? {};
     for (const segment of Object.values(scripts).flatMap((command) => command.split('&&'))) {
         const args = segment.trim().split(/\s+/);
         const at = args.findIndex((arg) => /^(?:vue-)?tsc$/.test(arg));
@@ -425,7 +441,7 @@ function reachableConfigs() {
         // Build mode reads its projects positionally; -p is the only form otherwise.
         const named = building
             ? flags.filter((arg) => !arg.startsWith('-'))
-            : [/(?:-p|--project)\s+(\S+)/.exec(segment)?.[1]].filter((arg) => arg !== undefined);
+            : [/(?:-p|--project)\s+(\S+)/.exec(segment)?.[1]].filter((arg): arg is string => arg !== undefined);
 
         for (const specifier of named.length > 0 ? named : ['tsconfig.json']) {
             const rel = toConfigPath(specifier, '.');
@@ -440,7 +456,7 @@ function reachableConfigs() {
 }
 
 /** A `-b` root drags in everything it references, and everything those reference. */
-function addWithReferences(rel, out) {
+function addWithReferences(rel: string, out: Set<string>): void {
     if (out.has(rel)) return; // also the cycle guard; tsc reports a reference cycle itself
     out.add(rel);
     for (const { path: specifier } of configs.get(rel)?.data.references ?? []) {
@@ -449,14 +465,14 @@ function addWithReferences(rel, out) {
 }
 
 /** `-p`, `-b` and `references` all take a directory to mean the `tsconfig.json` inside it. */
-function toConfigPath(specifier, fromDir) {
+function toConfigPath(specifier: string, fromDir: string): string {
     const abs = path.resolve(ROOT, fromDir, specifier);
     const file = fs.existsSync(abs) && fs.statSync(abs).isDirectory() ? path.join(abs, 'tsconfig.json') : abs;
     return path.relative(ROOT, file);
 }
 
 /** A config that holds no source of its own and exists only to point at others. */
-function isSolution(data) {
+function isSolution(data: TsconfigData): boolean {
     return Array.isArray(data.files) && data.files.length === 0 && (data.references ?? []).length > 0;
 }
 

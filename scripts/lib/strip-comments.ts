@@ -7,7 +7,7 @@
  * String and template literals are preserved: a `'//'` inside a URL is not a
  * comment, and dropping it would corrupt the very lines a gate is reading.
  */
-export function stripComments(source) {
+export function stripComments(source: string): string {
     let out = '';
     let i = 0;
     const n = source.length;

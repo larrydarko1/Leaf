@@ -178,7 +178,7 @@
     appearance: none;
     width: $size-18;
     height: $size-2;
-    /* stylelint-disable no-unknown-custom-properties -- set by the component through a :style binding; declared in check-scss-standards.mjs */
+    /* stylelint-disable no-unknown-custom-properties -- set by the component through a :style binding; declared in check-scss-standards.ts */
     background: linear-gradient(
         to right,
         $accent-color 0 calc(var(--volume) * 100%),

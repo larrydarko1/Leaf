@@ -24,7 +24,7 @@ export default [
         rules: { 'no-process-env': 'error' },
     },
     {
-        files: ['**/lib/config.ts', 'tests/**/*.ts', 'vitest.setup.ts', 'scripts/**/*.mjs', 'build/**/*.cjs'],
+        files: ['**/lib/config.ts', 'tests/**/*.ts', 'vitest.setup.ts', 'scripts/**/*.ts', 'build/**/*.cjs'],
         rules: { 'no-process-env': 'off' },
     },
 ];

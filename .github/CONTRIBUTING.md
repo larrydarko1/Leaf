@@ -109,7 +109,7 @@ One command runs the exact gate list CI runs:
 npm run ci:check
 ```
 
-That is the audit gate (production deps, high and above, via `scripts/check/check-audit.mjs` and its
+That is the audit gate (production deps, high and above, via `scripts/check/check-audit.ts` and its
 reviewed allowlist) → lint → format check → stylelint → tests with coverage → build. Running it
 locally first is the difference between one push and six.
 

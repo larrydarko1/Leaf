@@ -20,7 +20,7 @@ export default [
         },
     },
     {
-        files: ['eslint/**/*.js', 'eslint.config.js', 'scripts/**/*.mjs'],
+        files: ['eslint/**/*.js', 'eslint.config.js', 'scripts/**/*.ts'],
         rules: { 'no-warning-comments': 'off' },
     },
 ];
