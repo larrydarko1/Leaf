@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
  * Refactoring & change-management gate.
- *   1. eslint/refactoring.js runs `no-warning-comments` over everything ESLint
- *      parses: .ts, .vue, .js, .mjs, .cjs.
+ *   1. @larrydarko/lint-config's refactoring rules run `no-warning-comments` over
+ *      everything ESLint parses: .ts, .vue, .js, .mjs, .cjs.
  *   2. THIS GATE covers everything else. ESLint has no parser for .scss, .yml,
  *      .json, .sh or .md, and markers live there too — a `(TBD)` in an SCSS
  *      architecture header describing a file as unwritten, at a point where the
@@ -21,7 +21,7 @@ import { REPO_ROOT as ROOT } from '../lib/repo-root.ts';
 
 /**
  * Deferral markers, shouted. Kept in sync by hand with the `terms` list in
- * eslint/refactoring.js — importing it would be tidier, but the two are matched
+ * @larrydarko/lint-config — importing it would be tidier, but the two are matched
  * differently on purpose (see the header), and a shared constant would invite
  * someone to unify the matching too.
  */
