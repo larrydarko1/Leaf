@@ -89,6 +89,7 @@
         "@commitlint/config-conventional": "^21.2.2",
         "@eslint/js": "^10.0.1",
         "@intlify/eslint-plugin-vue-i18n": "^4.5.1",
+        "@larrydarko/lint-config": "file:../lint-config",
         "@types/node": "^24.0.13",
         "@vitejs/plugin-vue": "^6.0.6",
         "@vitest/coverage-v8": "^5.0.1",
@@ -212,17 +213,5 @@
             "synopsis": "A local-first, privacy-focused note-taking app with on-device AI",
             "syncDesktopName": true
         }
-    },
-    "lint-staged": {
-        "*.{ts,vue}": [
-            "eslint --fix",
-            "prettier --write"
-        ],
-        "*.{scss,vue}": [
-            "stylelint --fix"
-        ],
-        "*.{scss,json,md}": [
-            "prettier --write"
-        ]
     }
 }
