@@ -232,11 +232,11 @@ This project uses **ESLint** (flat config) + **Prettier** for consistent formatt
 Leaf uses [semantic versioning](https://semver.org/) — `vMAJOR.MINOR.PATCH`. The split is that
 **humans decide, CI executes**.
 
-| Bump      | When                                                                                | Example           |
-| --------- | ----------------------------------------------------------------------------------- | ----------------- |
-| **MAJOR** | Breaking change for users — altered vault format, changed license, dropped platform | `1.4.2` → `2.0.0` |
-| **MINOR** | New feature, backwards-compatible                                                   | `1.4.2` → `1.5.0` |
-| **PATCH** | Bug fix, no new features, nothing breaking                                          | `1.4.2` → `1.4.3` |
+| Bump      | When                                                              | Example           |
+| --------- | ----------------------------------------------------------------- | ----------------- |
+| **MAJOR** | Breaking change for users — altered vault format, changed license | `1.4.2` → `2.0.0` |
+| **MINOR** | New feature, backwards-compatible                                 | `1.4.2` → `1.5.0` |
+| **PATCH** | Bug fix, no new features, nothing breaking                        | `1.4.2` → `1.4.3` |
 
 Releases are batched, not automatic. The maintainer decides when one is worth cutting, then:
 
