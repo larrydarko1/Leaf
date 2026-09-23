@@ -110,6 +110,7 @@
         "vue-tsc": "^3.2.0",
         "yaml": "^2.9.0"
     },
+    "packageManager": "npm@11.11.0",
     "engines": {
         "node": ">=24",
         "npm": ">=11"
@@ -120,7 +121,6 @@
         "win32"
     ],
     "private": true,
-    "packageManager": "npm@11.11.0",
     "build": {
         "appId": "com.leaf.app",
         "productName": "Leaf",
