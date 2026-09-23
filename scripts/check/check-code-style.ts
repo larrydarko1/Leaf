@@ -24,15 +24,13 @@
  * and a prose header above them is the one part nothing checks, so it is the part
  * that goes stale.
  *
- * `measure: 'lines'` — what `wc -l` counts, style block included. That is the unit
- * every number in `baseline` is written in, so it cannot change without re-measuring
- * all of them, and it is the honest one for this repo: an SFC with 400 lines of
- * style is still a file you scroll through.
- *
- * Three entries came off the baseline in this migration — SearchPanel, AudioViewer
- * and VideoViewer had all shrunk back under the cap, and the entries left behind
- * were licensing up to 209 lines of regrowth each. The shared gate fails on that
- * now, which is how they were found.
+ * `baseline` is in the shared gate's unit: non-blank lines, and an SFC's `<style>`
+ * block does not count. This repo used to count what `wc -l` counts, which was
+ * drift — the code style standard says "files over ~400 lines (template and script
+ * only, style can be ignored)" and the SCSS standard says no gate counts stylesheet
+ * lines. Every number below was re-measured in the new unit in one pass, and eight
+ * entries left the list because their script and template were never over the cap;
+ * only their stylesheets were. Three more had simply shrunk back under it.
  */
 import { checkCodeStyle } from '@larrydarko/lint-config/gates/code-style';
 
@@ -47,30 +45,21 @@ const CODEMIRROR = /^src\/renderer\/composables\/editor\/codemirror\/cm-[a-z0-9-
  * regrow to the old number.
  */
 const LENGTH_BASELINE: Record<string, number> = {
-    'src/renderer/components/ai/AiMessageList.vue': 1098,
-    'src/renderer/App.vue': 915,
-    'src/renderer/composables/drawing/useDrawingInteraction.ts': 814,
-    'src/main/services/fs.ts': 798,
-    'src/renderer/components/explorer/FolderNode.vue': 777,
-    'src/renderer/components/ai/AiInputArea.vue': 730,
-    'src/renderer/components/NoteEditor.vue': 725,
-    'src/renderer/components/ai/AiModelBar.vue': 700,
-    'src/renderer/composables/drawing/useCanvasRenderer.ts': 685,
-    'src/renderer/components/drawing/DrawingPropertiesPanel.vue': 675,
-    'src/renderer/components/drawing/DrawingToolbar.vue': 576,
-    'src/renderer/components/drawing/DrawingExportDialog.vue': 573,
-    'src/renderer/composables/editor/codemirror/cm-theme.ts': 525,
-    'src/renderer/composables/ai/useAIChat.ts': 499,
-    'src/main/services/ai.ts': 480,
-    'src/renderer/components/DrawingCanvas.vue': 475,
-    'src/renderer/components/editor/MarkdownToolbar.vue': 465,
-    'src/renderer/composables/editor/codemirror/cm-widgets.ts': 429,
-    'src/renderer/composables/editor/codemirror/cm-deco-builders.ts': 422,
+    'src/main/services/fs.ts': 755,
+    'src/renderer/composables/drawing/useDrawingInteraction.ts': 750,
+    'src/renderer/App.vue': 656,
+    'src/renderer/composables/drawing/useCanvasRenderer.ts': 628,
+    'src/renderer/components/explorer/FolderNode.vue': 513,
+    'src/renderer/components/ai/AiMessageList.vue': 490,
+    'src/renderer/components/NoteEditor.vue': 467,
+    'src/renderer/composables/ai/useAIChat.ts': 452,
+    'src/renderer/composables/editor/codemirror/cm-theme.ts': 421,
+    'src/main/services/ai.ts': 415,
+    'src/renderer/components/drawing/DrawingToolbar.vue': 406,
 };
 
 checkCodeStyle({
     scan: ['src'],
-    measure: 'lines',
     baseline: LENGTH_BASELINE,
     casing: [
         { files: /\.vue$/, style: 'pascal' },
