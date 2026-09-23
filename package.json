@@ -90,7 +90,6 @@
         "@types/node": "^24.0.13",
         "@vitejs/plugin-vue": "^6.0.6",
         "@vitest/coverage-v8": "^5.0.1",
-        "@vue/compiler-sfc": "^3.5.41",
         "@vue/test-utils": "^2.4.6",
         "@vue/tsconfig": "^0.9.0",
         "electron": "^43.4.0",
