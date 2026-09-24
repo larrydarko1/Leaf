@@ -31,22 +31,28 @@ describe('preload / electronAPI', () => {
     describe('log methods — route to ipcRenderer.send', () => {
         it('log.error sends "log:error"', () => {
             (capturedApi['log'] as { error: (...a: unknown[]) => void }).error('msg');
-            expect(mockSend).toHaveBeenCalledWith('log:error', 'msg');
+            expect(mockSend).toHaveBeenCalledWith('log:error', { message: 'msg', details: [] });
         });
 
         it('log.warn sends "log:warn"', () => {
             (capturedApi['log'] as { warn: (...a: unknown[]) => void }).warn('warning');
-            expect(mockSend).toHaveBeenCalledWith('log:warn', 'warning');
+            expect(mockSend).toHaveBeenCalledWith('log:warn', { message: 'warning', details: [] });
         });
 
         it('log.info sends "log:info"', () => {
             (capturedApi['log'] as { info: (...a: unknown[]) => void }).info('info msg');
-            expect(mockSend).toHaveBeenCalledWith('log:info', 'info msg');
+            expect(mockSend).toHaveBeenCalledWith('log:info', { message: 'info msg', details: [] });
+        });
+
+        it('packs whatever follows the message into details', () => {
+            const err = new Error('boom');
+            (capturedApi['log'] as { error: (...a: unknown[]) => void }).error('Failed to save:', err, 3);
+            expect(mockSend).toHaveBeenCalledWith('log:error', { message: 'Failed to save:', details: [err, 3] });
         });
 
         it('log.debug sends "log:debug"', () => {
             (capturedApi['log'] as { debug: (...a: unknown[]) => void }).debug('debug msg');
-            expect(mockSend).toHaveBeenCalledWith('log:debug', 'debug msg');
+            expect(mockSend).toHaveBeenCalledWith('log:debug', { message: 'debug msg', details: [] });
         });
     });
 

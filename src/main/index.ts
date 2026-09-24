@@ -17,7 +17,8 @@
  *   systemPrompt-service → systemPrompt:*
  *   theme-service        → theme:*
  *   language-service     → language:*
- *   main (inline)        → log:*, clipboard:write, shell:openExternal
+ *   log-service          → log:*
+ *   main (inline)        → clipboard:write, shell:openExternal
  */
 
 import path from 'path';
@@ -33,6 +34,7 @@ import * as aiService from '@/main/services/ai';
 import * as conversationService from '@/main/services/conversation';
 import * as fsService from '@/main/services/fs';
 import * as languageService from '@/main/services/language';
+import * as logService from '@/main/services/log';
 import * as mediaService from '@/main/services/media';
 import * as speechService from '@/main/services/speech';
 import * as systemPromptService from '@/main/services/systemPrompt';
@@ -227,12 +229,7 @@ void app.whenReady().then(async (): Promise<void> => {
     systemPromptService.register(ipcMain);
     themeService.register(ipcMain);
     languageService.register(ipcMain);
-
-    // Logging — route renderer log calls to electron-log
-    ipcMain.on('log:error', (_event, ...args: unknown[]): void => log.error(...args));
-    ipcMain.on('log:warn', (_event, ...args: unknown[]): void => log.warn(...args));
-    ipcMain.on('log:info', (_event, ...args: unknown[]): void => log.info(...args));
-    ipcMain.on('log:debug', (_event, ...args: unknown[]): void => log.debug(...args));
+    logService.register(ipcMain);
 
     // Clipboard
     ipcMain.handle('clipboard:write', (_event, text: string): void => {

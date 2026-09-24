@@ -12,10 +12,10 @@ import type { SpeechStatusEvent } from '@/schemas/speech';
 const api: ElectronAPI = {
     // Logging (routed to electron-log in the main process)
     log: {
-        error: (...args: unknown[]) => ipcRenderer.send('log:error', ...args),
-        warn: (...args: unknown[]) => ipcRenderer.send('log:warn', ...args),
-        info: (...args: unknown[]) => ipcRenderer.send('log:info', ...args),
-        debug: (...args: unknown[]) => ipcRenderer.send('log:debug', ...args),
+        error: (message: string, ...details: unknown[]) => ipcRenderer.send('log:error', { message, details }),
+        warn: (message: string, ...details: unknown[]) => ipcRenderer.send('log:warn', { message, details }),
+        info: (message: string, ...details: unknown[]) => ipcRenderer.send('log:info', { message, details }),
+        debug: (message: string, ...details: unknown[]) => ipcRenderer.send('log:debug', { message, details }),
     },
 
     isElectron: () => true,
