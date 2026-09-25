@@ -11,7 +11,7 @@
  *
  * The one thing worth remembering here: a dependency Electron loads indirectly — a
  * native backend, a builder hook — looks unused to an import graph. Those belong
- * under `ignoreDependencies` in knip.json with a reason, not in a raised budget.
+ * under `ignoreDependencies` in knip.config.js with a reason, not in a raised budget.
  */
 import { checkDeadCode } from '@larrydarko/lint-config/gates/dead-code';
 

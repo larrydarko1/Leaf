@@ -33,7 +33,6 @@ import { checkTesting } from '@larrydarko/lint-config/gates/testing';
 
 checkTesting({
     config: 'vitest.config.ts',
-    standard: 'the Testing section of .github/CONTRIBUTING.md',
     layout: { kind: 'mirrored', root: 'tests', areas: ['main', 'preload', 'renderer', 'schemas'] },
     e2e: false,
     thresholds: { statements: 80, branches: 80, functions: 80, lines: 80 },

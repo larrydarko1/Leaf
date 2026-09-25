@@ -20,7 +20,6 @@
 import { checkElectronSecurity } from '@larrydarko/lint-config/gates/electron-security';
 
 checkElectronSecurity({
-    standard: 'electron.instructions.md',
     vHtml: [
         {
             file: 'src/renderer/components/drawing/DrawingToolbar.vue',
