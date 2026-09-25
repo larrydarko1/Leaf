@@ -46,9 +46,7 @@ checkPackageJson({
         'build',
     ],
     tildeAllowed: {
-        'typescript':
+        typescript:
             'Its minor releases introduce new type errors, so a minor bump is a code change, not a dependency bump.',
-        'electron-log':
-            'Deliberate patch-pin — the reason is not recorded. Replace this note with it the next time you touch the range, or move the dep to `^`.',
     },
 });
