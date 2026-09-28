@@ -65,7 +65,9 @@ published by `release.yml`.
 ### Commit messages
 
 Commits follow [Conventional Commits](https://www.conventionalcommits.org/), enforced locally by the
-husky `commit-msg` hook. Allowed types are listed with their meanings in `commitlint.config.js`.
+husky `commit-msg` hook. `commitlint.config.js` pulls its rules from `@larrydarko/lint-config`, where
+the allowed types are listed with their meanings (`node_modules/@larrydarko/lint-config/dist/commitlint.js`):
+`feat`, `fix`, `perf`, `refactor`, `test`, `security`, `docs`, `style`, `chore`, `bump` and `revert`.
 
 ```
 <type>(<scope>): <subject>          required, imperative mood, 200 chars max
@@ -110,8 +112,11 @@ npm run ci:check
 ```
 
 That is the audit gate (production deps, high and above, via `scripts/check/check-audit.ts` and its
-reviewed allowlist) → lint → format check → stylelint → tests with coverage → build. Running it
-locally first is the difference between one push and six.
+reviewed allowlist) → lint → format check → stylelint → the standards gates → tests with coverage →
+testing standards → build. The standards gates are one `*:check` script each — package manifest,
+pipeline, code style, declaration order, HTML, SCSS, refactoring, IPC, Electron security, error
+handling, duplication, dead code, i18n and tsconfigs. Running it locally first is the difference
+between one push and six.
 
 If lint or formatting fails, auto-fix with:
 
@@ -219,10 +224,15 @@ checked by hand, because nothing else will check it.
 
 ## Code Style
 
-This project uses **ESLint** (flat config) + **Prettier** for consistent formatting:
+Linting, formatting and the CI gates all come from one shared package,
+[`@larrydarko/lint-config`](https://www.npmjs.com/package/@larrydarko/lint-config). The config files
+in this repo are thin: they call the package and pass only what is specific to Leaf. A change to a
+shared rule belongs in the package, not here.
 
-- **Prettier config** (`.prettierrc`): Single quotes, 4-space indent, 120 char line width, trailing commas, LF line endings
-- **ESLint config** (`eslint.config.js`): TypeScript-aware rules + Vue plugin + Prettier integration
+- **Prettier** (`prettier.config.js`): re-exports the shared config — single quotes, 4-space indent, 120 char line width, trailing commas, LF line endings
+- **ESLint** (`eslint.config.js`): the shared TypeScript + Vue base, plus Leaf's own rules for what main, preload, renderer and schemas may import and use
+- **stylelint** (`.stylelintrc.mjs`), **lint-staged** (`lint-staged.config.js`), **commitlint** (`commitlint.config.js`) and **knip** (`knip.config.js`) follow the same pattern
+- **Gate scripts** (`scripts/check/`): each one runs a gate from the package with Leaf's paths and allowlists
 - Follow existing patterns in the codebase — look at similar files before writing new code
 - Keep components small and focused — extract sub-components and composables when a file grows beyond ~300 lines
 - Write clear, descriptive comments only where the logic isn't self-evident

@@ -52,7 +52,7 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 ### Design
 
 - **Obsidian-inspired UI** - Clean, familiar interface
-- **Multi-language support** - 15 built-in languages with easy language switching; add your own translations
+- **Multi-language support** - 14 built-in languages with easy language switching; add your own translations
 - **Theme customization** - 4 built-in color themes; drop in your own for automatic detection
 
 ## Security & Privacy
@@ -136,7 +136,6 @@ Leaf supports multiple languages. Currently available:
 
 - **Chinese (simplified)**
 - **English** (default)
-- **Brainrot**
 - **Esperanto**
 - **French**
 - **German**
@@ -252,18 +251,19 @@ curl -L -o models/whisper/Xenova/whisper-base/onnx/decoder_model_merged_quantize
 Once the files are in place, dictation works fully offline — no cloud or API keys needed.
 
 Recommended models for getting started:
-| Model Name | Size (Q4_K_M) | System RAM | VRAM (GPU) | Context Window | Best For |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Qwen 3.5 4B** | ~2.9 GB | ~4 GB | ~3.5 GB | 256K | **Vision + Text**: Multimodal reasoning |
-| **Llama 3.2 3B** | ~2.0 GB | ~4 GB | ~3 GB | 128K | Fast general assistant, robust ecosystem |
-| **Qwen 3.5 7B** | ~4.6 GB | ~8 GB | ~6 GB | 128K | **Best All-Rounder**: Superior coding/math |
-| **Llama 3.3 8B** | ~5.0 GB | ~8 GB | ~6 GB | 128K | **Best Instruction Following**: Chat, general tasks |
-| **Mistral Nemo 12B** | ~7.0 GB | ~12 GB | ~8 GB | 128K | Large context, coding, tool use |
-| **Qwen 3.5 14B** | ~9.5 GB | ~16 GB | ~10 GB | 128K | Advanced reasoning, complex analysis |
-| **Phi-4 14B** | ~9.8 GB | ~16 GB | ~11 GB | 128K | High-end reasoning, logic puzzles |
-| **Gemma 4 9B** | ~6.0 GB | ~12 GB | ~8 GB | 128K | Creative tasks, multimodal (vision/audio) |
-| **Qwen 3.8 27B** | ~16.8 GB | ~32 GB | ~17 GB | 262K | **Flagship Local**: Near-api quality, multimodal |
-| **Qwen 3.8 32B** | ~20.5 GB | ~32 GB | ~21 GB | 128K | High-performance single-GPU (24GB+ VRAM) |
+
+| Model Name           | Size (Q4_K_M) | System RAM | VRAM (GPU) | Context Window | Best For                                            |
+| :------------------- | :------------ | :--------- | :--------- | :------------- | :-------------------------------------------------- |
+| **Qwen 3.5 4B**      | ~2.9 GB       | ~4 GB      | ~3.5 GB    | 256K           | **Vision + Text**: Multimodal reasoning             |
+| **Llama 3.2 3B**     | ~2.0 GB       | ~4 GB      | ~3 GB      | 128K           | Fast general assistant, robust ecosystem            |
+| **Qwen 3.5 7B**      | ~4.6 GB       | ~8 GB      | ~6 GB      | 128K           | **Best All-Rounder**: Superior coding/math          |
+| **Llama 3.3 8B**     | ~5.0 GB       | ~8 GB      | ~6 GB      | 128K           | **Best Instruction Following**: Chat, general tasks |
+| **Mistral Nemo 12B** | ~7.0 GB       | ~12 GB     | ~8 GB      | 128K           | Large context, coding, tool use                     |
+| **Qwen 3.5 14B**     | ~9.5 GB       | ~16 GB     | ~10 GB     | 128K           | Advanced reasoning, complex analysis                |
+| **Phi-4 14B**        | ~9.8 GB       | ~16 GB     | ~11 GB     | 128K           | High-end reasoning, logic puzzles                   |
+| **Gemma 4 9B**       | ~6.0 GB       | ~12 GB     | ~8 GB      | 128K           | Creative tasks, multimodal (vision/audio)           |
+| **Qwen 3.8 27B**     | ~16.8 GB      | ~32 GB     | ~17 GB     | 262K           | **Flagship Local**: Near-api quality, multimodal    |
+| **Qwen 3.8 32B**     | ~20.5 GB      | ~32 GB     | ~21 GB     | 128K           | High-performance single-GPU (24GB+ VRAM)            |
 
 ### App Settings
 
@@ -327,9 +327,12 @@ npm run format:check
 
 # Auto-format source code
 npm run format
+
+# Run every gate CI runs, in one go
+npm run ci:check
 ```
 
-Tests live in the `tests/` directory and mirror the `src/` structure. The CI pipeline runs type-checking, building, and all tests on every push and pull request — the release pipeline only triggers if CI passes.
+Tests live in the `tests/` directory and mirror the `src/` structure. On every push and pull request, CI runs the dependency audit, lint, formatting and style checks, the project's standards gates (`scripts/check/`), type-checking, the build, and the full test suite with coverage — the release pipeline only triggers if CI passes.
 
 > **No E2E tests:** Playwright's Electron support remains experimental and broken for Electron 30+ (as of 2026). The --remote-debugging-port flag was removed from the CLI in Electron 30, and the only reliable workaround requires patching your Electron application code via app.commandLine.appendSwitch(). Unit test coverage sits above 80% across all branches and keeps the CI feedback loop fast. E2E support should be revisited once Playwright ships a stable fix for Electron 30+.
 
@@ -400,8 +403,8 @@ signed macOS and Windows releases are on the list.
 - **Schema Validation:** [Zod](https://zod.dev) (runtime TypeScript-first schema validation)
 - **Build Tools:** [electron-vite](https://electron-vite.org) + [Electron Builder](https://www.electron.build)
 - **Testing:** [Vitest](https://vitest.dev) + [Vue Test Utils](https://test-utils.vuejs.org)
-- **Linting:** [ESLint](https://eslint.org) (flat config) + [typescript-eslint](https://typescript-eslint.io) + [Prettier](https://prettier.io) + [stylelint](https://stylelint.io/)
-- **Git Hooks:** [Husky](https://typicode.github.io/husky) + [lint-staged](https://github.com/lint-staged/lint-staged) + [commitlint](https://commitlint.js.org) (Conventional Commits)
+- **Linting & Formatting:** [@larrydarko/lint-config](https://www.npmjs.com/package/@larrydarko/lint-config) — one shared package that bundles [ESLint](https://eslint.org) (flat config) + [typescript-eslint](https://typescript-eslint.io), [Prettier](https://prettier.io), [stylelint](https://stylelint.io/), [knip](https://knip.dev) and the CI gate scripts
+- **Git Hooks:** [Husky](https://typicode.github.io/husky) + [lint-staged](https://github.com/lint-staged/lint-staged) + [commitlint](https://commitlint.js.org) (Conventional Commits), configured through the same package
 
 ## Project Structure
 
@@ -550,8 +553,9 @@ leaf/
 ├── build/                          # Packaging inputs: master icon, DMG backgrounds, hooks
 ├── design/                         # Source design files (PSD, SVG)
 ├── scripts/
-│   └── check/                      # CI gate scripts
-│       └── check-audit.ts          # npm audit gate with a reviewed advisory allowlist
+│   └── check/                      # CI gate scripts — thin wrappers over @larrydarko/lint-config/gates
+│       ├── check-audit.ts          # npm audit gate with a reviewed advisory allowlist
+│       └── check-*.ts              # One per `*:check` npm script (security, IPC, i18n, dead code, …)
 ├── .github/
 │   ├── CONTRIBUTING.md             # Contributor guide (setup, testing, releases)
 │   ├── SECURITY.md                 # Vulnerability reporting policy
@@ -567,13 +571,19 @@ leaf/
 │       └── release.yml             # Build & GitHub Release
 ├── electron.vite.config.ts         # electron-vite config (main, preload, renderer)
 ├── vitest.config.ts                # Test runner config (jsdom environment)
-├── eslint.config.js                # ESLint flat config (TypeScript + Vue + Prettier)
-├── commitlint.config.js            # Conventional Commits linting
-├── .prettierrc                     # Prettier formatting rules
+├── eslint.config.js                # Shared ESLint base + Leaf's per-process import/syntax rules
+├── commitlint.config.js            # Conventional Commits linting (shared config)
+├── prettier.config.js              # Prettier formatting rules (shared config)
+├── .stylelintrc.mjs                # stylelint rules (shared config)
+├── lint-staged.config.js           # Pre-commit tasks on staged files (shared config)
+├── knip.config.js                  # Dead-code analysis entry points and ignores
 ├── package.json
 ├── tsconfig.json                   # Root TS config (project references)
+├── tsconfig.base.json              # Options shared by every TS config below
 ├── tsconfig.app.json               # Renderer TS config (DOM + Vue, strict)
-└── tsconfig.node.json              # Main & preload TS config (Node, strict)
+├── tsconfig.node.json              # Main & preload TS config (Node, strict)
+├── tsconfig.test.json              # Test TS config (Vitest globals, path aliases)
+└── tsconfig.scripts.json           # Gate scripts TS config (run directly by Node)
 ```
 
 ## Contributing

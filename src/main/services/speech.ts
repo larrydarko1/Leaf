@@ -51,9 +51,8 @@ export function cleanup(): void {
 }
 
 export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | null): void {
-    ipc.handle(
-        'speech:init',
-        async (): Promise<{ success: boolean; message?: string; error?: string }> => initModel(findMainWindow()),
+    ipc.handle('speech:init', async (): Promise<{ success: boolean; message?: string; error?: string }> =>
+        initModel(findMainWindow()),
     );
     ipc.handle(
         'speech:transcribe',

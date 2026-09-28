@@ -108,7 +108,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                 ref="audioRef"
                 :key="audioUrl"
                 :src="audioUrl"
-                style="display: none"
+                class="audio-element"
                 @error="onAudioError"
                 @loadedmetadata="onAudioLoaded"
                 @ended="onAudioEnded"></audio>
@@ -289,6 +289,12 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
     width: 100%;
     position: relative;
     z-index: $z-normal;
+}
+
+// The real <audio> element is the playback engine only — every control the user sees is the
+// custom transport bar below it, so the element itself is never rendered.
+.audio-element {
+    display: none;
 }
 
 // The large glyph standing in for the waveform, dimmed so it reads as decoration.

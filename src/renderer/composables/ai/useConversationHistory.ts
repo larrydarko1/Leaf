@@ -151,13 +151,11 @@ export function useConversationHistory(
                     await window.electronAPI.aiResetChat();
                 }
                 currentConversationId.value = result.conversation.id;
-                messages.value = result.conversation.messages.map(
-                    (m): ChatMessage => ({
-                        role: m.role,
-                        content: m.content,
-                        ...(m.thinking === undefined ? {} : { thinking: m.thinking }),
-                    }),
-                );
+                messages.value = result.conversation.messages.map((m): ChatMessage => ({
+                    role: m.role,
+                    content: m.content,
+                    ...(m.thinking === undefined ? {} : { thinking: m.thinking }),
+                }));
                 if (result.conversation.model !== null && result.conversation.model !== '') {
                     lastUsedModelName.value = result.conversation.model;
                 }

@@ -14,7 +14,7 @@ import { useDrawingInteraction } from '@/renderer/composables/drawing/useDrawing
 import { useDrawingPersistence } from '@/renderer/composables/drawing/useDrawingPersistence';
 import { useTextEditing } from '@/renderer/composables/drawing/useTextEditing';
 import { useThrottleFn } from '@/renderer/composables/useThrottle';
-import type { ToolType, StrokeStyle, DefaultStyle, StyleKey } from '@/schemas/drawing';
+import type { ToolType, DefaultStyle, StyleKey } from '@/schemas/drawing';
 
 type Props = {
     filePath: string;
@@ -56,14 +56,14 @@ const {
     isShapeTool,
 } = useDrawingElements();
 
-const defaultStyle = ref({
+const defaultStyle = ref<DefaultStyle>({
     strokeColor: '#ffffff',
     fillColor: 'transparent',
     strokeWidth: 2,
-    strokeStyle: 'solid' as StrokeStyle,
+    strokeStyle: 'solid',
     borderRadius: 0,
     fontSize: 20,
-} as DefaultStyle);
+});
 
 const history = ref<string[]>([]);
 const historyIndex = ref(-1);

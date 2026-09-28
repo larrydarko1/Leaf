@@ -11,7 +11,7 @@
  *   Linux  — ~/.config/Leaf/logs/main.log
  */
 
-import baseLog from 'electron-log/main.js';
+import baseLog from 'electron-log/main';
 
 export const log = baseLog;
 

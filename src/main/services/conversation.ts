@@ -44,9 +44,8 @@ export function init(userDataPath: string): void {
 }
 
 export function register(ipc: IpcMain): void {
-    ipc.handle(
-        'conversations:list',
-        async (): Promise<{ success: boolean; conversations: object[]; error?: string }> => readConversations(),
+    ipc.handle('conversations:list', async (): Promise<{ success: boolean; conversations: object[]; error?: string }> =>
+        readConversations(),
     );
 
     ipc.handle(

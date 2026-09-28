@@ -254,13 +254,7 @@ export function useDrawingInteraction({
             if (hit !== null) {
                 if (shiftHeld.value) {
                     // Shift-click: toggle element in selection
-                    const newSet = new Set(selectedIds.value);
-                    if (newSet.has(hit.id)) {
-                        newSet.delete(hit.id);
-                    } else {
-                        newSet.add(hit.id);
-                    }
-                    selectedIds.value = newSet;
+                    selectedIds.value = toggled(selectedIds.value, hit.id);
                 } else if (!selectedIds.value.has(hit.id)) {
                     // Click on unselected element: select only it
                     selectedIds.value = new Set([hit.id]);
@@ -811,4 +805,11 @@ export function useDrawingInteraction({
         handleKeydown,
         handleKeyup,
     };
+}
+
+/** A copy of `ids` with `id` flipped: removed if it was there, added if not. */
+function toggled(ids: ReadonlySet<string>, id: string): Set<string> {
+    const next = new Set(ids);
+    if (!next.delete(id)) next.add(id);
+    return next;
 }

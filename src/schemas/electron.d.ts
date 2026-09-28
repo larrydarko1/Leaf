@@ -37,10 +37,10 @@ import type {
 
 export type ElectronAPI = {
     log: {
-        error: (...args: unknown[]) => void;
-        warn: (...args: unknown[]) => void;
-        info: (...args: unknown[]) => void;
-        debug: (...args: unknown[]) => void;
+        error: (message: string, ...details: unknown[]) => void;
+        warn: (message: string, ...details: unknown[]) => void;
+        info: (message: string, ...details: unknown[]) => void;
+        debug: (message: string, ...details: unknown[]) => void;
     };
     isElectron: () => boolean;
     openExternal: (url: string) => Promise<boolean>;

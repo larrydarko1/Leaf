@@ -39,7 +39,6 @@
         "build:linux": "npm run build && electron-builder --linux --publish never",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
-        "lint:dup": "jscpd src --config .jscpd.json --reporters console",
         "format": "prettier --write \"src/**/*.{ts,vue,scss,json}\"",
         "format:check": "prettier --check \"src/**/*.{ts,vue,scss,json}\"",
         "audit:check": "node scripts/check/check-audit.ts",
@@ -76,7 +75,7 @@
         "@huggingface/transformers": "^4.2.0",
         "@lezer/highlight": "^1.2.3",
         "dompurify": "^3.4.11",
-        "electron-log": "~5.4.3",
+        "electron-log": "^5.4.4",
         "marked": "^18.0.9",
         "node-llama-cpp": "^3.15.1",
         "onnxruntime-node": "^1.24.2",
@@ -85,47 +84,24 @@
         "zod": "^4.4.3"
     },
     "devDependencies": {
-        "@commitlint/cli": "^21.2.2",
-        "@commitlint/config-conventional": "^21.2.2",
-        "@eslint/js": "^10.0.1",
-        "@intlify/eslint-plugin-vue-i18n": "^4.5.1",
+        "@larrydarko/lint-config": "^0.1.0-beta.0",
         "@types/node": "^24.0.13",
         "@vitejs/plugin-vue": "^6.0.6",
         "@vitest/coverage-v8": "^5.0.1",
-        "@vitest/eslint-plugin": "^1.6.27",
-        "@vue/compiler-sfc": "^3.5.41",
         "@vue/test-utils": "^2.4.6",
         "@vue/tsconfig": "^0.9.0",
         "electron": "^43.4.0",
         "electron-builder": "^26.4.0",
         "electron-vite": "^5.0.0",
-        "eslint": "^10.0.3",
-        "eslint-config-prettier": "^10.1.8",
-        "eslint-import-resolver-typescript": "^4.4.5",
-        "eslint-plugin-import-x": "^4.16.2",
-        "eslint-plugin-vue": "^10.8.0",
-        "eslint-plugin-vuejs-accessibility": "^2.5.0",
-        "globals": "^17.4.0",
-        "husky": "^9.1.7",
-        "jscpd": "^5.0.16",
         "jsdom": "^30.0.1",
-        "jsonc-eslint-parser": "^3.1.0",
-        "knip": "^6.32.2",
-        "lint-staged": "^16.4.0",
-        "postcss-html": "^2.0.0",
-        "prettier": "^3.8.1",
         "sass-embedded": "^1.100.0",
-        "stylelint": "^17.13.0",
-        "stylelint-config-standard-scss": "^17.0.0",
-        "stylelint-declaration-strict-value": "^1.11.1",
-        "stylelint-scss": "^7.2.0",
         "typescript": "~6.0.2",
-        "typescript-eslint": "^8.58.1",
         "vite": "^7.0.0",
         "vitest": "^5.0.1",
         "vue-tsc": "^3.2.0",
         "yaml": "^2.9.0"
     },
+    "packageManager": "npm@11.11.0",
     "engines": {
         "node": ">=24",
         "npm": ">=11"
@@ -136,7 +112,6 @@
         "win32"
     ],
     "private": true,
-    "packageManager": "npm@11.11.0",
     "build": {
         "appId": "com.leaf.app",
         "productName": "Leaf",
@@ -212,17 +187,5 @@
             "synopsis": "A local-first, privacy-focused note-taking app with on-device AI",
             "syncDesktopName": true
         }
-    },
-    "lint-staged": {
-        "*.{ts,vue}": [
-            "eslint --fix",
-            "prettier --write"
-        ],
-        "*.{scss,vue}": [
-            "stylelint --fix"
-        ],
-        "*.{scss,json,md}": [
-            "prettier --write"
-        ]
     }
 }
