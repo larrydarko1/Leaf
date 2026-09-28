@@ -182,9 +182,8 @@ async function doSeed(): Promise<void> {
         }
     }
 
-    await updateState(
-        (s): Record<string, unknown> =>
-            s['activePrompt'] === undefined ? { ...s, activePrompt: DEFAULT_PROMPT_ID } : s,
+    await updateState((s): Record<string, unknown> =>
+        s['activePrompt'] === undefined ? { ...s, activePrompt: DEFAULT_PROMPT_ID } : s,
     );
 }
 
