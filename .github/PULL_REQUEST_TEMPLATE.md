@@ -5,7 +5,7 @@ Two things about this repo that catch people out, both mechanical:
      subject, so it must be a conventional commit — `feat(editor): add markdown
      table shortcut`, not `Add markdown table shortcut`. pr-title.yml runs
      commitlint against it, so a wrong title is a red check, not a surprise
-     later. Allowed types are in commitlint.config.js.
+     later. Allowed types are in @larrydarko/lint-config (see CONTRIBUTING.md).
   2. `npm run ci:check` is the same gate list CI runs. Running it locally first
      is the difference between one push and six.
 
@@ -56,8 +56,8 @@ anyway — the point of ticking it is that you thought about it before CI did.
 - [ ] Process boundary (new IPC channel, or main↔renderer contract changed)
 - [ ] Filesystem (vault reads/writes, path handling, anything that can lose a note)
 - [ ] Local AI (model loading, inference, download, or the Whisper weights the release build packs)
-- [ ] Privacy (any new network call — Leaf makes none except explicit model downloads)
-- [ ] Frontend (a11y checked, i18n strings added for every locale in `src/renderer/i18n.ts`)
+- [ ] Privacy (any new network call — Leaf makes none)
+- [ ] Frontend (a11y checked, i18n strings added to every locale in `assets/locales/`)
 - [ ] Packaging (electron-builder config, entitlements, per-platform installer behaviour)
 - [ ] Pipeline (workflow, composite action, or a `ci:check` gate)
 - [ ] Dependencies (adds a production dep, or changes what `npm audit` reports — see `scripts/check/check-audit.ts`)
@@ -78,6 +78,6 @@ create a merge commit — main is linear.
 
 Releasing is separate: the maintainer decides when, counts the commits since the
 last tag for the semver bump, and lands a `bump: version x.y.z` commit. Once CI
-is green on that commit, release.yml tags it, builds the three installers and
+is green on that commit, release.yml tags it, builds the Linux packages and
 publishes the GitHub release. Don't bump the version in a feature PR.
 -->
