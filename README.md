@@ -9,7 +9,7 @@ Leaf is a **local-first, privacy-focused note-taking app** for desktop built wit
 
 # Demo
 
-![Leaf Demo](./public/demo.png)
+![Leaf Demo](./public/demo.gif)
 
 ## Features
 
@@ -549,7 +549,7 @@ leaf/
 │       └── light-contrast.json     # 4 themes, all WCAG-verified (AA; -contrast are AAA)
 ├── models/
 │   └── whisper/                    # Whisper ONNX model (download manually — see above)
-├── public/                         # Static assets (demo screenshot)
+├── public/                         # Static assets (demo GIF)
 ├── build/                          # Packaging inputs: master icon, DMG backgrounds, hooks
 ├── design/                         # Source design files (PSD, SVG)
 ├── scripts/
