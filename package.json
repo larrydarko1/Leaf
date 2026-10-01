@@ -90,7 +90,7 @@
         "@vitest/coverage-v8": "^5.0.1",
         "@vue/test-utils": "^2.4.6",
         "@vue/tsconfig": "^0.9.0",
-        "electron": "^43.4.0",
+        "electron": "^44.4.5",
         "electron-builder": "^26.4.0",
         "electron-vite": "^5.0.0",
         "jsdom": "^30.0.1",
