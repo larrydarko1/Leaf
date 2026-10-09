@@ -456,6 +456,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
     background: $accent-color;
     border-radius: $border-radius-round;
     box-shadow: $accent-shadow;
+    margin-right: $space-2;
 }
 
 .ai-model-name {
