@@ -13,10 +13,6 @@
 // Nothing below this line may be added to the SFC injection: each SFC style block is its own sass
 // compilation, so an injected module that emits rules ships one copy per component.
 
-// –– Forwarded tokens –––––––––––––––––––––––––
-
-@forward '@/renderer/styles/variables';
-
 // –– Emitted styles –––––––––––––––––––––––––––
 
 @use '@/renderer/styles/theme' as *;

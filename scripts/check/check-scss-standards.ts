@@ -7,10 +7,12 @@
  *
  * What stays here is this repo's answers.
  *
- * THE THREE FILE ROLES. `index.scss` is the BARREL (it `@forward`s the tokens)
- * and also the ENTRY (`main.ts` imports it, once). `_variables.scss` is the
- * INJECTED module — what electron.vite.config.ts prepends to every SFC style
- * block. The gate's defaults are that layout, so only the specifier is stated.
+ * THE TWO FILE ROLES. `index.scss` is the ENTRY: it `@use`s the modules that
+ * emit, and main.ts imports it exactly once. `_variables.scss` is the INJECTED
+ * module — both Vite configs prepend it to every SFC style block, and each block
+ * is its own Sass compilation, so anything reachable from it that emits a rule
+ * ships once per component. The mixins live in it too, for that reason: a mixin
+ * emits nothing until it is included. The gate fixes both names.
  *
  * `themes.source: 'json-presets'` is the one real switch, and it is a product
  * decision rather than a style preference: Leaf's themes are JSON files seeded
