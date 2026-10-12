@@ -336,6 +336,7 @@
     "unknown": "Etwas ist schiefgelaufen.",
     "create_file_failed": "Die Datei konnte nicht erstellt werden. {reason}",
     "create_drawing_failed": "Die Zeichnung konnte nicht erstellt werden. {reason}",
+    "create_folder_failed": "Der Ordner konnte nicht erstellt werden. {reason}",
     "rename_file_failed": "Die Datei konnte nicht umbenannt werden. {reason}",
     "rename_folder_failed": "Der Ordner konnte nicht umbenannt werden. {reason}",
     "delete_file_failed": "{name} konnte nicht gelöscht werden. {reason}",
@@ -344,5 +345,9 @@
     "move_folder_failed": "Der Ordner konnte nicht verschoben werden. {reason}",
     "save_file_failed": "Die Datei konnte nicht gespeichert werden. {reason}",
     "chat_failed": "Das Modell konnte nicht antworten. {reason}"
+  },
+  "notifications": {
+    "region": "Benachrichtigungen",
+    "dismiss": "Benachrichtigung schließen"
   }
 }

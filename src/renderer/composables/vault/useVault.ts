@@ -5,6 +5,7 @@
 
 import { ref, shallowRef, type Ref, type ShallowRef } from 'vue';
 
+import { notify } from '@/renderer/composables/ui/useNotifications';
 import { i18n } from '@/renderer/i18n';
 import { formatIpcError } from '@/renderer/utils/ipcError';
 import type { FileInfo, FolderInfo } from '@/schemas/vault';
@@ -142,11 +143,11 @@ export function useVault(): UseVaultReturn {
                 await refreshFiles();
                 return files.value.find((f): boolean => f.path === result.path) ?? null;
             }
-            alert(t('errors.create_file_failed', { reason: formatIpcError(t, result.error) }));
+            notify.error(t('errors.create_file_failed', { reason: formatIpcError(t, result.error) }));
             return null;
         } catch (error) {
             window.electronAPI.log.error('Error creating file:', error);
-            alert(t('errors.create_file_failed', { reason: formatIpcError(t, 'UNKNOWN') }));
+            notify.error(t('errors.create_file_failed', { reason: formatIpcError(t, 'UNKNOWN') }));
             return null;
         }
     }
@@ -163,11 +164,11 @@ export function useVault(): UseVaultReturn {
                 await refreshFiles();
                 return files.value.find((f): boolean => f.path === result.path) ?? null;
             }
-            alert(t('errors.create_drawing_failed', { reason: formatIpcError(t, result.error) }));
+            notify.error(t('errors.create_drawing_failed', { reason: formatIpcError(t, result.error) }));
             return null;
         } catch (error) {
             window.electronAPI.log.error('Error creating drawing:', error);
-            alert(t('errors.create_drawing_failed', { reason: formatIpcError(t, 'UNKNOWN') }));
+            notify.error(t('errors.create_drawing_failed', { reason: formatIpcError(t, 'UNKNOWN') }));
             return null;
         }
     }
@@ -182,9 +183,11 @@ export function useVault(): UseVaultReturn {
                 await refreshFiles();
             } else {
                 window.electronAPI.log.error('Failed to create folder:', result.error);
+                notify.error(t('errors.create_folder_failed', { reason: formatIpcError(t, result.error) }));
             }
         } catch (error) {
             window.electronAPI.log.error('Error creating folder:', error);
+            notify.error(t('errors.create_folder_failed', { reason: formatIpcError(t, 'UNKNOWN') }));
         }
     }
 
@@ -204,11 +207,11 @@ export function useVault(): UseVaultReturn {
                 await refreshFiles();
                 return files.value.find((f): boolean => f.path === result.newPath) ?? null;
             }
-            alert(t('errors.rename_file_failed', { reason: formatIpcError(t, result.error) }));
+            notify.error(t('errors.rename_file_failed', { reason: formatIpcError(t, result.error) }));
             return null;
         } catch (error) {
             window.electronAPI.log.error('Error renaming file:', error);
-            alert(t('errors.rename_file_failed', { reason: formatIpcError(t, 'UNKNOWN') }));
+            notify.error(t('errors.rename_file_failed', { reason: formatIpcError(t, 'UNKNOWN') }));
             return null;
         }
     }
@@ -225,11 +228,11 @@ export function useVault(): UseVaultReturn {
                     : '';
                 return parentPath !== '' ? parentPath + '/' + newName : newName;
             }
-            alert(t('errors.rename_folder_failed', { reason: formatIpcError(t, result.error) }));
+            notify.error(t('errors.rename_folder_failed', { reason: formatIpcError(t, result.error) }));
             return null;
         } catch (error) {
             window.electronAPI.log.error('Error renaming folder:', error);
-            alert(t('errors.rename_folder_failed', { reason: formatIpcError(t, 'UNKNOWN') }));
+            notify.error(t('errors.rename_folder_failed', { reason: formatIpcError(t, 'UNKNOWN') }));
             return null;
         }
     }
@@ -239,11 +242,13 @@ export function useVault(): UseVaultReturn {
             try {
                 const result = await window.electronAPI.deleteFile(file.path);
                 if (!result.success) {
-                    alert(t('errors.delete_file_failed', { name: file.name, reason: formatIpcError(t, result.error) }));
+                    notify.error(
+                        t('errors.delete_file_failed', { name: file.name, reason: formatIpcError(t, result.error) }),
+                    );
                 }
             } catch (error) {
                 window.electronAPI.log.error('Error deleting file:', error);
-                alert(t('errors.delete_file_failed', { name: file.name, reason: formatIpcError(t, 'UNKNOWN') }));
+                notify.error(t('errors.delete_file_failed', { name: file.name, reason: formatIpcError(t, 'UNKNOWN') }));
             }
         }
         await refreshFiles();
@@ -258,10 +263,11 @@ export function useVault(): UseVaultReturn {
                 await refreshFiles();
                 return true;
             }
-            alert(t('errors.delete_folder_failed', { reason: formatIpcError(t, result.error) }));
+            notify.error(t('errors.delete_folder_failed', { reason: formatIpcError(t, result.error) }));
             return false;
         } catch (error) {
             window.electronAPI.log.error('Error deleting folder:', error);
+            notify.error(t('errors.delete_folder_failed', { reason: formatIpcError(t, 'UNKNOWN') }));
             return false;
         }
     }
@@ -274,6 +280,7 @@ export function useVault(): UseVaultReturn {
                 : currentFolder.value + '/' + targetRelativePath;
         const movedFiles: MovedFile[] = [];
         for (const path of filePaths) {
+            const name = path.split('/').pop() ?? path;
             try {
                 const result = await window.electronAPI.moveFile(path, absoluteTarget);
                 if (
@@ -284,11 +291,11 @@ export function useVault(): UseVaultReturn {
                 ) {
                     movedFiles.push({ from: path, to: result.newPath });
                 } else if (result.error !== undefined && result.error !== 'NOT_FOUND') {
-                    const name = path.split('/').pop() ?? path;
-                    alert(t('errors.move_file_failed', { name, reason: formatIpcError(t, result.error) }));
+                    notify.error(t('errors.move_file_failed', { name, reason: formatIpcError(t, result.error) }));
                 }
             } catch (error) {
                 window.electronAPI.log.error('Error moving file:', error);
+                notify.error(t('errors.move_file_failed', { name, reason: formatIpcError(t, 'UNKNOWN') }));
             }
         }
         if (movedFiles.length > 0) await refreshFiles();
@@ -308,10 +315,11 @@ export function useVault(): UseVaultReturn {
                 const folderName = relativePath.substring(relativePath.lastIndexOf('/') + 1);
                 return isVaultRoot ? folderName : targetRelativePath + '/' + folderName;
             }
-            alert(t('errors.move_folder_failed', { reason: formatIpcError(t, result.error) }));
+            notify.error(t('errors.move_folder_failed', { reason: formatIpcError(t, result.error) }));
             return null;
         } catch (error) {
             window.electronAPI.log.error('Error moving folder:', error);
+            notify.error(t('errors.move_folder_failed', { reason: formatIpcError(t, 'UNKNOWN') }));
             return null;
         }
     }

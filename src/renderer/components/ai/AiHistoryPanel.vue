@@ -2,6 +2,8 @@
 import { ref, watch, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import IconEdit from '@/renderer/components/icons/IconEdit.vue';
+import IconTrash from '@/renderer/components/icons/IconTrash.vue';
 import type { ConversationMeta } from '@/schemas/ai';
 
 type Props = {
@@ -142,19 +144,10 @@ watch(
                             :title="t('ai.rename_conversation')"
                             :aria-label="t('ai.rename_conversation')"
                             @click.stop="$emit('start-rename', conv)">
-                            <svg
+                            <IconEdit
                                 width="12"
                                 height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2.5"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                aria-hidden="true">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                            </svg>
+                                stroke-width="2.5" />
                         </button>
                         <button
                             class="ai-btn-icon ai-btn-tiny ai-btn-danger icon-btn icon-btn-danger"
@@ -162,20 +155,10 @@ watch(
                             :title="t('ai.delete_conversation')"
                             :aria-label="t('ai.delete_conversation')"
                             @click.stop="$emit('delete', conv.id)">
-                            <svg
+                            <IconTrash
                                 width="12"
                                 height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2.5"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                aria-hidden="true">
-                                <polyline points="3 6 5 6 21 6" />
-                                <path
-                                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                            </svg>
+                                stroke-width="2.5" />
                         </button>
                     </div>
                 </li>

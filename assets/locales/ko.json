@@ -336,6 +336,7 @@
     "unknown": "문제가 발생했습니다.",
     "create_file_failed": "파일을 만들 수 없습니다. {reason}",
     "create_drawing_failed": "그림을 만들 수 없습니다. {reason}",
+    "create_folder_failed": "폴더를 만들 수 없습니다. {reason}",
     "rename_file_failed": "파일 이름을 바꿀 수 없습니다. {reason}",
     "rename_folder_failed": "폴더 이름을 바꿀 수 없습니다. {reason}",
     "delete_file_failed": "{name}을(를) 삭제할 수 없습니다. {reason}",
@@ -344,5 +345,9 @@
     "move_folder_failed": "폴더를 이동할 수 없습니다. {reason}",
     "save_file_failed": "파일을 저장할 수 없습니다. {reason}",
     "chat_failed": "모델이 응답할 수 없습니다. {reason}"
+  },
+  "notifications": {
+    "region": "알림",
+    "dismiss": "알림 닫기"
   }
 }

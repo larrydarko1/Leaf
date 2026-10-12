@@ -1,6 +1,19 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 
+import IconBold from '@/renderer/components/icons/IconBold.vue';
+import IconCheckbox from '@/renderer/components/icons/IconCheckbox.vue';
+import IconCode from '@/renderer/components/icons/IconCode.vue';
+import IconHighlight from '@/renderer/components/icons/IconHighlight.vue';
+import IconItalic from '@/renderer/components/icons/IconItalic.vue';
+import IconLink from '@/renderer/components/icons/IconLink.vue';
+import IconList from '@/renderer/components/icons/IconList.vue';
+import IconListOrdered from '@/renderer/components/icons/IconListOrdered.vue';
+import IconMinus from '@/renderer/components/icons/IconMinus.vue';
+import IconQuote from '@/renderer/components/icons/IconQuote.vue';
+import IconStrikethrough from '@/renderer/components/icons/IconStrikethrough.vue';
+import IconTable from '@/renderer/components/icons/IconTable.vue';
+
 defineEmits<{
     format: [type: string];
     heading: [event: Event];
@@ -21,19 +34,10 @@ const { t } = useI18n();
             :title="t('editor.bold') + ' (⌘B)'"
             :aria-label="t('editor.bold')"
             @mousedown.prevent="$emit('format', 'bold')">
-            <svg
+            <IconBold
                 width="14"
                 height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="3"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true">
-                <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
-                <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
-            </svg>
+                stroke-width="3" />
         </button>
         <button
             class="md-toolbar-btn icon-btn-square"
@@ -41,32 +45,9 @@ const { t } = useI18n();
             :title="t('editor.italic') + ' (⌘I)'"
             :aria-label="t('editor.italic')"
             @mousedown.prevent="$emit('format', 'italic')">
-            <svg
+            <IconItalic
                 width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true">
-                <line
-                    x1="19"
-                    y1="4"
-                    x2="10"
-                    y2="4"></line>
-                <line
-                    x1="14"
-                    y1="20"
-                    x2="5"
-                    y2="20"></line>
-                <line
-                    x1="15"
-                    y1="4"
-                    x2="9"
-                    y2="20"></line>
-            </svg>
+                height="14" />
         </button>
         <button
             class="md-toolbar-btn icon-btn-square"
@@ -74,20 +55,9 @@ const { t } = useI18n();
             :title="t('editor.strikethrough')"
             :aria-label="t('editor.strikethrough')"
             @mousedown.prevent="$emit('format', 'strikethrough')">
-            <svg
+            <IconStrikethrough
                 width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true">
-                <path d="M17.3 4.9c-2.3-.6-4.4-1-6.2-.9-2.7 0-5.3.7-5.3 3.1 0 1.4.8 2.3 2.3 3"></path>
-                <path d="M4 12h16"></path>
-                <path d="M17 16c0 2.3-2 4-5.5 4-2 0-3.7-.4-5.5-1.5"></path>
-            </svg>
+                height="14" />
         </button>
         <button
             class="md-toolbar-btn icon-btn-square"
@@ -95,19 +65,9 @@ const { t } = useI18n();
             :title="t('editor.highlight') + ' (⌘⇧H)'"
             :aria-label="t('editor.highlight')"
             @mousedown.prevent="$emit('format', 'highlight')">
-            <svg
+            <IconHighlight
                 width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true">
-                <path d="M12 20h9"></path>
-                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-            </svg>
+                height="14" />
         </button>
         <button
             class="md-toolbar-btn icon-btn-square"
@@ -115,19 +75,9 @@ const { t } = useI18n();
             :title="t('editor.inline_code')"
             :aria-label="t('editor.inline_code')"
             @mousedown.prevent="$emit('format', 'code')">
-            <svg
+            <IconCode
                 width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true">
-                <polyline points="16 18 22 12 16 6"></polyline>
-                <polyline points="8 6 2 12 8 18"></polyline>
-            </svg>
+                height="14" />
         </button>
 
         <div
@@ -163,47 +113,9 @@ const { t } = useI18n();
             :title="t('editor.bullet_list')"
             :aria-label="t('editor.bullet_list')"
             @mousedown.prevent="$emit('format', 'ul')">
-            <svg
+            <IconList
                 width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true">
-                <line
-                    x1="8"
-                    y1="6"
-                    x2="21"
-                    y2="6"></line>
-                <line
-                    x1="8"
-                    y1="12"
-                    x2="21"
-                    y2="12"></line>
-                <line
-                    x1="8"
-                    y1="18"
-                    x2="21"
-                    y2="18"></line>
-                <line
-                    x1="3"
-                    y1="6"
-                    x2="3.01"
-                    y2="6"></line>
-                <line
-                    x1="3"
-                    y1="12"
-                    x2="3.01"
-                    y2="12"></line>
-                <line
-                    x1="3"
-                    y1="18"
-                    x2="3.01"
-                    y2="18"></line>
-            </svg>
+                height="14" />
         </button>
         <button
             class="md-toolbar-btn icon-btn-square"
@@ -211,35 +123,9 @@ const { t } = useI18n();
             :title="t('editor.numbered_list')"
             :aria-label="t('editor.numbered_list')"
             @mousedown.prevent="$emit('format', 'ol')">
-            <svg
+            <IconListOrdered
                 width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true">
-                <line
-                    x1="10"
-                    y1="6"
-                    x2="21"
-                    y2="6"></line>
-                <line
-                    x1="10"
-                    y1="12"
-                    x2="21"
-                    y2="12"></line>
-                <line
-                    x1="10"
-                    y1="18"
-                    x2="21"
-                    y2="18"></line>
-                <path d="M4 6h1v4"></path>
-                <path d="M4 10h2"></path>
-                <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"></path>
-            </svg>
+                height="14" />
         </button>
         <button
             class="md-toolbar-btn icon-btn-square"
@@ -247,25 +133,9 @@ const { t } = useI18n();
             :title="t('editor.checkbox')"
             :aria-label="t('editor.checkbox')"
             @mousedown.prevent="$emit('format', 'checkbox')">
-            <svg
+            <IconCheckbox
                 width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true">
-                <rect
-                    x="3"
-                    y="3"
-                    width="18"
-                    height="18"
-                    rx="2"
-                    ry="2"></rect>
-                <path d="M9 12l2 2 4-4"></path>
-            </svg>
+                height="14" />
         </button>
 
         <div
@@ -279,15 +149,9 @@ const { t } = useI18n();
             :title="t('editor.blockquote')"
             :aria-label="t('editor.blockquote')"
             @mousedown.prevent="$emit('format', 'quote')">
-            <svg
+            <IconQuote
                 width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                aria-hidden="true">
-                <path
-                    d="M10 11H6a1 1 0 01-1-1V7a1 1 0 011-1h3a1 1 0 011 1v3a4 4 0 01-1.5 3.12A3.49 3.49 0 017 14a.5.5 0 010-1 2.5 2.5 0 001.73-.72A2.49 2.49 0 0010 11zM20 11h-4a1 1 0 01-1-1V7a1 1 0 011-1h3a1 1 0 011 1v3a4 4 0 01-1.5 3.12A3.49 3.49 0 0117 14a.5.5 0 010-1 2.5 2.5 0 001.73-.72A2.49 2.49 0 0020 11z"></path>
-            </svg>
+                height="14" />
         </button>
         <button
             class="md-toolbar-btn icon-btn-square"
@@ -295,19 +159,9 @@ const { t } = useI18n();
             :title="t('editor.link')"
             :aria-label="t('editor.link')"
             @mousedown.prevent="$emit('format', 'link')">
-            <svg
+            <IconLink
                 width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true">
-                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-            </svg>
+                height="14" />
         </button>
         <button
             class="md-toolbar-btn icon-btn-square"
@@ -315,44 +169,9 @@ const { t } = useI18n();
             :title="t('editor.table')"
             :aria-label="t('editor.table')"
             @mousedown.prevent="$emit('format', 'table')">
-            <svg
+            <IconTable
                 width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true">
-                <rect
-                    x="3"
-                    y="3"
-                    width="18"
-                    height="18"
-                    rx="2"
-                    ry="2"></rect>
-                <line
-                    x1="3"
-                    y1="9"
-                    x2="21"
-                    y2="9"></line>
-                <line
-                    x1="3"
-                    y1="15"
-                    x2="21"
-                    y2="15"></line>
-                <line
-                    x1="9"
-                    y1="9"
-                    x2="9"
-                    y2="21"></line>
-                <line
-                    x1="15"
-                    y1="9"
-                    x2="15"
-                    y2="21"></line>
-            </svg>
+                height="14" />
         </button>
         <button
             class="md-toolbar-btn icon-btn-square"
@@ -360,21 +179,9 @@ const { t } = useI18n();
             :title="t('editor.horizontal_rule')"
             :aria-label="t('editor.horizontal_rule')"
             @mousedown.prevent="$emit('format', 'hr')">
-            <svg
+            <IconMinus
                 width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                aria-hidden="true">
-                <line
-                    x1="3"
-                    y1="12"
-                    x2="21"
-                    y2="12"></line>
-            </svg>
+                height="14" />
         </button>
     </div>
 </template>

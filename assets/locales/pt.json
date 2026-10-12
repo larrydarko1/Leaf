@@ -336,6 +336,7 @@
     "unknown": "Algo correu mal.",
     "create_file_failed": "Não foi possível criar o ficheiro. {reason}",
     "create_drawing_failed": "Não foi possível criar o desenho. {reason}",
+    "create_folder_failed": "Não foi possível criar a pasta. {reason}",
     "rename_file_failed": "Não foi possível mudar o nome do ficheiro. {reason}",
     "rename_folder_failed": "Não foi possível mudar o nome da pasta. {reason}",
     "delete_file_failed": "Não foi possível eliminar {name}. {reason}",
@@ -344,5 +345,9 @@
     "move_folder_failed": "Não foi possível mover a pasta. {reason}",
     "save_file_failed": "Não foi possível guardar o ficheiro. {reason}",
     "chat_failed": "O modelo não conseguiu responder. {reason}"
+  },
+  "notifications": {
+    "region": "Notificações",
+    "dismiss": "Dispensar notificação"
   }
 }

@@ -336,6 +336,7 @@
     "unknown": "Что-то пошло не так.",
     "create_file_failed": "Не удалось создать файл. {reason}",
     "create_drawing_failed": "Не удалось создать рисунок. {reason}",
+    "create_folder_failed": "Не удалось создать папку. {reason}",
     "rename_file_failed": "Не удалось переименовать файл. {reason}",
     "rename_folder_failed": "Не удалось переименовать папку. {reason}",
     "delete_file_failed": "Не удалось удалить {name}. {reason}",
@@ -344,5 +345,9 @@
     "move_folder_failed": "Не удалось переместить папку. {reason}",
     "save_file_failed": "Не удалось сохранить файл. {reason}",
     "chat_failed": "Модель не смогла ответить. {reason}"
+  },
+  "notifications": {
+    "region": "Уведомления",
+    "dismiss": "Закрыть уведомление"
   }
 }

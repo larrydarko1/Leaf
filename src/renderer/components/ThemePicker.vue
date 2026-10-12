@@ -2,6 +2,9 @@
 import { onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import IconCheck from '@/renderer/components/icons/IconCheck.vue';
+import IconClose from '@/renderer/components/icons/IconClose.vue';
+import IconRefresh from '@/renderer/components/icons/IconRefresh.vue';
 import { useTheme } from '@/renderer/composables/ui/useTheme';
 
 const emit = defineEmits<{ close: [] }>();
@@ -43,35 +46,18 @@ onMounted(() => {
                     :title="t('theme.refresh_list')"
                     :aria-label="t('theme.refresh_list')"
                     @click="handleRefresh">
-                    <svg
+                    <IconRefresh
                         width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        aria-hidden="true">
-                        <path d="M21 12a9 9 0 1 1-3-6.7" />
-                        <path d="M21 4v5h-5" />
-                    </svg>
+                        height="14" />
                 </button>
                 <button
                     class="icon-btn"
                     :title="t('theme.close_panel')"
                     :aria-label="t('theme.close_panel')"
                     @click="emit('close')">
-                    <svg
+                    <IconClose
                         width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        aria-hidden="true">
-                        <path
-                            d="M18 6L6 18M6 6l12 12"
-                            stroke-linecap="round" />
-                    </svg>
+                        height="14" />
                 </button>
             </div>
         </header>
@@ -113,20 +99,12 @@ onMounted(() => {
                         >{{ theme.description }}</span
                     >
                 </span>
-                <svg
+                <IconCheck
                     v-if="theme.id === activeId"
                     class="list-check"
                     width="14"
                     height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true">
-                    <path d="M5 12l5 5 9-11" />
-                </svg>
+                    stroke-width="2.5" />
             </button>
 
             <div

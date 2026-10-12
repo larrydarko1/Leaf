@@ -5,6 +5,7 @@
 
 import { ref, type Ref } from 'vue';
 
+import { notify } from '@/renderer/composables/ui/useNotifications';
 import { i18n } from '@/renderer/i18n';
 import { formatIpcError } from '@/renderer/utils/ipcError';
 import type { FileInfo } from '@/schemas/vault';
@@ -102,15 +103,16 @@ export function useNotePersistence(
                 originalContent.value = content.value;
                 hasUnsavedChanges.value = false;
                 justSaved.value = true;
+                notify.dismiss(saveNoticeId(file.path));
                 onContentChanged(false);
                 onSave(content.value);
             } else {
                 window.electronAPI.log.error('Failed to save file:', result.error);
-                alert(t('errors.save_file_failed', { reason: formatIpcError(t, result.error) }));
+                reportSaveFailure(file.path, formatIpcError(t, result.error));
             }
         } catch (error) {
             window.electronAPI.log.error('Error saving file:', error);
-            alert(t('errors.save_file_failed', { reason: formatIpcError(t, 'UNKNOWN') }));
+            reportSaveFailure(file.path, formatIpcError(t, 'UNKNOWN'));
         } finally {
             isSaving.value = false;
         }
@@ -125,13 +127,16 @@ export function useNotePersistence(
                 content.value = drawingContent;
                 originalContent.value = drawingContent;
                 hasUnsavedChanges.value = false;
+                notify.dismiss(saveNoticeId(file.path));
                 onContentChanged(false);
                 onSave(drawingContent);
             } else {
                 window.electronAPI.log.error('Failed to save drawing:', result.error);
+                reportSaveFailure(file.path, formatIpcError(t, result.error));
             }
         } catch (error) {
             window.electronAPI.log.error('Error saving drawing:', error);
+            reportSaveFailure(file.path, formatIpcError(t, 'UNKNOWN'));
         }
     }
 
@@ -159,4 +164,13 @@ export function useNotePersistence(
         handleDrawingSave,
         clearAutoSaveTimeout,
     };
+}
+
+// One notice per file, so an autosave that keeps failing updates it rather than stacking more.
+function saveNoticeId(path: string): string {
+    return `save-failed:${path}`;
+}
+
+function reportSaveFailure(path: string, reason: string): void {
+    notify.error(t('errors.save_file_failed', { reason }), { id: saveNoticeId(path), persistent: true });
 }

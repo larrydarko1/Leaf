@@ -336,6 +336,7 @@
     "unknown": "Something went wrong.",
     "create_file_failed": "Could not create the file. {reason}",
     "create_drawing_failed": "Could not create the drawing. {reason}",
+    "create_folder_failed": "Could not create the folder. {reason}",
     "rename_file_failed": "Could not rename the file. {reason}",
     "rename_folder_failed": "Could not rename the folder. {reason}",
     "delete_file_failed": "Could not delete {name}. {reason}",
@@ -344,5 +345,9 @@
     "move_folder_failed": "Could not move the folder. {reason}",
     "save_file_failed": "Could not save the file. {reason}",
     "chat_failed": "The model could not answer. {reason}"
+  },
+  "notifications": {
+    "region": "Notifications",
+    "dismiss": "Dismiss notification"
   }
 }

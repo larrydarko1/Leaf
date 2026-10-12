@@ -336,6 +336,7 @@
     "unknown": "出现问题。",
     "create_file_failed": "无法创建文件。{reason}",
     "create_drawing_failed": "无法创建绘图。{reason}",
+    "create_folder_failed": "无法创建文件夹。{reason}",
     "rename_file_failed": "无法重命名文件。{reason}",
     "rename_folder_failed": "无法重命名文件夹。{reason}",
     "delete_file_failed": "无法删除 {name}。{reason}",
@@ -344,5 +345,9 @@
     "move_folder_failed": "无法移动文件夹。{reason}",
     "save_file_failed": "无法保存文件。{reason}",
     "chat_failed": "模型无法回答。{reason}"
+  },
+  "notifications": {
+    "region": "通知",
+    "dismiss": "关闭通知"
   }
 }

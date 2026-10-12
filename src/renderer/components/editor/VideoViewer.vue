@@ -2,6 +2,11 @@
 import { watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import IconPause from '@/renderer/components/icons/IconPause.vue';
+import IconPlay from '@/renderer/components/icons/IconPlay.vue';
+import IconVolumeHigh from '@/renderer/components/icons/IconVolumeHigh.vue';
+import IconVolumeLow from '@/renderer/components/icons/IconVolumeLow.vue';
+import IconVolumeMute from '@/renderer/components/icons/IconVolumeMute.vue';
 import { useVideoPlayer } from '@/renderer/composables/editor/useVideoPlayer';
 
 type Props = {
@@ -88,35 +93,14 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                     :aria-label="videoPlaying ? t('editor.pause_video') : t('editor.play_video')"
                     :title="videoPlaying ? t('editor.pause') : t('editor.play')"
                     @click="toggleVideoPlayback">
-                    <svg
+                    <IconPlay
                         v-if="!videoPlaying"
                         width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        aria-hidden="true">
-                        <path d="M8 5v14l11-7z" />
-                    </svg>
-                    <svg
+                        height="16" />
+                    <IconPause
                         v-else
                         width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        aria-hidden="true">
-                        <rect
-                            x="6"
-                            y="4"
-                            width="4"
-                            height="16"
-                            rx="1" />
-                        <rect
-                            x="14"
-                            y="4"
-                            width="4"
-                            height="16"
-                            rx="1" />
-                    </svg>
+                        height="16" />
                 </button>
 
                 <!-- Current time display -->
@@ -162,57 +146,18 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                         :aria-label="videoVolume === 0 ? t('editor.unmute_video') : t('editor.mute_video')"
                         :title="videoVolume === 0 ? t('editor.unmute') : t('editor.mute')"
                         @click="toggleVideoMute">
-                        <svg
+                        <IconVolumeMute
                             v-if="videoVolume === 0"
                             width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true">
-                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                            <line
-                                x1="23"
-                                y1="9"
-                                x2="17"
-                                y2="15"></line>
-                            <line
-                                x1="17"
-                                y1="9"
-                                x2="23"
-                                y2="15"></line>
-                        </svg>
-                        <svg
+                            height="16" />
+                        <IconVolumeLow
                             v-else-if="videoVolume < 0.5"
                             width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true">
-                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                        </svg>
-                        <svg
+                            height="16" />
+                        <IconVolumeHigh
                             v-else
                             width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true">
-                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                        </svg>
+                            height="16" />
                     </button>
                     <input
                         id="volume-slider"

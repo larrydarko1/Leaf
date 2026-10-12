@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 
+import IconCopy from '@/renderer/components/icons/IconCopy.vue';
+import IconDuplicate from '@/renderer/components/icons/IconDuplicate.vue';
+import IconRadiusFull from '@/renderer/components/icons/IconRadiusFull.vue';
+import IconRadiusRound from '@/renderer/components/icons/IconRadiusRound.vue';
+import IconRadiusSharp from '@/renderer/components/icons/IconRadiusSharp.vue';
+import IconSwatchNone from '@/renderer/components/icons/IconSwatchNone.vue';
+import IconTrash from '@/renderer/components/icons/IconTrash.vue';
 import type { StrokeStyle, StyleKey } from '@/schemas/drawing';
 
 type Props = {
@@ -123,20 +130,9 @@ void props;
                         :aria-label="t('drawing.transparent_background')"
                         :aria-pressed="activeFillColor === 'transparent'"
                         @click="emit('setProperty', 'fillColor', 'transparent')">
-                        <svg
+                        <IconSwatchNone
                             width="16"
-                            height="16"
-                            viewBox="0 0 16 16"
-                            aria-hidden="true"
-                            focusable="false">
-                            <line
-                                x1="0"
-                                y1="16"
-                                x2="16"
-                                y2="0"
-                                stroke="currentColor"
-                                stroke-width="1.5" />
-                        </svg>
+                            height="16" />
                     </button>
                     <button
                         v-for="c in fillColorPalette"
@@ -224,56 +220,21 @@ void props;
                         :aria-label="r.label"
                         :aria-pressed="activeBorderRadius === r.value"
                         @click="emit('setProperty', 'borderRadius', r.value)">
-                        <svg
+                        <IconRadiusSharp
                             v-if="r.icon === 'sharp'"
                             width="18"
                             height="18"
-                            viewBox="0 0 20 20"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            aria-hidden="true"
-                            focusable="false">
-                            <rect
-                                x="2"
-                                y="2"
-                                width="16"
-                                height="16" />
-                        </svg>
-                        <svg
+                            stroke-width="1.5" />
+                        <IconRadiusRound
                             v-else-if="r.icon === 'round'"
                             width="18"
                             height="18"
-                            viewBox="0 0 20 20"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            aria-hidden="true"
-                            focusable="false">
-                            <rect
-                                x="2"
-                                y="2"
-                                width="16"
-                                height="16"
-                                rx="4" />
-                        </svg>
-                        <svg
+                            stroke-width="1.5" />
+                        <IconRadiusFull
                             v-else
                             width="18"
                             height="18"
-                            viewBox="0 0 20 20"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            aria-hidden="true"
-                            focusable="false">
-                            <rect
-                                x="2"
-                                y="2"
-                                width="16"
-                                height="16"
-                                rx="8" />
-                        </svg>
+                            stroke-width="1.5" />
                     </button>
                 </div>
             </section>
@@ -319,76 +280,27 @@ void props;
                         class="action-btn menu-item"
                         :aria-label="t('drawing.copy')"
                         @click="emit('copy')">
-                        <svg
+                        <IconCopy
                             width="15"
-                            height="15"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true"
-                            focusable="false">
-                            <rect
-                                x="9"
-                                y="9"
-                                width="13"
-                                height="13"
-                                rx="2" />
-                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                        </svg>
+                            height="15" />
                         {{ t('drawing.copy') }}
                     </button>
                     <button
                         class="action-btn menu-item"
                         :aria-label="t('drawing.duplicate')"
                         @click="emit('duplicate')">
-                        <svg
+                        <IconDuplicate
                             width="15"
-                            height="15"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true"
-                            focusable="false">
-                            <rect
-                                x="3"
-                                y="3"
-                                width="13"
-                                height="13"
-                                rx="2" />
-                            <rect
-                                x="8"
-                                y="8"
-                                width="13"
-                                height="13"
-                                rx="2" />
-                        </svg>
+                            height="15" />
                         {{ t('drawing.duplicate') }}
                     </button>
                     <button
                         class="action-btn action-btn-delete menu-item menu-item-danger"
                         :aria-label="t('drawing.delete')"
                         @click="emit('delete')">
-                        <svg
+                        <IconTrash
                             width="15"
-                            height="15"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true"
-                            focusable="false">
-                            <path d="M3 6h18" />
-                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                        </svg>
+                            height="15" />
                         {{ t('drawing.delete') }}
                     </button>
                 </div>

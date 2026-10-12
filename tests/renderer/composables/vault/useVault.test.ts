@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import { useNotifications } from '@/renderer/composables/ui/useNotifications';
 import { useVault } from '@/renderer/composables/vault/useVault';
 import type { ElectronAPI } from '@/schemas/electron';
 import type { FileInfo, FolderInfo } from '@/schemas/vault';
@@ -41,6 +42,8 @@ const localStorageMock = (() => {
     };
 })();
 
+const { notifications, dismiss } = useNotifications();
+
 function makeFile(name: string, folder = '.'): FileInfo {
     return { name, path: `/vault/${name}`, relativePath: name, extension: '.md', size: 0, modified: '', folder };
 }
@@ -56,7 +59,6 @@ Object.defineProperty(window, 'electronAPI', {
 });
 
 Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock, writable: true });
-vi.stubGlobal('alert', vi.fn());
 
 describe('useVault', () => {
     let vault: ReturnType<typeof useVault>;
@@ -64,6 +66,7 @@ describe('useVault', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         localStorageMock.clear();
+        for (const n of [...notifications.value]) dismiss(n.id);
         mockAPI.watchFolder.mockResolvedValue({ success: true });
         mockAPI.unwatchFolder.mockResolvedValue({ success: true });
         vault = useVault();
@@ -117,10 +120,10 @@ describe('useVault', () => {
             expect(vault.files.value).toHaveLength(0);
         });
 
-        it('does not alert when there is simply no vault to restore', async () => {
+        it('does not notify when there is simply no vault to restore', async () => {
             mockAPI.scanFolder.mockResolvedValue({ success: false, error: 'No vault is open.' });
             await vault.loadVault();
-            expect(globalThis.alert).not.toHaveBeenCalled();
+            expect(notifications.value).toEqual([]);
         });
 
         it('starts the folder watcher after loading', async () => {
@@ -220,11 +223,11 @@ describe('useVault', () => {
             expect(result).toBeNull();
         });
 
-        it('returns null and shows an alert when creation fails', async () => {
+        it('returns null and shows an error notification when creation fails', async () => {
             mockAPI.createFile.mockResolvedValue({ success: false, error: 'ACCESS_DENIED' });
             const result = await vault.createFile();
             expect(result).toBeNull();
-            expect(globalThis.alert).toHaveBeenCalled();
+            expect(notifications.value).toHaveLength(1);
         });
 
         it('refreshes the file list and returns the new FileInfo on success', async () => {
@@ -252,11 +255,11 @@ describe('useVault', () => {
             expect(result?.path).toBe(renamedFile.path);
         });
 
-        it('returns null and shows an alert on failure', async () => {
+        it('returns null and shows an error notification on failure', async () => {
             mockAPI.renameFile.mockResolvedValue({ success: false, error: 'ACCESS_DENIED' });
             const result = await vault.renameFile(existingFile, 'new');
             expect(result).toBeNull();
-            expect(globalThis.alert).toHaveBeenCalled();
+            expect(notifications.value).toHaveLength(1);
         });
     });
 
@@ -275,11 +278,11 @@ describe('useVault', () => {
             expect(mockAPI.deleteFile).toHaveBeenCalledWith(file.path);
         });
 
-        it('shows an alert when deletion fails', async () => {
+        it('shows an error notification when deletion fails', async () => {
             mockAPI.deleteFile.mockResolvedValue({ success: false, error: 'ACCESS_DENIED' });
             mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [file], folders: [] });
             await vault.deleteFile([file]);
-            expect(globalThis.alert).toHaveBeenCalled();
+            expect(notifications.value).toHaveLength(1);
         });
     });
 
@@ -331,18 +334,18 @@ describe('useVault', () => {
             expect(result?.path).toBe(newFile.path);
         });
 
-        it('shows an alert and returns null when createFile fails', async () => {
+        it('shows an error notification and returns null when createFile fails', async () => {
             mockAPI.createFile.mockResolvedValue({ success: false, error: 'DISK_FULL' });
             const result = await vault.createDrawing();
             expect(result).toBeNull();
-            expect(globalThis.alert).toHaveBeenCalled();
+            expect(notifications.value).toHaveLength(1);
         });
 
-        it('shows an alert and returns null on IPC rejection', async () => {
+        it('shows an error notification and returns null on IPC rejection', async () => {
             mockAPI.createFile.mockRejectedValue(new Error('IPC error'));
             const result = await vault.createDrawing();
             expect(result).toBeNull();
-            expect(globalThis.alert).toHaveBeenCalled();
+            expect(notifications.value).toHaveLength(1);
         });
     });
 
@@ -370,15 +373,19 @@ describe('useVault', () => {
             expect(vault.folders.value).toHaveLength(1);
         });
 
-        it('logs an error when createFolder fails', async () => {
+        it('logs and shows an error notification when createFolder fails', async () => {
             mockAPI.createFolder.mockResolvedValue({ success: false, error: 'ACCESS_DENIED' });
             await vault.createFolder();
             expect(mockAPI.log.error).toHaveBeenCalled();
+            expect(notifications.value.map((n) => n.message)).toEqual(['Could not create the folder. Access denied.']);
         });
 
-        it('handles IPC rejections gracefully', async () => {
+        it('shows an error notification when the IPC rejects', async () => {
             mockAPI.createFolder.mockRejectedValue(new Error('IPC error'));
             await expect(vault.createFolder()).resolves.not.toThrow();
+            expect(notifications.value.map((n) => n.message)).toEqual([
+                'Could not create the folder. Something went wrong.',
+            ]);
         });
     });
 
@@ -418,18 +425,18 @@ describe('useVault', () => {
             expect(result).toBe('parent/new-name');
         });
 
-        it('shows an alert and returns null on failure', async () => {
+        it('shows an error notification and returns null on failure', async () => {
             mockAPI.renameFolder.mockResolvedValue({ success: false, error: 'ACCESS_DENIED' });
             const result = await vault.renameFolder('docs', 'new-docs');
             expect(result).toBeNull();
-            expect(globalThis.alert).toHaveBeenCalled();
+            expect(notifications.value).toHaveLength(1);
         });
 
-        it('shows an alert and returns null on IPC rejection', async () => {
+        it('shows an error notification and returns null on IPC rejection', async () => {
             mockAPI.renameFolder.mockRejectedValue(new Error('IPC error'));
             const result = await vault.renameFolder('docs', 'new-docs');
             expect(result).toBeNull();
-            expect(globalThis.alert).toHaveBeenCalled();
+            expect(notifications.value).toHaveLength(1);
         });
     });
 
@@ -458,11 +465,11 @@ describe('useVault', () => {
             expect(vault.folders.value).toHaveLength(0);
         });
 
-        it('shows an alert and returns false on failure', async () => {
+        it('shows an error notification and returns false on failure', async () => {
             mockAPI.deleteFolder.mockResolvedValue({ success: false, error: 'ALREADY_EXISTS' });
             const result = await vault.deleteFolder('old');
             expect(result).toBe(false);
-            expect(globalThis.alert).toHaveBeenCalled();
+            expect(notifications.value).toHaveLength(1);
         });
 
         it('returns false on IPC rejection', async () => {
@@ -492,13 +499,21 @@ describe('useVault', () => {
             mockAPI.moveFile.mockResolvedValue({ success: false, error: 'NOT_FOUND' });
             const result = await vault.moveFiles([file.path], 'docs');
             expect(result).toHaveLength(0);
-            expect(globalThis.alert).not.toHaveBeenCalled();
+            expect(notifications.value).toEqual([]);
         });
 
-        it('shows alert for non-ENOENT move errors', async () => {
+        it('shows an error notification for non-ENOENT move errors', async () => {
             mockAPI.moveFile.mockResolvedValue({ success: false, error: 'ACCESS_DENIED' });
             await vault.moveFiles([file.path], 'docs');
-            expect(globalThis.alert).toHaveBeenCalledWith(`Could not move ${file.name}. Access denied.`);
+            expect(notifications.value.map((n) => n.message)).toEqual([`Could not move ${file.name}. Access denied.`]);
+        });
+
+        it('shows an error notification when the move IPC rejects', async () => {
+            mockAPI.moveFile.mockRejectedValue(new Error('IPC error'));
+            await vault.moveFiles([file.path], 'docs');
+            expect(notifications.value.map((n) => n.message)).toEqual([
+                `Could not move ${file.name}. Something went wrong.`,
+            ]);
         });
     });
 
@@ -540,11 +555,11 @@ describe('useVault', () => {
             expect(mockAPI.moveFolder).toHaveBeenCalledWith('/vault/docs', '/vault');
         });
 
-        it('shows an alert and returns null on failure', async () => {
+        it('shows an error notification and returns null on failure', async () => {
             mockAPI.moveFolder.mockResolvedValue({ success: false, error: 'DISK_FULL' });
             const result = await vault.moveFolder('docs', 'archive');
             expect(result).toBeNull();
-            expect(globalThis.alert).toHaveBeenCalled();
+            expect(notifications.value).toHaveLength(1);
         });
 
         it('returns null on IPC rejection', async () => {
@@ -562,11 +577,11 @@ describe('useVault', () => {
             await vault.loadVault();
         });
 
-        it('shows alert and returns null on IPC rejection', async () => {
+        it('shows an error notification and returns null on IPC rejection', async () => {
             mockAPI.renameFile.mockRejectedValue(new Error('IPC error'));
             const result = await vault.renameFile(existingFile, 'new');
             expect(result).toBeNull();
-            expect(globalThis.alert).toHaveBeenCalled();
+            expect(notifications.value).toHaveLength(1);
         });
     });
 
@@ -578,11 +593,11 @@ describe('useVault', () => {
             await vault.loadVault();
         });
 
-        it('shows alert and continues on IPC rejection', async () => {
+        it('shows an error notification and continues on IPC rejection', async () => {
             mockAPI.deleteFile.mockRejectedValue(new Error('IPC error'));
             mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [], folders: [] });
             await vault.deleteFile([file]);
-            expect(globalThis.alert).toHaveBeenCalled();
+            expect(notifications.value).toHaveLength(1);
         });
     });
 

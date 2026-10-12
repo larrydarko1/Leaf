@@ -2,6 +2,9 @@
 import { ref, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import IconClose from '@/renderer/components/icons/IconClose.vue';
+import IconFile from '@/renderer/components/icons/IconFile.vue';
+import IconSearch from '@/renderer/components/icons/IconSearch.vue';
 import { useListKeyboardNavigation } from '@/renderer/composables/ui/useListKeyboardNavigation';
 import { watchDebounced } from '@/renderer/composables/useDebounce';
 import type { FileInfo, HighlightPart } from '@/schemas/vault';
@@ -167,21 +170,10 @@ onMounted(() => {
         :aria-label="t('search.search_panel')">
         <header class="panel-header search-header">
             <div class="search-input-wrapper field-well field-well-single">
-                <svg
+                <IconSearch
                     class="search-icon"
                     width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true">
-                    <path
-                        d="M21 21L16.65 16.65M19 11C19 15.4183 15.4183 19 11 19C6.58172 19 3 15.4183 3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11Z"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round" />
-                </svg>
+                    height="16" />
                 <input
                     ref="searchInput"
                     v-model="searchQuery"
@@ -198,20 +190,9 @@ onMounted(() => {
                     :title="t('search.clear_search')"
                     :aria-label="t('search.clear_search')"
                     @click="clearSearch">
-                    <svg
+                    <IconClose
                         width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        aria-hidden="true">
-                        <path
-                            d="M18 6L6 18M6 6L18 18"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round" />
-                    </svg>
+                        height="14" />
                 </button>
             </div>
             <div
@@ -261,27 +242,10 @@ onMounted(() => {
                     @click="selectFile(file, $event)"
                     @dblclick="openFile(file)">
                     <div class="file-info">
-                        <svg
+                        <IconFile
                             class="file-icon"
                             width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                            aria-hidden="true">
-                            <path
-                                d="M13 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V9L13 2Z"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round" />
-                            <path
-                                d="M13 2V9H20"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round" />
-                        </svg>
+                            height="16" />
                         <div class="file-details">
                             <div class="file-name truncate">
                                 <span

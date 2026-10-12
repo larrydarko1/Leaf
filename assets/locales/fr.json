@@ -336,6 +336,7 @@
     "unknown": "Une erreur s’est produite.",
     "create_file_failed": "Impossible de créer le fichier. {reason}",
     "create_drawing_failed": "Impossible de créer le dessin. {reason}",
+    "create_folder_failed": "Impossible de créer le dossier. {reason}",
     "rename_file_failed": "Impossible de renommer le fichier. {reason}",
     "rename_folder_failed": "Impossible de renommer le dossier. {reason}",
     "delete_file_failed": "Impossible de supprimer {name}. {reason}",
@@ -344,5 +345,9 @@
     "move_folder_failed": "Impossible de déplacer le dossier. {reason}",
     "save_file_failed": "Impossible d’enregistrer le fichier. {reason}",
     "chat_failed": "Le modèle n’a pas pu répondre. {reason}"
+  },
+  "notifications": {
+    "region": "Notifications",
+    "dismiss": "Ignorer la notification"
   }
 }

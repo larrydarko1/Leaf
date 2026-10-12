@@ -336,6 +336,7 @@
     "unknown": "Qualcosa è andato storto.",
     "create_file_failed": "Impossibile creare il file. {reason}",
     "create_drawing_failed": "Impossibile creare il disegno. {reason}",
+    "create_folder_failed": "Impossibile creare la cartella. {reason}",
     "rename_file_failed": "Impossibile rinominare il file. {reason}",
     "rename_folder_failed": "Impossibile rinominare la cartella. {reason}",
     "delete_file_failed": "Impossibile eliminare {name}. {reason}",
@@ -344,5 +345,9 @@
     "move_folder_failed": "Impossibile spostare la cartella. {reason}",
     "save_file_failed": "Impossibile salvare il file. {reason}",
     "chat_failed": "Il modello non è riuscito a rispondere. {reason}"
+  },
+  "notifications": {
+    "region": "Notifiche",
+    "dismiss": "Chiudi notifica"
   }
 }

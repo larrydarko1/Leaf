@@ -336,6 +336,7 @@
     "unknown": "Aliquid erravit.",
     "create_file_failed": "Scapus creari non potuit. {reason}",
     "create_drawing_failed": "Pictura creari non potuit. {reason}",
+    "create_folder_failed": "Capsa creari non potuit. {reason}",
     "rename_file_failed": "Scapus renominari non potuit. {reason}",
     "rename_folder_failed": "Fasciculus renominari non potuit. {reason}",
     "delete_file_failed": "{name} deleri non potuit. {reason}",
@@ -344,5 +345,9 @@
     "move_folder_failed": "Fasciculus moveri non potuit. {reason}",
     "save_file_failed": "Scapus servari non potuit. {reason}",
     "chat_failed": "Exemplar respondere non potuit. {reason}"
+  },
+  "notifications": {
+    "region": "Nuntii",
+    "dismiss": "Nuntium dimittere"
   }
 }
