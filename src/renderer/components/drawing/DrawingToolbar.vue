@@ -305,7 +305,9 @@ function handleClickOutside(e: MouseEvent): void {
                             :aria-pressed="currentTool === shape.tool"
                             role="menuitem"
                             @click="selectArchTool(shape.tool)">
-                            <span class="arch-shape-icon">
+                            <span
+                                class="arch-shape-icon"
+                                aria-hidden="true">
                                 <component
                                     :is="shape.icon"
                                     width="20"
