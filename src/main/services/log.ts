@@ -6,8 +6,7 @@
  * handlers used to forward `...args` straight to the logger, so whatever it
  * chose to send was written to disk unchecked.
  */
-import { type IpcMain } from 'electron';
-
+import type { IpcMain } from '@/main/lib/ipc';
 import { log } from '@/main/lib/logger';
 import { LogEntrySchema, type LogLevel } from '@/schemas/log';
 

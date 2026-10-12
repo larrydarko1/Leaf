@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref } from 'vue';
 
 import { useDictation } from '@/renderer/composables/editor/useDictation';
+import type { ElectronAPI } from '@/schemas/electron';
 
 class FakeAudioWorkletNode {
     port: { onmessage: ((e: MessageEvent) => void) | null } = { onmessage: null };
@@ -22,10 +23,10 @@ class FakeMediaStreamSource {
 class FakeAudioContext {
     audioWorklet = fakeAudioWorklet;
     sampleRate = 44100;
-    destination = {} as AudioDestinationNode;
+    destination = {};
     closed = false;
-    createMediaStreamSource(_stream: unknown): MediaStreamAudioSourceNode {
-        return new FakeMediaStreamSource() as never;
+    createMediaStreamSource(_stream: unknown): FakeMediaStreamSource {
+        return new FakeMediaStreamSource();
     }
     close() {
         this.closed = true;
@@ -38,7 +39,7 @@ class MockAudioContext extends FakeAudioContext {}
 class MockAudioWorkletNode extends FakeAudioWorkletNode {
     constructor(_ctx: unknown, _name: string) {
         super();
-        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        // eslint-disable-next-line @typescript-eslint/no-this-alias -- the stub records the node the code under test constructs
         lastWorkletNode = this;
     }
 }
@@ -47,11 +48,15 @@ const fakeAudioWorklet = { addModule: vi.fn().mockResolvedValue(undefined) };
 let lastWorkletNode: FakeAudioWorkletNode;
 const fakeTrack = { stop: vi.fn() };
 const fakeStream = { getTracks: vi.fn().mockReturnValue([fakeTrack]) };
-const mockGetUserMedia = vi.fn().mockResolvedValue(fakeStream);
+const mockGetUserMedia = vi
+    .fn<(constraints: MediaStreamConstraints) => Promise<unknown>>()
+    .mockResolvedValue(fakeStream);
 let storedIntervalFn: (() => void) | null = null;
 const mockSpeechGetStatus = vi.fn().mockResolvedValue({ isModelLoaded: true });
 const mockSpeechInit = vi.fn().mockResolvedValue({ success: true });
-const mockSpeechTranscribe = vi.fn().mockResolvedValue({ success: true, text: 'hello world' });
+const mockSpeechTranscribe = vi
+    .fn<ElectronAPI['speechTranscribe']>()
+    .mockResolvedValue({ success: true, text: 'hello world' });
 const mockSpeechResetSession = vi.fn().mockResolvedValue({ success: true });
 const mockLog = { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() };
 
@@ -73,9 +78,9 @@ vi.stubGlobal('AudioWorkletNode', MockAudioWorkletNode);
 
 vi.stubGlobal(
     'Blob',
-    // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+    // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Blob only has to be constructible; nothing here reads the encoded audio
     class FakeBlob {
-        // eslint-disable-next-line @typescript-eslint/no-useless-constructor
+        // eslint-disable-next-line @typescript-eslint/no-useless-constructor -- spells out the (parts, options) call the encoder makes
         constructor(_parts: unknown[], _opts?: unknown) {}
     },
 );
@@ -130,7 +135,7 @@ beforeEach(() => {
     mockGetUserMedia.mockResolvedValue(fakeStream);
     fakeAudioWorklet.addModule.mockResolvedValue(undefined);
     fakeTrack.stop.mockReset();
-    (URL.createObjectURL as ReturnType<typeof vi.fn>).mockReturnValue('blob:fake-url');
+    vi.mocked(URL.createObjectURL).mockReturnValue('blob:fake-url');
 });
 
 describe('initial state', () => {
@@ -155,7 +160,7 @@ describe('toggleDictation (start)', () => {
     it('requests microphone access', async () => {
         const { toggleDictation } = makeDictation();
         await toggleDictation();
-        expect(mockGetUserMedia).toHaveBeenCalledWith(expect.objectContaining({ audio: expect.anything() }));
+        expect(mockGetUserMedia.mock.calls[0]?.[0]).toHaveProperty('audio');
     });
 
     it('checks speech status if whisper model not yet ready', async () => {
@@ -189,7 +194,7 @@ describe('toggleDictation (start)', () => {
 
     it('stays not dictating when speechInit fails', async () => {
         mockSpeechGetStatus.mockResolvedValueOnce({ isModelLoaded: false });
-        mockSpeechInit.mockResolvedValueOnce({ success: false, error: 'failed' });
+        mockSpeechInit.mockResolvedValueOnce({ success: false, error: 'UNKNOWN' });
         const { isDictating, toggleDictation } = makeDictation();
         await toggleDictation();
         expect(isDictating.value).toBe(false);
@@ -351,10 +356,10 @@ describe('stopDictation', () => {
         expect(onContentChange).not.toHaveBeenCalled();
     });
 
-    it('skips null transcription text', async () => {
+    it('skips a reply that carries no transcription text', async () => {
         const content = ref('');
         const onContentChange = vi.fn();
-        mockSpeechTranscribe.mockResolvedValue({ success: true, text: null });
+        mockSpeechTranscribe.mockResolvedValue({ success: true });
         const d = useDictation(content, onContentChange);
         await d.toggleDictation();
         sendChunk(new Float32Array([0.1]));
@@ -422,7 +427,7 @@ describe('resampling', () => {
         sendChunk(chunk);
         stopDictation();
         await new Promise((r) => setTimeout(r, 50));
-        const call = mockSpeechTranscribe.mock.calls[0]?.[0] as number[];
+        const call = mockSpeechTranscribe.mock.calls[0]![0];
         expect(Array.isArray(call)).toBe(true);
         expect(call.length).toBeGreaterThan(0);
     });
@@ -434,7 +439,7 @@ describe('resampling', () => {
         sendChunk(chunk);
         stopDictation();
         await new Promise((r) => setTimeout(r, 50));
-        const call = mockSpeechTranscribe.mock.calls[0]?.[0] as number[];
+        const call = mockSpeechTranscribe.mock.calls[0]![0];
         expect(call.length).toBeLessThan(44100);
         expect(call.length).toBeCloseTo(16000, -2);
     });

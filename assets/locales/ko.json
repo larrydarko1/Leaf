@@ -319,5 +319,35 @@
     "save_png": "PNG로 저장",
     "copy_png": "PNG로 복사",
     "close_export_dialog": "내보내기 대화상자 닫기"
+  },
+  "errors": {
+    "invalid_arguments": "요청이 올바르지 않습니다.",
+    "no_window": "사용할 수 있는 창이 없습니다.",
+    "no_vault": "열려 있는 노트 폴더가 없습니다.",
+    "access_denied": "접근이 거부되었습니다.",
+    "invalid_name": "사용할 수 없는 이름입니다.",
+    "not_found": "찾을 수 없습니다.",
+    "already_exists": "같은 이름의 항목이 이미 있습니다.",
+    "move_into_self": "폴더를 자기 자신 안으로 이동할 수 없습니다.",
+    "disk_full": "디스크가 가득 찼습니다.",
+    "model_not_loaded": "불러온 모델이 없습니다.",
+    "busy": "처리 중입니다. 잠시 후 다시 시도하세요.",
+    "invalid_state": "지금은 할 수 없습니다.",
+    "unknown": "문제가 발생했습니다.",
+    "create_file_failed": "파일을 만들 수 없습니다. {reason}",
+    "create_drawing_failed": "그림을 만들 수 없습니다. {reason}",
+    "create_folder_failed": "폴더를 만들 수 없습니다. {reason}",
+    "rename_file_failed": "파일 이름을 바꿀 수 없습니다. {reason}",
+    "rename_folder_failed": "폴더 이름을 바꿀 수 없습니다. {reason}",
+    "delete_file_failed": "{name}을(를) 삭제할 수 없습니다. {reason}",
+    "delete_folder_failed": "폴더를 삭제할 수 없습니다. {reason}",
+    "move_file_failed": "{name}을(를) 이동할 수 없습니다. {reason}",
+    "move_folder_failed": "폴더를 이동할 수 없습니다. {reason}",
+    "save_file_failed": "파일을 저장할 수 없습니다. {reason}",
+    "chat_failed": "모델이 응답할 수 없습니다. {reason}"
+  },
+  "notifications": {
+    "region": "알림",
+    "dismiss": "알림 닫기"
   }
 }

@@ -9,7 +9,7 @@ import type { Ref, ShallowRef } from 'vue';
 
 import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS, AUDIO_EXTENSIONS, PDF_EXTENSIONS } from '@/renderer/utils/fileTypes';
 
-export type UseEditorDropReturn = {
+type UseEditorDropReturn = {
     isDragOverEditor: Ref<boolean>;
     onEditorDragEnter: (event: DragEvent) => void;
     onEditorDragOver: (event: DragEvent) => void;

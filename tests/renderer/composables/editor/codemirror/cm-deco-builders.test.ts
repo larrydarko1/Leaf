@@ -1,5 +1,6 @@
 import { markdown } from '@codemirror/lang-markdown';
-import { EditorState, EditorSelection } from '@codemirror/state';
+import { EditorState, EditorSelection, type Range } from '@codemirror/state';
+import type { Decoration } from '@codemirror/view';
 import { describe, it, expect } from 'vitest';
 
 import {
@@ -23,8 +24,15 @@ function fullRange(state: EditorState) {
     return [{ from: 0, to: state.doc.length }];
 }
 
-function classesOf(decos: { value: { spec: { class?: string } } }[]): string[] {
-    return decos.map((d) => d.value?.spec?.class).filter((c): c is string => c !== undefined && c !== '');
+/** A decoration's CSS class. CodeMirror types `spec` as `any`, so it is read as `unknown` and checked. */
+function classOf(deco: Range<Decoration>): string | undefined {
+    const spec: unknown = deco.value.spec;
+    if (typeof spec !== 'object' || spec === null || !('class' in spec)) return undefined;
+    return typeof spec.class === 'string' ? spec.class : undefined;
+}
+
+function classesOf(decos: readonly Range<Decoration>[]): string[] {
+    return decos.map(classOf).filter((c): c is string => c !== undefined && c !== '');
 }
 
 describe('activeLinesSet', () => {
@@ -59,13 +67,13 @@ describe('line-anchored patterns across partial visible ranges', () => {
     it('matches a task whose visible range starts mid-line', () => {
         const state = makeState('- [x] done thing');
         const decos = buildTaskDecos(state, [{ from: 8, to: state.doc.length }], new Set());
-        expect(classesOf(decos as never[]).some((c) => c.includes('cm-task-done'))).toBe(true);
+        expect(classesOf(decos).some((c) => c.includes('cm-task-done'))).toBe(true);
     });
 
     it('matches a task on the first line when the range starts at the document end', () => {
         const state = makeState('- [ ] only line');
         const decos = buildTaskDecos(state, [{ from: state.doc.length, to: state.doc.length }], new Set());
-        expect(classesOf(decos as never[]).some((c) => c.includes('cm-task'))).toBe(true);
+        expect(classesOf(decos).some((c) => c.includes('cm-task'))).toBe(true);
     });
 
     it('does not reach a task on a line outside the visible range', () => {
@@ -120,7 +128,7 @@ describe('buildHighlightDecos', () => {
         const state = makeState('before ==highlighted== after');
         const decos = buildHighlightDecos(state, fullRange(state), new Set());
         expect(decos.length).toBeGreaterThan(0);
-        const classes = classesOf(decos as never[]);
+        const classes = classesOf(decos);
         expect(classes).toContain('cm-highlight');
     });
 
@@ -135,9 +143,7 @@ describe('buildHighlightDecos', () => {
     it('handles multiple highlights on the same line', () => {
         const state = makeState('==a== and ==b==');
         const decos = buildHighlightDecos(state, fullRange(state), new Set());
-        const highlightDecos = (decos as never[]).filter(
-            (d: { value: { spec: { class?: string } } }) => d.value?.spec?.class === 'cm-highlight',
-        );
+        const highlightDecos = decos.filter((d) => classOf(d) === 'cm-highlight');
         expect(highlightDecos).toHaveLength(2);
     });
 });
@@ -195,14 +201,14 @@ describe('buildTaskDecos', () => {
         const state = makeState('- [ ] do something');
         const decos = buildTaskDecos(state, fullRange(state), new Set());
         expect(decos.length).toBeGreaterThan(0);
-        const lines = classesOf(decos as never[]).filter((c) => c.includes('cm-task'));
+        const lines = classesOf(decos).filter((c) => c.includes('cm-task'));
         expect(lines.length).toBeGreaterThan(0);
     });
 
     it('produces cm-task-done class for checked tasks "- [x]"', () => {
         const state = makeState('- [x] done thing');
         const decos = buildTaskDecos(state, fullRange(state), new Set());
-        const allClasses = classesOf(decos as never[]);
+        const allClasses = classesOf(decos);
         expect(allClasses.some((c) => c.includes('cm-task-done'))).toBe(true);
     });
 
@@ -210,7 +216,7 @@ describe('buildTaskDecos', () => {
         const state = makeState('- [/] half done');
         const decos = buildTaskDecos(state, fullRange(state), new Set());
         expect(decos.length).toBeGreaterThan(0);
-        const allClasses = classesOf(decos as never[]);
+        const allClasses = classesOf(decos);
         expect(allClasses.some((c) => c.includes('cm-task-done'))).toBe(false);
     });
 
@@ -239,42 +245,42 @@ describe('buildSyntaxDecos', () => {
     it('produces heading decoration for ATX headings', () => {
         const state = makeState('# Hello');
         const decos = buildSyntaxDecos(state, fullRange(state), new Set(), []);
-        const classes = classesOf(decos as never[]);
+        const classes = classesOf(decos);
         expect(classes.some((c) => c.includes('cm-heading'))).toBe(true);
     });
 
     it('produces cm-heading-2 for level 2 heading', () => {
         const state = makeState('## World');
         const decos = buildSyntaxDecos(state, fullRange(state), new Set(), []);
-        const classes = classesOf(decos as never[]);
+        const classes = classesOf(decos);
         expect(classes.some((c) => c.includes('cm-heading-2'))).toBe(true);
     });
 
     it('produces cm-emphasis for italic *text*', () => {
         const state = makeState('*italic*');
         const decos = buildSyntaxDecos(state, fullRange(state), new Set(), []);
-        const classes = classesOf(decos as never[]);
+        const classes = classesOf(decos);
         expect(classes.some((c) => c === 'cm-emphasis')).toBe(true);
     });
 
     it('produces cm-strong for bold **text**', () => {
         const state = makeState('**bold**');
         const decos = buildSyntaxDecos(state, fullRange(state), new Set(), []);
-        const classes = classesOf(decos as never[]);
+        const classes = classesOf(decos);
         expect(classes.some((c) => c === 'cm-strong')).toBe(true);
     });
 
     it('produces cm-inline-code for `code`', () => {
         const state = makeState('`code`');
         const decos = buildSyntaxDecos(state, fullRange(state), new Set(), []);
-        const classes = classesOf(decos as never[]);
+        const classes = classesOf(decos);
         expect(classes.some((c) => c === 'cm-inline-code')).toBe(true);
     });
 
     it('produces cm-blockquote for "> quote"', () => {
         const state = makeState('> a blockquote');
         const decos = buildSyntaxDecos(state, fullRange(state), new Set(), []);
-        const classes = classesOf(decos as never[]);
+        const classes = classesOf(decos);
         expect(classes.some((c) => c === 'cm-blockquote')).toBe(true);
     });
 
@@ -296,14 +302,14 @@ describe('buildSyntaxDecos', () => {
     it('produces link decoration for [text](url)', () => {
         const state = makeState('[link](https://example.com)');
         const decos = buildSyntaxDecos(state, fullRange(state), new Set(), []);
-        const classes = classesOf(decos as never[]);
+        const classes = classesOf(decos);
         expect(classes.some((c) => c === 'cm-link')).toBe(true);
     });
 
     it('produces code block decorations for fenced code', () => {
         const state = makeState('```\nconst x = 1;\n```');
         const decos = buildSyntaxDecos(state, fullRange(state), new Set(), []);
-        const classes = classesOf(decos as never[]);
+        const classes = classesOf(decos);
         expect(classes.some((c) => c.includes('cm-code-block'))).toBe(true);
     });
 
@@ -316,14 +322,14 @@ describe('buildSyntaxDecos', () => {
     it('produces list bullet decoration for "- item"', () => {
         const state = makeState('- list item');
         const decos = buildSyntaxDecos(state, fullRange(state), new Set(), []);
-        const classes = classesOf(decos as never[]);
+        const classes = classesOf(decos);
         expect(classes.some((c) => c === 'cm-list-bullet')).toBe(true);
     });
 
     it('produces image decoration for ![alt](src)', () => {
         const state = makeState('![alt](image.png)');
         const decos = buildSyntaxDecos(state, fullRange(state), new Set(), []);
-        const classes = classesOf(decos as never[]);
+        const classes = classesOf(decos);
         expect(classes.some((c) => c === 'cm-image-link')).toBe(true);
     });
 
@@ -334,9 +340,7 @@ describe('buildSyntaxDecos', () => {
             { from: 0, to: 18 }, // duplicate
         ];
         const decos = buildSyntaxDecos(state, ranges, new Set(), []);
-        const strongDecos = (decos as never[]).filter(
-            (d: { value: { spec: { class?: string } } }) => d.value?.spec?.class === 'cm-strong',
-        );
+        const strongDecos = decos.filter((d) => classOf(d) === 'cm-strong');
         expect(strongDecos).toHaveLength(1);
     });
 });

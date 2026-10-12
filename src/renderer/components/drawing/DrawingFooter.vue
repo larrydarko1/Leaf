@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 
+import IconDownload from '@/renderer/components/icons/IconDownload.vue';
+import IconMinus from '@/renderer/components/icons/IconMinus.vue';
+import IconPlus from '@/renderer/components/icons/IconPlus.vue';
+import IconRedo from '@/renderer/components/icons/IconRedo.vue';
+import IconTrash from '@/renderer/components/icons/IconTrash.vue';
+import IconUndo from '@/renderer/components/icons/IconUndo.vue';
+
 type Props = {
     zoom: number;
     zoomPercent: number;
@@ -39,21 +46,9 @@ void props;
                     class="zoom-btn icon-btn-square"
                     :aria-label="t('drawing.zoom_out')"
                     @click="emit('zoomToCenter', zoom - 0.1)">
-                    <svg
+                    <IconMinus
                         width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        aria-hidden="true"
-                        focusable="false">
-                        <line
-                            x1="5"
-                            y1="12"
-                            x2="19"
-                            y2="12" />
-                    </svg>
+                        height="14" />
                 </button>
                 <button
                     class="zoom-value"
@@ -65,26 +60,9 @@ void props;
                     class="zoom-btn icon-btn-square"
                     :aria-label="t('drawing.zoom_in')"
                     @click="emit('zoomToCenter', zoom + 0.1)">
-                    <svg
+                    <IconPlus
                         width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        aria-hidden="true"
-                        focusable="false">
-                        <line
-                            x1="12"
-                            y1="5"
-                            x2="12"
-                            y2="19" />
-                        <line
-                            x1="5"
-                            y1="12"
-                            x2="19"
-                            y2="12" />
-                    </svg>
+                        height="14" />
                 </button>
             </div>
         </div>
@@ -96,60 +74,26 @@ void props;
                 :disabled="historyIndex <= 0"
                 :aria-label="t('drawing.undo')"
                 @click="emit('undo')">
-                <svg
+                <IconUndo
                     width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                    focusable="false">
-                    <path d="M3 7v6h6" />
-                    <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
-                </svg>
+                    height="16" />
             </button>
             <button
                 class="footer-btn icon-btn-square"
                 :disabled="historyIndex >= historyLength - 1"
                 :aria-label="t('drawing.redo')"
                 @click="emit('redo')">
-                <svg
+                <IconRedo
                     width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                    focusable="false">
-                    <path d="M21 7v6h-6" />
-                    <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13" />
-                </svg>
+                    height="16" />
             </button>
             <button
                 class="footer-btn icon-btn-square"
                 :aria-label="t('drawing.clear_canvas')"
                 @click="emit('clearAll')">
-                <svg
+                <IconTrash
                     width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                    focusable="false">
-                    <path d="M3 6h18" />
-                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                </svg>
+                    height="16" />
             </button>
         </div>
 
@@ -168,25 +112,9 @@ void props;
                 class="footer-btn export-btn icon-btn-square"
                 :aria-label="t('drawing.export_image')"
                 @click="emit('openExportDialog')">
-                <svg
+                <IconDownload
                     width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                    focusable="false">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line
-                        x1="12"
-                        y1="15"
-                        x2="12"
-                        y2="3" />
-                </svg>
+                    height="16" />
             </button>
         </div>
     </footer>

@@ -8,9 +8,10 @@ import { existsSync, mkdirSync } from 'fs';
 import fs from 'fs/promises';
 import path from 'path';
 
-import type { IpcMain } from 'electron';
 import { z } from 'zod';
 
+import { IpcError, toIpcErrorCode, ipcFailure } from '@/main/lib/errors';
+import type { IpcMain } from '@/main/lib/ipc';
 import { log } from '@/main/lib/logger';
 import { assertSafeFileName, resolveInsideBoundary } from '@/main/lib/validation';
 import {
@@ -18,6 +19,10 @@ import {
     type ConversationMessage,
     ConversationSchema,
     ConversationMessageSchema,
+    type AiSimpleResult,
+    type ConversationCreateResult,
+    type ConversationListResult,
+    type ConversationLoadResult,
 } from '@/schemas/ai';
 
 type ConversationSummary = {
@@ -44,80 +49,61 @@ export function init(userDataPath: string): void {
 }
 
 export function register(ipc: IpcMain): void {
-    ipc.handle('conversations:list', async (): Promise<{ success: boolean; conversations: object[]; error?: string }> =>
-        readConversations(),
-    );
+    ipc.handle('conversations:list', async (): Promise<ConversationListResult> => readConversations());
 
-    ipc.handle(
-        'conversations:create',
-        async (
-            _event,
-            modelName: unknown,
-        ): Promise<{ success: boolean; conversation?: Conversation; error?: string }> => {
-            const parsed = z.string().min(1).safeParse(modelName);
-            if (!parsed.success) return { success: false, error: 'Invalid model name' };
-            return createConversation(parsed.data);
-        },
-    );
+    ipc.handle('conversations:create', async (_event, modelName: unknown): Promise<ConversationCreateResult> => {
+        const parsed = z.string().min(1).safeParse(modelName);
+        if (!parsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
+        return createConversation(parsed.data);
+    });
 
-    ipc.handle(
-        'conversations:load',
-        async (_event, id: unknown): Promise<{ success: boolean; conversation?: Conversation; error?: string }> => {
-            const parsed = z.string().min(1).safeParse(id);
-            if (!parsed.success) return { success: false, error: 'Invalid id' };
-            return loadConversation(parsed.data);
-        },
-    );
+    ipc.handle('conversations:load', async (_event, id: unknown): Promise<ConversationLoadResult> => {
+        const parsed = z.string().min(1).safeParse(id);
+        if (!parsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
+        return loadConversation(parsed.data);
+    });
 
-    ipc.handle(
-        'conversations:save',
-        async (_event, conversation: unknown): Promise<{ success: boolean; error?: string }> => {
-            const parsed = ConversationSchema.safeParse(conversation);
-            if (!parsed.success) return { success: false, error: 'Invalid conversation' };
-            return saveConversation(parsed.data);
-        },
-    );
+    ipc.handle('conversations:save', async (_event, conversation: unknown): Promise<AiSimpleResult> => {
+        const parsed = ConversationSchema.safeParse(conversation);
+        if (!parsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
+        return saveConversation(parsed.data);
+    });
 
     ipc.handle(
         'conversations:addMessage',
-        async (_event, conversationId: unknown, message: unknown): Promise<{ success: boolean; error?: string }> => {
+        async (_event, conversationId: unknown, message: unknown): Promise<AiSimpleResult> => {
             const idParsed = z.string().min(1).safeParse(conversationId);
             const msgParsed = ConversationMessageSchema.safeParse(message);
-            if (!idParsed.success || !msgParsed.success) return { success: false, error: 'Invalid arguments' };
+            if (!idParsed.success || !msgParsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
             return addMessage(idParsed.data, msgParsed.data);
         },
     );
 
     ipc.handle(
         'conversations:updateLastMessage',
-        async (_event, conversationId: unknown, content: unknown): Promise<{ success: boolean; error?: string }> => {
+        async (_event, conversationId: unknown, content: unknown): Promise<AiSimpleResult> => {
             const idParsed = z.string().min(1).safeParse(conversationId);
             const contentParsed = z.string().safeParse(content);
-            if (!idParsed.success || !contentParsed.success) return { success: false, error: 'Invalid arguments' };
+            if (!idParsed.success || !contentParsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
             return updateLastMessage(idParsed.data, contentParsed.data);
         },
     );
 
-    ipc.handle('conversations:delete', async (_event, id: unknown): Promise<{ success: boolean; error?: string }> => {
+    ipc.handle('conversations:delete', async (_event, id: unknown): Promise<AiSimpleResult> => {
         const parsed = z.string().min(1).safeParse(id);
-        if (!parsed.success) return { success: false, error: 'Invalid id' };
+        if (!parsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
         return deleteConversation(parsed.data);
     });
 
-    ipc.handle(
-        'conversations:rename',
-        async (_event, id: unknown, newTitle: unknown): Promise<{ success: boolean; error?: string }> => {
-            const idParsed = z.string().min(1).safeParse(id);
-            const titleParsed = z.string().min(1).safeParse(newTitle);
-            if (!idParsed.success || !titleParsed.success) return { success: false, error: 'Invalid arguments' };
-            return renameConversation(idParsed.data, titleParsed.data);
-        },
-    );
+    ipc.handle('conversations:rename', async (_event, id: unknown, newTitle: unknown): Promise<AiSimpleResult> => {
+        const idParsed = z.string().min(1).safeParse(id);
+        const titleParsed = z.string().min(1).safeParse(newTitle);
+        if (!idParsed.success || !titleParsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
+        return renameConversation(idParsed.data, titleParsed.data);
+    });
 }
 
-async function createConversation(
-    modelName: string,
-): Promise<{ success: boolean; conversation?: Conversation; error?: string }> {
+async function createConversation(modelName: string): Promise<ConversationCreateResult> {
     try {
         const now = new Date().toISOString();
         const conversation: Conversation = {
@@ -135,11 +121,11 @@ async function createConversation(
         return { success: true, conversation };
     } catch (error) {
         log.error('Failed to create conversation:', error);
-        return { success: false, error: (error as Error).message };
+        return { success: false, error: toIpcErrorCode(error) };
     }
 }
 
-async function saveConversation(conversation: Conversation): Promise<{ success: boolean; error?: string }> {
+async function saveConversation(conversation: Conversation): Promise<AiSimpleResult> {
     try {
         conversation.updatedAt = new Date().toISOString();
         if (conversation.title === 'New Conversation' && conversation.messages.length > 0) {
@@ -151,18 +137,15 @@ async function saveConversation(conversation: Conversation): Promise<{ success: 
         return { success: true };
     } catch (error) {
         log.error('Failed to save conversation:', error);
-        return { success: false, error: (error as Error).message };
+        return { success: false, error: toIpcErrorCode(error) };
     }
 }
 
-async function addMessage(
-    conversationId: string,
-    message: ConversationMessage,
-): Promise<{ success: boolean; error?: string }> {
+async function addMessage(conversationId: string, message: ConversationMessage): Promise<AiSimpleResult> {
     try {
         const conversation = await findConversation(conversationId);
         if (conversation === null) {
-            return { success: false, error: 'Conversation not found' };
+            return { success: false, error: 'NOT_FOUND' };
         }
 
         message.timestamp = new Date().toISOString();
@@ -171,32 +154,29 @@ async function addMessage(
         return await saveConversation(conversation);
     } catch (error) {
         log.error('Failed to add message:', error);
-        return { success: false, error: (error as Error).message };
+        return { success: false, error: toIpcErrorCode(error) };
     }
 }
 
-async function updateLastMessage(
-    conversationId: string,
-    content: string,
-): Promise<{ success: boolean; error?: string }> {
+async function updateLastMessage(conversationId: string, content: string): Promise<AiSimpleResult> {
     try {
         const conversation = await findConversation(conversationId);
         if (conversation === null) {
-            return { success: false, error: 'Conversation not found' };
+            return { success: false, error: 'NOT_FOUND' };
         }
 
         if (conversation.messages.length === 0) {
-            return { success: false, error: 'No messages to update' };
+            return { success: false, error: 'INVALID_STATE' };
         }
 
         const lastMessage = conversation.messages[conversation.messages.length - 1];
-        if (lastMessage === undefined) return { success: false, error: 'No messages to update' };
+        if (lastMessage === undefined) return { success: false, error: 'INVALID_STATE' };
         lastMessage.content = content;
 
         return await saveConversation(conversation);
     } catch (error) {
         log.error('Failed to update last message:', error);
-        return { success: false, error: (error as Error).message };
+        return { success: false, error: toIpcErrorCode(error) };
     }
 }
 
@@ -215,10 +195,10 @@ async function findConversation(id: string): Promise<Conversation | null> {
     }
 }
 
-async function readConversations(): Promise<{ success: boolean; conversations: object[]; error?: string }> {
+async function readConversations(): Promise<ConversationListResult> {
     try {
         if (conversationsDir === null) {
-            return { success: false, conversations: [], error: 'Conversations directory not initialized' };
+            return { success: false, conversations: [], error: 'INVALID_STATE' };
         }
         const dir = conversationsDir;
         const entries = await fs.readdir(dir, { withFileTypes: true });
@@ -235,45 +215,43 @@ async function readConversations(): Promise<{ success: boolean; conversations: o
         return { success: true, conversations };
     } catch (error) {
         log.error('Failed to read conversations', error);
-        return { success: false, conversations: [], error: (error as Error).message };
+        return { success: false, conversations: [], error: toIpcErrorCode(error) };
     }
 }
 
-async function loadConversation(
-    id: string,
-): Promise<{ success: boolean; conversation?: Conversation; error?: string }> {
+async function loadConversation(id: string): Promise<ConversationLoadResult> {
     try {
         const conversation = await findConversation(id);
         if (conversation === null) {
-            return { success: false, error: 'Conversation not found' };
+            return { success: false, error: 'NOT_FOUND' };
         }
         return { success: true, conversation };
     } catch (error) {
-        return { success: false, error: (error as Error).message };
+        return ipcFailure('conversation loadConversation', error);
     }
 }
 
-async function deleteConversation(id: string): Promise<{ success: boolean; error?: string }> {
+async function deleteConversation(id: string): Promise<AiSimpleResult> {
     try {
         const filePath = getConversationPath(id);
         await fs.unlink(filePath);
         return { success: true };
     } catch (error) {
         log.error('Failed to delete conversation:', error);
-        return { success: false, error: (error as Error).message };
+        return { success: false, error: toIpcErrorCode(error) };
     }
 }
 
-async function renameConversation(id: string, newTitle: string): Promise<{ success: boolean; error?: string }> {
+async function renameConversation(id: string, newTitle: string): Promise<AiSimpleResult> {
     try {
         const conversation = await findConversation(id);
         if (conversation === null) {
-            return { success: false, error: 'Conversation not found' };
+            return { success: false, error: 'NOT_FOUND' };
         }
         conversation.title = newTitle;
         return await saveConversation(conversation);
     } catch (error) {
-        return { success: false, error: (error as Error).message };
+        return ipcFailure('conversation renameConversation', error);
     }
 }
 
@@ -299,7 +277,7 @@ function deriveTitle(messages: ConversationMessage[]): string {
 function getConversationPath(id: string): string {
     // Prevent path traversal via crafted IDs like "../../etc/passwd"
     if (conversationsDir === null) {
-        throw new Error('Conversations directory not initialized');
+        throw new IpcError('INVALID_STATE', 'Conversations directory not initialized');
     }
     assertSafeFileName(id);
     const filePath = path.join(conversationsDir, `${id}.json`);

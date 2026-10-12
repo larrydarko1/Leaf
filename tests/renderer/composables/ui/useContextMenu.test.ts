@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
 import { ref, nextTick, defineComponent, createApp } from 'vue';
 
 import { useContextMenu } from '@/renderer/composables/ui/useContextMenu';
@@ -29,7 +29,7 @@ function withSetup<T>(composable: () => T): [T, () => void] {
 describe('useContextMenu', () => {
     let visible: ReturnType<typeof ref<boolean>>;
     let position: ReturnType<typeof ref<{ x: number; y: number }>>;
-    let onClose: ReturnType<typeof vi.fn>;
+    let onClose: Mock<() => void>;
     let ctx: ReturnType<typeof useContextMenu>;
     let unmount: () => void;
 
@@ -37,13 +37,13 @@ describe('useContextMenu', () => {
         vi.clearAllMocks();
         visible = ref<boolean>(false);
         position = ref({ x: 100, y: 100 });
-        onClose = vi.fn();
+        onClose = vi.fn<() => void>();
 
         [ctx, unmount] = withSetup(() =>
             useContextMenu(
                 () => visible.value!,
                 () => position.value!,
-                onClose as unknown as () => void,
+                onClose,
             ),
         );
     });

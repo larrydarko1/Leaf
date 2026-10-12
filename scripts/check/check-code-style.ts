@@ -45,17 +45,14 @@ const CODEMIRROR = /^src\/renderer\/composables\/editor\/codemirror\/cm-[a-z0-9-
  * regrow to the old number.
  */
 const LENGTH_BASELINE: Record<string, number> = {
-    'src/main/services/fs.ts': 755,
-    'src/renderer/composables/drawing/useDrawingInteraction.ts': 750,
-    'src/renderer/App.vue': 656,
-    'src/renderer/composables/drawing/useCanvasRenderer.ts': 628,
-    'src/renderer/components/explorer/FolderNode.vue': 513,
-    'src/renderer/components/ai/AiMessageList.vue': 490,
-    'src/renderer/components/NoteEditor.vue': 467,
-    'src/renderer/composables/ai/useAIChat.ts': 452,
+    'src/renderer/composables/drawing/useDrawingInteraction.ts': 749,
+    'src/main/services/fs.ts': 658,
+    'src/renderer/composables/drawing/useCanvasRenderer.ts': 623,
+    'src/renderer/App.vue': 516,
+    'src/renderer/composables/ai/useAIChat.ts': 447,
+    'src/renderer/components/NoteEditor.vue': 425,
     'src/renderer/composables/editor/codemirror/cm-theme.ts': 421,
-    'src/main/services/ai.ts': 415,
-    'src/renderer/components/drawing/DrawingToolbar.vue': 406,
+    'src/main/services/ai.ts': 412,
 };
 
 checkCodeStyle({

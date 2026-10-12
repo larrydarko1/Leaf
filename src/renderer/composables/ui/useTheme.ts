@@ -12,7 +12,7 @@ import { ref, type Ref } from 'vue';
 
 import type { ThemeInfo } from '@/schemas/vault';
 
-export type UseThemeReturn = {
+type UseThemeReturn = {
     themes: Ref<ThemeInfo[]>;
     activeId: Ref<string>;
     isLoading: Ref<boolean>;

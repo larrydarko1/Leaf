@@ -103,8 +103,8 @@ const taskFoldTogglePlugin = ViewPlugin.fromClass(
         decorations: (v): DecorationSet => v.decorations,
         eventHandlers: {
             mousedown(event: MouseEvent, view: EditorView): boolean {
-                const target = event.target as HTMLElement;
-                if (!target.classList.contains('cm-task-fold-toggle')) return false;
+                const target = event.target;
+                if (!(target instanceof HTMLElement) || !target.classList.contains('cm-task-fold-toggle')) return false;
 
                 event.preventDefault();
                 event.stopPropagation();

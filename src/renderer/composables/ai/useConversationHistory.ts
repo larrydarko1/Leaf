@@ -5,10 +5,11 @@
 import { ref, shallowRef, nextTick, type ShallowRef } from 'vue';
 import type { Ref } from 'vue';
 
-import type { AiStatus, ConversationMeta } from '@/schemas/ai';
+import { toModelTurns } from '@/renderer/utils/chat';
+import type { AiStatus, ConversationMessage, ConversationMeta } from '@/schemas/ai';
 import type { ChatMessage } from '@/schemas/chat';
 
-export type UseConversationHistoryReturn = {
+type UseConversationHistoryReturn = {
     showHistory: Ref<boolean>;
     conversationList: ShallowRef<ConversationMeta[]>;
     currentConversationId: Ref<string | null>;
@@ -100,23 +101,10 @@ export function useConversationHistory(
         try {
             const result = await window.electronAPI.conversationLoad(currentConversationId.value);
             if (result.success && result.conversation != null) {
-                result.conversation.messages = messages.value
-                    .filter((m): boolean => m.role !== 'system')
-                    .map(
-                        (
-                            m,
-                        ): {
-                            role: 'user' | 'assistant';
-                            content: string;
-                            thinking: string | undefined;
-                            timestamp: string;
-                        } => ({
-                            role: m.role as 'user' | 'assistant',
-                            content: m.content,
-                            thinking: m.thinking,
-                            timestamp: new Date().toISOString(),
-                        }),
-                    );
+                const timestamp = new Date().toISOString();
+                result.conversation.messages = messages.value.flatMap((m): ConversationMessage[] =>
+                    m.role === 'system' ? [] : [{ role: m.role, content: m.content, thinking: m.thinking, timestamp }],
+                );
                 result.conversation.tokenCount = conversationTokenCount.value;
                 await window.electronAPI.conversationSave(result.conversation);
             }
@@ -161,14 +149,7 @@ export function useConversationHistory(
                 }
                 conversationTokenCount.value = result.conversation.tokenCount ?? 0;
                 if (status.value.isModelLoaded && messages.value.length > 0) {
-                    await window.electronAPI.aiRestoreChatHistory(
-                        messages.value
-                            .filter((m): boolean => m.role !== 'system')
-                            .map((m): { role: 'user' | 'assistant'; content: string } => ({
-                                role: m.role as 'user' | 'assistant',
-                                content: m.content,
-                            })),
-                    );
+                    await window.electronAPI.aiRestoreChatHistory(toModelTurns(messages.value));
                 }
                 showHistory.value = false;
             }

@@ -10,6 +10,7 @@ import type {
     ConversationCreateResult,
     ConversationLoadResult,
 } from '@/schemas/ai';
+import type { IpcErrorCode } from '@/schemas/errors';
 import type {
     SpeechInitResult,
     SpeechTranscribeResult,
@@ -64,7 +65,7 @@ export type ElectronAPI = {
     updateEmbedRefs: (
         oldFileName: string,
         newFileName: string,
-    ) => Promise<{ success: boolean; updatedCount?: number; error?: string }>;
+    ) => Promise<{ success: boolean; updatedCount?: number; error?: IpcErrorCode }>;
     renameFolder: (folderPath: string, newFolderName: string) => Promise<FolderRenameResult>;
     deleteFolder: (folderPath: string) => Promise<FolderDeleteResult>;
     moveFile: (filePath: string, targetFolderPath: string) => Promise<FileMoveResult>;
@@ -86,7 +87,7 @@ export type ElectronAPI = {
         prompts: { id: string; name: string; description: string; path: string }[];
         activeId: string;
         promptsDir: string;
-        error?: string;
+        error?: IpcErrorCode;
     }>;
     systemPromptSetActive: (id: string) => Promise<AiSimpleResult>;
     systemPromptOpenLeafDir: () => Promise<AiSimpleResult>;
@@ -103,7 +104,7 @@ export type ElectronAPI = {
         }[];
         activeId: string;
         themesDir: string;
-        error?: string;
+        error?: IpcErrorCode;
     }>;
     themeSetActive: (id: string) => Promise<AiSimpleResult>;
     themeOpenLeafDir: () => Promise<AiSimpleResult>;
@@ -118,13 +119,13 @@ export type ElectronAPI = {
         }[];
         activeId: string;
         localesDir: string;
-        error?: string;
+        error?: IpcErrorCode;
     }>;
     languageSetActive: (id: string) => Promise<AiSimpleResult>;
     languageLoad: (id: string) => Promise<{
         success: boolean;
         content?: Record<string, unknown>;
-        error?: string;
+        error?: IpcErrorCode;
     }>;
     languageOpenLeafDir: () => Promise<AiSimpleResult>;
 
@@ -153,8 +154,8 @@ export type ElectronAPI = {
     writeClipboard: (text: string) => Promise<void>;
 
     // Bookmarks persistence
-    bookmarksLoad: () => Promise<{ success: boolean; bookmarks?: string[]; error?: string }>;
-    bookmarksSave: (bookmarks: string[]) => Promise<{ success: boolean; error?: string }>;
+    bookmarksLoad: () => Promise<{ success: boolean; bookmarks?: string[]; error?: IpcErrorCode }>;
+    bookmarksSave: (bookmarks: string[]) => Promise<{ success: boolean; error?: IpcErrorCode }>;
 
     // Speech-to-Text (Whisper) operations
     speechInit: () => Promise<SpeechInitResult>;
@@ -166,7 +167,7 @@ export type ElectronAPI = {
 };
 
 declare global {
-    /* eslint-disable @typescript-eslint/consistent-type-definitions */
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- only an interface merges into the global Window
     interface Window {
         electronAPI: ElectronAPI;
     }

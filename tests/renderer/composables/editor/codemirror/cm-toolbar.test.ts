@@ -47,8 +47,7 @@ describe('useCodemirrorToolbar', () => {
         });
 
         it('mdInsertHeading does not throw', () => {
-            const event = { target: { value: '2' } } as unknown as Event;
-            expect(() => toolbar.mdInsertHeading(event)).not.toThrow();
+            expect(() => toolbar.mdInsertHeading(new Event('change'))).not.toThrow();
         });
     });
 
@@ -200,38 +199,43 @@ describe('useCodemirrorToolbar', () => {
     });
 
     describe('mdInsertHeading', () => {
-        function headingEvent(level: string): Event {
-            return { target: { value: level } } as unknown as Event;
+        /** The toolbar's heading <select>, set to `level` and changed the way a user picks an option. */
+        function pickHeading(level: string): HTMLSelectElement {
+            const select = document.createElement('select');
+            for (const value of ['', '1', '2', '3', '4', '5', '6']) select.add(new Option(value, value));
+            select.value = level;
+            select.addEventListener('change', toolbar.mdInsertHeading);
+            select.dispatchEvent(new Event('change'));
+            return select;
         }
 
         it('inserts a heading prefix on the current line', () => {
             setup('My Title', 0);
-            toolbar.mdInsertHeading(headingEvent('2'));
+            pickHeading('2');
             expect(doc(viewRef.value!)).toBe('## My Title');
         });
 
         it('replaces an existing heading level', () => {
             setup('### Old Heading', 0);
-            toolbar.mdInsertHeading(headingEvent('1'));
+            pickHeading('1');
             expect(doc(viewRef.value!)).toBe('# Old Heading');
         });
 
         it('upgrades from h1 to h4', () => {
             setup('# Title', 0);
-            toolbar.mdInsertHeading(headingEvent('4'));
+            pickHeading('4');
             expect(doc(viewRef.value!)).toBe('#### Title');
         });
 
         it('resets the select value after dispatching', () => {
-            const target = { value: '3' };
             setup('text', 0);
-            toolbar.mdInsertHeading({ target } as unknown as Event);
-            expect(target.value).toBe('');
+            const select = pickHeading('3');
+            expect(select.value).toBe('');
         });
 
         it('does nothing for NaN level', () => {
             setup('text', 0);
-            toolbar.mdInsertHeading(headingEvent(''));
+            pickHeading('');
             expect(doc(viewRef.value!)).toBe('text');
         });
     });

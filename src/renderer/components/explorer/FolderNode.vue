@@ -2,6 +2,17 @@
 import { computed, ref, watch, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import IconChevronRight from '@/renderer/components/icons/IconChevronRight.vue';
+import IconCode from '@/renderer/components/icons/IconCode.vue';
+import IconFile from '@/renderer/components/icons/IconFile.vue';
+import IconFileText from '@/renderer/components/icons/IconFileText.vue';
+import IconFolder from '@/renderer/components/icons/IconFolder.vue';
+import IconFolderOpen from '@/renderer/components/icons/IconFolderOpen.vue';
+import IconImage from '@/renderer/components/icons/IconImage.vue';
+import IconMusic from '@/renderer/components/icons/IconMusic.vue';
+import IconPenTool from '@/renderer/components/icons/IconPenTool.vue';
+import IconStar from '@/renderer/components/icons/IconStar.vue';
+import IconVideo from '@/renderer/components/icons/IconVideo.vue';
 import { useTreeNodeDrag } from '@/renderer/composables/vault/useTreeNodeDrag';
 import {
     isImageFile as checkImage,
@@ -198,57 +209,26 @@ watch(isRenaming, (renaming) => {
                 :aria-label="`${isExpanded ? 'Collapse' : 'Expand'} folder: ${node.name}`"
                 :aria-pressed="isExpanded"
                 @click.stop="$emit('toggleFolder', node.path)">
-                <svg
+                <IconChevronRight
                     class="chevron"
                     :class="{ expanded: isExpanded }"
                     width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                    focusable="false">
-                    <polyline points="9 18 15 12 9 6"></polyline>
-                </svg>
+                    height="12" />
             </button>
 
             <!-- Closed folder icon -->
-            <svg
+            <IconFolder
                 v-if="!isExpanded"
                 class="folder-icon"
                 width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-                focusable="false">
-                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-            </svg>
+                height="14" />
 
             <!-- Open folder icon -->
-            <svg
+            <IconFolderOpen
                 v-else
                 class="folder-icon folder-icon-open"
                 width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-                focusable="false">
-                <path d="M5 19a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4l2 3h9a2 2 0 0 1 2 2v1"></path>
-                <path d="M5 11h15a2 2 0 0 1 2 2l-1.5 6a2 2 0 0 1-2 2H6.5a2 2 0 0 1-2-2L3 13a2 2 0 0 1 2-2z"></path>
-            </svg>
+                height="14" />
 
             <!-- Folder name input (renaming) -->
             <input
@@ -258,8 +238,8 @@ watch(isRenaming, (renaming) => {
                 class="folder-name-input field field-sm"
                 type="text"
                 :aria-label="`${t('file.rename')}: ${node.name}`"
-                @input="$emit('updateRenameValue', ($event.target as HTMLInputElement).value)"
-                @keydown.enter="($event.target as HTMLInputElement).blur()"
+                @input="$emit('updateRenameValue', renameInput?.value ?? '')"
+                @keydown.enter="renameInput?.blur()"
                 @keydown.esc="$emit('cancelRename')"
                 @blur="$emit('rename')"
                 @click.stop />
@@ -310,159 +290,53 @@ watch(isRenaming, (renaming) => {
             @dragstart="handleDragStart"
             @dragend="handleDragEnd">
             <!-- Image icon for image files -->
-            <svg
+            <IconImage
                 v-if="isImageFile"
                 class="file-icon"
                 width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-                focusable="false">
-                <rect
-                    x="3"
-                    y="3"
-                    width="18"
-                    height="18"
-                    rx="2"
-                    ry="2"></rect>
-                <circle
-                    cx="8.5"
-                    cy="8.5"
-                    r="1.5"></circle>
-                <polyline points="21 15 16 10 5 21"></polyline>
-            </svg>
+                height="14" />
 
             <!-- Video icon for video files -->
-            <svg
+            <IconVideo
                 v-else-if="isVideoFile"
                 class="file-icon"
                 width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-                focusable="false">
-                <polygon points="23 7 16 12 23 17 23 7"></polygon>
-                <rect
-                    x="1"
-                    y="5"
-                    width="15"
-                    height="14"
-                    rx="2"
-                    ry="2"></rect>
-            </svg>
+                height="14" />
 
             <!-- Audio icon for audio files -->
-            <svg
+            <IconMusic
                 v-else-if="isAudioFile"
                 class="file-icon"
                 width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-                focusable="false">
-                <path d="M9 18V5l12-2v13"></path>
-                <circle
-                    cx="6"
-                    cy="18"
-                    r="3"></circle>
-                <circle
-                    cx="18"
-                    cy="16"
-                    r="3"></circle>
-            </svg>
+                height="14" />
 
             <!-- PDF icon for PDF files -->
-            <svg
+            <IconFileText
                 v-else-if="isPdfFile"
                 class="file-icon pdf-icon"
                 width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-                focusable="false">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <path d="M10 12h4"></path>
-                <path d="M10 16h4"></path>
-            </svg>
+                height="14" />
 
             <!-- Drawing icon for drawing files -->
-            <svg
+            <IconPenTool
                 v-else-if="isDrawingFile"
                 class="file-icon drawing-icon"
                 width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-                focusable="false">
-                <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
-                <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
-                <circle
-                    cx="11"
-                    cy="11"
-                    r="2"></circle>
-            </svg>
+                height="14" />
 
             <!-- Code icon for code files -->
-            <svg
+            <IconCode
                 v-else-if="isCodeFile"
                 class="file-icon code-icon"
                 width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-                focusable="false">
-                <polyline points="16 18 22 12 16 6"></polyline>
-                <polyline points="8 6 2 12 8 18"></polyline>
-            </svg>
+                height="14" />
 
             <!-- Document icon for text files -->
-            <svg
+            <IconFile
                 v-else
                 class="file-icon"
                 width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-                focusable="false">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-            </svg>
+                height="14" />
 
             <!-- File name input (renaming) -->
             <input
@@ -472,8 +346,8 @@ watch(isRenaming, (renaming) => {
                 class="file-name-input field field-sm"
                 type="text"
                 :aria-label="`${t('file.rename')}: ${node.name}`"
-                @input="$emit('updateRenameValue', ($event.target as HTMLInputElement).value)"
-                @keydown.enter="($event.target as HTMLInputElement).blur()"
+                @input="$emit('updateRenameValue', renameInput?.value ?? '')"
+                @keydown.enter="renameInput?.blur()"
                 @keydown.esc="$emit('cancelRename')"
                 @blur="$emit('rename')"
                 @click.stop />
@@ -492,19 +366,12 @@ watch(isRenaming, (renaming) => {
             </span>
 
             <!-- Bookmark indicator -->
-            <svg
+            <IconStar
                 v-if="node.file && bookmarkedFiles?.includes(node.file.path)"
                 class="bookmark-star"
                 width="12"
                 height="12"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                xmlns="http://www.w3.org/2000/svg"
-                :aria-label="t('file.bookmarked')"
-                role="img">
-                <path
-                    d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-            </svg>
+                fill="currentColor" />
         </div>
 
         <!-- Recursively render children -->

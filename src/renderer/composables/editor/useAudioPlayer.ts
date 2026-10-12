@@ -4,7 +4,7 @@
 
 import { ref, computed, type ComputedRef, type Ref } from 'vue';
 
-export type UseAudioPlayerReturn = {
+type UseAudioPlayerReturn = {
     audioUrl: Ref<string>;
     audioRef: Ref<HTMLAudioElement | null>;
     audioError: Ref<boolean>;
@@ -86,7 +86,8 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
 
     function seekAudio(event: MouseEvent): void {
         if (audioRef.value === null || !(audioDuration.value > 0)) return;
-        const wrapper = event.currentTarget as HTMLElement;
+        const wrapper = event.currentTarget;
+        if (!(wrapper instanceof HTMLElement)) return;
         const rect = wrapper.getBoundingClientRect();
         const percent = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
         audioRef.value.currentTime = percent * audioDuration.value;
@@ -94,7 +95,8 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
     }
 
     function onVolumeChange(event: Event): void {
-        const value = parseFloat((event.target as HTMLInputElement).value);
+        if (!(event.target instanceof HTMLInputElement)) return;
+        const value = parseFloat(event.target.value);
         audioVolume.value = value;
         if (audioRef.value !== null) {
             audioRef.value.volume = value;

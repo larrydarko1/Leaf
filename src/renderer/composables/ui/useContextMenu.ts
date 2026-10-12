@@ -17,7 +17,7 @@ export function useContextMenu(
     const adjustedPosition = ref({ x: 0, y: 0 });
 
     function handleClickOutside(event: MouseEvent): void {
-        if (menuRef.value !== null && !menuRef.value.contains(event.target as Node)) {
+        if (menuRef.value !== null && !(event.target instanceof Node && menuRef.value.contains(event.target))) {
             onClose();
         }
     }

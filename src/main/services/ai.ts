@@ -8,15 +8,25 @@ import { existsSync } from 'fs';
 import fs from 'fs/promises';
 import path from 'path';
 
-import type { IpcMain, BrowserWindow } from 'electron';
+import type { BrowserWindow } from 'electron';
 import { shell } from 'electron';
 import type { Llama, LlamaModel, LlamaContext, LlamaChatSession, LlamaContextSequence } from 'node-llama-cpp';
 import { z } from 'zod';
 
+import { IpcError, toIpcErrorCode, ipcFailure } from '@/main/lib/errors';
+import type { IpcMain } from '@/main/lib/ipc';
 import { log } from '@/main/lib/logger';
 import { DEFAULT_MODELS_DIR, LEAF_HOME } from '@/main/lib/paths';
 import { getActiveSystemPrompt } from '@/main/services/systemPrompt';
-import { type AiModelInfo, ConversationMessageSchema } from '@/schemas/ai';
+import {
+    type AiModelInfo,
+    ConversationMessageSchema,
+    type AiChatResult,
+    type AiListModelsResult,
+    type AiLoadResult,
+    type AiSimpleResult,
+    type AiStatus,
+} from '@/schemas/ai';
 
 type ModelEntry = AiModelInfo;
 
@@ -42,59 +52,45 @@ let pendingConversationHistory: { role: string; content: string }[] | null = nul
 let trackedMessages: { role: string; content: string }[] = [];
 
 export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | null): void {
-    ipc.handle(
-        'ai:listModels',
-        async (): Promise<{ success: boolean; models: AiModelInfo[]; modelsDir: string; error?: string }> =>
-            readModels(),
-    );
+    ipc.handle('ai:listModels', async (): Promise<AiListModelsResult> => readModels());
 
-    ipc.handle(
-        'ai:loadModel',
-        async (_event, modelPath: unknown): Promise<{ success: boolean; modelName?: string; error?: string }> => {
-            const parsed = z.string().min(1).safeParse(modelPath);
-            if (!parsed.success) return { success: false, error: 'Invalid model path' };
-            return loadModel(parsed.data);
-        },
-    );
+    ipc.handle('ai:loadModel', async (_event, modelPath: unknown): Promise<AiLoadResult> => {
+        const parsed = z.string().min(1).safeParse(modelPath);
+        if (!parsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
+        return loadModel(parsed.data);
+    });
 
-    ipc.handle('ai:unloadModel', async (): Promise<{ success: boolean; error?: string }> => unloadModel());
+    ipc.handle('ai:unloadModel', async (): Promise<AiSimpleResult> => unloadModel());
 
-    ipc.handle(
-        'ai:chat',
-        async (
-            _event,
-            userMessage: unknown,
-            noteContext: unknown,
-        ): Promise<{ success: boolean; response?: string; compacted?: boolean; error?: string }> => {
-            const msgParsed = z.string().min(1).safeParse(userMessage);
-            const ctxParsed = z.string().nullish().safeParse(noteContext);
-            if (!msgParsed.success || !ctxParsed.success) return { success: false, error: 'Invalid arguments' };
-            return chat(
-                msgParsed.data,
-                (token): void => {
-                    const window = findMainWindow();
-                    if (window !== null && !window.isDestroyed()) window.webContents.send('ai:token', token);
-                },
-                (token): void => {
-                    const window = findMainWindow();
-                    if (window !== null && !window.isDestroyed()) window.webContents.send('ai:thinkingToken', token);
-                },
-                ctxParsed.data,
-            );
-        },
-    );
+    ipc.handle('ai:chat', async (_event, userMessage: unknown, noteContext: unknown): Promise<AiChatResult> => {
+        const msgParsed = z.string().min(1).safeParse(userMessage);
+        const ctxParsed = z.string().nullish().safeParse(noteContext);
+        if (!msgParsed.success || !ctxParsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
+        return chat(
+            msgParsed.data,
+            (token): void => {
+                const window = findMainWindow();
+                if (window !== null && !window.isDestroyed()) window.webContents.send('ai:token', token);
+            },
+            (token): void => {
+                const window = findMainWindow();
+                if (window !== null && !window.isDestroyed()) window.webContents.send('ai:thinkingToken', token);
+            },
+            ctxParsed.data,
+        );
+    });
 
-    ipc.handle('ai:stopChat', (): { success: boolean; error?: string } => stopChat());
-    ipc.handle('ai:resetChat', async (): Promise<{ success: boolean; error?: string }> => resetChat());
+    ipc.handle('ai:stopChat', (): AiSimpleResult => stopChat());
+    ipc.handle('ai:resetChat', async (): Promise<AiSimpleResult> => resetChat());
 
-    ipc.handle('ai:restoreChatHistory', (_event, messages: unknown): { success: boolean; error?: string } => {
+    ipc.handle('ai:restoreChatHistory', (_event, messages: unknown): AiSimpleResult => {
         const parsed = z.array(ConversationMessageSchema).safeParse(messages);
-        if (!parsed.success) return { success: false, error: 'Invalid messages' };
+        if (!parsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
         return restoreChatHistory(parsed.data);
     });
 
-    ipc.handle('ai:getStatus', (): object => getStatus());
-    ipc.handle('ai:openLeafDir', async (): Promise<{ success: boolean }> => await openLeafDir());
+    ipc.handle('ai:getStatus', (): AiStatus => getStatus());
+    ipc.handle('ai:openLeafDir', async (): Promise<AiSimpleResult> => await openLeafDir());
 }
 
 /** Graceful shutdown: unload the model and free resources. */
@@ -170,7 +166,7 @@ async function scanForModels(dir: string, baseDir: string): Promise<ModelEntry[]
     return models;
 }
 
-async function readModels(): Promise<{ success: boolean; models: AiModelInfo[]; modelsDir: string; error?: string }> {
+async function readModels(): Promise<AiListModelsResult> {
     await ensureModelsDir();
 
     try {
@@ -178,7 +174,8 @@ async function readModels(): Promise<{ success: boolean; models: AiModelInfo[]; 
         models.sort((a, b): number => a.name.localeCompare(b.name));
         return { success: true, models, modelsDir: DEFAULT_MODELS_DIR };
     } catch (error) {
-        return { success: false, error: (error as Error).message, models: [], modelsDir: DEFAULT_MODELS_DIR };
+        log.warn('[ai] readModels failed:', error);
+        return { success: false, error: toIpcErrorCode(error), models: [], modelsDir: DEFAULT_MODELS_DIR };
     }
 }
 
@@ -197,7 +194,7 @@ async function getModelLoadOptions(modelPath: string): Promise<{ gpuLayers?: num
     return {};
 }
 
-async function loadModel(modelPath: string): Promise<{ success: boolean; modelName?: string; error?: string }> {
+async function loadModel(modelPath: string): Promise<AiLoadResult> {
     try {
         if (isModelLoaded) {
             await unloadModel();
@@ -207,11 +204,11 @@ async function loadModel(modelPath: string): Promise<{ success: boolean; modelNa
         const resolvedModel = path.resolve(modelPath);
         const resolvedModelsDir = path.resolve(DEFAULT_MODELS_DIR);
         if (resolvedModel !== resolvedModelsDir && !resolvedModel.startsWith(resolvedModelsDir + path.sep)) {
-            return { success: false, error: 'Access denied: model must be inside the models directory.' };
+            return { success: false, error: 'ACCESS_DENIED' };
         }
 
         if (!existsSync(modelPath)) {
-            return { success: false, error: `Model file not found: ${modelPath}` };
+            return { success: false, error: 'NOT_FOUND' };
         }
 
         const llamaInstance = await getLlamaInstance();
@@ -240,11 +237,11 @@ async function loadModel(modelPath: string): Promise<{ success: boolean; modelNa
         model = null;
         context = null;
         session = null;
-        return { success: false, error: (error as Error).message };
+        return { success: false, error: toIpcErrorCode(error) };
     }
 }
 
-async function unloadModel(): Promise<{ success: boolean; error?: string }> {
+async function unloadModel(): Promise<AiSimpleResult> {
     try {
         session = null;
         if (context !== null) {
@@ -269,7 +266,7 @@ async function unloadModel(): Promise<{ success: boolean; error?: string }> {
         return { success: true };
     } catch (error) {
         log.error('Failed to unload model:', error);
-        return { success: false, error: (error as Error).message };
+        return { success: false, error: toIpcErrorCode(error) };
     }
 }
 
@@ -288,7 +285,7 @@ async function startCompactedSession(seq: LlamaContextSequence): Promise<LlamaCh
     if (context !== null) {
         return new LlamaChatSession({ contextSequence: context.getSequence(), ...systemPromptOption });
     }
-    throw new Error('No context available to rebuild the chat session after compaction.');
+    throw new IpcError('INVALID_STATE', 'No context available to rebuild the chat session after compaction.');
 }
 
 async function chat(
@@ -296,13 +293,13 @@ async function chat(
     onToken: (token: string) => void,
     onThinkingToken: (token: string) => void,
     noteContext: string | null = null,
-): Promise<{ success: boolean; response?: string; compacted?: boolean; error?: string }> {
+): Promise<AiChatResult> {
     if (!isModelLoaded || session === null) {
-        return { success: false, error: 'No model loaded. Please load a model first.' };
+        return { success: false, error: 'MODEL_NOT_LOADED' };
     }
 
     if (isGenerating) {
-        return { success: false, error: 'Already generating a response. Please wait.' };
+        return { success: false, error: 'BUSY' };
     }
 
     isGenerating = true;
@@ -362,11 +359,11 @@ async function chat(
         isGenerating = false;
         currentAbortController = null;
         log.error('Chat error:', error);
-        return { success: false, error: (error as Error).message };
+        return { success: false, error: toIpcErrorCode(error) };
     }
 }
 
-function stopChat(): { success: boolean; error?: string } {
+function stopChat(): AiSimpleResult {
     if (isGenerating && currentAbortController !== null) {
         currentAbortController.abort();
         isGenerating = false;
@@ -374,12 +371,12 @@ function stopChat(): { success: boolean; error?: string } {
         log.info('Generation stopped by user');
         return { success: true };
     }
-    return { success: false, error: 'No generation in progress.' };
+    return { success: false, error: 'INVALID_STATE' };
 }
 
-async function resetChat(): Promise<{ success: boolean; error?: string }> {
+async function resetChat(): Promise<AiSimpleResult> {
     if (!isModelLoaded || model === null || context === null) {
-        return { success: false, error: 'No model loaded.' };
+        return { success: false, error: 'MODEL_NOT_LOADED' };
     }
 
     try {
@@ -406,11 +403,11 @@ async function resetChat(): Promise<{ success: boolean; error?: string }> {
         }
         return { success: true };
     } catch (error) {
-        return { success: false, error: (error as Error).message };
+        return ipcFailure('ai resetChat', error);
     }
 }
 
-function restoreChatHistory(messages: { role: string; content: string }[]): { success: boolean; error?: string } {
+function restoreChatHistory(messages: { role: string; content: string }[]): AiSimpleResult {
     if (messages.length === 0) {
         pendingConversationHistory = null;
         return { success: true };
@@ -427,7 +424,7 @@ function restoreChatHistory(messages: { role: string; content: string }[]): { su
         return { success: true };
     } catch (error) {
         log.error('Failed to store chat history:', error);
-        return { success: false, error: (error as Error).message };
+        return { success: false, error: toIpcErrorCode(error) };
     }
 }
 
@@ -446,7 +443,7 @@ function buildConversationSummary(messages: { role: string; content: string }[])
         .join('\n');
 }
 
-function getStatus(): object {
+function getStatus(): AiStatus {
     let contextTokens = 0;
     let contextSize = 0;
 

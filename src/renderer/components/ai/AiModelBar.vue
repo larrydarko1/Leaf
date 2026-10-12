@@ -2,6 +2,14 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import IconChevronDown from '@/renderer/components/icons/IconChevronDown.vue';
+import IconClock from '@/renderer/components/icons/IconClock.vue';
+import IconClose from '@/renderer/components/icons/IconClose.vue';
+import IconComment from '@/renderer/components/icons/IconComment.vue';
+import IconFolder from '@/renderer/components/icons/IconFolder.vue';
+import IconPlus from '@/renderer/components/icons/IconPlus.vue';
+import IconRefresh from '@/renderer/components/icons/IconRefresh.vue';
+import IconSquare from '@/renderer/components/icons/IconSquare.vue';
 import { useSystemPrompt } from '@/renderer/composables/ai/useSystemPrompt';
 import type { AiModelInfo, AiStatus } from '@/schemas/ai';
 
@@ -68,7 +76,7 @@ function handleSelectModel(model: AiModelInfo): void {
 }
 
 function handleClickOutside(event: MouseEvent): void {
-    const target = event.target as Node;
+    const target = event.target instanceof Node ? event.target : null;
     if (dropdownRef.value !== null && !dropdownRef.value.contains(target)) {
         showDropdown.value = false;
     }
@@ -138,20 +146,12 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
                         :aria-expanded="showDropdown"
                         @click="toggleDropdown()">
                         <span class="ai-dropdown-label menu-trigger-label">{{ selectedModelLabel }}</span>
-                        <svg
+                        <IconChevronDown
                             class="ai-dropdown-chevron menu-chevron"
                             :class="{ open: showDropdown }"
                             width="10"
                             height="10"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2.5"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true">
-                            <polyline points="6 9 12 15 18 9" />
-                        </svg>
+                            stroke-width="2.5" />
                     </button>
                     <Teleport to="body">
                         <div
@@ -202,24 +202,10 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
                     :aria-label="t('ai.unload_current_model')"
                     :disabled="status.isGenerating"
                     @click="$emit('unload-model')">
-                    <svg
+                    <IconSquare
                         width="10"
                         height="10"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true">
-                        <rect
-                            x="3"
-                            y="3"
-                            width="18"
-                            height="18"
-                            rx="2"
-                            ry="2" />
-                    </svg>
+                        stroke-width="2.5" />
                 </button>
             </div>
         </div>
@@ -232,15 +218,9 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
                 :title="t('ai.open_models_folder')"
                 :aria-label="t('ai.open_models_folder')"
                 @click="$emit('open-models-folder')">
-                <svg
+                <IconFolder
                     width="11"
-                    height="11"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    aria-hidden="true">
-                    <path
-                        d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.12.28.256.554.53L11 4c.816.816 1.224 1.224 1.712 1.495.274.15.56.263.86.348.536.153 1.113.153 2.268.153h.374c2.632 0 3.949 0 4.804.77.079.07.154.145.224.224C22 7.85 22 9.166 22 11.798V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14V6.95z" />
-                </svg>
+                    height="11" />
             </button>
 
             <!-- System prompt picker -->
@@ -255,18 +235,10 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
                     aria-haspopup="listbox"
                     :aria-expanded="showPromptDropdown"
                     @click="togglePromptDropdown()">
-                    <svg
+                    <IconComment
                         width="11"
                         height="11"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                    </svg>
+                        stroke-width="2.5" />
                 </button>
                 <Teleport to="body">
                     <div
@@ -309,19 +281,10 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
                 :title="t('ai.refresh_models_folder')"
                 :aria-label="t('ai.refresh_models_folder')"
                 @click="handleRefresh()">
-                <svg
+                <IconRefresh
                     width="11"
                     height="11"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true">
-                    <polyline points="23 4 23 10 17 10" />
-                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-                </svg>
+                    stroke-width="2.5" />
             </button>
 
             <!-- Conversation history -->
@@ -332,22 +295,10 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
                 :aria-label="t('ai.conversation_history')"
                 :aria-pressed="showHistory"
                 @click="$emit('toggle-history')">
-                <svg
+                <IconClock
                     width="11"
                     height="11"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true">
-                    <circle
-                        cx="12"
-                        cy="12"
-                        r="10" />
-                    <polyline points="12 6 12 12 16 14" />
-                </svg>
+                    stroke-width="2.5" />
             </button>
 
             <!-- New conversation -->
@@ -356,27 +307,10 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
                 :title="t('ai.new_conversation')"
                 :aria-label="t('ai.new_conversation')"
                 @click="$emit('new-conversation')">
-                <svg
+                <IconPlus
                     width="11"
                     height="11"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true">
-                    <line
-                        x1="12"
-                        y1="5"
-                        x2="12"
-                        y2="19" />
-                    <line
-                        x1="5"
-                        y1="12"
-                        x2="19"
-                        y2="12" />
-                </svg>
+                    stroke-width="2.5" />
             </button>
 
             <!-- Close -->
@@ -385,27 +319,10 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
                 :title="t('ai.close')"
                 :aria-label="t('ai.close')"
                 @click="$emit('close')">
-                <svg
+                <IconClose
                     width="11"
                     height="11"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true">
-                    <line
-                        x1="18"
-                        y1="6"
-                        x2="6"
-                        y2="18" />
-                    <line
-                        x1="6"
-                        y1="6"
-                        x2="18"
-                        y2="18" />
-                </svg>
+                    stroke-width="2.5" />
             </button>
         </div>
     </div>

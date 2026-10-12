@@ -2,6 +2,10 @@ import { shallowMount } from '@vue/test-utils';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref, computed } from 'vue';
 
+import DrawingExportDialog from '@/renderer/components/drawing/DrawingExportDialog.vue';
+import DrawingFooter from '@/renderer/components/drawing/DrawingFooter.vue';
+import DrawingPropertiesPanel from '@/renderer/components/drawing/DrawingPropertiesPanel.vue';
+import DrawingToolbar from '@/renderer/components/drawing/DrawingToolbar.vue';
 import DrawingCanvas from '@/renderer/components/DrawingCanvas.vue';
 import { i18n } from '@/renderer/i18n';
 
@@ -174,25 +178,25 @@ describe('DrawingCanvas', () => {
 
         it('renders DrawingToolbar', () => {
             const wrapper = mountCanvas();
-            expect(wrapper.findComponent({ name: 'DrawingToolbar' }).exists()).toBe(true);
+            expect(wrapper.findComponent(DrawingToolbar).exists()).toBe(true);
             wrapper.unmount();
         });
 
         it('renders DrawingPropertiesPanel', () => {
             const wrapper = mountCanvas();
-            expect(wrapper.findComponent({ name: 'DrawingPropertiesPanel' }).exists()).toBe(true);
+            expect(wrapper.findComponent(DrawingPropertiesPanel).exists()).toBe(true);
             wrapper.unmount();
         });
 
         it('renders DrawingFooter', () => {
             const wrapper = mountCanvas();
-            expect(wrapper.findComponent({ name: 'DrawingFooter' }).exists()).toBe(true);
+            expect(wrapper.findComponent(DrawingFooter).exists()).toBe(true);
             wrapper.unmount();
         });
 
         it('renders DrawingExportDialog', () => {
             const wrapper = mountCanvas();
-            expect(wrapper.findComponent({ name: 'DrawingExportDialog' }).exists()).toBe(true);
+            expect(wrapper.findComponent(DrawingExportDialog).exists()).toBe(true);
             wrapper.unmount();
         });
     });
@@ -289,7 +293,7 @@ describe('DrawingCanvas', () => {
             mockEffectiveTool.value = 'select';
             mockSelectedIds.value = new Set();
             const wrapper = mountCanvas();
-            const panel = wrapper.findComponent({ name: 'DrawingPropertiesPanel' });
+            const panel = wrapper.findComponent(DrawingPropertiesPanel);
             expect(panel.props('visible')).toBe(false);
             wrapper.unmount();
         });
@@ -298,7 +302,7 @@ describe('DrawingCanvas', () => {
             mockEffectiveTool.value = 'select';
             mockSelectedIds.value = new Set(['el-1']);
             const wrapper = mountCanvas();
-            const panel = wrapper.findComponent({ name: 'DrawingPropertiesPanel' });
+            const panel = wrapper.findComponent(DrawingPropertiesPanel);
             expect(panel.props('visible')).toBe(true);
             wrapper.unmount();
         });
@@ -306,7 +310,7 @@ describe('DrawingCanvas', () => {
         it('is true for non-select/hand tools', () => {
             mockEffectiveTool.value = 'rectangle';
             const wrapper = mountCanvas();
-            const panel = wrapper.findComponent({ name: 'DrawingPropertiesPanel' });
+            const panel = wrapper.findComponent(DrawingPropertiesPanel);
             expect(panel.props('visible')).toBe(true);
             wrapper.unmount();
         });
@@ -316,7 +320,7 @@ describe('DrawingCanvas', () => {
         it('calls renderScene after tool change', async () => {
             const wrapper = mountCanvas();
             mockRenderScene.mockClear();
-            const toolbar = wrapper.findComponent({ name: 'DrawingToolbar' });
+            const toolbar = wrapper.findComponent(DrawingToolbar);
             await toolbar.vm.$emit('select-tool', 'rectangle');
             expect(mockRenderScene).toHaveBeenCalled();
             wrapper.unmount();
@@ -325,7 +329,7 @@ describe('DrawingCanvas', () => {
         it('clears selectedIds when switching away from select', async () => {
             mockSelectedIds.value = new Set(['el-1', 'el-2']);
             const wrapper = mountCanvas();
-            const toolbar = wrapper.findComponent({ name: 'DrawingToolbar' });
+            const toolbar = wrapper.findComponent(DrawingToolbar);
             await toolbar.vm.$emit('select-tool', 'freedraw');
             expect(mockSelectedIds.value.size).toBe(0);
             wrapper.unmount();
@@ -334,7 +338,7 @@ describe('DrawingCanvas', () => {
         it('does not clear selection when switching to select tool', async () => {
             mockSelectedIds.value = new Set(['el-1']);
             const wrapper = mountCanvas();
-            const toolbar = wrapper.findComponent({ name: 'DrawingToolbar' });
+            const toolbar = wrapper.findComponent(DrawingToolbar);
             await toolbar.vm.$emit('select-tool', 'select');
             expect(mockSelectedIds.value.size).toBe(1);
             wrapper.unmount();
@@ -344,22 +348,22 @@ describe('DrawingCanvas', () => {
     describe('export dialog', () => {
         it('export dialog is hidden by default', () => {
             const wrapper = mountCanvas();
-            expect(wrapper.findComponent({ name: 'DrawingExportDialog' }).props('visible')).toBe(false);
+            expect(wrapper.findComponent(DrawingExportDialog).props('visible')).toBe(false);
             wrapper.unmount();
         });
 
         it('opens export dialog via footer event', async () => {
             const wrapper = mountCanvas();
-            await wrapper.findComponent({ name: 'DrawingFooter' }).vm.$emit('open-export-dialog');
-            expect(wrapper.findComponent({ name: 'DrawingExportDialog' }).props('visible')).toBe(true);
+            await wrapper.findComponent(DrawingFooter).vm.$emit('open-export-dialog');
+            expect(wrapper.findComponent(DrawingExportDialog).props('visible')).toBe(true);
             wrapper.unmount();
         });
 
         it('closes export dialog on close event', async () => {
             const wrapper = mountCanvas();
-            await wrapper.findComponent({ name: 'DrawingFooter' }).vm.$emit('open-export-dialog');
-            await wrapper.findComponent({ name: 'DrawingExportDialog' }).vm.$emit('close');
-            expect(wrapper.findComponent({ name: 'DrawingExportDialog' }).props('visible')).toBe(false);
+            await wrapper.findComponent(DrawingFooter).vm.$emit('open-export-dialog');
+            await wrapper.findComponent(DrawingExportDialog).vm.$emit('close');
+            expect(wrapper.findComponent(DrawingExportDialog).props('visible')).toBe(false);
             wrapper.unmount();
         });
     });

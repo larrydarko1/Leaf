@@ -3,7 +3,9 @@ import os from 'os';
 import path from 'path';
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { z } from 'zod';
 
+import { createFakeIpc, readReply, readReplyWith } from './test-utils';
 import { register } from '@/main/services/media';
 
 vi.mock('electron', () => ({}));
@@ -13,20 +15,15 @@ vi.mock('@/main/lib/logger', () => ({
 }));
 
 let tmpDir: string;
-let vaultRoot: string;
-let handlers: Record<string, (...args: unknown[]) => Promise<unknown>>;
+let vaultRoot: string | null;
+let ipc: ReturnType<typeof createFakeIpc>;
 
 beforeEach(() => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'leaf-media-'));
     vaultRoot = tmpDir;
 
-    handlers = {};
-    const ipc = {
-        handle: vi.fn((channel: string, fn: (...args: unknown[]) => Promise<unknown>) => {
-            handlers[channel] = fn;
-        }),
-    };
-    register(ipc as never, () => vaultRoot);
+    ipc = createFakeIpc();
+    register(ipc, () => vaultRoot);
 });
 
 afterEach(() => {
@@ -37,57 +34,45 @@ describe('audio:saveRecording', () => {
     it('saves a base64-encoded file inside the vault', async () => {
         const fileName = 'recording.wav';
         const base64 = Buffer.from('audio data').toString('base64');
-        const result = (await handlers['audio:saveRecording']?.({}, vaultRoot, fileName, base64)) as {
-            success: boolean;
-            path: string;
-        };
+        const result = readReplyWith(await ipc.invoke('audio:saveRecording', vaultRoot, fileName, base64), {
+            path: z.string(),
+        });
         expect(result.success).toBe(true);
         expect(fs.existsSync(result.path)).toBe(true);
     });
 
     it('saves into a subdirectory of the vault', async () => {
-        const subDir = path.join(vaultRoot, 'recordings');
+        const subDir = path.join(tmpDir, 'recordings');
         fs.mkdirSync(subDir);
         const base64 = Buffer.from('audio').toString('base64');
-        const result = (await handlers['audio:saveRecording']?.({}, subDir, 'rec.wav', base64)) as { success: boolean };
+        const result = readReply(await ipc.invoke('audio:saveRecording', subDir, 'rec.wav', base64));
         expect(result.success).toBe(true);
     });
 
     it('rejects a filename with path traversal', async () => {
         const base64 = Buffer.from('x').toString('base64');
-        const result = (await handlers['audio:saveRecording']?.({}, vaultRoot, '../evil.wav', base64)) as {
-            success: boolean;
-        };
+        const result = readReply(await ipc.invoke('audio:saveRecording', vaultRoot, '../evil.wav', base64));
         expect(result.success).toBe(false);
     });
 
     it('rejects a folder path outside the vault', async () => {
         const outsideDir = fs.mkdtempSync(path.join(os.tmpdir(), 'outside-'));
         const base64 = Buffer.from('x').toString('base64');
-        const result = (await handlers['audio:saveRecording']?.({}, outsideDir, 'rec.wav', base64)) as {
-            success: boolean;
-            error: string;
-        };
+        const result = readReply(await ipc.invoke('audio:saveRecording', outsideDir, 'rec.wav', base64));
         fs.rmSync(outsideDir, { recursive: true, force: true });
         expect(result.success).toBe(false);
-        expect(result.error).toMatch(/outside the vault/i);
+        expect(result.error).toBe('ACCESS_DENIED');
     });
 
     it('rejects when no vault is open', async () => {
-        vaultRoot = null as unknown as string;
-        const ipc = {
-            handle: vi.fn((ch: string, fn: (...args: unknown[]) => Promise<unknown>) => {
-                handlers[ch] = fn;
-            }),
-        };
-        register(ipc as never, () => null);
+        vaultRoot = null;
         const base64 = Buffer.from('x').toString('base64');
-        const result = (await handlers['audio:saveRecording']?.({}, tmpDir, 'rec.wav', base64)) as { success: boolean };
+        const result = readReply(await ipc.invoke('audio:saveRecording', tmpDir, 'rec.wav', base64));
         expect(result.success).toBe(false);
     });
 
     it('rejects non-string arguments', async () => {
-        const result = (await handlers['audio:saveRecording']?.({}, 123, 'rec.wav', 'base64')) as { success: boolean };
+        const result = readReply(await ipc.invoke('audio:saveRecording', 123, 'rec.wav', 'base64'));
         expect(result.success).toBe(false);
     });
 });

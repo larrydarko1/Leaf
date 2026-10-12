@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref, computed } from 'vue';
+import { z } from 'zod';
 
 import { useDrawingHistory } from '@/renderer/composables/drawing/useDrawingHistory';
-import type { CanvasElement } from '@/schemas/drawing';
+import { type CanvasElement, CanvasElementSchema } from '@/schemas/drawing';
 
 function makeEl(id: string, x = 0, y = 0): CanvasElement {
     return {
@@ -63,8 +64,8 @@ describe('useDrawingHistory', () => {
         it('serialises the current elements as JSON', () => {
             ctx.elements.value = [makeEl('a')];
             ctx.hist.saveToHistory();
-            const snapshot = JSON.parse(ctx.history.value[ctx.historyIndex.value]!);
-            expect(snapshot[0].id).toBe('a');
+            const snapshot = z.array(CanvasElementSchema).parse(JSON.parse(ctx.history.value[ctx.historyIndex.value]!));
+            expect(snapshot[0]?.id).toBe('a');
         });
 
         it('truncates any forward history when saving mid-stack', () => {
@@ -76,7 +77,7 @@ describe('useDrawingHistory', () => {
             ctx.elements.value = [makeEl('c')];
             ctx.hist.saveToHistory(); // overwrites forward entry
             expect(ctx.historyIndex.value).toBe(ctx.history.value.length - 1);
-            const ids = ctx.history.value.map((s) => JSON.parse(s)[0]?.id ?? null);
+            const ids = ctx.history.value.map((s) => z.array(CanvasElementSchema).parse(JSON.parse(s))[0]?.id ?? null);
             expect(ids).not.toContain('b');
         });
 

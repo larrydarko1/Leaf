@@ -2,14 +2,16 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
+import { BrowserWindow } from 'electron';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-type IpcHandler = (_event: null, ...args: unknown[]) => Promise<unknown>;
+import { createFakeIpc, readReply } from './test-utils';
 
 const { mockShowOpenDialog } = vi.hoisted(() => ({ mockShowOpenDialog: vi.fn() }));
 const { mockState } = vi.hoisted(() => ({ mockState: { current: {} as Record<string, unknown> } }));
 
 vi.mock('electron', () => ({
+    BrowserWindow: vi.fn(),
     app: { getPath: vi.fn(() => '/home/test') },
     dialog: { showOpenDialog: mockShowOpenDialog, showSaveDialog: vi.fn() },
     shell: { openExternal: vi.fn() },
@@ -27,22 +29,9 @@ vi.mock('@/main/lib/appState', () => ({
     }),
 }));
 
+const fakeWindow = new BrowserWindow();
 let tmpVault: string;
-let ipc: ReturnType<typeof makeMockIpc>;
-
-function makeMockIpc() {
-    const handlers = new Map<string, IpcHandler>();
-    return {
-        handle(channel: string, fn: IpcHandler) {
-            handlers.set(channel, fn);
-        },
-        async invoke(channel: string, ...args: unknown[]) {
-            const fn = handlers.get(channel);
-            if (!fn) throw new Error(`No handler registered for channel '${channel}'`);
-            return fn(null, ...args);
-        },
-    };
-}
+let ipc: ReturnType<typeof createFakeIpc>;
 
 function newTmpVault(): string {
     const dir = path.join(os.tmpdir(), `leaf-bm-test-${process.pid}-${Date.now()}`);
@@ -54,9 +43,9 @@ describe('bookmarks IPC handlers', () => {
     beforeEach(async () => {
         vi.resetModules();
         tmpVault = newTmpVault();
-        ipc = makeMockIpc();
+        ipc = createFakeIpc();
         const { register } = await import('@/main/services/fs');
-        register(ipc as never, () => ({}) as never);
+        register(ipc, () => fakeWindow);
         mockState.current = {};
         mockShowOpenDialog.mockResolvedValue({ canceled: false, filePaths: [tmpVault] });
         await ipc.invoke('dialog:openFolder');
@@ -68,10 +57,7 @@ describe('bookmarks IPC handlers', () => {
 
     describe('bookmarks:load', () => {
         it('returns empty array when .leaf/bookmarks.json does not exist', async () => {
-            const result = (await ipc.invoke('bookmarks:load')) as {
-                success: boolean;
-                bookmarks: string[];
-            };
+            const result = readReply(await ipc.invoke('bookmarks:load'));
             expect(result.success).toBe(true);
             expect(result.bookmarks).toEqual([]);
         });
@@ -79,10 +65,7 @@ describe('bookmarks IPC handlers', () => {
         it('returns the saved list after a successful save', async () => {
             const paths = [`${tmpVault}/a.md`, `${tmpVault}/b.md`];
             await ipc.invoke('bookmarks:save', paths);
-            const result = (await ipc.invoke('bookmarks:load')) as {
-                success: boolean;
-                bookmarks: string[];
-            };
+            const result = readReply(await ipc.invoke('bookmarks:load'));
             expect(result.success).toBe(true);
             expect(result.bookmarks).toEqual(paths);
         });
@@ -94,10 +77,7 @@ describe('bookmarks IPC handlers', () => {
                 path.join(leafDir, 'bookmarks.json'),
                 JSON.stringify([`${tmpVault}/valid.md`, '/etc/passwd']),
             );
-            const result = (await ipc.invoke('bookmarks:load')) as {
-                success: boolean;
-                bookmarks: string[];
-            };
+            const result = readReply(await ipc.invoke('bookmarks:load'));
             expect(result.success).toBe(true);
             expect(result.bookmarks).toContain(`${tmpVault}/valid.md`);
             expect(result.bookmarks).not.toContain('/etc/passwd');
@@ -107,10 +87,7 @@ describe('bookmarks IPC handlers', () => {
             const leafDir = path.join(tmpVault, '.leaf');
             fs.mkdirSync(leafDir, { recursive: true });
             fs.writeFileSync(path.join(leafDir, 'bookmarks.json'), JSON.stringify({ oops: true }));
-            const result = (await ipc.invoke('bookmarks:load')) as {
-                success: boolean;
-                bookmarks: string[];
-            };
+            const result = readReply(await ipc.invoke('bookmarks:load'));
             expect(result.success).toBe(true);
             expect(result.bookmarks).toEqual([]);
         });
@@ -119,10 +96,7 @@ describe('bookmarks IPC handlers', () => {
             const leafDir = path.join(tmpVault, '.leaf');
             fs.mkdirSync(leafDir, { recursive: true });
             fs.writeFileSync(path.join(leafDir, 'bookmarks.json'), 'NOT JSON {{{}}}');
-            const result = (await ipc.invoke('bookmarks:load')) as {
-                success: boolean;
-                bookmarks: string[];
-            };
+            const result = readReply(await ipc.invoke('bookmarks:load'));
             expect(result.success).toBe(true);
             expect(result.bookmarks).toEqual([]);
         });
@@ -130,7 +104,7 @@ describe('bookmarks IPC handlers', () => {
 
     describe('bookmarks:save', () => {
         it('returns success for a valid list of vault-internal paths', async () => {
-            const result = (await ipc.invoke('bookmarks:save', [`${tmpVault}/note.md`])) as { success: boolean };
+            const result = readReply(await ipc.invoke('bookmarks:save', [`${tmpVault}/note.md`]));
             expect(result.success).toBe(true);
         });
 
@@ -148,56 +122,38 @@ describe('bookmarks IPC handlers', () => {
         });
 
         it('rejects a path that escapes the vault via traversal', async () => {
-            const result = (await ipc.invoke('bookmarks:save', [`${tmpVault}/../outside.md`])) as {
-                success: boolean;
-                error?: string;
-            };
+            const result = readReply(await ipc.invoke('bookmarks:save', [`${tmpVault}/../outside.md`]));
             expect(result.success).toBe(false);
-            expect(result.error).toMatch(/access denied/i);
+            expect(result.error).toBe('ACCESS_DENIED');
         });
 
         it('rejects an absolute path outside the vault', async () => {
-            const result = (await ipc.invoke('bookmarks:save', ['/etc/passwd'])) as {
-                success: boolean;
-                error?: string;
-            };
+            const result = readReply(await ipc.invoke('bookmarks:save', ['/etc/passwd']));
             expect(result.success).toBe(false);
-            expect(result.error).toMatch(/access denied/i);
+            expect(result.error).toBe('ACCESS_DENIED');
         });
 
         it('rejects a non-array payload', async () => {
-            const result = (await ipc.invoke('bookmarks:save', 'not-an-array')) as {
-                success: boolean;
-                error?: string;
-            };
+            const result = readReply(await ipc.invoke('bookmarks:save', 'not-an-array'));
             expect(result.success).toBe(false);
         });
 
         it('rejects a payload containing non-string entries', async () => {
-            const result = (await ipc.invoke('bookmarks:save', [42, true])) as {
-                success: boolean;
-                error?: string;
-            };
+            const result = readReply(await ipc.invoke('bookmarks:save', [42, true]));
             expect(result.success).toBe(false);
         });
 
         it('overwrites the previous bookmarks list', async () => {
             await ipc.invoke('bookmarks:save', [`${tmpVault}/a.md`, `${tmpVault}/b.md`]);
             await ipc.invoke('bookmarks:save', [`${tmpVault}/c.md`]);
-            const result = (await ipc.invoke('bookmarks:load')) as {
-                success: boolean;
-                bookmarks: string[];
-            };
+            const result = readReply(await ipc.invoke('bookmarks:load'));
             expect(result.bookmarks).toEqual([`${tmpVault}/c.md`]);
         });
 
         it('persists an empty list (clearing bookmarks)', async () => {
             await ipc.invoke('bookmarks:save', [`${tmpVault}/a.md`]);
             await ipc.invoke('bookmarks:save', []);
-            const result = (await ipc.invoke('bookmarks:load')) as {
-                success: boolean;
-                bookmarks: string[];
-            };
+            const result = readReply(await ipc.invoke('bookmarks:load'));
             expect(result.bookmarks).toEqual([]);
         });
     });
@@ -205,18 +161,18 @@ describe('bookmarks IPC handlers', () => {
     describe('when no vault is open', () => {
         beforeEach(async () => {
             vi.resetModules();
-            ipc = makeMockIpc();
+            ipc = createFakeIpc();
             const { register } = await import('@/main/services/fs');
-            register(ipc as never, () => null);
+            register(ipc, () => null);
         });
 
         it('bookmarks:load returns failure', async () => {
-            const result = (await ipc.invoke('bookmarks:load')) as { success: boolean };
+            const result = readReply(await ipc.invoke('bookmarks:load'));
             expect(result.success).toBe(false);
         });
 
         it('bookmarks:save returns failure', async () => {
-            const result = (await ipc.invoke('bookmarks:save', [])) as { success: boolean };
+            const result = readReply(await ipc.invoke('bookmarks:save', []));
             expect(result.success).toBe(false);
         });
     });

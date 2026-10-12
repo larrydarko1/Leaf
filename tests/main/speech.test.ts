@@ -2,29 +2,22 @@ import fs from 'fs';
 import path from 'path';
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { z } from 'zod';
 
+import { createFakeIpc, readReply } from './test-utils';
 import { cleanup, register } from '@/main/services/speech';
 
-type SpeechHandlers = {
-    'speech:init': () => Promise<{ success: boolean; message?: string; error?: string }>;
-    'speech:transcribe': (
-        _event: unknown,
-        audioData: unknown,
-    ) => Promise<{ success: boolean; text?: string; error?: string }>;
-    'speech:getStatus': () => { isModelLoaded: boolean; isModelLoading: boolean };
-    'speech:resetSession': () => { success: boolean };
-};
-
 const PATHS = vi.hoisted(() => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { join } = require('path') as typeof import('path');
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { tmpdir } = require('os') as typeof import('os');
+    const { join } = process.getBuiltinModule('path');
+    const { tmpdir } = process.getBuiltinModule('os');
     const modelRoot = join(tmpdir(), `leaf-speech-test-${process.pid}-${Date.now()}`);
     return { modelRoot };
 });
 
-const mockTranscriber = vi.hoisted(() => vi.fn());
+const mockTranscriber = vi.hoisted(() =>
+    vi.fn<(audio: Float32Array, options?: Record<string, unknown>) => Promise<unknown>>(),
+);
+const mockPipeline = vi.hoisted(() => vi.fn<() => Promise<unknown>>());
 const mockFindActiveDictationLanguage = vi.hoisted(() => vi.fn<() => Promise<string | null>>());
 vi.mock('electron', () => ({}));
 
@@ -38,7 +31,7 @@ vi.mock('@/main/lib/paths', () => ({
 
 vi.mock('@huggingface/transformers', () => ({
     env: { cacheDir: '', allowRemoteModels: true },
-    pipeline: vi.fn().mockResolvedValue(mockTranscriber),
+    pipeline: mockPipeline,
 }));
 
 vi.mock('@/main/services/language', () => ({
@@ -47,16 +40,6 @@ vi.mock('@/main/services/language', () => ({
 
 const LOUD_CHUNK = Array.from({ length: 16000 }, () => 0.3);
 const SILENT_CHUNK = Array.from({ length: 16000 }, () => 0);
-
-function makeIpc() {
-    const handlers: Partial<SpeechHandlers> = {};
-    const ipc = {
-        handle: vi.fn(<K extends keyof SpeechHandlers>(ch: K, fn: SpeechHandlers[K]) => {
-            (handlers as Record<string, unknown>)[ch] = fn;
-        }),
-    };
-    return { ipc, handlers: handlers as SpeechHandlers };
-}
 
 function createModelFiles() {
     const modelDir = path.join(PATHS.modelRoot, 'Xenova', 'whisper-base');
@@ -67,19 +50,22 @@ function createModelFiles() {
     fs.writeFileSync(path.join(onnxDir, 'decoder_model_merged_quantized.onnx'), '');
 }
 
+/** Gives the stand-in pipeline the model and processor detection reads; returns them to assert on. */
 function attachModelInternals(detectedToken = 50274) {
-    Object.assign(mockTranscriber, {
+    const internals = {
         model: {
             generation_config: { lang_to_id: { '<|en|>': 50259, '<|it|>': 50274 } },
             generate: vi.fn().mockResolvedValue([{ tolist: () => [50258, detectedToken] }]),
         },
         processor: vi.fn().mockResolvedValue({ input_features: {} }),
-    });
+    };
+    Object.assign(mockTranscriber, internals);
+    return internals;
 }
 
 function lastTranscribeOptions() {
     const calls = mockTranscriber.mock.calls;
-    return calls[calls.length - 1]?.[1] as Record<string, unknown> | undefined;
+    return calls[calls.length - 1]?.[1];
 }
 
 beforeEach(() => {
@@ -87,8 +73,10 @@ beforeEach(() => {
     fs.rmSync(PATHS.modelRoot, { recursive: true, force: true });
     mockTranscriber.mockReset();
     mockTranscriber.mockResolvedValue({ text: 'text' });
-    delete (mockTranscriber as unknown as Record<string, unknown>)['model'];
-    delete (mockTranscriber as unknown as Record<string, unknown>)['processor'];
+    Reflect.deleteProperty(mockTranscriber, 'model');
+    Reflect.deleteProperty(mockTranscriber, 'processor');
+    mockPipeline.mockReset();
+    mockPipeline.mockResolvedValue(mockTranscriber);
     mockFindActiveDictationLanguage.mockReset();
     mockFindActiveDictationLanguage.mockResolvedValue(null);
 });
@@ -104,10 +92,12 @@ describe('cleanup', () => {
 });
 
 describe('speech:getStatus', () => {
-    it('reports not loaded and not loading on fresh state', () => {
-        const { ipc, handlers } = makeIpc();
-        register(ipc as never, () => null);
-        const status = handlers['speech:getStatus']?.() as { isModelLoaded: boolean; isModelLoading: boolean };
+    it('reports not loaded and not loading on fresh state', async () => {
+        const handlers = createFakeIpc();
+        register(handlers, () => null);
+        const status = z
+            .object({ isModelLoaded: z.boolean(), isModelLoading: z.boolean() })
+            .parse(await handlers.invoke('speech:getStatus'));
         expect(status.isModelLoaded).toBe(false);
         expect(status.isModelLoading).toBe(false);
     });
@@ -115,54 +105,58 @@ describe('speech:getStatus', () => {
 
 describe('speech:transcribe', () => {
     it('returns failure for an empty audio array', async () => {
-        const { ipc, handlers } = makeIpc();
-        register(ipc as never, () => null);
-        const result = (await handlers['speech:transcribe']?.({}, [])) as { success: boolean; error: string };
+        const handlers = createFakeIpc();
+        register(handlers, () => null);
+        const result = readReply(await handlers.invoke('speech:transcribe', []));
         expect(result.success).toBe(false);
-        expect(result.error).toMatch(/no audio data/i);
+        expect(result.error).toBe('INVALID_ARGUMENTS');
     });
 
     it('returns failure for non-array audio data', async () => {
-        const { ipc, handlers } = makeIpc();
-        register(ipc as never, () => null);
-        const result = (await handlers['speech:transcribe']?.({}, 'blob')) as { success: boolean };
+        const handlers = createFakeIpc();
+        register(handlers, () => null);
+        const result = readReply(await handlers.invoke('speech:transcribe', 'blob'));
         expect(result.success).toBe(false);
     });
 
     it('returns failure when the model is not loaded', async () => {
-        const { ipc, handlers } = makeIpc();
-        register(ipc as never, () => null);
-        const result = (await handlers['speech:transcribe']?.({}, [0.1, 0.2])) as { success: boolean; error: string };
+        const handlers = createFakeIpc();
+        register(handlers, () => null);
+        const result = readReply(await handlers.invoke('speech:transcribe', [0.1, 0.2]));
         expect(result.success).toBe(false);
-        expect(result.error).toMatch(/not loaded/i);
+        expect(result.error).toBe('MODEL_NOT_LOADED');
     });
 });
 
 describe('speech:init', () => {
     it('returns failure when a required model file is missing', async () => {
-        const { ipc, handlers } = makeIpc();
-        register(ipc as never, () => null);
-        const result = (await handlers['speech:init']?.()) as { success: boolean; error: string };
+        const handlers = createFakeIpc();
+        register(handlers, () => null);
+        const result = readReply(await handlers.invoke('speech:init'));
         expect(result.success).toBe(false);
-        expect(result.error).toMatch(/missing model file/i);
+        expect(result.error).toBe('NOT_FOUND');
     });
 
     it('loads model successfully when all files exist', async () => {
         createModelFiles();
         mockTranscriber.mockResolvedValue({ text: 'hello' });
-        const { ipc, handlers } = makeIpc();
-        register(ipc as never, () => null);
-        const result = (await handlers['speech:init']?.()) as { success: boolean; message?: string };
+        const handlers = createFakeIpc();
+        register(handlers, () => null);
+        const result = z
+            .object({ success: z.boolean(), message: z.string().optional() })
+            .parse(await handlers.invoke('speech:init'));
         expect(result.success).toBe(true);
         expect(result.message).toMatch(/loaded/i);
     });
 
     it('returns "already loaded" when called twice', async () => {
         createModelFiles();
-        const { ipc, handlers } = makeIpc();
-        register(ipc as never, () => null);
-        await handlers['speech:init']?.();
-        const result = (await handlers['speech:init']?.()) as { success: boolean; message?: string };
+        const handlers = createFakeIpc();
+        register(handlers, () => null);
+        await handlers.invoke('speech:init');
+        const result = z
+            .object({ success: z.boolean(), message: z.string().optional() })
+            .parse(await handlers.invoke('speech:init'));
         expect(result.success).toBe(true);
         expect(result.message).toMatch(/already loaded/i);
     });
@@ -170,13 +164,12 @@ describe('speech:init', () => {
     it('transcribes audio successfully when model is loaded', async () => {
         createModelFiles();
         mockTranscriber.mockResolvedValue({ text: 'transcribed text' });
-        const { ipc, handlers } = makeIpc();
-        register(ipc as never, () => null);
-        await handlers['speech:init']?.();
-        const result = (await handlers['speech:transcribe']?.({}, [0.1, 0.2, 0.3])) as {
-            success: boolean;
-            text?: string;
-        };
+        const handlers = createFakeIpc();
+        register(handlers, () => null);
+        await handlers.invoke('speech:init');
+        const result = z
+            .object({ success: z.boolean(), text: z.string().optional() })
+            .parse(await handlers.invoke('speech:transcribe', [0.1, 0.2, 0.3]));
         expect(result.success).toBe(true);
         expect(result.text).toBe('transcribed text');
     });
@@ -184,10 +177,12 @@ describe('speech:init', () => {
     it('transcribes audio when result is a plain string', async () => {
         createModelFiles();
         mockTranscriber.mockResolvedValue('plain text result');
-        const { ipc, handlers } = makeIpc();
-        register(ipc as never, () => null);
-        await handlers['speech:init']?.();
-        const result = (await handlers['speech:transcribe']?.({}, [0.1, 0.2])) as { success: boolean; text?: string };
+        const handlers = createFakeIpc();
+        register(handlers, () => null);
+        await handlers.invoke('speech:init');
+        const result = z
+            .object({ success: z.boolean(), text: z.string().optional() })
+            .parse(await handlers.invoke('speech:transcribe', [0.1, 0.2]));
         expect(result.success).toBe(true);
         expect(result.text).toBe('plain text result');
     });
@@ -195,31 +190,32 @@ describe('speech:init', () => {
     it('returns failure when transcription throws', async () => {
         createModelFiles();
         mockTranscriber.mockRejectedValueOnce(new Error('transcription error'));
-        const { ipc, handlers } = makeIpc();
-        register(ipc as never, () => null);
-        await handlers['speech:init']?.();
-        const result = (await handlers['speech:transcribe']?.({}, [0.1])) as { success: boolean; error?: string };
+        const handlers = createFakeIpc();
+        register(handlers, () => null);
+        await handlers.invoke('speech:init');
+        const result = z
+            .object({ success: z.boolean(), error: z.string().optional() })
+            .parse(await handlers.invoke('speech:transcribe', [0.1]));
         expect(result.success).toBe(false);
     });
 
     it('returns "model is currently loading" when init is called while loading', async () => {
         createModelFiles();
-        const { pipeline } = await import('@huggingface/transformers');
         let resolvePipeline!: (v: typeof mockTranscriber) => void;
-        vi.mocked(pipeline).mockImplementationOnce(
+        mockPipeline.mockImplementationOnce(
             () =>
                 new Promise<typeof mockTranscriber>((r) => {
                     resolvePipeline = r;
-                }) as any,
+                }),
         );
 
-        const { ipc, handlers } = makeIpc();
-        register(ipc as never, () => null);
+        const handlers = createFakeIpc();
+        register(handlers, () => null);
 
-        const firstInitPromise = handlers['speech:init']?.();
-        const result = (await handlers['speech:init']?.()) as { success: boolean; error: string };
+        const firstInitPromise = handlers.invoke('speech:init');
+        const result = readReply(await handlers.invoke('speech:init'));
         expect(result.success).toBe(false);
-        expect(result.error).toMatch(/currently loading/i);
+        expect(result.error).toBe('BUSY');
 
         resolvePipeline(mockTranscriber);
         await firstInitPromise;
@@ -229,9 +225,9 @@ describe('speech:init', () => {
 describe('dictation language', () => {
     async function initReady() {
         createModelFiles();
-        const { ipc, handlers } = makeIpc();
-        register(ipc as never, () => null);
-        await handlers['speech:init']?.();
+        const handlers = createFakeIpc();
+        register(handlers, () => null);
+        await handlers.invoke('speech:init');
         return handlers;
     }
 
@@ -240,19 +236,18 @@ describe('dictation language', () => {
         attachModelInternals();
         const handlers = await initReady();
 
-        await handlers['speech:transcribe']?.({}, LOUD_CHUNK);
+        await handlers.invoke('speech:transcribe', LOUD_CHUNK);
 
         expect(lastTranscribeOptions()).toEqual({ language: 'it' });
     });
 
     it('does not run detection when the locale declares a supported language', async () => {
         mockFindActiveDictationLanguage.mockResolvedValue('it');
-        attachModelInternals();
+        const internals = attachModelInternals();
         const handlers = await initReady();
 
-        await handlers['speech:transcribe']?.({}, LOUD_CHUNK);
+        await handlers.invoke('speech:transcribe', LOUD_CHUNK);
 
-        const internals = mockTranscriber as unknown as { processor: ReturnType<typeof vi.fn> };
         expect(internals.processor).not.toHaveBeenCalled();
     });
 
@@ -261,7 +256,7 @@ describe('dictation language', () => {
         attachModelInternals();
         const handlers = await initReady();
 
-        await handlers['speech:transcribe']?.({}, LOUD_CHUNK);
+        await handlers.invoke('speech:transcribe', LOUD_CHUNK);
 
         expect(lastTranscribeOptions()).toEqual({ language: 'it' });
     });
@@ -271,7 +266,7 @@ describe('dictation language', () => {
         attachModelInternals();
         const handlers = await initReady();
 
-        await handlers['speech:transcribe']?.({}, LOUD_CHUNK);
+        await handlers.invoke('speech:transcribe', LOUD_CHUNK);
 
         expect(lastTranscribeOptions()).toEqual({ language: 'it' });
     });
@@ -280,48 +275,45 @@ describe('dictation language', () => {
         attachModelInternals();
         const handlers = await initReady();
 
-        await handlers['speech:transcribe']?.({}, LOUD_CHUNK);
+        await handlers.invoke('speech:transcribe', LOUD_CHUNK);
 
         expect(lastTranscribeOptions()).toEqual({ language: 'it' });
     });
 
     it('does not detect a language from a silent chunk', async () => {
-        attachModelInternals();
+        const internals = attachModelInternals();
         const handlers = await initReady();
 
-        await handlers['speech:transcribe']?.({}, SILENT_CHUNK);
+        await handlers.invoke('speech:transcribe', SILENT_CHUNK);
 
-        const internals = mockTranscriber as unknown as { model: { generate: ReturnType<typeof vi.fn> } };
         expect(internals.model.generate).not.toHaveBeenCalled();
         expect(lastTranscribeOptions()).toEqual({});
     });
 
     it('detects once and reuses the result for the rest of the session', async () => {
-        attachModelInternals();
+        const internals = attachModelInternals();
         const handlers = await initReady();
 
-        await handlers['speech:transcribe']?.({}, LOUD_CHUNK);
-        await handlers['speech:transcribe']?.({}, LOUD_CHUNK);
+        await handlers.invoke('speech:transcribe', LOUD_CHUNK);
+        await handlers.invoke('speech:transcribe', LOUD_CHUNK);
 
-        const internals = mockTranscriber as unknown as { model: { generate: ReturnType<typeof vi.fn> } };
         expect(internals.model.generate).toHaveBeenCalledTimes(1);
         expect(lastTranscribeOptions()).toEqual({ language: 'it' });
     });
 
     it('detects again after the session is reset', async () => {
-        attachModelInternals();
+        const internals = attachModelInternals();
         const handlers = await initReady();
 
-        await handlers['speech:transcribe']?.({}, LOUD_CHUNK);
-        await handlers['speech:resetSession']?.();
-        await handlers['speech:transcribe']?.({}, LOUD_CHUNK);
+        await handlers.invoke('speech:transcribe', LOUD_CHUNK);
+        await handlers.invoke('speech:resetSession');
+        await handlers.invoke('speech:transcribe', LOUD_CHUNK);
 
-        const internals = mockTranscriber as unknown as { model: { generate: ReturnType<typeof vi.fn> } };
         expect(internals.model.generate).toHaveBeenCalledTimes(2);
     });
 
     it('reports success from speech:resetSession', async () => {
         const handlers = await initReady();
-        expect(await handlers['speech:resetSession']?.()).toEqual({ success: true });
+        expect(await handlers.invoke('speech:resetSession')).toEqual({ success: true });
     });
 });

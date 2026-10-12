@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import IconClose from '@/renderer/components/icons/IconClose.vue';
 import type { TabState } from '@/schemas/vault';
 
 type Props = {
@@ -120,27 +121,10 @@ dragGhost.src = TRANSPARENT_GIF;
                 :aria-label="t('app.tab_close_button', { filename: tab.file.name })"
                 :title="t('app.tab_close_button', { filename: tab.file.name })"
                 @click.stop="emit('close', i)">
-                <svg
-                    width="10"
-                    height="10"
-                    viewBox="0 0 10 10"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                    aria-hidden="true"
-                    focusable="false">
-                    <line
-                        x1="2"
-                        y1="2"
-                        x2="8"
-                        y2="8" />
-                    <line
-                        x1="8"
-                        y1="2"
-                        x2="2"
-                        y2="8" />
-                </svg>
+                <IconClose
+                    width="12"
+                    height="12"
+                    stroke-width="3.5" />
             </button>
         </div>
     </div>

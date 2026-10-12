@@ -5,7 +5,16 @@ import type { CanvasElement } from '@/schemas/drawing';
 import { mountWithI18n } from '@test-utils';
 
 const fakeBlob = new Blob(['fake'], { type: 'image/png' });
-const mockExportToBlob = vi.fn().mockResolvedValue(fakeBlob);
+const mockExportToBlob = vi
+    .fn<
+        (opts: {
+            elements: CanvasElement[];
+            withBackground: boolean;
+            scale: number;
+            padding?: number;
+        }) => Promise<Blob | null>
+    >()
+    .mockResolvedValue(fakeBlob);
 const elements: CanvasElement[] = [makeRect('a'), makeRect('b')];
 
 const baseProps = {
@@ -16,9 +25,6 @@ const baseProps = {
     selectedIds: new Set<string>(),
     exportToBlob: mockExportToBlob,
 };
-
-let createObjectURLSpy: ReturnType<typeof vi.spyOn>;
-let revokeObjectURLSpy: ReturnType<typeof vi.spyOn>;
 
 function makeRect(id: string): CanvasElement {
     return {
@@ -50,14 +56,13 @@ async function openDialog(propsOverrides: Partial<typeof baseProps> = {}) {
 
 beforeEach(() => {
     vi.clearAllMocks();
-    createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:fake-url');
-    revokeObjectURLSpy = vi.spyOn(URL, 'revokeObjectURL').mockReturnValue(undefined);
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:fake-url');
+    vi.spyOn(URL, 'revokeObjectURL').mockReturnValue(undefined);
     mockExportToBlob.mockResolvedValue(fakeBlob);
 });
 
 afterEach(() => {
-    createObjectURLSpy.mockRestore();
-    revokeObjectURLSpy.mockRestore();
+    vi.restoreAllMocks();
     document.querySelector('.export-overlay')?.remove();
 });
 
@@ -102,7 +107,7 @@ describe('DrawingExportDialog', () => {
         });
         const call = mockExportToBlob.mock.calls[0]![0];
         expect(call.elements).toHaveLength(1);
-        expect(call.elements[0].id).toBe('a');
+        expect(call.elements[0]?.id).toBe('a');
         wrapper.unmount();
     });
 
@@ -120,7 +125,7 @@ describe('DrawingExportDialog', () => {
 
     it('creates a preview URL when blob is returned', async () => {
         const wrapper = await openDialog();
-        expect(createObjectURLSpy).toHaveBeenCalledWith(fakeBlob);
+        expect(vi.mocked(URL.createObjectURL)).toHaveBeenCalledWith(fakeBlob);
         wrapper.unmount();
     });
 
@@ -134,7 +139,7 @@ describe('DrawingExportDialog', () => {
         closeBtn?.click();
         await wrapper.vm.$nextTick();
         expect(wrapper.emitted('close')).toHaveLength(1);
-        expect(revokeObjectURLSpy).toHaveBeenCalled();
+        expect(vi.mocked(URL.revokeObjectURL)).toHaveBeenCalled();
         wrapper.unmount();
     });
 
@@ -147,7 +152,7 @@ describe('DrawingExportDialog', () => {
             checkbox.click();
             await new Promise((r) => setTimeout(r, 0));
             await wrapper.vm.$nextTick();
-            expect(revokeObjectURLSpy).toHaveBeenCalledWith('blob:fake-url');
+            expect(vi.mocked(URL.revokeObjectURL)).toHaveBeenCalledWith('blob:fake-url');
         }
         wrapper.unmount();
     });

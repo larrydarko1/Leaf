@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import { useEditorTabs } from '@/renderer/composables/editor/useEditorTabs';
-import type { FileInfo } from '@/schemas/vault';
+import { type FileInfo, PersistedTabStateSchema } from '@/schemas/vault';
 
 const localStorageMock = (() => {
     let store: Record<string, string> = {};
@@ -308,9 +308,9 @@ describe('useEditorTabs', () => {
             tabs.openTab(makeFile('a.md'));
             const stored = localStorage.getItem(`leaf-tabs-${FOLDER}`);
             expect(stored).toBeTruthy();
-            const data = JSON.parse(stored!);
+            const data = PersistedTabStateSchema.parse(JSON.parse(stored!));
             expect(data.tabs).toHaveLength(1);
-            expect(data.tabs[0].path).toBe('/a.md');
+            expect(data.tabs[0]?.path).toBe('/a.md');
             expect(data.activeIndex).toBe(0);
         });
 
@@ -319,9 +319,9 @@ describe('useEditorTabs', () => {
             tabs.openTab(makeFile('a.md'));
             tabs.openTab(makeFile('b.md'));
             tabs.closeTab(0);
-            const data = JSON.parse(localStorage.getItem(`leaf-tabs-${FOLDER}`)!);
+            const data = PersistedTabStateSchema.parse(JSON.parse(localStorage.getItem(`leaf-tabs-${FOLDER}`)!));
             expect(data.tabs).toHaveLength(1);
-            expect(data.tabs[0].path).toBe('/b.md');
+            expect(data.tabs[0]?.path).toBe('/b.md');
         });
 
         it('persists when switching tabs', () => {
@@ -329,7 +329,7 @@ describe('useEditorTabs', () => {
             tabs.openTab(makeFile('a.md'));
             tabs.openTab(makeFile('b.md'));
             tabs.switchTab(0);
-            const data = JSON.parse(localStorage.getItem(`leaf-tabs-${FOLDER}`)!);
+            const data = PersistedTabStateSchema.parse(JSON.parse(localStorage.getItem(`leaf-tabs-${FOLDER}`)!));
             expect(data.activeIndex).toBe(0);
         });
 
@@ -337,8 +337,8 @@ describe('useEditorTabs', () => {
             tabs.setFolderPath(FOLDER);
             tabs.openTab(makeFile('a.md'));
             tabs.saveScrollPosition('/a.md', 250);
-            const data = JSON.parse(localStorage.getItem(`leaf-tabs-${FOLDER}`)!);
-            expect(data.tabs[0].scrollTop).toBe(250);
+            const data = PersistedTabStateSchema.parse(JSON.parse(localStorage.getItem(`leaf-tabs-${FOLDER}`)!));
+            expect(data.tabs[0]?.scrollTop).toBe(250);
         });
 
         it('restores tabs from localStorage', () => {
@@ -422,8 +422,8 @@ describe('useEditorTabs', () => {
             tabs.setFolderPath(FOLDER);
             tabs.openTab(makeFile('old.md', '/old.md'));
             tabs.renameTabFile('/old.md', makeFile('new.md', '/new.md'));
-            const data = JSON.parse(localStorage.getItem(`leaf-tabs-${FOLDER}`)!);
-            expect(data.tabs[0].path).toBe('/new.md');
+            const data = PersistedTabStateSchema.parse(JSON.parse(localStorage.getItem(`leaf-tabs-${FOLDER}`)!));
+            expect(data.tabs[0]?.path).toBe('/new.md');
         });
 
         it('persists on syncTabFiles when tabs are removed', () => {
@@ -433,7 +433,7 @@ describe('useEditorTabs', () => {
             vi.clearAllMocks();
             tabs.syncTabFiles([makeFile('a.md')]); // b.md removed
             expect(localStorageMock.setItem).toHaveBeenCalled();
-            const data = JSON.parse(localStorage.getItem(`leaf-tabs-${FOLDER}`)!);
+            const data = PersistedTabStateSchema.parse(JSON.parse(localStorage.getItem(`leaf-tabs-${FOLDER}`)!));
             expect(data.tabs).toHaveLength(1);
         });
 
@@ -441,7 +441,7 @@ describe('useEditorTabs', () => {
             tabs.setFolderPath(FOLDER);
             tabs.openTab(makeFile('a.md'));
             tabs.clearTabs();
-            const data = JSON.parse(localStorage.getItem(`leaf-tabs-${FOLDER}`)!);
+            const data = PersistedTabStateSchema.parse(JSON.parse(localStorage.getItem(`leaf-tabs-${FOLDER}`)!));
             expect(data.tabs).toHaveLength(0);
             expect(data.activeIndex).toBe(-1);
         });

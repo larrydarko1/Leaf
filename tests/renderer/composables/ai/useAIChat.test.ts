@@ -4,16 +4,17 @@ import { ref, createApp, defineComponent, h } from 'vue';
 import { useAIChat, MAX_CONTEXT_FILES } from '@/renderer/composables/ai/useAIChat';
 import type { AiStatus } from '@/schemas/ai';
 import type { ChatMessage } from '@/schemas/chat';
+import type { ElectronAPI } from '@/schemas/electron';
 
 const mockAiResetChat = vi.fn().mockResolvedValue({ success: true });
-const mockAiRestoreChatHistory = vi.fn().mockResolvedValue({ success: true });
-const mockAiChat = vi.fn().mockResolvedValue({ success: true, response: 'AI response' });
+const mockAiRestoreChatHistory = vi.fn<ElectronAPI['aiRestoreChatHistory']>().mockResolvedValue({ success: true });
+const mockAiChat = vi.fn<ElectronAPI['aiChat']>().mockResolvedValue({ success: true, response: 'AI response' });
 const mockAiGetStatus = vi.fn().mockResolvedValue({ contextTokens: 10, contextSize: 4096 });
 const mockConversationAddMessage = vi.fn().mockResolvedValue({ success: true });
 const mockAiStopChat = vi.fn().mockResolvedValue({ success: true });
 const mockReadFile = vi.fn().mockResolvedValue({ success: false });
-const mockOnAiToken = vi.fn();
-const mockOnAiThinkingToken = vi.fn();
+const mockOnAiToken = vi.fn<ElectronAPI['onAiToken']>();
+const mockOnAiThinkingToken = vi.fn<ElectronAPI['onAiThinkingToken']>();
 
 function makeStatus(overrides: Partial<AiStatus> = {}): AiStatus {
     return {
@@ -149,7 +150,7 @@ describe('useAIChat', () => {
 
             await chat.resendMessage(2);
 
-            const call = mockAiRestoreChatHistory.mock.calls[0]![0] as ChatMessage[];
+            const call = mockAiRestoreChatHistory.mock.calls[0]![0];
             expect(call.every((m) => m.role !== 'system')).toBe(true);
         });
     });
@@ -265,7 +266,7 @@ describe('useAIChat', () => {
 
             await chat.deleteLastMessagePair();
 
-            const call = mockAiRestoreChatHistory.mock.calls[0]![0] as ChatMessage[];
+            const call = mockAiRestoreChatHistory.mock.calls[0]![0];
             expect(call.every((m) => m.role !== 'system')).toBe(true);
         });
 
@@ -467,13 +468,13 @@ describe('useAIChat', () => {
 
         it('sets assistant message content to error string when aiChat returns success=false', async () => {
             const { chat, messages } = makeChat();
-            mockAiChat.mockResolvedValueOnce({ success: false, error: 'context limit' });
+            mockAiChat.mockResolvedValueOnce({ success: false, error: 'UNKNOWN' });
             chat.inputMessage.value = 'Hello';
 
             await chat.sendMessage();
 
             const assistantMsg = messages.value.find((m) => m.role === 'assistant');
-            expect(assistantMsg?.content).toBe('Error: context limit');
+            expect(assistantMsg?.content).toBe('The model could not answer. Something went wrong.');
         });
 
         it('sets assistant message content to error when aiChat throws', async () => {
@@ -484,7 +485,7 @@ describe('useAIChat', () => {
             await chat.sendMessage();
 
             const assistantMsg = messages.value.find((m) => m.role === 'assistant');
-            expect(assistantMsg?.content).toContain('Error: crash');
+            expect(assistantMsg?.content).toBe('The model could not answer. Something went wrong.');
         });
 
         it('adds a system compaction notice when result.compacted is true', async () => {
@@ -619,7 +620,7 @@ describe('useAIChat', () => {
 
             await chat.sendMessage();
 
-            const ctx = mockAiChat.mock.calls[0]![1] as string;
+            const ctx = mockAiChat.mock.calls[0]![1];
             expect(ctx).toContain('File: a.md');
             expect(ctx).toContain('File: b.md');
             expect(ctx).toContain('CONTENT');
@@ -636,7 +637,7 @@ describe('useAIChat', () => {
 
             await chat.sendMessage();
 
-            const ctx = mockAiChat.mock.calls[0]![1] as string;
+            const ctx = mockAiChat.mock.calls[0]![1];
             expect(ctx).toContain('File: a.md');
             expect(ctx).not.toContain('File: b.md');
         });
@@ -703,7 +704,7 @@ describe('useAIChat', () => {
             const { api, messages } = mountChat();
             messages.value.push({ role: 'assistant', content: '' });
 
-            const handler = mockOnAiToken.mock.calls.at(-1)?.[0] as (t: string) => void;
+            const handler = mockOnAiToken.mock.calls.at(-1)![0];
             handler('Hel');
             handler('lo');
 
@@ -715,7 +716,7 @@ describe('useAIChat', () => {
             const { messages } = mountChat();
             messages.value.push({ role: 'assistant', content: '' });
 
-            const handler = mockOnAiThinkingToken.mock.calls.at(-1)?.[0] as (t: string) => void;
+            const handler = mockOnAiThinkingToken.mock.calls.at(-1)![0];
             handler('think');
 
             expect(messages.value.at(-1)?.thinking).toBe('think');
@@ -725,7 +726,7 @@ describe('useAIChat', () => {
             const { messages } = mountChat();
             messages.value.push({ role: 'user', content: 'q' });
 
-            const handler = mockOnAiToken.mock.calls.at(-1)?.[0] as (t: string) => void;
+            const handler = mockOnAiToken.mock.calls.at(-1)![0];
             handler('ignored');
 
             expect(messages.value.at(-1)?.content).toBe('q');

@@ -2,19 +2,22 @@ import { describe, it, expect, vi } from 'vitest';
 
 import { convertWebMToWav, arrayBufferToBase64 } from '@/renderer/utils/audio';
 
-function makeAudioBuffer(channels: Float32Array[], sampleRate: number): AudioBuffer {
+/** The members of an AudioBuffer the encoder reads; jsdom has no Web Audio. */
+type DecodedAudio = Pick<AudioBuffer, 'numberOfChannels' | 'sampleRate' | 'length' | 'duration' | 'getChannelData'>;
+
+function makeAudioBuffer(channels: Float32Array<ArrayBuffer>[], sampleRate: number): DecodedAudio {
     return {
         numberOfChannels: channels.length,
         sampleRate,
         length: channels[0]!.length,
         duration: channels[0]!.length / sampleRate,
         getChannelData(ch: number) {
-            return channels[ch];
+            return channels[ch] ?? new Float32Array();
         },
-    } as AudioBuffer;
+    };
 }
 
-async function encode(buffer: AudioBuffer): Promise<ArrayBuffer> {
+async function encode(buffer: DecodedAudio): Promise<ArrayBuffer> {
     const close = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal(
         'AudioContext',
@@ -24,7 +27,7 @@ async function encode(buffer: AudioBuffer): Promise<ArrayBuffer> {
         },
     );
     try {
-        return await convertWebMToWav({ arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)) } as Blob);
+        return await convertWebMToWav(new Blob([new ArrayBuffer(8)]));
     } finally {
         vi.unstubAllGlobals();
     }
@@ -136,7 +139,7 @@ describe('audio utilities', () => {
                     close = close;
                 },
             );
-            const blob = { arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)) } as Blob;
+            const blob = new Blob([new ArrayBuffer(8)]);
             await expect(convertWebMToWav(blob)).rejects.toThrow('bad codec');
             expect(close).toHaveBeenCalledOnce();
             vi.unstubAllGlobals();

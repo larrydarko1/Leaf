@@ -5,18 +5,19 @@
 
 import { computed, type Ref } from 'vue';
 
+import { encodePng, findContext2D, type Canvas2D } from '@/renderer/composables/drawing/canvas2d';
 import type { CanvasElement } from '@/schemas/drawing';
 
-export type UseCanvasRendererReturn = {
+type UseCanvasRendererReturn = {
     setupCanvas: () => void;
     handleResize: () => void;
     renderScene: () => void;
     screenToWorld: (sx: number, sy: number) => { x: number; y: number };
     worldToScreen: (wx: number, wy: number) => { x: number; y: number };
-    getScreenPoint: (e: PointerEvent | Touch) => { x: number; y: number };
+    getScreenPoint: (e: MouseEvent | Touch) => { x: number; y: number };
     cssWidth: () => number;
     cssHeight: () => number;
-    findCtx: () => CanvasRenderingContext2D | null;
+    findCtx: () => Canvas2D | null;
     exportToBlob: (opts: {
         elements: CanvasElement[];
         withBackground: boolean;
@@ -54,7 +55,7 @@ export function useCanvasRenderer({
     getElementBounds: (el: CanvasElement) => { x: number; y: number; width: number; height: number };
     getHandlePositions: (el: CanvasElement) => Record<string, { x: number; y: number }>;
 }): UseCanvasRendererReturn {
-    let ctx: CanvasRenderingContext2D | null = null;
+    let ctx: Canvas2D | null = null;
     let dpr = 1;
 
     const canvasBg = computed((): string => getCSSVariable('--base1'));
@@ -70,7 +71,7 @@ export function useCanvasRenderer({
         canvas.value.height = rect.height * dpr;
         canvas.value.style.width = rect.width + 'px';
         canvas.value.style.height = rect.height + 'px';
-        const ctx2d = canvas.value.getContext('2d');
+        const ctx2d = findContext2D(canvas.value);
         if (ctx2d !== null) ctx = ctx2d;
     }
 
@@ -102,7 +103,7 @@ export function useCanvasRenderer({
         };
     }
 
-    function getScreenPoint(e: PointerEvent | Touch): { x: number; y: number } {
+    function getScreenPoint(e: MouseEvent | Touch): { x: number; y: number } {
         if (canvas.value === null) return { x: 0, y: 0 };
         const rect = canvas.value.getBoundingClientRect();
         return { x: e.clientX - rect.left, y: e.clientY - rect.top };
@@ -509,11 +510,7 @@ export function useCanvasRenderer({
         ctx.restore();
     }
 
-    function drawRoundedPolygon(
-        ctx: CanvasRenderingContext2D,
-        points: { x: number; y: number }[],
-        radius: number,
-    ): void {
+    function drawRoundedPolygon(ctx: Canvas2D, points: { x: number; y: number }[], radius: number): void {
         const pointCount = points.length;
         if (pointCount < 3) return;
         for (const [i, curr] of points.entries()) {
@@ -636,7 +633,7 @@ export function useCanvasRenderer({
         const offscreen = document.createElement('canvas');
         offscreen.width = width;
         offscreen.height = height;
-        const offCtx = offscreen.getContext('2d');
+        const offCtx = findContext2D(offscreen);
         if (offCtx === null) return Promise.resolve(null);
 
         // Background
@@ -660,9 +657,7 @@ export function useCanvasRenderer({
         // Restore original context
         ctx = savedCtx;
 
-        return new Promise((resolve): void => {
-            offscreen.toBlob((blob): void => resolve(blob), 'image/png');
-        });
+        return encodePng(offscreen);
     }
 
     return {
@@ -674,7 +669,7 @@ export function useCanvasRenderer({
         getScreenPoint,
         cssWidth,
         cssHeight,
-        findCtx: (): CanvasRenderingContext2D | null => ctx,
+        findCtx: (): Canvas2D | null => ctx,
         exportToBlob,
     };
 }

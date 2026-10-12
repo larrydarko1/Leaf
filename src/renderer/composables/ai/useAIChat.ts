@@ -9,8 +9,12 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import type { Ref } from 'vue';
 
 import { useThrottleFn } from '@/renderer/composables/useThrottle';
+import { i18n } from '@/renderer/i18n';
+import { toModelTurns } from '@/renderer/utils/chat';
+import { formatIpcError } from '@/renderer/utils/ipcError';
 import type { AiStatus } from '@/schemas/ai';
 import type { ChatMessage } from '@/schemas/chat';
+import type { IpcErrorCode } from '@/schemas/errors';
 import type { FileInfo } from '@/schemas/vault';
 
 type AiChatDeps = {
@@ -28,7 +32,7 @@ type AiChatActions = {
     refreshStatus: () => Promise<void>;
 };
 
-export type UseAIChatReturn = {
+type UseAIChatReturn = {
     messagesContainer: Ref<HTMLElement | null>;
     inputField: Ref<HTMLTextAreaElement | null>;
     inputMessage: Ref<string>;
@@ -247,12 +251,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions): UseAIChatRe
         // sends have conversation history available.
         const priorMessages = messages.value.slice(0, index).filter((m): boolean => m.role !== 'system');
         if (priorMessages.length > 0) {
-            await window.electronAPI.aiRestoreChatHistory(
-                priorMessages.map((m): { role: 'user' | 'assistant'; content: string } => ({
-                    role: m.role as 'user' | 'assistant',
-                    content: m.content,
-                })),
-            );
+            await window.electronAPI.aiRestoreChatHistory(toModelTurns(priorMessages));
         }
         await saveCurrentConversation();
         await saveTokenCountToConversation();
@@ -273,12 +272,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions): UseAIChatRe
         // doesn't lose conversation history on regenerate/resend.
         const priorMessages = messages.value.slice(0, index).filter((m): boolean => m.role !== 'system');
         if (priorMessages.length > 0) {
-            await window.electronAPI.aiRestoreChatHistory(
-                priorMessages.map((m): { role: 'user' | 'assistant'; content: string } => ({
-                    role: m.role as 'user' | 'assistant',
-                    content: m.content,
-                })),
-            );
+            await window.electronAPI.aiRestoreChatHistory(toModelTurns(priorMessages));
         }
         messages.value.push({ role: 'assistant', content: '' });
         isStreaming.value = true;
@@ -289,7 +283,8 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions): UseAIChatRe
             const result = await window.electronAPI.aiChat(msg.content, noteContext);
             if (result.success === false) {
                 const lastMsg = messages.value[messages.value.length - 1];
-                if (lastMsg !== undefined && lastMsg.role === 'assistant') lastMsg.content = `Error: ${result.error}`;
+                if (lastMsg !== undefined && lastMsg.role === 'assistant')
+                    lastMsg.content = formatChatFailure(result.error);
             }
             const assistantMsg = messages.value[messages.value.length - 1];
             if (
@@ -303,9 +298,9 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions): UseAIChatRe
                 });
             }
         } catch (error) {
+            window.electronAPI.log.error('Chat request failed:', error);
             const lastMsg = messages.value[messages.value.length - 1];
-            if (lastMsg !== undefined && lastMsg.role === 'assistant')
-                lastMsg.content = `Error: ${(error as Error).message}`;
+            if (lastMsg !== undefined && lastMsg.role === 'assistant') lastMsg.content = formatChatFailure('UNKNOWN');
         } finally {
             isStreaming.value = false;
             userScrolledUp.value = false;
@@ -326,12 +321,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions): UseAIChatRe
         // conversation history after the deletion.
         const remainingMessages = messages.value.filter((m): boolean => m.role !== 'system');
         if (remainingMessages.length > 0) {
-            await window.electronAPI.aiRestoreChatHistory(
-                remainingMessages.map((m): { role: 'user' | 'assistant'; content: string } => ({
-                    role: m.role as 'user' | 'assistant',
-                    content: m.content,
-                })),
-            );
+            await window.electronAPI.aiRestoreChatHistory(toModelTurns(remainingMessages));
         }
         await saveCurrentConversation();
         await saveTokenCountToConversation();
@@ -377,7 +367,8 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions): UseAIChatRe
             const result = await window.electronAPI.aiChat(text, noteContext);
             if (result.success === false) {
                 const lastMsg = messages.value[messages.value.length - 1];
-                if (lastMsg !== undefined && lastMsg.role === 'assistant') lastMsg.content = `Error: ${result.error}`;
+                if (lastMsg !== undefined && lastMsg.role === 'assistant')
+                    lastMsg.content = formatChatFailure(result.error);
             }
             const assistantMsg = messages.value[messages.value.length - 1];
             if (
@@ -398,9 +389,9 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions): UseAIChatRe
                 });
             }
         } catch (error) {
+            window.electronAPI.log.error('Chat request failed:', error);
             const lastMsg = messages.value[messages.value.length - 1];
-            if (lastMsg !== undefined && lastMsg.role === 'assistant')
-                lastMsg.content = `Error: ${(error as Error).message}`;
+            if (lastMsg !== undefined && lastMsg.role === 'assistant') lastMsg.content = formatChatFailure('UNKNOWN');
         } finally {
             isStreaming.value = false;
             userScrolledUp.value = false;
@@ -493,6 +484,11 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions): UseAIChatRe
         stopGeneration,
         formatTokenCount,
     };
+}
+
+function formatChatFailure(code: IpcErrorCode | undefined): string {
+    const { t } = i18n.global;
+    return t('errors.chat_failed', { reason: formatIpcError(t, code) });
 }
 
 // Configure marked once at module level

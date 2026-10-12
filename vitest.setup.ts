@@ -1,3 +1,4 @@
+import { config } from '@vue/test-utils';
 import { createApp } from 'vue';
 import { i18n } from './src/renderer/i18n';
 import en from './assets/locales/en.json';
@@ -6,6 +7,7 @@ import en from './assets/locales/en.json';
 // This makes the plugin available to all components during testing
 const app = createApp({});
 app.use(i18n);
+config.global.plugins.push(i18n);
 
 // Production loads messages async via IPC (see useLanguage.ts); tests have no
 // IPC bridge, so seed the real English strings directly for translated-text assertions.

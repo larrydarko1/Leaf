@@ -27,11 +27,16 @@ import { existsSync } from 'fs';
 import fs from 'fs/promises';
 import path from 'path';
 
-import { type IpcMain, shell } from 'electron';
+import { shell } from 'electron';
 
 import { readState as readRawState, updateState } from '@/main/lib/appState';
+import { toIpcErrorCode, ipcFailure } from '@/main/lib/errors';
+import type { IpcMain } from '@/main/lib/ipc';
 import { log } from '@/main/lib/logger';
 import { THEMES_DIR, getBundledThemesDir } from '@/main/lib/paths';
+import type { AiSimpleResult } from '@/schemas/ai';
+import type { IpcErrorCode } from '@/schemas/errors';
+import { JsonObjectSchema } from '@/schemas/json';
 import { type ThemeInfo, type ThemeState, ThemeStateSchema } from '@/schemas/vault';
 
 const DEFAULT_THEME_ID = 'dark';
@@ -43,7 +48,7 @@ export function register(ipc: IpcMain): void {
         'theme:list',
         async (): Promise<
             | { success: boolean; themes: ThemeInfo[]; activeId: string; themesDir: string; error?: undefined }
-            | { success: boolean; error: string; themes: never[]; activeId: string; themesDir: string }
+            | { success: boolean; error: IpcErrorCode; themes: never[]; activeId: string; themesDir: string }
         > => {
             try {
                 const themes = await listThemes();
@@ -58,7 +63,7 @@ export function register(ipc: IpcMain): void {
                 log.error('[theme] list failed:', err);
                 return {
                     success: false,
-                    error: (err as Error).message,
+                    error: toIpcErrorCode(err),
                     themes: [],
                     activeId: DEFAULT_THEME_ID,
                     themesDir: THEMES_DIR,
@@ -67,38 +72,29 @@ export function register(ipc: IpcMain): void {
         },
     );
 
-    ipc.handle(
-        'theme:setActive',
-        async (
-            _event,
-            id: unknown,
-        ): Promise<{ success: boolean; error: string } | { success: boolean; error?: undefined }> => {
-            if (typeof id !== 'string' || !isValidThemeId(id)) {
-                return { success: false, error: 'Invalid theme id' };
-            }
-            const file = path.join(THEMES_DIR, `${id}.json`);
-            if (!existsSync(file)) return { success: false, error: 'Theme not found' };
-            try {
-                await updateState((s): { activeTheme: string } => ({ ...s, activeTheme: id }));
-                return { success: true };
-            } catch (err) {
-                return { success: false, error: (err as Error).message };
-            }
-        },
-    );
+    ipc.handle('theme:setActive', async (_event, id: unknown): Promise<AiSimpleResult> => {
+        if (typeof id !== 'string' || !isValidThemeId(id)) {
+            return { success: false, error: 'INVALID_ARGUMENTS' };
+        }
+        const file = path.join(THEMES_DIR, `${id}.json`);
+        if (!existsSync(file)) return { success: false, error: 'NOT_FOUND' };
+        try {
+            await updateState((s): { activeTheme: string } => ({ ...s, activeTheme: id }));
+            return { success: true };
+        } catch (err) {
+            return ipcFailure('theme theme:setActive', err);
+        }
+    });
 
-    ipc.handle(
-        'theme:openLeafDir',
-        async (): Promise<{ success: boolean; error?: undefined } | { success: boolean; error: string }> => {
-            try {
-                await fs.mkdir(THEMES_DIR, { recursive: true });
-                await shell.openPath(THEMES_DIR);
-                return { success: true };
-            } catch (err) {
-                return { success: false, error: (err as Error).message };
-            }
-        },
-    );
+    ipc.handle('theme:openLeafDir', async (): Promise<AiSimpleResult> => {
+        try {
+            await fs.mkdir(THEMES_DIR, { recursive: true });
+            await shell.openPath(THEMES_DIR);
+            return { success: true };
+        } catch (err) {
+            return ipcFailure('theme theme:openLeafDir', err);
+        }
+    });
 }
 
 /**
@@ -171,18 +167,19 @@ async function listThemes(): Promise<ThemeInfo[]> {
 }
 
 function normalizeTheme(id: string, filePath: string, raw: unknown): ThemeInfo | null {
-    if (raw === null || raw === undefined || typeof raw !== 'object') return null;
-    const obj = raw as Record<string, unknown>;
+    const parsed = JsonObjectSchema.safeParse(raw);
+    if (!parsed.success) return null;
+    const obj = parsed.data;
 
     const rawName = obj['name'];
     const rawDescription = obj['description'];
     const name = typeof rawName === 'string' && rawName.trim() !== '' ? rawName.trim() : id;
     const description = typeof rawDescription === 'string' ? rawDescription.trim() : '';
 
-    const colorsRaw = obj['colors'];
+    const colorsRaw = JsonObjectSchema.safeParse(obj['colors']);
     const colors: Record<string, string> = {};
-    if (colorsRaw !== null && colorsRaw !== undefined && typeof colorsRaw === 'object') {
-        for (const [key, value] of Object.entries(colorsRaw as Record<string, unknown>)) {
+    if (colorsRaw.success) {
+        for (const [key, value] of Object.entries(colorsRaw.data)) {
             if (typeof value !== 'string') continue;
             // Only allow safe CSS-variable keys (letters, digits, dashes, underscore).
             if (!/^[a-zA-Z][a-zA-Z0-9_-]*$/.test(key)) continue;

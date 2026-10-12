@@ -1,7 +1,9 @@
+import { EditorView } from '@codemirror/view';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref, shallowRef } from 'vue';
 
 import { useEditorDrop } from '@/renderer/composables/editor/useEditorDrop';
+import { createDragEvent, FakeDataTransfer } from '@test-utils';
 
 const mockElectronAPI = {
     log: { error: vi.fn() },
@@ -24,7 +26,7 @@ function makeComposable(
     const composable = useEditorDrop({
         isMarkdownFile,
         findFile: () => file,
-        textareaRef: textareaRef as never,
+        textareaRef,
         showPreview,
         content,
         onContentChange,
@@ -33,22 +35,11 @@ function makeComposable(
     return { ...composable, content, onContentChange };
 }
 
-function makeDragEvent(
-    opts: {
-        textPlain?: string;
-        types?: string[];
-        files?: { name: string; path: string }[];
-    } = {},
-): DragEvent {
-    const types = opts.types ?? (opts.textPlain != null ? ['text/plain'] : opts.files != null ? ['Files'] : []);
-    const files = opts.files ?? [];
-    const dt = {
-        types,
-        getData: (type: string) => (type === 'text/plain' ? (opts.textPlain ?? '') : ''),
-        files: Object.assign([...files], { length: files.length }),
-        dropEffect: '',
-    };
-    return { dataTransfer: dt, preventDefault: vi.fn() } as unknown as DragEvent;
+function makeDragEvent(opts: { textPlain?: string; types?: string[] } = {}): DragEvent {
+    const dt = new FakeDataTransfer();
+    const types = opts.types ?? (opts.textPlain != null ? ['text/plain'] : []);
+    for (const type of types) dt.setData(type, type === 'text/plain' ? (opts.textPlain ?? '') : '');
+    return createDragEvent('drop', dt);
 }
 
 beforeEach(() => {
@@ -84,7 +75,7 @@ describe('onEditorDragEnter', () => {
 
     it('shows no drop affordance for a native OS file drag', () => {
         const { isDragOverEditor, onEditorDragEnter } = makeComposable({ isMarkdown: true });
-        onEditorDragEnter(makeDragEvent({ types: ['Files'], files: [{ name: 'a.png', path: '/Downloads/a.png' }] }));
+        onEditorDragEnter(makeDragEvent({ types: ['Files'] }));
         expect(isDragOverEditor.value).toBe(false);
     });
 });
@@ -172,7 +163,6 @@ describe('onFileDrop', () => {
         });
         const event = makeDragEvent({
             types: ['Files'],
-            files: [{ name: 'photo.jpg', path: '/vault/photo.jpg' }],
         });
         await onFileDrop(event);
         expect(content.value).toBe('');
@@ -186,7 +176,6 @@ describe('onFileDrop', () => {
         });
         const event = makeDragEvent({
             types: ['Files'],
-            files: [{ name: 'external.png', path: '/Downloads/external.png' }],
         });
         await onFileDrop(event);
         expect(content.value).toBe('');
@@ -206,7 +195,7 @@ describe('onFileDrop', () => {
         const { onFileDrop: drop } = useEditorDrop({
             isMarkdownFile,
             findFile: () => ({ path: '/vault/note.md' }),
-            textareaRef: textareaRef as never,
+            textareaRef,
             showPreview,
             content: c,
             onContentChange: vi.fn(),
@@ -220,21 +209,13 @@ describe('onFileDrop', () => {
         const showPreview = ref(false);
         const content = ref('');
         const onContentChange = vi.fn();
-        const dispatch = vi.fn();
-        const cmView = {
-            state: {
-                selection: { main: { head: 0 } },
-                doc: { length: 0, sliceString: () => '\n', lineAt: () => ({ from: 0 }) },
-            },
-            dispatch,
-            focus: vi.fn(),
-        };
-        const cmViewRef = shallowRef(cmView as never);
+        const cmView = new EditorView({ doc: '', parent: document.createElement('div') });
+        const cmViewRef = shallowRef<EditorView | null>(cmView);
 
         const { onFileDrop } = useEditorDrop({
             isMarkdownFile,
             findFile: () => ({ path: '/vault/note.md' }),
-            textareaRef: ref(null) as never,
+            textareaRef: ref(null),
             showPreview,
             content,
             onContentChange,
@@ -242,7 +223,8 @@ describe('onFileDrop', () => {
         });
 
         await onFileDrop(makeDragEvent({ textPlain: 'file:/vault/image.png', types: ['text/plain'] }));
-        expect(dispatch).toHaveBeenCalled();
+        expect(cmView.state.doc.toString()).toContain('![[image.png]]');
         expect(onContentChange).toHaveBeenCalled();
+        cmView.destroy();
     });
 });

@@ -1,7 +1,7 @@
 {
   "meta": {
     "name": "Esperanto",
-    "dictationLanguage": "en" 
+    "dictationLanguage": "en"
   },
   "app": {
     "select_folder_description": "Elektu dosierujon por uzi kiel vian notarkivon. Vi povas ŝanĝi tion poste en agordoj.",
@@ -319,5 +319,35 @@
     "save_png": "Konservi PNG",
     "copy_png": "Kopii PNG",
     "close_export_dialog": "Fermi Eksportan Dialogon"
+  },
+  "errors": {
+    "invalid_arguments": "La peto ne estis valida.",
+    "no_window": "Neniu fenestro disponeblas.",
+    "no_vault": "Neniu notdosierujo estas malfermita.",
+    "access_denied": "Aliro rifuzita.",
+    "invalid_name": "Tiu nomo ne estas permesata.",
+    "not_found": "Ĝi ne troviĝis.",
+    "already_exists": "Ero kun tiu nomo jam ekzistas.",
+    "move_into_self": "Dosierujo ne povas esti movita en sin mem.",
+    "disk_full": "La disko estas plena.",
+    "model_not_loaded": "Neniu modelo estas ŝargita.",
+    "busy": "Okupita, reprovu post momento.",
+    "invalid_state": "Tio ne eblas nun.",
+    "unknown": "Io misfunkciis.",
+    "create_file_failed": "Ne eblis krei la dosieron. {reason}",
+    "create_drawing_failed": "Ne eblis krei la desegnon. {reason}",
+    "create_folder_failed": "Ne eblis krei la dosierujon. {reason}",
+    "rename_file_failed": "Ne eblis renomi la dosieron. {reason}",
+    "rename_folder_failed": "Ne eblis renomi la dosierujon. {reason}",
+    "delete_file_failed": "Ne eblis forigi {name}. {reason}",
+    "delete_folder_failed": "Ne eblis forigi la dosierujon. {reason}",
+    "move_file_failed": "Ne eblis movi {name}. {reason}",
+    "move_folder_failed": "Ne eblis movi la dosierujon. {reason}",
+    "save_file_failed": "Ne eblis konservi la dosieron. {reason}",
+    "chat_failed": "La modelo ne povis respondi. {reason}"
+  },
+  "notifications": {
+    "region": "Sciigoj",
+    "dismiss": "Forigi sciigon"
   }
 }

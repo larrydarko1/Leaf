@@ -14,6 +14,7 @@ import { useDrawingInteraction } from '@/renderer/composables/drawing/useDrawing
 import { useDrawingPersistence } from '@/renderer/composables/drawing/useDrawingPersistence';
 import { useTextEditing } from '@/renderer/composables/drawing/useTextEditing';
 import { useThrottleFn } from '@/renderer/composables/useThrottle';
+import { toStylePatch } from '@/renderer/utils/drawingStyle';
 import type { ToolType, DefaultStyle, StyleKey } from '@/schemas/drawing';
 
 type Props = {
@@ -274,10 +275,12 @@ function handleClickOutside(e: MouseEvent): void {
 }
 
 function setProperty(prop: StyleKey, value: string | number): void {
+    const patch = toStylePatch(prop, value);
+    if (patch === null) return;
     // Update all selected elements
     if (selectedElements.value.length > 0) {
         for (const el of selectedElements.value) {
-            el[prop] = value as never;
+            Object.assign(el, patch);
 
             // When fontSize changes on a text element, recalculate bounds to fit
             const resizesText =
@@ -289,9 +292,7 @@ function setProperty(prop: StyleKey, value: string | number): void {
                 el.text !== '';
             const ctx = resizesText ? findCtx() : null;
             if (ctx !== null && typeof value === 'number' && el.text !== undefined && el.text !== null) {
-                const box = measureTextBox(ctx, el.text, value);
-                el.width = box.width;
-                el.height = box.height;
+                Object.assign(el, measureTextBox(ctx, el.text, value));
             }
         }
 
@@ -300,9 +301,7 @@ function setProperty(prop: StyleKey, value: string | number): void {
         renderScene();
     }
     // Always update default style
-    if (prop in defaultStyle.value) {
-        defaultStyle.value[prop] = value as never;
-    }
+    Object.assign(defaultStyle.value, patch);
 }
 
 function openExportDialog(): void {

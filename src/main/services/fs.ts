@@ -9,16 +9,37 @@ import type { FSWatcher } from 'fs';
 import fs from 'fs/promises';
 import path from 'path';
 
-import type { IpcMain, BrowserWindow } from 'electron';
+import type { BrowserWindow } from 'electron';
 import { app, dialog, shell } from 'electron';
 import { z } from 'zod';
 
 import { readState, updateState } from '@/main/lib/appState';
+import { IpcError, ipcFailure } from '@/main/lib/errors';
 import { ALLOWED_EXTENSIONS } from '@/main/lib/extensions';
+import type { IpcMain } from '@/main/lib/ipc';
 import { log } from '@/main/lib/logger';
 import { IMAGE_MIMETYPES, AUDIO_MIMETYPES } from '@/main/lib/mime';
 import { resolveInsideBoundary } from '@/main/lib/validation';
-import type { FileInfo, FolderInfo, ScanResult } from '@/schemas/vault';
+import type { AiSimpleResult } from '@/schemas/ai';
+import type { IpcErrorCode } from '@/schemas/errors';
+import type {
+    FileInfo,
+    FolderInfo,
+    ScanResult,
+    AudioReadResult,
+    EmbedResolveResult,
+    FileCreateResult,
+    FileDeleteResult,
+    FileMoveResult,
+    FileReadResult,
+    FileRenameResult,
+    FileWriteResult,
+    FolderCreateResult,
+    FolderDeleteResult,
+    FolderMoveResult,
+    FolderRenameResult,
+    ImageReadResult,
+} from '@/schemas/vault';
 import {
     SaveDialogOptionsSchema,
     FileWriteBufferArgsSchema,
@@ -70,9 +91,9 @@ export function cleanup(): void {
 
 export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | null): void {
     // Open folder dialog — the ONLY way the vault root changes.
-    ipc.handle('dialog:openFolder', async (): Promise<string | { success: boolean; error: string } | null> => {
+    ipc.handle('dialog:openFolder', async (): Promise<string | { success: boolean; error: IpcErrorCode } | null> => {
         const win = findMainWindow();
-        if (win === null) return { success: false, error: 'No window available' };
+        if (win === null) return { success: false, error: 'NO_WINDOW' };
         const result = await dialog.showOpenDialog(win, {
             properties: ['openDirectory'],
             title: 'Select Your Notes Folder',
@@ -84,28 +105,25 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
     });
 
     // Close the current vault, so it is not reopened on next launch.
-    ipc.handle(
-        'vault:close',
-        async (): Promise<{ success: boolean; error?: undefined } | { success: boolean; error: string }> => {
-            try {
-                await clearVaultRoot();
-                return { success: true };
-            } catch (error) {
-                return { success: false, error: (error as Error).message };
-            }
-        },
-    );
+    ipc.handle('vault:close', async (): Promise<FileWriteResult> => {
+        try {
+            await clearVaultRoot();
+            return { success: true };
+        } catch (error) {
+            return ipcFailure('fs-service vault:close', error);
+        }
+    });
 
     // Save-file dialog (for exporting images, etc.).
     // The chosen path is recorded as a one-shot write authorisation — see
     // `file:writeBuffer` below.
     ipc.handle(
         'dialog:showSaveDialog',
-        async (_event, rawOptions: unknown): Promise<string | { success: boolean; error: string } | null> => {
+        async (_event, rawOptions: unknown): Promise<string | { success: boolean; error: IpcErrorCode } | null> => {
             const parsed = SaveDialogOptionsSchema.safeParse(rawOptions);
-            if (!parsed.success) return { success: false, error: 'Invalid arguments' };
+            if (!parsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
             const win = findMainWindow();
-            if (win === null) return { success: false, error: 'No window available' };
+            if (win === null) return { success: false, error: 'NO_WINDOW' };
             // Electron 43+ resolves a bare filename against Downloads, so anchor it to the vault.
             const { defaultPath: requested, filters } = parsed.data;
             const result = await dialog.showSaveDialog(win, {
@@ -126,66 +144,42 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
      */
     ipc.handle(
         'file:writeBuffer',
-        async (
-            _event,
-            rawFilePath: unknown,
-            rawBase64Data: unknown,
-        ): Promise<{ success: boolean; error: string } | { success: boolean; error?: undefined }> => {
+        async (_event, rawFilePath: unknown, rawBase64Data: unknown): Promise<FileWriteResult> => {
             const parsed = FileWriteBufferArgsSchema.safeParse({ filePath: rawFilePath, base64Data: rawBase64Data });
-            if (!parsed.success) return { success: false, error: 'Invalid arguments' };
+            if (!parsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
             const { filePath, base64Data } = parsed.data;
             const resolved = path.resolve(filePath);
             if (!authorizedWritePaths.delete(resolved)) {
-                return { success: false, error: 'Access denied: path was not authorised by a save dialog.' };
+                return { success: false, error: 'ACCESS_DENIED' };
             }
             try {
                 await fs.writeFile(resolved, Buffer.from(base64Data, 'base64'));
                 return { success: true };
             } catch (error) {
-                return { success: false, error: (error as Error).message };
+                return ipcFailure('fs-service file:writeBuffer', error);
             }
         },
     );
 
-    ipc.handle(
-        'files:scan',
-        async (): Promise<
-            | {
-                  success: boolean;
-                  root: string;
-                  files: {
-                      name: string;
-                      path: string;
-                      relativePath: string;
-                      extension: string;
-                      size: number;
-                      modified: string;
-                      folder: string;
-                  }[];
-                  folders: FolderInfo[];
-                  error?: undefined;
-              }
-            | { success: boolean; error: string; root?: undefined; files?: undefined; folders?: undefined }
-        > => {
-            try {
-                const root = getVaultRoot();
-                const result = await scanFolder(root);
-                return { success: true, root, files: result.files, folders: result.folders };
-            } catch (error) {
-                return { success: false, error: (error as Error).message };
-            }
-        },
-    );
+    ipc.handle('files:scan', async (): Promise<ScanResult> => {
+        try {
+            const root = getVaultRoot();
+            const result = await scanFolder(root);
+            return { success: true, root, files: result.files, folders: result.folders };
+        } catch (error) {
+            return { ...ipcFailure('fs-service files:scan', error), files: [], folders: [] };
+        }
+    });
 
     // Watch the active vault for external changes. Also takes no path.
-    ipc.handle('fs:watchFolder', (): { success: boolean; error: string } | { success: boolean; error?: undefined } => {
+    ipc.handle('fs:watchFolder', (): AiSimpleResult => {
         let root: string;
         try {
             root = getVaultRoot();
         } catch (error) {
-            return { success: false, error: (error as Error).message };
+            return ipcFailure('fs-service fs:watchFolder', error);
         }
-        if (!existsSync(root)) return { success: false, error: `Folder does not exist: ${root}` };
+        if (!existsSync(root)) return { success: false, error: 'NOT_FOUND' };
         try {
             if (folderWatcher !== null && folderWatcher !== undefined) {
                 folderWatcher.close();
@@ -198,7 +192,7 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
             folderWatcher.on('error', (err): void => log.error('[fs-service] Watcher error:', err));
             return { success: true };
         } catch (error) {
-            return { success: false, error: (error as Error).message };
+            return ipcFailure('fs-service fs:watchFolder', error);
         }
     });
 
@@ -218,16 +212,13 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
             rawFileName: unknown,
             rawNoteDir: unknown,
             rawEmbedVaultRoot: unknown,
-        ): Promise<
-            | { success: boolean; error: string; path?: undefined }
-            | { success: boolean; path: string; error?: undefined }
-        > => {
+        ): Promise<EmbedResolveResult> => {
             const parsed = ResolveEmbedArgsSchema.safeParse({
                 fileName: rawFileName,
                 noteDir: rawNoteDir,
                 embedVaultRoot: rawEmbedVaultRoot,
             });
-            if (!parsed.success) return { success: false, error: 'Invalid arguments' };
+            if (!parsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
             const { fileName, noteDir, embedVaultRoot } = parsed.data;
             try {
                 const root = getVaultRoot();
@@ -258,122 +249,81 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
                     resolveInsideBoundary(found, root);
                     return { success: true, path: found };
                 }
-                return { success: false, error: 'File not found' };
+                return { success: false, error: 'NOT_FOUND' };
             } catch (error) {
-                return { success: false, error: (error as Error).message };
+                return ipcFailure('fs-service file:resolveEmbedPath', error);
             }
         },
     );
 
     // Read text file
-    ipc.handle(
-        'file:read',
-        async (
-            _event,
-            rawFilePath: unknown,
-        ): Promise<
-            | { success: boolean; error: string; content?: undefined }
-            | { success: boolean; content: string; error?: undefined }
-        > => {
-            const parsed = z.string().safeParse(rawFilePath);
-            if (!parsed.success) return { success: false, error: 'Invalid path' };
-            const filePath = parsed.data;
-            try {
-                resolveInsideVault(filePath);
-                const content = await fs.readFile(filePath, 'utf-8');
-                return { success: true, content };
-            } catch (error) {
-                return { success: false, error: (error as Error).message };
-            }
-        },
-    );
+    ipc.handle('file:read', async (_event, rawFilePath: unknown): Promise<FileReadResult> => {
+        const parsed = z.string().safeParse(rawFilePath);
+        if (!parsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
+        const filePath = parsed.data;
+        try {
+            resolveInsideVault(filePath);
+            const content = await fs.readFile(filePath, 'utf-8');
+            return { success: true, content };
+        } catch (error) {
+            return ipcFailure('fs-service file:read', error);
+        }
+    });
 
     // Read image as base64 data URL
-    ipc.handle(
-        'file:readImage',
-        async (
-            _event,
-            rawFilePath: unknown,
-        ): Promise<
-            | { success: boolean; error: string; dataUrl?: undefined }
-            | { success: boolean; dataUrl: string; error?: undefined }
-        > => {
-            const parsed = z.string().safeParse(rawFilePath);
-            if (!parsed.success) return { success: false, error: 'Invalid path' };
-            const filePath = parsed.data;
-            try {
-                resolveInsideVault(filePath);
-                const ext = path.extname(filePath).toLowerCase();
-                const mimeType = IMAGE_MIMETYPES[ext] ?? 'image/png';
-                const buf = await fs.readFile(filePath);
-                return { success: true, dataUrl: `data:${mimeType};base64,${buf.toString('base64')}` };
-            } catch (error) {
-                return { success: false, error: (error as Error).message };
-            }
-        },
-    );
+    ipc.handle('file:readImage', async (_event, rawFilePath: unknown): Promise<ImageReadResult> => {
+        const parsed = z.string().safeParse(rawFilePath);
+        if (!parsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
+        const filePath = parsed.data;
+        try {
+            resolveInsideVault(filePath);
+            const ext = path.extname(filePath).toLowerCase();
+            const mimeType = IMAGE_MIMETYPES[ext] ?? 'image/png';
+            const buf = await fs.readFile(filePath);
+            return { success: true, dataUrl: `data:${mimeType};base64,${buf.toString('base64')}` };
+        } catch (error) {
+            return ipcFailure('fs-service file:readImage', error);
+        }
+    });
 
     // Read audio as base64 data URL
-    ipc.handle(
-        'file:readAudio',
-        async (
-            _event,
-            rawFilePath: unknown,
-        ): Promise<
-            | { success: boolean; error: string; dataUrl?: undefined }
-            | { success: boolean; dataUrl: string; error?: undefined }
-        > => {
-            const parsed = z.string().safeParse(rawFilePath);
-            if (!parsed.success) return { success: false, error: 'Invalid path' };
-            const filePath = parsed.data;
-            try {
-                resolveInsideVault(filePath);
-                const ext = path.extname(filePath).toLowerCase();
-                const mimeType = AUDIO_MIMETYPES[ext] ?? 'audio/mpeg';
-                const buf = await fs.readFile(filePath);
-                return { success: true, dataUrl: `data:${mimeType};base64,${buf.toString('base64')}` };
-            } catch (error) {
-                return { success: false, error: (error as Error).message };
-            }
-        },
-    );
+    ipc.handle('file:readAudio', async (_event, rawFilePath: unknown): Promise<AudioReadResult> => {
+        const parsed = z.string().safeParse(rawFilePath);
+        if (!parsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
+        const filePath = parsed.data;
+        try {
+            resolveInsideVault(filePath);
+            const ext = path.extname(filePath).toLowerCase();
+            const mimeType = AUDIO_MIMETYPES[ext] ?? 'audio/mpeg';
+            const buf = await fs.readFile(filePath);
+            return { success: true, dataUrl: `data:${mimeType};base64,${buf.toString('base64')}` };
+        } catch (error) {
+            return ipcFailure('fs-service file:readAudio', error);
+        }
+    });
 
     // Write text file (atomic: write to .tmp then rename)
-    ipc.handle(
-        'file:write',
-        async (
-            _event,
-            rawFilePath: unknown,
-            rawContent: unknown,
-        ): Promise<{ success: boolean; error: string } | { success: boolean; error?: undefined }> => {
-            const parsed = FileWriteArgsSchema.safeParse({ filePath: rawFilePath, content: rawContent });
-            if (!parsed.success) return { success: false, error: 'Invalid arguments' };
-            const { filePath, content } = parsed.data;
-            try {
-                resolveInsideVault(filePath);
-                const tmp = filePath + '.tmp';
-                await fs.writeFile(tmp, content, 'utf-8');
-                await fs.rename(tmp, filePath);
-                return { success: true };
-            } catch (error) {
-                return { success: false, error: (error as Error).message };
-            }
-        },
-    );
+    ipc.handle('file:write', async (_event, rawFilePath: unknown, rawContent: unknown): Promise<FileWriteResult> => {
+        const parsed = FileWriteArgsSchema.safeParse({ filePath: rawFilePath, content: rawContent });
+        if (!parsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
+        const { filePath, content } = parsed.data;
+        try {
+            resolveInsideVault(filePath);
+            const tmp = filePath + '.tmp';
+            await fs.writeFile(tmp, content, 'utf-8');
+            await fs.rename(tmp, filePath);
+            return { success: true };
+        } catch (error) {
+            return ipcFailure('fs-service file:write', error);
+        }
+    });
 
     // Create file
     ipc.handle(
         'file:create',
-        async (
-            _event,
-            rawFolderPath: unknown,
-            rawFileName: unknown,
-        ): Promise<
-            | { success: boolean; error: string; path?: undefined }
-            | { success: boolean; path: string; error?: undefined }
-        > => {
+        async (_event, rawFolderPath: unknown, rawFileName: unknown): Promise<FileCreateResult> => {
             const parsed = FileCreateArgsSchema.safeParse({ folderPath: rawFolderPath, fileName: rawFileName });
-            if (!parsed.success) return { success: false, error: 'Invalid arguments' };
+            if (!parsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
             const { folderPath, fileName } = parsed.data;
             try {
                 resolveInsideVault(folderPath);
@@ -382,7 +332,7 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
                 await fs.writeFile(filePath, '', 'utf-8');
                 return { success: true, path: filePath };
             } catch (error) {
-                return { success: false, error: (error as Error).message };
+                return ipcFailure('fs-service file:create', error);
             }
         },
     );
@@ -390,16 +340,9 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
     // Create folder
     ipc.handle(
         'folder:create',
-        async (
-            _event,
-            rawParentPath: unknown,
-            rawFolderName: unknown,
-        ): Promise<
-            | { success: boolean; error: string; path?: undefined }
-            | { success: boolean; path: string; error?: undefined }
-        > => {
+        async (_event, rawParentPath: unknown, rawFolderName: unknown): Promise<FolderCreateResult> => {
             const parsed = FolderCreateArgsSchema.safeParse({ parentPath: rawParentPath, folderName: rawFolderName });
-            if (!parsed.success) return { success: false, error: 'Invalid arguments' };
+            if (!parsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
             const { parentPath, folderName } = parsed.data;
             try {
                 resolveInsideVault(parentPath);
@@ -407,51 +350,38 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
                 resolveInsideVault(folderPath);
                 try {
                     await fs.access(folderPath);
-                    return { success: false, error: 'A folder with this name already exists' };
+                    return { success: false, error: 'ALREADY_EXISTS' };
                 } catch {
                     /* doesn't exist yet — good */
                 }
                 await fs.mkdir(folderPath, { recursive: true });
                 return { success: true, path: folderPath };
             } catch (error) {
-                return { success: false, error: (error as Error).message };
+                return ipcFailure('fs-service folder:create', error);
             }
         },
     );
 
     // Delete file → trash
-    ipc.handle(
-        'file:delete',
-        async (
-            _event,
-            rawFilePath: unknown,
-        ): Promise<{ success: boolean; error: string } | { success: boolean; error?: undefined }> => {
-            const parsed = z.string().safeParse(rawFilePath);
-            if (!parsed.success) return { success: false, error: 'Invalid path' };
-            const filePath = parsed.data;
-            try {
-                resolveInsideVault(filePath);
-                await shell.trashItem(filePath);
-                return { success: true };
-            } catch (error) {
-                return { success: false, error: (error as Error).message };
-            }
-        },
-    );
+    ipc.handle('file:delete', async (_event, rawFilePath: unknown): Promise<FileDeleteResult> => {
+        const parsed = z.string().safeParse(rawFilePath);
+        if (!parsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
+        const filePath = parsed.data;
+        try {
+            resolveInsideVault(filePath);
+            await shell.trashItem(filePath);
+            return { success: true };
+        } catch (error) {
+            return ipcFailure('fs-service file:delete', error);
+        }
+    });
 
     // Rename file
     ipc.handle(
         'file:rename',
-        async (
-            _event,
-            rawOldPath: unknown,
-            rawNewFileName: unknown,
-        ): Promise<
-            | { success: boolean; error: string; newPath?: undefined }
-            | { success: boolean; newPath: string; error?: undefined }
-        > => {
+        async (_event, rawOldPath: unknown, rawNewFileName: unknown): Promise<FileRenameResult> => {
             const parsed = FileRenameArgsSchema.safeParse({ oldPath: rawOldPath, newFileName: rawNewFileName });
-            if (!parsed.success) return { success: false, error: 'Invalid arguments' };
+            if (!parsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
             const { oldPath, newFileName } = parsed.data;
             try {
                 resolveInsideVault(oldPath);
@@ -460,7 +390,7 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
                 if (oldPath.toLowerCase() !== newPath.toLowerCase()) {
                     try {
                         await fs.access(newPath);
-                        return { success: false, error: 'A file with this name already exists' };
+                        return { success: false, error: 'ALREADY_EXISTS' };
                     } catch {
                         /* good */
                     }
@@ -468,7 +398,7 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
                 await fs.rename(oldPath, newPath);
                 return { success: true, newPath };
             } catch (error) {
-                return { success: false, error: (error as Error).message };
+                return ipcFailure('fs-service file:rename', error);
             }
         },
     );
@@ -481,14 +411,14 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
             rawOldFileName: unknown,
             rawNewFileName: unknown,
         ): Promise<
-            | { success: boolean; error: string; updatedCount?: undefined }
+            | { success: boolean; error: IpcErrorCode; updatedCount?: undefined }
             | { success: boolean; updatedCount: number; error?: undefined }
         > => {
             const parsed = UpdateEmbedRefsArgsSchema.safeParse({
                 oldFileName: rawOldFileName,
                 newFileName: rawNewFileName,
             });
-            if (!parsed.success) return { success: false, error: 'Invalid arguments' };
+            if (!parsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
             const { oldFileName, newFileName } = parsed.data;
             try {
                 const root = getVaultRoot();
@@ -514,7 +444,7 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
 
                 return { success: true, updatedCount };
             } catch (error) {
-                return { success: false, error: (error as Error).message };
+                return ipcFailure('fs-service file:updateEmbedRefs', error);
             }
         },
     );
@@ -522,16 +452,9 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
     // Rename folder
     ipc.handle(
         'folder:rename',
-        async (
-            _event,
-            rawOldPath: unknown,
-            rawNewFolderName: unknown,
-        ): Promise<
-            | { success: boolean; error: string; newPath?: undefined }
-            | { success: boolean; newPath: string; error?: undefined }
-        > => {
+        async (_event, rawOldPath: unknown, rawNewFolderName: unknown): Promise<FolderRenameResult> => {
             const parsed = FolderRenameArgsSchema.safeParse({ oldPath: rawOldPath, newFolderName: rawNewFolderName });
-            if (!parsed.success) return { success: false, error: 'Invalid arguments' };
+            if (!parsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
             const { oldPath, newFolderName } = parsed.data;
             try {
                 resolveInsideVault(oldPath);
@@ -540,7 +463,7 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
                 if (oldPath.toLowerCase() !== newPath.toLowerCase()) {
                     try {
                         await fs.access(newPath);
-                        return { success: false, error: 'A folder with this name already exists' };
+                        return { success: false, error: 'ALREADY_EXISTS' };
                     } catch {
                         /* good */
                     }
@@ -548,47 +471,34 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
                 await fs.rename(oldPath, newPath);
                 return { success: true, newPath };
             } catch (error) {
-                return { success: false, error: (error as Error).message };
+                return ipcFailure('fs-service folder:rename', error);
             }
         },
     );
 
     // Delete folder → trash
-    ipc.handle(
-        'folder:delete',
-        async (
-            _event,
-            rawFolderPath: unknown,
-        ): Promise<{ success: boolean; error: string } | { success: boolean; error?: undefined }> => {
-            const parsed = z.string().safeParse(rawFolderPath);
-            if (!parsed.success) return { success: false, error: 'Invalid path' };
-            const folderPath = parsed.data;
-            try {
-                resolveInsideVault(folderPath);
-                await shell.trashItem(folderPath);
-                return { success: true };
-            } catch (error) {
-                return { success: false, error: (error as Error).message };
-            }
-        },
-    );
+    ipc.handle('folder:delete', async (_event, rawFolderPath: unknown): Promise<FolderDeleteResult> => {
+        const parsed = z.string().safeParse(rawFolderPath);
+        if (!parsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
+        const folderPath = parsed.data;
+        try {
+            resolveInsideVault(folderPath);
+            await shell.trashItem(folderPath);
+            return { success: true };
+        } catch (error) {
+            return ipcFailure('fs-service folder:delete', error);
+        }
+    });
 
     // Move file
     ipc.handle(
         'file:move',
-        async (
-            _event,
-            rawFilePath: unknown,
-            rawTargetFolderPath: unknown,
-        ): Promise<
-            | { success: boolean; error: string; newPath?: undefined }
-            | { success: boolean; newPath: string; error?: undefined }
-        > => {
+        async (_event, rawFilePath: unknown, rawTargetFolderPath: unknown): Promise<FileMoveResult> => {
             const parsed = FileMoveArgsSchema.safeParse({
                 filePath: rawFilePath,
                 targetFolderPath: rawTargetFolderPath,
             });
-            if (!parsed.success) return { success: false, error: 'Invalid arguments' };
+            if (!parsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
             const { filePath, targetFolderPath } = parsed.data;
             try {
                 resolveInsideVault(filePath);
@@ -597,14 +507,14 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
                 if (filePath === newPath) return { success: true, newPath };
                 try {
                     await fs.access(newPath);
-                    return { success: false, error: 'A file with this name already exists in the target folder' };
+                    return { success: false, error: 'ALREADY_EXISTS' };
                 } catch {
                     /* good */
                 }
                 await fs.rename(filePath, newPath);
                 return { success: true, newPath };
             } catch (error) {
-                return { success: false, error: (error as Error).message };
+                return ipcFailure('fs-service file:move', error);
             }
         },
     );
@@ -612,19 +522,12 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
     // Move folder
     ipc.handle(
         'folder:move',
-        async (
-            _event,
-            rawFolderPath: unknown,
-            rawTargetFolderPath: unknown,
-        ): Promise<
-            | { success: boolean; error: string; newPath?: undefined }
-            | { success: boolean; newPath: string; error?: undefined }
-        > => {
+        async (_event, rawFolderPath: unknown, rawTargetFolderPath: unknown): Promise<FolderMoveResult> => {
             const parsed = FolderMoveArgsSchema.safeParse({
                 folderPath: rawFolderPath,
                 targetFolderPath: rawTargetFolderPath,
             });
-            if (!parsed.success) return { success: false, error: 'Invalid arguments' };
+            if (!parsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
             const { folderPath, targetFolderPath } = parsed.data;
             try {
                 resolveInsideVault(folderPath);
@@ -632,18 +535,18 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
                 const newPath = path.join(targetFolderPath, path.basename(folderPath));
                 if (folderPath === newPath) return { success: true, newPath };
                 if (targetFolderPath.startsWith(folderPath + path.sep) || targetFolderPath === folderPath) {
-                    return { success: false, error: 'Cannot move a folder into itself' };
+                    return { success: false, error: 'MOVE_INTO_SELF' };
                 }
                 try {
                     await fs.access(newPath);
-                    return { success: false, error: 'A folder with this name already exists in the target folder' };
+                    return { success: false, error: 'ALREADY_EXISTS' };
                 } catch {
                     /* good */
                 }
                 await fs.rename(folderPath, newPath);
                 return { success: true, newPath };
             } catch (error) {
-                return { success: false, error: (error as Error).message };
+                return ipcFailure('fs-service folder:move', error);
             }
         },
     );
@@ -653,7 +556,7 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
         'bookmarks:load',
         async (): Promise<
             | { success: boolean; bookmarks: string[]; error?: undefined }
-            | { success: boolean; error: string; bookmarks?: undefined }
+            | { success: boolean; error: IpcErrorCode; bookmarks?: undefined }
         > => {
             try {
                 const root = getVaultRoot();
@@ -671,7 +574,7 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
                     return { success: true, bookmarks: [] };
                 }
             } catch (error) {
-                return { success: false, error: (error as Error).message };
+                return ipcFailure('fs-service bookmarks:load', error);
             }
         },
     );
@@ -681,9 +584,9 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
         async (
             _event,
             rawBookmarks: unknown,
-        ): Promise<{ success: boolean; error: string } | { success: boolean; error?: undefined }> => {
+        ): Promise<{ success: boolean; error: IpcErrorCode } | { success: boolean; error?: undefined }> => {
             const parsed = z.array(z.string()).safeParse(rawBookmarks);
-            if (!parsed.success) return { success: false, error: 'Invalid bookmarks payload' };
+            if (!parsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
             try {
                 const root = getVaultRoot();
                 const leafDir = path.join(root, '.leaf');
@@ -696,14 +599,14 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
                 await fs.writeFile(bookmarksPath, JSON.stringify(parsed.data, null, 2), 'utf-8');
                 return { success: true };
             } catch (error) {
-                return { success: false, error: (error as Error).message };
+                return ipcFailure('fs-service bookmarks:save', error);
             }
         },
     );
 }
 
 function getVaultRoot(): string {
-    if (vaultRoot === null) throw new Error('No vault is open.');
+    if (vaultRoot === null) throw new IpcError('NO_VAULT', 'No vault is open.');
     return vaultRoot;
 }
 

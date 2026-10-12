@@ -174,21 +174,19 @@ function makeKeyEvent(
     key: string,
     modifiers: { ctrlKey?: boolean; metaKey?: boolean; shiftKey?: boolean; code?: string } = {},
 ): KeyboardEvent {
-    return {
+    return new KeyboardEvent('keydown', {
         key,
         code: modifiers.code ?? key,
         ctrlKey: modifiers.ctrlKey ?? false,
         metaKey: modifiers.metaKey ?? false,
         shiftKey: modifiers.shiftKey ?? false,
-        altKey: false,
-        preventDefault: vi.fn(),
-        stopPropagation: vi.fn(),
-    } as unknown as KeyboardEvent;
+        bubbles: true,
+        cancelable: true,
+    });
 }
 
-function makePointerEvent(type: string, overrides: Partial<PointerEvent> = {}): PointerEvent {
-    return {
-        type,
+function makePointerEvent(type: string, init: PointerEventInit = {}): PointerEvent {
+    return new PointerEvent(type, {
         clientX: 100,
         clientY: 100,
         pointerId: 1,
@@ -196,14 +194,10 @@ function makePointerEvent(type: string, overrides: Partial<PointerEvent> = {}): 
         buttons: 1,
         isPrimary: true,
         pressure: 0.5,
-        shiftKey: false,
-        ctrlKey: false,
-        metaKey: false,
-        preventDefault: vi.fn(),
-        stopPropagation: vi.fn(),
-        target: { setPointerCapture: vi.fn(), releasePointerCapture: vi.fn() },
-        ...overrides,
-    } as unknown as PointerEvent;
+        bubbles: true,
+        cancelable: true,
+        ...init,
+    });
 }
 
 beforeEach(() => {
@@ -252,7 +246,7 @@ describe('handleKeydown (Space)', () => {
         const { handleKeydown } = makeInteraction();
         const e = makeKeyEvent('Space', { code: 'Space' });
         handleKeydown(e);
-        expect(e.preventDefault).toHaveBeenCalled();
+        expect(e.defaultPrevented).toBe(true);
     });
 
     it('ignores Space while dragging', () => {
@@ -512,15 +506,15 @@ describe('zoomToCenter', () => {
 describe('onWheel', () => {
     it('scrolls when Ctrl/Meta is not held', () => {
         const { scrollX, scrollY, onWheel, renderScene } = makeInteraction();
-        const e = {
+        const e = new WheelEvent('wheel', {
             ctrlKey: false,
             metaKey: false,
             deltaX: 10,
             deltaY: 20,
             clientX: 0,
             clientY: 0,
-            preventDefault: vi.fn(),
-        } as unknown as WheelEvent;
+            cancelable: true,
+        });
         onWheel(e);
         expect(scrollX.value).toBe(-10);
         expect(scrollY.value).toBe(-20);
@@ -530,15 +524,15 @@ describe('onWheel', () => {
     it('zooms when Ctrl is held', () => {
         const { zoom, onWheel } = makeInteraction();
         zoom.value = 1;
-        const e = {
+        const e = new WheelEvent('wheel', {
             ctrlKey: true,
             metaKey: false,
             deltaX: 0,
             deltaY: -100,
             clientX: 400,
             clientY: 300,
-            preventDefault: vi.fn(),
-        } as unknown as WheelEvent;
+            cancelable: true,
+        });
         onWheel(e);
         expect(zoom.value).toBeGreaterThan(1);
     });

@@ -12,10 +12,13 @@ vi.mock('@/main/lib/logger', () => ({
 function registered(): Record<string, Listener> {
     const listeners: Record<string, Listener> = {};
     register({
-        on: (channel: string, fn: Listener) => {
+        on(channel: string, fn: Listener) {
             listeners[channel] = fn;
         },
-    } as never);
+        handle(channel: string) {
+            throw new Error(`the log service is one-way; it registered a reply channel: ${channel}`);
+        },
+    });
     return listeners;
 }
 

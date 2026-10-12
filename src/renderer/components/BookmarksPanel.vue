@@ -2,6 +2,9 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import IconClose from '@/renderer/components/icons/IconClose.vue';
+import IconFile from '@/renderer/components/icons/IconFile.vue';
+import IconStar from '@/renderer/components/icons/IconStar.vue';
 import { useListKeyboardNavigation } from '@/renderer/composables/ui/useListKeyboardNavigation';
 import type { FileInfo } from '@/schemas/vault';
 
@@ -63,21 +66,11 @@ useListKeyboardNavigation(
         :aria-label="t('bookmarks.bookmarks_panel')">
         <header class="bookmarks-header panel-header">
             <div class="header-title">
-                <svg
+                <IconStar
                     class="star-icon"
                     width="16"
                     height="16"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true">
-                    <path
-                        d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round" />
-                </svg>
+                    fill="currentColor" />
                 <h2 class="panel-label">{{ t('bookmarks.title') }}</h2>
             </div>
             <div
@@ -93,21 +86,11 @@ useListKeyboardNavigation(
             <div
                 v-if="bookmarkedFiles.length === 0"
                 class="bookmarks-empty-state empty-state">
-                <svg
+                <IconStar
                     class="empty-state-icon"
                     width="48"
                     height="48"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true">
-                    <path
-                        d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round" />
-                </svg>
+                    stroke-width="1.5" />
                 <p>{{ t('bookmarks.no_bookmarks') }}</p>
                 <p class="hint">{{ t('bookmarks.add_bookmark_hint') }}</p>
             </div>
@@ -132,27 +115,10 @@ useListKeyboardNavigation(
                     @keydown.enter="openFile(file)"
                     @keydown.space.prevent="selectFile(file, $event)">
                     <div class="file-info">
-                        <svg
+                        <IconFile
                             class="file-icon"
                             width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                            aria-hidden="true">
-                            <path
-                                d="M13 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V9L13 2Z"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round" />
-                            <path
-                                d="M13 2V9H20"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round" />
-                        </svg>
+                            height="16" />
                         <div class="file-details">
                             <div class="file-name truncate">{{ file.name }}</div>
                             <div class="file-path truncate">{{
@@ -163,20 +129,9 @@ useListKeyboardNavigation(
                             class="unbookmark-btn icon-btn-subtle icon-btn-on-hover"
                             :aria-label="t('bookmarks.remove_file_bookmark', { file: file.name })"
                             @click.stop="removeBookmark(file)">
-                            <svg
+                            <IconClose
                                 width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                                aria-hidden="true">
-                                <path
-                                    d="M18 6L6 18M6 6L18 18"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                            </svg>
+                                height="14" />
                         </button>
                     </div>
                 </li>

@@ -3,6 +3,7 @@ import { ref, nextTick } from 'vue';
 
 import { useTextEditing } from '@/renderer/composables/drawing/useTextEditing';
 import type { CanvasElement, DefaultStyle } from '@/schemas/drawing';
+import { createFakeContext2D } from '@test-utils';
 
 let idCounter = 0;
 
@@ -61,9 +62,9 @@ function makeShapeEl(overrides: Partial<CanvasElement> = {}): CanvasElement {
 function makeEditing(opts: { hasCanvas?: boolean; hasInput?: boolean; ctxReturnsNull?: boolean } = {}) {
     const { hasCanvas = false, hasInput = true, ctxReturnsNull = false } = opts;
 
-    const canvas = ref<HTMLCanvasElement | null>(hasCanvas ? ({} as HTMLCanvasElement) : null);
+    const canvas = ref<HTMLCanvasElement | null>(hasCanvas ? document.createElement('canvas') : null);
     const textInputEl = ref<HTMLTextAreaElement | null>(
-        hasInput ? ({ focus: fakeFocus } as unknown as HTMLTextAreaElement) : null,
+        hasInput ? Object.assign(document.createElement('textarea'), { focus: fakeFocus }) : null,
     );
     const zoom = ref(1);
     const elements = ref<CanvasElement[]>([]);
@@ -81,13 +82,8 @@ function makeEditing(opts: { hasCanvas?: boolean; hasInput?: boolean; ctxReturns
     const worldToScreen = vi.fn().mockImplementation((wx: number, wy: number) => ({ x: wx, y: wy }));
     const screenToWorld = vi.fn().mockImplementation((sx: number, sy: number) => ({ x: sx, y: sy }));
 
-    const fakeMeasure = vi.fn().mockReturnValue({ width: 80 });
-    const fakeCtx = {
-        save: vi.fn(),
-        restore: vi.fn(),
-        font: '',
-        measureText: fakeMeasure,
-    } as unknown as CanvasRenderingContext2D;
+    const fakeCtx = createFakeContext2D();
+    vi.mocked(fakeCtx.measureText).mockReturnValue({ width: 80 });
     const findCtx = vi.fn().mockReturnValue(ctxReturnsNull ? null : fakeCtx);
     const renderScene = vi.fn();
     const saveToHistory = vi.fn();
@@ -297,15 +293,15 @@ describe('onTextEnter', () => {
         const { onTextEnter, startNewText, textValue } = makeEditing();
         startNewText(0, 0);
         textValue.value = 'new text';
-        const e = { shiftKey: false, preventDefault: vi.fn() } as unknown as KeyboardEvent;
+        const e = new KeyboardEvent('keydown', { key: 'Enter', shiftKey: false, cancelable: true });
         onTextEnter(e);
-        expect(e.preventDefault).toHaveBeenCalled();
+        expect(e.defaultPrevented).toBe(true);
     });
 
     it('does not finalize when Shift+Enter is pressed', () => {
         const { onTextEnter, textEditing, startNewText } = makeEditing();
         startNewText(0, 0);
-        const e = { shiftKey: true, preventDefault: vi.fn() } as unknown as KeyboardEvent;
+        const e = new KeyboardEvent('keydown', { key: 'Enter', shiftKey: true, cancelable: true });
         onTextEnter(e);
         expect(textEditing.value).toBe(true); // still editing
     });
@@ -387,7 +383,7 @@ describe('finalizeText (with text)', () => {
 
     it('creates a new text element with measured width', () => {
         const { startNewText, textValue, finalizeText, elements, fakeCtx } = makeEditing();
-        (fakeCtx.measureText as ReturnType<typeof vi.fn>).mockReturnValue({ width: 120 });
+        vi.mocked(fakeCtx.measureText).mockReturnValue({ width: 120 });
         startNewText(100, 200);
         textValue.value = 'Hello World';
         finalizeText();
@@ -418,7 +414,7 @@ describe('finalizeText (with text)', () => {
         const el = makeTextEl({ id: 'existing', text: 'old' });
         const { startEditText, textValue, finalizeText, elements, fakeCtx } = makeEditing();
         elements.value = [el];
-        (fakeCtx.measureText as ReturnType<typeof vi.fn>).mockReturnValue({ width: 50 });
+        vi.mocked(fakeCtx.measureText).mockReturnValue({ width: 50 });
         startEditText(el);
         textValue.value = 'updated text';
         finalizeText();
@@ -437,7 +433,7 @@ describe('finalizeText (with text)', () => {
 
     it('handles multiline text (height = lines * lineHeight)', () => {
         const { startNewText, textValue, finalizeText, elements, fakeCtx } = makeEditing();
-        (fakeCtx.measureText as ReturnType<typeof vi.fn>).mockReturnValue({ width: 40 });
+        vi.mocked(fakeCtx.measureText).mockReturnValue({ width: 40 });
         startNewText(0, 0);
         textValue.value = 'line1\nline2\nline3';
         finalizeText();
@@ -484,7 +480,7 @@ describe('textOverlayStyle', () => {
 describe('onDoubleClick', () => {
     it('does nothing when canvas is null', () => {
         const { onDoubleClick, textEditing } = makeEditing({ hasCanvas: false });
-        const e = { clientX: 100, clientY: 100 } as MouseEvent;
+        const e = new MouseEvent('dblclick', { clientX: 100, clientY: 100 });
         onDoubleClick(e);
         expect(textEditing.value).toBe(false);
     });
@@ -492,9 +488,9 @@ describe('onDoubleClick', () => {
     it('starts new text when double-clicking empty canvas', () => {
         const { hitTestElement } = makeEditing({ hasCanvas: true });
         hitTestElement.mockReturnValue(null);
-        const fakeCanvas = { getBoundingClientRect: () => ({ left: 0, top: 0 }) };
+        const fakeCanvas = document.createElement('canvas');
         const { canvas } = makeEditing({ hasCanvas: true });
-        canvas.value = fakeCanvas as unknown as HTMLCanvasElement;
+        canvas.value = fakeCanvas;
 
         const { onDoubleClick: dblClick, textEditing: editing } = useTextEditing({
             canvas,
@@ -514,15 +510,15 @@ describe('onDoubleClick', () => {
             saveToHistory: vi.fn(),
             scheduleAutoSave: vi.fn(),
         });
-        const e = { clientX: 50, clientY: 50 } as MouseEvent;
+        const e = new MouseEvent('dblclick', { clientX: 50, clientY: 50 });
         dblClick(e);
         expect(editing.value).toBe(true);
     });
 
     it('starts editing existing text element on double-click', () => {
         const textEl = makeTextEl({ id: 'txt-1', text: 'click me' });
-        const fakeCanvas = { getBoundingClientRect: () => ({ left: 0, top: 0 }) };
-        const canvas = ref(fakeCanvas as unknown as HTMLCanvasElement);
+        const fakeCanvas = document.createElement('canvas');
+        const canvas = ref<HTMLCanvasElement | null>(fakeCanvas);
         const elements = ref([textEl]);
         const selectedId = ref<string | null>(null);
 
@@ -546,7 +542,7 @@ describe('onDoubleClick', () => {
             saveToHistory: vi.fn(),
             scheduleAutoSave: vi.fn(),
         });
-        const e = { clientX: 15, clientY: 25 } as MouseEvent;
+        const e = new MouseEvent('dblclick', { clientX: 15, clientY: 25 });
         onDoubleClick(e);
         expect(textEditing.value).toBe(true);
         expect(textValue.value).toBe('click me');
@@ -554,8 +550,8 @@ describe('onDoubleClick', () => {
 
     it('starts editing shape text on double-click on a shape', () => {
         const shapeEl = makeShapeEl({ id: 'shape-1' });
-        const fakeCanvas = { getBoundingClientRect: () => ({ left: 0, top: 0 }) };
-        const canvas = ref(fakeCanvas as unknown as HTMLCanvasElement);
+        const fakeCanvas = document.createElement('canvas');
+        const canvas = ref<HTMLCanvasElement | null>(fakeCanvas);
         const elements = ref([shapeEl]);
 
         const { onDoubleClick, textEditing } = useTextEditing({
@@ -578,7 +574,7 @@ describe('onDoubleClick', () => {
             saveToHistory: vi.fn(),
             scheduleAutoSave: vi.fn(),
         });
-        const e = { clientX: 50, clientY: 60 } as MouseEvent;
+        const e = new MouseEvent('dblclick', { clientX: 50, clientY: 60 });
         onDoubleClick(e);
         expect(textEditing.value).toBe(true);
     });

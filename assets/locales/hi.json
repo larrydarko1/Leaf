@@ -319,5 +319,35 @@
     "save_png": "PNG सहेजें",
     "copy_png": "PNG कॉपी करें",
     "close_export_dialog": "एक्सपोर्ट डायलॉग बंद करें"
+  },
+  "errors": {
+    "invalid_arguments": "अनुरोध मान्य नहीं था।",
+    "no_window": "कोई विंडो उपलब्ध नहीं है।",
+    "no_vault": "कोई नोट्स फ़ोल्डर खुला नहीं है।",
+    "access_denied": "पहुँच अस्वीकृत।",
+    "invalid_name": "यह नाम अनुमत नहीं है।",
+    "not_found": "यह नहीं मिला।",
+    "already_exists": "इस नाम का आइटम पहले से मौजूद है।",
+    "move_into_self": "किसी फ़ोल्डर को उसी के अंदर नहीं ले जाया जा सकता।",
+    "disk_full": "डिस्क भर गई है।",
+    "model_not_loaded": "कोई मॉडल लोड नहीं है।",
+    "busy": "व्यस्त है, थोड़ी देर में फिर से प्रयास करें।",
+    "invalid_state": "यह अभी नहीं किया जा सकता।",
+    "unknown": "कुछ गलत हो गया।",
+    "create_file_failed": "फ़ाइल नहीं बनाई जा सकी। {reason}",
+    "create_drawing_failed": "ड्रॉइंग नहीं बनाई जा सकी। {reason}",
+    "create_folder_failed": "फ़ोल्डर नहीं बनाया जा सका। {reason}",
+    "rename_file_failed": "फ़ाइल का नाम नहीं बदला जा सका। {reason}",
+    "rename_folder_failed": "फ़ोल्डर का नाम नहीं बदला जा सका। {reason}",
+    "delete_file_failed": "{name} को हटाया नहीं जा सका। {reason}",
+    "delete_folder_failed": "फ़ोल्डर को हटाया नहीं जा सका। {reason}",
+    "move_file_failed": "{name} को स्थानांतरित नहीं किया जा सका। {reason}",
+    "move_folder_failed": "फ़ोल्डर को स्थानांतरित नहीं किया जा सका। {reason}",
+    "save_file_failed": "फ़ाइल सहेजी नहीं जा सकी। {reason}",
+    "chat_failed": "मॉडल उत्तर नहीं दे सका। {reason}"
+  },
+  "notifications": {
+    "region": "सूचनाएँ",
+    "dismiss": "सूचना हटाएँ"
   }
 }

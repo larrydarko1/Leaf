@@ -2,6 +2,9 @@
 import { onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import IconCheck from '@/renderer/components/icons/IconCheck.vue';
+import IconClose from '@/renderer/components/icons/IconClose.vue';
+import IconRefresh from '@/renderer/components/icons/IconRefresh.vue';
 import { useLanguage } from '@/renderer/composables/ui/useLanguage';
 
 const emit = defineEmits<{ close: [] }>();
@@ -43,35 +46,18 @@ onMounted(() => {
                     :title="t('language.refresh_list')"
                     :aria-label="t('language.refresh_list')"
                     @click="handleRefresh">
-                    <svg
+                    <IconRefresh
                         width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        aria-hidden="true">
-                        <path d="M21 12a9 9 0 1 1-3-6.7" />
-                        <path d="M21 4v5h-5" />
-                    </svg>
+                        height="14" />
                 </button>
                 <button
                     class="icon-btn"
                     :title="t('language.close_panel')"
                     :aria-label="t('language.close_panel')"
                     @click="emit('close')">
-                    <svg
+                    <IconClose
                         width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        aria-hidden="true">
-                        <path
-                            d="M18 6L6 18M6 6l12 12"
-                            stroke-linecap="round" />
-                    </svg>
+                        height="14" />
                 </button>
             </div>
         </header>
@@ -90,20 +76,12 @@ onMounted(() => {
                 :aria-label="`${language.name} ${t('language.language')}`"
                 @click="handleSelect(language.id)">
                 <span class="language-name fill truncate">{{ language.name }}</span>
-                <svg
+                <IconCheck
                     v-if="language.id === activeId"
                     class="list-check"
                     width="14"
                     height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true">
-                    <path d="M5 12l5 5 9-11" />
-                </svg>
+                    stroke-width="2.5" />
             </button>
 
             <div

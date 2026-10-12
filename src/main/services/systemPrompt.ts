@@ -17,13 +17,15 @@ import { existsSync } from 'fs';
 import fs from 'fs/promises';
 import path from 'path';
 
-import type { IpcMain } from 'electron';
 import { shell } from 'electron';
 
 import { readState as readRawState, updateState } from '@/main/lib/appState';
+import { toIpcErrorCode, ipcFailure } from '@/main/lib/errors';
+import type { IpcMain } from '@/main/lib/ipc';
 import { log } from '@/main/lib/logger';
 import { LEAF_HOME, PROMPTS_DIR, getBundledPromptsDir } from '@/main/lib/paths';
-import { type PromptInfo, type PromptState, PromptStateSchema } from '@/schemas/ai';
+import { type PromptInfo, type PromptState, PromptStateSchema, type AiSimpleResult } from '@/schemas/ai';
+import type { IpcErrorCode } from '@/schemas/errors';
 
 const DEFAULT_PROMPT_ID = 'default';
 const PROMPT_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
@@ -40,7 +42,7 @@ export function register(ipc: IpcMain): void {
                   promptsDir: string;
                   error?: undefined;
               }
-            | { success: boolean; error: string; prompts: never[]; activeId: string; promptsDir: string }
+            | { success: boolean; error: IpcErrorCode; prompts: never[]; activeId: string; promptsDir: string }
         > => {
             try {
                 const prompts = await listPrompts();
@@ -55,7 +57,7 @@ export function register(ipc: IpcMain): void {
                 log.error('[systemPrompt] list failed:', err);
                 return {
                     success: false,
-                    error: (err as Error).message,
+                    error: toIpcErrorCode(err),
                     prompts: [],
                     activeId: DEFAULT_PROMPT_ID,
                     promptsDir: PROMPTS_DIR,
@@ -64,38 +66,29 @@ export function register(ipc: IpcMain): void {
         },
     );
 
-    ipc.handle(
-        'systemPrompt:setActive',
-        async (
-            _event,
-            id: unknown,
-        ): Promise<{ success: boolean; error: string } | { success: boolean; error?: undefined }> => {
-            if (typeof id !== 'string' || !isValidPromptId(id)) {
-                return { success: false, error: 'Invalid prompt id' };
-            }
-            const file = path.join(PROMPTS_DIR, `${id}.md`);
-            if (!existsSync(file)) return { success: false, error: 'Prompt not found' };
-            try {
-                await updateState((s): { activePrompt: string } => ({ ...s, activePrompt: id }));
-                return { success: true };
-            } catch (err) {
-                return { success: false, error: (err as Error).message };
-            }
-        },
-    );
+    ipc.handle('systemPrompt:setActive', async (_event, id: unknown): Promise<AiSimpleResult> => {
+        if (typeof id !== 'string' || !isValidPromptId(id)) {
+            return { success: false, error: 'INVALID_ARGUMENTS' };
+        }
+        const file = path.join(PROMPTS_DIR, `${id}.md`);
+        if (!existsSync(file)) return { success: false, error: 'NOT_FOUND' };
+        try {
+            await updateState((s): { activePrompt: string } => ({ ...s, activePrompt: id }));
+            return { success: true };
+        } catch (err) {
+            return ipcFailure('systemPrompt systemPrompt:setActive', err);
+        }
+    });
 
-    ipc.handle(
-        'systemPrompt:openLeafDir',
-        async (): Promise<{ success: boolean; error?: undefined } | { success: boolean; error: string }> => {
-            try {
-                await fs.mkdir(LEAF_HOME, { recursive: true });
-                await shell.openPath(LEAF_HOME);
-                return { success: true };
-            } catch (err) {
-                return { success: false, error: (err as Error).message };
-            }
-        },
-    );
+    ipc.handle('systemPrompt:openLeafDir', async (): Promise<AiSimpleResult> => {
+        try {
+            await fs.mkdir(LEAF_HOME, { recursive: true });
+            await shell.openPath(LEAF_HOME);
+            return { success: true };
+        } catch (err) {
+            return ipcFailure('systemPrompt systemPrompt:openLeafDir', err);
+        }
+    });
 }
 
 /**

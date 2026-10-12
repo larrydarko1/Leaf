@@ -2,12 +2,13 @@ import fs from 'fs';
 import path from 'path';
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { z } from 'zod';
+
+import { createFakeIpc } from './test-utils';
 
 const PATHS = vi.hoisted(() => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { join } = require('path') as typeof import('path');
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { tmpdir } = require('os') as typeof import('os');
+    const { join } = process.getBuiltinModule('path');
+    const { tmpdir } = process.getBuiltinModule('os');
     const tmpRoot = join(tmpdir(), `leaf-language-test-${process.pid}-${Date.now()}`);
     const leafHome = join(tmpRoot, '.leaf');
     return {
@@ -53,29 +54,35 @@ function writeState(state: Record<string, unknown>) {
 
 async function freshService() {
     const { register } = await import('@/main/services/language');
-    const handlers: Record<string, (...args: unknown[]) => unknown> = {};
-    register({
-        handle: vi.fn((channel: string, fn: (...args: unknown[]) => unknown) => {
-            handlers[channel] = fn;
-        }),
-    } as never);
+    const handlers = createFakeIpc();
+    register(handlers);
     return {
         list: () =>
-            handlers['language:list']!({}) as Promise<{
-                success: boolean;
-                languages?: { id: string; name: string }[];
-                activeId: string;
-                localesDir: string;
-                error?: string;
-            }>,
+            handlers.invoke('language:list').then((reply) =>
+                z
+                    .object({
+                        success: z.boolean(),
+                        languages: z.array(z.object({ id: z.string(), name: z.string() })).optional(),
+                        activeId: z.string(),
+                        localesDir: z.string(),
+                        error: z.string().optional(),
+                    })
+                    .parse(reply),
+            ),
         setActive: (id: unknown) =>
-            handlers['language:setActive']!({}, id) as Promise<{ success: boolean; error?: string }>,
+            handlers
+                .invoke('language:setActive', id)
+                .then((reply) => z.object({ success: z.boolean(), error: z.string().optional() }).parse(reply)),
         load: (id: unknown) =>
-            handlers['language:load']!({}, id) as Promise<{
-                success: boolean;
-                content?: Record<string, unknown>;
-                error?: string;
-            }>,
+            handlers.invoke('language:load', id).then((reply) =>
+                z
+                    .object({
+                        success: z.boolean(),
+                        content: z.record(z.string(), z.unknown()).optional(),
+                        error: z.string().optional(),
+                    })
+                    .parse(reply),
+            ),
     };
 }
 
@@ -111,9 +118,9 @@ describe('language service', () => {
         fs.writeFileSync(path.join(LOCALES_DIR, 'en.json'), JSON.stringify({ custom: true }));
         const svc = await freshService();
         await svc.list();
-        const content = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, 'en.json'), 'utf-8'));
-        expect(content.custom).toBe(true);
-        expect(content.common.save).toBe('Save');
+        const content: unknown = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, 'en.json'), 'utf-8'));
+        expect(content).toMatchObject({ custom: true });
+        expect(content).toMatchObject({ common: { save: 'Save' } });
     });
 
     it('is idempotent — listing twice only copies once', async () => {
@@ -194,8 +201,8 @@ describe('language service', () => {
         it('updates activeLanguage in state', async () => {
             const svc = await freshService();
             await svc.setActive('it');
-            const state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf-8'));
-            expect(state.activeLanguage).toBe('it');
+            const state: unknown = JSON.parse(fs.readFileSync(STATE_FILE, 'utf-8'));
+            expect(state).toMatchObject({ activeLanguage: 'it' });
         });
 
         it('returns success when language file exists', async () => {
@@ -221,10 +228,10 @@ describe('language service', () => {
             writeState({ activeTheme: 'dark', activePrompt: 'coding' });
             const svc = await freshService();
             await svc.setActive('it');
-            const state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf-8'));
-            expect(state.activeLanguage).toBe('it');
-            expect(state.activeTheme).toBe('dark');
-            expect(state.activePrompt).toBe('coding');
+            const state: unknown = JSON.parse(fs.readFileSync(STATE_FILE, 'utf-8'));
+            expect(state).toMatchObject({ activeLanguage: 'it' });
+            expect(state).toMatchObject({ activeTheme: 'dark' });
+            expect(state).toMatchObject({ activePrompt: 'coding' });
         });
     });
 
@@ -232,14 +239,14 @@ describe('language service', () => {
         it.each(['en', 'en_US', 'zh-Hans', 'pt_BR'])('accepts the well-formed id %s', async (id) => {
             const svc = await freshService();
             const result = await svc.setActive(id);
-            expect(result.error).toBe('Language not found');
+            expect(result.error).toBe('NOT_FOUND');
         });
 
         it.each(['../../../etc/passwd', '..\\windows\\system32'])('rejects the traversal attempt %s', async (id) => {
             const svc = await freshService();
             const result = await svc.setActive(id);
             expect(result.success).toBe(false);
-            expect(result.error).toBe('Invalid language id');
+            expect(result.error).toBe('INVALID_ARGUMENTS');
         });
 
         it.each(['en;rm -rf /', 'en`whoami`', 'en$(cat /etc/passwd)', ''])(
@@ -248,7 +255,7 @@ describe('language service', () => {
                 const svc = await freshService();
                 const result = await svc.setActive(id);
                 expect(result.success).toBe(false);
-                expect(result.error).toBe('Invalid language id');
+                expect(result.error).toBe('INVALID_ARGUMENTS');
             },
         );
 
@@ -256,7 +263,7 @@ describe('language service', () => {
             const svc = await freshService();
             const result = await svc.setActive(123);
             expect(result.success).toBe(false);
-            expect(result.error).toBe('Invalid language id');
+            expect(result.error).toBe('INVALID_ARGUMENTS');
         });
     });
 
@@ -277,14 +284,14 @@ describe('language service', () => {
             const svc = await freshService();
             const result = await svc.load('../../../etc/passwd');
             expect(result.success).toBe(false);
-            expect(result.error).toMatch(/invalid language id/i);
+            expect(result.error).toBe('INVALID_ARGUMENTS');
         });
 
         it('returns failure when language file does not exist', async () => {
             const svc = await freshService();
             const result = await svc.load('fr');
             expect(result.success).toBe(false);
-            expect(result.error).toMatch(/not found/i);
+            expect(result.error).toBe('NOT_FOUND');
         });
 
         it('returns failure when file contains invalid JSON', async () => {
@@ -303,8 +310,9 @@ describe('language service', () => {
                 handle: vi.fn((ch: string) => {
                     handles.push(ch);
                 }),
+                on: vi.fn(),
             };
-            register(ipc as never);
+            register(ipc);
             expect(handles).toContain('language:list');
             expect(handles).toContain('language:setActive');
             expect(handles).toContain('language:load');

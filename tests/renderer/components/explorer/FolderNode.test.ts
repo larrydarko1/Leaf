@@ -1,8 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 import FolderNode from '@/renderer/components/explorer/FolderNode.vue';
 import type { FileInfo, TreeNode } from '@/schemas/vault';
-import { mountWithI18n } from '@test-utils';
+import { mountWithI18n, FakeDataTransfer, instanceOf } from '@test-utils';
 
 const noteFile = makeFile('notes.md', '/vault/notes.md');
 const imageFile = makeFile('photo.png', '/vault/photo.png', 'png');
@@ -23,13 +23,7 @@ const baseProps = {
 };
 
 function makeDataTransfer(data = ''): DataTransfer {
-    return {
-        effectAllowed: '',
-        dropEffect: '',
-        types: [] as string[],
-        setData: vi.fn(),
-        getData: vi.fn(() => data),
-    } as unknown as DataTransfer;
+    return new FakeDataTransfer(data === '' ? {} : { 'text/plain': data });
 }
 
 function makeFile(name: string, path: string, ext = 'md'): FileInfo {
@@ -395,7 +389,7 @@ describe('FolderNode — hover marquee', () => {
         const wrapper = mountWithI18n(FolderNode, {
             props: { ...baseProps, node: makeFolderNode('/vault/docs', 'docs') },
         });
-        const el = wrapper.find('.folder-name .name-text').element as HTMLElement;
+        const el = instanceOf(wrapper.find('.folder-name .name-text').element, HTMLElement);
         Object.defineProperty(el, 'scrollWidth', { value: 200, configurable: true });
         Object.defineProperty(el, 'clientWidth', { value: 100, configurable: true });
         await wrapper.find('.folder-item').trigger('mouseenter');
@@ -407,7 +401,7 @@ describe('FolderNode — hover marquee', () => {
 
     it('scrolls an overflowing file name on hover and resets on leave', async () => {
         const wrapper = mountWithI18n(FolderNode, { props: { ...baseProps, node: makeFileNode(noteFile) } });
-        const el = wrapper.find('.file-name .name-text').element as HTMLElement;
+        const el = instanceOf(wrapper.find('.file-name .name-text').element, HTMLElement);
         Object.defineProperty(el, 'scrollWidth', { value: 200, configurable: true });
         Object.defineProperty(el, 'clientWidth', { value: 100, configurable: true });
         await wrapper.find('.file-item').trigger('mouseenter');

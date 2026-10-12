@@ -1,24 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 
 import { useTreeNodeDrag } from '@/renderer/composables/vault/useTreeNodeDrag';
 import type { TreeNode, FileInfo } from '@/schemas/vault';
+import { createDragEvent, FakeDataTransfer } from '@test-utils';
 
 function makeFakeDragEvent(dataToReturn = ''): DragEvent {
-    const store: Record<string, string> = {};
-    const dt = {
-        effectAllowed: '',
-        dropEffect: '',
-        setData(type: string, val: string) {
-            store[type] = val;
-        },
-        getData(type: string) {
-            return store[type] ?? dataToReturn;
-        },
-    };
-    return {
-        dataTransfer: dt as unknown as DataTransfer,
-        preventDefault: vi.fn(),
-    } as unknown as DragEvent;
+    return createDragEvent('drag', new FakeDataTransfer(dataToReturn === '' ? {} : { 'text/plain': dataToReturn }));
 }
 
 function makeFileNode(filePath = '/vault/note.md', folder = '.'): TreeNode {
@@ -39,13 +26,13 @@ function makeFolderNode(relativePath: string): TreeNode {
 }
 
 describe('useTreeNodeDrag', () => {
-    let onMoveFile: ReturnType<typeof vi.fn>;
-    let onMoveFolder: ReturnType<typeof vi.fn>;
+    let onMoveFile: Mock<(filePath: string, targetFolderPath: string) => void>;
+    let onMoveFolder: Mock<(folderPath: string, targetFolderPath: string) => void>;
     let activeFile: FileInfo | null;
 
     beforeEach(() => {
-        onMoveFile = vi.fn();
-        onMoveFolder = vi.fn();
+        onMoveFile = vi.fn<(filePath: string, targetFolderPath: string) => void>();
+        onMoveFolder = vi.fn<(folderPath: string, targetFolderPath: string) => void>();
         activeFile = null;
     });
 
@@ -53,8 +40,8 @@ describe('useTreeNodeDrag', () => {
         return useTreeNodeDrag(
             () => node,
             () => activeFile,
-            onMoveFile as unknown as (filePath: string, targetFolderPath: string) => void,
-            onMoveFolder as unknown as (folderPath: string, targetFolderPath: string) => void,
+            onMoveFile,
+            onMoveFolder,
         );
     }
 
@@ -100,7 +87,7 @@ describe('useTreeNodeDrag', () => {
             const { handleDragOver } = makeDrag(makeFolderNode('docs'));
             const event = makeFakeDragEvent();
             handleDragOver(event);
-            expect(event.preventDefault).toHaveBeenCalled();
+            expect(event.defaultPrevented).toBe(true);
         });
 
         it('does not set isDragOver when the node is a file', () => {

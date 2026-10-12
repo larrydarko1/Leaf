@@ -2,6 +2,12 @@
 import { watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import IconMusic from '@/renderer/components/icons/IconMusic.vue';
+import IconPause from '@/renderer/components/icons/IconPause.vue';
+import IconPlay from '@/renderer/components/icons/IconPlay.vue';
+import IconVolumeHigh from '@/renderer/components/icons/IconVolumeHigh.vue';
+import IconVolumeLow from '@/renderer/components/icons/IconVolumeLow.vue';
+import IconVolumeMute from '@/renderer/components/icons/IconVolumeMute.vue';
 import { useAudioPlayer } from '@/renderer/composables/editor/useAudioPlayer';
 
 type Props = {
@@ -43,8 +49,8 @@ function formatTime(seconds: number): string {
 
 function onKeydown(e: KeyboardEvent): void {
     if (e.key !== ' ') return;
-    const target = e.target as HTMLElement;
-    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+    const target = e.target;
+    if (target instanceof HTMLElement && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
     e.preventDefault();
     toggleAudioPlayback();
 }
@@ -72,25 +78,10 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
             <div
                 class="audio-icon"
                 aria-hidden="true">
-                <svg
+                <IconMusic
                     width="80"
                     height="80"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <path d="M9 18V5l12-2v13"></path>
-                    <circle
-                        cx="6"
-                        cy="18"
-                        r="3"></circle>
-                    <circle
-                        cx="18"
-                        cy="16"
-                        r="3"></circle>
-                </svg>
+                    stroke-width="1.5" />
             </div>
 
             <!-- Loading state -->
@@ -125,35 +116,14 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                     :aria-label="audioPlaying ? t('editor.pause_audio') : t('editor.play_audio')"
                     :title="audioPlaying ? t('editor.pause') : t('editor.play')"
                     @click="toggleAudioPlayback">
-                    <svg
+                    <IconPlay
                         v-if="!audioPlaying"
                         width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        aria-hidden="true">
-                        <path d="M8 5v14l11-7z" />
-                    </svg>
-                    <svg
+                        height="16" />
+                    <IconPause
                         v-else
                         width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        aria-hidden="true">
-                        <rect
-                            x="6"
-                            y="4"
-                            width="4"
-                            height="16"
-                            rx="1" />
-                        <rect
-                            x="14"
-                            y="4"
-                            width="4"
-                            height="16"
-                            rx="1" />
-                    </svg>
+                        height="16" />
                 </button>
 
                 <!-- Current time display -->
@@ -199,57 +169,18 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                         :aria-label="audioVolume === 0 ? t('editor.unmute_audio') : t('editor.mute_audio')"
                         :title="audioVolume === 0 ? t('editor.unmute') : t('editor.mute')"
                         @click="toggleMute">
-                        <svg
+                        <IconVolumeMute
                             v-if="audioVolume === 0"
                             width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true">
-                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                            <line
-                                x1="23"
-                                y1="9"
-                                x2="17"
-                                y2="15"></line>
-                            <line
-                                x1="17"
-                                y1="9"
-                                x2="23"
-                                y2="15"></line>
-                        </svg>
-                        <svg
+                            height="16" />
+                        <IconVolumeLow
                             v-else-if="audioVolume < 0.5"
                             width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true">
-                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                        </svg>
-                        <svg
+                            height="16" />
+                        <IconVolumeHigh
                             v-else
                             width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true">
-                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                        </svg>
+                            height="16" />
                     </button>
                     <input
                         type="range"

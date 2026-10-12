@@ -1,8 +1,12 @@
-import { shallowMount } from '@vue/test-utils';
+import { flushPromises, shallowMount } from '@vue/test-utils';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref } from 'vue';
 
 import App from '@/renderer/App.vue';
+import AudioRecorder from '@/renderer/components/AudioRecorder.vue';
+import FileExplorer from '@/renderer/components/FileExplorer.vue';
+import NoteEditor from '@/renderer/components/NoteEditor.vue';
+import TabBar from '@/renderer/components/TabBar.vue';
 import { i18n } from '@/renderer/i18n';
 import type { FileInfo } from '@/schemas/vault';
 
@@ -22,7 +26,7 @@ const mockRenameFolder = vi.fn().mockResolvedValue(null);
 const mockMoveFiles = vi.fn().mockResolvedValue([]);
 const mockMoveFolder = vi.fn().mockResolvedValue(false);
 const mockCloseVault = vi.fn();
-const mockSetExternalChangeCallback = vi.fn();
+const mockSetExternalChangeCallback = vi.fn<(onChange: () => Promise<void>) => void>();
 
 vi.mock('@/renderer/composables/vault/useVault', () => ({
     useVault: vi.fn(() => ({
@@ -153,6 +157,14 @@ function makeFile(overrides: Partial<FileInfo> = {}): FileInfo {
 
 function mountApp() {
     return shallowMount(App, { global: { plugins: [i18n] } });
+}
+
+/** The app with a vault open, settled: the sidebar, explorer, tabs and editor are rendered. */
+async function mountWithVault() {
+    mockCurrentFolder.value = '/vault';
+    const wrapper = mountApp();
+    await flushPromises();
+    return wrapper;
 }
 
 function findToggle(wrapper: ReturnType<typeof mountApp>, label: string) {
@@ -304,9 +316,8 @@ describe('App', () => {
 
     describe('changeFolder', () => {
         it('calls closeVault, clearSelection, clearTabs, setFolderPath(null)', async () => {
-            mockCurrentFolder.value = '/vault';
-            const wrapper = mountApp();
-            await (wrapper.vm as unknown as { changeFolder: () => void }).changeFolder?.();
+            const wrapper = await mountWithVault();
+            await wrapper.find('[aria-label="Change notes folder"]').trigger('click');
             expect(mockCloseVault).toHaveBeenCalled();
             expect(mockClearSelection).toHaveBeenCalled();
             expect(mockClearTabs).toHaveBeenCalled();
@@ -319,8 +330,9 @@ describe('App', () => {
         it('opens file in selection and tab when vault returns a new file', async () => {
             const newFile = makeFile();
             mockCreateFile.mockResolvedValue(newFile);
-            const wrapper = mountApp();
-            await (wrapper.vm as unknown as { createNewFile: () => Promise<void> }).createNewFile?.();
+            const wrapper = await mountWithVault();
+            await wrapper.find('[aria-label="Create new note"]').trigger('click');
+            await flushPromises();
             expect(mockOpenFile).toHaveBeenCalledWith(newFile);
             expect(mockOpenTab).toHaveBeenCalledWith(newFile);
             wrapper.unmount();
@@ -328,8 +340,10 @@ describe('App', () => {
 
         it('does nothing when vault.createFile returns null', async () => {
             mockCreateFile.mockResolvedValue(null);
-            const wrapper = mountApp();
-            await (wrapper.vm as unknown as { createNewFile: () => Promise<void> }).createNewFile?.();
+            const wrapper = await mountWithVault();
+            mockOpenFile.mockClear();
+            await wrapper.find('[aria-label="Create new note"]').trigger('click');
+            await flushPromises();
             expect(mockOpenFile).not.toHaveBeenCalled();
             wrapper.unmount();
         });
@@ -339,8 +353,9 @@ describe('App', () => {
         it('opens drawing in selection and tab when vault returns a new file', async () => {
             const drawingFile = makeFile({ name: 'art.drawing', extension: '.drawing' });
             mockCreateDrawing.mockResolvedValue(drawingFile);
-            const wrapper = mountApp();
-            await (wrapper.vm as unknown as { createNewDrawing: () => Promise<void> }).createNewDrawing?.();
+            const wrapper = await mountWithVault();
+            await wrapper.find('[aria-label="Create new drawing"]').trigger('click');
+            await flushPromises();
             expect(mockOpenFile).toHaveBeenCalledWith(drawingFile);
             expect(mockOpenTab).toHaveBeenCalledWith(drawingFile);
             wrapper.unmount();
@@ -352,8 +367,9 @@ describe('App', () => {
             const file = makeFile();
             mockActiveFile.value = file;
             mockTabs.value = [{ file, hasUnsavedChanges: true, content: 'text' }];
-            const wrapper = mountApp();
-            await (wrapper.vm as unknown as { handleFileSave: () => void }).handleFileSave?.();
+            const wrapper = await mountWithVault();
+            wrapper.findComponent(NoteEditor).vm.$emit('save', 'text');
+            await flushPromises();
             expect(mockMarkTabSaved).toHaveBeenCalledWith(file.path, 'text');
             expect(mockRefreshFiles).toHaveBeenCalled();
             wrapper.unmount();
@@ -366,21 +382,21 @@ describe('App', () => {
             mockActiveFile.value = file;
             const tab = { file, hasUnsavedChanges: false, content: 'text' };
             mockTabs.value = [tab];
-            const wrapper = mountApp();
-            (wrapper.vm as unknown as { handleContentChanged: (v: boolean) => void }).handleContentChanged?.(true);
+            const wrapper = await mountWithVault();
+            wrapper.findComponent(NoteEditor).vm.$emit('contentChanged', true);
             expect(tab.hasUnsavedChanges).toBe(true);
             wrapper.unmount();
         });
     });
 
     describe('handleTabSwitch', () => {
-        it('calls editorTabs.switchTab and opens active file', () => {
+        it('calls editorTabs.switchTab and opens active file', async () => {
             const file = makeFile();
             mockSwitchTab.mockImplementation(() => {
                 mockActiveFile.value = file;
             });
-            const wrapper = mountApp();
-            (wrapper.vm as unknown as { handleTabSwitch: (i: number) => void }).handleTabSwitch?.(1);
+            const wrapper = await mountWithVault();
+            wrapper.findComponent(TabBar).vm.$emit('switch', 1);
             expect(mockSwitchTab).toHaveBeenCalledWith(1);
             wrapper.unmount();
         });
@@ -391,10 +407,9 @@ describe('App', () => {
             const original = makeFile({ name: 'old.md', path: '/vault/old.md' });
             const renamed = makeFile({ name: 'new.md', path: '/vault/new.md' });
             mockRenameFile.mockResolvedValue(renamed);
-            const wrapper = mountApp();
-            await (
-                wrapper.vm as unknown as { handleFileRename: (f: FileInfo, n: string) => Promise<void> }
-            ).handleFileRename?.(original, 'new.md');
+            const wrapper = await mountWithVault();
+            wrapper.findComponent(FileExplorer).vm.$emit('renameFile', original, 'new.md');
+            await flushPromises();
             expect(mockRenameTabFile).toHaveBeenCalledWith(original.path, renamed);
             expect(mockOpenFile).toHaveBeenCalledWith(renamed);
             wrapper.unmount();
@@ -402,10 +417,9 @@ describe('App', () => {
 
         it('does nothing when rename returns null', async () => {
             mockRenameFile.mockResolvedValue(null);
-            const wrapper = mountApp();
-            await (
-                wrapper.vm as unknown as { handleFileRename: (f: FileInfo, n: string) => Promise<void> }
-            ).handleFileRename?.(makeFile(), 'fail.md');
+            const wrapper = await mountWithVault();
+            wrapper.findComponent(FileExplorer).vm.$emit('renameFile', makeFile(), 'fail.md');
+            await flushPromises();
             expect(mockRenameTabFile).not.toHaveBeenCalled();
             wrapper.unmount();
         });
@@ -416,10 +430,9 @@ describe('App', () => {
             const file = makeFile();
             mockSelectedFiles.value = [file];
             mockTabs.value = [{ file, hasUnsavedChanges: false, content: null }];
-            const wrapper = mountApp();
-            await (wrapper.vm as unknown as { handleFileDelete: (f: FileInfo) => Promise<void> }).handleFileDelete?.(
-                file,
-            );
+            const wrapper = await mountWithVault();
+            wrapper.findComponent(FileExplorer).vm.$emit('deleteFile', file);
+            await flushPromises();
             expect(mockDeleteFile).toHaveBeenCalled();
             expect(mockClearSelection).toHaveBeenCalled();
             wrapper.unmount();
@@ -430,10 +443,9 @@ describe('App', () => {
         it('refreshes files and opens new recording', async () => {
             const recFile = makeFile({ name: 'recording.wav', path: '/vault/recording.wav', extension: '.wav' });
             mockFiles.value = [recFile];
-            const wrapper = mountApp();
-            await (
-                wrapper.vm as unknown as { handleRecordingSaved: (p: string) => Promise<void> }
-            ).handleRecordingSaved?.('/vault/recording.wav');
+            const wrapper = await mountWithVault();
+            wrapper.findComponent(AudioRecorder).vm.$emit('recordingSaved', '/vault/recording.wav');
+            await flushPromises();
             expect(mockRefreshFiles).toHaveBeenCalled();
             expect(mockOpenFile).toHaveBeenCalledWith(recFile);
             expect(mockOpenTab).toHaveBeenCalledWith(recFile);
@@ -497,7 +509,8 @@ describe('App', () => {
         it('opens folder dialog and clears tabs when path returned', async () => {
             mockOpenFolderDialog.mockResolvedValue('/new-vault');
             const wrapper = mountApp();
-            await (wrapper.vm as unknown as { selectFolder: () => Promise<void> }).selectFolder?.();
+            await wrapper.find('.welcome-action').trigger('click');
+            await flushPromises();
             expect(mockOpenFolderDialog).toHaveBeenCalled();
             expect(mockClearTabs).toHaveBeenCalled();
             expect(mockLoadBookmarks).toHaveBeenCalled();
@@ -511,7 +524,8 @@ describe('App', () => {
             mockClearTabs.mockClear();
             mockRestoreTabs.mockClear();
             mockLoadBookmarks.mockClear();
-            await (wrapper.vm as unknown as { selectFolder: () => Promise<void> }).selectFolder?.();
+            await wrapper.find('.welcome-action').trigger('click');
+            await flushPromises();
             expect(mockClearTabs).not.toHaveBeenCalled();
             expect(mockRestoreTabs).not.toHaveBeenCalled();
             expect(mockLoadBookmarks).not.toHaveBeenCalled();
@@ -524,7 +538,8 @@ describe('App', () => {
             mockRestoreTabs.mockReturnValue(true);
             mockActiveFile.value = file;
             const wrapper = mountApp();
-            await (wrapper.vm as unknown as { selectFolder: () => Promise<void> }).selectFolder?.();
+            await wrapper.find('.welcome-action').trigger('click');
+            await flushPromises();
             expect(mockOpenFile).toHaveBeenCalledWith(file);
             wrapper.unmount();
         });
@@ -570,10 +585,9 @@ describe('App', () => {
     describe('handleFolderRename', () => {
         it('updates selectedFolder on successful rename', async () => {
             mockRenameFolder.mockResolvedValue('new-sub');
-            const wrapper = mountApp();
-            await (
-                wrapper.vm as unknown as { handleFolderRename: (p: string, n: string) => Promise<void> }
-            ).handleFolderRename?.('/vault/old-sub', 'new-sub');
+            const wrapper = await mountWithVault();
+            wrapper.findComponent(FileExplorer).vm.$emit('renameFolder', '/vault/old-sub', 'new-sub');
+            await flushPromises();
             expect(mockSelectedFolder.value).toBe('new-sub');
             wrapper.unmount();
         });
@@ -583,10 +597,9 @@ describe('App', () => {
         it('clears selectedFolder on successful delete', async () => {
             mockDeleteFolder.mockResolvedValue(true);
             mockSelectedFolder.value = '/vault/sub';
-            const wrapper = mountApp();
-            await (wrapper.vm as unknown as { handleFolderDelete: (p: string) => Promise<void> }).handleFolderDelete?.(
-                '/vault/sub',
-            );
+            const wrapper = await mountWithVault();
+            wrapper.findComponent(FileExplorer).vm.$emit('deleteFolder', '/vault/sub');
+            await flushPromises();
             expect(mockSelectedFolder.value).toBeNull();
             wrapper.unmount();
         });
@@ -596,12 +609,11 @@ describe('App', () => {
         it('calls refreshFiles and syncAfterRefresh when external change fires', async () => {
             const wrapper = mountApp();
             await wrapper.vm.$nextTick();
-            const cb = mockSetExternalChangeCallback.mock.calls[0]?.[0] as (() => Promise<void>) | undefined;
-            if (cb !== undefined) {
-                await cb();
-                expect(mockRefreshFiles).toHaveBeenCalled();
-                expect(mockSyncAfterRefresh).toHaveBeenCalled();
-            }
+            const cb = mockSetExternalChangeCallback.mock.calls[0]?.[0];
+            expect(cb).toBeDefined();
+            await cb?.();
+            expect(mockRefreshFiles).toHaveBeenCalled();
+            expect(mockSyncAfterRefresh).toHaveBeenCalled();
             wrapper.unmount();
         });
     });

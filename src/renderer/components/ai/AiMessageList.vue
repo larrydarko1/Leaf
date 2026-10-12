@@ -2,6 +2,14 @@
 import { ref, watch, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import IconAlertCircle from '@/renderer/components/icons/IconAlertCircle.vue';
+import IconCheck from '@/renderer/components/icons/IconCheck.vue';
+import IconClose from '@/renderer/components/icons/IconClose.vue';
+import IconCopy from '@/renderer/components/icons/IconCopy.vue';
+import IconEdit from '@/renderer/components/icons/IconEdit.vue';
+import IconRefresh from '@/renderer/components/icons/IconRefresh.vue';
+import IconRetry from '@/renderer/components/icons/IconRetry.vue';
+import IconTrash from '@/renderer/components/icons/IconTrash.vue';
 import type { AiModelInfo, AiStatus } from '@/schemas/ai';
 import type { ChatMessage } from '@/schemas/chat';
 
@@ -12,7 +20,6 @@ type Props = {
     isStreaming: boolean;
     isReady: boolean;
     editingIndex: number | null;
-    editContent: string;
     copiedIndex: number | null;
     previousModelMatch: AiModelInfo | null;
     isLoading: boolean;
@@ -23,6 +30,7 @@ type Props = {
 };
 
 const props = defineProps<Props>();
+const editContent = defineModel<string>('editContent', { required: true });
 
 defineEmits<{
     'scroll': [];
@@ -34,7 +42,6 @@ defineEmits<{
     'load-previous-model': [];
     'copy': [content: string, index: number];
     'copy-code': [value: string];
-    'update:editContent': [value: string];
     'start-edit': [index: number];
     'confirm-edit': [index: number];
     'resend': [index: number];
@@ -90,8 +97,7 @@ function renderWithCopyBtns(content: string): string {
 }
 
 async function onMarkdownClick(content: string, event: MouseEvent): Promise<void> {
-    const target = event.target as Element;
-    const closest = target.closest('.ai-code-copy-btn');
+    const closest = event.target instanceof Element ? event.target.closest('.ai-code-copy-btn') : null;
     const btn = closest instanceof HTMLButtonElement ? closest : null;
     if (btn === null) return;
 
@@ -185,11 +191,10 @@ watch(
                     <textarea
                         id="edit-input-user-msg"
                         ref="editInputRef"
-                        :value="editContent"
+                        v-model="editContent"
                         class="ai-edit-input field field-resize-y"
                         rows="2"
                         aria-label="Edit user message"
-                        @input="$emit('update:editContent', ($event.target as HTMLTextAreaElement).value)"
                         @keydown.enter.exact.prevent="$emit('confirm-edit', index)"
                         @keydown.escape.prevent="$emit('cancel-edit')" />
                     <div class="ai-edit-actions row">
@@ -197,42 +202,19 @@ watch(
                             class="ai-btn-icon ai-btn-tiny icon-btn"
                             :aria-label="t('ai.cancel_editing')"
                             @click="$emit('cancel-edit')">
-                            <svg
+                            <IconClose
                                 width="10"
                                 height="10"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2.5"
-                                stroke-linecap="round"
-                                stroke-linejoin="round">
-                                <line
-                                    x1="18"
-                                    y1="6"
-                                    x2="6"
-                                    y2="18" />
-                                <line
-                                    x1="6"
-                                    y1="6"
-                                    x2="18"
-                                    y2="18" />
-                            </svg>
+                                stroke-width="2.5" />
                         </button>
                         <button
                             class="ai-btn-icon ai-btn-tiny icon-btn"
                             :aria-label="t('ai.save_changes_and_resend')"
                             @click="$emit('confirm-edit', index)">
-                            <svg
+                            <IconCheck
                                 width="10"
                                 height="10"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2.5"
-                                stroke-linecap="round"
-                                stroke-linejoin="round">
-                                <polyline points="20 6 9 17 4 12" />
-                            </svg>
+                                stroke-width="2.5" />
                         </button>
                     </div>
                 </div>
@@ -249,31 +231,9 @@ watch(
                     v-else-if="msg.role === 'system'"
                     class="ai-message-content ai-system-notice"
                     role="status">
-                    <svg
+                    <IconAlertCircle
                         width="12"
-                        height="12"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true">
-                        <circle
-                            cx="12"
-                            cy="12"
-                            r="10" />
-                        <line
-                            x1="12"
-                            y1="8"
-                            x2="12"
-                            y2="12" />
-                        <line
-                            x1="12"
-                            y1="16"
-                            x2="12.01"
-                            y2="16" />
-                    </svg>
+                        height="12" />
                     <span>{{ msg.content }}</span>
                 </div>
 
@@ -321,115 +281,51 @@ watch(
                         class="ai-btn-action icon-btn-subtle"
                         :aria-label="copiedIndex === index ? t('ai.copied') : t('ai.copy_message')"
                         @click="$emit('copy', msg.content, index)">
-                        <svg
+                        <IconCopy
                             v-if="copiedIndex !== index"
                             width="11"
-                            height="11"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true">
-                            <rect
-                                x="9"
-                                y="9"
-                                width="13"
-                                height="13"
-                                rx="2"
-                                ry="2" />
-                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                        </svg>
-                        <svg
+                            height="11" />
+                        <IconCheck
                             v-else
                             width="11"
                             height="11"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2.5"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true">
-                            <polyline points="20 6 9 17 4 12" />
-                        </svg>
+                            stroke-width="2.5" />
                     </button>
                     <button
                         v-if="msg.role === 'user'"
                         class="ai-btn-action icon-btn-subtle"
                         :aria-label="t('ai.edit_message')"
                         @click="$emit('start-edit', index)">
-                        <svg
+                        <IconEdit
                             width="11"
-                            height="11"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                        </svg>
+                            height="11" />
                     </button>
                     <button
                         v-if="msg.role === 'user' && index === messages.length - 1 && isReady"
                         class="ai-btn-action icon-btn-subtle"
                         :aria-label="t('ai.resend_message')"
                         @click="$emit('resend', index)">
-                        <svg
+                        <IconRetry
                             width="11"
-                            height="11"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true">
-                            <polyline points="1 4 1 10 7 10" />
-                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-                        </svg>
+                            height="11" />
                     </button>
                     <button
                         v-if="msg.role === 'assistant' && index === messages.length - 1 && isReady"
                         class="ai-btn-action icon-btn-subtle"
                         :aria-label="t('ai.regenerate_assistant_response')"
                         @click="$emit('regenerate')">
-                        <svg
+                        <IconRefresh
                             width="11"
-                            height="11"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true">
-                            <polyline points="23 4 23 10 17 10" />
-                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-                        </svg>
+                            height="11" />
                     </button>
                     <button
                         v-if="index === messages.length - 1"
                         class="ai-btn-action ai-btn-action-danger icon-btn-subtle icon-btn-danger"
                         :aria-label="t('ai.delete_last_message_pair')"
                         @click="$emit('delete-last-pair')">
-                        <svg
+                        <IconTrash
                             width="11"
-                            height="11"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true">
-                            <polyline points="3 6 5 6 21 6" />
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                        </svg>
+                            height="11" />
                     </button>
                 </div>
             </div>
@@ -443,31 +339,9 @@ watch(
         role="status"
         :aria-label="t('ai.model_status')">
         <div class="ai-load-model-banner-content row">
-            <svg
+            <IconAlertCircle
                 width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true">
-                <circle
-                    cx="12"
-                    cy="12"
-                    r="10" />
-                <line
-                    x1="12"
-                    y1="8"
-                    x2="12"
-                    y2="12" />
-                <line
-                    x1="12"
-                    y1="16"
-                    x2="12.01"
-                    y2="16" />
-            </svg>
+                height="14" />
             <span>{{ t('ai.load_model_to_continue') }}</span>
         </div>
         <button
@@ -476,19 +350,10 @@ watch(
             :disabled="isLoading"
             :aria-label="t('ai.load_model', { model: previousModelMatch.name })"
             @click="$emit('load-previous-model')">
-            <svg
+            <IconRefresh
                 width="12"
                 height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true">
-                <polyline points="23 4 23 10 17 10" />
-                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-            </svg>
+                stroke-width="2.5" />
             {{ isLoading ? t('ai.loading') : t('ai.load_model', { model: truncate(previousModelMatch.name, 20) }) }}
         </button>
     </aside>

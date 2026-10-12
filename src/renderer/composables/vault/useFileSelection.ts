@@ -6,7 +6,7 @@ import { ref, type Ref } from 'vue';
 
 import type { FileInfo } from '@/schemas/vault';
 
-export type UseFileSelectionReturn = {
+type UseFileSelectionReturn = {
     selectedFiles: Ref<FileInfo[]>;
     activeFile: Ref<FileInfo | null>;
     selectedFolder: Ref<string | null>;

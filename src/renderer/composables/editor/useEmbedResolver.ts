@@ -12,7 +12,7 @@ import {
 } from '@/renderer/utils/fileTypes';
 import type { EmbedResolveResult } from '@/schemas/vault';
 
-export type UseEmbedResolverReturn = {
+type UseEmbedResolverReturn = {
     embedCache: Ref<Map<string, string>>;
     embedCacheVersion: Ref<number>;
     resolveEmbeds: (text: string) => Promise<void>;

@@ -2,7 +2,6 @@ import { createI18n } from 'vue-i18n';
 
 import en from '../../assets/locales/en.json';
 
-export type MessageSchema = typeof en;
 const DEFAULT_LOCALE = 'en';
 
 /**

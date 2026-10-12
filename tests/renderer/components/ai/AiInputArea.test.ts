@@ -613,7 +613,7 @@ describe('AiInputArea', () => {
 
             const emitted = wrapper.emitted('add-context-file');
             expect(emitted).toBeTruthy();
-            expect((emitted?.[0]?.[0] as FileInfo).path).toBe('/pick-me.md');
+            expect(emitted?.[0]?.[0]).toMatchObject({ path: '/pick-me.md' });
         });
 
         it('disables the add button when the max is reached', () => {

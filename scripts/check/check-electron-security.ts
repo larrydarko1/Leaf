@@ -9,10 +9,9 @@
  *
  * `vHtml` names each v-html BINDING, not each file, so a second binding added to
  * one of these components fails until someone writes down why it is safe too.
- * Both reasons were checked against the code when they were written: the
- * toolbar icons are string literals in the component's own shape table, and
- * the chat's copy buttons are wrapped around markup that has already been
- * through DOMPurify with an ALLOWED_TAGS allowlist.
+ * The reason was checked against the code when it was written: the chat's copy
+ * buttons are wrapped around markup that has already been through DOMPurify
+ * with an ALLOWED_TAGS allowlist.
  *
  * `sanitizers` adds `renderInline` to the built-in escapeHtml and
  * DOMPurify.sanitize: it is how markdown table cells reach innerHTML.
@@ -21,11 +20,6 @@ import { checkElectronSecurity } from '@larrydarko/lint-config/gates/electron-se
 
 checkElectronSecurity({
     vHtml: [
-        {
-            file: 'src/renderer/components/drawing/DrawingToolbar.vue',
-            binding: 'shape.icon',
-            why: '`shape.icon` is a static SVG string in the component’s own shape table — never user input.',
-        },
         {
             file: 'src/renderer/components/ai/AiMessageList.vue',
             binding: 'renderWithCopyBtns(msg.content)',

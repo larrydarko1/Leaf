@@ -7,7 +7,7 @@ import { z } from 'zod';
 
 import { type CanvasElement, CanvasElementSchema } from '@/schemas/drawing';
 
-export type UseDrawingHistoryReturn = {
+type UseDrawingHistoryReturn = {
     saveToHistory: () => void;
     undo: () => void;
     redo: () => void;

@@ -5,9 +5,10 @@
 import fs from 'fs/promises';
 import path from 'path';
 
-import type { IpcMain } from 'electron';
-
+import { ipcFailure } from '@/main/lib/errors';
+import type { IpcMain } from '@/main/lib/ipc';
 import { assertSafeFileName } from '@/main/lib/validation';
+import type { AudioSaveResult } from '@/schemas/vault';
 
 // The vault root is passed in from the register call so media-service
 // can validate that audio recordings are written inside the vault.
@@ -19,17 +20,9 @@ export function register(ipc: IpcMain, vaultRootFn: () => string | null): void {
     // Save an audio recording (base64-encoded WAV) to the vault
     ipc.handle(
         'audio:saveRecording',
-        async (
-            _event,
-            folderPath: string,
-            fileName: string,
-            base64Data: string,
-        ): Promise<
-            | { success: boolean; error: string; path?: undefined }
-            | { success: boolean; path: string; error?: undefined }
-        > => {
+        async (_event, folderPath: unknown, fileName: unknown, base64Data: unknown): Promise<AudioSaveResult> => {
             if (typeof folderPath !== 'string' || typeof fileName !== 'string' || typeof base64Data !== 'string') {
-                return { success: false, error: 'Invalid arguments' };
+                return { success: false, error: 'INVALID_ARGUMENTS' };
             }
             try {
                 // Only allow safe filenames (no path traversal)
@@ -37,19 +30,18 @@ export function register(ipc: IpcMain, vaultRootFn: () => string | null): void {
 
                 // Validate target folder is inside the active vault
                 const vaultRoot = findVaultRoot?.();
-                if (vaultRoot === undefined || vaultRoot === null)
-                    return { success: false, error: 'No vault is open.' };
+                if (vaultRoot === undefined || vaultRoot === null) return { success: false, error: 'NO_VAULT' };
                 const resolvedFolder = path.resolve(folderPath);
                 const resolvedRoot = path.resolve(vaultRoot);
                 if (resolvedFolder !== resolvedRoot && !resolvedFolder.startsWith(resolvedRoot + path.sep)) {
-                    return { success: false, error: 'Access denied: path is outside the vault.' };
+                    return { success: false, error: 'ACCESS_DENIED' };
                 }
 
                 const filePath = path.join(folderPath, fileName);
                 await fs.writeFile(filePath, Buffer.from(base64Data, 'base64'));
                 return { success: true, path: filePath };
             } catch (error) {
-                return { success: false, error: (error as Error).message };
+                return ipcFailure('media audio:saveRecording', error);
             }
         },
     );

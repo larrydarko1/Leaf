@@ -4,7 +4,7 @@
 
 import { ref, computed, type ComputedRef, type Ref } from 'vue';
 
-export type UseVideoPlayerReturn = {
+type UseVideoPlayerReturn = {
     videoUrl: Ref<string>;
     videoRef: Ref<HTMLVideoElement | null>;
     videoError: Ref<boolean>;
@@ -91,7 +91,8 @@ export function useVideoPlayer(): UseVideoPlayerReturn {
 
     function seekVideo(event: MouseEvent): void {
         if (videoRef.value === null || !(videoDuration.value > 0)) return;
-        const wrapper = event.currentTarget as HTMLElement;
+        const wrapper = event.currentTarget;
+        if (!(wrapper instanceof HTMLElement)) return;
         const rect = wrapper.getBoundingClientRect();
         const percent = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
         videoRef.value.currentTime = percent * videoDuration.value;
@@ -99,7 +100,8 @@ export function useVideoPlayer(): UseVideoPlayerReturn {
     }
 
     function onVideoVolumeChange(event: Event): void {
-        const value = parseFloat((event.target as HTMLInputElement).value);
+        if (!(event.target instanceof HTMLInputElement)) return;
+        const value = parseFloat(event.target.value);
         videoVolume.value = value;
         if (videoRef.value !== null) {
             videoRef.value.volume = value;

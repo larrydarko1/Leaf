@@ -24,10 +24,10 @@ function makeCtx(widthOf: (line: string) => number = (line) => line.length) {
         }),
         measureText: vi.fn((line: string) => {
             calls.push(`measureText(${JSON.stringify(line)})`);
-            return { width: widthOf(line) } as TextMetrics;
+            return { width: widthOf(line) };
         }),
     };
-    return { ctx: ctx as unknown as CanvasRenderingContext2D, calls, raw: ctx };
+    return { ctx, calls, raw: ctx };
 }
 
 describe('measureTextBox', () => {

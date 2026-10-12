@@ -175,9 +175,9 @@ function makeInteraction(
     };
 }
 
-function ptr(overrides: Record<string, unknown> = {}): PointerEvent {
-    return {
-        type: 'pointerdown',
+function ptr(init: PointerEventInit & { type?: string } = {}): PointerEvent {
+    const { type = 'pointerdown', ...rest } = init;
+    return new PointerEvent(type, {
         clientX: 100,
         clientY: 100,
         pointerId: 1,
@@ -185,14 +185,10 @@ function ptr(overrides: Record<string, unknown> = {}): PointerEvent {
         buttons: 1,
         isPrimary: true,
         pressure: 0.5,
-        shiftKey: false,
-        ctrlKey: false,
-        metaKey: false,
-        preventDefault: vi.fn(),
-        stopPropagation: vi.fn(),
-        target: { setPointerCapture: vi.fn(), releasePointerCapture: vi.fn() },
-        ...overrides,
-    } as unknown as PointerEvent;
+        bubbles: true,
+        cancelable: true,
+        ...rest,
+    });
 }
 
 beforeEach(() => {
@@ -275,7 +271,7 @@ describe('onPointerDown: select tool — resize handle', () => {
         ctx.hitTestHandle.mockReturnValue({ elementId: 'rect-1', handle: 'se' });
         ctx.selectedId.value = 'rect-1';
         ctx.onPointerDown(ptr({ clientX: 100, clientY: 50 }));
-        ctx.onPointerMove({ ...ptr({ clientX: 150, clientY: 80 }), type: 'pointermove' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 150, clientY: 80, type: 'pointermove' }));
         expect(el.width).toBe(150); // se: wx - ox = 150 - 0
         expect(el.height).toBe(80); // wy - oy = 80 - 0
     });
@@ -406,7 +402,7 @@ describe('onPointerMove: pan', () => {
         ctx.onPointerDown(ptr({ clientX: 100, clientY: 100 }));
         ctx.scrollX.value = 0;
         ctx.scrollY.value = 0;
-        const moveEvt = { ...ptr({ clientX: 120, clientY: 115 }), type: 'pointermove' } as unknown as PointerEvent;
+        const moveEvt = ptr({ clientX: 120, clientY: 115, type: 'pointermove' });
         ctx.onPointerMove(moveEvt);
         expect(ctx.scrollX.value).toBe(20);
         expect(ctx.scrollY.value).toBe(15);
@@ -424,7 +420,7 @@ describe('onPointerMove: create', () => {
     it('updates creating element dimensions', () => {
         const ctx = makeInteraction({ initialTool: 'rectangle', isShapeToolResult: true });
         ctx.onPointerDown(ptr({ clientX: 10, clientY: 10 }));
-        ctx.onPointerMove({ ...ptr({ clientX: 110, clientY: 60 }), type: 'pointermove' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 110, clientY: 60, type: 'pointermove' }));
         expect(ctx.creatingElement.value?.width).toBe(100);
         expect(ctx.creatingElement.value?.height).toBe(50);
     });
@@ -433,7 +429,7 @@ describe('onPointerMove: create', () => {
         const ctx = makeInteraction({ initialTool: 'rectangle', isShapeToolResult: true });
         ctx.onPointerDown(ptr({ clientX: 0, clientY: 0 }));
         ctx.shiftHeld.value = true;
-        ctx.onPointerMove({ ...ptr({ clientX: 100, clientY: 60 }), type: 'pointermove' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 100, clientY: 60, type: 'pointermove' }));
         expect(Math.abs(ctx.creatingElement.value?.width ?? 0)).toBe(100);
         expect(Math.abs(ctx.creatingElement.value?.height ?? 0)).toBe(100);
     });
@@ -443,7 +439,7 @@ describe('onPointerMove: create', () => {
         ctx.isDragging.value = true;
         ctx.dragAction.value = 'create';
         ctx.creatingElement.value = null;
-        ctx.onPointerMove({ ...ptr(), type: 'pointermove' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ type: 'pointermove' }));
         expect(ctx.renderScene).not.toHaveBeenCalled();
     });
 });
@@ -455,7 +451,7 @@ describe('onPointerMove: move', () => {
         ctx.hitTestElement.mockReturnValue(el);
         ctx.onPointerDown(ptr({ clientX: 10, clientY: 20 }));
         expect(ctx.dragAction.value).toBe('move');
-        ctx.onPointerMove({ ...ptr({ clientX: 30, clientY: 40 }), type: 'pointermove' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 30, clientY: 40, type: 'pointermove' }));
         expect(el.x).toBe(30); // 10 + (30-10)
         expect(el.y).toBe(40); // 20 + (40-20)
         expect(ctx.renderScene).toHaveBeenCalled();
@@ -465,7 +461,7 @@ describe('onPointerMove: move', () => {
         const ctx = makeInteraction({ initialTool: 'select' });
         ctx.isDragging.value = true;
         ctx.dragAction.value = 'move';
-        ctx.onPointerMove({ ...ptr(), type: 'pointermove' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ type: 'pointermove' }));
         expect(ctx.renderScene).not.toHaveBeenCalled();
     });
 });
@@ -477,7 +473,7 @@ describe('onPointerMove: resize', () => {
         ctx.hitTestHandle.mockReturnValue({ elementId: 'r1', handle: 'se' });
         ctx.selectedId.value = 'r1';
         ctx.onPointerDown(ptr({ clientX: 110, clientY: 70 }));
-        ctx.onPointerMove({ ...ptr({ clientX: 150, clientY: 100 }), type: 'pointermove' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 150, clientY: 100, type: 'pointermove' }));
         expect(ctx.renderScene).toHaveBeenCalled();
     });
 });
@@ -486,7 +482,7 @@ describe('onPointerMove: freedraw', () => {
     it('adds points to the creating freedraw element', () => {
         const ctx = makeInteraction({ initialTool: 'freedraw' });
         ctx.onPointerDown(ptr({ clientX: 10, clientY: 10 }));
-        ctx.onPointerMove({ ...ptr({ clientX: 20, clientY: 30 }), type: 'pointermove' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 20, clientY: 30, type: 'pointermove' }));
         expect(ctx.creatingElement.value?.points?.length).toBeGreaterThan(1);
     });
 });
@@ -499,7 +495,7 @@ describe('onPointerMove: erase', () => {
         ctx.hitTestElement.mockReturnValue(null); // no hit on pointer down
         ctx.onPointerDown(ptr());
         ctx.hitTestElement.mockReturnValue(el2); // hit el2 on move
-        ctx.onPointerMove({ ...ptr({ clientX: 50, clientY: 50 }), type: 'pointermove' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 50, clientY: 50, type: 'pointermove' }));
         expect(ctx.elements.value.find((e) => e.id === 'e2')).toBeUndefined();
     });
 
@@ -510,7 +506,7 @@ describe('onPointerMove: erase', () => {
         ctx.hitTestElement.mockReturnValue(null);
         ctx.onPointerDown(ptr());
         ctx.hitTestElement.mockReturnValue(el);
-        ctx.onPointerMove({ ...ptr(), type: 'pointermove' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ type: 'pointermove' }));
         expect(ctx.selectedIds.value.has('e1')).toBe(false);
     });
 
@@ -521,7 +517,7 @@ describe('onPointerMove: erase', () => {
         ctx.onPointerDown(ptr()); // erases e1 on pointerdown
         ctx.hitTestElement.mockReturnValue(el); // same element "hit" again on move
         ctx.renderScene.mockClear();
-        ctx.onPointerMove({ ...ptr(), type: 'pointermove' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ type: 'pointermove' }));
         expect(ctx.renderScene).not.toHaveBeenCalled();
     });
 });
@@ -534,7 +530,7 @@ describe('onPointerMove: marquee', () => {
         ctx.getElementBounds.mockReturnValue({ x: 20, y: 20, width: 30, height: 30 });
         ctx.onPointerDown(ptr({ clientX: 0, clientY: 0 }));
         expect(ctx.dragAction.value).toBe('marquee');
-        ctx.onPointerMove({ ...ptr({ clientX: 100, clientY: 100 }), type: 'pointermove' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 100, clientY: 100, type: 'pointermove' }));
         expect(ctx.selectedIds.value.has('el-1')).toBe(true);
     });
 
@@ -549,7 +545,7 @@ describe('onPointerMove: marquee', () => {
         ctx.getElementBounds
             .mockReturnValueOnce({ x: 20, y: 20, width: 30, height: 30 })
             .mockReturnValueOnce({ x: 200, y: 200, width: 10, height: 10 });
-        ctx.onPointerMove({ ...ptr({ clientX: 100, clientY: 100 }), type: 'pointermove' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 100, clientY: 100, type: 'pointermove' }));
         expect(ctx.selectedIds.value.has('el-1')).toBe(true);
         expect(ctx.selectedIds.value.has('el-2')).toBe(true);
     });
@@ -559,8 +555,8 @@ describe('onPointerUp: create', () => {
     it('adds element and saves history when large enough', () => {
         const ctx = makeInteraction({ initialTool: 'rectangle', isShapeToolResult: true });
         ctx.onPointerDown(ptr({ clientX: 0, clientY: 0 }));
-        ctx.onPointerMove({ ...ptr({ clientX: 100, clientY: 60 }), type: 'pointermove' } as unknown as PointerEvent);
-        ctx.onPointerUp({ ...ptr(), type: 'pointerup' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 100, clientY: 60, type: 'pointermove' }));
+        ctx.onPointerUp(ptr({ type: 'pointerup' }));
         expect(ctx.elements.value.length).toBe(1);
         expect(ctx.saveToHistory).toHaveBeenCalled();
         expect(ctx.scheduleAutoSave).toHaveBeenCalled();
@@ -570,8 +566,8 @@ describe('onPointerUp: create', () => {
     it('discards element when too small', () => {
         const ctx = makeInteraction({ initialTool: 'rectangle', isShapeToolResult: true });
         ctx.onPointerDown(ptr({ clientX: 0, clientY: 0 }));
-        ctx.onPointerMove({ ...ptr({ clientX: 1, clientY: 1 }), type: 'pointermove' } as unknown as PointerEvent);
-        ctx.onPointerUp({ ...ptr(), type: 'pointerup' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 1, clientY: 1, type: 'pointermove' }));
+        ctx.onPointerUp(ptr({ type: 'pointerup' }));
         expect(ctx.elements.value.length).toBe(0);
         expect(ctx.saveToHistory).not.toHaveBeenCalled();
     });
@@ -579,8 +575,8 @@ describe('onPointerUp: create', () => {
     it('normalizes negative width/height for non-line elements', () => {
         const ctx = makeInteraction({ initialTool: 'rectangle', isShapeToolResult: true });
         ctx.onPointerDown(ptr({ clientX: 100, clientY: 100 }));
-        ctx.onPointerMove({ ...ptr({ clientX: 0, clientY: 0 }), type: 'pointermove' } as unknown as PointerEvent);
-        ctx.onPointerUp({ ...ptr(), type: 'pointerup' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 0, clientY: 0, type: 'pointermove' }));
+        ctx.onPointerUp(ptr({ type: 'pointerup' }));
         const el = ctx.elements.value[0];
         if (el !== undefined) {
             expect(el.width).toBeGreaterThan(0);
@@ -591,8 +587,8 @@ describe('onPointerUp: create', () => {
     it('does not normalize negative dims for line elements', () => {
         const ctx = makeInteraction({ initialTool: 'line', isShapeToolResult: true });
         ctx.onPointerDown(ptr({ clientX: 100, clientY: 100 }));
-        ctx.onPointerMove({ ...ptr({ clientX: 0, clientY: 0 }), type: 'pointermove' } as unknown as PointerEvent);
-        ctx.onPointerUp({ ...ptr(), type: 'pointerup' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 0, clientY: 0, type: 'pointermove' }));
+        ctx.onPointerUp(ptr({ type: 'pointerup' }));
         expect(ctx.elements.value.length).toBeGreaterThanOrEqual(0); // just ensure no throw
     });
 });
@@ -603,8 +599,8 @@ describe('onPointerUp: move', () => {
         const ctx = makeInteraction({ initialTool: 'select', initialElements: [el] });
         ctx.hitTestElement.mockReturnValue(el);
         ctx.onPointerDown(ptr({ clientX: 10, clientY: 10 }));
-        ctx.onPointerMove({ ...ptr({ clientX: 30, clientY: 30 }), type: 'pointermove' } as unknown as PointerEvent);
-        ctx.onPointerUp({ ...ptr(), type: 'pointerup' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 30, clientY: 30, type: 'pointermove' }));
+        ctx.onPointerUp(ptr({ type: 'pointerup' }));
         expect(ctx.saveToHistory).toHaveBeenCalled();
         expect(ctx.isDragging.value).toBe(false);
     });
@@ -617,8 +613,8 @@ describe('onPointerUp: resize', () => {
         ctx.hitTestHandle.mockReturnValue({ elementId: 'r1', handle: 'se' });
         ctx.selectedId.value = 'r1';
         ctx.onPointerDown(ptr({ clientX: 100, clientY: 50 }));
-        ctx.onPointerMove({ ...ptr({ clientX: 150, clientY: 80 }), type: 'pointermove' } as unknown as PointerEvent);
-        ctx.onPointerUp({ ...ptr(), type: 'pointerup' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 150, clientY: 80, type: 'pointermove' }));
+        ctx.onPointerUp(ptr({ type: 'pointerup' }));
         expect(ctx.saveToHistory).toHaveBeenCalled();
     });
 });
@@ -627,9 +623,9 @@ describe('onPointerUp: freedraw', () => {
     it('adds freedraw element to elements when enough points', () => {
         const ctx = makeInteraction({ initialTool: 'freedraw' });
         ctx.onPointerDown(ptr({ clientX: 0, clientY: 0 }));
-        ctx.onPointerMove({ ...ptr({ clientX: 50, clientY: 50 }), type: 'pointermove' } as unknown as PointerEvent);
-        ctx.onPointerMove({ ...ptr({ clientX: 80, clientY: 80 }), type: 'pointermove' } as unknown as PointerEvent);
-        ctx.onPointerUp({ ...ptr(), type: 'pointerup' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 50, clientY: 50, type: 'pointermove' }));
+        ctx.onPointerMove(ptr({ clientX: 80, clientY: 80, type: 'pointermove' }));
+        ctx.onPointerUp(ptr({ type: 'pointerup' }));
         expect(ctx.elements.value.length).toBe(1);
         expect(ctx.elements.value[0]?.type).toBe('freedraw');
         expect(ctx.saveToHistory).toHaveBeenCalled();
@@ -638,7 +634,7 @@ describe('onPointerUp: freedraw', () => {
     it('discards freedraw element when too few points', () => {
         const ctx = makeInteraction({ initialTool: 'freedraw' });
         ctx.onPointerDown(ptr({ clientX: 0, clientY: 0 }));
-        ctx.onPointerUp({ ...ptr(), type: 'pointerup' } as unknown as PointerEvent);
+        ctx.onPointerUp(ptr({ type: 'pointerup' }));
         expect(ctx.elements.value.length).toBe(0);
         expect(ctx.creatingElement.value).toBeNull();
     });
@@ -650,7 +646,7 @@ describe('onPointerUp: erase', () => {
         const ctx = makeInteraction({ initialTool: 'eraser', initialElements: [el] });
         ctx.hitTestElement.mockReturnValue(el);
         ctx.onPointerDown(ptr());
-        ctx.onPointerUp({ ...ptr(), type: 'pointerup' } as unknown as PointerEvent);
+        ctx.onPointerUp(ptr({ type: 'pointerup' }));
         expect(ctx.saveToHistory).toHaveBeenCalled();
     });
 
@@ -658,7 +654,7 @@ describe('onPointerUp: erase', () => {
         const ctx = makeInteraction({ initialTool: 'eraser' });
         ctx.hitTestElement.mockReturnValue(null);
         ctx.onPointerDown(ptr());
-        ctx.onPointerUp({ ...ptr(), type: 'pointerup' } as unknown as PointerEvent);
+        ctx.onPointerUp(ptr({ type: 'pointerup' }));
         expect(ctx.saveToHistory).not.toHaveBeenCalled();
     });
 });
@@ -668,7 +664,7 @@ describe('onPointerUp: marquee', () => {
         const ctx = makeInteraction({ initialTool: 'select' });
         ctx.hitTestElement.mockReturnValue(null);
         ctx.onPointerDown(ptr({ clientX: 0, clientY: 0 }));
-        ctx.onPointerUp({ ...ptr(), type: 'pointerup' } as unknown as PointerEvent);
+        ctx.onPointerUp(ptr({ type: 'pointerup' }));
         expect(ctx.marqueeRect.value).toBeNull();
     });
 });
@@ -676,7 +672,7 @@ describe('onPointerUp: marquee', () => {
 describe('onPointerUp: not dragging', () => {
     it('returns early without action when isDragging is false', () => {
         const ctx = makeInteraction();
-        ctx.onPointerUp({ ...ptr(), type: 'pointerup' } as unknown as PointerEvent);
+        ctx.onPointerUp(ptr({ type: 'pointerup' }));
         expect(ctx.saveToHistory).not.toHaveBeenCalled();
     });
 });
@@ -693,28 +689,28 @@ describe('applyResize (via onPointerMove resize)', () => {
 
     it('nw handle: moves top-left corner', () => {
         const { el, ctx } = setupResize('nw');
-        ctx.onPointerMove({ ...ptr({ clientX: 5, clientY: 5 }), type: 'pointermove' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 5, clientY: 5, type: 'pointermove' }));
         expect(el.x).toBe(5);
         expect(el.y).toBe(5);
     });
 
     it('ne handle: moves top-right corner', () => {
         const { el, ctx } = setupResize('ne');
-        ctx.onPointerMove({ ...ptr({ clientX: 150, clientY: 5 }), type: 'pointermove' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 150, clientY: 5, type: 'pointermove' }));
         expect(el.y).toBe(5);
         expect(el.width).toBe(140); // 150 - orig.x(10)
     });
 
     it('sw handle: moves bottom-left corner', () => {
         const { el, ctx } = setupResize('sw');
-        ctx.onPointerMove({ ...ptr({ clientX: 5, clientY: 80 }), type: 'pointermove' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 5, clientY: 80, type: 'pointermove' }));
         expect(el.x).toBe(5);
         expect(el.height).toBe(70); // 80 - orig.y(10)
     });
 
     it('se handle: moves bottom-right corner', () => {
         const { el, ctx } = setupResize('se');
-        ctx.onPointerMove({ ...ptr({ clientX: 120, clientY: 80 }), type: 'pointermove' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 120, clientY: 80, type: 'pointermove' }));
         expect(el.width).toBe(110); // 120 - orig.x(10)
         expect(el.height).toBe(70); // 80 - orig.y(10)
     });
@@ -725,7 +721,7 @@ describe('applyResize (via onPointerMove resize)', () => {
         ctx.hitTestHandle.mockReturnValue({ elementId: 'l1', handle: 'start' });
         ctx.selectedId.value = 'l1';
         ctx.onPointerDown(ptr({ clientX: 10, clientY: 10 }));
-        ctx.onPointerMove({ ...ptr({ clientX: 20, clientY: 20 }), type: 'pointermove' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 20, clientY: 20, type: 'pointermove' }));
         expect(lineEl.x).toBe(20);
         expect(lineEl.y).toBe(20);
     });
@@ -736,7 +732,7 @@ describe('applyResize (via onPointerMove resize)', () => {
         ctx.hitTestHandle.mockReturnValue({ elementId: 'l1', handle: 'end' });
         ctx.selectedId.value = 'l1';
         ctx.onPointerDown(ptr({ clientX: 100, clientY: 50 }));
-        ctx.onPointerMove({ ...ptr({ clientX: 200, clientY: 100 }), type: 'pointermove' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 200, clientY: 100, type: 'pointermove' }));
         expect(lineEl.width).toBe(200); // wx - el.x
         expect(lineEl.height).toBe(100); // wy - el.y
     });
@@ -747,7 +743,7 @@ describe('applyResize (via onPointerMove resize)', () => {
         ctx.hitTestHandle.mockReturnValue({ elementId: 't1', handle: 'se' });
         ctx.selectedId.value = 't1';
         ctx.onPointerDown(ptr({ clientX: 100, clientY: 50 }));
-        ctx.onPointerMove({ ...ptr({ clientX: 200, clientY: 100 }), type: 'pointermove' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 200, clientY: 100, type: 'pointermove' }));
         expect(textEl.fontSize).toBeGreaterThan(20);
     });
 });
@@ -757,7 +753,7 @@ describe('constrainDimensions (via onPointerMove create + shiftHeld)', () => {
         const ctx = makeInteraction({ initialTool: 'rectangle', isShapeToolResult: true });
         ctx.onPointerDown(ptr({ clientX: 0, clientY: 0 }));
         ctx.shiftHeld.value = true;
-        ctx.onPointerMove({ ...ptr({ clientX: 80, clientY: 60 }), type: 'pointermove' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 80, clientY: 60, type: 'pointermove' }));
         expect(Math.abs(ctx.creatingElement.value?.width ?? 0)).toBe(80);
         expect(Math.abs(ctx.creatingElement.value?.height ?? 0)).toBe(80);
     });
@@ -766,7 +762,7 @@ describe('constrainDimensions (via onPointerMove create + shiftHeld)', () => {
         const ctx = makeInteraction({ initialTool: 'ellipse', isShapeToolResult: true });
         ctx.onPointerDown(ptr({ clientX: 0, clientY: 0 }));
         ctx.shiftHeld.value = true;
-        ctx.onPointerMove({ ...ptr({ clientX: 50, clientY: 90 }), type: 'pointermove' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 50, clientY: 90, type: 'pointermove' }));
         expect(Math.abs(ctx.creatingElement.value?.width ?? 0)).toBe(90);
         expect(Math.abs(ctx.creatingElement.value?.height ?? 0)).toBe(90);
     });
@@ -775,7 +771,7 @@ describe('constrainDimensions (via onPointerMove create + shiftHeld)', () => {
         const ctx = makeInteraction({ initialTool: 'line', isShapeToolResult: true });
         ctx.onPointerDown(ptr({ clientX: 0, clientY: 0 }));
         ctx.shiftHeld.value = true;
-        ctx.onPointerMove({ ...ptr({ clientX: 100, clientY: 10 }), type: 'pointermove' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 100, clientY: 10, type: 'pointermove' }));
         const h = ctx.creatingElement.value?.height ?? 0;
         expect(Math.abs(h)).toBeLessThan(5);
     });
@@ -784,7 +780,7 @@ describe('constrainDimensions (via onPointerMove create + shiftHeld)', () => {
         const ctx = makeInteraction({ initialTool: 'freedraw' });
         ctx.onPointerDown(ptr({ clientX: 0, clientY: 0 }));
         ctx.shiftHeld.value = true;
-        ctx.onPointerMove({ ...ptr({ clientX: 100, clientY: 50 }), type: 'pointermove' } as unknown as PointerEvent);
+        ctx.onPointerMove(ptr({ clientX: 100, clientY: 50, type: 'pointermove' }));
         expect(ctx.creatingElement.value?.type).toBe('freedraw');
     });
 });

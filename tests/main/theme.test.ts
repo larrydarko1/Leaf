@@ -2,12 +2,13 @@ import fs from 'fs';
 import path from 'path';
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { z } from 'zod';
+
+import { createFakeIpc, readReply } from './test-utils';
 
 const PATHS = vi.hoisted(() => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { join } = require('path') as typeof import('path');
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { tmpdir } = require('os') as typeof import('os');
+    const { join } = process.getBuiltinModule('path');
+    const { tmpdir } = process.getBuiltinModule('os');
     const tmpRoot = join(tmpdir(), `leaf-theme-test-${process.pid}-${Date.now()}`);
     const leafHome = join(tmpRoot, '.leaf');
     return {
@@ -62,12 +63,8 @@ async function freshModule() {
 
 async function freshHandlers() {
     const { register } = await freshModule();
-    const handlers: Record<string, (...args: unknown[]) => Promise<unknown>> = {};
-    register({
-        handle: vi.fn((channel: string, fn: (...args: unknown[]) => Promise<unknown>) => {
-            handlers[channel] = fn;
-        }),
-    } as never);
+    const handlers = createFakeIpc();
+    register(handlers);
     return handlers;
 }
 
@@ -84,7 +81,7 @@ describe('seeding, via theme:list', () => {
     it('copies bundled themes into THEMES_DIR', async () => {
         writeBundledTheme('dark', { name: 'Dark', colors: { bg: '#000' } });
         const handlers = await freshHandlers();
-        await handlers['theme:list']!();
+        await handlers.invoke('theme:list');
         expect(fs.existsSync(path.join(THEMES_DIR, 'dark.json'))).toBe(true);
     });
 
@@ -92,27 +89,24 @@ describe('seeding, via theme:list', () => {
         writeBundledTheme('dark', { name: 'Dark', colors: { bg: '#000' } });
         writeTheme('dark', { name: 'Custom Dark', colors: { bg: '#111' } });
         const handlers = await freshHandlers();
-        await handlers['theme:list']!();
-        const content = JSON.parse(fs.readFileSync(path.join(THEMES_DIR, 'dark.json'), 'utf-8')) as Record<
-            string,
-            unknown
-        >;
-        expect((content as { name: string }).name).toBe('Custom Dark');
+        await handlers.invoke('theme:list');
+        const content: unknown = JSON.parse(fs.readFileSync(path.join(THEMES_DIR, 'dark.json'), 'utf-8'));
+        expect(content).toMatchObject({ name: 'Custom Dark' });
     });
 
     it('is idempotent — runs seeding only once', async () => {
         writeBundledTheme('dark', { name: 'Dark', colors: {} });
         const handlers = await freshHandlers();
-        await handlers['theme:list']!();
+        await handlers.invoke('theme:list');
         writeBundledTheme('light', { name: 'Light', colors: {} });
-        await handlers['theme:list']!();
+        await handlers.invoke('theme:list');
         expect(fs.existsSync(path.join(THEMES_DIR, 'light.json'))).toBe(false);
     });
 
     it('handles a missing bundled dir gracefully', async () => {
         fs.rmSync(BUNDLED_DIR, { recursive: true, force: true });
         const handlers = await freshHandlers();
-        await expect(handlers['theme:list']!()).resolves.toMatchObject({ success: true });
+        await expect(handlers.invoke('theme:list')).resolves.toMatchObject({ success: true });
     });
 });
 
@@ -122,19 +116,12 @@ describe('register — theme:list', () => {
         writeState({ activeTheme: 'dark' });
         const { register } = await freshModule();
 
-        const handlers: Record<string, (...args: unknown[]) => Promise<unknown>> = {};
-        const ipc = {
-            handle: vi.fn((channel: string, fn: (...args: unknown[]) => Promise<unknown>) => {
-                handlers[channel] = fn;
-            }),
-        };
-        register(ipc as never);
+        const handlers = createFakeIpc();
+        register(handlers);
 
-        const result = (await handlers['theme:list']?.()) as {
-            success: boolean;
-            themes: { id: string }[];
-            activeId: string;
-        };
+        const result = z
+            .object({ success: z.boolean(), themes: z.array(z.object({ id: z.string() })), activeId: z.string() })
+            .parse(await handlers.invoke('theme:list'));
         expect(result.success).toBe(true);
         expect(result.themes).toHaveLength(1);
         expect(result.themes[0]!.id).toBe('dark');
@@ -145,15 +132,10 @@ describe('register — theme:list', () => {
         writeTheme('dark', { name: 'Dark', colors: {} });
         const { register } = await freshModule();
 
-        const handlers: Record<string, (...args: unknown[]) => Promise<unknown>> = {};
-        const ipc = {
-            handle: vi.fn((ch: string, fn: (...args: unknown[]) => Promise<unknown>) => {
-                handlers[ch] = fn;
-            }),
-        };
-        register(ipc as never);
+        const handlers = createFakeIpc();
+        register(handlers);
 
-        const result = (await handlers['theme:list']?.()) as { activeId: string };
+        const result = z.object({ activeId: z.string() }).parse(await handlers.invoke('theme:list'));
         expect(result.activeId).toBe('dark');
     });
 
@@ -163,15 +145,12 @@ describe('register — theme:list', () => {
         writeTheme('zen', { name: 'Zen', colors: {} });
         const { register } = await freshModule();
 
-        const handlers: Record<string, (...args: unknown[]) => Promise<unknown>> = {};
-        const ipc = {
-            handle: vi.fn((ch: string, fn: (...args: unknown[]) => Promise<unknown>) => {
-                handlers[ch] = fn;
-            }),
-        };
-        register(ipc as never);
+        const handlers = createFakeIpc();
+        register(handlers);
 
-        const result = (await handlers['theme:list']?.()) as { themes: { id: string }[] };
+        const result = z
+            .object({ themes: z.array(z.object({ id: z.string() })) })
+            .parse(await handlers.invoke('theme:list'));
         const ids = result.themes.map((t) => t.id);
         expect(ids[0]).toBe('dark');
         expect(ids[1]).toBe('aurora');
@@ -183,15 +162,10 @@ describe('register — theme:list', () => {
         fs.writeFileSync(path.join(THEMES_DIR, 'bad.json'), 'not json');
         const { register } = await freshModule();
 
-        const handlers: Record<string, (...args: unknown[]) => Promise<unknown>> = {};
-        const ipc = {
-            handle: vi.fn((ch: string, fn: (...args: unknown[]) => Promise<unknown>) => {
-                handlers[ch] = fn;
-            }),
-        };
-        register(ipc as never);
+        const handlers = createFakeIpc();
+        register(handlers);
 
-        const result = (await handlers['theme:list']?.()) as { themes: unknown[] };
+        const result = z.object({ themes: z.array(z.unknown()) }).parse(await handlers.invoke('theme:list'));
         expect(result.themes).toHaveLength(1);
     });
 
@@ -199,15 +173,12 @@ describe('register — theme:list', () => {
         writeTheme('dark', { name: 'Dark', colors: { 'bg-primary': '#000', '../../evil': 'red' } });
         const { register } = await freshModule();
 
-        const handlers: Record<string, (...args: unknown[]) => Promise<unknown>> = {};
-        const ipc = {
-            handle: vi.fn((ch: string, fn: (...args: unknown[]) => Promise<unknown>) => {
-                handlers[ch] = fn;
-            }),
-        };
-        register(ipc as never);
+        const handlers = createFakeIpc();
+        register(handlers);
 
-        const result = (await handlers['theme:list']?.()) as { themes: { colors: Record<string, string> }[] };
+        const result = z
+            .object({ themes: z.array(z.object({ colors: z.record(z.string(), z.string()) })) })
+            .parse(await handlers.invoke('theme:list'));
         const colors = result.themes[0]!.colors;
         expect(colors['bg-primary']).toBe('#000');
         expect(colors['../../evil']).toBeUndefined();
@@ -219,59 +190,39 @@ describe('register — theme:setActive', () => {
         writeTheme('dark', { name: 'Dark', colors: {} });
         const { register } = await freshModule();
 
-        const handlers: Record<string, (...args: unknown[]) => Promise<unknown>> = {};
-        const ipc = {
-            handle: vi.fn((ch: string, fn: (...args: unknown[]) => Promise<unknown>) => {
-                handlers[ch] = fn;
-            }),
-        };
-        register(ipc as never);
+        const handlers = createFakeIpc();
+        register(handlers);
 
-        const result = (await handlers['theme:setActive']?.({}, 'dark')) as { success: boolean };
+        const result = readReply(await handlers.invoke('theme:setActive', 'dark'));
         expect(result.success).toBe(true);
-        const state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf-8')) as { activeTheme: string };
+        const state = z.object({ activeTheme: z.string() }).parse(JSON.parse(fs.readFileSync(STATE_FILE, 'utf-8')));
         expect(state.activeTheme).toBe('dark');
     });
 
     it('rejects a theme id with path traversal characters', async () => {
         const { register } = await freshModule();
-        const handlers: Record<string, (...args: unknown[]) => Promise<unknown>> = {};
-        const ipc = {
-            handle: vi.fn((ch: string, fn: (...args: unknown[]) => Promise<unknown>) => {
-                handlers[ch] = fn;
-            }),
-        };
-        register(ipc as never);
+        const handlers = createFakeIpc();
+        register(handlers);
 
-        const result = (await handlers['theme:setActive']?.({}, '../evil')) as { success: boolean };
+        const result = readReply(await handlers.invoke('theme:setActive', '../evil'));
         expect(result.success).toBe(false);
     });
 
     it('rejects an id longer than 64 characters', async () => {
         const { register } = await freshModule();
-        const handlers: Record<string, (...args: unknown[]) => Promise<unknown>> = {};
-        const ipc = {
-            handle: vi.fn((ch: string, fn: (...args: unknown[]) => Promise<unknown>) => {
-                handlers[ch] = fn;
-            }),
-        };
-        register(ipc as never);
+        const handlers = createFakeIpc();
+        register(handlers);
 
-        const result = (await handlers['theme:setActive']?.({}, 'a'.repeat(65))) as { success: boolean };
+        const result = readReply(await handlers.invoke('theme:setActive', 'a'.repeat(65)));
         expect(result.success).toBe(false);
     });
 
     it('rejects a non-existent theme id', async () => {
         const { register } = await freshModule();
-        const handlers: Record<string, (...args: unknown[]) => Promise<unknown>> = {};
-        const ipc = {
-            handle: vi.fn((ch: string, fn: (...args: unknown[]) => Promise<unknown>) => {
-                handlers[ch] = fn;
-            }),
-        };
-        register(ipc as never);
+        const handlers = createFakeIpc();
+        register(handlers);
 
-        const result = (await handlers['theme:setActive']?.({}, 'nonexistent')) as { success: boolean };
+        const result = readReply(await handlers.invoke('theme:setActive', 'nonexistent'));
         expect(result.success).toBe(false);
     });
 });
