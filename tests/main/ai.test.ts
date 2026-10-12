@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { z } from 'zod';
 
+import { createFakeIpc, readReply } from './test-utils';
 import { register, cleanup } from '@/main/services/ai';
 
 vi.mock('fs/promises', async () => {
@@ -29,22 +31,11 @@ vi.mock('@/main/services/systemPrompt', () => ({
     getActiveSystemPrompt: vi.fn().mockResolvedValue(''),
 }));
 
-let handlers: Record<string, (...args: unknown[]) => unknown>;
-
-function makeIpc() {
-    const h: Record<string, (...args: unknown[]) => unknown> = {};
-    const ipc = {
-        handle: vi.fn((ch: string, fn: (...args: unknown[]) => unknown) => {
-            h[ch] = fn;
-        }),
-    };
-    return { ipc, handlers: h };
-}
+let ipc: ReturnType<typeof createFakeIpc>;
 
 beforeEach(() => {
-    const r = makeIpc();
-    handlers = r.handlers;
-    register(r.ipc as never, () => null);
+    ipc = createFakeIpc();
+    register(ipc, () => null);
 });
 
 describe('cleanup', () => {
@@ -54,14 +45,16 @@ describe('cleanup', () => {
 });
 
 describe('ai:getStatus', () => {
-    it('reports unloaded state on initial call', () => {
-        const status = handlers['ai:getStatus']?.() as {
-            isModelLoaded: boolean;
-            currentModelPath: string | null;
-            currentModelName: string | null;
-            isGenerating: boolean;
-            modelsDir: string;
-        };
+    it('reports unloaded state on initial call', async () => {
+        const status = z
+            .object({
+                isModelLoaded: z.boolean(),
+                currentModelPath: z.string().nullable(),
+                currentModelName: z.string().nullable(),
+                isGenerating: z.boolean(),
+                modelsDir: z.string(),
+            })
+            .parse(await ipc.invoke('ai:getStatus'));
         expect(status.isModelLoaded).toBe(false);
         expect(status.currentModelPath).toBeNull();
         expect(status.currentModelName).toBeNull();
@@ -72,11 +65,9 @@ describe('ai:getStatus', () => {
 
 describe('ai:listModels', () => {
     it('returns an empty models list when the models directory does not exist', async () => {
-        const result = (await handlers['ai:listModels']?.()) as {
-            success: boolean;
-            models: unknown[];
-            modelsDir: string;
-        };
+        const result = z
+            .object({ success: z.boolean(), models: z.array(z.unknown()), modelsDir: z.string() })
+            .parse(await ipc.invoke('ai:listModels'));
         expect(result.success).toBe(true);
         expect(result.models).toHaveLength(0);
         expect(result.modelsDir).toBe('/fake/models');
@@ -85,72 +76,66 @@ describe('ai:listModels', () => {
 
 describe('ai:loadModel', () => {
     it('returns failure for non-string modelPath', async () => {
-        const result = (await handlers['ai:loadModel']?.({}, 123)) as { success: boolean; error: string };
+        const result = readReply(await ipc.invoke('ai:loadModel', 123));
         expect(result.success).toBe(false);
-        expect(result.error).toMatch(/invalid model path/i);
+        expect(result.error).toBe('INVALID_ARGUMENTS');
     });
 
     it('returns failure for an empty modelPath', async () => {
-        const result = (await handlers['ai:loadModel']?.({}, '')) as { success: boolean; error: string };
+        const result = readReply(await ipc.invoke('ai:loadModel', ''));
         expect(result.success).toBe(false);
-        expect(result.error).toMatch(/invalid model path/i);
+        expect(result.error).toBe('INVALID_ARGUMENTS');
     });
 
     it('returns failure for a model path outside the models directory', async () => {
-        const result = (await handlers['ai:loadModel']?.({}, '/etc/some-model.gguf')) as {
-            success: boolean;
-            error: string;
-        };
+        const result = readReply(await ipc.invoke('ai:loadModel', '/etc/some-model.gguf'));
         expect(result.success).toBe(false);
-        expect(result.error).toMatch(/access denied/i);
+        expect(result.error).toBe('ACCESS_DENIED');
     });
 });
 
 describe('ai:chat', () => {
     it('returns failure for non-string userMessage', async () => {
-        const result = (await handlers['ai:chat']?.({}, 123, '')) as { success: boolean; error: string };
+        const result = readReply(await ipc.invoke('ai:chat', 123, ''));
         expect(result.success).toBe(false);
-        expect(result.error).toMatch(/invalid arguments/i);
+        expect(result.error).toBe('INVALID_ARGUMENTS');
     });
 
     it('returns failure for an empty userMessage', async () => {
-        const result = (await handlers['ai:chat']?.({}, '', '')) as { success: boolean; error: string };
+        const result = readReply(await ipc.invoke('ai:chat', '', ''));
         expect(result.success).toBe(false);
-        expect(result.error).toMatch(/invalid arguments/i);
+        expect(result.error).toBe('INVALID_ARGUMENTS');
     });
 });
 
 describe('ai:stopChat', () => {
-    it('returns failure when no generation is in progress', () => {
-        const result = handlers['ai:stopChat']?.() as { success: boolean; error: string };
+    it('returns failure when no generation is in progress', async () => {
+        const result = readReply(await ipc.invoke('ai:stopChat'));
         expect(result.success).toBe(false);
-        expect(result.error).toMatch(/no generation/i);
+        expect(result.error).toBe('INVALID_STATE');
     });
 });
 
 describe('ai:resetChat', () => {
     it('returns failure when no model is loaded', async () => {
-        const result = (await handlers['ai:resetChat']?.()) as { success: boolean; error: string };
+        const result = readReply(await ipc.invoke('ai:resetChat'));
         expect(result.success).toBe(false);
-        expect(result.error).toMatch(/no model loaded/i);
+        expect(result.error).toBe('MODEL_NOT_LOADED');
     });
 });
 
 describe('ai:loadModel (file not found)', () => {
     it('returns failure when model file does not exist inside models directory', async () => {
-        const result = (await handlers['ai:loadModel']?.({}, '/fake/models/nonexistent.gguf')) as {
-            success: boolean;
-            error: string;
-        };
+        const result = readReply(await ipc.invoke('ai:loadModel', '/fake/models/nonexistent.gguf'));
         expect(result.success).toBe(false);
-        expect(result.error).toMatch(/not found/i);
+        expect(result.error).toBe('NOT_FOUND');
     });
 });
 
 describe('ai:openLeafDir', () => {
     it('calls shell.openPath with LEAF_HOME and returns success', async () => {
         const { shell } = await import('electron');
-        const result = (await handlers['ai:openLeafDir']?.()) as { success: boolean };
+        const result = readReply(await ipc.invoke('ai:openLeafDir'));
         expect(result.success).toBe(true);
         expect(shell.openPath).toHaveBeenCalled();
     });
@@ -158,23 +143,18 @@ describe('ai:openLeafDir', () => {
 
 describe('ai:restoreChatHistory', () => {
     it('returns failure for non-array messages', async () => {
-        const result = (await handlers['ai:restoreChatHistory']?.({}, 'not an array')) as {
-            success: boolean;
-            error: string;
-        };
+        const result = readReply(await ipc.invoke('ai:restoreChatHistory', 'not an array'));
         expect(result.success).toBe(false);
-        expect(result.error).toMatch(/invalid messages/i);
+        expect(result.error).toBe('INVALID_ARGUMENTS');
     });
 
     it('returns failure for messages with invalid role', async () => {
-        const result = (await handlers['ai:restoreChatHistory']?.({}, [{ role: 'system', content: 'hi' }])) as {
-            success: boolean;
-        };
+        const result = readReply(await ipc.invoke('ai:restoreChatHistory', [{ role: 'system', content: 'hi' }]));
         expect(result.success).toBe(false);
     });
 
     it('succeeds with an empty messages array', async () => {
-        const result = (await handlers['ai:restoreChatHistory']?.({}, [])) as { success: boolean };
+        const result = readReply(await ipc.invoke('ai:restoreChatHistory', []));
         expect(result.success).toBe(true);
     });
 
@@ -183,7 +163,7 @@ describe('ai:restoreChatHistory', () => {
             { role: 'user', content: 'Hello' },
             { role: 'assistant', content: 'Hi there' },
         ];
-        const result = (await handlers['ai:restoreChatHistory']?.({}, messages)) as { success: boolean };
+        const result = readReply(await ipc.invoke('ai:restoreChatHistory', messages));
         expect(result.success).toBe(true);
     });
 });

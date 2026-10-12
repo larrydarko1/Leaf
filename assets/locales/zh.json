@@ -319,5 +319,30 @@
     "save_png": "保存为 PNG",
     "copy_png": "复制为 PNG",
     "close_export_dialog": "关闭导出对话框"
+  },
+  "errors": {
+    "invalid_arguments": "请求无效。",
+    "no_window": "没有可用的窗口。",
+    "no_vault": "未打开笔记文件夹。",
+    "access_denied": "访问被拒绝。",
+    "invalid_name": "不允许使用该名称。",
+    "not_found": "未找到。",
+    "already_exists": "已存在同名项目。",
+    "move_into_self": "文件夹不能移动到其自身内部。",
+    "disk_full": "磁盘已满。",
+    "model_not_loaded": "未加载模型。",
+    "busy": "正忙，请稍后再试。",
+    "invalid_state": "现在无法执行此操作。",
+    "unknown": "出现问题。",
+    "create_file_failed": "无法创建文件。{reason}",
+    "create_drawing_failed": "无法创建绘图。{reason}",
+    "rename_file_failed": "无法重命名文件。{reason}",
+    "rename_folder_failed": "无法重命名文件夹。{reason}",
+    "delete_file_failed": "无法删除 {name}。{reason}",
+    "delete_folder_failed": "无法删除文件夹。{reason}",
+    "move_file_failed": "无法移动 {name}。{reason}",
+    "move_folder_failed": "无法移动文件夹。{reason}",
+    "save_file_failed": "无法保存文件。{reason}",
+    "chat_failed": "模型无法回答。{reason}"
   }
 }

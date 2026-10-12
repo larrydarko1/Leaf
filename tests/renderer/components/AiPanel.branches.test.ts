@@ -1,7 +1,11 @@
-import { shallowMount } from '@vue/test-utils';
+import { flushPromises, shallowMount } from '@vue/test-utils';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref, computed } from 'vue';
+import { z } from 'zod';
 
+import AiHistoryPanel from '@/renderer/components/ai/AiHistoryPanel.vue';
+import AiMessageList from '@/renderer/components/ai/AiMessageList.vue';
+import AiModelBar from '@/renderer/components/ai/AiModelBar.vue';
 import AiPanel from '@/renderer/components/AiPanel.vue';
 import { i18n } from '@/renderer/i18n';
 import type { FileInfo } from '@/schemas/vault';
@@ -145,6 +149,13 @@ const defaultProps: { activeFile: FileInfo | null; workspacePath: string | null 
     workspacePath: '/vault',
 };
 
+/** The messages AiPanel hands its message list to render. */
+function listedMessages(wrapper: ReturnType<typeof mountPanel>) {
+    return z
+        .array(z.object({ role: z.string(), content: z.string() }))
+        .parse(wrapper.findComponent(AiMessageList).props('messages'));
+}
+
 function mountPanel(props = defaultProps) {
     return shallowMount(AiPanel, {
         props,
@@ -228,7 +239,7 @@ describe('onMounted', () => {
     it('focuses inputField when model is loaded and inputField exists', async () => {
         mockStatus.value.isModelLoaded = true;
         const mockFocus = vi.fn();
-        mockInputField.value = { focus: mockFocus } as unknown as HTMLTextAreaElement;
+        mockInputField.value = Object.assign(document.createElement('textarea'), { focus: mockFocus });
         mountPanel();
         await new Promise((r) => setTimeout(r, 0));
         expect(mockFocus).toHaveBeenCalled();
@@ -237,7 +248,7 @@ describe('onMounted', () => {
     it('does not focus when model is not loaded', async () => {
         mockStatus.value.isModelLoaded = false;
         const mockFocus = vi.fn();
-        mockInputField.value = { focus: mockFocus } as unknown as HTMLTextAreaElement;
+        mockInputField.value = Object.assign(document.createElement('textarea'), { focus: mockFocus });
         mountPanel();
         await new Promise((r) => setTimeout(r, 0));
         expect(mockFocus).not.toHaveBeenCalled();
@@ -248,23 +259,21 @@ describe('loadSelectedModel', () => {
     it('calls startNewConversation on success', async () => {
         mockLoadModel.mockResolvedValue({ success: true });
         const wrapper = mountPanel();
-        const vm = wrapper.vm as unknown as { loadSelectedModel: () => Promise<void> };
-        await vm.loadSelectedModel();
+        wrapper.findComponent(AiModelBar).vm.$emit('load-model');
+        await flushPromises();
         expect(mockStartNewConversation).toHaveBeenCalled();
         wrapper.unmount();
     });
 
     it('pushes error message on failure (visible in AiMessageList messages prop)', async () => {
-        mockLoadModel.mockResolvedValue({ success: false, error: 'OOM' });
+        mockLoadModel.mockResolvedValue({ success: false, error: 'NOT_FOUND' });
         const wrapper = mountPanel();
-        const vm = wrapper.vm as unknown as { loadSelectedModel: () => Promise<void> };
-        await vm.loadSelectedModel();
-        await wrapper.vm.$nextTick();
-        const msgs = wrapper.findComponent({ name: 'AiMessageList' }).props('messages') as {
-            role: string;
-            content: string;
-        }[];
-        expect(msgs.some((m) => m.role === 'assistant' && m.content.includes('OOM'))).toBe(true);
+        wrapper.findComponent(AiModelBar).vm.$emit('load-model');
+        await flushPromises();
+        expect(listedMessages(wrapper)).toContainEqual({
+            role: 'assistant',
+            content: 'Failed to load model: It could not be found.',
+        });
         wrapper.unmount();
     });
 });
@@ -273,8 +282,8 @@ describe('unloadModel', () => {
     it('calls stopGeneration when model is generating', async () => {
         mockStatus.value.isGenerating = true;
         const wrapper = mountPanel();
-        const vm = wrapper.vm as unknown as { unloadModel: () => Promise<void> };
-        await vm.unloadModel();
+        wrapper.findComponent(AiModelBar).vm.$emit('unload-model');
+        await flushPromises();
         expect(mockStopGeneration).toHaveBeenCalled();
         expect(mockSaveCurrentConversation).toHaveBeenCalled();
         expect(mockUnloadModel).toHaveBeenCalled();
@@ -284,8 +293,8 @@ describe('unloadModel', () => {
     it('skips stopGeneration when not generating', async () => {
         mockStatus.value.isGenerating = false;
         const wrapper = mountPanel();
-        const vm = wrapper.vm as unknown as { unloadModel: () => Promise<void> };
-        await vm.unloadModel();
+        wrapper.findComponent(AiModelBar).vm.$emit('unload-model');
+        await flushPromises();
         expect(mockStopGeneration).not.toHaveBeenCalled();
         expect(mockUnloadModel).toHaveBeenCalled();
         wrapper.unmount();
@@ -294,8 +303,8 @@ describe('unloadModel', () => {
     it('resets conversationTokenCount to 0', async () => {
         mockConversationTokenCount.value = 500;
         const wrapper = mountPanel();
-        const vm = wrapper.vm as unknown as { unloadModel: () => Promise<void> };
-        await vm.unloadModel();
+        wrapper.findComponent(AiModelBar).vm.$emit('unload-model');
+        await flushPromises();
         expect(mockConversationTokenCount.value).toBe(0);
         wrapper.unmount();
     });
@@ -304,18 +313,18 @@ describe('unloadModel', () => {
 describe('startNewConversation', () => {
     it('calls conversation.startNewConversation', async () => {
         const wrapper = mountPanel();
-        const vm = wrapper.vm as unknown as { startNewConversation: () => Promise<void> };
-        await vm.startNewConversation();
+        wrapper.findComponent(AiModelBar).vm.$emit('new-conversation');
+        await flushPromises();
         expect(mockStartNewConversation).toHaveBeenCalled();
         wrapper.unmount();
     });
 
     it('focuses input field if available', async () => {
         const mockFocus = vi.fn();
-        mockInputField.value = { focus: mockFocus } as unknown as HTMLTextAreaElement;
+        mockInputField.value = Object.assign(document.createElement('textarea'), { focus: mockFocus });
         const wrapper = mountPanel();
-        const vm = wrapper.vm as unknown as { startNewConversation: () => Promise<void> };
-        await vm.startNewConversation();
+        wrapper.findComponent(AiModelBar).vm.$emit('new-conversation');
+        await flushPromises();
         expect(mockFocus).toHaveBeenCalled();
         wrapper.unmount();
     });
@@ -323,9 +332,11 @@ describe('startNewConversation', () => {
 
 describe('loadConversation', () => {
     it('calls conversation.loadConversation and scrollToBottom', async () => {
+        mockShowHistory.value = true;
         const wrapper = mountPanel();
-        const vm = wrapper.vm as unknown as { loadConversation: (id: string) => Promise<void> };
-        await vm.loadConversation('conv-1');
+        await wrapper.vm.$nextTick();
+        wrapper.findComponent(AiHistoryPanel).vm.$emit('load', 'conv-1');
+        await flushPromises();
         expect(mockLoadConversation).toHaveBeenCalledWith('conv-1');
         expect(mockScrollToBottom).toHaveBeenCalled();
         wrapper.unmount();
@@ -335,54 +346,42 @@ describe('loadConversation', () => {
 describe('loadPreviousModel', () => {
     it('success + no conversation: calls startNewConversation', async () => {
         mockCurrentConversationId.value = null;
-        mockLoadPreviousModel.mockResolvedValue({ success: true, error: null });
+        mockLoadPreviousModel.mockResolvedValue({ success: true });
         const wrapper = mountPanel();
-        const vm = wrapper.vm as unknown as { loadPreviousModel: () => Promise<void> };
-        await vm.loadPreviousModel();
+        wrapper.findComponent(AiMessageList).vm.$emit('load-previous-model');
+        await flushPromises();
         expect(mockStartNewConversation).toHaveBeenCalled();
         wrapper.unmount();
     });
 
     it('success + existing conversation: skips startNewConversation', async () => {
         mockCurrentConversationId.value = 'conv-1';
-        mockLoadPreviousModel.mockResolvedValue({ success: true, error: null });
+        mockLoadPreviousModel.mockResolvedValue({ success: true });
         const wrapper = mountPanel();
-        const vm = wrapper.vm as unknown as { loadPreviousModel: () => Promise<void> };
-        await vm.loadPreviousModel();
+        wrapper.findComponent(AiMessageList).vm.$emit('load-previous-model');
+        await flushPromises();
         expect(mockStartNewConversation).not.toHaveBeenCalled();
         wrapper.unmount();
     });
 
     it('failure with error string: pushes error message', async () => {
-        mockLoadPreviousModel.mockResolvedValue({ success: false, error: 'Not found' });
+        mockLoadPreviousModel.mockResolvedValue({ success: false, error: 'NOT_FOUND' });
         const wrapper = mountPanel();
-        const vm = wrapper.vm as unknown as { loadPreviousModel: () => Promise<void> };
-        await vm.loadPreviousModel();
-        await wrapper.vm.$nextTick();
-        const msgs = wrapper.findComponent({ name: 'AiMessageList' }).props('messages') as { content: string }[];
-        expect(msgs.some((m) => m.content.includes('Not found'))).toBe(true);
+        wrapper.findComponent(AiMessageList).vm.$emit('load-previous-model');
+        await flushPromises();
+        expect(listedMessages(wrapper)).toContainEqual({
+            role: 'assistant',
+            content: 'Failed to load model: It could not be found.',
+        });
         wrapper.unmount();
     });
 
-    it('failure with empty error: does not push message', async () => {
-        mockLoadPreviousModel.mockResolvedValue({ success: false, error: '' });
+    it('failure without an error code: does not push a message', async () => {
+        mockLoadPreviousModel.mockResolvedValue({ success: false });
         const wrapper = mountPanel();
-        const vm = wrapper.vm as unknown as { loadPreviousModel: () => Promise<void> };
-        await vm.loadPreviousModel();
-        await wrapper.vm.$nextTick();
-        const msgs = wrapper.findComponent({ name: 'AiMessageList' }).props('messages') as unknown[];
-        expect(msgs.length).toBe(0);
-        wrapper.unmount();
-    });
-
-    it('failure with null error: does not push message', async () => {
-        mockLoadPreviousModel.mockResolvedValue({ success: false, error: null });
-        const wrapper = mountPanel();
-        const vm = wrapper.vm as unknown as { loadPreviousModel: () => Promise<void> };
-        await vm.loadPreviousModel();
-        await wrapper.vm.$nextTick();
-        const msgs = wrapper.findComponent({ name: 'AiMessageList' }).props('messages') as unknown[];
-        expect(msgs.length).toBe(0);
+        wrapper.findComponent(AiMessageList).vm.$emit('load-previous-model');
+        await flushPromises();
+        expect(listedMessages(wrapper)).toEqual([]);
         wrapper.unmount();
     });
 });

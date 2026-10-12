@@ -319,5 +319,30 @@
     "save_png": "PNGを保存",
     "copy_png": "PNGをコピー",
     "close_export_dialog": "エクスポートダイアログを閉じる"
+  },
+  "errors": {
+    "invalid_arguments": "リクエストが無効です。",
+    "no_window": "利用できるウィンドウがありません。",
+    "no_vault": "ノートフォルダが開かれていません。",
+    "access_denied": "アクセスが拒否されました。",
+    "invalid_name": "その名前は使用できません。",
+    "not_found": "見つかりませんでした。",
+    "already_exists": "同じ名前の項目がすでに存在します。",
+    "move_into_self": "フォルダをそれ自身の中に移動することはできません。",
+    "disk_full": "ディスクがいっぱいです。",
+    "model_not_loaded": "モデルが読み込まれていません。",
+    "busy": "処理中です。しばらくしてからもう一度お試しください。",
+    "invalid_state": "今はその操作を実行できません。",
+    "unknown": "問題が発生しました。",
+    "create_file_failed": "ファイルを作成できませんでした。{reason}",
+    "create_drawing_failed": "描画を作成できませんでした。{reason}",
+    "rename_file_failed": "ファイル名を変更できませんでした。{reason}",
+    "rename_folder_failed": "フォルダ名を変更できませんでした。{reason}",
+    "delete_file_failed": "{name} を削除できませんでした。{reason}",
+    "delete_folder_failed": "フォルダを削除できませんでした。{reason}",
+    "move_file_failed": "{name} を移動できませんでした。{reason}",
+    "move_folder_failed": "フォルダを移動できませんでした。{reason}",
+    "save_file_failed": "ファイルを保存できませんでした。{reason}",
+    "chat_failed": "モデルが応答できませんでした。{reason}"
   }
 }

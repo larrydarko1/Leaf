@@ -49,10 +49,16 @@ const { expandedFolders, folderTree, flattenedItems, visibleFiles, toggleFolder,
     );
 
 // Context menu state
-const contextMenu = ref({
+const contextMenu = ref<{
+    visible: boolean;
+    position: { x: number; y: number };
+    type: 'file' | 'folder';
+    targetPath: string;
+}>({
     visible: false,
     position: { x: 0, y: 0 },
-    type: '' as 'file' | 'folder',
+    // Overwritten on every open; the menu never renders while hidden.
+    type: 'file',
     targetPath: '',
 });
 
@@ -79,8 +85,11 @@ function handleKeyDown(e: KeyboardEvent): void {
     if (props.renamingFile !== null || (props.renamingFolder !== null && props.renamingFolder !== '')) return;
 
     // Don't intercept arrow keys when focus is inside an editable element (e.g. the note editor)
-    const target = e.target as HTMLElement;
-    if (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT' || target.isContentEditable) {
+    const target = e.target;
+    if (
+        target instanceof HTMLElement &&
+        (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT' || target.isContentEditable)
+    ) {
         return;
     }
 
@@ -240,10 +249,10 @@ function handleRootDragOver(event: DragEvent): void {
 
 function handleRootDragLeave(event: DragEvent): void {
     // Only set to false if we're leaving the root container entirely
-    const target = event.target as HTMLElement;
-    const relatedTarget = event.relatedTarget as HTMLElement;
+    const { target, relatedTarget } = event;
+    if (!(target instanceof Node)) return;
 
-    if (!target.contains(relatedTarget)) {
+    if (!target.contains(relatedTarget instanceof Node ? relatedTarget : null)) {
         isDragOverRoot.value = false;
     }
 }

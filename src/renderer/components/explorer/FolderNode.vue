@@ -258,8 +258,8 @@ watch(isRenaming, (renaming) => {
                 class="folder-name-input field field-sm"
                 type="text"
                 :aria-label="`${t('file.rename')}: ${node.name}`"
-                @input="$emit('updateRenameValue', ($event.target as HTMLInputElement).value)"
-                @keydown.enter="($event.target as HTMLInputElement).blur()"
+                @input="$emit('updateRenameValue', renameInput?.value ?? '')"
+                @keydown.enter="renameInput?.blur()"
                 @keydown.esc="$emit('cancelRename')"
                 @blur="$emit('rename')"
                 @click.stop />
@@ -472,8 +472,8 @@ watch(isRenaming, (renaming) => {
                 class="file-name-input field field-sm"
                 type="text"
                 :aria-label="`${t('file.rename')}: ${node.name}`"
-                @input="$emit('updateRenameValue', ($event.target as HTMLInputElement).value)"
-                @keydown.enter="($event.target as HTMLInputElement).blur()"
+                @input="$emit('updateRenameValue', renameInput?.value ?? '')"
+                @keydown.enter="renameInput?.blur()"
                 @keydown.esc="$emit('cancelRename')"
                 @blur="$emit('rename')"
                 @click.stop />

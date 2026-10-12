@@ -6,7 +6,7 @@ import type { FileInfo } from '@/schemas/vault';
 const localStorageMock = (() => {
     let store: Record<string, string> = {};
     return {
-        getItem: vi.fn((key: string) => store[key] ?? null),
+        getItem: vi.fn((key: string): string | null => store[key] ?? null),
         setItem: vi.fn((key: string, value: string) => {
             store[key] = value;
         }),
@@ -80,7 +80,7 @@ describe('useFileSelection', () => {
     describe('selectFile (meta/ctrl click)', () => {
         it('adds the file to an existing selection', () => {
             sel.selectFile(fileA);
-            sel.selectFile(fileB, { event: { metaKey: true } as MouseEvent });
+            sel.selectFile(fileB, { event: new MouseEvent('click', { metaKey: true }) });
             const paths = sel.selectedFiles.value.map((f) => f.path);
             expect(paths).toContain(fileA.path);
             expect(paths).toContain(fileB.path);
@@ -88,20 +88,20 @@ describe('useFileSelection', () => {
 
         it('removes the file from the selection when it is already selected', () => {
             sel.selectFile(fileA);
-            sel.selectFile(fileA, { event: { metaKey: true } as MouseEvent });
+            sel.selectFile(fileA, { event: new MouseEvent('click', { metaKey: true }) });
             expect(sel.selectedFiles.value).not.toContain(fileA);
         });
 
         it('updates activeFile to the first remaining file after deselection', () => {
             sel.selectFile(fileA);
-            sel.selectFile(fileB, { event: { metaKey: true } as MouseEvent });
-            sel.selectFile(fileA, { event: { metaKey: true } as MouseEvent });
+            sel.selectFile(fileB, { event: new MouseEvent('click', { metaKey: true }) });
+            sel.selectFile(fileA, { event: new MouseEvent('click', { metaKey: true }) });
             expect(sel.activeFile.value?.path).toBe(fileB.path);
         });
 
         it('works with ctrlKey as well as metaKey', () => {
             sel.selectFile(fileA);
-            sel.selectFile(fileB, { event: { ctrlKey: true } as MouseEvent });
+            sel.selectFile(fileB, { event: new MouseEvent('click', { ctrlKey: true }) });
             expect(sel.selectedFiles.value).toHaveLength(2);
         });
     });
@@ -110,19 +110,22 @@ describe('useFileSelection', () => {
         it('selects a contiguous range between the anchor and the clicked file', () => {
             const visibleFiles = [fileA, fileB, fileC];
             sel.selectFile(fileA, { visibleFiles: visibleFiles });
-            sel.selectFile(fileC, { event: { shiftKey: true } as MouseEvent, visibleFiles: visibleFiles });
+            sel.selectFile(fileC, { event: new MouseEvent('click', { shiftKey: true }), visibleFiles: visibleFiles });
             expect(sel.selectedFiles.value).toHaveLength(3);
         });
 
         it('works when the range is reversed (click on an earlier item)', () => {
             const visibleFiles = [fileA, fileB, fileC];
             sel.selectFile(fileC, { visibleFiles: visibleFiles });
-            sel.selectFile(fileA, { event: { shiftKey: true } as MouseEvent, visibleFiles: visibleFiles });
+            sel.selectFile(fileA, { event: new MouseEvent('click', { shiftKey: true }), visibleFiles: visibleFiles });
             expect(sel.selectedFiles.value).toHaveLength(3);
         });
 
         it('falls back to plain selection when lastSelectedIndex is -1', () => {
-            sel.selectFile(fileB, { event: { shiftKey: true } as MouseEvent, visibleFiles: [fileA, fileB, fileC] });
+            sel.selectFile(fileB, {
+                event: new MouseEvent('click', { shiftKey: true }),
+                visibleFiles: [fileA, fileB, fileC],
+            });
             expect(sel.selectedFiles.value).toEqual([fileB]);
         });
     });
@@ -171,7 +174,7 @@ describe('useFileSelection', () => {
             const files = [fileA, fileB, fileC];
             sel.selectFile(fileA, { visibleFiles: files });
             sel.clearSelection();
-            sel.selectFile(fileC, { event: { shiftKey: true } as MouseEvent, visibleFiles: files });
+            sel.selectFile(fileC, { event: new MouseEvent('click', { shiftKey: true }), visibleFiles: files });
             expect(sel.selectedFiles.value).toEqual([fileC]);
         });
     });
@@ -224,13 +227,13 @@ describe('useFileSelection', () => {
         });
 
         it('falls back to the first available file when localStorage has no entry', () => {
-            localStorageMock.getItem.mockReturnValueOnce(null as unknown as string);
+            localStorageMock.getItem.mockReturnValueOnce(null);
             sel.restoreFromStorage([fileA, fileB]);
             expect(sel.activeFile.value?.path).toBe(fileA.path);
         });
 
         it('does nothing when no files are available', () => {
-            localStorageMock.getItem.mockReturnValueOnce(null as unknown as string);
+            localStorageMock.getItem.mockReturnValueOnce(null);
             sel.restoreFromStorage([]);
             expect(sel.activeFile.value).toBeNull();
         });

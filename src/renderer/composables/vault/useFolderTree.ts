@@ -8,7 +8,7 @@ import { z } from 'zod';
 
 import type { FileInfo, FolderInfo, TreeNode } from '@/schemas/vault';
 
-export type UseFolderTreeReturn = {
+type UseFolderTreeReturn = {
     expandedFolders: Ref<Set<string>>;
     folderTree: ComputedRef<TreeNode[]>;
     flattenedItems: ComputedRef<{ type: 'file' | 'folder'; file?: FileInfo; folderPath?: string }[]>;
@@ -146,21 +146,9 @@ export function useFolderTree(
             modified: string;
             folder: string;
         }[] =>
-            flattenedItems.value
-                .filter((item): boolean => item.type === 'file' && item.file !== undefined)
-                .map(
-                    (
-                        item,
-                    ): {
-                        name: string;
-                        path: string;
-                        relativePath: string;
-                        extension: string;
-                        size: number;
-                        modified: string;
-                        folder: string;
-                    } => item.file as FileInfo,
-                ),
+            flattenedItems.value.flatMap((item): FileInfo[] =>
+                item.type === 'file' && item.file !== undefined ? [item.file] : [],
+            ),
     );
 
     function toggleFolder(folderPath: string): void {

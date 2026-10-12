@@ -4,11 +4,12 @@ import { ref } from 'vue';
 import { useConversationHistory } from '@/renderer/composables/ai/useConversationHistory';
 import type { AiStatus, Conversation } from '@/schemas/ai';
 import type { ChatMessage } from '@/schemas/chat';
+import type { ElectronAPI } from '@/schemas/electron';
 
 const mockConversationList = vi.fn();
 const mockConversationCreate = vi.fn();
 const mockConversationLoad = vi.fn();
-const mockConversationSave = vi.fn();
+const mockConversationSave = vi.fn<ElectronAPI['conversationSave']>();
 const mockConversationDelete = vi.fn();
 const mockConversationRename = vi.fn();
 const mockAiResetChat = vi.fn().mockResolvedValue({ success: true });
@@ -356,7 +357,7 @@ describe('useConversationHistory', () => {
             history.currentConversationId.value = 'conv-save';
             await history.saveCurrentConversation();
 
-            const saved = mockConversationSave.mock.calls[0]![0] as Conversation;
+            const saved = mockConversationSave.mock.calls[0]![0];
             expect(saved.messages).toHaveLength(2);
             expect(saved.messages.map((m) => m.role)).toEqual(['user', 'assistant']);
         });
@@ -367,7 +368,7 @@ describe('useConversationHistory', () => {
             history.conversationTokenCount.value = 777;
             await history.saveCurrentConversation();
 
-            const saved = mockConversationSave.mock.calls[0]![0] as Conversation;
+            const saved = mockConversationSave.mock.calls[0]![0];
             expect(saved.tokenCount).toBe(777);
         });
     });

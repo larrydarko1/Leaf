@@ -78,8 +78,8 @@ export function useListKeyboardNavigation<T>(
     }
 
     function handleKeyDown(e: KeyboardEvent): void {
-        const target = e.target as HTMLElement;
-        if (ignoreWhen(target)) return;
+        const target = e.target;
+        if (target instanceof HTMLElement && ignoreWhen(target)) return;
 
         if (e.key === 'ArrowDown') {
             e.preventDefault();

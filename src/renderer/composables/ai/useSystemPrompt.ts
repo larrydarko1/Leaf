@@ -10,7 +10,7 @@ import { ref, type Ref } from 'vue';
 
 import type { PromptInfo } from '@/schemas/ai';
 
-export type UseSystemPromptReturn = {
+type UseSystemPromptReturn = {
     prompts: Ref<PromptInfo[]>;
     activeId: Ref<string>;
     isLoading: Ref<boolean>;

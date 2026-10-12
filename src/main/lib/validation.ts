@@ -5,6 +5,8 @@
 
 import path from 'path';
 
+import { IpcError } from '@/main/lib/errors';
+
 /**
  * Ensure `targetPath` resolves inside `rootDir`.
  * Throws if the resolved path escapes the root (path traversal).
@@ -13,7 +15,7 @@ import path from 'path';
  */
 export function resolveInsideBoundary(targetPath: string, rootDir: string): string {
     if (!isInsideBoundary(targetPath, rootDir)) {
-        throw new Error('Access denied: path is outside the allowed directory.');
+        throw new IpcError('ACCESS_DENIED', 'Access denied: path is outside the allowed directory.');
     }
     return path.resolve(targetPath);
 }
@@ -30,6 +32,6 @@ export function isInsideBoundary(targetPath: string, rootDir: string): boolean {
  */
 export function assertSafeFileName(name: string): void {
     if (name === '' || path.basename(name) !== name) {
-        throw new Error('Invalid name: must be a plain filename without path separators.');
+        throw new IpcError('INVALID_NAME', 'Invalid name: must be a plain filename without path separators.');
     }
 }

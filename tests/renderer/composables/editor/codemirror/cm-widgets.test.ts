@@ -6,6 +6,7 @@ import {
     EmbedWidget,
     TaskCheckboxWidget,
 } from '@/renderer/composables/editor/codemirror/cm-widgets';
+import { findElement } from '@test-utils';
 
 describe('HorizontalRuleWidget', () => {
     it('renders an <hr> with cm-hr class', () => {
@@ -63,25 +64,25 @@ describe('TableWidget.toDOM', () => {
 
     it('applies center alignment for :---: delimiter', () => {
         const el = renderTable('| A |\n|:---:|\n| 1 |');
-        const th = el.querySelector('thead th') as HTMLElement;
+        const th = findElement(el, 'thead th', HTMLElement);
         expect(th.style.textAlign).toBe('center');
     });
 
     it('applies right alignment for ---: delimiter', () => {
         const el = renderTable('| A |\n|---:|\n| 1 |');
-        const th = el.querySelector('thead th') as HTMLElement;
+        const th = findElement(el, 'thead th', HTMLElement);
         expect(th.style.textAlign).toBe('right');
     });
 
     it('applies left alignment for :--- delimiter', () => {
         const el = renderTable('| A |\n|:---|\n| 1 |');
-        const th = el.querySelector('thead th') as HTMLElement;
+        const th = findElement(el, 'thead th', HTMLElement);
         expect(th.style.textAlign).toBe('left');
     });
 
     it('no alignment style for plain --- delimiter', () => {
         const el = renderTable('| A |\n|---|\n| 1 |');
-        const th = el.querySelector('thead th') as HTMLElement;
+        const th = findElement(el, 'thead th', HTMLElement);
         expect(th.style.textAlign).toBe('');
     });
 
@@ -179,14 +180,14 @@ describe('EmbedWidget.toDOM', () => {
 
     it('applies width and height from displayOptions', () => {
         const el = new EmbedWidget('photo.png', '/vault/photo.png', 'image', '200x100').toDOM();
-        const img = el.querySelector('img') as HTMLImageElement;
+        const img = findElement(el, 'img', HTMLImageElement);
         expect(img.width).toBe(200);
         expect(img.height).toBe(100);
     });
 
     it('applies only width when displayOptions has no height', () => {
         const el = new EmbedWidget('photo.png', '/vault/photo.png', 'image', '300').toDOM();
-        const img = el.querySelector('img') as HTMLImageElement;
+        const img = findElement(el, 'img', HTMLImageElement);
         expect(img.width).toBe(300);
     });
 
@@ -199,8 +200,8 @@ describe('EmbedWidget.toDOM', () => {
 
     it('play button pauses when media is playing', () => {
         const el = new EmbedWidget('clip.mp4', '/vault/clip.mp4', 'video', '').toDOM();
-        const media = el.querySelector('video') as HTMLVideoElement & { paused: boolean; pause: () => void };
-        const btn = el.querySelector('button.cm-embed-play-btn') as HTMLButtonElement;
+        const media = findElement(el, 'video', HTMLVideoElement);
+        const btn = findElement(el, 'button.cm-embed-play-btn', HTMLButtonElement);
         Object.defineProperty(media, 'paused', { get: () => false, configurable: true });
         media.pause = vi.fn();
         btn.click();
@@ -209,8 +210,8 @@ describe('EmbedWidget.toDOM', () => {
 
     it('play button plays when media is paused', () => {
         const el = new EmbedWidget('clip.mp4', '/vault/clip.mp4', 'video', '').toDOM();
-        const media = el.querySelector('video') as HTMLVideoElement;
-        const btn = el.querySelector('button.cm-embed-play-btn') as HTMLButtonElement;
+        const media = findElement(el, 'video', HTMLVideoElement);
+        const btn = findElement(el, 'button.cm-embed-play-btn', HTMLButtonElement);
         Object.defineProperty(media, 'paused', { get: () => true, configurable: true });
         media.play = vi.fn().mockResolvedValue(undefined);
         btn.click();
@@ -219,16 +220,16 @@ describe('EmbedWidget.toDOM', () => {
 
     it('media play event updates play button to pause icon', () => {
         const el = new EmbedWidget('clip.mp4', '/vault/clip.mp4', 'video', '').toDOM();
-        const media = el.querySelector('video') as HTMLVideoElement;
-        const btn = el.querySelector('button.cm-embed-play-btn') as HTMLButtonElement;
+        const media = findElement(el, 'video', HTMLVideoElement);
+        const btn = findElement(el, 'button.cm-embed-play-btn', HTMLButtonElement);
         media.dispatchEvent(new Event('play'));
         expect(btn.innerHTML).toContain('rect'); // pause SVG has rect elements
     });
 
     it('media pause event updates play button to play icon', () => {
         const el = new EmbedWidget('clip.mp4', '/vault/clip.mp4', 'video', '').toDOM();
-        const media = el.querySelector('video') as HTMLVideoElement;
-        const btn = el.querySelector('button.cm-embed-play-btn') as HTMLButtonElement;
+        const media = findElement(el, 'video', HTMLVideoElement);
+        const btn = findElement(el, 'button.cm-embed-play-btn', HTMLButtonElement);
         media.dispatchEvent(new Event('play'));
         media.dispatchEvent(new Event('pause'));
         expect(btn.innerHTML).toContain('path'); // play SVG has path
@@ -236,8 +237,8 @@ describe('EmbedWidget.toDOM', () => {
 
     it('media ended event resets play button', () => {
         const el = new EmbedWidget('clip.mp4', '/vault/clip.mp4', 'video', '').toDOM();
-        const media = el.querySelector('video') as HTMLVideoElement;
-        const btn = el.querySelector('button.cm-embed-play-btn') as HTMLButtonElement;
+        const media = findElement(el, 'video', HTMLVideoElement);
+        const btn = findElement(el, 'button.cm-embed-play-btn', HTMLButtonElement);
         media.dispatchEvent(new Event('play'));
         media.dispatchEvent(new Event('ended'));
         expect(btn.innerHTML).toContain('path');
@@ -245,18 +246,18 @@ describe('EmbedWidget.toDOM', () => {
 
     it('timeupdate updates time display when realDuration is known', () => {
         const el = new EmbedWidget('clip.mp4', '/vault/clip.mp4', 'video', '').toDOM();
-        const media = el.querySelector('video') as HTMLVideoElement;
+        const media = findElement(el, 'video', HTMLVideoElement);
         Object.defineProperty(media, 'duration', { get: () => 120, configurable: true });
         media.dispatchEvent(new Event('loadedmetadata'));
         Object.defineProperty(media, 'currentTime', { get: () => 60, configurable: true });
         media.dispatchEvent(new Event('timeupdate'));
-        const timeEl = el.querySelector('.cm-embed-time') as HTMLSpanElement;
+        const timeEl = findElement(el, '.cm-embed-time', HTMLSpanElement);
         expect(timeEl.textContent).toBe('1:00');
     });
 
     it('loadedmetadata captures finite duration', () => {
         const el = new EmbedWidget('clip.mp4', '/vault/clip.mp4', 'video', '').toDOM();
-        const media = el.querySelector('video') as HTMLVideoElement;
+        const media = findElement(el, 'video', HTMLVideoElement);
         Object.defineProperty(media, 'duration', { get: () => 90, configurable: true });
         media.dispatchEvent(new Event('loadedmetadata'));
         expect(el.dataset['realDuration']).toBe('90');
@@ -264,7 +265,7 @@ describe('EmbedWidget.toDOM', () => {
 
     it('loadedmetadata probes when duration is Infinity', () => {
         const el = new EmbedWidget('clip.mp4', '/vault/clip.mp4', 'video', '').toDOM();
-        const media = el.querySelector('video') as HTMLVideoElement;
+        const media = findElement(el, 'video', HTMLVideoElement);
         Object.defineProperty(media, 'duration', { get: () => Infinity, configurable: true });
         media.dispatchEvent(new Event('loadedmetadata'));
         expect(media.currentTime).toBe(1e10);
@@ -272,7 +273,7 @@ describe('EmbedWidget.toDOM', () => {
 
     it('seeked event finalizes probe and captures duration', () => {
         const el = new EmbedWidget('clip.mp4', '/vault/clip.mp4', 'video', '').toDOM();
-        const media = el.querySelector('video') as HTMLVideoElement;
+        const media = findElement(el, 'video', HTMLVideoElement);
         Object.defineProperty(media, 'duration', { get: () => Infinity, configurable: true });
         media.dispatchEvent(new Event('loadedmetadata'));
         Object.defineProperty(media, 'duration', { get: () => 120, configurable: true });
@@ -282,8 +283,8 @@ describe('EmbedWidget.toDOM', () => {
 
     it('volume button mutes when volume > 0', () => {
         const el = new EmbedWidget('clip.mp4', '/vault/clip.mp4', 'video', '').toDOM();
-        const media = el.querySelector('video') as HTMLVideoElement;
-        const volBtn = el.querySelector('button.cm-embed-vol-btn') as HTMLButtonElement;
+        const media = findElement(el, 'video', HTMLVideoElement);
+        const volBtn = findElement(el, 'button.cm-embed-vol-btn', HTMLButtonElement);
         Object.defineProperty(media, 'volume', { get: () => 1, set: vi.fn(), configurable: true });
         const setter = vi.fn();
         Object.defineProperty(media, 'volume', { get: () => 1, set: setter, configurable: true });
@@ -293,8 +294,8 @@ describe('EmbedWidget.toDOM', () => {
 
     it('volume button unmutes when muted', () => {
         const el = new EmbedWidget('clip.mp4', '/vault/clip.mp4', 'video', '').toDOM();
-        const media = el.querySelector('video') as HTMLVideoElement;
-        const volBtn = el.querySelector('button.cm-embed-vol-btn') as HTMLButtonElement;
+        const media = findElement(el, 'video', HTMLVideoElement);
+        const volBtn = findElement(el, 'button.cm-embed-vol-btn', HTMLButtonElement);
         const setter = vi.fn();
         Object.defineProperty(media, 'volume', { get: () => 1, set: setter, configurable: true });
         volBtn.click();
@@ -305,16 +306,15 @@ describe('EmbedWidget.toDOM', () => {
 
     it('progress bar click seeks to position', () => {
         const el = new EmbedWidget('clip.mp4', '/vault/clip.mp4', 'video', '').toDOM();
-        const media = el.querySelector('video') as HTMLVideoElement;
-        const progressWrap = el.querySelector('.cm-embed-progress-wrapper') as HTMLElement;
+        const media = findElement(el, 'video', HTMLVideoElement);
+        const progressWrap = findElement(el, '.cm-embed-progress-wrapper', HTMLElement);
         Object.defineProperty(media, 'duration', { get: () => 100, configurable: true });
         media.dispatchEvent(new Event('loadedmetadata'));
         const setter = vi.fn();
         Object.defineProperty(media, 'currentTime', { get: () => 0, set: setter, configurable: true });
-        const mockRect = { left: 0, width: 100 };
-        const progressTrack = el.querySelector('.cm-embed-progress-track') as HTMLElement;
-        vi.spyOn(progressTrack, 'getBoundingClientRect').mockReturnValue(mockRect as DOMRect);
-        progressWrap.dispatchEvent(Object.assign(new MouseEvent('click', { clientX: 50 })));
+        const progressTrack = findElement(el, '.cm-embed-progress-track', HTMLElement);
+        vi.spyOn(progressTrack, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 100, 10));
+        progressWrap.dispatchEvent(new MouseEvent('click', { clientX: 50 }));
         expect(setter).toHaveBeenCalledWith(50);
     });
 
@@ -326,8 +326,8 @@ describe('EmbedWidget.toDOM', () => {
 
     it('volume slider input on audio sets volume', () => {
         const el = new EmbedWidget('sound.mp3', '/vault/sound.mp3', 'audio', '').toDOM();
-        const media = el.querySelector('audio') as HTMLAudioElement;
-        const slider = el.querySelector('.cm-embed-vol-slider') as HTMLInputElement;
+        const media = findElement(el, 'audio', HTMLAudioElement);
+        const slider = findElement(el, '.cm-embed-vol-slider', HTMLInputElement);
         const setter = vi.fn();
         Object.defineProperty(media, 'volume', { get: () => 0.5, set: setter, configurable: true });
         slider.value = '0.75';
@@ -337,9 +337,9 @@ describe('EmbedWidget.toDOM', () => {
 
     it('volume slider tracks the mute button', () => {
         const el = new EmbedWidget('sound.mp3', '/vault/sound.mp3', 'audio', '').toDOM();
-        const media = el.querySelector('audio') as HTMLAudioElement;
-        const slider = el.querySelector('.cm-embed-vol-slider') as HTMLInputElement;
-        const volBtn = el.querySelector('button.cm-embed-vol-btn') as HTMLButtonElement;
+        const media = findElement(el, 'audio', HTMLAudioElement);
+        const slider = findElement(el, '.cm-embed-vol-slider', HTMLInputElement);
+        const volBtn = findElement(el, 'button.cm-embed-vol-btn', HTMLButtonElement);
         Object.defineProperty(media, 'volume', { get: () => 1, set: vi.fn(), configurable: true });
         volBtn.click();
         expect(slider.value).toBe('0');
@@ -396,21 +396,21 @@ describe('TaskCheckboxWidget.toDOM', () => {
 
     it('renders a checked checkbox for "checked" state', () => {
         const el = new TaskCheckboxWidget('checked', 0).toDOM();
-        const input = el.querySelector('input[type="checkbox"]') as HTMLInputElement;
+        const input = findElement(el, 'input[type="checkbox"]', HTMLInputElement);
         expect(input.checked).toBe(true);
         expect(el.querySelector('span.cm-task-checked')).not.toBeNull();
     });
 
     it('renders a half-checked checkbox for "half" state', () => {
         const el = new TaskCheckboxWidget('half', 0).toDOM();
-        const input = el.querySelector('input') as HTMLInputElement;
+        const input = findElement(el, 'input', HTMLInputElement);
         expect(input.dataset['half']).toBe('true');
         expect(el.querySelector('span.cm-task-half')).not.toBeNull();
     });
 
     it('renders an unchecked checkbox for "unchecked" state', () => {
         const el = new TaskCheckboxWidget('unchecked', 0).toDOM();
-        const input = el.querySelector('input') as HTMLInputElement;
+        const input = findElement(el, 'input', HTMLInputElement);
         expect(input.checked).toBe(false);
         expect(el.querySelector('span.cm-task-checked')).toBeNull();
     });

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 
 import { useNotePersistence } from '@/renderer/composables/editor/useNotePersistence';
 import type { FileInfo } from '@/schemas/vault';
@@ -32,24 +32,24 @@ vi.stubGlobal('alert', vi.fn());
 describe('useNotePersistence', () => {
     let file: FileInfo | null;
     let isMarkdown: boolean;
-    let resolveEmbeds: ReturnType<typeof vi.fn>;
-    let onSave: ReturnType<typeof vi.fn>;
-    let onContentChanged: ReturnType<typeof vi.fn>;
+    let resolveEmbeds: Mock<(content: string) => void>;
+    let onSave: Mock<(content: string) => void>;
+    let onContentChanged: Mock<(hasChanges: boolean) => void>;
     let np: ReturnType<typeof useNotePersistence>;
 
     beforeEach(() => {
         vi.clearAllMocks();
         file = makeFile();
         isMarkdown = true;
-        resolveEmbeds = vi.fn();
-        onSave = vi.fn();
-        onContentChanged = vi.fn();
+        resolveEmbeds = vi.fn<(content: string) => void>();
+        onSave = vi.fn<(content: string) => void>();
+        onContentChanged = vi.fn<(hasChanges: boolean) => void>();
         np = useNotePersistence(
             () => file,
             () => isMarkdown,
-            resolveEmbeds as unknown as (content: string) => void,
-            onSave as unknown as (content: string) => void,
-            onContentChanged as unknown as (hasChanges: boolean) => void,
+            resolveEmbeds,
+            onSave,
+            onContentChanged,
         );
     });
 
@@ -88,7 +88,7 @@ describe('useNotePersistence', () => {
 
         it('does not alter content when the read fails', async () => {
             np.content.value = 'pre-existing';
-            mockAPI.readFile.mockResolvedValue({ success: false, error: 'not found' });
+            mockAPI.readFile.mockResolvedValue({ success: false, error: 'NOT_FOUND' });
             await np.loadFile(makeFile());
             expect(np.content.value).toBe('pre-existing');
         });
@@ -181,7 +181,7 @@ describe('useNotePersistence', () => {
         });
 
         it('shows an alert when the write fails', async () => {
-            mockAPI.writeFile.mockResolvedValue({ success: false, error: 'disk full' });
+            mockAPI.writeFile.mockResolvedValue({ success: false, error: 'DISK_FULL' });
             np.content.value = 'changed';
             np.originalContent.value = 'original';
             np.hasUnsavedChanges.value = true;
@@ -190,7 +190,7 @@ describe('useNotePersistence', () => {
         });
 
         it('resets isSaving to false even when the write fails', async () => {
-            mockAPI.writeFile.mockResolvedValue({ success: false, error: 'oops' });
+            mockAPI.writeFile.mockResolvedValue({ success: false, error: 'UNKNOWN' });
             np.content.value = 'x';
             np.originalContent.value = '';
             np.hasUnsavedChanges.value = true;
@@ -227,7 +227,7 @@ describe('useNotePersistence', () => {
         });
 
         it('does not update content when the write fails', async () => {
-            mockAPI.writeFile.mockResolvedValue({ success: false, error: 'error' });
+            mockAPI.writeFile.mockResolvedValue({ success: false, error: 'UNKNOWN' });
             np.content.value = 'previous';
             await np.handleDrawingSave('new drawing');
             expect(np.content.value).toBe('previous');

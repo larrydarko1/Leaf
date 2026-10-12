@@ -1,5 +1,5 @@
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
-import { EditorState } from '@codemirror/state';
+import { EditorState, type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref } from 'vue';
@@ -32,7 +32,7 @@ function makeEmbedCache() {
     };
 }
 
-function makeViewWithExtension(doc: string, extraExtensions: unknown[] = []): EditorView {
+function makeViewWithExtension(doc: string, extraExtensions: Extension[] = []): EditorView {
     const parent = makeDiv();
     const { cache, cacheVersion, getMediaType } = makeEmbedCache();
     return new EditorView({
@@ -42,7 +42,7 @@ function makeViewWithExtension(doc: string, extraExtensions: unknown[] = []): Ed
                 markdown({ base: markdownLanguage }),
                 interactiveExtension,
                 createMarkdownWidgetsPlugin(cache, cacheVersion, getMediaType),
-                ...(extraExtensions as import('@codemirror/state').Extension[]),
+                ...extraExtensions,
             ],
         }),
         parent,

@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import { useAIModel } from '@/renderer/composables/ai/useAIModel';
 import type { AiModelInfo, AiStatus } from '@/schemas/ai';
+import type { ChatMessage } from '@/schemas/chat';
+import type { ElectronAPI } from '@/schemas/electron';
 
 vi.mock('vue-i18n', () => ({
     useI18n: () => ({
@@ -18,7 +20,7 @@ const mockAiListModels = vi.fn();
 const mockAiLoadModel = vi.fn();
 const mockAiUnloadModel = vi.fn();
 const mockAiGetStatus = vi.fn();
-const mockAiRestoreChatHistory = vi.fn().mockResolvedValue({ success: true });
+const mockAiRestoreChatHistory = vi.fn<ElectronAPI['aiRestoreChatHistory']>().mockResolvedValue({ success: true });
 const mockAiOpenLeafDir = vi.fn().mockResolvedValue(undefined);
 
 function makeModel(overrides: Partial<AiModelInfo> = {}): AiModelInfo {
@@ -183,7 +185,7 @@ describe('useAIModel', () => {
             m.selectedModelPath.value = '';
             const result = await m.loadModel();
             expect(result.success).toBe(false);
-            expect(result.error).toBe('No model selected');
+            expect(result.error).toBe('INVALID_ARGUMENTS');
             expect(mockAiLoadModel).not.toHaveBeenCalled();
         });
 
@@ -268,7 +270,7 @@ describe('useAIModel', () => {
             m.availableModels.value = [model];
             m.lastUsedModelName.value = 'prev.gguf';
 
-            const history = [
+            const history: ChatMessage[] = [
                 { role: 'user', content: 'Hello' },
                 { role: 'assistant', content: 'Hi' },
             ];
@@ -306,14 +308,14 @@ describe('useAIModel', () => {
             m.availableModels.value = [model];
             m.lastUsedModelName.value = 'prev.gguf';
 
-            const history = [
+            const history: ChatMessage[] = [
                 { role: 'user', content: 'Hello' },
                 { role: 'system', content: 'Compacted.' },
                 { role: 'assistant', content: 'Hi' },
             ];
             await m.loadPreviousModel(history, { hasActiveConversation: true });
 
-            const restored = mockAiRestoreChatHistory.mock.calls[0]![0] as { role: string }[];
+            const restored = mockAiRestoreChatHistory.mock.calls[0]![0];
             expect(restored.every((m) => m.role !== 'system')).toBe(true);
         });
     });

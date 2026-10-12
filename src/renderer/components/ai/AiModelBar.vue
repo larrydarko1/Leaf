@@ -68,7 +68,7 @@ function handleSelectModel(model: AiModelInfo): void {
 }
 
 function handleClickOutside(event: MouseEvent): void {
-    const target = event.target as Node;
+    const target = event.target instanceof Node ? event.target : null;
     if (dropdownRef.value !== null && !dropdownRef.value.contains(target)) {
         showDropdown.value = false;
     }

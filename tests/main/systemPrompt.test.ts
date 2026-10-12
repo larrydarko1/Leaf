@@ -2,12 +2,13 @@ import fs from 'fs';
 import path from 'path';
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { z } from 'zod';
+
+import { createFakeIpc, readReply } from './test-utils';
 
 const PATHS = vi.hoisted(() => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { join } = require('path') as typeof import('path');
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { tmpdir } = require('os') as typeof import('os');
+    const { join } = process.getBuiltinModule('path');
+    const { tmpdir } = process.getBuiltinModule('os');
     const tmpRoot = join(tmpdir(), `leaf-prompt-test-${process.pid}-${Date.now()}`);
     const leafHome = join(tmpRoot, '.leaf');
     return {
@@ -49,15 +50,11 @@ function resetTmp() {
 async function metaOfDefault(content: string): Promise<{ name: string; description: string }> {
     fs.writeFileSync(path.join(BUNDLED_DIR, 'default.md'), content);
     const { register } = await import('@/main/services/systemPrompt');
-    const handlers: Record<string, (...args: unknown[]) => Promise<unknown>> = {};
-    register({
-        handle: vi.fn((channel: string, fn: (...args: unknown[]) => Promise<unknown>) => {
-            handlers[channel] = fn;
-        }),
-    } as never);
-    const result = (await handlers['systemPrompt:list']!()) as {
-        prompts: { id: string; name: string; description: string }[];
-    };
+    const handlers = createFakeIpc();
+    register(handlers);
+    const result = z
+        .object({ prompts: z.array(z.object({ id: z.string(), name: z.string(), description: z.string() })) })
+        .parse(await handlers.invoke('systemPrompt:list'));
     return result.prompts.find((p) => p.id === 'default')!;
 }
 
@@ -69,13 +66,8 @@ async function bodyOfDefault(content: string): Promise<string> {
 
 async function makeHandlers() {
     const mod = await import('@/main/services/systemPrompt');
-    const handlers: Record<string, (...args: unknown[]) => unknown> = {};
-    const ipc = {
-        handle: vi.fn((ch: string, fn: (...args: unknown[]) => unknown) => {
-            handlers[ch] = fn;
-        }),
-    };
-    mod.register(ipc as never);
+    const handlers = createFakeIpc();
+    mod.register(handlers);
     return handlers;
 }
 
@@ -151,8 +143,8 @@ describe('seeding, via getActiveSystemPrompt', () => {
         expect(fs.existsSync(path.join(PROMPTS_DIR, 'coding.md'))).toBe(true);
         expect(fs.existsSync(STATE_FILE)).toBe(true);
 
-        const state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf-8'));
-        expect(state.activePrompt).toBe('default');
+        const state: unknown = JSON.parse(fs.readFileSync(STATE_FILE, 'utf-8'));
+        expect(state).toMatchObject({ activePrompt: 'default' });
     });
 
     it('seeds exactly once under concurrent calls (memoised in-flight promise)', async () => {
@@ -225,7 +217,9 @@ describe('seeding, via getActiveSystemPrompt', () => {
 describe('systemPrompt:list', () => {
     it('returns empty list when prompts directory does not exist', async () => {
         const handlers = await makeHandlers();
-        const result = (await handlers['systemPrompt:list']?.()) as { success: boolean; prompts: unknown[] };
+        const result = z
+            .object({ success: z.boolean(), prompts: z.array(z.unknown()) })
+            .parse(await handlers.invoke('systemPrompt:list'));
         expect(result.success).toBe(true);
         expect(result.prompts).toHaveLength(0);
     });
@@ -239,11 +233,13 @@ describe('systemPrompt:list', () => {
         fs.writeFileSync(STATE_FILE, JSON.stringify({ activePrompt: 'default' }));
 
         const handlers = await makeHandlers();
-        const result = (await handlers['systemPrompt:list']?.()) as {
-            success: boolean;
-            prompts: { id: string; name: string }[];
-            activeId: string;
-        };
+        const result = z
+            .object({
+                success: z.boolean(),
+                prompts: z.array(z.object({ id: z.string(), name: z.string() })),
+                activeId: z.string(),
+            })
+            .parse(await handlers.invoke('systemPrompt:list'));
         expect(result.success).toBe(true);
         expect(result.prompts[0]!.id).toBe('default');
         expect(result.prompts.map((p) => p.id)).toEqual(['default', 'alpha', 'zebra']);
@@ -258,7 +254,7 @@ describe('systemPrompt:list', () => {
         fs.writeFileSync(STATE_FILE, JSON.stringify({ activePrompt: 'valid' }));
 
         const handlers = await makeHandlers();
-        const result = (await handlers['systemPrompt:list']?.()) as { prompts: unknown[] };
+        const result = z.object({ prompts: z.array(z.unknown()) }).parse(await handlers.invoke('systemPrompt:list'));
         expect(result.prompts).toHaveLength(1);
     });
 });
@@ -266,25 +262,22 @@ describe('systemPrompt:list', () => {
 describe('systemPrompt:setActive', () => {
     it('returns failure for non-string id', async () => {
         const handlers = await makeHandlers();
-        const result = (await handlers['systemPrompt:setActive']?.({}, 123)) as { success: boolean };
+        const result = readReply(await handlers.invoke('systemPrompt:setActive', 123));
         expect(result.success).toBe(false);
     });
 
     it('returns failure for an id with invalid characters', async () => {
         const handlers = await makeHandlers();
-        const result = (await handlers['systemPrompt:setActive']?.({}, '../etc/passwd')) as { success: boolean };
+        const result = readReply(await handlers.invoke('systemPrompt:setActive', '../etc/passwd'));
         expect(result.success).toBe(false);
     });
 
     it('returns failure when the prompt file does not exist', async () => {
         fs.mkdirSync(PROMPTS_DIR, { recursive: true });
         const handlers = await makeHandlers();
-        const result = (await handlers['systemPrompt:setActive']?.({}, 'missing')) as {
-            success: boolean;
-            error: string;
-        };
+        const result = readReply(await handlers.invoke('systemPrompt:setActive', 'missing'));
         expect(result.success).toBe(false);
-        expect(result.error).toMatch(/not found/i);
+        expect(result.error).toBe('NOT_FOUND');
     });
 
     it('sets the active prompt and updates the state file', async () => {
@@ -294,10 +287,10 @@ describe('systemPrompt:setActive', () => {
         fs.writeFileSync(STATE_FILE, JSON.stringify({ activePrompt: 'default' }));
 
         const handlers = await makeHandlers();
-        const result = (await handlers['systemPrompt:setActive']?.({}, 'custom')) as { success: boolean };
+        const result = readReply(await handlers.invoke('systemPrompt:setActive', 'custom'));
         expect(result.success).toBe(true);
 
-        const state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf-8')) as { activePrompt: string };
-        expect(state.activePrompt).toBe('custom');
+        const state = z.object({ activePrompt: z.string() }).parse(JSON.parse(fs.readFileSync(STATE_FILE, 'utf-8')));
+        expect(state).toMatchObject({ activePrompt: 'custom' });
     });
 });

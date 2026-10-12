@@ -319,5 +319,30 @@
     "save_png": "Salva PNG",
     "copy_png": "Copia PNG",
     "close_export_dialog": "Chiudi finestra di esportazione"
+  },
+  "errors": {
+    "invalid_arguments": "La richiesta non era valida.",
+    "no_window": "Nessuna finestra disponibile.",
+    "no_vault": "Nessuna cartella delle note aperta.",
+    "access_denied": "Accesso negato.",
+    "invalid_name": "Questo nome non è consentito.",
+    "not_found": "Non è stato trovato.",
+    "already_exists": "Esiste già un elemento con questo nome.",
+    "move_into_self": "Una cartella non può essere spostata dentro sé stessa.",
+    "disk_full": "Il disco è pieno.",
+    "model_not_loaded": "Nessun modello caricato.",
+    "busy": "Occupato, riprova tra un momento.",
+    "invalid_state": "Non è possibile farlo adesso.",
+    "unknown": "Qualcosa è andato storto.",
+    "create_file_failed": "Impossibile creare il file. {reason}",
+    "create_drawing_failed": "Impossibile creare il disegno. {reason}",
+    "rename_file_failed": "Impossibile rinominare il file. {reason}",
+    "rename_folder_failed": "Impossibile rinominare la cartella. {reason}",
+    "delete_file_failed": "Impossibile eliminare {name}. {reason}",
+    "delete_folder_failed": "Impossibile eliminare la cartella. {reason}",
+    "move_file_failed": "Impossibile spostare {name}. {reason}",
+    "move_folder_failed": "Impossibile spostare la cartella. {reason}",
+    "save_file_failed": "Impossibile salvare il file. {reason}",
+    "chat_failed": "Il modello non è riuscito a rispondere. {reason}"
   }
 }

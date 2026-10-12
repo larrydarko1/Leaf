@@ -87,9 +87,8 @@ function selectArchTool(tool: ToolType): void {
 }
 
 function handleClickOutside(e: MouseEvent): void {
-    if (archDropdownOpen.value && archDropdownEl.value !== null && !archDropdownEl.value.contains(e.target as Node)) {
-        archDropdownOpen.value = false;
-    }
+    const inside = e.target instanceof Node && archDropdownEl.value?.contains(e.target) === true;
+    if (!inside) archDropdownOpen.value = false;
 }
 </script>
 

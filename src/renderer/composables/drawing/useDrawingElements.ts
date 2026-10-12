@@ -7,7 +7,7 @@ import { ref, computed, shallowRef, type ComputedRef, type Ref, type ShallowRef,
 
 import type { CanvasElement, ElementType } from '@/schemas/drawing';
 
-export type UseDrawingElementsReturn = {
+type UseDrawingElementsReturn = {
     elements: ShallowRef<CanvasElement[]>;
     selectedId: WritableComputedRef<string | null>;
     selectedIds: Ref<Set<string>>;
@@ -271,7 +271,7 @@ export function useDrawingElements(): UseDrawingElementsReturn {
     ];
 
     function isShapeTool(tool: string): tool is ElementType {
-        return shapeTools.includes(tool as ElementType);
+        return shapeTools.some((shape): boolean => shape === tool);
     }
 
     return {

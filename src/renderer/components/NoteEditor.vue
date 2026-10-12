@@ -283,8 +283,8 @@ watch(
 );
 
 onMounted(() => {
-    document.addEventListener('drop', preventGlobalDrop as EventListener, true);
-    document.addEventListener('dragover', preventGlobalDragOver as EventListener, true);
+    document.addEventListener('drop', preventGlobalDrop, true);
+    document.addEventListener('dragover', preventGlobalDragOver, true);
 });
 
 // Cleanup
@@ -295,14 +295,14 @@ onUnmounted(() => {
         stopDictation();
     }
     window.electronAPI.removeSpeechStatusListener();
-    document.removeEventListener('drop', preventGlobalDrop as EventListener, true);
-    document.removeEventListener('dragover', preventGlobalDragOver as EventListener, true);
-    window.removeEventListener('keydown', handleKeyboard as EventListener);
+    document.removeEventListener('drop', preventGlobalDrop, true);
+    document.removeEventListener('dragover', preventGlobalDragOver, true);
+    window.removeEventListener('keydown', handleKeyboard);
 });
 
 // Add keyboard listener
 if (typeof window !== 'undefined') {
-    window.addEventListener('keydown', handleKeyboard as EventListener);
+    window.addEventListener('keydown', handleKeyboard);
 }
 </script>
 

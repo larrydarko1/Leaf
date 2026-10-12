@@ -319,5 +319,30 @@
     "save_png": "Сохранить PNG",
     "copy_png": "Копировать PNG",
     "close_export_dialog": "Закрыть диалог экспорта"
+  },
+  "errors": {
+    "invalid_arguments": "Недопустимый запрос.",
+    "no_window": "Нет доступного окна.",
+    "no_vault": "Папка заметок не открыта.",
+    "access_denied": "Доступ запрещён.",
+    "invalid_name": "Это имя недопустимо.",
+    "not_found": "Не найдено.",
+    "already_exists": "Элемент с таким именем уже существует.",
+    "move_into_self": "Папку нельзя переместить в саму себя.",
+    "disk_full": "Диск заполнен.",
+    "model_not_loaded": "Модель не загружена.",
+    "busy": "Занято, повторите попытку через мгновение.",
+    "invalid_state": "Сейчас это невозможно.",
+    "unknown": "Что-то пошло не так.",
+    "create_file_failed": "Не удалось создать файл. {reason}",
+    "create_drawing_failed": "Не удалось создать рисунок. {reason}",
+    "rename_file_failed": "Не удалось переименовать файл. {reason}",
+    "rename_folder_failed": "Не удалось переименовать папку. {reason}",
+    "delete_file_failed": "Не удалось удалить {name}. {reason}",
+    "delete_folder_failed": "Не удалось удалить папку. {reason}",
+    "move_file_failed": "Не удалось переместить {name}. {reason}",
+    "move_folder_failed": "Не удалось переместить папку. {reason}",
+    "save_file_failed": "Не удалось сохранить файл. {reason}",
+    "chat_failed": "Модель не смогла ответить. {reason}"
   }
 }

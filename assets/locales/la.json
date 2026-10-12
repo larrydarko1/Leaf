@@ -319,5 +319,30 @@
     "save_png": "PNG Servare",
     "copy_png": "PNG Exemplare",
     "close_export_dialog": "Dialogum Exportandi Claudere"
+  },
+  "errors": {
+    "invalid_arguments": "Petitio non valebat.",
+    "no_window": "Nulla fenestra praesto est.",
+    "no_vault": "Nullus fasciculus notarum apertus est.",
+    "access_denied": "Aditus negatus.",
+    "invalid_name": "Hoc nomen non licet.",
+    "not_found": "Inveniri non potuit.",
+    "already_exists": "Res eodem nomine iam exstat.",
+    "move_into_self": "Fasciculus in se ipsum moveri non potest.",
+    "disk_full": "Discus plenus est.",
+    "model_not_loaded": "Nullum exemplar oneratum est.",
+    "busy": "Occupatum, mox iterum conare.",
+    "invalid_state": "Id nunc fieri non potest.",
+    "unknown": "Aliquid erravit.",
+    "create_file_failed": "Scapus creari non potuit. {reason}",
+    "create_drawing_failed": "Pictura creari non potuit. {reason}",
+    "rename_file_failed": "Scapus renominari non potuit. {reason}",
+    "rename_folder_failed": "Fasciculus renominari non potuit. {reason}",
+    "delete_file_failed": "{name} deleri non potuit. {reason}",
+    "delete_folder_failed": "Fasciculus deleri non potuit. {reason}",
+    "move_file_failed": "{name} moveri non potuit. {reason}",
+    "move_folder_failed": "Fasciculus moveri non potuit. {reason}",
+    "save_file_failed": "Scapus servari non potuit. {reason}",
+    "chat_failed": "Exemplar respondere non potuit. {reason}"
   }
 }

@@ -3,7 +3,7 @@ import { ref } from 'vue';
 
 import AiModelBar from '@/renderer/components/ai/AiModelBar.vue';
 import type { AiModelInfo, AiStatus, PromptInfo } from '@/schemas/ai';
-import { mountWithI18n } from '@test-utils';
+import { mountWithI18n, findElement } from '@test-utils';
 
 const mockRefresh = vi.fn().mockResolvedValue(undefined);
 const mockSetActive = vi.fn().mockResolvedValue(undefined);
@@ -129,8 +129,7 @@ describe('AiModelBar', () => {
                 attachTo: document.body,
             });
             await wrapper.find('.ai-dropdown-trigger').trigger('click');
-            const item = document.querySelector('.ai-dropdown-item') as HTMLElement;
-            item?.click();
+            findElement(document, '.ai-dropdown-item', HTMLElement).click();
             await wrapper.vm.$nextTick();
             expect(wrapper.emitted('select-model')?.[0]).toEqual([model]);
             wrapper.unmount();
@@ -246,8 +245,7 @@ describe('AiModelBar', () => {
                 (b) => (b.attributes('aria-haspopup') ?? '') === 'listbox' && b.classes().includes('ai-btn-icon'),
             );
             await promptBtn?.trigger('click');
-            const promptItem = document.querySelector('.ai-prompt-item') as HTMLElement;
-            promptItem?.click();
+            findElement(document, '.ai-prompt-item', HTMLElement).click();
             await wrapper.vm.$nextTick();
             expect(mockSetActive).toHaveBeenCalledWith('creative');
             wrapper.unmount();

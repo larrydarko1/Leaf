@@ -1,15 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import type { ElectronAPI } from '@/schemas/electron';
+
+type Listener = (event: unknown, ...args: unknown[]) => void;
+
 const mockSend = vi.fn();
 const mockInvoke = vi.fn().mockResolvedValue(undefined);
-const mockOn = vi.fn();
+const mockOn = vi.fn<(channel: string, listener: Listener) => void>();
 const mockRemoveAllListeners = vi.fn();
 
-let capturedApi: Record<string, unknown> = {};
+let capturedApi: ElectronAPI | null = null;
 
 vi.mock('electron', () => ({
     contextBridge: {
-        exposeInMainWorld: (_channel: string, api: Record<string, unknown>) => {
+        exposeInMainWorld: (_channel: string, api: ElectronAPI) => {
             capturedApi = api;
         },
     },
@@ -21,6 +25,18 @@ vi.mock('electron', () => ({
     },
 }));
 
+function bridge(): ElectronAPI {
+    if (capturedApi === null) throw new Error('preload never called exposeInMainWorld');
+    return capturedApi;
+}
+
+/** Each listener the preload handed `ipcRenderer.on`, by channel. */
+function listenerFor(channel: string): Listener {
+    const call = mockOn.mock.calls.find(([registered]) => registered === channel);
+    if (call === undefined) throw new Error(`nothing listens on ${channel}`);
+    return call[1];
+}
+
 await import('@/preload/index');
 
 beforeEach(() => {
@@ -30,40 +46,40 @@ beforeEach(() => {
 describe('preload / electronAPI', () => {
     describe('log methods — route to ipcRenderer.send', () => {
         it('log.error sends "log:error"', () => {
-            (capturedApi['log'] as { error: (...a: unknown[]) => void }).error('msg');
+            bridge().log.error('msg');
             expect(mockSend).toHaveBeenCalledWith('log:error', { message: 'msg', details: [] });
         });
 
         it('log.warn sends "log:warn"', () => {
-            (capturedApi['log'] as { warn: (...a: unknown[]) => void }).warn('warning');
+            bridge().log.warn('warning');
             expect(mockSend).toHaveBeenCalledWith('log:warn', { message: 'warning', details: [] });
         });
 
         it('log.info sends "log:info"', () => {
-            (capturedApi['log'] as { info: (...a: unknown[]) => void }).info('info msg');
+            bridge().log.info('info msg');
             expect(mockSend).toHaveBeenCalledWith('log:info', { message: 'info msg', details: [] });
         });
 
         it('packs whatever follows the message into details', () => {
             const err = new Error('boom');
-            (capturedApi['log'] as { error: (...a: unknown[]) => void }).error('Failed to save:', err, 3);
+            bridge().log.error('Failed to save:', err, 3);
             expect(mockSend).toHaveBeenCalledWith('log:error', { message: 'Failed to save:', details: [err, 3] });
         });
 
         it('log.debug sends "log:debug"', () => {
-            (capturedApi['log'] as { debug: (...a: unknown[]) => void }).debug('debug msg');
+            bridge().log.debug('debug msg');
             expect(mockSend).toHaveBeenCalledWith('log:debug', { message: 'debug msg', details: [] });
         });
     });
 
     describe('isElectron', () => {
         it('returns true', () => {
-            expect((capturedApi['isElectron'] as () => boolean)()).toBe(true);
+            expect(bridge().isElectron()).toBe(true);
         });
     });
 
     describe('IPC invoke methods', () => {
-        const invokeTests: [string, string, unknown[]][] = [
+        const invokeTests: [keyof ElectronAPI, string, unknown[]][] = [
             ['openExternal', 'shell:openExternal', ['https://example.com']],
             ['openFolderDialog', 'dialog:openFolder', []],
             ['showSaveDialog', 'dialog:showSaveDialog', [{ defaultPath: '/tmp' }]],
@@ -124,7 +140,9 @@ describe('preload / electronAPI', () => {
 
         for (const [method, channel, args] of invokeTests) {
             it(`${method} invokes "${channel}"`, () => {
-                (capturedApi[method] as (...a: unknown[]) => unknown)(...args);
+                const fn: unknown = bridge()[method];
+                if (typeof fn !== 'function') throw new Error(`${method} is not a function`);
+                Reflect.apply(fn, undefined, args);
                 expect(mockInvoke).toHaveBeenCalledWith(channel, ...args);
             });
         }
@@ -133,40 +151,38 @@ describe('preload / electronAPI', () => {
     describe('event listener methods', () => {
         it('onAiToken registers ipcRenderer.on handler for "ai:token"', () => {
             const cb = vi.fn();
-            (capturedApi['onAiToken'] as (cb: (token: string) => void) => void)(cb);
+            bridge().onAiToken(cb);
             expect(mockOn).toHaveBeenCalledWith('ai:token', expect.any(Function));
-            const handler = mockOn.mock.calls[0]![1];
-            handler({}, 'hello');
+            listenerFor('ai:token')({}, 'hello');
             expect(cb).toHaveBeenCalledWith('hello');
         });
 
         it('removeAiTokenListener calls removeAllListeners("ai:token")', () => {
-            (capturedApi['removeAiTokenListener'] as () => void)();
+            bridge().removeAiTokenListener();
             expect(mockRemoveAllListeners).toHaveBeenCalledWith('ai:token');
         });
 
         it('onFsChanged registers handler for "fs:changed"', () => {
             const cb = vi.fn();
-            (capturedApi['onFsChanged'] as (cb: (data: object) => void) => void)(cb);
+            bridge().onFsChanged(cb);
             expect(mockOn).toHaveBeenCalledWith('fs:changed', expect.any(Function));
-            const handler = mockOn.mock.calls[0]![1];
-            handler({}, { type: 'change' });
+            listenerFor('fs:changed')({}, { type: 'change' });
             expect(cb).toHaveBeenCalledWith({ type: 'change' });
         });
 
         it('removeFsChangedListener calls removeAllListeners("fs:changed")', () => {
-            (capturedApi['removeFsChangedListener'] as () => void)();
+            bridge().removeFsChangedListener();
             expect(mockRemoveAllListeners).toHaveBeenCalledWith('fs:changed');
         });
 
         it('onSpeechStatus registers handler for "speech:status"', () => {
             const cb = vi.fn();
-            (capturedApi['onSpeechStatus'] as (cb: (s: object) => void) => void)(cb);
+            bridge().onSpeechStatus(cb);
             expect(mockOn).toHaveBeenCalledWith('speech:status', expect.any(Function));
         });
 
         it('removeSpeechStatusListener calls removeAllListeners("speech:status")', () => {
-            (capturedApi['removeSpeechStatusListener'] as () => void)();
+            bridge().removeSpeechStatusListener();
             expect(mockRemoveAllListeners).toHaveBeenCalledWith('speech:status');
         });
     });

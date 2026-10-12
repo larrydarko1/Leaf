@@ -26,11 +26,17 @@ import { existsSync } from 'fs';
 import fs from 'fs/promises';
 import path from 'path';
 
-import { shell, type IpcMain } from 'electron';
+import { shell } from 'electron';
+import { z } from 'zod';
 
 import { readState as readRawState, updateState } from '@/main/lib/appState';
+import { toIpcErrorCode, ipcFailure } from '@/main/lib/errors';
+import type { IpcMain } from '@/main/lib/ipc';
 import { log } from '@/main/lib/logger';
 import { LOCALES_DIR, getBundledLocalesDir } from '@/main/lib/paths';
+import type { AiSimpleResult } from '@/schemas/ai';
+import type { IpcErrorCode } from '@/schemas/errors';
+import { JsonObjectSchema } from '@/schemas/json';
 import { type LanguageInfo, type LanguageState, LanguageStateSchema } from '@/schemas/vault';
 
 /** Maps locale id -> sha256 of the bundled content it was last synced to. */
@@ -44,8 +50,8 @@ let seedPromise: Promise<void> | null = null;
 export function register(ipc: IpcMain): void {
     ipc.handle('language:list', readLanguages);
 
-    ipc.handle('language:setActive', async (_event, id: unknown): Promise<{ success: boolean; error?: string }> => {
-        if (typeof id !== 'string') return { success: false, error: 'Invalid language id' };
+    ipc.handle('language:setActive', async (_event, id: unknown): Promise<AiSimpleResult> => {
+        if (typeof id !== 'string') return { success: false, error: 'INVALID_ARGUMENTS' };
         return setActiveLanguage(id);
     });
 
@@ -54,24 +60,21 @@ export function register(ipc: IpcMain): void {
         async (
             _event,
             id: unknown,
-        ): Promise<{ success: boolean; content?: Record<string, unknown>; error?: string }> => {
-            if (typeof id !== 'string') return { success: false, error: 'Invalid language id' };
+        ): Promise<{ success: boolean; content?: Record<string, unknown>; error?: IpcErrorCode }> => {
+            if (typeof id !== 'string') return { success: false, error: 'INVALID_ARGUMENTS' };
             return loadLanguageContent(id);
         },
     );
 
-    ipc.handle(
-        'language:openLeafDir',
-        async (): Promise<{ success: boolean; error?: undefined } | { success: boolean; error: string }> => {
-            try {
-                await fs.mkdir(LOCALES_DIR, { recursive: true });
-                await shell.openPath(LOCALES_DIR);
-                return { success: true };
-            } catch (err) {
-                return { success: false, error: (err as Error).message };
-            }
-        },
-    );
+    ipc.handle('language:openLeafDir', async (): Promise<AiSimpleResult> => {
+        try {
+            await fs.mkdir(LOCALES_DIR, { recursive: true });
+            await shell.openPath(LOCALES_DIR);
+            return { success: true };
+        } catch (err) {
+            return ipcFailure('language language:openLeafDir', err);
+        }
+    });
 }
 
 export async function findActiveDictationLanguage(): Promise<string | null> {
@@ -112,7 +115,7 @@ async function readLanguages(): Promise<{
     languages?: LanguageInfo[];
     activeId: string;
     localesDir: string;
-    error?: string;
+    error?: IpcErrorCode;
 }> {
     try {
         const languages = await listLanguagesArray();
@@ -127,7 +130,7 @@ async function readLanguages(): Promise<{
         log.error('[language] list failed:', err);
         return {
             success: false,
-            error: (err as Error).message,
+            error: toIpcErrorCode(err),
             languages: [],
             activeId: DEFAULT_LANGUAGE_ID,
             localesDir: LOCALES_DIR,
@@ -137,40 +140,44 @@ async function readLanguages(): Promise<{
 
 async function setActiveLanguage(id: string): Promise<{
     success: boolean;
-    error?: string;
+    error?: IpcErrorCode;
 }> {
     if (typeof id !== 'string' || !isValidLanguageId(id)) {
-        return { success: false, error: 'Invalid language id' };
+        return { success: false, error: 'INVALID_ARGUMENTS' };
     }
     const file = path.join(LOCALES_DIR, `${id}.json`);
-    if (!existsSync(file)) return { success: false, error: 'Language not found' };
+    if (!existsSync(file)) return { success: false, error: 'NOT_FOUND' };
     try {
         await updateState((s): { activeLanguage: string } => ({ ...s, activeLanguage: id }));
         return { success: true };
     } catch (err) {
-        return { success: false, error: (err as Error).message };
+        return ipcFailure('language setActiveLanguage', err);
     }
 }
 
 async function loadLanguageContent(id: string): Promise<{
     success: boolean;
     content?: Record<string, unknown>;
-    error?: string;
+    error?: IpcErrorCode;
 }> {
     if (typeof id !== 'string' || !isValidLanguageId(id)) {
-        return { success: false, error: 'Invalid language id' };
+        return { success: false, error: 'INVALID_ARGUMENTS' };
     }
     const file = path.join(LOCALES_DIR, `${id}.json`);
     if (!existsSync(file)) {
-        return { success: false, error: 'Language file not found' };
+        return { success: false, error: 'NOT_FOUND' };
     }
     try {
         const data = await fs.readFile(file, 'utf-8');
-        const content = JSON.parse(data) as Record<string, unknown>;
-        return { success: true, content };
+        const content = JsonObjectSchema.safeParse(JSON.parse(data));
+        if (!content.success) {
+            log.warn('[language] language file is not a JSON object', { id });
+            return { success: false, error: 'UNKNOWN' };
+        }
+        return { success: true, content: content.data };
     } catch (err) {
         log.error('[language] failed to load language', { id }, err);
-        return { success: false, error: (err as Error).message };
+        return { success: false, error: toIpcErrorCode(err) };
     }
 }
 
@@ -283,8 +290,8 @@ async function backfillMissingKeys(
 async function readManifest(): Promise<LocaleManifest> {
     try {
         const data: string = await fs.readFile(MANIFEST_FILE, 'utf-8');
-        const parsed: unknown = JSON.parse(data);
-        if (parsed !== null && typeof parsed === 'object') return parsed as LocaleManifest;
+        const parsed = z.record(z.string(), z.string()).safeParse(JSON.parse(data));
+        if (parsed.success) return parsed.data;
     } catch {
         // No manifest yet (first run, or pre-dates this tracking).
     }

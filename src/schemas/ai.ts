@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import type { IpcErrorCode } from '@/schemas/errors';
+
 // IPC result shapes. Plain types: the main process is the only producer and
 // nothing validates them on the way back, so there is no schema to keep.
 
@@ -15,20 +17,20 @@ export type AiListModelsResult = {
     success: boolean;
     models: AiModelInfo[];
     modelsDir: string;
-    error?: string;
+    error?: IpcErrorCode;
 };
 
 export type AiLoadResult = {
     success: boolean;
     modelName?: string;
-    error?: string;
+    error?: IpcErrorCode;
 };
 
 export type AiChatResult = {
     success: boolean;
     response?: string;
     compacted?: boolean;
-    error?: string;
+    error?: IpcErrorCode;
 };
 
 export type AiStatus = {
@@ -43,7 +45,7 @@ export type AiStatus = {
 
 export type AiSimpleResult = {
     success: boolean;
-    error?: string;
+    error?: IpcErrorCode;
 };
 
 // Conversation persistence types
@@ -82,19 +84,19 @@ export type ConversationMeta = {
 export type ConversationListResult = {
     success: boolean;
     conversations: ConversationMeta[];
-    error?: string;
+    error?: IpcErrorCode;
 };
 
 export type ConversationCreateResult = {
     success: boolean;
     conversation?: Conversation;
-    error?: string;
+    error?: IpcErrorCode;
 };
 
 export type ConversationLoadResult = {
     success: boolean;
     conversation?: Conversation;
-    error?: string;
+    error?: IpcErrorCode;
 };
 
 export type PromptInfo = {

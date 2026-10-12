@@ -3,10 +3,8 @@ import fs from 'fs';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const PATHS = vi.hoisted(() => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { join } = require('path') as typeof import('path');
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { tmpdir } = require('os') as typeof import('os');
+    const { join } = process.getBuiltinModule('path');
+    const { tmpdir } = process.getBuiltinModule('os');
     const tmpRoot = join(tmpdir(), `leaf-appstate-test-${process.pid}-${Date.now()}`);
     const leafHome = join(tmpRoot, '.leaf');
     return {
@@ -47,8 +45,8 @@ describe('appState', () => {
         await updateState((s) => ({ ...s, activePrompt: 'coding' }));
 
         expect(await readState()).toEqual({ activePrompt: 'coding' });
-        const onDisk = JSON.parse(fs.readFileSync(STATE_FILE, 'utf-8'));
-        expect(onDisk.activePrompt).toBe('coding');
+        const onDisk: unknown = JSON.parse(fs.readFileSync(STATE_FILE, 'utf-8'));
+        expect(onDisk).toMatchObject({ activePrompt: 'coding' });
     });
 
     it('preserves keys written by other services (no clobbering)', async () => {

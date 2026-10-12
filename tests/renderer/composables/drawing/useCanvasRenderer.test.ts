@@ -1,82 +1,22 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref } from 'vue';
 
+import type { Canvas2D } from '@/renderer/composables/drawing/canvas2d';
 import { useCanvasRenderer } from '@/renderer/composables/drawing/useCanvasRenderer';
 import type { CanvasElement } from '@/schemas/drawing';
+import { createFakeContext2D } from '@test-utils';
 
-const mockCtx: CanvasRenderingContext2D = {
-    canvas: {} as HTMLCanvasElement,
-    save: vi.fn(),
-    restore: vi.fn(),
-    scale: vi.fn(),
-    translate: vi.fn(),
-    clearRect: vi.fn(),
-    fillRect: vi.fn(),
-    strokeRect: vi.fn(),
-    beginPath: vi.fn(),
-    moveTo: vi.fn(),
-    lineTo: vi.fn(),
-    stroke: vi.fn(),
-    fill: vi.fn(),
-    arc: vi.fn(),
-    closePath: vi.fn(),
-    setLineDash: vi.fn(),
-    quadraticCurveTo: vi.fn(),
-    bezierCurveTo: vi.fn(),
-    fillText: vi.fn(),
-    strokeText: vi.fn(),
-    measureText: vi.fn().mockReturnValue({ width: 50 }),
-    setTransform: vi.fn(),
-    getTransform: vi.fn().mockReturnValue({}),
-    resetTransform: vi.fn(),
-    transform: vi.fn(),
-    roundRect: vi.fn(),
-    createLinearGradient: vi.fn(),
-    createRadialGradient: vi.fn(),
-    createConicGradient: vi.fn(),
-    createPattern: vi.fn(),
-    drawImage: vi.fn(),
-    createImageData: vi.fn(),
-    putImageData: vi.fn(),
-    getImageData: vi.fn().mockReturnValue({ data: new Uint8ClampedArray(4), width: 1, height: 1 }),
-    isPointInPath: vi.fn().mockReturnValue(false),
-    isPointInStroke: vi.fn().mockReturnValue(false),
-    clip: vi.fn(),
-    ellipse: vi.fn(),
-    rect: vi.fn(),
-    strokeStyle: '#000',
-    fillStyle: '#fff',
-    lineWidth: 1,
-    globalAlpha: 1,
-    font: '12px sans-serif',
-    textBaseline: 'alphabetic',
-    textAlign: 'left',
-    lineCap: 'butt',
-    lineJoin: 'miter',
-    imageSmoothingEnabled: true,
-    imageSmoothingQuality: 'low',
-    miterLimit: 10,
-    lineDashOffset: 0,
-    shadowBlur: 0,
-    shadowColor: '',
-    shadowOffsetX: 0,
-    shadowOffsetY: 0,
-    direction: 'ltr',
-    filter: 'none',
-    globalCompositeOperation: 'source-over',
-    fontKerning: 'auto',
-    fontStretch: 'normal',
-    fontVariantCaps: 'normal',
-    letterSpacing: '0px',
-    textRendering: 'auto',
-    wordSpacing: '0px',
-    drawFocusIfNeeded: vi.fn(),
-    scrollPathIntoView: vi.fn(),
-    getLineDash: vi.fn().mockReturnValue([]),
-} as unknown as CanvasRenderingContext2D;
+const { mockFindContext2D, mockEncodePng } = vi.hoisted(() => ({
+    mockFindContext2D: vi.fn<(canvas: HTMLCanvasElement) => Canvas2D | null>(),
+    mockEncodePng: vi.fn<(canvas: HTMLCanvasElement) => Promise<Blob | null>>(),
+}));
 
-let originalGetContext: typeof HTMLCanvasElement.prototype.getContext;
-let originalToDataURL: typeof HTMLCanvasElement.prototype.toDataURL;
+vi.mock('@/renderer/composables/drawing/canvas2d', () => ({
+    findContext2D: mockFindContext2D,
+    encodePng: mockEncodePng,
+}));
+
+const mockCtx = createFakeContext2D();
 
 function makeRect(overrides: Partial<CanvasElement> = {}): CanvasElement {
     return {
@@ -173,22 +113,15 @@ function makeRenderer(
 
 beforeEach(() => {
     vi.clearAllMocks();
-    originalGetContext = HTMLCanvasElement.prototype.getContext;
-    originalToDataURL = HTMLCanvasElement.prototype.toDataURL;
-    HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue(mockCtx) as never;
-    HTMLCanvasElement.prototype.toDataURL = vi.fn().mockReturnValue('data:image/png;base64,fake') as never;
-});
-
-afterEach(() => {
-    HTMLCanvasElement.prototype.getContext = originalGetContext;
-    HTMLCanvasElement.prototype.toDataURL = originalToDataURL;
+    mockFindContext2D.mockReturnValue(mockCtx);
+    mockEncodePng.mockResolvedValue(null);
 });
 
 describe('useCanvasRenderer', () => {
     describe('setupCanvas', () => {
-        it('calls getContext("2d") on the canvas element', () => {
-            makeRenderer();
-            expect(HTMLCanvasElement.prototype.getContext).toHaveBeenCalledWith('2d');
+        it("asks for the canvas element's 2D context", () => {
+            const { canvasRef } = makeRenderer();
+            expect(mockFindContext2D).toHaveBeenCalledWith(canvasRef.value);
         });
 
         it('returns ctx via findCtx() after setup', () => {
@@ -222,7 +155,7 @@ describe('useCanvasRenderer', () => {
         it('getScreenPoint returns zero for null canvas', () => {
             const { renderer, canvasRef } = makeRenderer();
             canvasRef.value = null;
-            const e = { clientX: 100, clientY: 200 } as PointerEvent;
+            const e = new PointerEvent('pointermove', { clientX: 100, clientY: 200 });
             const pt = renderer.getScreenPoint(e);
             expect(pt.x).toBe(0);
             expect(pt.y).toBe(0);
@@ -235,7 +168,7 @@ describe('useCanvasRenderer', () => {
             });
             const { renderer: r2, canvasRef: cr2 } = makeRenderer();
             cr2.value = canvasEl;
-            const e = { clientX: 110, clientY: 120 } as PointerEvent;
+            const e = new PointerEvent('pointermove', { clientX: 110, clientY: 120 });
             const pt = r2.getScreenPoint(e);
             expect(pt.x).toBe(100);
             expect(pt.y).toBe(100);
@@ -468,9 +401,7 @@ describe('useCanvasRenderer', () => {
     describe('exportToBlob', () => {
         it('resolves with a Blob when elements are provided', async () => {
             const blob = new Blob(['fake'], { type: 'image/png' });
-            HTMLCanvasElement.prototype.toBlob = vi
-                .fn()
-                .mockImplementation((cb: (b: Blob) => void) => cb(blob)) as never;
+            mockEncodePng.mockResolvedValue(blob);
             const { renderer } = makeRenderer({ elements: [makeRect()] });
             const result = await renderer.exportToBlob({
                 elements: [makeRect()],
@@ -491,12 +422,8 @@ describe('useCanvasRenderer', () => {
         });
 
         it('returns null when offscreen canvas getContext returns null', async () => {
-            let callCount = 0;
-            HTMLCanvasElement.prototype.getContext = vi.fn().mockImplementation(() => {
-                callCount++;
-                return callCount === 1 ? mockCtx : null;
-            }) as never;
             const { renderer } = makeRenderer();
+            mockFindContext2D.mockReturnValueOnce(null);
             const result = await renderer.exportToBlob({
                 elements: [makeRect()],
                 withBackground: false,

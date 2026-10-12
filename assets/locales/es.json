@@ -319,5 +319,30 @@
     "save_png": "Guardar PNG",
     "copy_png": "Copiar PNG",
     "close_export_dialog": "Cerrar diálogo de exportación"
+  },
+  "errors": {
+    "invalid_arguments": "La solicitud no era válida.",
+    "no_window": "No hay ninguna ventana disponible.",
+    "no_vault": "No hay ninguna carpeta de notas abierta.",
+    "access_denied": "Acceso denegado.",
+    "invalid_name": "Ese nombre no está permitido.",
+    "not_found": "No se ha encontrado.",
+    "already_exists": "Ya existe un elemento con ese nombre.",
+    "move_into_self": "Una carpeta no se puede mover dentro de sí misma.",
+    "disk_full": "El disco está lleno.",
+    "model_not_loaded": "No hay ningún modelo cargado.",
+    "busy": "Ocupado, inténtalo de nuevo en un momento.",
+    "invalid_state": "Eso no se puede hacer ahora mismo.",
+    "unknown": "Algo ha salido mal.",
+    "create_file_failed": "No se pudo crear el archivo. {reason}",
+    "create_drawing_failed": "No se pudo crear el dibujo. {reason}",
+    "rename_file_failed": "No se pudo renombrar el archivo. {reason}",
+    "rename_folder_failed": "No se pudo renombrar la carpeta. {reason}",
+    "delete_file_failed": "No se pudo eliminar {name}. {reason}",
+    "delete_folder_failed": "No se pudo eliminar la carpeta. {reason}",
+    "move_file_failed": "No se pudo mover {name}. {reason}",
+    "move_folder_failed": "No se pudo mover la carpeta. {reason}",
+    "save_file_failed": "No se pudo guardar el archivo. {reason}",
+    "chat_failed": "El modelo no pudo responder. {reason}"
   }
 }

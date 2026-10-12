@@ -43,8 +43,8 @@ function formatTime(seconds: number): string {
 
 function onKeydown(e: KeyboardEvent): void {
     if (e.key !== ' ') return;
-    const target = e.target as HTMLElement;
-    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+    const target = e.target;
+    if (target instanceof HTMLElement && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
     e.preventDefault();
     toggleAudioPlayback();
 }

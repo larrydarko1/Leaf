@@ -105,6 +105,10 @@ function startResize(e: MouseEvent): void {
     document.addEventListener('mouseup', handleMouseUp);
 }
 
+function onInput(event: Event): void {
+    if (event.target instanceof HTMLTextAreaElement) emit('update:inputMessage', event.target.value);
+}
+
 onMounted(() => {
     // Restore saved height preference if available
     const saved = localStorage.getItem('ai-input-max-height');
@@ -193,7 +197,7 @@ onMounted(() => {
                 :disabled="!isReady || isAnyGenerating"
                 rows="1"
                 aria-label="AI message input"
-                @input="$emit('update:inputMessage', ($event.target as HTMLTextAreaElement).value)"
+                @input="onInput"
                 @keydown.enter.exact.prevent="$emit('send')" />
             <div class="ai-input-controls row">
                 <div class="ai-input-tools row">

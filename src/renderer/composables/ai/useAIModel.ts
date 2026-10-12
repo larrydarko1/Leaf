@@ -5,9 +5,12 @@
 import { ref, shallowRef, computed, onMounted, onUnmounted, type ComputedRef, type Ref, type ShallowRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import { toModelTurns } from '@/renderer/utils/chat';
 import type { AiModelInfo, AiStatus } from '@/schemas/ai';
+import type { ChatMessage } from '@/schemas/chat';
+import type { IpcErrorCode } from '@/schemas/errors';
 
-export type UseAIModelReturn = {
+type UseAIModelReturn = {
     status: Ref<AiStatus>;
     availableModels: ShallowRef<AiModelInfo[]>;
     isLoading: Ref<boolean>;
@@ -25,12 +28,12 @@ export type UseAIModelReturn = {
     selectModel: (model: AiModelInfo) => void;
     refreshModels: () => Promise<void>;
     refreshStatus: () => Promise<void>;
-    loadModel: (path?: string) => Promise<{ success: boolean; error?: string }>;
+    loadModel: (path?: string) => Promise<{ success: boolean; error?: IpcErrorCode }>;
     unloadModel: () => Promise<void>;
     loadPreviousModel: (
-        chatHistory: { role: string; content: string }[],
+        chatHistory: Pick<ChatMessage, 'role' | 'content'>[],
         { hasActiveConversation }: { hasActiveConversation: boolean },
-    ) => Promise<{ success: boolean; error?: string }>;
+    ) => Promise<{ success: boolean; error?: IpcErrorCode }>;
     openModelsFolder: () => Promise<void>;
 };
 
@@ -109,7 +112,7 @@ export function useAIModel(): UseAIModelReturn {
     }
 
     function handleDropdownClickOutside(event: MouseEvent): void {
-        if (dropdownRef.value !== null && !dropdownRef.value.contains(event.target as Node)) {
+        if (dropdownRef.value !== null && !(event.target instanceof Node && dropdownRef.value.contains(event.target))) {
             showDropdown.value = false;
         }
     }
@@ -132,9 +135,11 @@ export function useAIModel(): UseAIModelReturn {
     }
 
     /** Load a model by path (defaults to selectedModelPath). Caller handles post-load orchestration. */
-    async function loadModel(path: string = selectedModelPath.value): Promise<{ success: boolean; error?: string }> {
+    async function loadModel(
+        path: string = selectedModelPath.value,
+    ): Promise<{ success: boolean; error?: IpcErrorCode }> {
         if (path === '') {
-            return { success: false, error: 'No model selected' };
+            return { success: false, error: 'INVALID_ARGUMENTS' };
         }
         isLoading.value = true;
         try {
@@ -145,7 +150,8 @@ export function useAIModel(): UseAIModelReturn {
             }
             return { success: false, ...(result.error === undefined ? {} : { error: result.error }) };
         } catch (error) {
-            return { success: false, error: (error as Error).message };
+            window.electronAPI.log.error('Failed to load model:', error);
+            return { success: false, error: 'UNKNOWN' };
         } finally {
             isLoading.value = false;
         }
@@ -172,21 +178,14 @@ export function useAIModel(): UseAIModelReturn {
      * Caller handles `startNewConversation` if there was no active conversation.
      */
     async function loadPreviousModel(
-        chatHistory: { role: string; content: string }[],
+        chatHistory: Pick<ChatMessage, 'role' | 'content'>[],
         { hasActiveConversation }: { hasActiveConversation: boolean },
-    ): Promise<{ success: boolean; error?: string }> {
+    ): Promise<{ success: boolean; error?: IpcErrorCode }> {
         const previousPath = previousModelMatch.value !== null ? previousModelMatch.value.path : '';
         const result = await loadModel(previousPath);
         if (result.success && hasActiveConversation && chatHistory.length > 0) {
             try {
-                await window.electronAPI.aiRestoreChatHistory(
-                    chatHistory
-                        .filter((m): boolean => m.role !== 'system')
-                        .map((m): { role: 'user' | 'assistant'; content: string } => ({
-                            role: m.role as 'user' | 'assistant',
-                            content: m.content,
-                        })),
-                );
+                await window.electronAPI.aiRestoreChatHistory(toModelTurns(chatHistory));
             } catch (err) {
                 window.electronAPI.log.error('Failed to restore chat history:', err);
             }

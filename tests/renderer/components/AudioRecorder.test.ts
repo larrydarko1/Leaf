@@ -1,14 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 import AudioRecorder from '@/renderer/components/AudioRecorder.vue';
 import { useAudioRecorder } from '@/renderer/composables/useAudioRecorder';
 import { mountWithI18n } from '@test-utils';
 
-const mockToggle = vi.fn();
+const mockToggle = vi.fn<() => Promise<void>>();
 const mockIsRecording = ref(false);
 const mockHasPermission = ref(true);
-const mockFormattedDuration = ref('00:00');
+const mockDurationText = ref('00:00');
+const mockFormattedDuration = computed(() => mockDurationText.value);
 
 vi.mock('@/renderer/composables/useAudioRecorder', () => ({
     useAudioRecorder: vi.fn(() => ({
@@ -23,7 +24,7 @@ beforeEach(() => {
     mockToggle.mockReset();
     mockIsRecording.value = false;
     mockHasPermission.value = true;
-    mockFormattedDuration.value = '00:00';
+    mockDurationText.value = '00:00';
 });
 
 describe('AudioRecorder', () => {
@@ -99,7 +100,7 @@ describe('AudioRecorder', () => {
         });
 
         it('includes formattedDuration in aria-label when recording', () => {
-            mockFormattedDuration.value = '01:23';
+            mockDurationText.value = '01:23';
             const wrapper = mountWithI18n(AudioRecorder, { props: { currentFolder: '/vault' } });
             expect(wrapper.find('button').attributes('aria-label')).toContain('01:23');
             wrapper.unmount();
@@ -128,7 +129,7 @@ describe('AudioRecorder', () => {
                     hasPermission: mockHasPermission,
                     formattedDuration: mockFormattedDuration,
                     toggle: mockToggle,
-                } as unknown as ReturnType<typeof useAudioRecorder>;
+                };
             });
             const wrapper = mountWithI18n(AudioRecorder, { props: { currentFolder: '/vault' } });
             capturedOnSaved('/vault/recording.wav');

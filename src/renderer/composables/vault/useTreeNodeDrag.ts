@@ -7,7 +7,7 @@ import { ref, type Ref } from 'vue';
 
 import type { TreeNode, FileInfo } from '@/schemas/vault';
 
-export type UseTreeNodeDragReturn = {
+type UseTreeNodeDragReturn = {
     isDragging: Ref<boolean>;
     isDragOver: Ref<boolean>;
     handleDragStart: (event: DragEvent) => void;

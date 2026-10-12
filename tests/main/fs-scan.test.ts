@@ -2,20 +2,17 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
+import { BrowserWindow } from 'electron';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { z } from 'zod';
 
-type IpcHandler = (_event: null, ...args: unknown[]) => Promise<unknown>;
-
-type ScanResult = {
-    success: boolean;
-    files: { relativePath: string }[];
-    folders: { relativePath: string }[];
-};
+import { createFakeIpc } from './test-utils';
 
 const { mockShowOpenDialog } = vi.hoisted(() => ({ mockShowOpenDialog: vi.fn() }));
 const { mockState } = vi.hoisted(() => ({ mockState: { current: {} as Record<string, unknown> } }));
 
 vi.mock('electron', () => ({
+    BrowserWindow: vi.fn(),
     app: { getPath: vi.fn(() => '/home/test') },
     dialog: { showOpenDialog: mockShowOpenDialog, showSaveDialog: vi.fn() },
     shell: { openExternal: vi.fn() },
@@ -33,22 +30,16 @@ vi.mock('@/main/lib/appState', () => ({
     }),
 }));
 
-let tmpVault: string;
-let ipc: ReturnType<typeof makeMockIpc>;
+const ScanReplySchema = z.object({
+    success: z.boolean(),
+    root: z.string().optional(),
+    files: z.array(z.object({ relativePath: z.string() })),
+    folders: z.array(z.object({ relativePath: z.string() })),
+});
 
-function makeMockIpc() {
-    const handlers = new Map<string, IpcHandler>();
-    return {
-        handle(channel: string, fn: IpcHandler) {
-            handlers.set(channel, fn);
-        },
-        async invoke(channel: string, ...args: unknown[]) {
-            const fn = handlers.get(channel);
-            if (!fn) throw new Error(`No handler registered for channel '${channel}'`);
-            return fn(null, ...args);
-        },
-    };
-}
+const fakeWindow = new BrowserWindow();
+let tmpVault: string;
+let ipc: ReturnType<typeof createFakeIpc>;
 
 function newTmpVault(): string {
     const dir = path.join(os.tmpdir(), `leaf-scan-test-${process.pid}-${Date.now()}`);
@@ -60,9 +51,9 @@ describe('files:scan IPC handler', () => {
     beforeEach(async () => {
         vi.resetModules();
         tmpVault = newTmpVault();
-        ipc = makeMockIpc();
+        ipc = createFakeIpc();
         const { register } = await import('@/main/services/fs');
-        register(ipc as never, () => ({}) as never);
+        register(ipc, () => fakeWindow);
         mockState.current = {};
         mockShowOpenDialog.mockResolvedValue({ canceled: false, filePaths: [tmpVault] });
         await ipc.invoke('dialog:openFolder');
@@ -73,7 +64,7 @@ describe('files:scan IPC handler', () => {
     });
 
     it('returns success with empty lists for an empty vault', async () => {
-        const result = (await ipc.invoke('files:scan')) as ScanResult;
+        const result = ScanReplySchema.parse(await ipc.invoke('files:scan'));
         expect(result.success).toBe(true);
         expect(result.files).toEqual([]);
         expect(result.folders).toEqual([]);
@@ -81,7 +72,7 @@ describe('files:scan IPC handler', () => {
 
     it('ignores a path argument and scans the vault root instead', async () => {
         fs.writeFileSync(path.join(tmpVault, 'note.md'), '# Hello');
-        const result = (await ipc.invoke('files:scan', '/etc')) as ScanResult & { root: string };
+        const result = ScanReplySchema.parse(await ipc.invoke('files:scan', '/etc'));
         expect(result.success).toBe(true);
         expect(result.root).toBe(path.resolve(tmpVault));
         expect(result.files.map((f) => f.relativePath)).toEqual(['note.md']);
@@ -89,26 +80,26 @@ describe('files:scan IPC handler', () => {
 
     it('includes regular markdown files at the vault root', async () => {
         fs.writeFileSync(path.join(tmpVault, 'note.md'), '# Hello');
-        const result = (await ipc.invoke('files:scan')) as ScanResult;
+        const result = ScanReplySchema.parse(await ipc.invoke('files:scan'));
         expect(result.files.map((f) => f.relativePath)).toContain('note.md');
     });
 
     it('includes regular subdirectories', async () => {
         fs.mkdirSync(path.join(tmpVault, 'projects'));
-        const result = (await ipc.invoke('files:scan')) as ScanResult;
+        const result = ScanReplySchema.parse(await ipc.invoke('files:scan'));
         expect(result.folders.map((f) => f.relativePath)).toContain('projects');
     });
 
     it('includes files nested inside subdirectories', async () => {
         fs.mkdirSync(path.join(tmpVault, 'notes'));
         fs.writeFileSync(path.join(tmpVault, 'notes', 'hello.md'), '# hi');
-        const result = (await ipc.invoke('files:scan')) as ScanResult;
+        const result = ScanReplySchema.parse(await ipc.invoke('files:scan'));
         expect(result.files.map((f) => f.relativePath)).toContain('notes/hello.md');
     });
 
     it('excludes the .leaf directory from the folders list', async () => {
         fs.mkdirSync(path.join(tmpVault, '.leaf'));
-        const result = (await ipc.invoke('files:scan')) as ScanResult;
+        const result = ScanReplySchema.parse(await ipc.invoke('files:scan'));
         expect(result.folders.map((f) => f.relativePath)).not.toContain('.leaf');
     });
 
@@ -116,7 +107,7 @@ describe('files:scan IPC handler', () => {
         const leafDir = path.join(tmpVault, '.leaf');
         fs.mkdirSync(leafDir);
         fs.writeFileSync(path.join(leafDir, 'bookmarks.json'), '[]');
-        const result = (await ipc.invoke('files:scan')) as ScanResult;
+        const result = ScanReplySchema.parse(await ipc.invoke('files:scan'));
         const filePaths = result.files.map((f) => f.relativePath);
         expect(filePaths.every((p) => !p.startsWith('.leaf'))).toBe(true);
     });
@@ -128,7 +119,7 @@ describe('files:scan IPC handler', () => {
         fs.writeFileSync(path.join(tmpVault, 'notes', 'hello.md'), '# hi');
         fs.writeFileSync(path.join(tmpVault, 'readme.md'), 'readme');
 
-        const result = (await ipc.invoke('files:scan')) as ScanResult;
+        const result = ScanReplySchema.parse(await ipc.invoke('files:scan'));
         const folderPaths = result.folders.map((f) => f.relativePath);
         const filePaths = result.files.map((f) => f.relativePath);
 
@@ -141,13 +132,13 @@ describe('files:scan IPC handler', () => {
 
     it('still includes other dotfolders such as .git', async () => {
         fs.mkdirSync(path.join(tmpVault, '.git'));
-        const result = (await ipc.invoke('files:scan')) as ScanResult;
+        const result = ScanReplySchema.parse(await ipc.invoke('files:scan'));
         expect(result.folders.map((f) => f.relativePath)).toContain('.git');
     });
 
     it('still includes dotfiles that are not inside .leaf', async () => {
         fs.writeFileSync(path.join(tmpVault, '.gitignore'), '');
-        const result = (await ipc.invoke('files:scan')) as ScanResult;
+        const result = ScanReplySchema.parse(await ipc.invoke('files:scan'));
         expect(result.success).toBe(true);
     });
 });

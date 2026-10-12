@@ -34,8 +34,8 @@ const {
 
 function onKeydown(e: KeyboardEvent): void {
     if (e.key !== ' ' || videoRef.value === null) return;
-    const target = e.target as HTMLElement;
-    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+    const target = e.target;
+    if (target instanceof HTMLElement && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
     e.preventDefault();
     toggleVideoPlayback();
 }

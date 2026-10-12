@@ -11,6 +11,7 @@ import { MAX_CONTEXT_FILES } from '@/renderer/composables/ai/useAIChat';
 import { useAIModel } from '@/renderer/composables/ai/useAIModel';
 import { useConversationHistory } from '@/renderer/composables/ai/useConversationHistory';
 import { useThrottleFn } from '@/renderer/composables/useThrottle';
+import { formatIpcError } from '@/renderer/utils/ipcError';
 import type { ChatMessage } from '@/schemas/chat';
 import type { FileInfo } from '@/schemas/vault';
 
@@ -144,7 +145,10 @@ async function loadSelectedModel(): Promise<void> {
     if (result.success) {
         await startNewConversation();
     } else {
-        messages.value.push({ role: 'assistant', content: t('ai.failed_to_load_model', { error: result.error }) });
+        messages.value.push({
+            role: 'assistant',
+            content: t('ai.failed_to_load_model', { error: formatIpcError(t, result.error) }),
+        });
     }
 }
 
@@ -172,8 +176,11 @@ async function loadPreviousModel(): Promise<void> {
     if (result.success) {
         if (!hasConversation) await startNewConversation();
         inputField.value?.focus();
-    } else if (result.error !== null && result.error !== undefined && result.error !== '') {
-        messages.value.push({ role: 'assistant', content: t('ai.failed_to_load_model', { error: result.error }) });
+    } else if (result.error !== undefined) {
+        messages.value.push({
+            role: 'assistant',
+            content: t('ai.failed_to_load_model', { error: formatIpcError(t, result.error) }),
+        });
     }
 }
 

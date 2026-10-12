@@ -5,9 +5,11 @@
 
 import { ref, type Ref } from 'vue';
 
+import { i18n } from '@/renderer/i18n';
+import { formatIpcError } from '@/renderer/utils/ipcError';
 import type { FileInfo } from '@/schemas/vault';
 
-export type UseNotePersistenceReturn = {
+type UseNotePersistenceReturn = {
     content: Ref<string>;
     originalContent: Ref<string>;
     hasUnsavedChanges: Ref<boolean>;
@@ -20,6 +22,8 @@ export type UseNotePersistenceReturn = {
     handleDrawingSave: (drawingContent: string) => Promise<void>;
     clearAutoSaveTimeout: () => void;
 };
+
+const { t } = i18n.global;
 
 export function useNotePersistence(
     findFile: () => FileInfo | null,
@@ -102,11 +106,11 @@ export function useNotePersistence(
                 onSave(content.value);
             } else {
                 window.electronAPI.log.error('Failed to save file:', result.error);
-                alert('Failed to save file: ' + result.error);
+                alert(t('errors.save_file_failed', { reason: formatIpcError(t, result.error) }));
             }
         } catch (error) {
             window.electronAPI.log.error('Error saving file:', error);
-            alert('Error saving file');
+            alert(t('errors.save_file_failed', { reason: formatIpcError(t, 'UNKNOWN') }));
         } finally {
             isSaving.value = false;
         }

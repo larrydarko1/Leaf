@@ -319,5 +319,30 @@
     "save_png": "Enregistrer en PNG",
     "copy_png": "Copier en PNG",
     "close_export_dialog": "Fermer la boîte de dialogue d'exportation"
+  },
+  "errors": {
+    "invalid_arguments": "La requête n’était pas valide.",
+    "no_window": "Aucune fenêtre n’est disponible.",
+    "no_vault": "Aucun dossier de notes n’est ouvert.",
+    "access_denied": "Accès refusé.",
+    "invalid_name": "Ce nom n’est pas autorisé.",
+    "not_found": "Introuvable.",
+    "already_exists": "Un élément portant ce nom existe déjà.",
+    "move_into_self": "Un dossier ne peut pas être déplacé dans lui-même.",
+    "disk_full": "Le disque est plein.",
+    "model_not_loaded": "Aucun modèle n’est chargé.",
+    "busy": "Occupé, réessayez dans un instant.",
+    "invalid_state": "Impossible pour le moment.",
+    "unknown": "Une erreur s’est produite.",
+    "create_file_failed": "Impossible de créer le fichier. {reason}",
+    "create_drawing_failed": "Impossible de créer le dessin. {reason}",
+    "rename_file_failed": "Impossible de renommer le fichier. {reason}",
+    "rename_folder_failed": "Impossible de renommer le dossier. {reason}",
+    "delete_file_failed": "Impossible de supprimer {name}. {reason}",
+    "delete_folder_failed": "Impossible de supprimer le dossier. {reason}",
+    "move_file_failed": "Impossible de déplacer {name}. {reason}",
+    "move_folder_failed": "Impossible de déplacer le dossier. {reason}",
+    "save_file_failed": "Impossible d’enregistrer le fichier. {reason}",
+    "chat_failed": "Le modèle n’a pas pu répondre. {reason}"
   }
 }

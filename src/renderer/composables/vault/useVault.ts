@@ -5,11 +5,13 @@
 
 import { ref, shallowRef, type Ref, type ShallowRef } from 'vue';
 
+import { i18n } from '@/renderer/i18n';
+import { formatIpcError } from '@/renderer/utils/ipcError';
 import type { FileInfo, FolderInfo } from '@/schemas/vault';
 
 type MovedFile = { from: string; to: string };
 
-export type UseVaultReturn = {
+type UseVaultReturn = {
     // State
     currentFolder: Ref<string | null>;
     files: ShallowRef<FileInfo[]>;
@@ -32,6 +34,8 @@ export type UseVaultReturn = {
     moveFiles: (filePaths: string[], targetRelativePath: string) => Promise<MovedFile[]>;
     moveFolder: (relativePath: string, targetRelativePath: string) => Promise<string | null>;
 };
+
+const { t } = i18n.global;
 
 export function useVault(): UseVaultReturn {
     const currentFolder = ref<string | null>(null);
@@ -138,11 +142,11 @@ export function useVault(): UseVaultReturn {
                 await refreshFiles();
                 return files.value.find((f): boolean => f.path === result.path) ?? null;
             }
-            alert('Failed to create file: ' + result.error);
+            alert(t('errors.create_file_failed', { reason: formatIpcError(t, result.error) }));
             return null;
         } catch (error) {
             window.electronAPI.log.error('Error creating file:', error);
-            alert('Error creating file');
+            alert(t('errors.create_file_failed', { reason: formatIpcError(t, 'UNKNOWN') }));
             return null;
         }
     }
@@ -159,11 +163,11 @@ export function useVault(): UseVaultReturn {
                 await refreshFiles();
                 return files.value.find((f): boolean => f.path === result.path) ?? null;
             }
-            alert('Failed to create drawing: ' + result.error);
+            alert(t('errors.create_drawing_failed', { reason: formatIpcError(t, result.error) }));
             return null;
         } catch (error) {
             window.electronAPI.log.error('Error creating drawing:', error);
-            alert('Error creating drawing');
+            alert(t('errors.create_drawing_failed', { reason: formatIpcError(t, 'UNKNOWN') }));
             return null;
         }
     }
@@ -200,11 +204,11 @@ export function useVault(): UseVaultReturn {
                 await refreshFiles();
                 return files.value.find((f): boolean => f.path === result.newPath) ?? null;
             }
-            alert('Failed to rename file: ' + result.error);
+            alert(t('errors.rename_file_failed', { reason: formatIpcError(t, result.error) }));
             return null;
         } catch (error) {
             window.electronAPI.log.error('Error renaming file:', error);
-            alert('Error renaming file');
+            alert(t('errors.rename_file_failed', { reason: formatIpcError(t, 'UNKNOWN') }));
             return null;
         }
     }
@@ -221,11 +225,11 @@ export function useVault(): UseVaultReturn {
                     : '';
                 return parentPath !== '' ? parentPath + '/' + newName : newName;
             }
-            alert('Failed to rename folder: ' + result.error);
+            alert(t('errors.rename_folder_failed', { reason: formatIpcError(t, result.error) }));
             return null;
         } catch (error) {
             window.electronAPI.log.error('Error renaming folder:', error);
-            alert('Error renaming folder');
+            alert(t('errors.rename_folder_failed', { reason: formatIpcError(t, 'UNKNOWN') }));
             return null;
         }
     }
@@ -235,11 +239,11 @@ export function useVault(): UseVaultReturn {
             try {
                 const result = await window.electronAPI.deleteFile(file.path);
                 if (!result.success) {
-                    alert(`Failed to delete ${file.name}: ${result.error}`);
+                    alert(t('errors.delete_file_failed', { name: file.name, reason: formatIpcError(t, result.error) }));
                 }
             } catch (error) {
                 window.electronAPI.log.error('Error deleting file:', error);
-                alert('Error deleting file');
+                alert(t('errors.delete_file_failed', { name: file.name, reason: formatIpcError(t, 'UNKNOWN') }));
             }
         }
         await refreshFiles();
@@ -254,7 +258,7 @@ export function useVault(): UseVaultReturn {
                 await refreshFiles();
                 return true;
             }
-            alert('Failed to delete folder: ' + result.error);
+            alert(t('errors.delete_folder_failed', { reason: formatIpcError(t, result.error) }));
             return false;
         } catch (error) {
             window.electronAPI.log.error('Error deleting folder:', error);
@@ -279,14 +283,9 @@ export function useVault(): UseVaultReturn {
                     result.newPath !== ''
                 ) {
                     movedFiles.push({ from: path, to: result.newPath });
-                } else if (
-                    result.error !== null &&
-                    result.error !== undefined &&
-                    result.error !== '' &&
-                    !result.error.includes('ENOENT')
-                ) {
+                } else if (result.error !== undefined && result.error !== 'NOT_FOUND') {
                     const name = path.split('/').pop() ?? path;
-                    alert(`Failed to move ${name}: ${result.error}`);
+                    alert(t('errors.move_file_failed', { name, reason: formatIpcError(t, result.error) }));
                 }
             } catch (error) {
                 window.electronAPI.log.error('Error moving file:', error);
@@ -309,7 +308,7 @@ export function useVault(): UseVaultReturn {
                 const folderName = relativePath.substring(relativePath.lastIndexOf('/') + 1);
                 return isVaultRoot ? folderName : targetRelativePath + '/' + folderName;
             }
-            alert('Failed to move folder: ' + result.error);
+            alert(t('errors.move_folder_failed', { reason: formatIpcError(t, result.error) }));
             return null;
         } catch (error) {
             window.electronAPI.log.error('Error moving folder:', error);

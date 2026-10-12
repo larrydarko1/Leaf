@@ -10,10 +10,11 @@
 import { ref, type Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-import { i18n, type MessageSchema } from '@/renderer/i18n';
+import { i18n } from '@/renderer/i18n';
+import { LocaleMessagesSchema, type LocaleMessages } from '@/schemas/json';
 import type { LanguageInfo } from '@/schemas/vault';
 
-export type UseLanguageReturn = {
+type UseLanguageReturn = {
     languages: Ref<LanguageInfo[]>;
     activeId: Ref<string>;
     isLoading: Ref<boolean>;
@@ -42,9 +43,9 @@ export function useLanguage(): UseLanguageReturn {
 
                 // Always keep English loaded as the fallback locale.
                 const fallback = id !== 'en' ? await loadLanguageMessages('en') : null;
-                if (fallback !== null) i18n.global.setLocaleMessage('en', fallback as MessageSchema);
+                if (fallback !== null) i18n.global.setLocaleMessage<LocaleMessages>('en', fallback);
                 const messages = await loadLanguageMessages(id);
-                if (messages !== null) i18n.global.setLocaleMessage(id, messages as MessageSchema);
+                if (messages !== null) i18n.global.setLocaleMessage<LocaleMessages>(id, messages);
 
                 activeId.value = id;
                 locale.value = id;
@@ -69,7 +70,7 @@ export function useLanguage(): UseLanguageReturn {
             if (result.success) {
                 const messages = await loadLanguageMessages(id);
                 if (messages !== null) {
-                    i18n.global.setLocaleMessage(id, messages as MessageSchema);
+                    i18n.global.setLocaleMessage<LocaleMessages>(id, messages);
                 }
                 activeId.value = id;
                 locale.value = id;
@@ -105,11 +106,14 @@ export function useLanguage(): UseLanguageReturn {
     };
 }
 
-async function loadLanguageMessages(id: string): Promise<Record<string, unknown> | null> {
+async function loadLanguageMessages(id: string): Promise<LocaleMessages | null> {
     try {
         const result = await window.electronAPI.languageLoad(id);
         if (result.success && result.content !== undefined) {
-            return result.content;
+            const parsed = LocaleMessagesSchema.safeParse(result.content);
+            if (parsed.success) return parsed.data;
+            window.electronAPI.log.warn('Language file is not a tree of messages', { id, issues: parsed.error.issues });
+            return null;
         }
         window.electronAPI.log.warn('Failed to load language', { id, error: result.error });
     } catch (err) {

@@ -17,6 +17,7 @@
 import fs from 'fs/promises';
 
 import { LEAF_HOME, STATE_FILE } from '@/main/lib/paths';
+import { JsonObjectSchema } from '@/schemas/json';
 
 type State = Record<string, unknown>;
 
@@ -52,9 +53,8 @@ function enqueue<T>(task: () => Promise<T>): Promise<T> {
 async function readRaw(): Promise<State> {
     try {
         const raw = await fs.readFile(STATE_FILE, 'utf-8');
-        const parsed = JSON.parse(raw) as unknown;
-        if (parsed !== null && typeof parsed === 'object') return parsed as State;
-        return {};
+        const parsed = JsonObjectSchema.safeParse(JSON.parse(raw));
+        return parsed.success ? parsed.data : {};
     } catch {
         return {};
     }

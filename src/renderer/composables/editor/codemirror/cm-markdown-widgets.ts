@@ -19,15 +19,15 @@ import {
 
 export const interactiveExtension = EditorView.domEventHandlers({
     mousedown(event: MouseEvent, view: EditorView): boolean {
-        const target = event.target as HTMLElement;
+        const target = event.target instanceof Element ? event.target : null;
 
         // ── Block CM6 from processing clicks inside embed media controls ────
-        if (target.closest('.cm-embed-controls') != null) {
+        if (target?.closest('.cm-embed-controls') != null) {
             return true;
         }
 
         // ── Block CM6 for clicks on the video element itself ────────────────
-        if (target.closest('.cm-embed-video') != null) {
+        if (target?.closest('.cm-embed-video') != null) {
             return true;
         }
 
@@ -122,10 +122,8 @@ export function createMarkdownWidgetsPlugin(
             decorations: (v): DecorationSet => v.decorations,
             eventHandlers: {
                 mousedown(event: MouseEvent, view: EditorView): void {
-                    const target = event.target as HTMLElement;
-
                     // ── Task checkbox toggle ──
-                    const label = target.closest('.cm-task-label');
+                    const label = event.target instanceof Element ? event.target.closest('.cm-task-label') : null;
                     if (label == null || !(label instanceof HTMLElement)) return;
 
                     const posStr = label.dataset['taskPos'];

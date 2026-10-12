@@ -3,11 +3,11 @@ import os from 'os';
 import path from 'path';
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { z } from 'zod';
 
+import { createFakeIpc, readReply } from './test-utils';
 import { init, register } from '@/main/services/conversation';
-import type { Conversation, ConversationMessage } from '@/schemas/ai';
-
-type Result = { success: boolean; conversation?: Conversation; error?: string };
+import { ConversationSchema, type Conversation, type ConversationMessage } from '@/schemas/ai';
 
 vi.mock('electron', () => ({}));
 
@@ -15,38 +15,38 @@ vi.mock('@/main/lib/logger', () => ({
     log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 
-const { ipc: serviceIpc, handlers: serviceHandlers } = makeIpc();
+const ResultSchema = z.object({
+    success: z.boolean(),
+    conversation: ConversationSchema.optional(),
+    error: z.string().optional(),
+});
+
+const ListSchema = z.object({
+    success: z.boolean(),
+    conversations: z.array(z.looseObject({ id: z.string() })),
+    error: z.string().optional(),
+});
+
+const serviceIpc = createFakeIpc();
 let tmpDir: string;
 
-function makeIpc() {
-    const h: Record<string, (...args: unknown[]) => unknown> = {};
-    const ipc = {
-        handle: vi.fn((ch: string, fn: (...args: unknown[]) => unknown) => {
-            h[ch] = fn;
-        }),
-    };
-    return { ipc, handlers: h };
-}
+const invoke = async (channel: string, ...args: unknown[]) =>
+    ResultSchema.parse(await serviceIpc.invoke(channel, ...args));
 
-const invoke = <T>(channel: string, ...args: unknown[]): Promise<T> =>
-    serviceHandlers[channel]!({}, ...args) as Promise<T>;
+const createConversation = (model: unknown) => invoke('conversations:create', model);
+const loadConversation = (id: unknown) => invoke('conversations:load', id);
+const saveConversation = (c: Conversation) => invoke('conversations:save', c);
+const addMessage = (id: string, m: ConversationMessage) => invoke('conversations:addMessage', id, m);
 
-const createConversation = (model: unknown) => invoke<Result>('conversations:create', model);
-const loadConversation = (id: unknown) => invoke<Result>('conversations:load', id);
-const saveConversation = (c: Conversation) => invoke<Result>('conversations:save', c);
-const addMessage = (id: string, m: ConversationMessage) => invoke<Result>('conversations:addMessage', id, m);
+const updateLastMessage = (id: string, content: string) => invoke('conversations:updateLastMessage', id, content);
 
-const updateLastMessage = (id: string, content: string) =>
-    invoke<Result>('conversations:updateLastMessage', id, content);
+const readConversations = async () => ListSchema.parse(await serviceIpc.invoke('conversations:list'));
 
-const readConversations = () =>
-    invoke<{ success: boolean; conversations: object[]; error?: string }>('conversations:list');
-
-const deleteConversation = (id: unknown) => invoke<Result>('conversations:delete', id);
-const renameConversation = (id: unknown, title: unknown) => invoke<Result>('conversations:rename', id, title);
+const deleteConversation = (id: unknown) => invoke('conversations:delete', id);
+const renameConversation = (id: unknown, title: unknown) => invoke('conversations:rename', id, title);
 const reload = async (id: string): Promise<Conversation | null> => (await loadConversation(id)).conversation ?? null;
 
-register(serviceIpc as never);
+register(serviceIpc);
 
 beforeEach(() => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'leaf-conv-'));
@@ -69,7 +69,7 @@ describe('createConversation', () => {
     it('rejects an empty model name at the boundary', async () => {
         const result = await createConversation('');
         expect(result.success).toBe(false);
-        expect(result.error).toMatch(/invalid model name/i);
+        expect(result.error).toBe('INVALID_ARGUMENTS');
     });
 
     it('trims whitespace from model name', async () => {
@@ -174,7 +174,7 @@ describe('addMessage', () => {
             content: 'Hi',
         });
         expect(result.success).toBe(false);
-        expect(result.error).toMatch(/not found/i);
+        expect(result.error).toBe('NOT_FOUND');
     });
 });
 
@@ -191,7 +191,7 @@ describe('updateLastMessage', () => {
         const { conversation } = await createConversation('llama');
         const result = await updateLastMessage(conversation!.id, 'content');
         expect(result.success).toBe(false);
-        expect(result.error).toMatch(/no messages/i);
+        expect(result.error).toBe('INVALID_STATE');
     });
 
     it('returns failure for non-existent conversation', async () => {
@@ -219,7 +219,7 @@ describe('readConversations', () => {
         await new Promise((r) => setTimeout(r, 10));
         const second = await createConversation('mistral');
         const result = await readConversations();
-        const ids = result.conversations.map((c) => (c as { id: string }).id);
+        const ids = result.conversations.map((c) => c.id);
         expect(ids[0]).toBe(second.conversation!.id);
         expect(ids[1]).toBe(first.conversation!.id);
     });
@@ -283,115 +283,100 @@ describe('renameConversation', () => {
 });
 
 describe('register', () => {
-    let handlers: Record<string, (...args: unknown[]) => unknown>;
+    let ipc: ReturnType<typeof createFakeIpc>;
 
     beforeEach(() => {
-        const { ipc, handlers: h } = makeIpc();
-        handlers = h;
-        register(ipc as never);
+        ipc = createFakeIpc();
+        register(ipc);
     });
 
     it('registers conversations:list handler', async () => {
-        const result = (await handlers['conversations:list']?.()) as { success: boolean };
+        const result = readReply(await ipc.invoke('conversations:list'));
         expect(result.success).toBe(true);
     });
 
     it('registers conversations:create handler', async () => {
-        const result = (await handlers['conversations:create']?.({}, 'llama')) as {
-            success: boolean;
-            conversation?: { id: string };
-        };
+        const result = ResultSchema.parse(await ipc.invoke('conversations:create', 'llama'));
         expect(result.success).toBe(true);
         expect(result.conversation?.id).toBeTruthy();
     });
 
     it('conversations:create rejects invalid modelName', async () => {
-        const result = (await handlers['conversations:create']?.({}, 123)) as { success: boolean; error: string };
+        const result = readReply(await ipc.invoke('conversations:create', 123));
         expect(result.success).toBe(false);
-        expect(result.error).toMatch(/invalid model name/i);
+        expect(result.error).toBe('INVALID_ARGUMENTS');
     });
 
     it('registers conversations:load handler', async () => {
         const { conversation } = await createConversation('llama');
-        const result = (await handlers['conversations:load']?.({}, conversation!.id)) as { success: boolean };
+        const result = readReply(await ipc.invoke('conversations:load', conversation!.id));
         expect(result.success).toBe(true);
     });
 
     it('conversations:load rejects invalid id', async () => {
-        const result = (await handlers['conversations:load']?.({}, 123)) as { success: boolean; error: string };
+        const result = readReply(await ipc.invoke('conversations:load', 123));
         expect(result.success).toBe(false);
     });
 
     it('registers conversations:save handler', async () => {
         const { conversation } = await createConversation('llama');
         conversation!.title = 'Saved title';
-        const result = (await handlers['conversations:save']?.({}, conversation)) as { success: boolean };
+        const result = readReply(await ipc.invoke('conversations:save', conversation));
         expect(result.success).toBe(true);
     });
 
     it('conversations:save rejects invalid conversation', async () => {
-        const result = (await handlers['conversations:save']?.({}, { not: 'valid' })) as {
-            success: boolean;
-            error: string;
-        };
+        const result = readReply(await ipc.invoke('conversations:save', { not: 'valid' }));
         expect(result.success).toBe(false);
     });
 
     it('registers conversations:addMessage handler', async () => {
         const { conversation } = await createConversation('llama');
-        const result = (await handlers['conversations:addMessage']?.({}, conversation!.id, {
-            role: 'user',
-            content: 'Hi',
-        })) as { success: boolean };
+        const result = readReply(
+            await ipc.invoke('conversations:addMessage', conversation!.id, {
+                role: 'user',
+                content: 'Hi',
+            }),
+        );
         expect(result.success).toBe(true);
     });
 
     it('conversations:addMessage rejects invalid arguments', async () => {
-        const result = (await handlers['conversations:addMessage']?.({}, 123, null)) as {
-            success: boolean;
-            error: string;
-        };
+        const result = readReply(await ipc.invoke('conversations:addMessage', 123, null));
         expect(result.success).toBe(false);
     });
 
     it('registers conversations:updateLastMessage handler', async () => {
         const { conversation } = await createConversation('llama');
         await addMessage(conversation!.id, { role: 'user', content: 'Original' });
-        const result = (await handlers['conversations:updateLastMessage']?.({}, conversation!.id, 'Updated')) as {
-            success: boolean;
-        };
+        const result = readReply(await ipc.invoke('conversations:updateLastMessage', conversation!.id, 'Updated'));
         expect(result.success).toBe(true);
     });
 
     it('conversations:updateLastMessage rejects invalid arguments', async () => {
-        const result = (await handlers['conversations:updateLastMessage']?.({}, null, null)) as {
-            success: boolean;
-            error: string;
-        };
+        const result = readReply(await ipc.invoke('conversations:updateLastMessage', null, null));
         expect(result.success).toBe(false);
     });
 
     it('registers conversations:delete handler', async () => {
         const { conversation } = await createConversation('llama');
-        const result = (await handlers['conversations:delete']?.({}, conversation!.id)) as { success: boolean };
+        const result = readReply(await ipc.invoke('conversations:delete', conversation!.id));
         expect(result.success).toBe(true);
     });
 
     it('conversations:delete rejects invalid id', async () => {
-        const result = (await handlers['conversations:delete']?.({}, 123)) as { success: boolean; error: string };
+        const result = readReply(await ipc.invoke('conversations:delete', 123));
         expect(result.success).toBe(false);
     });
 
     it('registers conversations:rename handler', async () => {
         const { conversation } = await createConversation('llama');
-        const result = (await handlers['conversations:rename']?.({}, conversation!.id, 'New Name')) as {
-            success: boolean;
-        };
+        const result = readReply(await ipc.invoke('conversations:rename', conversation!.id, 'New Name'));
         expect(result.success).toBe(true);
     });
 
     it('conversations:rename rejects invalid arguments', async () => {
-        const result = (await handlers['conversations:rename']?.({}, 123, 456)) as { success: boolean; error: string };
+        const result = readReply(await ipc.invoke('conversations:rename', 123, 456));
         expect(result.success).toBe(false);
     });
 });

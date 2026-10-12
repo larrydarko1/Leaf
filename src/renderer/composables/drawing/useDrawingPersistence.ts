@@ -5,9 +5,10 @@
 
 import { ref, nextTick, type Ref } from 'vue';
 
-import { type CanvasElement, type DrawingDataV2, type ElementType, DrawingDataV2Schema } from '@/schemas/drawing';
+import type { Canvas2D } from '@/renderer/composables/drawing/canvas2d';
+import { type CanvasElement, type DrawingDataV2, DrawingDataV2Schema, ElementTypeSchema } from '@/schemas/drawing';
 
-export type UseDrawingPersistenceReturn = {
+type UseDrawingPersistenceReturn = {
     hasUnsavedChanges: Ref<boolean>;
     isSaving: Ref<boolean>;
     scheduleAutoSave: () => void;
@@ -41,7 +42,7 @@ export function useDrawingPersistence({
     historyIndex: Ref<number>;
     genId: () => string;
     renderScene: () => void;
-    findCtx: () => CanvasRenderingContext2D | null;
+    findCtx: () => Canvas2D | null;
     onSave: (content: string) => void;
     onContentChanged: (hasChanges: boolean) => void;
 }): UseDrawingPersistenceReturn {
@@ -125,8 +126,7 @@ export function useDrawingPersistence({
 
     function isV1Data(data: unknown): data is V1Data {
         if (typeof data !== 'object' || data === null) return false;
-        const obj = data as Record<string, unknown>;
-        return Array.isArray(obj['strokes']) || Object.keys(obj).length === 0;
+        return ('strokes' in data && Array.isArray(data.strokes)) || Object.keys(data).length === 0;
     }
 
     // Migration
@@ -155,12 +155,13 @@ export function useDrawingPersistence({
             if (stroke.tool === 'eraser') continue;
 
             const shape = stroke.shape;
+            const shapeType = ElementTypeSchema.safeParse(shape?.type);
 
-            if (shape !== undefined && shape !== null) {
+            if (shape !== undefined && shape !== null && shapeType.success) {
                 const isLine = shape.type === 'line' || shape.type === 'arrow';
                 const el: CanvasElement = {
                     id: genId(),
-                    type: shape.type as ElementType,
+                    type: shapeType.data,
                     x: isLine ? shape.x1 : Math.min(shape.x1, shape.x2),
                     y: isLine ? shape.y1 : Math.min(shape.y1, shape.y2),
                     width: isLine ? shape.x2 - shape.x1 : Math.abs(shape.x2 - shape.x1),

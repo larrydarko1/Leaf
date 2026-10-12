@@ -1,7 +1,8 @@
 import { shallowMount } from '@vue/test-utils';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ref, shallowRef } from 'vue';
+import { ref, shallowRef, defineComponent, h } from 'vue';
 
+import DrawingCanvas from '@/renderer/components/DrawingCanvas.vue';
 import NoteEditor from '@/renderer/components/NoteEditor.vue';
 import { useDictation } from '@/renderer/composables/editor/useDictation';
 import { useEditorDrop } from '@/renderer/composables/editor/useEditorDrop';
@@ -214,7 +215,7 @@ describe('NoteEditor', () => {
             const wrapper = mountEditor(
                 makeFile({ name: 'art.drawing', extension: '.drawing', path: '/v/art.drawing' }),
             );
-            expect(wrapper.findComponent({ name: 'DrawingCanvas' }).exists()).toBe(true);
+            expect(wrapper.findComponent(DrawingCanvas).exists()).toBe(true);
             wrapper.unmount();
         });
     });
@@ -341,21 +342,27 @@ describe('NoteEditor', () => {
     });
 
     describe('reloadContent (exposed)', () => {
+        /** Mounts the editor the way App does — by template ref — and reloads it through that ref. */
+        async function reloadThroughRef(file: FileInfo | null): Promise<void> {
+            const editor = ref<InstanceType<typeof NoteEditor> | null>(null);
+            const Host = defineComponent({
+                setup: () => () => h(NoteEditor, { ref: editor, file, workspacePath: '/vault' }),
+            });
+            const wrapper = shallowMount(Host, { global: { plugins: [i18n], stubs: { NoteEditor: false } } });
+            mockLoadFile.mockClear();
+            await editor.value?.reloadContent();
+            wrapper.unmount();
+        }
+
         it('calls loadFile with the current file', async () => {
             const file = makeFile();
-            const wrapper = mountEditor(file);
-            mockLoadFile.mockClear();
-            await (wrapper.vm as unknown as { reloadContent: () => Promise<void> }).reloadContent();
+            await reloadThroughRef(file);
             expect(mockLoadFile).toHaveBeenCalledWith(file);
-            wrapper.unmount();
         });
 
         it('does nothing when file is null', async () => {
-            const wrapper = mountEditor(null);
-            mockLoadFile.mockClear();
-            await (wrapper.vm as unknown as { reloadContent: () => Promise<void> }).reloadContent();
+            await reloadThroughRef(null);
             expect(mockLoadFile).not.toHaveBeenCalled();
-            wrapper.unmount();
         });
     });
 
@@ -428,7 +435,7 @@ describe('NoteEditor', () => {
             const wrapper = mountEditor(
                 makeFile({ name: 'art.drawing', extension: '.drawing', path: '/v/art.drawing' }),
             );
-            wrapper.findComponent({ name: 'DrawingCanvas' }).vm.$emit('save', 'drawing-data');
+            wrapper.findComponent(DrawingCanvas).vm.$emit('save', 'drawing-data');
             expect(mockHandleDrawingSave).toHaveBeenCalledWith('drawing-data');
             wrapper.unmount();
         });
@@ -437,7 +444,7 @@ describe('NoteEditor', () => {
             const wrapper = mountEditor(
                 makeFile({ name: 'art.drawing', extension: '.drawing', path: '/v/art.drawing' }),
             );
-            wrapper.findComponent({ name: 'DrawingCanvas' }).vm.$emit('content-changed', true);
+            wrapper.findComponent(DrawingCanvas).vm.$emit('content-changed', true);
             await wrapper.vm.$nextTick();
             expect(mockHasUnsavedChanges.value).toBe(true);
             wrapper.unmount();
@@ -471,12 +478,7 @@ describe('NoteEditor', () => {
             vi.useFakeTimers();
             const file = makeFile({ extension: '.md', path: '/v/n.md' });
             const wrapper = mountEditor(file);
-            const args = vi.mocked(useNotePersistence).mock.calls.at(-1) as unknown[];
-            const findFile = args[0] as () => FileInfo | null;
-            const isMd = args[1] as () => boolean;
-            const onLoad = args[2] as (s: string) => void;
-            const onSave = args[3] as (c: string) => void;
-            const onChanged = args[4] as (v: boolean) => void;
+            const [findFile, isMd, onLoad, onSave, onChanged] = vi.mocked(useNotePersistence).mock.calls.at(-1)!;
 
             expect(findFile()).toEqual(file);
             expect(isMd()).toBe(true);
@@ -496,9 +498,9 @@ describe('NoteEditor', () => {
         it('wires the embed resolver file/workspace getters', () => {
             const file = makeFile({ extension: '.md', path: '/v/n.md' });
             const wrapper = mountEditor(file, '/ws');
-            const args = vi.mocked(useEmbedResolver).mock.calls.at(-1) as unknown[];
-            expect((args[0] as () => FileInfo | null)()).toEqual(file);
-            expect((args[1] as () => string | null)()).toBe('/ws');
+            const [findFile, findWorkspace] = vi.mocked(useEmbedResolver).mock.calls.at(-1)!;
+            expect(findFile()).toEqual(file);
+            expect(findWorkspace()).toBe('/ws');
             wrapper.unmount();
         });
 

@@ -2,20 +2,20 @@ import fs from 'fs';
 import path from 'path';
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { z } from 'zod';
 
+import { createFakeIpc, readReply } from './test-utils';
 import { register, cleanup } from '@/main/services/ai';
 
 const PATHS = vi.hoisted(() => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { join } = require('path') as typeof import('path');
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { tmpdir } = require('os') as typeof import('os');
+    const { join } = process.getBuiltinModule('path');
+    const { tmpdir } = process.getBuiltinModule('os');
     const root = join(tmpdir(), `leaf-ai-model-test-${process.pid}-${Date.now()}`);
     return { root, leafHome: join(root, '.leaf') };
 });
 
 const mockPrompt = vi.hoisted(() =>
-    vi.fn().mockImplementation(
+    vi.fn(
         async (
             _text: string,
             opts: {
@@ -92,17 +92,7 @@ vi.mock('@/main/services/systemPrompt', () => ({
     getActiveSystemPrompt: vi.fn().mockResolvedValue('You are helpful.'),
 }));
 
-let handlers: Record<string, (...args: unknown[]) => unknown>;
-
-function makeIpc() {
-    const h: Record<string, (...args: unknown[]) => unknown> = {};
-    const ipc = {
-        handle: vi.fn((ch: string, fn: (...args: unknown[]) => unknown) => {
-            h[ch] = fn;
-        }),
-    };
-    return { ipc, handlers: h };
-}
+let ipc: ReturnType<typeof createFakeIpc>;
 
 function modelFilePath() {
     return path.join(PATHS.root, 'test-model.gguf');
@@ -110,9 +100,8 @@ function modelFilePath() {
 
 beforeEach(() => {
     fs.mkdirSync(PATHS.root, { recursive: true });
-    const { ipc, handlers: h } = makeIpc();
-    handlers = h;
-    register(ipc as never, () => null);
+    ipc = createFakeIpc();
+    register(ipc, () => null);
 });
 
 afterEach(async () => {
@@ -123,17 +112,21 @@ afterEach(async () => {
 
 describe('readModels (scanForModels)', () => {
     it('returns an empty list when the models directory is empty', async () => {
-        const result = (await handlers['ai:listModels']?.()) as { success: boolean; models: unknown[] };
+        const result = z
+            .object({ success: z.boolean(), models: z.array(z.unknown()) })
+            .parse(await ipc.invoke('ai:listModels'));
         expect(result.success).toBe(true);
         expect(result.models).toHaveLength(0);
     });
 
     it('finds a .gguf file and returns its info', async () => {
         fs.writeFileSync(modelFilePath(), Buffer.alloc(1024 * 1024)); // 1 MB
-        const result = (await handlers['ai:listModels']?.()) as {
-            success: boolean;
-            models: { name: string; sizeFormatted: string }[];
-        };
+        const result = z
+            .object({
+                success: z.boolean(),
+                models: z.array(z.object({ name: z.string(), sizeFormatted: z.string() })),
+            })
+            .parse(await ipc.invoke('ai:listModels'));
         expect(result.success).toBe(true);
         expect(result.models).toHaveLength(1);
         expect(result.models[0]!.name).toBe('test-model.gguf');
@@ -143,7 +136,9 @@ describe('readModels (scanForModels)', () => {
     it('ignores non-.gguf files', async () => {
         fs.writeFileSync(path.join(PATHS.root, 'README.txt'), 'docs');
         fs.writeFileSync(path.join(PATHS.root, 'config.json'), '{}');
-        const result = (await handlers['ai:listModels']?.()) as { success: boolean; models: unknown[] };
+        const result = z
+            .object({ success: z.boolean(), models: z.array(z.unknown()) })
+            .parse(await ipc.invoke('ai:listModels'));
         expect(result.models).toHaveLength(0);
     });
 
@@ -152,7 +147,9 @@ describe('readModels (scanForModels)', () => {
         fs.writeFileSync(path.join(PATHS.root, 'projector-clip.gguf'), '');
         fs.writeFileSync(path.join(PATHS.root, 'tokenizer.gguf'), '');
         fs.writeFileSync(path.join(PATHS.root, 'adapter-lora.gguf'), '');
-        const result = (await handlers['ai:listModels']?.()) as { success: boolean; models: unknown[] };
+        const result = z
+            .object({ success: z.boolean(), models: z.array(z.unknown()) })
+            .parse(await ipc.invoke('ai:listModels'));
         expect(result.models).toHaveLength(0);
     });
 
@@ -160,7 +157,9 @@ describe('readModels (scanForModels)', () => {
         const sub = path.join(PATHS.root, 'vendor', 'llama');
         fs.mkdirSync(sub, { recursive: true });
         fs.writeFileSync(path.join(sub, 'llama-7b.gguf'), '');
-        const result = (await handlers['ai:listModels']?.()) as { success: boolean; models: { name: string }[] };
+        const result = z
+            .object({ success: z.boolean(), models: z.array(z.object({ name: z.string() })) })
+            .parse(await ipc.invoke('ai:listModels'));
         expect(result.models).toHaveLength(1);
         expect(result.models[0]!.name).toContain('llama-7b.gguf');
     });
@@ -168,17 +167,18 @@ describe('readModels (scanForModels)', () => {
     it('sorts models alphabetically by name', async () => {
         fs.writeFileSync(path.join(PATHS.root, 'zeta.gguf'), '');
         fs.writeFileSync(path.join(PATHS.root, 'alpha.gguf'), '');
-        const result = (await handlers['ai:listModels']?.()) as { success: boolean; models: { name: string }[] };
+        const result = z
+            .object({ success: z.boolean(), models: z.array(z.object({ name: z.string() })) })
+            .parse(await ipc.invoke('ai:listModels'));
         expect(result.models[0]!.name).toBe('alpha.gguf');
         expect(result.models[1]!.name).toBe('zeta.gguf');
     });
 
     it('formatFileSize: returns "0 B" for empty files', async () => {
         fs.writeFileSync(path.join(PATHS.root, 'empty.gguf'), '');
-        const result = (await handlers['ai:listModels']?.()) as {
-            success: boolean;
-            models: { sizeFormatted: string }[];
-        };
+        const result = z
+            .object({ success: z.boolean(), models: z.array(z.object({ sizeFormatted: z.string() })) })
+            .parse(await ipc.invoke('ai:listModels'));
         expect(result.models[0]!.sizeFormatted).toBe('0 B');
     });
 });
@@ -189,23 +189,24 @@ describe('loadModel (success path)', () => {
     });
 
     it('loads a model and reports success', async () => {
-        const result = (await handlers['ai:loadModel']?.({}, modelFilePath())) as {
-            success: boolean;
-            modelName?: string;
-        };
+        const result = z
+            .object({ success: z.boolean(), modelName: z.string().optional() })
+            .parse(await ipc.invoke('ai:loadModel', modelFilePath()));
         expect(result.success).toBe(true);
         expect(result.modelName).toBe('test-model.gguf');
     });
 
     it('getStatus reflects loaded model', async () => {
-        await handlers['ai:loadModel']?.({}, modelFilePath());
-        const status = handlers['ai:getStatus']?.() as {
-            isModelLoaded: boolean;
-            currentModelPath: string;
-            currentModelName: string;
-            contextTokens: number;
-            contextSize: number;
-        };
+        await ipc.invoke('ai:loadModel', modelFilePath());
+        const status = z
+            .object({
+                isModelLoaded: z.boolean(),
+                currentModelPath: z.string(),
+                currentModelName: z.string(),
+                contextTokens: z.number(),
+                contextSize: z.number(),
+            })
+            .parse(await ipc.invoke('ai:getStatus'));
         expect(status.isModelLoaded).toBe(true);
         expect(status.currentModelName).toBe('test-model.gguf');
         expect(status.contextTokens).toBe(50);
@@ -213,80 +214,82 @@ describe('loadModel (success path)', () => {
     });
 
     it('unloads successfully via ai:unloadModel', async () => {
-        await handlers['ai:loadModel']?.({}, modelFilePath());
-        const result = (await handlers['ai:unloadModel']?.()) as { success: boolean };
+        await ipc.invoke('ai:loadModel', modelFilePath());
+        const result = readReply(await ipc.invoke('ai:unloadModel'));
         expect(result.success).toBe(true);
         expect(mockContextDispose).toHaveBeenCalled();
         expect(mockModelDispose).toHaveBeenCalled();
 
-        const status = handlers['ai:getStatus']?.() as { isModelLoaded: boolean };
+        const status = z.object({ isModelLoaded: z.boolean() }).parse(await ipc.invoke('ai:getStatus'));
         expect(status.isModelLoaded).toBe(false);
     });
 
     it('loading a second model auto-unloads the first', async () => {
-        await handlers['ai:loadModel']?.({}, modelFilePath());
+        await ipc.invoke('ai:loadModel', modelFilePath());
         const secondPath = path.join(PATHS.root, 'second.gguf');
         fs.writeFileSync(secondPath, '');
-        await handlers['ai:loadModel']?.({}, secondPath);
+        await ipc.invoke('ai:loadModel', secondPath);
         expect(mockModelDispose).toHaveBeenCalled();
-        const status = handlers['ai:getStatus']?.() as { currentModelName: string };
+        const status = z.object({ currentModelName: z.string() }).parse(await ipc.invoke('ai:getStatus'));
         expect(status.currentModelName).toBe('second.gguf');
     });
 
     it('cleanup() unloads the model when one is loaded', async () => {
-        await handlers['ai:loadModel']?.({}, modelFilePath());
+        await ipc.invoke('ai:loadModel', modelFilePath());
         await cleanup();
-        const status = handlers['ai:getStatus']?.() as { isModelLoaded: boolean };
+        const status = z.object({ isModelLoaded: z.boolean() }).parse(await ipc.invoke('ai:getStatus'));
         expect(status.isModelLoaded).toBe(false);
     });
 
     it('getModelLoadOptions: uses CPU-only for mistral3 architecture', async () => {
         mockReadGgufFileInfo.mockResolvedValueOnce({ metadata: { general: { architecture: 'mistral3' } } });
-        await handlers['ai:loadModel']?.({}, modelFilePath());
+        await ipc.invoke('ai:loadModel', modelFilePath());
         expect(mockLoadModel).toHaveBeenCalledWith(expect.objectContaining({ gpuLayers: 0 }));
     });
 
     it('getModelLoadOptions: falls back to defaults when readGgufFileInfo throws', async () => {
         mockReadGgufFileInfo.mockRejectedValueOnce(new Error('bad file'));
-        const result = (await handlers['ai:loadModel']?.({}, modelFilePath())) as { success: boolean };
+        const result = readReply(await ipc.invoke('ai:loadModel', modelFilePath()));
         expect(result.success).toBe(true);
         expect(mockLoadModel).toHaveBeenCalledWith(expect.objectContaining({ modelPath: modelFilePath() }));
     });
 
     it('returns failure when llamaInstance.loadModel throws', async () => {
         mockLoadModel.mockRejectedValueOnce(new Error('GGML error'));
-        const result = (await handlers['ai:loadModel']?.({}, modelFilePath())) as { success: boolean; error: string };
+        const result = readReply(await ipc.invoke('ai:loadModel', modelFilePath()));
         expect(result.success).toBe(false);
-        expect(result.error).toMatch(/GGML error/);
+        expect(result.error).toBe('UNKNOWN');
     });
 });
 
 describe('chat (with loaded model)', () => {
     beforeEach(async () => {
         fs.writeFileSync(modelFilePath(), '');
-        await handlers['ai:loadModel']?.({}, modelFilePath());
+        await ipc.invoke('ai:loadModel', modelFilePath());
     });
 
     it('returns the streamed response', async () => {
-        const result = (await handlers['ai:chat']?.({}, 'Hi', '')) as { success: boolean; response?: string };
+        const result = z
+            .object({ success: z.boolean(), response: z.string().optional() })
+            .parse(await ipc.invoke('ai:chat', 'Hi', ''));
         expect(result.success).toBe(true);
         expect(result.response).toBe('Hello world');
     });
 
     it('includes noteContext in the prompt when provided', async () => {
-        await handlers['ai:chat']?.({}, 'What is this?', 'My note content here');
-        const calledWith = mockPrompt.mock.calls[0]![0] as string;
+        await ipc.invoke('ai:chat', 'What is this?', 'My note content here');
+        const calledWith = mockPrompt.mock.calls[0]![0];
         expect(calledWith).toContain('My note content here');
         expect(calledWith).toContain('What is this?');
     });
 
     it('injects pendingConversationHistory as a summary on the next chat', async () => {
-        handlers['ai:restoreChatHistory']?.({}, [
+        await ipc.invoke('ai:restoreChatHistory', [
             { role: 'user', content: 'Old question' },
             { role: 'assistant', content: 'Old answer' },
         ]);
-        await handlers['ai:chat']?.({}, 'Follow up', '');
-        const calledWith = mockPrompt.mock.calls[0]![0] as string;
+        await ipc.invoke('ai:chat', 'Follow up', '');
+        const calledWith = mockPrompt.mock.calls[0]![0];
         expect(calledWith).toContain('Old question');
         expect(calledWith).toContain('Old answer');
         expect(calledWith).toContain('Follow up');
@@ -294,18 +297,22 @@ describe('chat (with loaded model)', () => {
 
     it('returns failure when session.prompt throws', async () => {
         mockPrompt.mockRejectedValueOnce(new Error('inference failed'));
-        const result = (await handlers['ai:chat']?.({}, 'Hi', '')) as { success: boolean; error?: string };
+        const result = z
+            .object({ success: z.boolean(), error: z.string().optional() })
+            .parse(await ipc.invoke('ai:chat', 'Hi', ''));
         expect(result.success).toBe(false);
-        expect(result.error).toMatch(/inference failed/);
+        expect(result.error).toBe('UNKNOWN');
     });
 
     it('returns failure when already generating', async () => {
         const slowPrompt = new Promise<void>((resolve) => setTimeout(resolve, 500));
         mockPrompt.mockReturnValueOnce(slowPrompt);
-        const firstChat = handlers['ai:chat']?.({}, 'Slow', '');
-        const result = (await handlers['ai:chat']?.({}, 'Second', '')) as { success: boolean; error?: string };
+        const firstChat = ipc.invoke('ai:chat', 'Slow', '');
+        const result = z
+            .object({ success: z.boolean(), error: z.string().optional() })
+            .parse(await ipc.invoke('ai:chat', 'Second', ''));
         expect(result.success).toBe(false);
-        expect(result.error).toMatch(/already generating/i);
+        expect(result.error).toBe('BUSY');
         await firstChat; // clean up
     });
 
@@ -317,8 +324,8 @@ describe('chat (with loaded model)', () => {
                     chatResolve = r;
                 }),
         );
-        const chatPromise = handlers['ai:chat']?.({}, 'Long response', '');
-        const stopResult = handlers['ai:stopChat']?.() as { success: boolean };
+        const chatPromise = ipc.invoke('ai:chat', 'Long response', '');
+        const stopResult = readReply(await ipc.invoke('ai:stopChat'));
         expect(stopResult.success).toBe(true);
         chatResolve();
         await chatPromise;
@@ -328,19 +335,19 @@ describe('chat (with loaded model)', () => {
 describe('resetChat (with loaded model)', () => {
     beforeEach(async () => {
         fs.writeFileSync(modelFilePath(), '');
-        await handlers['ai:loadModel']?.({}, modelFilePath());
+        await ipc.invoke('ai:loadModel', modelFilePath());
     });
 
     it('succeeds and clears tracked history', async () => {
-        await handlers['ai:chat']?.({}, 'Hello', '');
-        const result = (await handlers['ai:resetChat']?.()) as { success: boolean };
+        await ipc.invoke('ai:chat', 'Hello', '');
+        const result = readReply(await ipc.invoke('ai:resetChat'));
         expect(result.success).toBe(true);
         expect(mockClearHistory).toHaveBeenCalled();
     });
 
     it('falls back to new sequence when existing sequence is disposed', async () => {
         mockSequence.disposed = true;
-        const result = (await handlers['ai:resetChat']?.()) as { success: boolean };
+        const result = readReply(await ipc.invoke('ai:resetChat'));
         expect(result.success).toBe(true);
         expect(mockGetSequence).toHaveBeenCalled();
         mockSequence.disposed = false; // restore
@@ -348,25 +355,27 @@ describe('resetChat (with loaded model)', () => {
 
     it('returns failure when clearHistory throws', async () => {
         mockClearHistory.mockRejectedValueOnce(new Error('clear failed'));
-        const result = (await handlers['ai:resetChat']?.()) as { success: boolean; error?: string };
+        const result = z
+            .object({ success: z.boolean(), error: z.string().optional() })
+            .parse(await ipc.invoke('ai:resetChat'));
         expect(result.success).toBe(false);
-        expect(result.error).toMatch(/clear failed/);
+        expect(result.error).toBe('UNKNOWN');
     });
 });
 
 describe('restoreChatHistory with messages', () => {
     it('stores messages and builds summary on next chat', async () => {
         fs.writeFileSync(modelFilePath(), '');
-        await handlers['ai:loadModel']?.({}, modelFilePath());
+        await ipc.invoke('ai:loadModel', modelFilePath());
 
         const messages = Array.from({ length: 60 }, (_, i) => ({
             role: i % 2 === 0 ? 'user' : 'assistant',
             content: `Message ${i}`.repeat(200),
         }));
-        handlers['ai:restoreChatHistory']?.({}, messages);
+        await ipc.invoke('ai:restoreChatHistory', messages);
 
-        await handlers['ai:chat']?.({}, 'Continue', '');
-        const calledWith = mockPrompt.mock.calls[0]![0] as string;
+        await ipc.invoke('ai:chat', 'Continue', '');
+        const calledWith = mockPrompt.mock.calls[0]![0];
         expect(calledWith).toContain('User:');
         expect(calledWith).toContain('Assistant:');
     });

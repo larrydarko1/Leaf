@@ -6,9 +6,10 @@
 import { ref, computed, nextTick, type ComputedRef } from 'vue';
 import type { Ref } from 'vue';
 
+import type { Canvas2D } from '@/renderer/composables/drawing/canvas2d';
 import type { CanvasElement, DefaultStyle } from '@/schemas/drawing';
 
-export type UseTextEditingReturn = {
+type UseTextEditingReturn = {
     textEditing: Ref<boolean>;
     textValue: Ref<string>;
     textOverlayStyle: ComputedRef<Record<string, string>>;
@@ -64,7 +65,7 @@ export function useTextEditing({
     // Renderer helpers
     worldToScreen: (wx: number, wy: number) => { x: number; y: number };
     screenToWorld: (sx: number, sy: number) => { x: number; y: number };
-    findCtx: () => CanvasRenderingContext2D | null;
+    findCtx: () => Canvas2D | null;
     renderScene: () => void;
     // History / persistence callbacks
     saveToHistory: () => void;

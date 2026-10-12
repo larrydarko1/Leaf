@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const ElementTypeSchema = z.enum([
+export const ElementTypeSchema = z.enum([
     'rectangle',
     'ellipse',
     'diamond',
@@ -24,7 +24,7 @@ export type ElementType = z.infer<typeof ElementTypeSchema>;
 /** Every element the canvas can draw, plus the three tools that draw nothing. */
 export type ToolType = ElementType | 'select' | 'hand' | 'eraser';
 
-const StrokeStyleSchema = z.enum(['solid', 'dashed', 'dotted']);
+export const StrokeStyleSchema = z.enum(['solid', 'dashed', 'dotted']);
 
 export type StrokeStyle = z.infer<typeof StrokeStyleSchema>;
 

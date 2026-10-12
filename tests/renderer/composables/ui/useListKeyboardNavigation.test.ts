@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
 import { defineComponent, createApp } from 'vue';
 
 import { useListKeyboardNavigation } from '@/renderer/composables/ui/useListKeyboardNavigation';
@@ -32,15 +32,15 @@ function pressKey(key: string, target: EventTarget = window): void {
 
 describe('useListKeyboardNavigation', () => {
     let list: string[];
-    let onSelect: (item: string, index: number) => void;
-    let onOpen: (item: string, index: number) => void;
-    let onEscape: () => void;
+    let onSelect: Mock<(item: string, index: number) => void>;
+    let onOpen: Mock<(item: string, index: number) => void>;
+    let onEscape: Mock<() => void>;
 
     beforeEach(() => {
         list = ['alpha', 'beta', 'gamma'];
-        onSelect = vi.fn() as unknown as (item: string, index: number) => void;
-        onOpen = vi.fn() as unknown as (item: string, index: number) => void;
-        onEscape = vi.fn() as unknown as () => void;
+        onSelect = vi.fn<(item: string, index: number) => void>();
+        onOpen = vi.fn<(item: string, index: number) => void>();
+        onEscape = vi.fn<() => void>();
     });
 
     describe('with wrap = true', () => {

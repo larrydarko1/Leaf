@@ -319,5 +319,30 @@
     "save_png": "Save PNG",
     "copy_png": "Copy PNG",
     "close_export_dialog": "Close export dialog"
+  },
+  "errors": {
+    "invalid_arguments": "The request was not valid.",
+    "no_window": "No window is available.",
+    "no_vault": "No notes folder is open.",
+    "access_denied": "Access denied.",
+    "invalid_name": "That name is not allowed.",
+    "not_found": "It could not be found.",
+    "already_exists": "An item with that name already exists.",
+    "move_into_self": "A folder cannot be moved into itself.",
+    "disk_full": "The disk is full.",
+    "model_not_loaded": "No model is loaded.",
+    "busy": "Busy, try again in a moment.",
+    "invalid_state": "That cannot be done right now.",
+    "unknown": "Something went wrong.",
+    "create_file_failed": "Could not create the file. {reason}",
+    "create_drawing_failed": "Could not create the drawing. {reason}",
+    "rename_file_failed": "Could not rename the file. {reason}",
+    "rename_folder_failed": "Could not rename the folder. {reason}",
+    "delete_file_failed": "Could not delete {name}. {reason}",
+    "delete_folder_failed": "Could not delete the folder. {reason}",
+    "move_file_failed": "Could not move {name}. {reason}",
+    "move_folder_failed": "Could not move the folder. {reason}",
+    "save_file_failed": "Could not save the file. {reason}",
+    "chat_failed": "The model could not answer. {reason}"
   }
 }

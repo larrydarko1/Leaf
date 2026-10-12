@@ -1,4 +1,4 @@
-/* eslint-disable vue/one-component-per-file */
+/* eslint-disable vue/one-component-per-file -- each test mounts its own throwaway host for the composable */
 import { undo } from '@codemirror/commands';
 import { EditorView } from '@codemirror/view';
 import { mount } from '@vue/test-utils';
@@ -36,7 +36,7 @@ function mountComposable(options: {
             return () =>
                 h('div', {
                     ref: (el) => {
-                        containerRef.value = el as HTMLElement | null;
+                        containerRef.value = el instanceof HTMLElement ? el : null;
                     },
                 });
         },
@@ -230,7 +230,7 @@ describe('useCodemirror', () => {
                 return () =>
                     h('div', {
                         ref: (el) => {
-                            containerRef.value = el as HTMLElement | null;
+                            containerRef.value = el instanceof HTMLElement ? el : null;
                         },
                     });
             },
@@ -303,7 +303,7 @@ describe('useCodemirror', () => {
                 return () =>
                     h('div', {
                         ref: (el) => {
-                            containerRef.value = el as HTMLElement | null;
+                            containerRef.value = el instanceof HTMLElement ? el : null;
                         },
                     });
             },

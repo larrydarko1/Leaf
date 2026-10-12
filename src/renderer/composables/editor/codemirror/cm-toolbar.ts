@@ -154,7 +154,8 @@ export function useCodemirrorToolbar(view: Ref<EditorView | null>): {
         const editorView = view.value;
         if (editorView === null) return;
 
-        const select = event.target as HTMLSelectElement;
+        const select = event.target;
+        if (!(select instanceof HTMLSelectElement)) return;
         const level = parseInt(select.value);
         if (isNaN(level)) return;
 

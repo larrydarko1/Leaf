@@ -1,5 +1,6 @@
-import type { pipeline as PipelineFn } from '@huggingface/transformers';
 import { z } from 'zod';
+
+import type { IpcErrorCode } from '@/schemas/errors';
 
 export type ContextMenuItem = {
     label: string;
@@ -31,88 +32,88 @@ export type ScanResult = {
     root?: string;
     files: FileInfo[];
     folders: FolderInfo[];
-    error?: string;
+    error?: IpcErrorCode;
 };
 
 export type FileReadResult = {
     success: boolean;
     content?: string;
-    error?: string;
+    error?: IpcErrorCode;
 };
 
 export type ImageReadResult = {
     success: boolean;
     dataUrl?: string;
-    error?: string;
+    error?: IpcErrorCode;
 };
 
 export type AudioReadResult = {
     success: boolean;
     dataUrl?: string;
-    error?: string;
+    error?: IpcErrorCode;
 };
 
 export type EmbedResolveResult = {
     success: boolean;
     path?: string;
-    error?: string;
+    error?: IpcErrorCode;
 };
 
 export type FileWriteResult = {
     success: boolean;
-    error?: string;
+    error?: IpcErrorCode;
 };
 
 export type FileCreateResult = {
     success: boolean;
     path?: string;
-    error?: string;
+    error?: IpcErrorCode;
 };
 
 export type FolderCreateResult = {
     success: boolean;
     path?: string;
-    error?: string;
+    error?: IpcErrorCode;
 };
 
 export type FileDeleteResult = {
     success: boolean;
-    error?: string;
+    error?: IpcErrorCode;
 };
 
 export type FileRenameResult = {
     success: boolean;
     newPath?: string;
-    error?: string;
+    error?: IpcErrorCode;
 };
 
 export type FolderRenameResult = {
     success: boolean;
     newPath?: string;
-    error?: string;
+    error?: IpcErrorCode;
 };
 
 export type FolderDeleteResult = {
     success: boolean;
-    error?: string;
+    error?: IpcErrorCode;
 };
 
 export type FileMoveResult = {
     success: boolean;
     newPath?: string;
-    error?: string;
+    error?: IpcErrorCode;
 };
 
 export type FolderMoveResult = {
     success: boolean;
     newPath?: string;
-    error?: string;
+    error?: IpcErrorCode;
 };
 
 export type AudioSaveResult = {
     success: boolean;
     path?: string;
-    error?: string;
+    error?: IpcErrorCode;
 };
 
 export type TreeNode = {
@@ -153,19 +154,9 @@ export const ThemeStateSchema = z
 
 export type ThemeState = z.infer<typeof ThemeStateSchema>;
 
-// Minimal shape of the parts of @huggingface/transformers we actually touch
-export type TransformersModule = {
-    pipeline: typeof PipelineFn;
-    env: {
-        cacheDir: string;
-        allowRemoteModels: boolean;
-    };
-};
+export const TranscriptionResultSchema = z.union([z.string(), z.object({ text: z.string() })]);
 
-export type TranscriptionResult = { text: string } | string;
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Transcriber = (audio: Float32Array) => Promise<any>;
+export type Transcriber = (audio: Float32Array, options?: Record<string, unknown>) => Promise<unknown>;
 
 export type TabState = {
     file: FileInfo;

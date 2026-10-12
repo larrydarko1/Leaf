@@ -13,7 +13,7 @@ type Props = {
 
 const props = defineProps<Props>();
 
-defineEmits<{
+const emit = defineEmits<{
     'load': [value: string];
     'confirm-rename': [value: string];
     'delete': [value: string];
@@ -38,6 +38,10 @@ function formatRelativeDate(dateStr: string): string {
     const diffDays = Math.floor(diffHrs / 24);
     if (diffDays < 7) return `${diffDays}d ago`;
     return date.toLocaleDateString();
+}
+
+function onRenameInput(event: Event): void {
+    if (event.target instanceof HTMLInputElement) emit('update:renameValue', event.target.value);
 }
 
 watch(
@@ -103,7 +107,7 @@ watch(
                                     type="text"
                                     class="ai-history-rename-input field field-sm"
                                     :aria-label="t('ai.rename_conversation')"
-                                    @input="$emit('update:renameValue', ($event.target as HTMLInputElement).value)"
+                                    @input="onRenameInput"
                                     @keydown.enter.prevent="$emit('confirm-rename', conv.id)"
                                     @keydown.escape.prevent="$emit('cancel-rename')"
                                     @blur="$emit('confirm-rename', conv.id)"

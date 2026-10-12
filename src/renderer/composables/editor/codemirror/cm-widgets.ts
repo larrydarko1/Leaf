@@ -312,7 +312,7 @@ export class EmbedWidget extends WidgetType {
                     else void media.pause();
                 };
                 if (isVideo)
-                    (media as HTMLVideoElement).onclick = (): void => {
+                    media.onclick = (): void => {
                         if (media.paused) void media.play();
                         else void media.pause();
                     };

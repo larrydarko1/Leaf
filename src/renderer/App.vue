@@ -40,7 +40,7 @@ const showThemePanel = ref(false);
 const showLanguagePanel = ref(false);
 
 function handleExternalLinkClick(e: MouseEvent): void {
-    const closest = (e.target as HTMLElement)?.closest('a');
+    const closest = e.target instanceof Element ? e.target.closest('a') : null;
     const target = closest instanceof HTMLAnchorElement ? closest : null;
     if (target === null) return;
     const href = target.getAttribute('href');

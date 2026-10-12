@@ -8,24 +8,32 @@ import { existsSync } from 'fs';
 import path from 'path';
 
 import type { pipeline as PipelineFn } from '@huggingface/transformers';
-import type { IpcMain, BrowserWindow } from 'electron';
+import type { BrowserWindow } from 'electron';
+import { z } from 'zod';
 
+import { IpcError, toIpcErrorCode } from '@/main/lib/errors';
+import type { IpcMain } from '@/main/lib/ipc';
 import { log } from '@/main/lib/logger';
 import { getWhisperModelDir } from '@/main/lib/paths';
 import { findActiveDictationLanguage } from '@/main/services/language';
-import type { Transcriber, TranscriptionResult, TransformersModule } from '@/schemas/vault';
+import type {
+    SpeechInitResult,
+    SpeechResetSessionResult,
+    SpeechStatus,
+    SpeechTranscribeResult,
+} from '@/schemas/speech';
+import { TranscriptionResultSchema, type Transcriber } from '@/schemas/vault';
 
 // Minimal shape of the pipeline internals we need for language detection
-// Property names must match @huggingface/transformers API exactly
-/* eslint-disable @typescript-eslint/naming-convention */
-type WhisperPipeline = {
+/* eslint-disable @typescript-eslint/naming-convention -- property names are @huggingface/transformers' own */
+type WhisperInternals = {
     model: {
         generate(opts: Record<string, unknown>): Promise<ArrayLike<{ tolist(): (number | bigint)[] }>>;
         generation_config: { lang_to_id: Record<string, number> };
     };
     processor(audio: Float32Array): Promise<{ input_features: unknown }>;
 };
-/* eslint-enable @typescript-eslint/naming-convention */
+/* eslint-enable @typescript-eslint/naming-convention -- end of the transformers shape */
 
 // Whisper decoder_start_token_id — constant across all Whisper models
 const WHISPER_SOT = 50258;
@@ -51,18 +59,14 @@ export function cleanup(): void {
 }
 
 export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | null): void {
-    ipc.handle('speech:init', async (): Promise<{ success: boolean; message?: string; error?: string }> =>
-        initModel(findMainWindow()),
-    );
-    ipc.handle(
-        'speech:transcribe',
-        async (_event, audioData: number[]): Promise<{ success: boolean; text?: string; error?: string }> => {
-            if (!Array.isArray(audioData) || audioData.length === 0) return { success: false, error: 'No audio data' };
-            return transcribe(audioData);
-        },
-    );
-    ipc.handle('speech:getStatus', (): { isModelLoaded: boolean; isModelLoading: boolean } => getStatus());
-    ipc.handle('speech:resetSession', (): { success: boolean } => resetSession());
+    ipc.handle('speech:init', async (): Promise<SpeechInitResult> => initModel(findMainWindow()));
+    ipc.handle('speech:transcribe', async (_event, audioData: unknown): Promise<SpeechTranscribeResult> => {
+        const parsed = z.array(z.number()).nonempty().safeParse(audioData);
+        if (!parsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
+        return transcribe(parsed.data);
+    });
+    ipc.handle('speech:getStatus', (): SpeechStatus => getStatus());
+    ipc.handle('speech:resetSession', (): SpeechResetSessionResult => resetSession());
 }
 
 /**
@@ -72,7 +76,7 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
 async function getTransformers(): Promise<typeof PipelineFn> {
     if (pipelineFn !== null) return pipelineFn;
 
-    const transformers = (await import('@huggingface/transformers')) as TransformersModule;
+    const transformers = await import('@huggingface/transformers');
 
     // Point cache to the bundled model directory
     const cacheDir = getWhisperModelDir();
@@ -91,7 +95,7 @@ async function getTransformers(): Promise<typeof PipelineFn> {
     for (const requiredFile of requiredFiles) {
         if (!existsSync(requiredFile)) {
             log.error('[Speech] Missing required model file:', requiredFile);
-            throw new Error(`Missing model file: ${path.basename(requiredFile)}`);
+            throw new IpcError('NOT_FOUND', `Missing model file: ${path.basename(requiredFile)}`);
         }
     }
     log.info('[Speech] All model files verified at:', modelDir);
@@ -100,14 +104,12 @@ async function getTransformers(): Promise<typeof PipelineFn> {
     return pipelineFn;
 }
 
-async function initModel(
-    mainWindow: BrowserWindow | null,
-): Promise<{ success: boolean; message?: string; error?: string }> {
+async function initModel(mainWindow: BrowserWindow | null): Promise<SpeechInitResult> {
     if (transcriber !== null) {
         return { success: true, message: 'Model already loaded' };
     }
     if (isModelLoading) {
-        return { success: false, error: 'Model is currently loading' };
+        return { success: false, error: 'BUSY' };
     }
 
     isModelLoading = true;
@@ -122,10 +124,12 @@ async function initModel(
             });
         }
 
-        transcriber = (await pipeline('automatic-speech-recognition', 'Xenova/whisper-base', {
+        const loaded: unknown = await pipeline('automatic-speech-recognition', 'Xenova/whisper-base', {
             revision: 'main',
             dtype: 'q8',
-        })) as Transcriber;
+        });
+        if (!isTranscriber(loaded)) throw new IpcError('INVALID_STATE', 'The speech pipeline is not callable');
+        transcriber = loaded;
 
         supportedLanguages = readSupportedLanguages();
         isModelReady = true;
@@ -148,18 +152,19 @@ async function initModel(
         if (mainWindow !== null && !mainWindow.isDestroyed()) {
             mainWindow.webContents.send('speech:status', {
                 status: 'error',
-                message: (error as Error).message,
+                error: toIpcErrorCode(error),
             });
         }
 
-        return { success: false, error: (error as Error).message };
+        return { success: false, error: toIpcErrorCode(error) };
     }
 }
 
 /** The `<|xx|>` keys of the model's own language table, as bare codes. */
 function readSupportedLanguages(): Set<string> | null {
+    if (!isWhisperInternals(transcriber)) return null;
     try {
-        const langToId = (transcriber as unknown as WhisperPipeline).model.generation_config.lang_to_id;
+        const langToId = transcriber.model.generation_config.lang_to_id;
         const codes = new Set<string>();
         for (const langKey of Object.keys(langToId)) {
             const match = /\|(.+)\|/.exec(langKey);
@@ -206,12 +211,10 @@ function hasSpeechSignal(float32Audio: Float32Array): boolean {
  * manually here via the model's internal generate API.
  */
 async function detectLanguage(float32Audio: Float32Array): Promise<string | null> {
-    if (transcriber === null) {
-        return null;
-    }
+    if (!isWhisperInternals(transcriber)) return null;
+    const pipe = transcriber;
     try {
-        const pipe = transcriber as unknown as WhisperPipeline;
-        // eslint-disable-next-line @typescript-eslint/naming-convention
+        // eslint-disable-next-line @typescript-eslint/naming-convention -- the processor's own output key
         const { input_features } = await pipe.processor(float32Audio);
 
         // max_new_tokens: 1 — generate only the language token after [<|startoftranscript|>]
@@ -240,9 +243,9 @@ async function detectLanguage(float32Audio: Float32Array): Promise<string | null
     }
 }
 
-async function transcribe(audioData: number[]): Promise<{ success: boolean; text?: string; error?: string }> {
+async function transcribe(audioData: number[]): Promise<SpeechTranscribeResult> {
     if (transcriber === null || !isModelReady) {
-        return { success: false, error: 'Whisper model not loaded' };
+        return { success: false, error: 'MODEL_NOT_LOADED' };
     }
 
     try {
@@ -250,27 +253,37 @@ async function transcribe(audioData: number[]): Promise<{ success: boolean; text
 
         const language = await resolveLanguage(float32Audio);
 
-        const call = transcriber as unknown as (
-            audio: Float32Array,
-            options: Record<string, unknown>,
-        ) => Promise<unknown>;
-
         const options: Record<string, unknown> = language !== null ? { language } : {};
-        const result = (await call(float32Audio, options)) as TranscriptionResult;
-        const text = typeof result === 'string' ? result : (result.text ?? '');
+        const result = TranscriptionResultSchema.parse(await transcriber(float32Audio, options));
+        const text = typeof result === 'string' ? result : result.text;
         return { success: true, text: text.trim() };
     } catch (error) {
         log.error('[Speech] Transcription error:', error);
-        return { success: false, error: (error as Error).message };
+        return { success: false, error: toIpcErrorCode(error) };
     }
 }
 
-function getStatus(): { isModelLoaded: boolean; isModelLoading: boolean } {
+function getStatus(): SpeechStatus {
     return { isModelLoaded: isModelReady, isModelLoading };
 }
 
 /** Clears the detected-language fallback so the next dictation run starts fresh. */
-function resetSession(): { success: boolean } {
+function resetSession(): SpeechResetSessionResult {
     sessionLanguage = null;
     return { success: true };
+}
+
+function isTranscriber(value: unknown): value is Transcriber {
+    return typeof value === 'function';
+}
+
+/** The pipeline exposes its model and processor; a stand-in or another backend may not. */
+function isWhisperInternals(value: unknown): value is Transcriber & WhisperInternals {
+    if (typeof value !== 'function' || !('model' in value) || !('processor' in value)) return false;
+    const { model, processor } = value;
+    if (typeof processor !== 'function' || typeof model !== 'object' || model === null) return false;
+    if (!('generate' in model) || typeof model.generate !== 'function' || !('generation_config' in model)) return false;
+    const config = model.generation_config;
+    if (typeof config !== 'object' || config === null || !('lang_to_id' in config)) return false;
+    return typeof config.lang_to_id === 'object' && config.lang_to_id !== null;
 }

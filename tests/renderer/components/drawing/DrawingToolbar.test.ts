@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { defineComponent, h, nextTick, ref } from 'vue';
 
 import DrawingToolbar from '@/renderer/components/drawing/DrawingToolbar.vue';
 import type { ToolType } from '@/schemas/drawing';
@@ -161,13 +162,27 @@ describe('DrawingToolbar', () => {
         wrapper.unmount();
     });
 
-    it('closes the arch dropdown when handleClickOutside is called with an outside element', () => {
-        const wrapper = mountWithI18n(DrawingToolbar, {
-            props: { currentTool: 'database' },
+    it('closes the arch dropdown when its parent reports a click outside it', async () => {
+        // DrawingCanvas holds the toolbar by template ref and forwards document clicks to it.
+        const toolbar = ref<InstanceType<typeof DrawingToolbar> | null>(null);
+        const Host = defineComponent({
+            setup: () => () => h(DrawingToolbar, { ref: toolbar, currentTool: 'database' }),
         });
-        const vm = wrapper.vm as unknown as { handleClickOutside: (e: MouseEvent) => void };
-        vm.handleClickOutside(new MouseEvent('click', { bubbles: true }));
-        expect(wrapper.exists()).toBe(true);
+        const wrapper = mountWithI18n(Host, { attachTo: document.body });
+        await wrapper.find('.arch-dropdown > button').trigger('click');
+        expect(wrapper.find('.arch-dropdown-menu').exists()).toBe(true);
+
+        const forward = (e: MouseEvent): void => {
+            toolbar.value?.handleClickOutside(e);
+        };
+        const outside = document.body.appendChild(document.createElement('div'));
+        document.addEventListener('mousedown', forward);
+        outside.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+        document.removeEventListener('mousedown', forward);
+        await nextTick();
+
+        expect(wrapper.find('.arch-dropdown-menu').exists()).toBe(false);
+        outside.remove();
         wrapper.unmount();
     });
 

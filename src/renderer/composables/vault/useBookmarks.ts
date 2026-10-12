@@ -4,7 +4,7 @@
 
 import { ref, type Ref } from 'vue';
 
-export type UseBookmarksReturn = {
+type UseBookmarksReturn = {
     bookmarkedFiles: Ref<string[]>;
     loadBookmarks: () => Promise<void>;
     toggleBookmark: (filePath: string) => void;

@@ -1,6 +1,9 @@
+// Measures text on a 2D context, for sizing text elements to their content.
+import type { Canvas2D } from '@/renderer/composables/drawing/canvas2d';
+
 /** Measure the box a text element occupies at a given font size. */
 export function measureTextBox(
-    ctx: CanvasRenderingContext2D,
+    ctx: Pick<Canvas2D, 'save' | 'restore' | 'font' | 'measureText'>,
     text: string,
     fontSize: number,
 ): { width: number; height: number } {

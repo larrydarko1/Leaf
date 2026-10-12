@@ -1,8 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ref, nextTick } from 'vue';
 
+import type { Canvas2D } from '@/renderer/composables/drawing/canvas2d';
 import { useDrawingPersistence } from '@/renderer/composables/drawing/useDrawingPersistence';
-import type { CanvasElement } from '@/schemas/drawing';
+import { type CanvasElement, DrawingDataV2Schema } from '@/schemas/drawing';
+import { createFakeContext2D } from '@test-utils';
 
 const mockLog = { error: vi.fn(), info: vi.fn(), warn: vi.fn() };
 let idCounter = 0;
@@ -46,8 +48,8 @@ function makePersistence(contentFn: () => string | undefined = () => undefined) 
     const history = ref<string[]>([]);
     const historyIndex = ref(0);
     const renderScene = vi.fn();
-    const findCtx = vi.fn().mockReturnValue(null as CanvasRenderingContext2D | null);
-    const onSave = vi.fn();
+    const findCtx = vi.fn<() => Canvas2D | null>().mockReturnValue(null);
+    const onSave = vi.fn<(content: string) => void>();
     const onContentChanged = vi.fn();
 
     const persistence = useDrawingPersistence({
@@ -139,7 +141,7 @@ describe('saveDrawing', () => {
         zoom.value = 1.5;
         saveDrawing();
         expect(onSave).toHaveBeenCalled();
-        const saved = JSON.parse((onSave.mock.calls[0] as string[])[0]!);
+        const saved = DrawingDataV2Schema.parse(JSON.parse(onSave.mock.calls[0]![0]));
         expect(saved.version).toBe(2);
         expect(saved.elements).toHaveLength(1);
         expect(saved.viewState.scrollX).toBe(10);
@@ -216,8 +218,8 @@ describe('loadDrawing (v2 format)', () => {
         const content = makeV2Content([el]);
         const { canvas, findCtx, elements, loadDrawing } = makePersistence(() => content);
 
-        canvas.value = {} as HTMLCanvasElement;
-        findCtx.mockReturnValue({} as CanvasRenderingContext2D);
+        canvas.value = document.createElement('canvas');
+        findCtx.mockReturnValue(createFakeContext2D());
 
         loadDrawing();
         expect(elements.value).toHaveLength(1);
@@ -227,8 +229,8 @@ describe('loadDrawing (v2 format)', () => {
     it('loads scrollX, scrollY, zoom from v2 content', () => {
         const content = makeV2Content([], 30, 40, 2.0);
         const { canvas, findCtx, scrollX, scrollY, zoom, loadDrawing } = makePersistence(() => content);
-        canvas.value = {} as HTMLCanvasElement;
-        findCtx.mockReturnValue({} as CanvasRenderingContext2D);
+        canvas.value = document.createElement('canvas');
+        findCtx.mockReturnValue(createFakeContext2D());
 
         loadDrawing();
         expect(scrollX.value).toBe(30);
@@ -239,8 +241,8 @@ describe('loadDrawing (v2 format)', () => {
     it('initializes history with a single entry', () => {
         const content = makeV2Content([makeEl()]);
         const { canvas, findCtx, history, historyIndex, loadDrawing } = makePersistence(() => content);
-        canvas.value = {} as HTMLCanvasElement;
-        findCtx.mockReturnValue({} as CanvasRenderingContext2D);
+        canvas.value = document.createElement('canvas');
+        findCtx.mockReturnValue(createFakeContext2D());
 
         loadDrawing();
         expect(history.value).toHaveLength(1);
@@ -250,8 +252,8 @@ describe('loadDrawing (v2 format)', () => {
     it('calls renderScene', () => {
         const content = makeV2Content([]);
         const { canvas, findCtx, renderScene, loadDrawing } = makePersistence(() => content);
-        canvas.value = {} as HTMLCanvasElement;
-        findCtx.mockReturnValue({} as CanvasRenderingContext2D);
+        canvas.value = document.createElement('canvas');
+        findCtx.mockReturnValue(createFakeContext2D());
         loadDrawing();
         expect(renderScene).toHaveBeenCalled();
     });
@@ -261,8 +263,8 @@ describe('loadDrawing (v2 format)', () => {
         const { canvas, findCtx, scheduleAutoSave, hasUnsavedChanges, loadDrawing } = makePersistence(() => content);
         scheduleAutoSave();
         expect(hasUnsavedChanges.value).toBe(true);
-        canvas.value = {} as HTMLCanvasElement;
-        findCtx.mockReturnValue({} as CanvasRenderingContext2D);
+        canvas.value = document.createElement('canvas');
+        findCtx.mockReturnValue(createFakeContext2D());
         loadDrawing();
         expect(hasUnsavedChanges.value).toBe(false);
     });
@@ -270,8 +272,8 @@ describe('loadDrawing (v2 format)', () => {
     it('uses default viewState values when not provided', () => {
         const content = JSON.stringify({ version: 2, elements: [] });
         const { canvas, findCtx, scrollX, scrollY, zoom, loadDrawing } = makePersistence(() => content);
-        canvas.value = {} as HTMLCanvasElement;
-        findCtx.mockReturnValue({} as CanvasRenderingContext2D);
+        canvas.value = document.createElement('canvas');
+        findCtx.mockReturnValue(createFakeContext2D());
         loadDrawing();
         expect(scrollX.value).toBe(0);
         expect(scrollY.value).toBe(0);
@@ -292,8 +294,8 @@ describe('loadDrawing (v1 migration)', () => {
             ],
         });
         const { canvas, findCtx, elements, loadDrawing } = makePersistence(() => v1Content);
-        canvas.value = {} as HTMLCanvasElement;
-        findCtx.mockReturnValue({} as CanvasRenderingContext2D);
+        canvas.value = document.createElement('canvas');
+        findCtx.mockReturnValue(createFakeContext2D());
         loadDrawing();
         expect(elements.value).toHaveLength(1);
         expect(elements.value[0]!.strokeColor).toBe('#ff0000');
@@ -311,8 +313,8 @@ describe('loadDrawing (v1 migration)', () => {
             ],
         });
         const { canvas, findCtx, elements, loadDrawing } = makePersistence(() => v1Content);
-        canvas.value = {} as HTMLCanvasElement;
-        findCtx.mockReturnValue({} as CanvasRenderingContext2D);
+        canvas.value = document.createElement('canvas');
+        findCtx.mockReturnValue(createFakeContext2D());
         loadDrawing();
         expect(elements.value[0]!.fillColor).toBe('#00ff00');
     });
@@ -329,8 +331,8 @@ describe('loadDrawing (v1 migration)', () => {
             ],
         });
         const { canvas, findCtx, elements, loadDrawing } = makePersistence(() => v1Content);
-        canvas.value = {} as HTMLCanvasElement;
-        findCtx.mockReturnValue({} as CanvasRenderingContext2D);
+        canvas.value = document.createElement('canvas');
+        findCtx.mockReturnValue(createFakeContext2D());
         loadDrawing();
         expect(elements.value[0]!.type).toBe('line');
         expect(elements.value[0]!.x).toBe(0);
@@ -353,8 +355,8 @@ describe('loadDrawing (v1 migration)', () => {
             ],
         });
         const { canvas, findCtx, elements, loadDrawing } = makePersistence(() => v1Content);
-        canvas.value = {} as HTMLCanvasElement;
-        findCtx.mockReturnValue({} as CanvasRenderingContext2D);
+        canvas.value = document.createElement('canvas');
+        findCtx.mockReturnValue(createFakeContext2D());
         loadDrawing();
         expect(elements.value).toHaveLength(1);
         expect(elements.value[0]!.type).toBe('freedraw');
@@ -375,8 +377,8 @@ describe('loadDrawing (v1 migration)', () => {
             ],
         });
         const { canvas, findCtx, elements, loadDrawing } = makePersistence(() => v1Content);
-        canvas.value = {} as HTMLCanvasElement;
-        findCtx.mockReturnValue({} as CanvasRenderingContext2D);
+        canvas.value = document.createElement('canvas');
+        findCtx.mockReturnValue(createFakeContext2D());
         loadDrawing();
         expect(elements.value).toHaveLength(0);
     });
@@ -384,8 +386,8 @@ describe('loadDrawing (v1 migration)', () => {
     it('handles v1 data with no strokes (empty object)', () => {
         const v1Content = JSON.stringify({});
         const { canvas, findCtx, elements, loadDrawing } = makePersistence(() => v1Content);
-        canvas.value = {} as HTMLCanvasElement;
-        findCtx.mockReturnValue({} as CanvasRenderingContext2D);
+        canvas.value = document.createElement('canvas');
+        findCtx.mockReturnValue(createFakeContext2D());
         loadDrawing();
         expect(elements.value).toHaveLength(0);
     });
@@ -393,8 +395,8 @@ describe('loadDrawing (v1 migration)', () => {
     it('handles v1 data with null strokes', () => {
         const v1Content = JSON.stringify({ strokes: null });
         const { canvas, findCtx, elements, loadDrawing } = makePersistence(() => v1Content);
-        canvas.value = {} as HTMLCanvasElement;
-        findCtx.mockReturnValue({} as CanvasRenderingContext2D);
+        canvas.value = document.createElement('canvas');
+        findCtx.mockReturnValue(createFakeContext2D());
         loadDrawing();
         expect(elements.value).toHaveLength(0);
     });
@@ -404,8 +406,8 @@ describe('loadDrawing (v1 migration)', () => {
             strokes: [{ tool: 'pen', color: '#000', size: 1, points: [{ x: 0, y: 0 }] }],
         });
         const { canvas, findCtx, elements, loadDrawing } = makePersistence(() => v1Content);
-        canvas.value = {} as HTMLCanvasElement;
-        findCtx.mockReturnValue({} as CanvasRenderingContext2D);
+        canvas.value = document.createElement('canvas');
+        findCtx.mockReturnValue(createFakeContext2D());
         loadDrawing();
         expect(elements.value).toHaveLength(0);
     });
@@ -414,8 +416,8 @@ describe('loadDrawing (v1 migration)', () => {
 describe('loadDrawing (invalid content)', () => {
     it('logs error and resets state for invalid JSON', () => {
         const { canvas, findCtx, elements, loadDrawing } = makePersistence(() => 'not-json');
-        canvas.value = {} as HTMLCanvasElement;
-        findCtx.mockReturnValue({} as CanvasRenderingContext2D);
+        canvas.value = document.createElement('canvas');
+        findCtx.mockReturnValue(createFakeContext2D());
         loadDrawing();
         expect(mockLog.error).toHaveBeenCalled();
         expect(elements.value).toHaveLength(0);
@@ -423,16 +425,16 @@ describe('loadDrawing (invalid content)', () => {
 
     it('logs error for content that is neither v1 nor v2', () => {
         const { canvas, findCtx, loadDrawing } = makePersistence(() => '"just a string"');
-        canvas.value = {} as HTMLCanvasElement;
-        findCtx.mockReturnValue({} as CanvasRenderingContext2D);
+        canvas.value = document.createElement('canvas');
+        findCtx.mockReturnValue(createFakeContext2D());
         loadDrawing();
         expect(mockLog.error).toHaveBeenCalled();
     });
 
     it('resets history to empty array on load error', () => {
         const { canvas, findCtx, history, loadDrawing } = makePersistence(() => 'bad-json');
-        canvas.value = {} as HTMLCanvasElement;
-        findCtx.mockReturnValue({} as CanvasRenderingContext2D);
+        canvas.value = document.createElement('canvas');
+        findCtx.mockReturnValue(createFakeContext2D());
         loadDrawing();
         expect(history.value).toEqual(['[]']);
     });

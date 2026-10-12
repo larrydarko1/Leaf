@@ -6,7 +6,7 @@ import { ref, computed, type ComputedRef, type Ref } from 'vue';
 
 import { type FileInfo, type TabState, type PersistedTabState, PersistedTabStateSchema } from '@/schemas/vault';
 
-export type UseEditorTabsReturn = {
+type UseEditorTabsReturn = {
     tabs: Ref<TabState[]>;
     activeIndex: Ref<number>;
     activeTab: ComputedRef<TabState | null>;

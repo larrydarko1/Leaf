@@ -1,13 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { useVault } from '@/renderer/composables/vault/useVault';
+import type { ElectronAPI } from '@/schemas/electron';
 import type { FileInfo, FolderInfo } from '@/schemas/vault';
 
 const mockAPI = {
     scanFolder: vi.fn(),
     watchFolder: vi.fn(),
     unwatchFolder: vi.fn(),
-    onFsChanged: vi.fn(),
+    onFsChanged: vi.fn<ElectronAPI['onFsChanged']>(),
     removeFsChangedListener: vi.fn(),
     openFolderDialog: vi.fn(),
     closeVault: vi.fn(),
@@ -220,7 +221,7 @@ describe('useVault', () => {
         });
 
         it('returns null and shows an alert when creation fails', async () => {
-            mockAPI.createFile.mockResolvedValue({ success: false, error: 'permission denied' });
+            mockAPI.createFile.mockResolvedValue({ success: false, error: 'ACCESS_DENIED' });
             const result = await vault.createFile();
             expect(result).toBeNull();
             expect(globalThis.alert).toHaveBeenCalled();
@@ -252,7 +253,7 @@ describe('useVault', () => {
         });
 
         it('returns null and shows an alert on failure', async () => {
-            mockAPI.renameFile.mockResolvedValue({ success: false, error: 'permission denied' });
+            mockAPI.renameFile.mockResolvedValue({ success: false, error: 'ACCESS_DENIED' });
             const result = await vault.renameFile(existingFile, 'new');
             expect(result).toBeNull();
             expect(globalThis.alert).toHaveBeenCalled();
@@ -275,7 +276,7 @@ describe('useVault', () => {
         });
 
         it('shows an alert when deletion fails', async () => {
-            mockAPI.deleteFile.mockResolvedValue({ success: false, error: 'permission denied' });
+            mockAPI.deleteFile.mockResolvedValue({ success: false, error: 'ACCESS_DENIED' });
             mockAPI.scanFolder.mockResolvedValue({ success: true, root: '/vault', files: [file], folders: [] });
             await vault.deleteFile([file]);
             expect(globalThis.alert).toHaveBeenCalled();
@@ -331,7 +332,7 @@ describe('useVault', () => {
         });
 
         it('shows an alert and returns null when createFile fails', async () => {
-            mockAPI.createFile.mockResolvedValue({ success: false, error: 'disk full' });
+            mockAPI.createFile.mockResolvedValue({ success: false, error: 'DISK_FULL' });
             const result = await vault.createDrawing();
             expect(result).toBeNull();
             expect(globalThis.alert).toHaveBeenCalled();
@@ -370,7 +371,7 @@ describe('useVault', () => {
         });
 
         it('logs an error when createFolder fails', async () => {
-            mockAPI.createFolder.mockResolvedValue({ success: false, error: 'permission denied' });
+            mockAPI.createFolder.mockResolvedValue({ success: false, error: 'ACCESS_DENIED' });
             await vault.createFolder();
             expect(mockAPI.log.error).toHaveBeenCalled();
         });
@@ -418,7 +419,7 @@ describe('useVault', () => {
         });
 
         it('shows an alert and returns null on failure', async () => {
-            mockAPI.renameFolder.mockResolvedValue({ success: false, error: 'locked' });
+            mockAPI.renameFolder.mockResolvedValue({ success: false, error: 'ACCESS_DENIED' });
             const result = await vault.renameFolder('docs', 'new-docs');
             expect(result).toBeNull();
             expect(globalThis.alert).toHaveBeenCalled();
@@ -458,7 +459,7 @@ describe('useVault', () => {
         });
 
         it('shows an alert and returns false on failure', async () => {
-            mockAPI.deleteFolder.mockResolvedValue({ success: false, error: 'not empty' });
+            mockAPI.deleteFolder.mockResolvedValue({ success: false, error: 'ALREADY_EXISTS' });
             const result = await vault.deleteFolder('old');
             expect(result).toBe(false);
             expect(globalThis.alert).toHaveBeenCalled();
@@ -488,16 +489,16 @@ describe('useVault', () => {
         });
 
         it('skips ENOENT errors silently', async () => {
-            mockAPI.moveFile.mockResolvedValue({ success: false, error: 'ENOENT: no such file' });
+            mockAPI.moveFile.mockResolvedValue({ success: false, error: 'NOT_FOUND' });
             const result = await vault.moveFiles([file.path], 'docs');
             expect(result).toHaveLength(0);
             expect(globalThis.alert).not.toHaveBeenCalled();
         });
 
         it('shows alert for non-ENOENT move errors', async () => {
-            mockAPI.moveFile.mockResolvedValue({ success: false, error: 'permission denied' });
+            mockAPI.moveFile.mockResolvedValue({ success: false, error: 'ACCESS_DENIED' });
             await vault.moveFiles([file.path], 'docs');
-            expect(globalThis.alert).toHaveBeenCalled();
+            expect(globalThis.alert).toHaveBeenCalledWith(`Could not move ${file.name}. Access denied.`);
         });
     });
 
@@ -540,7 +541,7 @@ describe('useVault', () => {
         });
 
         it('shows an alert and returns null on failure', async () => {
-            mockAPI.moveFolder.mockResolvedValue({ success: false, error: 'no space' });
+            mockAPI.moveFolder.mockResolvedValue({ success: false, error: 'DISK_FULL' });
             const result = await vault.moveFolder('docs', 'archive');
             expect(result).toBeNull();
             expect(globalThis.alert).toHaveBeenCalled();

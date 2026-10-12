@@ -6,11 +6,12 @@
 import { ref, computed } from 'vue';
 import type { Ref, ComputedRef } from 'vue';
 
+import { findContext2D } from '@/renderer/composables/drawing/canvas2d';
 import { measureTextBox } from '@/renderer/composables/drawing/textMetrics';
 import { useThrottleFn } from '@/renderer/composables/useThrottle';
 import type { ToolType, ElementType, DragAction, CanvasElement, DefaultStyle } from '@/schemas/drawing';
 
-export type UseDrawingInteractionReturn = {
+type UseDrawingInteractionReturn = {
     isDragging: Ref<boolean>;
     dragAction: Ref<'none' | 'create' | 'move' | 'resize' | 'pan' | 'freedraw' | 'erase' | 'marquee'>;
     spaceHeld: Ref<boolean>;
@@ -127,7 +128,7 @@ export function useDrawingInteraction({
     marqueeRect: Ref<{ x: number; y: number; width: number; height: number } | null>;
     // Renderer helpers
     screenToWorld: (sx: number, sy: number) => { x: number; y: number };
-    getScreenPoint: (e: PointerEvent | Touch) => { x: number; y: number };
+    getScreenPoint: (e: MouseEvent | Touch) => { x: number; y: number };
     cssWidth: () => number;
     cssHeight: () => number;
     renderScene: () => void;
@@ -602,11 +603,9 @@ export function useDrawingInteraction({
 
             // Recalculate text bounds to match the new font size
             if (el.type === 'text' && el.text !== undefined && el.text.length > 0) {
-                const ctx = canvas.value?.getContext('2d') ?? null;
+                const ctx = canvas.value !== null ? findContext2D(canvas.value) : null;
                 if (ctx !== null) {
-                    const box = measureTextBox(ctx, el.text, newFs);
-                    el.width = box.width;
-                    el.height = box.height;
+                    Object.assign(el, measureTextBox(ctx, el.text, newFs));
                 }
             }
         }
@@ -630,7 +629,7 @@ export function useDrawingInteraction({
     // Wheel and zoom
 
     function onWheel(e: WheelEvent): void {
-        const screenPt = getScreenPoint(e as unknown as PointerEvent);
+        const screenPt = getScreenPoint(e);
         if (e.ctrlKey || e.metaKey) {
             const delta = -e.deltaY * 0.01;
             zoomAtPoint(zoom.value + delta, screenPt.x, screenPt.y);

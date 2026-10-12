@@ -12,7 +12,6 @@ type Props = {
     isStreaming: boolean;
     isReady: boolean;
     editingIndex: number | null;
-    editContent: string;
     copiedIndex: number | null;
     previousModelMatch: AiModelInfo | null;
     isLoading: boolean;
@@ -23,6 +22,7 @@ type Props = {
 };
 
 const props = defineProps<Props>();
+const editContent = defineModel<string>('editContent', { required: true });
 
 defineEmits<{
     'scroll': [];
@@ -34,7 +34,6 @@ defineEmits<{
     'load-previous-model': [];
     'copy': [content: string, index: number];
     'copy-code': [value: string];
-    'update:editContent': [value: string];
     'start-edit': [index: number];
     'confirm-edit': [index: number];
     'resend': [index: number];
@@ -90,8 +89,7 @@ function renderWithCopyBtns(content: string): string {
 }
 
 async function onMarkdownClick(content: string, event: MouseEvent): Promise<void> {
-    const target = event.target as Element;
-    const closest = target.closest('.ai-code-copy-btn');
+    const closest = event.target instanceof Element ? event.target.closest('.ai-code-copy-btn') : null;
     const btn = closest instanceof HTMLButtonElement ? closest : null;
     if (btn === null) return;
 
@@ -185,11 +183,10 @@ watch(
                     <textarea
                         id="edit-input-user-msg"
                         ref="editInputRef"
-                        :value="editContent"
+                        v-model="editContent"
                         class="ai-edit-input field field-resize-y"
                         rows="2"
                         aria-label="Edit user message"
-                        @input="$emit('update:editContent', ($event.target as HTMLTextAreaElement).value)"
                         @keydown.enter.exact.prevent="$emit('confirm-edit', index)"
                         @keydown.escape.prevent="$emit('cancel-edit')" />
                     <div class="ai-edit-actions row">
