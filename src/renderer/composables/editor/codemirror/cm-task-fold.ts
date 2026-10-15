@@ -114,19 +114,14 @@ const taskFoldTogglePlugin = ViewPlugin.fromClass(
                 const range = taskFoldRange(view.state, line.from);
                 if (range == null) return false;
 
-                const folded = foldedRanges(view.state);
-                let isFolded = false;
-                folded.between(range.from, range.from + 1, (): void => {
-                    isFolded = true;
+                // Unfold whatever fold covers the task line; with none there, fold it.
+                const unfold: ReturnType<typeof unfoldEffect.of>[] = [];
+                foldedRanges(view.state).between(range.from, range.from + 1, (from, to): void => {
+                    unfold.push(unfoldEffect.of({ from, to }));
                 });
 
-                if (isFolded) {
-                    // Unfold: find the exact fold effect to reverse
-                    const effects: ReturnType<typeof unfoldEffect.of>[] = [];
-                    folded.between(range.from, range.from + 1, (from, to): void => {
-                        effects.push(unfoldEffect.of({ from, to }));
-                    });
-                    if (effects.length > 0) view.dispatch({ effects });
+                if (unfold.length > 0) {
+                    view.dispatch({ effects: unfold });
                 } else {
                     view.dispatch({
                         effects: [foldEffect.of({ from: range.from, to: range.to })],
