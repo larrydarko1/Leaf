@@ -100,10 +100,10 @@ export function useDrawingPersistence({
             const v2Result = DrawingDataV2Schema.safeParse(parsedData);
 
             if (v2Result.success) {
-                elements.value = v2Result.data.elements ?? [];
-                scrollX.value = v2Result.data.viewState?.scrollX ?? 0;
-                scrollY.value = v2Result.data.viewState?.scrollY ?? 0;
-                zoom.value = v2Result.data.viewState?.zoom ?? 1;
+                elements.value = v2Result.data.elements;
+                scrollX.value = v2Result.data.viewState.scrollX;
+                scrollY.value = v2Result.data.viewState.scrollY;
+                zoom.value = v2Result.data.viewState.zoom;
             } else if (isV1Data(parsedData)) {
                 elements.value = migrateV1(parsedData);
             } else {
@@ -147,7 +147,7 @@ export function useDrawingPersistence({
         const result: CanvasElement[] = [];
         const strokes = data.strokes;
 
-        if (strokes === undefined || strokes === null) {
+        if (strokes === undefined) {
             return result;
         }
 
@@ -157,7 +157,7 @@ export function useDrawingPersistence({
             const shape = stroke.shape;
             const shapeType = ElementTypeSchema.safeParse(shape?.type);
 
-            if (shape !== undefined && shape !== null && shapeType.success) {
+            if (shape !== undefined && shapeType.success) {
                 const isLine = shape.type === 'line' || shape.type === 'arrow';
                 const el: CanvasElement = {
                     id: genId(),
@@ -176,7 +176,7 @@ export function useDrawingPersistence({
             }
 
             const points = stroke.points;
-            if (points !== undefined && points !== null && points.length > 1) {
+            if (points !== undefined && points.length > 1) {
                 let minX = Infinity;
                 let minY = Infinity;
                 let maxX = -Infinity;

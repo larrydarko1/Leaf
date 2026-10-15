@@ -149,7 +149,7 @@ export function useDrawingElements(): UseDrawingElementsReturn {
     // Bounds
 
     function getElementBounds(el: CanvasElement): { x: number; y: number; width: number; height: number } {
-        if (el.type === 'freedraw' && el.points !== undefined && el.points !== null && el.points.length > 0) {
+        if (el.type === 'freedraw' && el.points !== undefined && el.points.length > 0) {
             let minX = Infinity;
             let minY = Infinity;
             let maxX = -Infinity;
@@ -208,7 +208,7 @@ export function useDrawingElements(): UseDrawingElementsReturn {
                 threshold + el.strokeWidth / 2
             );
         }
-        if (el.type === 'freedraw' && el.points !== undefined && el.points !== null) {
+        if (el.type === 'freedraw' && el.points !== undefined) {
             for (let i = 1; i < el.points.length; i++) {
                 const p1 = el.points[i - 1];
                 const p2 = el.points[i];

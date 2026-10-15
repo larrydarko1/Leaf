@@ -206,7 +206,7 @@ export function useTextEditing({
         const ctx = findCtx();
         if (ctx === null) return;
 
-        const fs = textEditFontSize.value ?? defaultStyle.value.fontSize;
+        const fs = textEditFontSize.value;
         ctx.save();
         ctx.font = `${fs}px "Helvetica", "Segoe UI", sans-serif`;
         const lines = txt.split('\n');

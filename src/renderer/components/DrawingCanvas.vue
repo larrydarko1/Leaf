@@ -234,9 +234,7 @@ const activeFontSize = computed(() => selectedElement.value?.fontSize ?? default
 
 const showFontSizeOption = computed(() => {
     if (selectedElements.value.length > 0) {
-        return selectedElements.value.some(
-            (el) => el.type === 'text' || (el.text !== null && el.text !== undefined && el.text !== ''),
-        );
+        return selectedElements.value.some((el) => el.type === 'text' || (el.text !== undefined && el.text !== ''));
     }
     return currentTool.value === 'text';
 });
@@ -287,11 +285,10 @@ function setProperty(prop: StyleKey, value: string | number): void {
                 prop === 'fontSize' &&
                 typeof value === 'number' &&
                 el.type === 'text' &&
-                el.text !== null &&
                 el.text !== undefined &&
                 el.text !== '';
             const ctx = resizesText ? findCtx() : null;
-            if (ctx !== null && typeof value === 'number' && el.text !== undefined && el.text !== null) {
+            if (ctx !== null && typeof value === 'number' && el.text !== undefined) {
                 Object.assign(el, measureTextBox(ctx, el.text, value));
             }
         }

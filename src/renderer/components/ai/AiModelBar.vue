@@ -49,7 +49,7 @@ const activePromptName = computed(() => {
     const found = prompts.value.find((p) => p.id === activeId.value);
     return (
         (found?.name !== undefined && found.name !== '' ? found.name : null) ??
-        (activeId.value !== null && activeId.value !== '' ? activeId.value : 'default')
+        (activeId.value !== '' ? activeId.value : 'default')
     );
 });
 

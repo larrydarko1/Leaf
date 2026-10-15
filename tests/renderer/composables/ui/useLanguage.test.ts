@@ -64,16 +64,6 @@ describe('useLanguage', () => {
             expect(language.activeId.value).toBe('it');
         });
 
-        it('defaults to "en" when activeId is undefined in response', async () => {
-            mockAPI.languageList.mockResolvedValue({
-                success: true,
-                languages: [enLanguage, itLanguage],
-                activeId: undefined,
-            });
-            await language.refresh();
-            expect(language.activeId.value).toBe('en');
-        });
-
         it('sets isLoading to false after a successful call', async () => {
             mockAPI.languageList.mockResolvedValue({
                 success: true,
@@ -171,25 +161,6 @@ describe('useLanguage', () => {
             });
             await language.refresh();
             expect(language.languages.value).toHaveLength(0);
-        });
-
-        it('handles IPC response with no languages key', async () => {
-            mockAPI.languageList.mockResolvedValue({
-                success: true,
-                languages: undefined,
-                activeId: 'en',
-            });
-            await language.refresh();
-            expect(language.languages.value).toEqual([]);
-        });
-
-        it('defaults to "en" when activeId is missing and response succeeds', async () => {
-            mockAPI.languageList.mockResolvedValue({
-                success: true,
-                languages: [enLanguage],
-            });
-            await language.refresh();
-            expect(language.activeId.value).toBe('en');
         });
     });
 });

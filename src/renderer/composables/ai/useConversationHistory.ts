@@ -144,7 +144,7 @@ export function useConversationHistory(
                     content: m.content,
                     ...(m.thinking === undefined ? {} : { thinking: m.thinking }),
                 }));
-                if (result.conversation.model !== null && result.conversation.model !== '') {
+                if (result.conversation.model !== '') {
                     lastUsedModelName.value = result.conversation.model;
                 }
                 conversationTokenCount.value = result.conversation.tokenCount ?? 0;

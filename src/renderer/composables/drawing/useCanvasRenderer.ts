@@ -65,7 +65,7 @@ export function useCanvasRenderer({
 
     function setupCanvas(): void {
         if (canvas.value === null || containerEl.value === null) return;
-        dpr = window.devicePixelRatio ?? 1;
+        dpr = window.devicePixelRatio;
         const rect = containerEl.value.getBoundingClientRect();
         canvas.value.width = rect.width * dpr;
         canvas.value.height = rect.height * dpr;
@@ -196,7 +196,7 @@ export function useCanvasRenderer({
                 ctx.setLineDash([]);
         }
 
-        const hasFill = el.fillColor !== null && el.fillColor !== undefined && el.fillColor !== 'transparent';
+        const hasFill = el.fillColor !== 'transparent';
         if (hasFill) ctx.fillStyle = el.fillColor;
 
         const br = el.borderRadius ?? 0;
@@ -313,7 +313,7 @@ export function useCanvasRenderer({
                 break;
             }
             case 'freedraw': {
-                if (el.points === null || el.points === undefined || el.points.length < 2) break;
+                if (el.points === undefined || el.points.length < 2) break;
                 ctx.beginPath();
                 for (const [i, point] of el.points.entries()) {
                     if (i === 0) ctx.moveTo(el.x + point.x, el.y + point.y);
@@ -323,9 +323,9 @@ export function useCanvasRenderer({
                 break;
             }
             case 'text': {
-                if (el.text === null || el.text === undefined || el.text === '') break;
+                if (el.text === undefined || el.text === '') break;
                 const fs = el.fontSize ?? 20;
-                const fsNum = fs !== null && fs !== undefined && fs > 0 ? fs : 20;
+                const fsNum = fs > 0 ? fs : 20;
                 ctx.font = `${fsNum}px "Helvetica", "Segoe UI", sans-serif`;
                 ctx.fillStyle = el.strokeColor;
                 ctx.textBaseline = 'top';
@@ -501,7 +501,7 @@ export function useCanvasRenderer({
             }
         }
 
-        if (el.type !== 'text' && el.text !== null && el.text !== undefined && el.text !== '') {
+        if (el.type !== 'text' && el.text !== undefined && el.text !== '') {
             drawEmbeddedText(el);
         }
 
@@ -536,10 +536,10 @@ export function useCanvasRenderer({
     }
 
     function drawEmbeddedText(el: CanvasElement): void {
-        if (ctx === null || el.text === null || el.text === undefined || el.text === '') return;
+        if (ctx === null || el.text === undefined || el.text === '') return;
         const bounds = getElementBounds(el);
         const fs = el.fontSize ?? 16;
-        const fsNum = fs !== null && fs !== undefined && fs > 0 ? fs : 16;
+        const fsNum = fs > 0 ? fs : 16;
         ctx.save();
         ctx.font = `${fsNum}px "Helvetica", "Segoe UI", sans-serif`;
         ctx.fillStyle = el.strokeColor;

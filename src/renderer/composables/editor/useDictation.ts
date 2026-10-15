@@ -129,7 +129,7 @@ export function useDictation(
 
         try {
             const result = await window.electronAPI.speechTranscribe(Array.from(resampled));
-            if (result.success && result.text !== null && result.text !== undefined && result.text.length > 0) {
+            if (result.success && result.text !== undefined && result.text.length > 0) {
                 const trimmedText = result.text.trim();
                 if (trimmedText.length > 0) {
                     const needsSpace = content.value.length > 0 && !/\s$/.test(content.value);
@@ -166,12 +166,7 @@ export function useDictation(
             void window.electronAPI
                 .speechTranscribe(Array.from(resampled))
                 .then((result): void => {
-                    if (
-                        result.success &&
-                        result.text !== null &&
-                        result.text !== undefined &&
-                        result.text.trim().length > 0
-                    ) {
+                    if (result.success && result.text !== undefined && result.text.trim().length > 0) {
                         const needsSpace = content.value.length > 0 && !/\s$/.test(content.value);
                         content.value += (needsSpace ? ' ' : '') + result.text.trim();
                         onContentChange();

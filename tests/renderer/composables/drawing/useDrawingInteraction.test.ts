@@ -72,7 +72,7 @@ function makeInteraction(
     const screenToWorld = vi.fn().mockImplementation((sx: number, sy: number) => ({ x: sx, y: sy }));
     const getScreenPoint = vi
         .fn()
-        .mockImplementation((e: { clientX: number; clientY: number }) => ({ x: e.clientX ?? 0, y: e.clientY ?? 0 }));
+        .mockImplementation((e: { clientX: number; clientY: number }) => ({ x: e.clientX, y: e.clientY }));
     const cssWidth = vi.fn().mockReturnValue(800);
     const cssHeight = vi.fn().mockReturnValue(600);
     const renderScene = vi.fn();

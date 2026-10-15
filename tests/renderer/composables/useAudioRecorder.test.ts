@@ -64,7 +64,7 @@ Object.defineProperty(globalThis.navigator, 'mediaDevices', {
 
 Object.assign(window, {
     electronAPI: {
-        ...(window.electronAPI ?? {}),
+        ...window.electronAPI,
         saveAudioRecording: mockSaveRecording,
         log: { error: mockLogError },
     },

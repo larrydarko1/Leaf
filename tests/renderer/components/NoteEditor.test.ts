@@ -131,7 +131,7 @@ function mountEditor(file: FileInfo | null, workspacePath: string | null = '/vau
 
 Object.assign(window, {
     electronAPI: {
-        ...(window.electronAPI ?? {}),
+        ...window.electronAPI,
         readFile: mockReadFile,
         removeSpeechStatusListener: mockRemoveSpeechStatusListener,
     },

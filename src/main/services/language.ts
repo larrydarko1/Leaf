@@ -112,7 +112,7 @@ function ensureSeeded(): Promise<void> {
 
 async function readLanguages(): Promise<{
     success: boolean;
-    languages?: LanguageInfo[];
+    languages: LanguageInfo[];
     activeId: string;
     localesDir: string;
     error?: IpcErrorCode;

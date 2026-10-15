@@ -204,13 +204,13 @@ export function useCodeEditor(
  */
 async function languageForExtension(ext: string): Promise<Extension | null> {
     const langName = EXT_TO_LANG[ext.toLowerCase()];
-    if (langName === null || langName === undefined || langName.length === 0) return null;
+    if (langName === undefined || langName.length === 0) return null;
 
     const desc =
         languages.find((l): boolean => l.name.toLowerCase() === langName.toLowerCase()) ??
         languages.find((l): boolean => l.alias.some((a): boolean => a.toLowerCase() === langName.toLowerCase()));
 
-    if (desc === null || desc === undefined) return null;
+    if (desc === undefined) return null;
 
     const support = await desc.load();
     return support;

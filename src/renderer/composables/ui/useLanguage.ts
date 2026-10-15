@@ -37,9 +37,9 @@ export function useLanguage(): UseLanguageReturn {
         isLoading.value = true;
         try {
             const result = await window.electronAPI.languageList();
-            if (result.success && result.languages !== undefined) {
+            if (result.success) {
                 languages.value = result.languages;
-                const id = result.activeId ?? 'en';
+                const id = result.activeId;
 
                 // Always keep English loaded as the fallback locale.
                 const fallback = id !== 'en' ? await loadLanguageMessages('en') : null;
