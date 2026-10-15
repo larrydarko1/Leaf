@@ -68,7 +68,7 @@ function makeRenderer(
     const marqueeRect = ref<{ x: number; y: number; width: number; height: number } | null>(null);
 
     function getElementBounds(el: CanvasElement) {
-        return { x: el.x, y: el.y, width: el.width ?? 0, height: el.height ?? 0 };
+        return { x: el.x, y: el.y, width: el.width, height: el.height };
     }
 
     function getHandlePositions(el: CanvasElement) {

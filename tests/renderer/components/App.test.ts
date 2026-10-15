@@ -173,7 +173,7 @@ function findToggle(wrapper: ReturnType<typeof mountApp>, label: string) {
 
 Object.assign(window, {
     electronAPI: {
-        ...(window.electronAPI ?? {}),
+        ...window.electronAPI,
         openExternal: mockOpenExternal,
     },
 });

@@ -45,7 +45,7 @@ class MockAudioWorkletNode extends FakeAudioWorkletNode {
 }
 
 const fakeAudioWorklet = { addModule: vi.fn().mockResolvedValue(undefined) };
-let lastWorkletNode: FakeAudioWorkletNode;
+let lastWorkletNode: FakeAudioWorkletNode | undefined;
 const fakeTrack = { stop: vi.fn() };
 const fakeStream = { getTracks: vi.fn().mockReturnValue([fakeTrack]) };
 const mockGetUserMedia = vi
@@ -267,7 +267,7 @@ describe('stopDictation', () => {
         await toggleDictation();
         const node = lastWorkletNode;
         stopDictation();
-        expect(node.disconnected).toBe(true);
+        expect(node?.disconnected).toBe(true);
     });
 
     it('does nothing when not dictating', () => {

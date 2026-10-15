@@ -109,7 +109,7 @@ describe('FileExplorer', () => {
         await fileItems[0]!.trigger('contextmenu');
         await wrapper.vm.$nextTick();
         const renameItem = [...document.querySelectorAll<HTMLButtonElement>('.context-menu-item')].find((item) =>
-            item.textContent?.toLowerCase().includes('rename'),
+            item.textContent.toLowerCase().includes('rename'),
         );
         expect(renameItem).toBeDefined();
 
@@ -130,7 +130,7 @@ describe('FileExplorer', () => {
         await fileItems[0]!.trigger('contextmenu');
         await wrapper.vm.$nextTick();
         const deleteItem = [...document.querySelectorAll<HTMLButtonElement>('.context-menu-item')].find((item) =>
-            item.textContent?.toLowerCase().includes('delete'),
+            item.textContent.toLowerCase().includes('delete'),
         );
         expect(deleteItem).toBeDefined();
 
