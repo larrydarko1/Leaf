@@ -36,7 +36,7 @@ export function useFolderTree(
         const folderMap = new Map<string, TreeNode>();
 
         // First pass: create folder nodes from explicit folders list
-        if (folders !== null && folders !== undefined) {
+        if (folders !== undefined) {
             folders.forEach((folder): void => {
                 if (!folderMap.has(folder.relativePath)) {
                     folderMap.set(folder.relativePath, {
@@ -126,7 +126,7 @@ export function useFolderTree(
                     if (hasExpandedFolder && node.children !== undefined && Array.isArray(node.children)) {
                         traverse(node.children);
                     }
-                } else if (node.type === 'file' && node.file !== undefined) {
+                } else if (node.file !== undefined) {
                     items.push({ type: 'file', file: node.file });
                 }
             }

@@ -86,20 +86,14 @@ const isRenaming = computed(() => {
     if (props.node.type === 'file') {
         return props.renamingFile?.path === props.node.file?.path;
     }
-    if (props.node.type === 'folder') {
-        return props.renamingFolder === props.node.path;
-    }
-    return false;
+    return props.renamingFolder === props.node.path;
 });
 
 const isSelected = computed(() => {
     if (props.node.type === 'file') {
         return props.selectedFiles.some((file) => file.path === props.node.file?.path);
     }
-    if (props.node.type === 'folder') {
-        return props.selectedFolder === props.node.path;
-    }
-    return false;
+    return props.selectedFolder === props.node.path;
 });
 
 const isActive = computed(() => {

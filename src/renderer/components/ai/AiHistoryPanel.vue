@@ -51,8 +51,8 @@ watch(
     async (id) => {
         if (id !== null && id !== '') {
             await nextTick();
-            renameInputRef.value?.[0]?.focus();
-            renameInputRef.value?.[0]?.select();
+            renameInputRef.value[0]?.focus();
+            renameInputRef.value[0]?.select();
         }
     },
 );

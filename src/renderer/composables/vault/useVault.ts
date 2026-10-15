@@ -79,8 +79,8 @@ export function useVault(): UseVaultReturn {
     // --- Core folder operations ---
     async function scanFolder(): Promise<{ root: string; files: FileInfo[]; folders: FolderInfo[] } | null> {
         const result = await window.electronAPI.scanFolder();
-        if (result.success && result.files != null && result.root != null && result.root !== '') {
-            return { root: result.root, files: result.files, folders: result.folders ?? [] };
+        if (result.success && result.root != null && result.root !== '') {
+            return { root: result.root, files: result.files, folders: result.folders };
         }
         return null;
     }
@@ -139,7 +139,7 @@ export function useVault(): UseVaultReturn {
         const fileName = `note-${timestamp}.md`;
         try {
             const result = await window.electronAPI.createFile(currentFolder.value, fileName);
-            if (result.success && result.path !== null && result.path !== undefined && result.path !== '') {
+            if (result.success && result.path !== undefined && result.path !== '') {
                 await refreshFiles();
                 return files.value.find((f): boolean => f.path === result.path) ?? null;
             }
@@ -159,7 +159,7 @@ export function useVault(): UseVaultReturn {
         const emptyDrawing = JSON.stringify({ version: 1, strokes: [], backgroundColor: '#1a1a1a' }, null, 2);
         try {
             const result = await window.electronAPI.createFile(currentFolder.value, fileName);
-            if (result.success && result.path !== null && result.path !== undefined && result.path !== '') {
+            if (result.success && result.path !== undefined && result.path !== '') {
                 await window.electronAPI.writeFile(result.path, emptyDrawing);
                 await refreshFiles();
                 return files.value.find((f): boolean => f.path === result.path) ?? null;
@@ -197,7 +197,7 @@ export function useVault(): UseVaultReturn {
         const newFileName = newBaseName + extension;
         try {
             const result = await window.electronAPI.renameFile(file.path, newFileName);
-            if (result.success && result.newPath !== null && result.newPath !== undefined && result.newPath !== '') {
+            if (result.success && result.newPath !== undefined && result.newPath !== '') {
                 // Cascade: update ![[embed]] references in all md files
                 if (oldFileName !== newFileName) {
                     window.electronAPI
@@ -221,7 +221,7 @@ export function useVault(): UseVaultReturn {
         const absolutePath = currentFolder.value + '/' + relativePath;
         try {
             const result = await window.electronAPI.renameFolder(absolutePath, newName);
-            if (result.success && result.newPath !== null && result.newPath !== undefined && result.newPath !== '') {
+            if (result.success && result.newPath !== undefined && result.newPath !== '') {
                 await refreshFiles();
                 const parentPath = relativePath.includes('/')
                     ? relativePath.substring(0, relativePath.lastIndexOf('/'))
@@ -283,12 +283,7 @@ export function useVault(): UseVaultReturn {
             const name = path.split('/').pop() ?? path;
             try {
                 const result = await window.electronAPI.moveFile(path, absoluteTarget);
-                if (
-                    result.success &&
-                    result.newPath !== null &&
-                    result.newPath !== undefined &&
-                    result.newPath !== ''
-                ) {
+                if (result.success && result.newPath !== undefined && result.newPath !== '') {
                     movedFiles.push({ from: path, to: result.newPath });
                 } else if (result.error !== undefined && result.error !== 'NOT_FOUND') {
                     notify.error(t('errors.move_file_failed', { name, reason: formatIpcError(t, result.error) }));

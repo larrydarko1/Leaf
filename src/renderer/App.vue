@@ -134,7 +134,7 @@ function handleFileSave(): void {
     // Mark the active tab as saved
     if (activeFile.value !== null) {
         const tab = editorTabs.tabs.value.find((t) => t.file.path === activeFile.value?.path);
-        if (tab !== null && tab !== undefined && tab.content !== null) {
+        if (tab !== undefined && tab.content !== null) {
             editorTabs.markTabSaved(activeFile.value.path, tab.content);
         }
     }
@@ -144,7 +144,7 @@ function handleFileSave(): void {
 function handleContentChanged(hasChanges: boolean): void {
     if (activeFile.value !== null) {
         const tab = editorTabs.tabs.value.find((t) => t.file.path === activeFile.value?.path);
-        if (tab !== null && tab !== undefined) tab.hasUnsavedChanges = hasChanges;
+        if (tab !== undefined) tab.hasUnsavedChanges = hasChanges;
     }
 }
 

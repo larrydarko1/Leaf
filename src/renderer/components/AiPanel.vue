@@ -122,7 +122,7 @@ const availableContextFiles = computed(() =>
 );
 
 const tokenUsagePercent = computed(() => {
-    if (status.value.contextSize === 0 || status.value.contextSize === undefined) return 0;
+    if (status.value.contextSize === 0) return 0;
     return Math.min(100, Math.round((conversationTokenCount.value / status.value.contextSize) * 100));
 });
 

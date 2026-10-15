@@ -74,10 +74,10 @@ export function useEditorDrop({
         // Internal drag from FileExplorer (text/plain with "file:" prefix).
         // Native OS file drops carry no usable path and are ignored.
         const plainData = event.dataTransfer?.getData('text/plain');
-        if (plainData !== null && plainData !== undefined && plainData.length > 0 && plainData.startsWith('file:')) {
+        if (plainData !== undefined && plainData.length > 0 && plainData.startsWith('file:')) {
             const filePath = plainData.substring(5);
             const fileName = filePath.split('/').pop();
-            if (fileName !== null && fileName !== undefined && fileName.length > 0 && isEmbeddableFile(fileName)) {
+            if (fileName !== undefined && fileName.length > 0 && isEmbeddableFile(fileName)) {
                 embedTexts.push(`![[${fileName}]]`);
             }
         }
@@ -111,7 +111,7 @@ export function useEditorDrop({
             cmView.focus();
         } else {
             const textarea = textareaRef.value;
-            if (textarea !== null && (!showPreview.value || !isMarkdownFile.value)) {
+            if (textarea !== null && !showPreview.value) {
                 const start = textarea.selectionStart;
                 const end = textarea.selectionEnd;
                 const before = content.value.substring(0, start);

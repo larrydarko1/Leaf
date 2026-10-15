@@ -114,7 +114,7 @@ export function useEditorTabs(): UseEditorTabsReturn {
                     content: null,
                     savedContent: null,
                     hasUnsavedChanges: false,
-                    scrollTop: persisted.scrollTop ?? 0,
+                    scrollTop: persisted.scrollTop,
                 });
             }
         }
@@ -123,8 +123,7 @@ export function useEditorTabs(): UseEditorTabsReturn {
 
         tabs.value = restoredTabs;
         // Clamp activeIndex to valid range
-        const savedIndex = data.activeIndex ?? 0;
-        activeIndex.value = Math.max(0, Math.min(savedIndex, restoredTabs.length - 1));
+        activeIndex.value = Math.max(0, Math.min(data.activeIndex, restoredTabs.length - 1));
 
         // Re-persist in case some tabs were pruned
         persistTabs();

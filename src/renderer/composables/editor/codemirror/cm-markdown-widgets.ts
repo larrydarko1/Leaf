@@ -161,7 +161,7 @@ export function createMarkdownWidgetsPlugin(
 /** Walk out from `pos` looking for an http(s) link the click should open externally. */
 function findExternalUrlAt(view: EditorView, pos: number): string | null {
     let node = syntaxTree(view.state).resolveInner(pos, 1);
-    for (let depth = 0; depth < 10 && node != null; depth++) {
+    for (let depth = 0; depth < 10; depth++) {
         if (node.name === 'Link') {
             const text = view.state.doc.sliceString(node.from, node.to);
             const linkMatch = text.match(/\]\(([^)]+)\)$/);

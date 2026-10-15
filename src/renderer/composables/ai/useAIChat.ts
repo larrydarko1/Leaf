@@ -108,7 +108,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions): UseAIChatRe
     async function readFileForContext(file: FileInfo): Promise<string | null> {
         try {
             const result = await window.electronAPI.readFile(file.path);
-            if (result.success && result.content !== null && result.content !== undefined) return result.content;
+            if (result.success && result.content !== undefined) return result.content;
         } catch (error) {
             window.electronAPI.log.error('Failed to read file for context:', error);
         }
@@ -227,7 +227,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions): UseAIChatRe
     function startEditMessage(index: number): void {
         if (messages.value[index]?.role !== 'user') return;
         editingIndex.value = index;
-        editContent.value = messages.value[index]?.content ?? '';
+        editContent.value = messages.value[index].content;
         void nextTick((): void => editInputRef.value?.[0]?.focus());
     }
 
@@ -381,7 +381,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions): UseAIChatRe
                     content: assistantMsg.content,
                 });
             }
-            if (result !== null && result !== undefined && result.compacted === true) {
+            if (result.compacted === true) {
                 messages.value.push({
                     role: 'system',
                     content:

@@ -127,7 +127,7 @@ watch(
     async (index) => {
         if (index !== null) {
             await nextTick();
-            editInputRef.value?.[0]?.focus();
+            editInputRef.value[0]?.focus();
         }
     },
 );

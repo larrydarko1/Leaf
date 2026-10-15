@@ -140,14 +140,9 @@ function handleKeyDown(e: KeyboardEvent): void {
     // Select the new item
     const newItem = items[newIndex];
     if (newItem === undefined) return;
-    if (newItem.type === 'file' && newItem.file !== null && newItem.file !== undefined) {
+    if (newItem.type === 'file' && newItem.file !== undefined) {
         emit('selectFile', newItem.file);
-    } else if (
-        newItem.type === 'folder' &&
-        newItem.folderPath !== null &&
-        newItem.folderPath !== undefined &&
-        newItem.folderPath !== ''
-    ) {
+    } else if (newItem.type === 'folder' && newItem.folderPath !== undefined && newItem.folderPath !== '') {
         emit('selectFolder', newItem.folderPath);
     }
 }
@@ -187,7 +182,7 @@ function handleContextMenuAction(action: string): void {
     } else if (action === 'rename') {
         if (type === 'folder') {
             emit('startRenameFolder', targetPath);
-        } else if (type === 'file') {
+        } else {
             const file = props.files.find((f) => f.path === targetPath);
             if (file !== undefined) {
                 emit('startRenameFile', file);
@@ -196,7 +191,7 @@ function handleContextMenuAction(action: string): void {
     } else if (action === 'delete') {
         if (type === 'folder') {
             emit('deleteFolder', targetPath);
-        } else if (type === 'file') {
+        } else {
             const file = props.files.find((f) => f.path === targetPath);
             if (file !== undefined) {
                 emit('deleteFile', file);
