@@ -183,7 +183,7 @@ async function getModelLoadOptions(modelPath: string): Promise<{ gpuLayers?: num
     try {
         const { readGgufFileInfo } = await import('node-llama-cpp');
         const info = await readGgufFileInfo(modelPath);
-        const arch = info.metadata?.['general']?.['architecture'] as string | undefined;
+        const arch = info.metadata['general']['architecture'] as string | undefined;
         if (arch != null && arch !== '' && CPU_ONLY_ARCHITECTURES.has(arch.toLowerCase())) {
             log.info('[ai] Architecture requires CPU-only inference — disabling GPU layers', { arch });
             return { gpuLayers: 0 };
@@ -259,9 +259,7 @@ async function unloadModel(): Promise<AiSimpleResult> {
         pendingConversationHistory = null;
         trackedMessages = [];
 
-        if (global.gc !== null && global.gc !== undefined) {
-            global.gc();
-        }
+        global.gc?.();
 
         return { success: true };
     } catch (error) {
@@ -339,9 +337,9 @@ async function chat(
 
         let compacted = false;
         try {
-            const seq: LlamaContextSequence | undefined = session.sequence;
-            const usage = seq !== undefined ? seq.nextTokenIndex / seq.contextSize : 0;
-            if (seq !== undefined && usage >= COMPACTION_THRESHOLD) {
+            const seq = session.sequence;
+            const usage = seq.nextTokenIndex / seq.contextSize;
+            if (usage >= COMPACTION_THRESHOLD) {
                 log.info('Context usage high — auto-compacting', { usagePercent: Math.round(usage * 100) });
                 pendingConversationHistory = [...trackedMessages];
                 session = await startCompactedSession(seq);
@@ -449,11 +447,9 @@ function getStatus(): AiStatus {
 
     if (isModelLoaded && session !== null) {
         try {
-            const seq: LlamaContextSequence | undefined = session.sequence;
-            if (seq !== undefined) {
-                contextTokens = seq.nextTokenIndex;
-                contextSize = seq.contextSize;
-            }
+            const seq = session.sequence;
+            contextTokens = seq.nextTokenIndex;
+            contextSize = seq.contextSize;
         } catch {
             /* sequence may not be available yet */
         }

@@ -133,7 +133,7 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
                     : { defaultPath: path.resolve(vaultRoot ?? app.getPath('home'), requested) }),
                 ...(filters === undefined ? {} : { filters }),
             });
-            if (result.canceled || result.filePath === undefined || result.filePath === '') return null;
+            if (result.canceled || result.filePath === '') return null;
             authorizedWritePaths.add(path.resolve(result.filePath));
             return result.filePath;
         },
@@ -181,7 +181,7 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
         }
         if (!existsSync(root)) return { success: false, error: 'NOT_FOUND' };
         try {
-            if (folderWatcher !== null && folderWatcher !== undefined) {
+            if (folderWatcher !== null) {
                 folderWatcher.close();
                 folderWatcher = null;
             }

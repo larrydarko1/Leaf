@@ -65,8 +65,9 @@ export function migrateLegacyPaths(): void {
 export function getBundledPromptsDir(): string {
     const devPath = path.join(import.meta.dirname, '../../assets/prompts');
 
-    if (process.resourcesPath != null) {
-        const prodPath = path.join(process.resourcesPath, 'assets/prompts');
+    const resources = resourcesPath();
+    if (resources !== undefined) {
+        const prodPath = path.join(resources, 'assets/prompts');
         if (fs.existsSync(prodPath)) return prodPath;
     }
 
@@ -81,8 +82,9 @@ export function getBundledPromptsDir(): string {
 export function getBundledThemesDir(): string {
     const devPath = path.join(import.meta.dirname, '../../assets/themes');
 
-    if (process.resourcesPath != null) {
-        const prodPath = path.join(process.resourcesPath, 'assets/themes');
+    const resources = resourcesPath();
+    if (resources !== undefined) {
+        const prodPath = path.join(resources, 'assets/themes');
         if (fs.existsSync(prodPath)) return prodPath;
     }
 
@@ -97,8 +99,9 @@ export function getBundledThemesDir(): string {
 export function getBundledLocalesDir(): string {
     const devPath = path.join(import.meta.dirname, '../../assets/locales');
 
-    if (process.resourcesPath != null) {
-        const prodPath = path.join(process.resourcesPath, 'assets/locales');
+    const resources = resourcesPath();
+    if (resources !== undefined) {
+        const prodPath = path.join(resources, 'assets/locales');
         if (fs.existsSync(prodPath)) return prodPath;
     }
 
@@ -116,8 +119,9 @@ export function getBundledLocalesDir(): string {
 export function getWhisperModelDir(): string {
     const devPath = path.join(import.meta.dirname, '../../models/whisper');
 
-    if (process.resourcesPath != null) {
-        const prodPath = path.join(process.resourcesPath, 'models/whisper');
+    const resources = resourcesPath();
+    if (resources !== undefined) {
+        const prodPath = path.join(resources, 'models/whisper');
         if (fs.existsSync(prodPath)) {
             log.info('[paths] Whisper model → production:', prodPath);
             return prodPath;
@@ -127,4 +131,12 @@ export function getWhisperModelDir(): string {
 
     log.info('[paths] Whisper model → dev:', devPath);
     return devPath;
+}
+
+/**
+ * Electron's resources directory. Electron types it as always set, but this module is pure Node
+ * and also runs without Electron (under Vitest), where it is undefined.
+ */
+function resourcesPath(): string | undefined {
+    return process.resourcesPath;
 }
