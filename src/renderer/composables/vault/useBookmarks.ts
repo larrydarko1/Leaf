@@ -18,7 +18,7 @@ export function useBookmarks(_getCurrentFolder: () => string | null): UseBookmar
     async function load(): Promise<void> {
         try {
             const result = await window.electronAPI.bookmarksLoad();
-            bookmarkedFiles.value = result.success === true && result.bookmarks !== undefined ? result.bookmarks : [];
+            bookmarkedFiles.value = result.success && result.bookmarks !== undefined ? result.bookmarks : [];
         } catch {
             bookmarkedFiles.value = [];
         }

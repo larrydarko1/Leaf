@@ -281,17 +281,12 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions): UseAIChatRe
         const noteContext = await collectNoteContext();
         try {
             const result = await window.electronAPI.aiChat(msg.content, noteContext);
-            if (result.success === false) {
+            if (!result.success) {
                 const lastMsg = messages.value[messages.value.length - 1];
-                if (lastMsg !== undefined && lastMsg.role === 'assistant')
-                    lastMsg.content = formatChatFailure(result.error);
+                if (lastMsg?.role === 'assistant') lastMsg.content = formatChatFailure(result.error);
             }
             const assistantMsg = messages.value[messages.value.length - 1];
-            if (
-                currentConversationId.value !== null &&
-                assistantMsg !== undefined &&
-                assistantMsg.role === 'assistant'
-            ) {
+            if (currentConversationId.value !== null && assistantMsg?.role === 'assistant') {
                 await window.electronAPI.conversationAddMessage(currentConversationId.value, {
                     role: 'assistant',
                     content: assistantMsg.content,
@@ -300,7 +295,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions): UseAIChatRe
         } catch (error) {
             window.electronAPI.log.error('Chat request failed:', error);
             const lastMsg = messages.value[messages.value.length - 1];
-            if (lastMsg !== undefined && lastMsg.role === 'assistant') lastMsg.content = formatChatFailure('UNKNOWN');
+            if (lastMsg?.role === 'assistant') lastMsg.content = formatChatFailure('UNKNOWN');
         } finally {
             isStreaming.value = false;
             userScrolledUp.value = false;
@@ -345,7 +340,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions): UseAIChatRe
 
     async function sendMessage(): Promise<void> {
         const text = inputMessage.value.trim();
-        if (text.length === 0 || isReady.value === false || isAnyGenerating.value === true) return;
+        if (text.length === 0 || !isReady.value || isAnyGenerating.value) return;
         if (currentConversationId.value === null) await createNewConversation();
         const userMsg: ChatMessage = { role: 'user', content: text };
         messages.value.push(userMsg);
@@ -365,17 +360,12 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions): UseAIChatRe
 
         try {
             const result = await window.electronAPI.aiChat(text, noteContext);
-            if (result.success === false) {
+            if (!result.success) {
                 const lastMsg = messages.value[messages.value.length - 1];
-                if (lastMsg !== undefined && lastMsg.role === 'assistant')
-                    lastMsg.content = formatChatFailure(result.error);
+                if (lastMsg?.role === 'assistant') lastMsg.content = formatChatFailure(result.error);
             }
             const assistantMsg = messages.value[messages.value.length - 1];
-            if (
-                currentConversationId.value !== null &&
-                assistantMsg !== undefined &&
-                assistantMsg.role === 'assistant'
-            ) {
+            if (currentConversationId.value !== null && assistantMsg?.role === 'assistant') {
                 await window.electronAPI.conversationAddMessage(currentConversationId.value, {
                     role: 'assistant',
                     content: assistantMsg.content,
@@ -391,7 +381,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions): UseAIChatRe
         } catch (error) {
             window.electronAPI.log.error('Chat request failed:', error);
             const lastMsg = messages.value[messages.value.length - 1];
-            if (lastMsg !== undefined && lastMsg.role === 'assistant') lastMsg.content = formatChatFailure('UNKNOWN');
+            if (lastMsg?.role === 'assistant') lastMsg.content = formatChatFailure('UNKNOWN');
         } finally {
             isStreaming.value = false;
             userScrolledUp.value = false;
@@ -421,7 +411,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions): UseAIChatRe
 
     function handleToken(token: string): void {
         const lastMsg = messages.value[messages.value.length - 1];
-        if (lastMsg !== undefined && lastMsg.role === 'assistant') {
+        if (lastMsg?.role === 'assistant') {
             lastMsg.content += token;
             scrollToBottom();
         }
@@ -429,7 +419,7 @@ export function useAIChat(deps: AiChatDeps, actions: AiChatActions): UseAIChatRe
 
     function handleThinkingToken(token: string): void {
         const lastMsg = messages.value[messages.value.length - 1];
-        if (lastMsg !== undefined && lastMsg.role === 'assistant') {
+        if (lastMsg?.role === 'assistant') {
             lastMsg.thinking = (lastMsg.thinking ?? '') + token;
             scrollToBottom();
         }

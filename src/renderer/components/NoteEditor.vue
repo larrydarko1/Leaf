@@ -195,7 +195,7 @@ async function reloadContent(): Promise<void> {
 
 // Keyboard shortcuts
 function handleKeyboard(e: KeyboardEvent): void {
-    if ((e.metaKey === true || e.ctrlKey === true) && e.key === 's') {
+    if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault();
         void saveFile();
     }
@@ -262,12 +262,7 @@ watch(
         if (newFile !== null) {
             const ext = newFile.extension.toLowerCase();
 
-            if (
-                checkImage(ext) === true ||
-                checkVideo(ext) === true ||
-                checkAudio(ext) === true ||
-                checkPdf(ext) === true
-            ) {
+            if (checkImage(ext) || checkVideo(ext) || checkAudio(ext) || checkPdf(ext)) {
                 // Media file: clear text state (sub-components handle their own loading)
                 content.value = '';
                 originalContent.value = '';
@@ -294,7 +289,7 @@ onMounted(() => {
 onUnmounted(() => {
     clearAutoSaveTimeout();
     debouncedEmitContentChanged.cancel();
-    if (isDictating.value === true) {
+    if (isDictating.value) {
         stopDictation();
     }
     window.electronAPI.removeSpeechStatusListener();

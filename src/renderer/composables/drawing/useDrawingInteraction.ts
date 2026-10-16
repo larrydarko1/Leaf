@@ -395,7 +395,7 @@ export function useDrawingInteraction({
 
             case 'freedraw': {
                 const creating = creatingElement.value;
-                if (creating === null || creating.points === undefined) break;
+                if (creating?.points === undefined) break;
                 const relX = worldPt.x - creating.x;
                 const relY = worldPt.y - creating.y;
                 creating.points.push({ x: relX, y: relY });
@@ -494,7 +494,7 @@ export function useDrawingInteraction({
 
             case 'freedraw': {
                 const creating = creatingElement.value;
-                if (creating === null || creating.points === undefined || creating.points.length < 2) {
+                if (creating?.points === undefined || creating.points.length < 2) {
                     creatingElement.value = null;
                     break;
                 }

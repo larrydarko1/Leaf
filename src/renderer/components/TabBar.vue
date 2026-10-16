@@ -10,7 +10,7 @@ type Props = {
     activeIndex: number;
 };
 
-const props = defineProps<Props>();
+defineProps<Props>();
 
 const emit = defineEmits<{
     switch: [index: number];
@@ -68,8 +68,6 @@ function onDragEnd(): void {
     dragStartIndex.value = -1;
     dragOverIndex.value = -1;
 }
-
-void props;
 
 dragGhost.src = TRANSPARENT_GIF;
 </script>

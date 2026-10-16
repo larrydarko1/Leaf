@@ -179,7 +179,7 @@ function readSupportedLanguages(): Set<string> | null {
 
 async function resolveLanguage(float32Audio: Float32Array): Promise<string | null> {
     const declared = (await findActiveDictationLanguage())?.toLowerCase() ?? null;
-    if (declared !== null && supportedLanguages !== null && supportedLanguages.has(declared)) {
+    if (declared !== null && supportedLanguages?.has(declared) === true) {
         return declared;
     }
     if (sessionLanguage !== null) return sessionLanguage;

@@ -211,7 +211,7 @@ export function useCanvasRenderer({
                 const cornerRadius = Math.min(br, maxR);
                 ctx.beginPath();
                 ctx.roundRect(rx, ry, rw, rh, cornerRadius);
-                if (hasFill === true) ctx.fill();
+                if (hasFill) ctx.fill();
                 ctx.stroke();
                 break;
             }
@@ -222,7 +222,7 @@ export function useCanvasRenderer({
                 const rry = Math.abs(el.height) / 2;
                 ctx.beginPath();
                 ctx.ellipse(cx, cy, Math.max(0.1, rrx), Math.max(0.1, rry), 0, 0, Math.PI * 2);
-                if (hasFill === true) ctx.fill();
+                if (hasFill) ctx.fill();
                 ctx.stroke();
                 break;
             }
@@ -250,7 +250,7 @@ export function useCanvasRenderer({
                     ctx.lineTo(dcx - dhw, dcy);
                     ctx.closePath();
                 }
-                if (hasFill === true) ctx.fill();
+                if (hasFill) ctx.fill();
                 ctx.stroke();
                 break;
             }
@@ -276,7 +276,7 @@ export function useCanvasRenderer({
                     ctx.lineTo(tx, ty + th);
                     ctx.closePath();
                 }
-                if (hasFill === true) ctx.fill();
+                if (hasFill) ctx.fill();
                 ctx.stroke();
                 break;
             }
@@ -351,12 +351,12 @@ export function useCanvasRenderer({
                 ctx.scale(dsx, dsy);
                 ctx.lineWidth = el.strokeWidth / Math.sqrt(dsx * dsy);
                 const dbBodyPath = new Path2D('M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5');
-                if (hasFill === true) ctx.fill(dbBodyPath);
+                if (hasFill) ctx.fill(dbBodyPath);
                 ctx.stroke(dbBodyPath);
                 ctx.stroke(new Path2D('M3 12c0 1.66 4 3 9 3s9-1.34 9-3'));
                 const dbTopPath = new Path2D();
                 dbTopPath.ellipse(12, 5, 9, 3, 0, 0, Math.PI * 2);
-                if (hasFill === true) ctx.fill(dbTopPath);
+                if (hasFill) ctx.fill(dbTopPath);
                 ctx.stroke(dbTopPath);
                 ctx.restore();
                 break;
@@ -374,11 +374,11 @@ export function useCanvasRenderer({
                 ctx.lineWidth = el.strokeWidth / Math.sqrt(svrSX * svrSY);
                 ctx.beginPath();
                 ctx.roundRect(2, 2, 20, 8, 2);
-                if (hasFill === true) ctx.fill();
+                if (hasFill) ctx.fill();
                 ctx.stroke();
                 ctx.beginPath();
                 ctx.roundRect(2, 14, 20, 8, 2);
-                if (hasFill === true) ctx.fill();
+                if (hasFill) ctx.fill();
                 ctx.stroke();
                 ctx.beginPath();
                 ctx.arc(6, 6, 1, 0, Math.PI * 2);
@@ -403,7 +403,7 @@ export function useCanvasRenderer({
                 ctx.lineWidth = el.strokeWidth / Math.sqrt(usx * usy);
                 ctx.beginPath();
                 ctx.arc(12, 8, 5, 0, Math.PI * 2);
-                if (hasFill === true) ctx.fill();
+                if (hasFill) ctx.fill();
                 ctx.stroke();
                 ctx.stroke(new Path2D('M3 21c0-4.42 4-8 9-8s9 3.58 9 8'));
                 ctx.restore();
@@ -421,7 +421,7 @@ export function useCanvasRenderer({
                 ctx.scale(clsx, clsy);
                 ctx.lineWidth = el.strokeWidth / Math.sqrt(clsx * clsy);
                 const cloudPath = new Path2D('M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z');
-                if (hasFill === true) ctx.fill(cloudPath);
+                if (hasFill) ctx.fill(cloudPath);
                 ctx.stroke(cloudPath);
                 ctx.restore();
                 break;
@@ -438,7 +438,7 @@ export function useCanvasRenderer({
                 ctx.scale(ddsx, ddsy);
                 ctx.lineWidth = el.strokeWidth / Math.sqrt(ddsx * ddsy);
                 const pagePath = new Path2D('M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z');
-                if (hasFill === true) ctx.fill(pagePath);
+                if (hasFill) ctx.fill(pagePath);
                 ctx.stroke(pagePath);
                 ctx.stroke(new Path2D('M14 2 L14 8 L20 8'));
                 ctx.stroke(new Path2D('M8 13 L16 13'));
@@ -458,7 +458,7 @@ export function useCanvasRenderer({
                 ctx.scale(hsx, hsy);
                 ctx.lineWidth = el.strokeWidth / Math.sqrt(hsx * hsy);
                 const hexPath = new Path2D('M12 2 L22 7 L22 17 L12 22 L2 17 L2 7 Z');
-                if (hasFill === true) ctx.fill(hexPath);
+                if (hasFill) ctx.fill(hexPath);
                 ctx.stroke(hexPath);
                 ctx.restore();
                 break;
@@ -475,7 +475,7 @@ export function useCanvasRenderer({
                 ctx.scale(psx, psy);
                 ctx.lineWidth = el.strokeWidth / Math.sqrt(psx * psy);
                 const paraPath = new Path2D('M6 4 L22 4 L18 20 L2 20 Z');
-                if (hasFill === true) ctx.fill(paraPath);
+                if (hasFill) ctx.fill(paraPath);
                 ctx.stroke(paraPath);
                 ctx.restore();
                 break;
@@ -494,7 +494,7 @@ export function useCanvasRenderer({
                 const starPath = new Path2D(
                     'M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z',
                 );
-                if (hasFill === true) ctx.fill(starPath);
+                if (hasFill) ctx.fill(starPath);
                 ctx.stroke(starPath);
                 ctx.restore();
                 break;
@@ -569,7 +569,7 @@ export function useCanvasRenderer({
         ctx.setLineDash([6 / zoom.value, 4 / zoom.value]);
         ctx.strokeRect(bounds.x - pad, bounds.y - pad, bounds.width + pad * 2, bounds.height + pad * 2);
         ctx.setLineDash([]);
-        if (showHandles === true) {
+        if (showHandles) {
             const handles = getHandlePositions(el);
             const hs = HANDLE_SIZE / zoom.value;
             for (const pos of Object.values(handles)) {
@@ -637,7 +637,7 @@ export function useCanvasRenderer({
         if (offCtx === null) return Promise.resolve(null);
 
         // Background
-        if (opts.withBackground === true) {
+        if (opts.withBackground) {
             offCtx.fillStyle = getCSSVariable('--base1');
             offCtx.fillRect(0, 0, width, height);
         }

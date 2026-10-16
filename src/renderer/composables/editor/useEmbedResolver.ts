@@ -66,7 +66,7 @@ export function useEmbedResolver(
         for (const entry of results) {
             if (
                 entry !== null &&
-                entry.result.success === true &&
+                entry.result.success &&
                 typeof entry.result.path === 'string' &&
                 entry.result.path !== ''
             ) {

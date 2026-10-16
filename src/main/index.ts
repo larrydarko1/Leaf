@@ -108,7 +108,7 @@ function createWindow(): void {
     // Load the app, electron-vite sets the renderer URL in dev mode
     if (config.rendererUrl !== '') {
         void mainWindow.loadURL(config.rendererUrl);
-        void mainWindow.webContents.openDevTools();
+        mainWindow.webContents.openDevTools();
     } else {
         void mainWindow.loadFile(path.join(import.meta.dirname, '../renderer/index.html'));
     }

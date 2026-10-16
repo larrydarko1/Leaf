@@ -144,12 +144,12 @@ function parseFrontmatter(content: string): {
     meta: { name?: string; description?: string };
     body: string;
 } {
-    const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+    const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/.exec(content);
     if (match === null) return { meta: {}, body: content };
 
     const meta: Record<string, string> = {};
     for (const line of (match[1] ?? '').split(/\r?\n/)) {
-        const keyValue = line.match(/^([A-Za-z][A-Za-z0-9_-]*)\s*:\s*(.*)$/);
+        const keyValue = /^([A-Za-z][A-Za-z0-9_-]*)\s*:\s*(.*)$/.exec(line);
         if (keyValue === null) continue;
         let value = (keyValue[2] ?? '').trim();
         if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {

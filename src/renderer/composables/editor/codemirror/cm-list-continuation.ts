@@ -74,7 +74,7 @@ function continueMarkdownList(view: EditorView): boolean {
     const textBeforeCursor = lineText.substring(0, posInLine);
 
     // Bullet list: "  - content" or "  - [ ] content" or "  - [x] content" or "  - [/] content"
-    const bulletMatch = textBeforeCursor.match(/^(\s*)- (\[[ x/]\] )?(.*)$/i);
+    const bulletMatch = /^(\s*)- (\[[ x/]\] )?(.*)$/i.exec(textBeforeCursor);
     if (bulletMatch != null) {
         const indent = bulletMatch[1] ?? '';
         const checkbox = bulletMatch[2] ?? '';
@@ -101,7 +101,7 @@ function continueMarkdownList(view: EditorView): boolean {
     }
 
     // Ordered list: "  1. content"
-    const orderedMatch = textBeforeCursor.match(/^(\s*)(\d+)\. (.*)$/);
+    const orderedMatch = /^(\s*)(\d+)\. (.*)$/.exec(textBeforeCursor);
     if (orderedMatch != null) {
         const indent = orderedMatch[1] ?? '';
         const num = parseInt(orderedMatch[2] ?? '');

@@ -174,7 +174,7 @@ export class EmbedWidget extends WidgetType {
                 img.alt = this.fileName;
                 img.className = 'cm-embed-image';
                 img.loading = 'lazy';
-                const dimMatch = this.displayOptions !== '' ? this.displayOptions.match(/^(\d+)(?:x(\d+))?$/) : null;
+                const dimMatch = this.displayOptions !== '' ? /^(\d+)(?:x(\d+))?$/.exec(this.displayOptions) : null;
                 if (dimMatch !== null) {
                     img.width = parseInt(dimMatch[1] ?? '');
                     if (dimMatch[2] !== undefined) img.height = parseInt(dimMatch[2]);
@@ -305,12 +305,12 @@ export class EmbedWidget extends WidgetType {
                 playBtn.onclick = (e): void => {
                     e.stopPropagation();
                     if (media.paused) void media.play();
-                    else void media.pause();
+                    else media.pause();
                 };
                 if (isVideo)
                     media.onclick = (): void => {
                         if (media.paused) void media.play();
-                        else void media.pause();
+                        else media.pause();
                     };
 
                 // Seek handler — uses realDuration from closure (set by probe)

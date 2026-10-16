@@ -23,7 +23,7 @@ type Props = {
     isAnyGenerating: boolean;
 };
 
-const props = defineProps<Props>();
+defineProps<Props>();
 
 const emit = defineEmits<{
     'select-model': [model: AiModelInfo];
@@ -115,8 +115,6 @@ function handleRefresh(): void {
 function truncate(str: string, len: number): string {
     return str.length > len ? `${str.slice(0, len)}…` : str;
 }
-
-void props;
 
 onMounted(() => {
     document.addEventListener('click', handleClickOutside);
