@@ -108,10 +108,9 @@ describe('MarkdownToolbar', () => {
     it('emits heading event when heading select changes', async () => {
         const w = mount();
         const select = w.find('select[aria-label*="eading"], select[aria-label*="Heading"]');
-        if (select.exists()) {
-            await select.trigger('change');
-            expect(w.emitted('heading')).toBeDefined();
-        }
+        expect(select.exists()).toBe(true);
+        await select.trigger('change');
+        expect(w.emitted('heading')).toBeDefined();
         w.unmount();
     });
 

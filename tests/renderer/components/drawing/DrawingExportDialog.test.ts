@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { assert, describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import DrawingExportDialog from '@/renderer/components/drawing/DrawingExportDialog.vue';
 import type { CanvasElement } from '@/schemas/drawing';
@@ -148,12 +148,11 @@ describe('DrawingExportDialog', () => {
         vi.clearAllMocks();
         mockExportToBlob.mockResolvedValue(new Blob(['new'], { type: 'image/png' }));
         const checkbox = document.querySelector<HTMLInputElement>('input[type="checkbox"]');
-        if (checkbox !== null) {
-            checkbox.click();
-            await new Promise((r) => setTimeout(r, 0));
-            await wrapper.vm.$nextTick();
-            expect(vi.mocked(URL.revokeObjectURL)).toHaveBeenCalledWith('blob:fake-url');
-        }
+        assert.isNotNull(checkbox);
+        checkbox.click();
+        await new Promise((r) => setTimeout(r, 0));
+        await wrapper.vm.$nextTick();
+        expect(vi.mocked(URL.revokeObjectURL)).toHaveBeenCalledWith('blob:fake-url');
         wrapper.unmount();
     });
 

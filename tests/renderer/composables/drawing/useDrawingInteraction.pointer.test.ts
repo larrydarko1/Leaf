@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { assert, describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref, computed } from 'vue';
 
 import { useDrawingInteraction } from '@/renderer/composables/drawing/useDrawingInteraction';
@@ -578,10 +578,9 @@ describe('onPointerUp: create', () => {
         ctx.onPointerMove(ptr({ clientX: 0, clientY: 0, type: 'pointermove' }));
         ctx.onPointerUp(ptr({ type: 'pointerup' }));
         const el = ctx.elements.value[0];
-        if (el !== undefined) {
-            expect(el.width).toBeGreaterThan(0);
-            expect(el.height).toBeGreaterThan(0);
-        }
+        assert.isDefined(el);
+        expect(el.width).toBeGreaterThan(0);
+        expect(el.height).toBeGreaterThan(0);
     });
 
     it('does not normalize negative dims for line elements', () => {

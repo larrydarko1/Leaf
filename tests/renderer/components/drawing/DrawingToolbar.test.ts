@@ -30,10 +30,9 @@ describe('DrawingToolbar', () => {
             props: { currentTool: 'hand' },
         });
         const selectBtn = wrapper.find('button[aria-label*="Selection tool"]');
-        if (selectBtn.exists()) {
-            await selectBtn.trigger('click');
-            expect(wrapper.emitted('selectTool')?.[0]?.[0]).toBe('select');
-        }
+        expect(selectBtn.exists()).toBe(true);
+        await selectBtn.trigger('click');
+        expect(wrapper.emitted('selectTool')?.[0]?.[0]).toBe('select');
         wrapper.unmount();
     });
 
@@ -42,10 +41,9 @@ describe('DrawingToolbar', () => {
             props: { currentTool: 'select' },
         });
         const handBtn = wrapper.find('button[aria-label*="Hand"]');
-        if (handBtn.exists()) {
-            await handBtn.trigger('click');
-            expect(wrapper.emitted('selectTool')?.[0]?.[0]).toBe('hand');
-        }
+        expect(handBtn.exists()).toBe(true);
+        await handBtn.trigger('click');
+        expect(wrapper.emitted('selectTool')?.[0]?.[0]).toBe('hand');
         wrapper.unmount();
     });
 
@@ -54,10 +52,9 @@ describe('DrawingToolbar', () => {
             props: { currentTool: 'select' },
         });
         const btn = wrapper.find('button[aria-label*="Rectangle"]');
-        if (btn.exists()) {
-            await btn.trigger('click');
-            expect(wrapper.emitted('selectTool')?.[0]?.[0]).toBe('rectangle');
-        }
+        expect(btn.exists()).toBe(true);
+        await btn.trigger('click');
+        expect(wrapper.emitted('selectTool')?.[0]?.[0]).toBe('rectangle');
         wrapper.unmount();
     });
 
@@ -66,10 +63,9 @@ describe('DrawingToolbar', () => {
             props: { currentTool: 'select' },
         });
         const btn = wrapper.find('button[aria-label*="Diamond"]');
-        if (btn.exists()) {
-            await btn.trigger('click');
-            expect(wrapper.emitted('selectTool')?.[0]?.[0]).toBe('diamond');
-        }
+        expect(btn.exists()).toBe(true);
+        await btn.trigger('click');
+        expect(wrapper.emitted('selectTool')?.[0]?.[0]).toBe('diamond');
         wrapper.unmount();
     });
 
@@ -78,10 +74,9 @@ describe('DrawingToolbar', () => {
             props: { currentTool: 'select' },
         });
         const btn = wrapper.find('button[aria-label*="Ellipse"]');
-        if (btn.exists()) {
-            await btn.trigger('click');
-            expect(wrapper.emitted('selectTool')?.[0]?.[0]).toBe('ellipse');
-        }
+        expect(btn.exists()).toBe(true);
+        await btn.trigger('click');
+        expect(wrapper.emitted('selectTool')?.[0]?.[0]).toBe('ellipse');
         wrapper.unmount();
     });
 
@@ -90,10 +85,9 @@ describe('DrawingToolbar', () => {
             props: { currentTool: 'select' },
         });
         const btn = wrapper.find('button[aria-label*="Line tool"]');
-        if (btn.exists()) {
-            await btn.trigger('click');
-            expect(wrapper.emitted('selectTool')?.[0]?.[0]).toBe('line');
-        }
+        expect(btn.exists()).toBe(true);
+        await btn.trigger('click');
+        expect(wrapper.emitted('selectTool')?.[0]?.[0]).toBe('line');
         wrapper.unmount();
     });
 
@@ -102,10 +96,9 @@ describe('DrawingToolbar', () => {
             props: { currentTool: 'select' },
         });
         const btn = wrapper.find('button[aria-label*="Arrow"]');
-        if (btn.exists()) {
-            await btn.trigger('click');
-            expect(wrapper.emitted('selectTool')?.[0]?.[0]).toBe('arrow');
-        }
+        expect(btn.exists()).toBe(true);
+        await btn.trigger('click');
+        expect(wrapper.emitted('selectTool')?.[0]?.[0]).toBe('arrow');
         wrapper.unmount();
     });
 
@@ -114,10 +107,9 @@ describe('DrawingToolbar', () => {
             props: { currentTool: 'select' },
         });
         const btn = wrapper.find('button[aria-label*="Text tool"]');
-        if (btn.exists()) {
-            await btn.trigger('click');
-            expect(wrapper.emitted('selectTool')?.[0]?.[0]).toBe('text');
-        }
+        expect(btn.exists()).toBe(true);
+        await btn.trigger('click');
+        expect(wrapper.emitted('selectTool')?.[0]?.[0]).toBe('text');
         wrapper.unmount();
     });
 
@@ -126,10 +118,9 @@ describe('DrawingToolbar', () => {
             props: { currentTool: 'select' },
         });
         const btn = wrapper.find('button[aria-label*="Pen tool"]');
-        if (btn.exists()) {
-            await btn.trigger('click');
-            expect(wrapper.emitted('selectTool')?.[0]?.[0]).toBe('freedraw');
-        }
+        expect(btn.exists()).toBe(true);
+        await btn.trigger('click');
+        expect(wrapper.emitted('selectTool')?.[0]?.[0]).toBe('freedraw');
         wrapper.unmount();
     });
 
@@ -138,10 +129,9 @@ describe('DrawingToolbar', () => {
             props: { currentTool: 'select' },
         });
         const archBtn = wrapper.find('[aria-label*="rch"], [aria-label*="shape"], button[class*="arch"]');
-        if (archBtn.exists()) {
-            await archBtn.trigger('click');
-            expect(wrapper.html()).toContain('dropdown');
-        }
+        expect(archBtn.exists()).toBe(true);
+        await archBtn.trigger('click');
+        expect(wrapper.html()).toContain('dropdown');
         wrapper.unmount();
     });
 
@@ -150,15 +140,13 @@ describe('DrawingToolbar', () => {
             props: { currentTool: 'select' },
         });
         const archBtn = wrapper.find('[aria-label*="rch"], [aria-label*="hape"]');
-        if (archBtn.exists()) {
-            await archBtn.trigger('click');
-            await wrapper.vm.$nextTick();
-            const dropdownItems = wrapper.findAll('.arch-item, .dropdown-item, [aria-label*="atabase"]');
-            if (dropdownItems.length > 0) {
-                await dropdownItems[0]!.trigger('click');
-                expect(wrapper.emitted('selectTool')).toBeDefined();
-            }
-        }
+        expect(archBtn.exists()).toBe(true);
+        await archBtn.trigger('click');
+        await wrapper.vm.$nextTick();
+        const dropdownItems = wrapper.findAll('.arch-item, .dropdown-item, [aria-label*="atabase"]');
+        expect(dropdownItems.length).toBeGreaterThan(0);
+        await dropdownItems[0]!.trigger('click');
+        expect(wrapper.emitted('selectTool')).toBeDefined();
         wrapper.unmount();
     });
 

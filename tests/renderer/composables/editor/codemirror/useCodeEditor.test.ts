@@ -1,7 +1,7 @@
 /* eslint-disable vue/one-component-per-file -- each test mounts its own throwaway host for the composable */
 import { EditorView } from '@codemirror/view';
 import { mount } from '@vue/test-utils';
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { assert, describe, it, expect, vi, afterEach } from 'vitest';
 import { ref, nextTick, defineComponent, h } from 'vue';
 
 import { useCodeEditor } from '@/renderer/composables/editor/codemirror/useCodeEditor';
@@ -82,9 +82,8 @@ describe('useCodeEditor', () => {
         await nextTick();
         await new Promise((r) => setTimeout(r, 50)); // language loading is async
         const v = getView();
-        if (v !== null) {
-            expect(v).toBeInstanceOf(EditorView);
-        }
+        assert.isNotNull(v);
+        expect(v).toBeInstanceOf(EditorView);
         wrapper.unmount();
     });
 
@@ -94,9 +93,8 @@ describe('useCodeEditor', () => {
         await nextTick();
         await new Promise((r) => setTimeout(r, 50));
         const v = getView();
-        if (v !== null) {
-            expect(v.state.doc.toString()).toBe('my code');
-        }
+        assert.isNotNull(v);
+        expect(v.state.doc.toString()).toBe('my code');
         wrapper.unmount();
     });
 
@@ -106,10 +104,9 @@ describe('useCodeEditor', () => {
         await nextTick();
         await new Promise((r) => setTimeout(r, 50));
         const v = getView();
-        if (v !== null) {
-            v.dispatch({ changes: { from: 0, to: 0, insert: 'typed code' } });
-            expect(content.value).toBe('typed code');
-        }
+        assert.isNotNull(v);
+        v.dispatch({ changes: { from: 0, to: 0, insert: 'typed code' } });
+        expect(content.value).toBe('typed code');
         wrapper.unmount();
     });
 
@@ -120,10 +117,9 @@ describe('useCodeEditor', () => {
         await nextTick();
         await new Promise((r) => setTimeout(r, 50));
         const v = getView();
-        if (v !== null) {
-            v.dispatch({ changes: { from: 0, to: 0, insert: 'x' } });
-            expect(onContentChange).toHaveBeenCalled();
-        }
+        assert.isNotNull(v);
+        v.dispatch({ changes: { from: 0, to: 0, insert: 'x' } });
+        expect(onContentChange).toHaveBeenCalled();
         wrapper.unmount();
     });
 
@@ -134,12 +130,11 @@ describe('useCodeEditor', () => {
         await nextTick();
         await new Promise((r) => setTimeout(r, 50));
         const v = getView();
-        if (v !== null) {
-            onContentChange.mockClear();
-            content.value = 'replaced from outside';
-            await nextTick();
-            expect(onContentChange).not.toHaveBeenCalled();
-        }
+        assert.isNotNull(v);
+        onContentChange.mockClear();
+        content.value = 'replaced from outside';
+        await nextTick();
+        expect(onContentChange).not.toHaveBeenCalled();
         wrapper.unmount();
     });
 
@@ -149,11 +144,10 @@ describe('useCodeEditor', () => {
         await nextTick();
         await new Promise((r) => setTimeout(r, 50));
         const v = getView();
-        if (v !== null) {
-            content.value = 'new';
-            await nextTick();
-            expect(v.state.doc.toString()).toBe('new');
-        }
+        assert.isNotNull(v);
+        content.value = 'new';
+        await nextTick();
+        expect(v.state.doc.toString()).toBe('new');
         wrapper.unmount();
     });
 
@@ -164,12 +158,11 @@ describe('useCodeEditor', () => {
         await nextTick();
         await new Promise((r) => setTimeout(r, 50));
         const v = getView();
-        if (v !== null) {
-            dispatchSpy.mockClear();
-            content.value = 'same';
-            await nextTick();
-            expect(dispatchSpy).not.toHaveBeenCalled();
-        }
+        assert.isNotNull(v);
+        dispatchSpy.mockClear();
+        content.value = 'same';
+        await nextTick();
+        expect(dispatchSpy).not.toHaveBeenCalled();
         dispatchSpy.mockRestore();
         wrapper.unmount();
     });
@@ -181,12 +174,9 @@ describe('useCodeEditor', () => {
         await nextTick();
         await new Promise((r) => setTimeout(r, 50));
         const v = getView();
-        if (v !== null) {
-            wrapper.unmount();
-            expect(destroySpy).toHaveBeenCalled();
-        } else {
-            wrapper.unmount();
-        }
+        assert.isNotNull(v);
+        wrapper.unmount();
+        expect(destroySpy).toHaveBeenCalled();
         destroySpy.mockRestore();
     });
 
@@ -199,13 +189,12 @@ describe('useCodeEditor', () => {
         await nextTick();
         await nextTick();
         await new Promise((r) => setTimeout(r, 50));
-        if (getView() !== null) {
-            setStateSpy.mockClear();
-            fileId.value = 'file2.ts';
-            await nextTick();
-            await new Promise((r) => setTimeout(r, 50));
-            expect(setStateSpy).toHaveBeenCalled();
-        }
+        expect(getView()).not.toBeNull();
+        setStateSpy.mockClear();
+        fileId.value = 'file2.ts';
+        await nextTick();
+        await new Promise((r) => setTimeout(r, 50));
+        expect(setStateSpy).toHaveBeenCalled();
         setStateSpy.mockRestore();
         wrapper.unmount();
     });
@@ -239,9 +228,8 @@ describe('useCodeEditor', () => {
         await nextTick();
         await new Promise((r) => setTimeout(r, 50));
         const v = getView();
-        if (v !== null) {
-            expect(v.state.doc.toString()).toBe('data');
-        }
+        assert.isNotNull(v);
+        expect(v.state.doc.toString()).toBe('data');
         wrapper.unmount();
     });
 
@@ -251,9 +239,8 @@ describe('useCodeEditor', () => {
         await nextTick();
         await new Promise((r) => setTimeout(r, 100));
         const v = getView();
-        if (v !== null) {
-            expect(v.state.doc.toString()).toBe('const x = 1;');
-        }
+        assert.isNotNull(v);
+        expect(v.state.doc.toString()).toBe('const x = 1;');
         wrapper.unmount();
     });
 
@@ -263,9 +250,8 @@ describe('useCodeEditor', () => {
         await nextTick();
         await new Promise((r) => setTimeout(r, 100));
         const v = getView();
-        if (v !== null) {
-            expect(v.state.doc.toString()).toBe('print("hi")');
-        }
+        assert.isNotNull(v);
+        expect(v.state.doc.toString()).toBe('print("hi")');
         wrapper.unmount();
     });
 
@@ -291,13 +277,12 @@ describe('useCodeEditor', () => {
         await nextTick();
         await new Promise((r) => setTimeout(r, 50));
 
-        if (composableResult!.view.value !== null) {
-            destroySpy.mockClear();
-            containerRef.value = null;
-            await nextTick();
-            await nextTick();
-            expect(destroySpy).toHaveBeenCalled();
-        }
+        expect(composableResult!.view.value).not.toBeNull();
+        destroySpy.mockClear();
+        containerRef.value = null;
+        await nextTick();
+        await nextTick();
+        expect(destroySpy).toHaveBeenCalled();
 
         destroySpy.mockRestore();
         wrapper.unmount();

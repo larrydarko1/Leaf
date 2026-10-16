@@ -2,7 +2,7 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { foldable } from '@codemirror/language';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { describe, it, expect, vi } from 'vitest';
+import { assert, describe, it, expect, vi } from 'vitest';
 
 import { taskFoldExtension } from '@/renderer/composables/editor/codemirror/cm-task-fold';
 
@@ -61,8 +61,7 @@ describe('cm-task-fold', () => {
         it('clicking toggle collapses the task', () => {
             const view = makeView('- [ ] Parent\n  - [ ] Child\n');
             const toggle = view.dom.querySelector('.cm-task-fold-toggle');
-            expect(toggle).not.toBeNull();
-            if (toggle === null) return;
+            assert.isNotNull(toggle);
             const event = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
             vi.spyOn(event, 'preventDefault');
             toggle.dispatchEvent(event);
@@ -73,7 +72,7 @@ describe('cm-task-fold', () => {
         it('clicking toggle again un-collapses the task', () => {
             const view = makeView('- [ ] Parent\n  - [ ] Child\n');
             const toggle = view.dom.querySelector('.cm-task-fold-toggle');
-            if (toggle === null) return;
+            assert.isNotNull(toggle);
             toggle.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
             const collapsed = view.dom.querySelector('.cm-task-fold-collapsed');
             collapsed?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));

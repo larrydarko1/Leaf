@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { assert, describe, it, expect, vi, beforeEach } from 'vitest';
 
 import type { ElectronAPI } from '@/schemas/electron';
 
@@ -141,7 +141,7 @@ describe('preload / electronAPI', () => {
         for (const [method, channel, args] of invokeTests) {
             it(`${method} invokes "${channel}"`, () => {
                 const fn: unknown = bridge()[method];
-                if (typeof fn !== 'function') throw new Error(`${method} is not a function`);
+                assert(typeof fn === 'function', `${method} is not a function`);
                 Reflect.apply(fn, undefined, args);
                 expect(mockInvoke).toHaveBeenCalledWith(channel, ...args);
             });

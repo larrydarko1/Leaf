@@ -86,30 +86,27 @@ describe('DrawingPropertiesPanel', () => {
     it('emits "copy" when copy button is clicked', async () => {
         const wrapper = mountWithI18n(DrawingPropertiesPanel, { props: baseProps });
         const copyBtn = wrapper.find('[aria-label*="opy"], .copy-btn, button[class*="copy"]');
-        if (copyBtn.exists()) {
-            await copyBtn.trigger('click');
-            expect(wrapper.emitted('copy')).toBeDefined();
-        }
+        expect(copyBtn.exists()).toBe(true);
+        await copyBtn.trigger('click');
+        expect(wrapper.emitted('copy')).toBeDefined();
         wrapper.unmount();
     });
 
     it('emits "duplicate" when duplicate button is clicked', async () => {
         const wrapper = mountWithI18n(DrawingPropertiesPanel, { props: baseProps });
         const dupBtn = wrapper.find('[aria-label*="uplicate"], .duplicate-btn, button[class*="duplicate"]');
-        if (dupBtn.exists()) {
-            await dupBtn.trigger('click');
-            expect(wrapper.emitted('duplicate')).toBeDefined();
-        }
+        expect(dupBtn.exists()).toBe(true);
+        await dupBtn.trigger('click');
+        expect(wrapper.emitted('duplicate')).toBeDefined();
         wrapper.unmount();
     });
 
     it('emits "delete" when delete button is clicked', async () => {
         const wrapper = mountWithI18n(DrawingPropertiesPanel, { props: baseProps });
         const deleteBtn = wrapper.find('[aria-label*="elete"], .delete-btn, button[class*="delete"]');
-        if (deleteBtn.exists()) {
-            await deleteBtn.trigger('click');
-            expect(wrapper.emitted('delete')).toBeDefined();
-        }
+        expect(deleteBtn.exists()).toBe(true);
+        await deleteBtn.trigger('click');
+        expect(wrapper.emitted('delete')).toBeDefined();
         wrapper.unmount();
     });
 

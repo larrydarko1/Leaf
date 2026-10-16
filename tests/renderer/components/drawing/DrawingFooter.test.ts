@@ -47,10 +47,9 @@ describe('DrawingFooter', () => {
             props: { ...baseProps, historyIndex: 2, historyLength: 3 },
         });
         const undoBtn = wrapper.find('[aria-label*="ndo"], button[class*="undo"]');
-        if (undoBtn.exists()) {
-            await undoBtn.trigger('click');
-            expect(wrapper.emitted('undo')).toBeDefined();
-        }
+        expect(undoBtn.exists()).toBe(true);
+        await undoBtn.trigger('click');
+        expect(wrapper.emitted('undo')).toBeDefined();
         wrapper.unmount();
     });
 
@@ -59,30 +58,27 @@ describe('DrawingFooter', () => {
             props: { ...baseProps, historyIndex: 0, historyLength: 3 },
         });
         const redoBtn = wrapper.find('[aria-label*="edo"], button[class*="redo"]');
-        if (redoBtn.exists()) {
-            await redoBtn.trigger('click');
-            expect(wrapper.emitted('redo')).toBeDefined();
-        }
+        expect(redoBtn.exists()).toBe(true);
+        await redoBtn.trigger('click');
+        expect(wrapper.emitted('redo')).toBeDefined();
         wrapper.unmount();
     });
 
     it('emits "clearAll" when clear button is clicked', async () => {
         const wrapper = mountWithI18n(DrawingFooter, { props: baseProps });
         const clearBtn = wrapper.find('[aria-label*="lear"], button[class*="clear"]');
-        if (clearBtn.exists()) {
-            await clearBtn.trigger('click');
-            expect(wrapper.emitted('clearAll')).toBeDefined();
-        }
+        expect(clearBtn.exists()).toBe(true);
+        await clearBtn.trigger('click');
+        expect(wrapper.emitted('clearAll')).toBeDefined();
         wrapper.unmount();
     });
 
     it('emits "openExportDialog" when export is clicked', async () => {
         const wrapper = mountWithI18n(DrawingFooter, { props: baseProps });
         const exportBtn = wrapper.find('[aria-label*="xport"], button[class*="export"]');
-        if (exportBtn.exists()) {
-            await exportBtn.trigger('click');
-            expect(wrapper.emitted('openExportDialog')).toBeDefined();
-        }
+        expect(exportBtn.exists()).toBe(true);
+        await exportBtn.trigger('click');
+        expect(wrapper.emitted('openExportDialog')).toBeDefined();
         wrapper.unmount();
     });
 

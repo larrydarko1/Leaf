@@ -44,11 +44,10 @@ describe('VideoViewer', () => {
         });
         await wrapper.vm.$nextTick();
         const video = wrapper.find('video');
-        if (video.exists()) {
-            await video.trigger('error');
-            await wrapper.vm.$nextTick();
-            expect(wrapper.html()).toMatch(/error|unavailable/i);
-        }
+        expect(video.exists()).toBe(true);
+        await video.trigger('error');
+        await wrapper.vm.$nextTick();
+        expect(wrapper.html()).toMatch(/error|unavailable/i);
         wrapper.unmount();
     });
 
@@ -58,10 +57,9 @@ describe('VideoViewer', () => {
         });
         await wrapper.vm.$nextTick();
         const video = wrapper.find('video');
-        if (video.exists()) {
-            await video.trigger('loadedmetadata');
-            await wrapper.vm.$nextTick();
-        }
+        expect(video.exists()).toBe(true);
+        await video.trigger('loadedmetadata');
+        await wrapper.vm.$nextTick();
         expect(wrapper.exists()).toBe(true);
         wrapper.unmount();
     });
@@ -96,11 +94,10 @@ describe('VideoViewer', () => {
         });
         await wrapper.vm.$nextTick();
         const video = wrapper.find('video');
-        if (video.exists()) {
-            await video.trigger('loadedmetadata');
-            await wrapper.vm.$nextTick();
-            expect(wrapper.find('.video-controls').exists()).toBe(true);
-        }
+        expect(video.exists()).toBe(true);
+        await video.trigger('loadedmetadata');
+        await wrapper.vm.$nextTick();
+        expect(wrapper.find('.video-controls').exists()).toBe(true);
         wrapper.unmount();
     });
 
@@ -110,11 +107,10 @@ describe('VideoViewer', () => {
         });
         await wrapper.vm.$nextTick();
         const video = wrapper.find('video');
-        if (video.exists()) {
-            await video.trigger('loadedmetadata');
-            await video.trigger('ended');
-            expect(wrapper.exists()).toBe(true);
-        }
+        expect(video.exists()).toBe(true);
+        await video.trigger('loadedmetadata');
+        await video.trigger('ended');
+        expect(wrapper.exists()).toBe(true);
         wrapper.unmount();
     });
 
@@ -124,15 +120,13 @@ describe('VideoViewer', () => {
         });
         await wrapper.vm.$nextTick();
         const video = wrapper.find('video');
-        if (video.exists()) {
-            await video.trigger('loadedmetadata');
-            await wrapper.vm.$nextTick();
-            const progress = wrapper.find('.video-progress-wrapper');
-            if (progress.exists()) {
-                await progress.trigger('click', { clientX: 100 });
-                expect(wrapper.exists()).toBe(true);
-            }
-        }
+        expect(video.exists()).toBe(true);
+        await video.trigger('loadedmetadata');
+        await wrapper.vm.$nextTick();
+        const progress = wrapper.find('.video-progress-wrapper');
+        expect(progress.exists()).toBe(true);
+        await progress.trigger('click', { clientX: 100 });
+        expect(wrapper.exists()).toBe(true);
         wrapper.unmount();
     });
 
@@ -142,15 +136,13 @@ describe('VideoViewer', () => {
         });
         await wrapper.vm.$nextTick();
         const video = wrapper.find('video');
-        if (video.exists()) {
-            await video.trigger('loadedmetadata');
-            await wrapper.vm.$nextTick();
-            const muteBtn = wrapper.find('.video-mute-btn');
-            if (muteBtn.exists()) {
-                await muteBtn.trigger('click');
-                expect(wrapper.exists()).toBe(true);
-            }
-        }
+        expect(video.exists()).toBe(true);
+        await video.trigger('loadedmetadata');
+        await wrapper.vm.$nextTick();
+        const muteBtn = wrapper.find('.video-volume-btn');
+        expect(muteBtn.exists()).toBe(true);
+        await muteBtn.trigger('click');
+        expect(wrapper.find('video').element.volume).toBe(0);
         wrapper.unmount();
     });
 
@@ -160,15 +152,13 @@ describe('VideoViewer', () => {
         });
         await wrapper.vm.$nextTick();
         const video = wrapper.find('video');
-        if (video.exists()) {
-            await video.trigger('loadedmetadata');
-            await wrapper.vm.$nextTick();
-            const slider = wrapper.find('.video-volume-slider');
-            if (slider.exists()) {
-                await slider.setValue('0.5');
-                expect(wrapper.exists()).toBe(true);
-            }
-        }
+        expect(video.exists()).toBe(true);
+        await video.trigger('loadedmetadata');
+        await wrapper.vm.$nextTick();
+        const slider = wrapper.find('.video-volume-slider');
+        expect(slider.exists()).toBe(true);
+        await slider.setValue('0.5');
+        expect(wrapper.exists()).toBe(true);
         wrapper.unmount();
     });
 
@@ -178,9 +168,8 @@ describe('VideoViewer', () => {
         });
         await wrapper.vm.$nextTick();
         const video = wrapper.find('video');
-        if (video.exists()) {
-            await video.trigger('loadedmetadata');
-        }
+        expect(video.exists()).toBe(true);
+        await video.trigger('loadedmetadata');
         window.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
         expect(wrapper.exists()).toBe(true);
         wrapper.unmount();

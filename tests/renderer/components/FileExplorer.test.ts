@@ -54,10 +54,9 @@ describe('FileExplorer', () => {
         const wrapper = mountWithI18n(FileExplorer, { props: baseProps });
         await wrapper.vm.$nextTick();
         const fileItems = wrapper.findAll('.file-item');
-        if (fileItems.length > 0) {
-            await fileItems[0]!.trigger('click');
-            expect(wrapper.emitted('selectFile')).toBeDefined();
-        }
+        expect(fileItems.length).toBeGreaterThan(0);
+        await fileItems[0]!.trigger('click');
+        expect(wrapper.emitted('selectFile')).toBeDefined();
         wrapper.unmount();
     });
 
@@ -65,10 +64,9 @@ describe('FileExplorer', () => {
         const wrapper = mountWithI18n(FileExplorer, { props: baseProps });
         await wrapper.vm.$nextTick();
         const folderItems = wrapper.findAll('.folder-item');
-        if (folderItems.length > 0) {
-            await folderItems[0]!.trigger('click');
-            expect(wrapper.emitted('selectFolder')).toBeDefined();
-        }
+        expect(folderItems.length).toBeGreaterThan(0);
+        await folderItems[0]!.trigger('click');
+        expect(wrapper.emitted('selectFolder')).toBeDefined();
         wrapper.unmount();
     });
 
@@ -76,12 +74,11 @@ describe('FileExplorer', () => {
         const wrapper = mountWithI18n(FileExplorer, { props: baseProps, attachTo: document.body });
         await wrapper.vm.$nextTick();
         const fileItems = wrapper.findAll('.file-item');
-        if (fileItems.length > 0) {
-            await fileItems[0]!.trigger('contextmenu');
-            await wrapper.vm.$nextTick();
-            const menu = document.querySelector('.context-menu');
-            expect(menu).not.toBeNull();
-        }
+        expect(fileItems.length).toBeGreaterThan(0);
+        await fileItems[0]!.trigger('contextmenu');
+        await wrapper.vm.$nextTick();
+        const menu = document.querySelector('.context-menu');
+        expect(menu).not.toBeNull();
         wrapper.unmount();
         document.querySelector('.context-menu')?.remove();
     });
@@ -90,12 +87,11 @@ describe('FileExplorer', () => {
         const wrapper = mountWithI18n(FileExplorer, { props: baseProps, attachTo: document.body });
         await wrapper.vm.$nextTick();
         const folderItems = wrapper.findAll('.folder-item');
-        if (folderItems.length > 0) {
-            await folderItems[0]!.trigger('contextmenu');
-            await wrapper.vm.$nextTick();
-            const menu = document.querySelector('.context-menu');
-            expect(menu).not.toBeNull();
-        }
+        expect(folderItems.length).toBeGreaterThan(0);
+        await folderItems[0]!.trigger('contextmenu');
+        await wrapper.vm.$nextTick();
+        const menu = document.querySelector('.context-menu');
+        expect(menu).not.toBeNull();
         wrapper.unmount();
         document.querySelector('.context-menu')?.remove();
     });
@@ -186,12 +182,11 @@ describe('FileExplorer', () => {
         });
         await wrapper.vm.$nextTick();
         const fileItems = wrapper.findAll('.file-item');
-        if (fileItems.length > 0) {
-            await fileItems[0]!.trigger('contextmenu');
-            await wrapper.vm.$nextTick();
-            const menuText = document.querySelector('.context-menu')?.textContent ?? '';
-            expect(menuText).toMatch(/bookmark/i);
-        }
+        expect(fileItems.length).toBeGreaterThan(0);
+        await fileItems[0]!.trigger('contextmenu');
+        await wrapper.vm.$nextTick();
+        const menuText = document.querySelector('.context-menu')?.textContent ?? '';
+        expect(menuText).toMatch(/bookmark/i);
         wrapper.unmount();
         document.querySelector('.context-menu')?.remove();
     });

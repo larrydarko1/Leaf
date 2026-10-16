@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { assert, describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref } from 'vue';
 
 import { useDictation } from '@/renderer/composables/editor/useDictation';
@@ -298,9 +298,8 @@ describe('stopDictation', () => {
         sendChunk(new Float32Array([0.1]));
         d.stopDictation();
         await new Promise((r) => setTimeout(r, 50));
-        if (content.value.length > 4) {
-            expect(content.value).toMatch(/^word /);
-        }
+        expect(content.value.length).toBeGreaterThan(4);
+        expect(content.value).toMatch(/^word /);
     });
 
     it('does not add space when content already ends with whitespace', async () => {
@@ -312,9 +311,8 @@ describe('stopDictation', () => {
         sendChunk(new Float32Array([0.1]));
         d.stopDictation();
         await new Promise((r) => setTimeout(r, 50));
-        if (content.value.length > 5) {
-            expect(content.value).not.toMatch(/^word {2}/);
-        }
+        expect(content.value.length).toBeGreaterThan(5);
+        expect(content.value).not.toMatch(/^word {2}/);
     });
 
     it('handles transcription error silently on stop', async () => {
@@ -378,9 +376,8 @@ describe('interval-based chunk processing', () => {
         const { toggleDictation, stopDictation } = makeDictation();
         await toggleDictation();
         sendChunk(new Float32Array([0.1, 0.2]));
-        if (storedIntervalFn) {
-            storedIntervalFn();
-        }
+        assert.exists(storedIntervalFn);
+        storedIntervalFn();
         await new Promise((r) => setTimeout(r, 20));
         stopDictation();
         expect(mockSpeechTranscribe).toHaveBeenCalled();
@@ -389,9 +386,8 @@ describe('interval-based chunk processing', () => {
     it('does nothing in processDictationChunk when no samples', async () => {
         const { toggleDictation, stopDictation } = makeDictation();
         await toggleDictation();
-        if (storedIntervalFn) {
-            storedIntervalFn();
-        }
+        assert.exists(storedIntervalFn);
+        storedIntervalFn();
         await new Promise((r) => setTimeout(r, 10));
         stopDictation();
         expect(mockSpeechTranscribe).not.toHaveBeenCalled();
@@ -402,9 +398,8 @@ describe('interval-based chunk processing', () => {
         const { toggleDictation, stopDictation } = makeDictation();
         await toggleDictation();
         sendChunk(new Float32Array([0.1]));
-        if (storedIntervalFn) {
-            storedIntervalFn();
-        }
+        assert.exists(storedIntervalFn);
+        storedIntervalFn();
         await new Promise((r) => setTimeout(r, 20));
         stopDictation();
         expect(mockLog.error).toHaveBeenCalled();
