@@ -17,7 +17,7 @@ type Props = {
     hasUnsavedChanges: boolean;
 };
 
-const props = defineProps<Props>();
+defineProps<Props>();
 
 const emit = defineEmits<{
     zoomToCenter: [value: number];
@@ -28,8 +28,6 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
-
-void props;
 </script>
 
 <template>

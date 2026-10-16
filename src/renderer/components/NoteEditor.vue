@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { keymap, EditorView } from '@codemirror/view';
-import { ref, watch, onMounted, onUnmounted, computed, shallowRef } from 'vue';
+import { ref, watch, onMounted, onUnmounted, computed, shallowRef, useTemplateRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import DrawingCanvas from '@/renderer/components/DrawingCanvas.vue';
@@ -55,11 +55,11 @@ defineExpose({ reloadContent });
 const { t } = useI18n();
 
 // CodeMirror container ref (replaces textarea + preview)
-const cmContainerRef = ref<HTMLElement | null>(null);
+const cmContainerRef = useTemplateRef<HTMLElement>('cmContainerRef');
 // CodeMirror container ref for code files
-const codeContainerRef = ref<HTMLElement | null>(null);
+const codeContainerRef = useTemplateRef<HTMLElement>('codeContainerRef');
 // Textarea ref for plain-text (non-markdown) files
-const textareaRef = ref<HTMLTextAreaElement | null>(null);
+const textareaRef = useTemplateRef<HTMLTextAreaElement>('textareaRef');
 
 // Obsidian-style embed resolver (must be initialized before useNotePersistence)
 const {
@@ -195,7 +195,7 @@ async function reloadContent(): Promise<void> {
 
 // Keyboard shortcuts
 function handleKeyboard(e: KeyboardEvent): void {
-    if ((e.metaKey === true || e.ctrlKey === true) && e.key === 's') {
+    if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault();
         void saveFile();
     }
@@ -262,12 +262,7 @@ watch(
         if (newFile !== null) {
             const ext = newFile.extension.toLowerCase();
 
-            if (
-                checkImage(ext) === true ||
-                checkVideo(ext) === true ||
-                checkAudio(ext) === true ||
-                checkPdf(ext) === true
-            ) {
+            if (checkImage(ext) || checkVideo(ext) || checkAudio(ext) || checkPdf(ext)) {
                 // Media file: clear text state (sub-components handle their own loading)
                 content.value = '';
                 originalContent.value = '';
@@ -294,10 +289,9 @@ onMounted(() => {
 onUnmounted(() => {
     clearAutoSaveTimeout();
     debouncedEmitContentChanged.cancel();
-    if (isDictating.value === true) {
+    if (isDictating.value) {
         stopDictation();
     }
-    window.electronAPI.removeSpeechStatusListener();
     document.removeEventListener('drop', preventGlobalDrop, true);
     document.removeEventListener('dragover', preventGlobalDragOver, true);
     window.removeEventListener('keydown', handleKeyboard);

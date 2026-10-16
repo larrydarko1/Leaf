@@ -261,7 +261,7 @@ async function handleFolderMove(folderPath: string, targetFolderPath: string): P
 function relocateFolderBookmarks(oldRelativePath: string, newRelativePath: string): void {
     const vaultRoot = vault.currentFolder.value;
     if (vaultRoot === null || vaultRoot === '') return;
-    relocateBookmark(vaultRoot + '/' + oldRelativePath, vaultRoot + '/' + newRelativePath);
+    relocateBookmark(`${vaultRoot}/${oldRelativePath}`, `${vaultRoot}/${newRelativePath}`);
 }
 
 function toggleSearch(): void {

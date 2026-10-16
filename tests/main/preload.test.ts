@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { assert, describe, it, expect, vi, beforeEach } from 'vitest';
 
 import type { ElectronAPI } from '@/schemas/electron';
 
@@ -55,26 +55,10 @@ describe('preload / electronAPI', () => {
             expect(mockSend).toHaveBeenCalledWith('log:warn', { message: 'warning', details: [] });
         });
 
-        it('log.info sends "log:info"', () => {
-            bridge().log.info('info msg');
-            expect(mockSend).toHaveBeenCalledWith('log:info', { message: 'info msg', details: [] });
-        });
-
         it('packs whatever follows the message into details', () => {
             const err = new Error('boom');
             bridge().log.error('Failed to save:', err, 3);
             expect(mockSend).toHaveBeenCalledWith('log:error', { message: 'Failed to save:', details: [err, 3] });
-        });
-
-        it('log.debug sends "log:debug"', () => {
-            bridge().log.debug('debug msg');
-            expect(mockSend).toHaveBeenCalledWith('log:debug', { message: 'debug msg', details: [] });
-        });
-    });
-
-    describe('isElectron', () => {
-        it('returns true', () => {
-            expect(bridge().isElectron()).toBe(true);
         });
     });
 
@@ -112,7 +96,6 @@ describe('preload / electronAPI', () => {
             ['aiOpenLeafDir', 'ai:openLeafDir', []],
             ['systemPromptList', 'systemPrompt:list', []],
             ['systemPromptSetActive', 'systemPrompt:setActive', ['creative']],
-            ['systemPromptOpenLeafDir', 'systemPrompt:openLeafDir', []],
             ['themeList', 'theme:list', []],
             ['themeSetActive', 'theme:setActive', ['dark']],
             ['themeOpenLeafDir', 'theme:openLeafDir', []],
@@ -125,7 +108,6 @@ describe('preload / electronAPI', () => {
             ['conversationLoad', 'conversations:load', ['conv-1']],
             ['conversationSave', 'conversations:save', [{ id: 'conv-1' }]],
             ['conversationAddMessage', 'conversations:addMessage', ['conv-1', { role: 'user' }]],
-            ['conversationUpdateLastMessage', 'conversations:updateLastMessage', ['conv-1', 'updated']],
             ['conversationDelete', 'conversations:delete', ['conv-1']],
             ['conversationRename', 'conversations:rename', ['conv-1', 'New Title']],
             ['watchFolder', 'fs:watchFolder', []],
@@ -141,7 +123,7 @@ describe('preload / electronAPI', () => {
         for (const [method, channel, args] of invokeTests) {
             it(`${method} invokes "${channel}"`, () => {
                 const fn: unknown = bridge()[method];
-                if (typeof fn !== 'function') throw new Error(`${method} is not a function`);
+                assert(typeof fn === 'function', `${method} is not a function`);
                 Reflect.apply(fn, undefined, args);
                 expect(mockInvoke).toHaveBeenCalledWith(channel, ...args);
             });
@@ -173,17 +155,6 @@ describe('preload / electronAPI', () => {
         it('removeFsChangedListener calls removeAllListeners("fs:changed")', () => {
             bridge().removeFsChangedListener();
             expect(mockRemoveAllListeners).toHaveBeenCalledWith('fs:changed');
-        });
-
-        it('onSpeechStatus registers handler for "speech:status"', () => {
-            const cb = vi.fn();
-            bridge().onSpeechStatus(cb);
-            expect(mockOn).toHaveBeenCalledWith('speech:status', expect.any(Function));
-        });
-
-        it('removeSpeechStatusListener calls removeAllListeners("speech:status")', () => {
-            bridge().removeSpeechStatusListener();
-            expect(mockRemoveAllListeners).toHaveBeenCalledWith('speech:status');
         });
     });
 });

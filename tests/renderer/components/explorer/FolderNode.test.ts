@@ -181,7 +181,7 @@ describe('FolderNode — folder node', () => {
         const wrapper = mountWithI18n(FolderNode, {
             props: { ...baseProps, node: folderNode },
         });
-        expect(wrapper.findAll('.file-item').length).toBe(0);
+        expect(wrapper.findAll('.file-item')).toHaveLength(0);
         wrapper.unmount();
     });
 
@@ -281,10 +281,9 @@ describe('FolderNode — renaming', () => {
         });
         await wrapper.vm.$nextTick();
         const input = wrapper.find('input');
-        if (input.exists()) {
-            await input.trigger('keydown', { key: 'Escape' });
-            expect(wrapper.emitted('cancelRename')).toBeDefined();
-        }
+        expect(input.exists()).toBe(true);
+        await input.trigger('keydown', { key: 'Escape' });
+        expect(wrapper.emitted('cancelRename')).toBeDefined();
         wrapper.unmount();
     });
 
@@ -299,10 +298,9 @@ describe('FolderNode — renaming', () => {
         });
         await wrapper.vm.$nextTick();
         const input = wrapper.find('input');
-        if (input.exists()) {
-            await input.trigger('blur');
-            expect(wrapper.emitted('rename')).toBeDefined();
-        }
+        expect(input.exists()).toBe(true);
+        await input.trigger('blur');
+        expect(wrapper.emitted('rename')).toBeDefined();
         wrapper.unmount();
     });
 

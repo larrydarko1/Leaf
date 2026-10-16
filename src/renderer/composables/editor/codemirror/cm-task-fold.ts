@@ -168,7 +168,7 @@ export function taskFoldExtension(): Extension[] {
  */
 function taskFoldRange(state: EditorState, lineStart: number): { from: number; to: number } | null {
     const line = state.doc.lineAt(lineStart);
-    const match = line.text.match(taskLineRegex);
+    const match = taskLineRegex.exec(line.text);
     if (match == null) return null;
 
     const parentIndent = match[1]?.length ?? 0;
@@ -183,7 +183,7 @@ function taskFoldRange(state: EditorState, lineStart: number): { from: number; t
             continue;
         }
 
-        const nextIndent = nextLine.text.match(/^(\s*)/)?.[1]?.length ?? 0;
+        const nextIndent = /^(\s*)/.exec(nextLine.text)?.[1]?.length ?? 0;
         if (nextIndent > parentIndent) {
             lastNonEmptyChildLine = lineNo;
         } else {

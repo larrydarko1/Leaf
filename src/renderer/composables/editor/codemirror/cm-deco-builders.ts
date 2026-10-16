@@ -234,12 +234,12 @@ export function buildSyntaxDecos(
 
                 // ── Headings ──────────────────────────────────────────
                 if (/^(ATXHeading[1-6])$/.test(name)) {
-                    const level = parseInt(name.replace('ATXHeading', ''));
+                    const level = parseInt(name.replace('ATXHeading', ''), 10);
                     decos.push(
                         Decoration.line({ class: `cm-heading cm-heading-${level}` }).range(state.doc.lineAt(from).from),
                     );
                     const text = state.doc.sliceString(from, to);
-                    const markerMatch = text.match(/^(#{1,6})\s/);
+                    const markerMatch = /^(#{1,6})\s/.exec(text);
                     if (markerMatch !== null) {
                         decos.push(Decoration.replace({}).range(from, from + markerMatch[0].length));
                     }
@@ -309,7 +309,7 @@ export function buildSyntaxDecos(
                 // ── Links ─────────────────────────────────────────────
                 if (name === 'Link') {
                     const text = state.doc.sliceString(from, to);
-                    const linkMatch = text.match(/^\[([^\]]*)\]\(([^)]*)\)$/);
+                    const linkMatch = /^\[([^\]]*)\]\(([^)]*)\)$/.exec(text);
                     if (linkMatch !== null) {
                         decos.push(
                             Decoration.mark({
@@ -326,7 +326,7 @@ export function buildSyntaxDecos(
                 // ── Images ────────────────────────────────────────────
                 if (name === 'Image') {
                     const text = state.doc.sliceString(from, to);
-                    const imgMatch = text.match(/^!\[([^\]]*)\]\(([^)]*)\)$/);
+                    const imgMatch = /^!\[([^\]]*)\]\(([^)]*)\)$/.exec(text);
                     if (imgMatch !== null) {
                         decos.push(Decoration.mark({ class: 'cm-image-link' }).range(from, to));
                     }
@@ -412,7 +412,7 @@ function pushBlockquoteLines(
         if (activeLines.has(ln)) continue;
         const line = state.doc.line(ln);
         decos.push(Decoration.line({ class: 'cm-blockquote' }).range(line.from));
-        const markerMatch = line.text.match(/^(\s*>\s?)/);
+        const markerMatch = /^(\s*>\s?)/.exec(line.text);
         if (markerMatch !== null) {
             decos.push(Decoration.replace({}).range(line.from, line.from + markerMatch[0].length));
         }

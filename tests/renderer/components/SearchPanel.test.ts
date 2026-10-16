@@ -54,7 +54,7 @@ describe('SearchPanel', () => {
         const wrapper = mountWithI18n(SearchPanel, {
             props: { files, selectedFiles: [], activeFile: null },
         });
-        expect(wrapper.findAll('.search-result-item').length).toBe(0);
+        expect(wrapper.findAll('.search-result-item')).toHaveLength(0);
         wrapper.unmount();
     });
 
@@ -83,7 +83,7 @@ describe('SearchPanel', () => {
             props: { files, selectedFiles: [], activeFile: null },
         });
         await search(wrapper, 'bbb');
-        expect(wrapper.findAll('.search-result-item').length).toBe(0);
+        expect(wrapper.findAll('.search-result-item')).toHaveLength(0);
         wrapper.unmount();
     });
 
@@ -95,7 +95,7 @@ describe('SearchPanel', () => {
         await wrapper.find('.clear-button').trigger('click');
         await wrapper.vm.$nextTick();
         expect(wrapper.find('.clear-button').exists()).toBe(false);
-        expect(wrapper.findAll('.search-result-item').length).toBe(0);
+        expect(wrapper.findAll('.search-result-item')).toHaveLength(0);
         wrapper.unmount();
     });
 
@@ -149,7 +149,7 @@ describe('SearchPanel', () => {
         await search(wrapper, 'notes');
         await wrapper.find('.search-input').trigger('keydown', { key: 'Escape' });
         await wrapper.vm.$nextTick();
-        expect(wrapper.findAll('.search-result-item').length).toBe(0);
+        expect(wrapper.findAll('.search-result-item')).toHaveLength(0);
         expect(wrapper.emitted('close')).toBeUndefined();
         wrapper.unmount();
     });

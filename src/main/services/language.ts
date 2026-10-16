@@ -101,12 +101,10 @@ export async function findActiveDictationLanguage(): Promise<string | null> {
  * before any await. Resets to null on failure so a later call can retry.
  */
 function ensureSeeded(): Promise<void> {
-    if (seedPromise === null) {
-        seedPromise = doSeed().catch((err): void => {
-            seedPromise = null;
-            log.error('[language] seeding failed:', err);
-        });
-    }
+    seedPromise ??= doSeed().catch((err: unknown): void => {
+        seedPromise = null;
+        log.error('[language] seeding failed:', err);
+    });
     return seedPromise;
 }
 
@@ -279,7 +277,7 @@ async function backfillMissingKeys(
         const destJson: unknown = JSON.parse(destRaw.toString('utf-8'));
         const bundledJson: unknown = JSON.parse(bundledContent.toString('utf-8'));
         if (isPlainObject(destJson) && isPlainObject(bundledJson) && fillMissingKeys(destJson, bundledJson)) {
-            await fs.writeFile(dest, JSON.stringify(destJson, null, 2) + '\n');
+            await fs.writeFile(dest, `${JSON.stringify(destJson, null, 2)}\n`);
             log.info('[language] Backfilled missing keys', { file: fileName });
         }
     } catch (err) {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, useTemplateRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import IconChevronDown from '@/renderer/components/icons/IconChevronDown.vue';
@@ -20,10 +20,9 @@ type Props = {
     selectedModelPath: string | null;
     selectedModelLabel: string;
     showHistory: boolean;
-    isAnyGenerating: boolean;
 };
 
-const props = defineProps<Props>();
+defineProps<Props>();
 
 const emit = defineEmits<{
     'select-model': [model: AiModelInfo];
@@ -38,11 +37,11 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-const dropdownRef = ref<HTMLElement | null>(null);
+const dropdownRef = useTemplateRef<HTMLElement>('dropdownRef');
 const showDropdown = ref(false);
 const dropdownPosition = ref<Record<string, string>>({});
 const { prompts, activeId, refresh: refreshPrompts, setActive } = useSystemPrompt();
-const promptDropdownRef = ref<HTMLElement | null>(null);
+const promptDropdownRef = useTemplateRef<HTMLElement>('promptDropdownRef');
 const showPromptDropdown = ref(false);
 const promptDropdownPosition = ref<Record<string, string>>({});
 const activePromptName = computed(() => {
@@ -113,10 +112,8 @@ function handleRefresh(): void {
 }
 
 function truncate(str: string, len: number): string {
-    return str.length > len ? str.slice(0, len) + '…' : str;
+    return str.length > len ? `${str.slice(0, len)}…` : str;
 }
-
-void props;
 
 onMounted(() => {
     document.addEventListener('click', handleClickOutside);

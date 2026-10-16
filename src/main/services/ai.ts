@@ -126,7 +126,7 @@ function formatFileSize(bytes: number): string {
     const step = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(step));
-    return parseFloat((bytes / Math.pow(step, i)).toFixed(2)) + ' ' + sizes[i];
+    return `${parseFloat((bytes / Math.pow(step, i)).toFixed(2))} ${sizes[i]}`;
 }
 
 async function scanForModels(dir: string, baseDir: string): Promise<ModelEntry[]> {
@@ -435,7 +435,7 @@ function buildConversationSummary(messages: { role: string; content: string }[])
     return recentMessages
         .map((m): string => {
             const role = m.role === 'user' ? 'User' : 'Assistant';
-            const content = m.content.length > MAX_MSG_LENGTH ? m.content.slice(0, MAX_MSG_LENGTH) + '...' : m.content;
+            const content = m.content.length > MAX_MSG_LENGTH ? `${m.content.slice(0, MAX_MSG_LENGTH)}...` : m.content;
             return `${role}: ${content}`;
         })
         .join('\n');

@@ -152,7 +152,7 @@ describe('useAIModel', () => {
             const model = makeModel({ name: longName, path: '/models/long.gguf' });
             m.availableModels.value = [model];
             m.selectedModelPath.value = '/models/long.gguf';
-            expect(m.selectedModelLabel.value).toBe(longName.slice(0, 30) + '...');
+            expect(m.selectedModelLabel.value).toBe(`${longName.slice(0, 30)}...`);
         });
 
         it('shows placeholder when selected path not in model list', () => {

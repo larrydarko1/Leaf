@@ -24,7 +24,7 @@ type Props = {
     hasSelection: boolean;
 };
 
-const props = defineProps<Props>();
+defineProps<Props>();
 
 const emit = defineEmits<{
     setProperty: [prop: StyleKey, value: string | number];
@@ -85,8 +85,6 @@ const borderRadiusOptions = [
     { label: t('drawing.border_radius_options.round'), value: 8, icon: 'round' },
     { label: t('drawing.border_radius_options.extra_round'), value: 16, icon: 'extra' },
 ];
-
-void props;
 </script>
 
 <template>

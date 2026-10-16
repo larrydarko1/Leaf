@@ -8,7 +8,6 @@ import { existsSync } from 'fs';
 import path from 'path';
 
 import type { pipeline as PipelineFn } from '@huggingface/transformers';
-import type { BrowserWindow } from 'electron';
 import { z } from 'zod';
 
 import { IpcError, toIpcErrorCode } from '@/main/lib/errors';
@@ -58,8 +57,8 @@ export function cleanup(): void {
     sessionLanguage = null;
 }
 
-export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | null): void {
-    ipc.handle('speech:init', async (): Promise<SpeechInitResult> => initModel(findMainWindow()));
+export function register(ipc: IpcMain): void {
+    ipc.handle('speech:init', async (): Promise<SpeechInitResult> => initModel());
     ipc.handle('speech:transcribe', async (_event, audioData: unknown): Promise<SpeechTranscribeResult> => {
         const parsed = z.array(z.number()).nonempty().safeParse(audioData);
         if (!parsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
@@ -104,7 +103,7 @@ async function getTransformers(): Promise<typeof PipelineFn> {
     return pipelineFn;
 }
 
-async function initModel(mainWindow: BrowserWindow | null): Promise<SpeechInitResult> {
+async function initModel(): Promise<SpeechInitResult> {
     if (transcriber !== null) {
         return { success: true, message: 'Model already loaded' };
     }
@@ -117,13 +116,6 @@ async function initModel(mainWindow: BrowserWindow | null): Promise<SpeechInitRe
     try {
         const pipeline = await getTransformers();
 
-        if (mainWindow !== null && !mainWindow.isDestroyed()) {
-            mainWindow.webContents.send('speech:status', {
-                status: 'loading',
-                message: 'Loading Whisper model...',
-            });
-        }
-
         const loaded: unknown = await pipeline('automatic-speech-recognition', 'Xenova/whisper-base', {
             revision: 'main',
             dtype: 'q8',
@@ -135,26 +127,12 @@ async function initModel(mainWindow: BrowserWindow | null): Promise<SpeechInitRe
         isModelReady = true;
         isModelLoading = false;
 
-        if (mainWindow !== null && !mainWindow.isDestroyed()) {
-            mainWindow.webContents.send('speech:status', {
-                status: 'ready',
-                message: 'Whisper model ready',
-            });
-        }
-
         log.info('[Speech] Whisper model loaded successfully');
         return { success: true, message: 'Whisper model loaded' };
     } catch (error) {
         isModelLoading = false;
         isModelReady = false;
         log.error('[Speech] Failed to load Whisper model:', error);
-
-        if (mainWindow !== null && !mainWindow.isDestroyed()) {
-            mainWindow.webContents.send('speech:status', {
-                status: 'error',
-                error: toIpcErrorCode(error),
-            });
-        }
 
         return { success: false, error: toIpcErrorCode(error) };
     }
@@ -179,7 +157,7 @@ function readSupportedLanguages(): Set<string> | null {
 
 async function resolveLanguage(float32Audio: Float32Array): Promise<string | null> {
     const declared = (await findActiveDictationLanguage())?.toLowerCase() ?? null;
-    if (declared !== null && supportedLanguages !== null && supportedLanguages.has(declared)) {
+    if (declared !== null && supportedLanguages?.has(declared) === true) {
         return declared;
     }
     if (sessionLanguage !== null) return sessionLanguage;
@@ -230,7 +208,7 @@ async function detectLanguage(float32Audio: Float32Array): Promise<string | null
 
         const langToId = pipe.model.generation_config.lang_to_id;
         for (const [langKey, tokenId] of Object.entries(langToId)) {
-            if (Number(tokenId) !== langToken) continue;
+            if (tokenId !== langToken) continue;
             const match = /\|(.+)\|/.exec(langKey);
             if (match?.[1] === undefined) continue;
             log.info('[Speech] Language detected:', match[1]);

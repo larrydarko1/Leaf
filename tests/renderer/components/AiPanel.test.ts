@@ -30,7 +30,6 @@ const mockElectronAPI = {
     conversationLoad: vi.fn().mockResolvedValue({ success: true, conversation: null }),
     conversationSave: vi.fn().mockResolvedValue({ success: true }),
     conversationAddMessage: vi.fn().mockResolvedValue({ success: true }),
-    conversationUpdateLastMessage: vi.fn().mockResolvedValue({ success: true }),
     conversationDelete: vi.fn().mockResolvedValue({ success: true }),
     conversationRename: vi.fn().mockResolvedValue({ success: true }),
     systemPromptList: vi.fn().mockResolvedValue({ success: true, prompts: [], activeId: '', promptsDir: '' }),
@@ -196,8 +195,8 @@ describe('AiPanel – resize feature', () => {
             await wrapper.vm.$nextTick();
 
             const style = wrapper.find('.ai-panel').attributes('style') ?? '';
-            const match = style.match(/width:\s*(\d+)px/);
-            const width = match?.[1] !== undefined ? parseInt(match[1]) : 0;
+            const match = /width:\s*(\d+)px/.exec(style);
+            const width = match?.[1] !== undefined ? parseInt(match[1], 10) : 0;
 
             expect(width).toBe(390); // 340 + 50
 

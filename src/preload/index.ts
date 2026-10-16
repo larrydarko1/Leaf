@@ -6,7 +6,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 import type { ElectronAPI } from '@/schemas/electron';
-import type { SpeechStatusEvent } from '@/schemas/speech';
 
 // Typed against the contract the renderer consumes, so the two cannot drift.
 const api: ElectronAPI = {
@@ -14,11 +13,7 @@ const api: ElectronAPI = {
     log: {
         error: (message: string, ...details: unknown[]) => ipcRenderer.send('log:error', { message, details }),
         warn: (message: string, ...details: unknown[]) => ipcRenderer.send('log:warn', { message, details }),
-        info: (message: string, ...details: unknown[]) => ipcRenderer.send('log:info', { message, details }),
-        debug: (message: string, ...details: unknown[]) => ipcRenderer.send('log:debug', { message, details }),
     },
-
-    isElectron: () => true,
 
     // Open external URLs in the OS default browser
     openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', url),
@@ -76,7 +71,6 @@ const api: ElectronAPI = {
     // System prompt templates (~/.leaf/prompts/*.md)
     systemPromptList: () => ipcRenderer.invoke('systemPrompt:list'),
     systemPromptSetActive: (id: string) => ipcRenderer.invoke('systemPrompt:setActive', id),
-    systemPromptOpenLeafDir: () => ipcRenderer.invoke('systemPrompt:openLeafDir'),
 
     // Theme presets (~/.leaf/themes/*.json)
     themeList: () => ipcRenderer.invoke('theme:list'),
@@ -110,8 +104,6 @@ const api: ElectronAPI = {
     conversationSave: (conversation: object) => ipcRenderer.invoke('conversations:save', conversation),
     conversationAddMessage: (conversationId: string, message: object) =>
         ipcRenderer.invoke('conversations:addMessage', conversationId, message),
-    conversationUpdateLastMessage: (conversationId: string, content: string) =>
-        ipcRenderer.invoke('conversations:updateLastMessage', conversationId, content),
     conversationDelete: (id: string) => ipcRenderer.invoke('conversations:delete', id),
     conversationRename: (id: string, newTitle: string) => ipcRenderer.invoke('conversations:rename', id, newTitle),
 
@@ -137,12 +129,6 @@ const api: ElectronAPI = {
     speechTranscribe: (audioData: number[]) => ipcRenderer.invoke('speech:transcribe', audioData),
     speechGetStatus: () => ipcRenderer.invoke('speech:getStatus'),
     speechResetSession: () => ipcRenderer.invoke('speech:resetSession'),
-    onSpeechStatus: (callback: (status: SpeechStatusEvent) => void) => {
-        ipcRenderer.on('speech:status', (_event, status: SpeechStatusEvent) => callback(status));
-    },
-    removeSpeechStatusListener: () => {
-        ipcRenderer.removeAllListeners('speech:status');
-    },
 };
 
 contextBridge.exposeInMainWorld('electronAPI', api);

@@ -45,7 +45,7 @@ const CODEMIRROR = /^src\/renderer\/composables\/editor\/codemirror\/cm-[a-z0-9-
  * regrow to the old number.
  */
 const LENGTH_BASELINE: Record<string, number> = {
-    'src/renderer/composables/drawing/useDrawingInteraction.ts': 749,
+    'src/renderer/composables/drawing/useDrawingInteraction.ts': 747,
     'src/main/services/fs.ts': 658,
     'src/renderer/composables/drawing/useCanvasRenderer.ts': 623,
     'src/renderer/App.vue': 516,

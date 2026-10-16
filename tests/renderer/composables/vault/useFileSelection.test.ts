@@ -109,15 +109,15 @@ describe('useFileSelection', () => {
     describe('selectFile (shift click)', () => {
         it('selects a contiguous range between the anchor and the clicked file', () => {
             const visibleFiles = [fileA, fileB, fileC];
-            sel.selectFile(fileA, { visibleFiles: visibleFiles });
-            sel.selectFile(fileC, { event: new MouseEvent('click', { shiftKey: true }), visibleFiles: visibleFiles });
+            sel.selectFile(fileA, { visibleFiles });
+            sel.selectFile(fileC, { event: new MouseEvent('click', { shiftKey: true }), visibleFiles });
             expect(sel.selectedFiles.value).toHaveLength(3);
         });
 
         it('works when the range is reversed (click on an earlier item)', () => {
             const visibleFiles = [fileA, fileB, fileC];
-            sel.selectFile(fileC, { visibleFiles: visibleFiles });
-            sel.selectFile(fileA, { event: new MouseEvent('click', { shiftKey: true }), visibleFiles: visibleFiles });
+            sel.selectFile(fileC, { visibleFiles });
+            sel.selectFile(fileA, { event: new MouseEvent('click', { shiftKey: true }), visibleFiles });
             expect(sel.selectedFiles.value).toHaveLength(3);
         });
 

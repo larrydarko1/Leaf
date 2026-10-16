@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue';
+import { watch, nextTick, useTemplateRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import IconEdit from '@/renderer/components/icons/IconEdit.vue';
@@ -26,7 +26,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-const renameInputRef = ref<HTMLInputElement[]>([]);
+const renameInputRef = useTemplateRef<HTMLInputElement[]>('renameInputRef');
 
 function formatRelativeDate(dateStr: string): string {
     const date = new Date(dateStr);
@@ -51,8 +51,8 @@ watch(
     async (id) => {
         if (id !== null && id !== '') {
             await nextTick();
-            renameInputRef.value[0]?.focus();
-            renameInputRef.value[0]?.select();
+            renameInputRef.value?.[0]?.focus();
+            renameInputRef.value?.[0]?.select();
         }
     },
 );

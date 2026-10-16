@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { assert, describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref, computed } from 'vue';
 
 import { useDrawingInteraction } from '@/renderer/composables/drawing/useDrawingInteraction';
@@ -557,7 +557,7 @@ describe('onPointerUp: create', () => {
         ctx.onPointerDown(ptr({ clientX: 0, clientY: 0 }));
         ctx.onPointerMove(ptr({ clientX: 100, clientY: 60, type: 'pointermove' }));
         ctx.onPointerUp(ptr({ type: 'pointerup' }));
-        expect(ctx.elements.value.length).toBe(1);
+        expect(ctx.elements.value).toHaveLength(1);
         expect(ctx.saveToHistory).toHaveBeenCalled();
         expect(ctx.scheduleAutoSave).toHaveBeenCalled();
         expect(ctx.creatingElement.value).toBeNull();
@@ -568,7 +568,7 @@ describe('onPointerUp: create', () => {
         ctx.onPointerDown(ptr({ clientX: 0, clientY: 0 }));
         ctx.onPointerMove(ptr({ clientX: 1, clientY: 1, type: 'pointermove' }));
         ctx.onPointerUp(ptr({ type: 'pointerup' }));
-        expect(ctx.elements.value.length).toBe(0);
+        expect(ctx.elements.value).toHaveLength(0);
         expect(ctx.saveToHistory).not.toHaveBeenCalled();
     });
 
@@ -578,10 +578,9 @@ describe('onPointerUp: create', () => {
         ctx.onPointerMove(ptr({ clientX: 0, clientY: 0, type: 'pointermove' }));
         ctx.onPointerUp(ptr({ type: 'pointerup' }));
         const el = ctx.elements.value[0];
-        if (el !== undefined) {
-            expect(el.width).toBeGreaterThan(0);
-            expect(el.height).toBeGreaterThan(0);
-        }
+        assert.isDefined(el);
+        expect(el.width).toBeGreaterThan(0);
+        expect(el.height).toBeGreaterThan(0);
     });
 
     it('does not normalize negative dims for line elements', () => {
@@ -626,7 +625,7 @@ describe('onPointerUp: freedraw', () => {
         ctx.onPointerMove(ptr({ clientX: 50, clientY: 50, type: 'pointermove' }));
         ctx.onPointerMove(ptr({ clientX: 80, clientY: 80, type: 'pointermove' }));
         ctx.onPointerUp(ptr({ type: 'pointerup' }));
-        expect(ctx.elements.value.length).toBe(1);
+        expect(ctx.elements.value).toHaveLength(1);
         expect(ctx.elements.value[0]?.type).toBe('freedraw');
         expect(ctx.saveToHistory).toHaveBeenCalled();
     });
@@ -635,7 +634,7 @@ describe('onPointerUp: freedraw', () => {
         const ctx = makeInteraction({ initialTool: 'freedraw' });
         ctx.onPointerDown(ptr({ clientX: 0, clientY: 0 }));
         ctx.onPointerUp(ptr({ type: 'pointerup' }));
-        expect(ctx.elements.value.length).toBe(0);
+        expect(ctx.elements.value).toHaveLength(0);
         expect(ctx.creatingElement.value).toBeNull();
     });
 });

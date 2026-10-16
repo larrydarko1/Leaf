@@ -18,7 +18,7 @@ export function useBookmarks(_getCurrentFolder: () => string | null): UseBookmar
     async function load(): Promise<void> {
         try {
             const result = await window.electronAPI.bookmarksLoad();
-            bookmarkedFiles.value = result.success === true && result.bookmarks !== undefined ? result.bookmarks : [];
+            bookmarkedFiles.value = result.success && result.bookmarks !== undefined ? result.bookmarks : [];
         } catch {
             bookmarkedFiles.value = [];
         }
@@ -56,7 +56,7 @@ export function useBookmarks(_getCurrentFolder: () => string | null): UseBookmar
      * carries the bookmarks of the files it contains).
      */
     function relocate(oldPath: string, newPath: string): void {
-        const descendantPrefix = oldPath + '/';
+        const descendantPrefix = `${oldPath}/`;
 
         let changed = false;
         const updated: string[] = [];

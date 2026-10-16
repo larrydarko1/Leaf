@@ -108,7 +108,7 @@ function createWindow(): void {
     // Load the app, electron-vite sets the renderer URL in dev mode
     if (config.rendererUrl !== '') {
         void mainWindow.loadURL(config.rendererUrl);
-        void mainWindow.webContents.openDevTools();
+        mainWindow.webContents.openDevTools();
     } else {
         void mainWindow.loadFile(path.join(import.meta.dirname, '../renderer/index.html'));
     }
@@ -225,7 +225,7 @@ void app.whenReady().then(async (): Promise<void> => {
     mediaService.register(ipcMain, fsService.findVaultRoot);
     aiService.register(ipcMain, findMainWindow);
     conversationService.register(ipcMain);
-    speechService.register(ipcMain, findMainWindow);
+    speechService.register(ipcMain);
     systemPromptService.register(ipcMain);
     themeService.register(ipcMain);
     languageService.register(ipcMain);

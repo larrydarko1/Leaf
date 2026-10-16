@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, useTemplateRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import IconClose from '@/renderer/components/icons/IconClose.vue';
@@ -25,7 +25,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-const searchInput = ref<HTMLInputElement | null>(null);
+const searchInput = useTemplateRef<HTMLInputElement>('searchInput');
 const searchQuery = ref('');
 const searchResults = ref<FileInfo[]>([]);
 

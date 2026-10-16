@@ -17,7 +17,7 @@ function makeFile(name = 'note.md'): FileInfo {
         name,
         path: `/vault/${name}`,
         relativePath: name,
-        extension: '.' + name.split('.').pop()!,
+        extension: `.${name.split('.').pop()!}`,
         size: 0,
         modified: '',
         folder: '.',

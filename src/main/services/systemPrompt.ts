@@ -17,13 +17,11 @@ import { existsSync } from 'fs';
 import fs from 'fs/promises';
 import path from 'path';
 
-import { shell } from 'electron';
-
 import { readState as readRawState, updateState } from '@/main/lib/appState';
 import { toIpcErrorCode, ipcFailure } from '@/main/lib/errors';
 import type { IpcMain } from '@/main/lib/ipc';
 import { log } from '@/main/lib/logger';
-import { LEAF_HOME, PROMPTS_DIR, getBundledPromptsDir } from '@/main/lib/paths';
+import { PROMPTS_DIR, getBundledPromptsDir } from '@/main/lib/paths';
 import { type PromptInfo, type PromptState, PromptStateSchema, type AiSimpleResult } from '@/schemas/ai';
 import type { IpcErrorCode } from '@/schemas/errors';
 
@@ -79,16 +77,6 @@ export function register(ipc: IpcMain): void {
             return ipcFailure('systemPrompt systemPrompt:setActive', err);
         }
     });
-
-    ipc.handle('systemPrompt:openLeafDir', async (): Promise<AiSimpleResult> => {
-        try {
-            await fs.mkdir(LEAF_HOME, { recursive: true });
-            await shell.openPath(LEAF_HOME);
-            return { success: true };
-        } catch (err) {
-            return ipcFailure('systemPrompt systemPrompt:openLeafDir', err);
-        }
-    });
 }
 
 /**
@@ -123,14 +111,12 @@ export async function getActiveSystemPrompt(): Promise<string> {
  * to slip past. Resets to null on failure so a later call can retry.
  */
 function ensureSeeded(): Promise<void> {
-    if (seedPromise === null) {
-        // On failure, log and reset the memo so a later call can retry, and
-        // swallow so callers never see a rejection — seeding is non-fatal.
-        seedPromise = doSeed().catch((err): void => {
-            seedPromise = null;
-            log.error('[systemPrompt] seeding failed:', err);
-        });
-    }
+    // On failure, log and reset the memo so a later call can retry, and
+    // swallow so callers never see a rejection — seeding is non-fatal.
+    seedPromise ??= doSeed().catch((err: unknown): void => {
+        seedPromise = null;
+        log.error('[systemPrompt] seeding failed:', err);
+    });
     return seedPromise;
 }
 
@@ -144,12 +130,12 @@ function parseFrontmatter(content: string): {
     meta: { name?: string; description?: string };
     body: string;
 } {
-    const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+    const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/.exec(content);
     if (match === null) return { meta: {}, body: content };
 
     const meta: Record<string, string> = {};
     for (const line of (match[1] ?? '').split(/\r?\n/)) {
-        const keyValue = line.match(/^([A-Za-z][A-Za-z0-9_-]*)\s*:\s*(.*)$/);
+        const keyValue = /^([A-Za-z][A-Za-z0-9_-]*)\s*:\s*(.*)$/.exec(line);
         if (keyValue === null) continue;
         let value = (keyValue[2] ?? '').trim();
         if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {

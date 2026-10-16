@@ -15,8 +15,6 @@ export function register(ipc: IpcMain): void {
     // assembled from a template is a string ipc:check cannot see.
     ipc.on('log:error', (_event, rawEntry: unknown): void => write('error', rawEntry));
     ipc.on('log:warn', (_event, rawEntry: unknown): void => write('warn', rawEntry));
-    ipc.on('log:info', (_event, rawEntry: unknown): void => write('info', rawEntry));
-    ipc.on('log:debug', (_event, rawEntry: unknown): void => write('debug', rawEntry));
 }
 
 function write(level: LogLevel, rawEntry: unknown): void {

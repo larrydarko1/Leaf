@@ -174,10 +174,10 @@ export class EmbedWidget extends WidgetType {
                 img.alt = this.fileName;
                 img.className = 'cm-embed-image';
                 img.loading = 'lazy';
-                const dimMatch = this.displayOptions !== '' ? this.displayOptions.match(/^(\d+)(?:x(\d+))?$/) : null;
+                const dimMatch = this.displayOptions !== '' ? /^(\d+)(?:x(\d+))?$/.exec(this.displayOptions) : null;
                 if (dimMatch !== null) {
-                    img.width = parseInt(dimMatch[1] ?? '');
-                    if (dimMatch[2] !== undefined) img.height = parseInt(dimMatch[2]);
+                    img.width = parseInt(dimMatch[1] ?? '', 10);
+                    if (dimMatch[2] !== undefined) img.height = parseInt(dimMatch[2], 10);
                 }
                 wrapper.appendChild(img);
                 return wrapper;
@@ -199,7 +199,7 @@ export class EmbedWidget extends WidgetType {
 
                 // The app's shared `.media-*` transport; the `cm-embed-*` names stay as this file's hooks.
                 const joined = isVideo ? ' media-controls-joined' : '';
-                const ctrlBar = el('div', 'cm-embed-controls media-controls' + joined);
+                const ctrlBar = el('div', `cm-embed-controls media-controls${joined}`);
 
                 const playBtn = el('button', 'cm-embed-play-btn media-ctrl-btn');
                 const playSvg =
@@ -222,12 +222,8 @@ export class EmbedWidget extends WidgetType {
 
                 const volIcon =
                     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">';
-                const volSvg =
-                    volIcon +
-                    '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>';
-                const muteSvg =
-                    volIcon +
-                    '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>';
+                const volSvg = `${volIcon}<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`;
+                const muteSvg = `${volIcon}<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`;
 
                 const volWrap = el('div', 'cm-embed-vol-wrapper media-volume');
                 const volBtn = el('button', 'cm-embed-vol-btn media-volume-btn');
@@ -309,12 +305,12 @@ export class EmbedWidget extends WidgetType {
                 playBtn.onclick = (e): void => {
                     e.stopPropagation();
                     if (media.paused) void media.play();
-                    else void media.pause();
+                    else media.pause();
                 };
                 if (isVideo)
                     media.onclick = (): void => {
                         if (media.paused) void media.play();
-                        else void media.pause();
+                        else media.pause();
                     };
 
                 // Seek handler — uses realDuration from closure (set by probe)

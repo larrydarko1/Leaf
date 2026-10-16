@@ -2,7 +2,7 @@ import { readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { mount } from '@vue/test-utils';
-import { describe, it, expect } from 'vitest';
+import { assert, describe, it, expect } from 'vitest';
 import type { Component } from 'vue';
 
 const ICONS_DIR = resolve(import.meta.dirname, '../../../../src/renderer/components/icons');
@@ -19,7 +19,7 @@ describe('icons', () => {
 
     it.each(ICONS)('%s renders a decorative svg', async (file) => {
         const mod: unknown = await import(resolve(ICONS_DIR, file));
-        if (!isComponentModule(mod)) throw new Error(`${file} has no default export`);
+        assert(isComponentModule(mod), `${file} has no default export`);
 
         const wrapper = mount(mod.default);
 

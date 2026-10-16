@@ -139,9 +139,9 @@ export function createMarkdownWidgetsPlugin(
                     const lineText = line.text;
 
                     let newLine: string;
-                    if (/- \[ \]/.test(lineText)) {
+                    if (lineText.includes('- [ ]')) {
                         newLine = lineText.replace('- [ ]', '- [/]');
-                    } else if (/- \[\/\]/.test(lineText)) {
+                    } else if (lineText.includes('- [/]')) {
                         newLine = lineText.replace('- [/]', '- [x]');
                     } else if (/- \[x\]/i.test(lineText)) {
                         newLine = lineText.replace(/- \[x\]/i, '- [ ]');
@@ -164,7 +164,7 @@ function findExternalUrlAt(view: EditorView, pos: number): string | null {
     for (let depth = 0; depth < 10; depth++) {
         if (node.name === 'Link') {
             const text = view.state.doc.sliceString(node.from, node.to);
-            const linkMatch = text.match(/\]\(([^)]+)\)$/);
+            const linkMatch = /\]\(([^)]+)\)$/.exec(text);
             const url = linkMatch?.[1];
             if (url != null && (url.startsWith('http://') || url.startsWith('https://'))) return url;
             return null;

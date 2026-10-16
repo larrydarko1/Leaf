@@ -121,10 +121,9 @@ describe('AudioViewer', () => {
         await new Promise((r) => setTimeout(r, 0));
         await wrapper.vm.$nextTick();
         const audio = wrapper.find('audio');
-        if (audio.exists()) {
-            await audio.trigger('loadedmetadata');
-            await wrapper.vm.$nextTick();
-        }
+        expect(audio.exists()).toBe(true);
+        await audio.trigger('loadedmetadata');
+        await wrapper.vm.$nextTick();
         expect(wrapper.exists()).toBe(true);
         wrapper.unmount();
     });
@@ -136,11 +135,10 @@ describe('AudioViewer', () => {
         await new Promise((r) => setTimeout(r, 0));
         await wrapper.vm.$nextTick();
         const audio = wrapper.find('audio');
-        if (audio.exists()) {
-            await audio.trigger('loadedmetadata');
-            await wrapper.vm.$nextTick();
-            expect(wrapper.find('.custom-audio-player').exists()).toBe(true);
-        }
+        expect(audio.exists()).toBe(true);
+        await audio.trigger('loadedmetadata');
+        await wrapper.vm.$nextTick();
+        expect(wrapper.find('.custom-audio-player').exists()).toBe(true);
         wrapper.unmount();
     });
 
@@ -151,15 +149,13 @@ describe('AudioViewer', () => {
         await new Promise((r) => setTimeout(r, 0));
         await wrapper.vm.$nextTick();
         const audio = wrapper.find('audio');
-        if (audio.exists()) {
-            await audio.trigger('loadedmetadata');
-            await wrapper.vm.$nextTick();
-            const playBtn = wrapper.find('.audio-play-btn');
-            if (playBtn.exists()) {
-                await playBtn.trigger('click');
-                expect(wrapper.exists()).toBe(true);
-            }
-        }
+        expect(audio.exists()).toBe(true);
+        await audio.trigger('loadedmetadata');
+        await wrapper.vm.$nextTick();
+        const playBtn = wrapper.find('.audio-play-btn');
+        expect(playBtn.exists()).toBe(true);
+        await playBtn.trigger('click');
+        expect(wrapper.exists()).toBe(true);
         wrapper.unmount();
     });
 
@@ -170,15 +166,13 @@ describe('AudioViewer', () => {
         await new Promise((r) => setTimeout(r, 0));
         await wrapper.vm.$nextTick();
         const audio = wrapper.find('audio');
-        if (audio.exists()) {
-            await audio.trigger('loadedmetadata');
-            await wrapper.vm.$nextTick();
-            const progress = wrapper.find('.audio-progress-wrapper');
-            if (progress.exists()) {
-                await progress.trigger('click', { clientX: 50 });
-                expect(wrapper.exists()).toBe(true);
-            }
-        }
+        expect(audio.exists()).toBe(true);
+        await audio.trigger('loadedmetadata');
+        await wrapper.vm.$nextTick();
+        const progress = wrapper.find('.audio-progress-wrapper');
+        expect(progress.exists()).toBe(true);
+        await progress.trigger('click', { clientX: 50 });
+        expect(wrapper.exists()).toBe(true);
         wrapper.unmount();
     });
 
@@ -189,15 +183,13 @@ describe('AudioViewer', () => {
         await new Promise((r) => setTimeout(r, 0));
         await wrapper.vm.$nextTick();
         const audio = wrapper.find('audio');
-        if (audio.exists()) {
-            await audio.trigger('loadedmetadata');
-            await wrapper.vm.$nextTick();
-            const volBtn = wrapper.find('.audio-volume-btn');
-            if (volBtn.exists()) {
-                await volBtn.trigger('click');
-                expect(wrapper.exists()).toBe(true);
-            }
-        }
+        expect(audio.exists()).toBe(true);
+        await audio.trigger('loadedmetadata');
+        await wrapper.vm.$nextTick();
+        const volBtn = wrapper.find('.audio-volume-btn');
+        expect(volBtn.exists()).toBe(true);
+        await volBtn.trigger('click');
+        expect(wrapper.exists()).toBe(true);
         wrapper.unmount();
     });
 
@@ -208,15 +200,13 @@ describe('AudioViewer', () => {
         await new Promise((r) => setTimeout(r, 0));
         await wrapper.vm.$nextTick();
         const audio = wrapper.find('audio');
-        if (audio.exists()) {
-            await audio.trigger('loadedmetadata');
-            await wrapper.vm.$nextTick();
-            const slider = wrapper.find('.audio-volume-slider');
-            if (slider.exists()) {
-                await slider.setValue('0.5');
-                expect(wrapper.exists()).toBe(true);
-            }
-        }
+        expect(audio.exists()).toBe(true);
+        await audio.trigger('loadedmetadata');
+        await wrapper.vm.$nextTick();
+        const slider = wrapper.find('.audio-volume-slider');
+        expect(slider.exists()).toBe(true);
+        await slider.setValue('0.5');
+        expect(wrapper.exists()).toBe(true);
         wrapper.unmount();
     });
 
@@ -227,11 +217,10 @@ describe('AudioViewer', () => {
         await new Promise((r) => setTimeout(r, 0));
         await wrapper.vm.$nextTick();
         const audio = wrapper.find('audio');
-        if (audio.exists()) {
-            await audio.trigger('loadedmetadata');
-            await audio.trigger('ended');
-            expect(wrapper.exists()).toBe(true);
-        }
+        expect(audio.exists()).toBe(true);
+        await audio.trigger('loadedmetadata');
+        await audio.trigger('ended');
+        expect(wrapper.exists()).toBe(true);
         wrapper.unmount();
     });
 
@@ -242,11 +231,10 @@ describe('AudioViewer', () => {
         await new Promise((r) => setTimeout(r, 0));
         await wrapper.vm.$nextTick();
         const audio = wrapper.find('audio');
-        if (audio.exists()) {
-            await audio.trigger('error');
-            await wrapper.vm.$nextTick();
-            expect(wrapper.html()).toMatch(/error|unavailable/i);
-        }
+        expect(audio.exists()).toBe(true);
+        await audio.trigger('error');
+        await wrapper.vm.$nextTick();
+        expect(wrapper.html()).toMatch(/error|unavailable/i);
         wrapper.unmount();
     });
 
@@ -257,9 +245,8 @@ describe('AudioViewer', () => {
         await new Promise((r) => setTimeout(r, 0));
         await wrapper.vm.$nextTick();
         const audio = wrapper.find('audio');
-        if (audio.exists()) {
-            await audio.trigger('loadedmetadata');
-        }
+        expect(audio.exists()).toBe(true);
+        await audio.trigger('loadedmetadata');
         const e = new KeyboardEvent('keydown', { key: ' ', bubbles: true });
         window.dispatchEvent(e);
         expect(wrapper.exists()).toBe(true);

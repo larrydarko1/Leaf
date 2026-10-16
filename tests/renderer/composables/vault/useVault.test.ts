@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { assert, describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { useNotifications } from '@/renderer/composables/ui/useNotifications';
 import { useVault } from '@/renderer/composables/vault/useVault';
@@ -610,9 +610,8 @@ describe('useVault', () => {
             vault.setExternalChangeCallback(onChange);
 
             const fsChangedCallback = mockAPI.onFsChanged.mock.calls[0]?.[0];
-            if (fsChangedCallback) {
-                fsChangedCallback({ eventType: 'change', filename: 'note.md' });
-            }
+            assert.exists(fsChangedCallback);
+            fsChangedCallback({ eventType: 'change', filename: 'note.md' });
             vi.useFakeTimers();
             vi.advanceTimersByTime(600);
             vi.useRealTimers();

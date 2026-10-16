@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount, useTemplateRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import AiHistoryPanel from '@/renderer/components/ai/AiHistoryPanel.vue';
@@ -127,8 +127,8 @@ const tokenUsagePercent = computed(() => {
 });
 
 // The two children own their DOM nodes; mirror them into the chat composable's refs.
-const messageList = ref<{ messagesContainer: HTMLElement | null } | null>(null);
-const inputArea = ref<{ inputField: HTMLTextAreaElement | null } | null>(null);
+const messageList = useTemplateRef<{ messagesContainer: HTMLElement | null }>('messageList');
+const inputArea = useTemplateRef<{ inputField: HTMLTextAreaElement | null }>('inputArea');
 
 // `undefined` means the child never exposed the element (a stub in tests) — leave the ref alone.
 function syncChildElements(): void {
@@ -255,7 +255,6 @@ onBeforeUnmount(() => {
             :selected-model-path="selectedModelPath"
             :selected-model-label="selectedModelLabel"
             :show-history="showHistory"
-            :is-any-generating="isAnyGenerating"
             :aria-label="t('ai.model_selection_and_controls')"
             @select-model="selectModel"
             @load-model="loadSelectedModel"

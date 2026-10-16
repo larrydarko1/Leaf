@@ -422,7 +422,7 @@ describe('useAIChat', () => {
             const { chat } = makeChat();
             const md = '```js\nfoo();\n```\n\n```py\nbar()\n```';
             const result = chat.renderMarkdown(md);
-            expect((result.match(/<pre>/g) ?? []).length).toBe(2);
+            expect(result.match(/<pre>/g) ?? []).toHaveLength(2);
         });
     });
 

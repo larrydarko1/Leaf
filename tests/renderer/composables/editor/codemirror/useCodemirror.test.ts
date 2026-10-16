@@ -2,7 +2,7 @@
 import { undo } from '@codemirror/commands';
 import { EditorView } from '@codemirror/view';
 import { mount } from '@vue/test-utils';
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { assert, describe, it, expect, vi, afterEach } from 'vitest';
 import { ref, nextTick, defineComponent, h } from 'vue';
 
 import { useCodemirror, leafHighlightStyle } from '@/renderer/composables/editor/codemirror/useCodemirror';
@@ -116,12 +116,11 @@ describe('useCodemirror', () => {
         await nextTick();
         await nextTick();
         const v = getView();
-        if (v !== null) {
-            v.dispatch({
-                changes: { from: 0, to: 0, insert: 'typed' },
-            });
-            expect(content.value).toBe('typed');
-        }
+        assert.isNotNull(v);
+        v.dispatch({
+            changes: { from: 0, to: 0, insert: 'typed' },
+        });
+        expect(content.value).toBe('typed');
         wrapper.unmount();
     });
 
@@ -131,12 +130,11 @@ describe('useCodemirror', () => {
         await nextTick();
         await nextTick();
         const v = getView();
-        if (v !== null) {
-            v.dispatch({
-                changes: { from: 0, to: 0, insert: 'a' },
-            });
-            expect(onContentChange).toHaveBeenCalled();
-        }
+        assert.isNotNull(v);
+        v.dispatch({
+            changes: { from: 0, to: 0, insert: 'a' },
+        });
+        expect(onContentChange).toHaveBeenCalled();
         wrapper.unmount();
     });
 
@@ -149,12 +147,11 @@ describe('useCodemirror', () => {
         await nextTick();
         await nextTick();
         const v = getView();
-        if (v !== null) {
-            onContentChange.mockClear();
-            content.value = 'replaced externally';
-            await nextTick();
-            expect(onContentChange).not.toHaveBeenCalled();
-        }
+        assert.isNotNull(v);
+        onContentChange.mockClear();
+        content.value = 'replaced externally';
+        await nextTick();
+        expect(onContentChange).not.toHaveBeenCalled();
         wrapper.unmount();
     });
 
@@ -163,11 +160,10 @@ describe('useCodemirror', () => {
         await nextTick();
         await nextTick();
         const v = getView();
-        if (v !== null) {
-            content.value = 'new text';
-            await nextTick();
-            expect(v.state.doc.toString()).toBe('new text');
-        }
+        assert.isNotNull(v);
+        content.value = 'new text';
+        await nextTick();
+        expect(v.state.doc.toString()).toBe('new text');
         wrapper.unmount();
     });
 
@@ -177,12 +173,11 @@ describe('useCodemirror', () => {
         await nextTick();
         await nextTick();
         const v = getView();
-        if (v !== null) {
-            dispatchSpy.mockClear();
-            content.value = 'same';
-            await nextTick();
-            expect(dispatchSpy).not.toHaveBeenCalled();
-        }
+        assert.isNotNull(v);
+        dispatchSpy.mockClear();
+        content.value = 'same';
+        await nextTick();
+        expect(dispatchSpy).not.toHaveBeenCalled();
         dispatchSpy.mockRestore();
         wrapper.unmount();
     });
@@ -193,12 +188,9 @@ describe('useCodemirror', () => {
         await nextTick();
         await nextTick();
         const v = getView();
-        if (v !== null) {
-            wrapper.unmount();
-            expect(destroySpy).toHaveBeenCalled();
-        } else {
-            wrapper.unmount();
-        }
+        assert.isNotNull(v);
+        wrapper.unmount();
+        expect(destroySpy).toHaveBeenCalled();
         destroySpy.mockRestore();
     });
 
@@ -210,12 +202,11 @@ describe('useCodemirror', () => {
         });
         await nextTick();
         await nextTick();
-        if (getView() !== null) {
-            setStateSpy.mockClear();
-            fileId.value = 'file2.md';
-            await nextTick();
-            expect(setStateSpy).toHaveBeenCalled();
-        }
+        expect(getView()).not.toBeNull();
+        setStateSpy.mockClear();
+        fileId.value = 'file2.md';
+        await nextTick();
+        expect(setStateSpy).toHaveBeenCalled();
         setStateSpy.mockRestore();
         wrapper.unmount();
     });

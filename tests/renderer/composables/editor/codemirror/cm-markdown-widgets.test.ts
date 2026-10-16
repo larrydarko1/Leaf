@@ -1,7 +1,7 @@
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { EditorState, type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { assert, describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref } from 'vue';
 
 import {
@@ -112,10 +112,7 @@ describe('createMarkdownWidgetsPlugin', () => {
         const view = makeViewWithExtension(doc);
         view.dispatch({ selection: { anchor: view.state.doc.length } });
         const label = view.dom.querySelector('.cm-task-label');
-        if (label === null) {
-            expect(true).toBe(true);
-            return;
-        }
+        assert.isNotNull(label);
         label.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
         expect(view.state.doc.toString()).toContain('- [/]');
     });
@@ -125,10 +122,7 @@ describe('createMarkdownWidgetsPlugin', () => {
         const view = makeViewWithExtension(doc);
         view.dispatch({ selection: { anchor: view.state.doc.length } });
         const label = view.dom.querySelector('.cm-task-label');
-        if (label === null) {
-            expect(true).toBe(true);
-            return;
-        }
+        assert.isNotNull(label);
         label.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
         expect(view.state.doc.toString()).toContain('- [x]');
     });
@@ -138,10 +132,7 @@ describe('createMarkdownWidgetsPlugin', () => {
         const view = makeViewWithExtension(doc);
         view.dispatch({ selection: { anchor: view.state.doc.length } });
         const label = view.dom.querySelector('.cm-task-label');
-        if (label === null) {
-            expect(true).toBe(true);
-            return;
-        }
+        assert.isNotNull(label);
         label.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
         expect(view.state.doc.toString()).toContain('- [ ]');
     });

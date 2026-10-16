@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
-import { ref, nextTick, defineComponent, createApp } from 'vue';
+import { ref, shallowRef, nextTick, defineComponent, createApp, type ShallowRef } from 'vue';
 
 import { useContextMenu } from '@/renderer/composables/ui/useContextMenu';
 
@@ -30,6 +30,7 @@ describe('useContextMenu', () => {
     let visible: ReturnType<typeof ref<boolean>>;
     let position: ReturnType<typeof ref<{ x: number; y: number }>>;
     let onClose: Mock<() => void>;
+    let menuRef: ShallowRef<HTMLElement | null>;
     let ctx: ReturnType<typeof useContextMenu>;
     let unmount: () => void;
 
@@ -38,9 +39,11 @@ describe('useContextMenu', () => {
         visible = ref<boolean>(false);
         position = ref({ x: 100, y: 100 });
         onClose = vi.fn<() => void>();
+        menuRef = shallowRef<HTMLElement | null>(null);
 
         [ctx, unmount] = withSetup(() =>
             useContextMenu(
+                menuRef,
                 () => visible.value!,
                 () => position.value!,
                 onClose,
@@ -49,10 +52,6 @@ describe('useContextMenu', () => {
     });
 
     afterEach(() => unmount());
-
-    it('menuRef starts as null', () => {
-        expect(ctx.menuRef.value).toBeNull();
-    });
 
     it('adjustedPosition starts as { x: 0, y: 0 }', () => {
         expect(ctx.adjustedPosition.value).toEqual({ x: 0, y: 0 });
@@ -112,7 +111,7 @@ describe('useContextMenu', () => {
         it('calls onClose when a click occurs on an element outside the menu', () => {
             const menuEl = document.createElement('div');
             document.body.appendChild(menuEl);
-            ctx.menuRef.value = menuEl;
+            menuRef.value = menuEl;
 
             const outside = document.createElement('div');
             document.body.appendChild(outside);
@@ -127,7 +126,7 @@ describe('useContextMenu', () => {
         it('does not call onClose when the click is inside the menu element', () => {
             const menuEl = document.createElement('div');
             document.body.appendChild(menuEl);
-            ctx.menuRef.value = menuEl;
+            menuRef.value = menuEl;
 
             menuEl.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
@@ -188,7 +187,7 @@ describe('useContextMenu', () => {
                     return {};
                 },
             });
-            ctx.menuRef.value = fakeEl;
+            menuRef.value = fakeEl;
 
             visible.value = true;
             await nextTick();
@@ -215,7 +214,7 @@ describe('useContextMenu', () => {
                     return {};
                 },
             });
-            ctx.menuRef.value = fakeEl;
+            menuRef.value = fakeEl;
 
             visible.value = true;
             await nextTick();

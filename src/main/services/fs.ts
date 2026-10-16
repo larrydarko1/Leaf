@@ -309,7 +309,7 @@ export function register(ipc: IpcMain, findMainWindow: () => BrowserWindow | nul
         const { filePath, content } = parsed.data;
         try {
             resolveInsideVault(filePath);
-            const tmp = filePath + '.tmp';
+            const tmp = `${filePath}.tmp`;
             await fs.writeFile(tmp, content, 'utf-8');
             await fs.rename(tmp, filePath);
             return { success: true };

@@ -202,7 +202,9 @@ export function useVault(): UseVaultReturn {
                 if (oldFileName !== newFileName) {
                     window.electronAPI
                         .updateEmbedRefs(oldFileName, newFileName)
-                        .catch((err): void => window.electronAPI.log.error('Failed to update embed references:', err));
+                        .catch((err: unknown): void =>
+                            window.electronAPI.log.error('Failed to update embed references:', err),
+                        );
                 }
                 await refreshFiles();
                 return files.value.find((f): boolean => f.path === result.newPath) ?? null;
@@ -218,7 +220,7 @@ export function useVault(): UseVaultReturn {
 
     async function renameFolder(relativePath: string, newName: string): Promise<string | null> {
         if (currentFolder.value === null || currentFolder.value === '') return null;
-        const absolutePath = currentFolder.value + '/' + relativePath;
+        const absolutePath = `${currentFolder.value}/${relativePath}`;
         try {
             const result = await window.electronAPI.renameFolder(absolutePath, newName);
             if (result.success && result.newPath !== undefined && result.newPath !== '') {
@@ -226,7 +228,7 @@ export function useVault(): UseVaultReturn {
                 const parentPath = relativePath.includes('/')
                     ? relativePath.substring(0, relativePath.lastIndexOf('/'))
                     : '';
-                return parentPath !== '' ? parentPath + '/' + newName : newName;
+                return parentPath !== '' ? `${parentPath}/${newName}` : newName;
             }
             notify.error(t('errors.rename_folder_failed', { reason: formatIpcError(t, result.error) }));
             return null;
@@ -256,7 +258,7 @@ export function useVault(): UseVaultReturn {
 
     async function deleteFolder(relativePath: string): Promise<boolean> {
         if (currentFolder.value === null || currentFolder.value === '') return false;
-        const absolutePath = currentFolder.value + '/' + relativePath;
+        const absolutePath = `${currentFolder.value}/${relativePath}`;
         try {
             const result = await window.electronAPI.deleteFolder(absolutePath);
             if (result.success) {
@@ -277,7 +279,7 @@ export function useVault(): UseVaultReturn {
         const absoluteTarget =
             targetRelativePath === '.' || targetRelativePath === ''
                 ? currentFolder.value
-                : currentFolder.value + '/' + targetRelativePath;
+                : `${currentFolder.value}/${targetRelativePath}`;
         const movedFiles: MovedFile[] = [];
         for (const path of filePaths) {
             const name = path.split('/').pop() ?? path;
@@ -300,15 +302,15 @@ export function useVault(): UseVaultReturn {
     /** Returns the folder's new vault-relative path, or null if the move failed. */
     async function moveFolder(relativePath: string, targetRelativePath: string): Promise<string | null> {
         if (currentFolder.value === null || currentFolder.value === '') return null;
-        const absolutePath = currentFolder.value + '/' + relativePath;
+        const absolutePath = `${currentFolder.value}/${relativePath}`;
         const isVaultRoot = targetRelativePath === '.' || targetRelativePath === '';
-        const absoluteTarget = isVaultRoot ? currentFolder.value : currentFolder.value + '/' + targetRelativePath;
+        const absoluteTarget = isVaultRoot ? currentFolder.value : `${currentFolder.value}/${targetRelativePath}`;
         try {
             const result = await window.electronAPI.moveFolder(absolutePath, absoluteTarget);
             if (result.success) {
                 await refreshFiles();
                 const folderName = relativePath.substring(relativePath.lastIndexOf('/') + 1);
-                return isVaultRoot ? folderName : targetRelativePath + '/' + folderName;
+                return isVaultRoot ? folderName : `${targetRelativePath}/${folderName}`;
             }
             notify.error(t('errors.move_folder_failed', { reason: formatIpcError(t, result.error) }));
             return null;

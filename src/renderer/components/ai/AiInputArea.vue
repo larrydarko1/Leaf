@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, nextTick } from 'vue';
+import { ref, onMounted, computed, nextTick, useTemplateRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import IconClose from '@/renderer/components/icons/IconClose.vue';
@@ -43,14 +43,14 @@ const maxHeight = 150;
 const { t } = useI18n();
 
 // Exposed so AiPanel can focus the input after loading a model.
-const inputField = ref<HTMLTextAreaElement | null>(null);
+const inputField = useTemplateRef<HTMLTextAreaElement>('inputField');
 defineExpose({ inputField });
 
 // ––– Context file picker –––
 
 const showFilePicker = ref(false);
 const fileSearch = ref('');
-const fileSearchInput = ref<HTMLInputElement | null>(null);
+const fileSearchInput = useTemplateRef<HTMLInputElement>('fileSearchInput');
 
 const canAddMore = computed(() => props.contextFiles.length < props.maxContextFiles);
 

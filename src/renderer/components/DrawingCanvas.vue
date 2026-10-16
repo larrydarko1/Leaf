@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, nextTick, useTemplateRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import DrawingExportDialog from '@/renderer/components/drawing/DrawingExportDialog.vue';
@@ -31,10 +31,10 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-const containerEl = ref<HTMLDivElement | null>(null);
-const canvas = ref<HTMLCanvasElement | null>(null);
-const textInputEl = ref<HTMLTextAreaElement | null>(null);
-const toolbarRef = ref<InstanceType<typeof DrawingToolbar> | null>(null);
+const containerEl = useTemplateRef<HTMLDivElement>('containerEl');
+const canvas = useTemplateRef<HTMLCanvasElement>('canvas');
+const textInputEl = useTemplateRef<HTMLTextAreaElement>('textInputEl');
+const toolbarRef = useTemplateRef<InstanceType<typeof DrawingToolbar>>('toolbarRef');
 const scrollX = ref(0);
 const scrollY = ref(0);
 const zoom = ref(1);

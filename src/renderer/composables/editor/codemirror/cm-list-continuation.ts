@@ -28,7 +28,7 @@ function renumberOrderedList(text: string, fromPos: number, indent: string, star
     for (const [i, lineText] of lines.entries()) {
         const match = lineText.match(pattern);
         if (match == null) break;
-        const oldNum = parseInt(match[1] ?? '');
+        const oldNum = parseInt(match[1] ?? '', 10);
         if (oldNum !== num) {
             lines[i] = lineText.replace(pattern, `${indent}${num}. `);
             changed = true;
@@ -74,7 +74,7 @@ function continueMarkdownList(view: EditorView): boolean {
     const textBeforeCursor = lineText.substring(0, posInLine);
 
     // Bullet list: "  - content" or "  - [ ] content" or "  - [x] content" or "  - [/] content"
-    const bulletMatch = textBeforeCursor.match(/^(\s*)- (\[[ x/]\] )?(.*)$/i);
+    const bulletMatch = /^(\s*)- (\[[ x/]\] )?(.*)$/i.exec(textBeforeCursor);
     if (bulletMatch != null) {
         const indent = bulletMatch[1] ?? '';
         const checkbox = bulletMatch[2] ?? '';
@@ -94,17 +94,17 @@ function continueMarkdownList(view: EditorView): boolean {
         // Continue the list
         const prefix = checkbox !== '' ? `${indent}- [ ] ` : `${indent}- `;
         view.dispatch({
-            changes: { from: cursorPos, to: cursorPos, insert: '\n' + prefix },
+            changes: { from: cursorPos, to: cursorPos, insert: `\n${prefix}` },
             selection: EditorSelection.cursor(cursorPos + 1 + prefix.length),
         });
         return true;
     }
 
     // Ordered list: "  1. content"
-    const orderedMatch = textBeforeCursor.match(/^(\s*)(\d+)\. (.*)$/);
+    const orderedMatch = /^(\s*)(\d+)\. (.*)$/.exec(textBeforeCursor);
     if (orderedMatch != null) {
         const indent = orderedMatch[1] ?? '';
-        const num = parseInt(orderedMatch[2] ?? '');
+        const num = parseInt(orderedMatch[2] ?? '', 10);
         const lineContent = orderedMatch[3] ?? '';
         const trimmedContent = lineContent.trim();
         const isEmpty = trimmedContent.length === 0;
@@ -135,7 +135,7 @@ function continueMarkdownList(view: EditorView): boolean {
         }
 
         view.dispatch({
-            changes: [{ from: cursorPos, to: cursorPos, insert: '\n' + prefix }, ...renumberChanges],
+            changes: [{ from: cursorPos, to: cursorPos, insert: `\n${prefix}` }, ...renumberChanges],
             selection: EditorSelection.cursor(cursorPos + insertLength),
         });
         return true;
