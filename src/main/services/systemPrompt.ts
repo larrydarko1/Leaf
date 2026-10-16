@@ -17,13 +17,11 @@ import { existsSync } from 'fs';
 import fs from 'fs/promises';
 import path from 'path';
 
-import { shell } from 'electron';
-
 import { readState as readRawState, updateState } from '@/main/lib/appState';
 import { toIpcErrorCode, ipcFailure } from '@/main/lib/errors';
 import type { IpcMain } from '@/main/lib/ipc';
 import { log } from '@/main/lib/logger';
-import { LEAF_HOME, PROMPTS_DIR, getBundledPromptsDir } from '@/main/lib/paths';
+import { PROMPTS_DIR, getBundledPromptsDir } from '@/main/lib/paths';
 import { type PromptInfo, type PromptState, PromptStateSchema, type AiSimpleResult } from '@/schemas/ai';
 import type { IpcErrorCode } from '@/schemas/errors';
 
@@ -77,16 +75,6 @@ export function register(ipc: IpcMain): void {
             return { success: true };
         } catch (err) {
             return ipcFailure('systemPrompt systemPrompt:setActive', err);
-        }
-    });
-
-    ipc.handle('systemPrompt:openLeafDir', async (): Promise<AiSimpleResult> => {
-        try {
-            await fs.mkdir(LEAF_HOME, { recursive: true });
-            await shell.openPath(LEAF_HOME);
-            return { success: true };
-        } catch (err) {
-            return ipcFailure('systemPrompt systemPrompt:openLeafDir', err);
         }
     });
 }

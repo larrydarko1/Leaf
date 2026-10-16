@@ -38,8 +38,6 @@ const loadConversation = (id: unknown) => invoke('conversations:load', id);
 const saveConversation = (c: Conversation) => invoke('conversations:save', c);
 const addMessage = (id: string, m: ConversationMessage) => invoke('conversations:addMessage', id, m);
 
-const updateLastMessage = (id: string, content: string) => invoke('conversations:updateLastMessage', id, content);
-
 const readConversations = async () => ListSchema.parse(await serviceIpc.invoke('conversations:list'));
 
 const deleteConversation = (id: unknown) => invoke('conversations:delete', id);
@@ -175,28 +173,6 @@ describe('addMessage', () => {
         });
         expect(result.success).toBe(false);
         expect(result.error).toBe('NOT_FOUND');
-    });
-});
-
-describe('updateLastMessage', () => {
-    it('updates the content of the last message', async () => {
-        const { conversation } = await createConversation('llama');
-        await addMessage(conversation!.id, { role: 'user', content: 'Original' });
-        await updateLastMessage(conversation!.id, 'Updated');
-        const reloaded = await reload(conversation!.id);
-        expect(reloaded?.messages[0]!.content).toBe('Updated');
-    });
-
-    it('returns failure when there are no messages', async () => {
-        const { conversation } = await createConversation('llama');
-        const result = await updateLastMessage(conversation!.id, 'content');
-        expect(result.success).toBe(false);
-        expect(result.error).toBe('INVALID_STATE');
-    });
-
-    it('returns failure for non-existent conversation', async () => {
-        const result = await updateLastMessage('00000000-0000-0000-0000-000000000000', 'x');
-        expect(result.success).toBe(false);
     });
 });
 
@@ -343,18 +319,6 @@ describe('register', () => {
 
     it('conversations:addMessage rejects invalid arguments', async () => {
         const result = readReply(await ipc.invoke('conversations:addMessage', 123, null));
-        expect(result.success).toBe(false);
-    });
-
-    it('registers conversations:updateLastMessage handler', async () => {
-        const { conversation } = await createConversation('llama');
-        await addMessage(conversation!.id, { role: 'user', content: 'Original' });
-        const result = readReply(await ipc.invoke('conversations:updateLastMessage', conversation!.id, 'Updated'));
-        expect(result.success).toBe(true);
-    });
-
-    it('conversations:updateLastMessage rejects invalid arguments', async () => {
-        const result = readReply(await ipc.invoke('conversations:updateLastMessage', null, null));
         expect(result.success).toBe(false);
     });
 

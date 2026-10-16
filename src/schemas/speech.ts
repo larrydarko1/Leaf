@@ -22,6 +22,3 @@ export type SpeechStatus = {
     isModelLoaded: boolean;
     isModelLoading: boolean;
 };
-
-export type SpeechStatusEvent =
-    { status: 'loading' | 'ready'; message: string } | { status: 'error'; error: IpcErrorCode };

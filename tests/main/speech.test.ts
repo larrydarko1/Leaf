@@ -94,7 +94,7 @@ describe('cleanup', () => {
 describe('speech:getStatus', () => {
     it('reports not loaded and not loading on fresh state', async () => {
         const handlers = createFakeIpc();
-        register(handlers, () => null);
+        register(handlers);
         const status = z
             .object({ isModelLoaded: z.boolean(), isModelLoading: z.boolean() })
             .parse(await handlers.invoke('speech:getStatus'));
@@ -106,7 +106,7 @@ describe('speech:getStatus', () => {
 describe('speech:transcribe', () => {
     it('returns failure for an empty audio array', async () => {
         const handlers = createFakeIpc();
-        register(handlers, () => null);
+        register(handlers);
         const result = readReply(await handlers.invoke('speech:transcribe', []));
         expect(result.success).toBe(false);
         expect(result.error).toBe('INVALID_ARGUMENTS');
@@ -114,14 +114,14 @@ describe('speech:transcribe', () => {
 
     it('returns failure for non-array audio data', async () => {
         const handlers = createFakeIpc();
-        register(handlers, () => null);
+        register(handlers);
         const result = readReply(await handlers.invoke('speech:transcribe', 'blob'));
         expect(result.success).toBe(false);
     });
 
     it('returns failure when the model is not loaded', async () => {
         const handlers = createFakeIpc();
-        register(handlers, () => null);
+        register(handlers);
         const result = readReply(await handlers.invoke('speech:transcribe', [0.1, 0.2]));
         expect(result.success).toBe(false);
         expect(result.error).toBe('MODEL_NOT_LOADED');
@@ -131,7 +131,7 @@ describe('speech:transcribe', () => {
 describe('speech:init', () => {
     it('returns failure when a required model file is missing', async () => {
         const handlers = createFakeIpc();
-        register(handlers, () => null);
+        register(handlers);
         const result = readReply(await handlers.invoke('speech:init'));
         expect(result.success).toBe(false);
         expect(result.error).toBe('NOT_FOUND');
@@ -141,7 +141,7 @@ describe('speech:init', () => {
         createModelFiles();
         mockTranscriber.mockResolvedValue({ text: 'hello' });
         const handlers = createFakeIpc();
-        register(handlers, () => null);
+        register(handlers);
         const result = z
             .object({ success: z.boolean(), message: z.string().optional() })
             .parse(await handlers.invoke('speech:init'));
@@ -152,7 +152,7 @@ describe('speech:init', () => {
     it('returns "already loaded" when called twice', async () => {
         createModelFiles();
         const handlers = createFakeIpc();
-        register(handlers, () => null);
+        register(handlers);
         await handlers.invoke('speech:init');
         const result = z
             .object({ success: z.boolean(), message: z.string().optional() })
@@ -165,7 +165,7 @@ describe('speech:init', () => {
         createModelFiles();
         mockTranscriber.mockResolvedValue({ text: 'transcribed text' });
         const handlers = createFakeIpc();
-        register(handlers, () => null);
+        register(handlers);
         await handlers.invoke('speech:init');
         const result = z
             .object({ success: z.boolean(), text: z.string().optional() })
@@ -178,7 +178,7 @@ describe('speech:init', () => {
         createModelFiles();
         mockTranscriber.mockResolvedValue('plain text result');
         const handlers = createFakeIpc();
-        register(handlers, () => null);
+        register(handlers);
         await handlers.invoke('speech:init');
         const result = z
             .object({ success: z.boolean(), text: z.string().optional() })
@@ -191,7 +191,7 @@ describe('speech:init', () => {
         createModelFiles();
         mockTranscriber.mockRejectedValueOnce(new Error('transcription error'));
         const handlers = createFakeIpc();
-        register(handlers, () => null);
+        register(handlers);
         await handlers.invoke('speech:init');
         const result = z
             .object({ success: z.boolean(), error: z.string().optional() })
@@ -210,7 +210,7 @@ describe('speech:init', () => {
         );
 
         const handlers = createFakeIpc();
-        register(handlers, () => null);
+        register(handlers);
 
         const firstInitPromise = handlers.invoke('speech:init');
         const result = readReply(await handlers.invoke('speech:init'));
@@ -226,7 +226,7 @@ describe('dictation language', () => {
     async function initReady() {
         createModelFiles();
         const handlers = createFakeIpc();
-        register(handlers, () => null);
+        register(handlers);
         await handlers.invoke('speech:init');
         return handlers;
     }

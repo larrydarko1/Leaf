@@ -16,7 +16,6 @@ import type {
     SpeechTranscribeResult,
     SpeechResetSessionResult,
     SpeechStatus,
-    SpeechStatusEvent,
 } from '@/schemas/speech';
 import type {
     ScanResult,
@@ -40,10 +39,7 @@ export type ElectronAPI = {
     log: {
         error: (message: string, ...details: unknown[]) => void;
         warn: (message: string, ...details: unknown[]) => void;
-        info: (message: string, ...details: unknown[]) => void;
-        debug: (message: string, ...details: unknown[]) => void;
     };
-    isElectron: () => boolean;
     openExternal: (url: string) => Promise<boolean>;
     openFolderDialog: () => Promise<string | null>;
     showSaveDialog: (options: {
@@ -90,7 +86,6 @@ export type ElectronAPI = {
         error?: IpcErrorCode;
     }>;
     systemPromptSetActive: (id: string) => Promise<AiSimpleResult>;
-    systemPromptOpenLeafDir: () => Promise<AiSimpleResult>;
 
     // Theme presets (~/.leaf/themes/*.json)
     themeList: () => Promise<{
@@ -140,7 +135,6 @@ export type ElectronAPI = {
     conversationLoad: (id: string) => Promise<ConversationLoadResult>;
     conversationSave: (conversation: Conversation) => Promise<AiSimpleResult>;
     conversationAddMessage: (conversationId: string, message: ConversationMessage) => Promise<AiSimpleResult>;
-    conversationUpdateLastMessage: (conversationId: string, content: string) => Promise<AiSimpleResult>;
     conversationDelete: (id: string) => Promise<AiSimpleResult>;
     conversationRename: (id: string, newTitle: string) => Promise<AiSimpleResult>;
 
@@ -162,8 +156,6 @@ export type ElectronAPI = {
     speechTranscribe: (audioData: number[]) => Promise<SpeechTranscribeResult>;
     speechGetStatus: () => Promise<SpeechStatus>;
     speechResetSession: () => Promise<SpeechResetSessionResult>;
-    onSpeechStatus: (callback: (status: SpeechStatusEvent) => void) => void;
-    removeSpeechStatusListener: () => void;
 };
 
 declare global {

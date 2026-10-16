@@ -225,7 +225,7 @@ void app.whenReady().then(async (): Promise<void> => {
     mediaService.register(ipcMain, fsService.findVaultRoot);
     aiService.register(ipcMain, findMainWindow);
     conversationService.register(ipcMain);
-    speechService.register(ipcMain, findMainWindow);
+    speechService.register(ipcMain);
     systemPromptService.register(ipcMain);
     themeService.register(ipcMain);
     languageService.register(ipcMain);

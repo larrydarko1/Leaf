@@ -30,7 +30,6 @@ const mockElectronAPI = {
     conversationLoad: vi.fn().mockResolvedValue({ success: true, conversation: null }),
     conversationSave: vi.fn().mockResolvedValue({ success: true }),
     conversationAddMessage: vi.fn().mockResolvedValue({ success: true }),
-    conversationUpdateLastMessage: vi.fn().mockResolvedValue({ success: true }),
     conversationDelete: vi.fn().mockResolvedValue({ success: true }),
     conversationRename: vi.fn().mockResolvedValue({ success: true }),
     systemPromptList: vi.fn().mockResolvedValue({ success: true, prompts: [], activeId: '', promptsDir: '' }),

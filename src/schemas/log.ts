@@ -6,7 +6,7 @@
 import { z } from 'zod';
 
 /** The severities the renderer may write at. */
-export type LogLevel = 'error' | 'warn' | 'info' | 'debug';
+export type LogLevel = 'error' | 'warn';
 
 /**
  * One log entry from the renderer. Call sites read like `console.error` —

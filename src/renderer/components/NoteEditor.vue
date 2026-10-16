@@ -292,7 +292,6 @@ onUnmounted(() => {
     if (isDictating.value) {
         stopDictation();
     }
-    window.electronAPI.removeSpeechStatusListener();
     document.removeEventListener('drop', preventGlobalDrop, true);
     document.removeEventListener('dragover', preventGlobalDragOver, true);
     window.removeEventListener('keydown', handleKeyboard);

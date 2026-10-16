@@ -79,16 +79,6 @@ export function register(ipc: IpcMain): void {
         },
     );
 
-    ipc.handle(
-        'conversations:updateLastMessage',
-        async (_event, conversationId: unknown, content: unknown): Promise<AiSimpleResult> => {
-            const idParsed = z.string().min(1).safeParse(conversationId);
-            const contentParsed = z.string().safeParse(content);
-            if (!idParsed.success || !contentParsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
-            return updateLastMessage(idParsed.data, contentParsed.data);
-        },
-    );
-
     ipc.handle('conversations:delete', async (_event, id: unknown): Promise<AiSimpleResult> => {
         const parsed = z.string().min(1).safeParse(id);
         if (!parsed.success) return { success: false, error: 'INVALID_ARGUMENTS' };
@@ -154,28 +144,6 @@ async function addMessage(conversationId: string, message: ConversationMessage):
         return await saveConversation(conversation);
     } catch (error) {
         log.error('Failed to add message:', error);
-        return { success: false, error: toIpcErrorCode(error) };
-    }
-}
-
-async function updateLastMessage(conversationId: string, content: string): Promise<AiSimpleResult> {
-    try {
-        const conversation = await findConversation(conversationId);
-        if (conversation === null) {
-            return { success: false, error: 'NOT_FOUND' };
-        }
-
-        if (conversation.messages.length === 0) {
-            return { success: false, error: 'INVALID_STATE' };
-        }
-
-        const lastMessage = conversation.messages[conversation.messages.length - 1];
-        if (lastMessage === undefined) return { success: false, error: 'INVALID_STATE' };
-        lastMessage.content = content;
-
-        return await saveConversation(conversation);
-    } catch (error) {
-        log.error('Failed to update last message:', error);
         return { success: false, error: toIpcErrorCode(error) };
     }
 }

@@ -28,18 +28,18 @@ describe('log service', () => {
     });
 
     it('registers one listener per level', () => {
-        expect(Object.keys(registered()).sort()).toEqual(['log:debug', 'log:error', 'log:info', 'log:warn']);
+        expect(Object.keys(registered()).sort()).toEqual(['log:error', 'log:warn']);
     });
 
-    it.each(['error', 'warn', 'info', 'debug'] as const)('writes a valid entry at %s', (level) => {
+    it.each(['error', 'warn'] as const)('writes a valid entry at %s', (level) => {
         const err = new Error('boom');
         registered()[`log:${level}`]!({}, { message: 'Failed to save:', details: [err] });
         expect(log[level]).toHaveBeenCalledWith('Failed to save:', err);
     });
 
     it('writes a message with no details on its own', () => {
-        registered()['log:info']!({}, { message: 'ready', details: [] });
-        expect(log.info).toHaveBeenCalledWith('ready');
+        registered()['log:warn']!({}, { message: 'ready', details: [] });
+        expect(log.warn).toHaveBeenCalledWith('ready');
     });
 
     it.each([

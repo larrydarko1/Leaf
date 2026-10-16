@@ -107,7 +107,6 @@ vi.mock('@/renderer/composables/editor/useDictation', () => ({
 }));
 
 const mockReadFile = vi.fn().mockResolvedValue({ success: false });
-const mockRemoveSpeechStatusListener = vi.fn();
 
 function makeFile(overrides: Partial<FileInfo> = {}): FileInfo {
     return {
@@ -133,7 +132,6 @@ Object.assign(window, {
     electronAPI: {
         ...window.electronAPI,
         readFile: mockReadFile,
-        removeSpeechStatusListener: mockRemoveSpeechStatusListener,
     },
 });
 
@@ -371,12 +369,6 @@ describe('NoteEditor', () => {
             const wrapper = mountEditor(makeFile());
             wrapper.unmount();
             expect(mockClearAutoSaveTimeout).toHaveBeenCalled();
-        });
-
-        it('calls removeSpeechStatusListener on unmount', () => {
-            const wrapper = mountEditor(makeFile());
-            wrapper.unmount();
-            expect(mockRemoveSpeechStatusListener).toHaveBeenCalled();
         });
 
         it('stops dictation on unmount when actively dictating', () => {
