@@ -106,12 +106,10 @@ export function register(ipc: IpcMain): void {
  * failure so a later call can retry.
  */
 function ensureSeeded(): Promise<void> {
-    if (seedPromise === null) {
-        seedPromise = doSeed().catch((err): void => {
-            seedPromise = null;
-            log.error('[theme] seeding failed:', err);
-        });
-    }
+    seedPromise ??= doSeed().catch((err: unknown): void => {
+        seedPromise = null;
+        log.error('[theme] seeding failed:', err);
+    });
     return seedPromise;
 }
 

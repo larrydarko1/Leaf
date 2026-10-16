@@ -28,7 +28,7 @@ function renumberOrderedList(text: string, fromPos: number, indent: string, star
     for (const [i, lineText] of lines.entries()) {
         const match = lineText.match(pattern);
         if (match == null) break;
-        const oldNum = parseInt(match[1] ?? '');
+        const oldNum = parseInt(match[1] ?? '', 10);
         if (oldNum !== num) {
             lines[i] = lineText.replace(pattern, `${indent}${num}. `);
             changed = true;
@@ -104,7 +104,7 @@ function continueMarkdownList(view: EditorView): boolean {
     const orderedMatch = /^(\s*)(\d+)\. (.*)$/.exec(textBeforeCursor);
     if (orderedMatch != null) {
         const indent = orderedMatch[1] ?? '';
-        const num = parseInt(orderedMatch[2] ?? '');
+        const num = parseInt(orderedMatch[2] ?? '', 10);
         const lineContent = orderedMatch[3] ?? '';
         const trimmedContent = lineContent.trim();
         const isEmpty = trimmedContent.length === 0;

@@ -197,7 +197,7 @@ describe('AiPanel – resize feature', () => {
 
             const style = wrapper.find('.ai-panel').attributes('style') ?? '';
             const match = /width:\s*(\d+)px/.exec(style);
-            const width = match?.[1] !== undefined ? parseInt(match[1]) : 0;
+            const width = match?.[1] !== undefined ? parseInt(match[1], 10) : 0;
 
             expect(width).toBe(390); // 340 + 50
 

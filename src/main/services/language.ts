@@ -101,12 +101,10 @@ export async function findActiveDictationLanguage(): Promise<string | null> {
  * before any await. Resets to null on failure so a later call can retry.
  */
 function ensureSeeded(): Promise<void> {
-    if (seedPromise === null) {
-        seedPromise = doSeed().catch((err): void => {
-            seedPromise = null;
-            log.error('[language] seeding failed:', err);
-        });
-    }
+    seedPromise ??= doSeed().catch((err: unknown): void => {
+        seedPromise = null;
+        log.error('[language] seeding failed:', err);
+    });
     return seedPromise;
 }
 

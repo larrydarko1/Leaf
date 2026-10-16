@@ -123,14 +123,12 @@ export async function getActiveSystemPrompt(): Promise<string> {
  * to slip past. Resets to null on failure so a later call can retry.
  */
 function ensureSeeded(): Promise<void> {
-    if (seedPromise === null) {
-        // On failure, log and reset the memo so a later call can retry, and
-        // swallow so callers never see a rejection — seeding is non-fatal.
-        seedPromise = doSeed().catch((err): void => {
-            seedPromise = null;
-            log.error('[systemPrompt] seeding failed:', err);
-        });
-    }
+    // On failure, log and reset the memo so a later call can retry, and
+    // swallow so callers never see a rejection — seeding is non-fatal.
+    seedPromise ??= doSeed().catch((err: unknown): void => {
+        seedPromise = null;
+        log.error('[systemPrompt] seeding failed:', err);
+    });
     return seedPromise;
 }
 

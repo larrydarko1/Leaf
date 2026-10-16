@@ -219,10 +219,7 @@ export function useDrawingInteraction({
         }
 
         // Non-text tools: capture pointer for drag
-        const canvasEl = canvas.value;
-        if (canvasEl !== null) {
-            canvasEl.setPointerCapture(e.pointerId);
-        }
+        canvas.value?.setPointerCapture(e.pointerId);
         isDragging.value = true;
         dragStartWorld.value = { ...worldPt };
         dragStartScreen.value = { ...screenPt };
@@ -444,15 +441,15 @@ export function useDrawingInteraction({
                 renderScene();
                 break;
             }
+
+            case 'none':
+                break;
         }
     }
 
     function onPointerUp(e: PointerEvent): void {
         if (!isDragging.value) return;
-        const canvasEl = canvas.value;
-        if (canvasEl !== null) {
-            canvasEl.releasePointerCapture(e.pointerId);
-        }
+        canvas.value?.releasePointerCapture(e.pointerId);
 
         const action = dragAction.value;
         isDragging.value = false;
@@ -460,9 +457,8 @@ export function useDrawingInteraction({
 
         switch (action) {
             case 'create': {
-                const creating = creatingElement.value;
-                if (creating === null) break;
-                const el = creating;
+                const el = creatingElement.value;
+                if (el === null) break;
                 if (!['line', 'arrow'].includes(el.type)) {
                     if (el.width < 0) {
                         el.x += el.width;
@@ -534,6 +530,10 @@ export function useDrawingInteraction({
                 renderScene();
                 break;
             }
+
+            case 'pan':
+            case 'none':
+                break;
         }
 
         dragOriginal.value = null;
@@ -640,8 +640,8 @@ export function useDrawingInteraction({
         renderScene();
     }
 
-    function zoomAtPoint(newZoom: number, sx: number, sy: number): void {
-        newZoom = Math.max(0.1, Math.min(5, newZoom));
+    function zoomAtPoint(requestedZoom: number, sx: number, sy: number): void {
+        const newZoom = Math.max(0.1, Math.min(5, requestedZoom));
         const oldZoom = zoom.value;
         scrollX.value = sx - (sx - scrollX.value) * (newZoom / oldZoom);
         scrollY.value = sy - (sy - scrollY.value) * (newZoom / oldZoom);

@@ -202,7 +202,9 @@ export function useVault(): UseVaultReturn {
                 if (oldFileName !== newFileName) {
                     window.electronAPI
                         .updateEmbedRefs(oldFileName, newFileName)
-                        .catch((err): void => window.electronAPI.log.error('Failed to update embed references:', err));
+                        .catch((err: unknown): void =>
+                            window.electronAPI.log.error('Failed to update embed references:', err),
+                        );
                 }
                 await refreshFiles();
                 return files.value.find((f): boolean => f.path === result.newPath) ?? null;

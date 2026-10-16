@@ -234,7 +234,7 @@ export function buildSyntaxDecos(
 
                 // ── Headings ──────────────────────────────────────────
                 if (/^(ATXHeading[1-6])$/.test(name)) {
-                    const level = parseInt(name.replace('ATXHeading', ''));
+                    const level = parseInt(name.replace('ATXHeading', ''), 10);
                     decos.push(
                         Decoration.line({ class: `cm-heading cm-heading-${level}` }).range(state.doc.lineAt(from).from),
                     );

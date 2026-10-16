@@ -230,7 +230,7 @@ async function detectLanguage(float32Audio: Float32Array): Promise<string | null
 
         const langToId = pipe.model.generation_config.lang_to_id;
         for (const [langKey, tokenId] of Object.entries(langToId)) {
-            if (Number(tokenId) !== langToken) continue;
+            if (tokenId !== langToken) continue;
             const match = /\|(.+)\|/.exec(langKey);
             if (match?.[1] === undefined) continue;
             log.info('[Speech] Language detected:', match[1]);

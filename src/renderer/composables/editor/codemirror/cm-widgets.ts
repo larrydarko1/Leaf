@@ -176,8 +176,8 @@ export class EmbedWidget extends WidgetType {
                 img.loading = 'lazy';
                 const dimMatch = this.displayOptions !== '' ? /^(\d+)(?:x(\d+))?$/.exec(this.displayOptions) : null;
                 if (dimMatch !== null) {
-                    img.width = parseInt(dimMatch[1] ?? '');
-                    if (dimMatch[2] !== undefined) img.height = parseInt(dimMatch[2]);
+                    img.width = parseInt(dimMatch[1] ?? '', 10);
+                    if (dimMatch[2] !== undefined) img.height = parseInt(dimMatch[2], 10);
                 }
                 wrapper.appendChild(img);
                 return wrapper;
