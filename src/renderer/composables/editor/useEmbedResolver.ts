@@ -86,7 +86,7 @@ export function useEmbedResolver(
 
     function getEmbedMediaType(fileName: string): 'image' | 'video' | 'audio' | 'pdf' | 'note' | 'unknown' {
         const lastPart = fileName.split('.').pop() ?? 'unknown';
-        const ext = '.' + lastPart.toLowerCase();
+        const ext = `.${lastPart.toLowerCase()}`;
         if (checkImage(ext)) return 'image';
         if (checkVideo(ext)) return 'video';
         if (checkAudio(ext)) return 'audio';

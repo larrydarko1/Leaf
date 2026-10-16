@@ -59,11 +59,11 @@ defineExpose({ messagesContainer });
 const editInputRef = ref<HTMLTextAreaElement[]>([]);
 
 function truncate(str: string, len: number): string {
-    return str.length > len ? str.slice(0, len) + '…' : str;
+    return str.length > len ? `${str.slice(0, len)}…` : str;
 }
 
 function formatTokenCount(n: number): string {
-    if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+    if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
     return String(n);
 }
 

@@ -565,7 +565,7 @@ describe('onDoubleClick', () => {
                 .mockReturnValue({ x: shapeEl.x, y: shapeEl.y, width: shapeEl.width, height: shapeEl.height }),
             hitTestElement: vi.fn().mockReturnValue(shapeEl),
             isShapeElement: vi.fn().mockReturnValue(true),
-            genId: genId,
+            genId,
             defaultStyle: ref({ ...defaultDefaultStyle }),
             worldToScreen: vi.fn().mockImplementation((x: number, y: number) => ({ x, y })),
             screenToWorld: vi.fn().mockImplementation((x: number, y: number) => ({ x, y })),

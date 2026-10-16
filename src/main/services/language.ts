@@ -279,7 +279,7 @@ async function backfillMissingKeys(
         const destJson: unknown = JSON.parse(destRaw.toString('utf-8'));
         const bundledJson: unknown = JSON.parse(bundledContent.toString('utf-8'));
         if (isPlainObject(destJson) && isPlainObject(bundledJson) && fillMissingKeys(destJson, bundledJson)) {
-            await fs.writeFile(dest, JSON.stringify(destJson, null, 2) + '\n');
+            await fs.writeFile(dest, `${JSON.stringify(destJson, null, 2)}\n`);
             log.info('[language] Backfilled missing keys', { file: fileName });
         }
     } catch (err) {

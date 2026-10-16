@@ -69,8 +69,8 @@ export function useCanvasRenderer({
         const rect = containerEl.value.getBoundingClientRect();
         canvas.value.width = rect.width * dpr;
         canvas.value.height = rect.height * dpr;
-        canvas.value.style.width = rect.width + 'px';
-        canvas.value.style.height = rect.height + 'px';
+        canvas.value.style.width = `${rect.width}px`;
+        canvas.value.style.height = `${rect.height}px`;
         const ctx2d = findContext2D(canvas.value);
         if (ctx2d !== null) ctx = ctx2d;
     }

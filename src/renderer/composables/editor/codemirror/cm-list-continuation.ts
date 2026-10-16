@@ -94,7 +94,7 @@ function continueMarkdownList(view: EditorView): boolean {
         // Continue the list
         const prefix = checkbox !== '' ? `${indent}- [ ] ` : `${indent}- `;
         view.dispatch({
-            changes: { from: cursorPos, to: cursorPos, insert: '\n' + prefix },
+            changes: { from: cursorPos, to: cursorPos, insert: `\n${prefix}` },
             selection: EditorSelection.cursor(cursorPos + 1 + prefix.length),
         });
         return true;
@@ -135,7 +135,7 @@ function continueMarkdownList(view: EditorView): boolean {
         }
 
         view.dispatch({
-            changes: [{ from: cursorPos, to: cursorPos, insert: '\n' + prefix }, ...renumberChanges],
+            changes: [{ from: cursorPos, to: cursorPos, insert: `\n${prefix}` }, ...renumberChanges],
             selection: EditorSelection.cursor(cursorPos + insertLength),
         });
         return true;

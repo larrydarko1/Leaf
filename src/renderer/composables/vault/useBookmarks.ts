@@ -56,7 +56,7 @@ export function useBookmarks(_getCurrentFolder: () => string | null): UseBookmar
      * carries the bookmarks of the files it contains).
      */
     function relocate(oldPath: string, newPath: string): void {
-        const descendantPrefix = oldPath + '/';
+        const descendantPrefix = `${oldPath}/`;
 
         let changed = false;
         const updated: string[] = [];

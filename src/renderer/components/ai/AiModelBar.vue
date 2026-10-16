@@ -113,7 +113,7 @@ function handleRefresh(): void {
 }
 
 function truncate(str: string, len: number): string {
-    return str.length > len ? str.slice(0, len) + '…' : str;
+    return str.length > len ? `${str.slice(0, len)}…` : str;
 }
 
 void props;

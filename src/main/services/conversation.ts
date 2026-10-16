@@ -257,7 +257,7 @@ async function renameConversation(id: string, newTitle: string): Promise<AiSimpl
 
 /** Write content to a file atomically: write to .tmp, then rename into place. */
 async function writeFileAtomic(filePath: string, data: string): Promise<void> {
-    const tmp = filePath + '.tmp';
+    const tmp = `${filePath}.tmp`;
     await fs.writeFile(tmp, data, 'utf-8');
     await fs.rename(tmp, filePath);
 }
@@ -271,7 +271,7 @@ function deriveTitle(messages: ConversationMessage[]): string {
     if (firstUserMsg === undefined) return 'New Conversation';
     const text = firstUserMsg.content.trim();
     if (text.length <= 60) return text;
-    return text.slice(0, 57) + '...';
+    return `${text.slice(0, 57)}...`;
 }
 
 function getConversationPath(id: string): string {

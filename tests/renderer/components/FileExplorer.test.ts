@@ -32,7 +32,7 @@ function makeFile(name: string, folder = '.'): FileInfo {
 }
 
 function makeFolder(path: string, name: string): FolderInfo {
-    return { name: name, path: path, relativePath: path, type: 'folder', folder: name };
+    return { name, path, relativePath: path, type: 'folder', folder: name };
 }
 
 beforeEach(() => {

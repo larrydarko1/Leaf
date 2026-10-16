@@ -25,7 +25,7 @@ function makeFile(name: string, folder = '.'): FileInfo {
         name,
         path: inFolder ? `/${folder}/${name}` : `/${name}`,
         relativePath: inFolder ? `${folder}/${name}` : name,
-        extension: name.includes('.') ? '.' + name.split('.').pop()! : '',
+        extension: name.includes('.') ? `.${name.split('.').pop()!}` : '',
         size: 0,
         modified: '',
         folder,

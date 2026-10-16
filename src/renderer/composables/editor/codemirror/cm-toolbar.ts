@@ -81,7 +81,7 @@ export function useCodemirrorToolbar(view: Ref<EditorView | null>): {
                 const { from, to } = editorView.state.selection.main;
                 const selected = editorView.state.sliceDoc(from, to);
                 if (selected.includes('\n')) {
-                    const replacement = '```\n' + selected + '\n```';
+                    const replacement = `\`\`\`\n${selected}\n\`\`\``;
                     editorView.dispatch({
                         changes: { from, to, insert: replacement },
                         selection: EditorSelection.range(from, from + replacement.length),
@@ -164,7 +164,7 @@ export function useCodemirrorToolbar(view: Ref<EditorView | null>): {
         const lineText = line.text;
 
         const stripped = lineText.replace(/^#{1,6}\s*/, '');
-        const prefix = '#'.repeat(level) + ' ';
+        const prefix = `${'#'.repeat(level)} `;
         const newLine = prefix + stripped;
 
         editorView.dispatch({

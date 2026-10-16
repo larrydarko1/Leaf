@@ -130,7 +130,7 @@ export function useEditorDrop({
                 textarea.focus();
             } else {
                 const needNewline = content.value.length > 0 && !content.value.endsWith('\n');
-                content.value += (needNewline ? '\n' : '') + embedString + '\n';
+                content.value += `${needNewline ? '\n' : ''}${embedString}\n`;
             }
         }
 
@@ -141,7 +141,7 @@ export function useEditorDrop({
 }
 
 function isEmbeddableFile(fileName: string): boolean {
-    const ext = '.' + (fileName.split('.').pop()?.toLowerCase() ?? '');
+    const ext = `.${fileName.split('.').pop()?.toLowerCase() ?? ''}`;
     return embeddableExtensions.includes(ext);
 }
 
