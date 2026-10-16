@@ -27,7 +27,7 @@ describe('ContextMenu', () => {
         const menu = document.querySelector('.context-menu');
         expect(menu).not.toBeNull();
         const buttons = document.querySelectorAll('.context-menu-item');
-        expect(buttons.length).toBe(3);
+        expect(buttons).toHaveLength(3);
         wrapper.unmount();
         document.querySelector('.context-menu')?.remove();
     });

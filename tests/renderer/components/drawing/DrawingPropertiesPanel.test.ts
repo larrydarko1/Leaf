@@ -71,7 +71,7 @@ describe('DrawingPropertiesPanel', () => {
             props: { ...baseProps, activeStrokeWidth: 2 },
         });
         const activeBtns = wrapper.findAll('.stroke-width-btn.active');
-        expect(activeBtns.length).toBe(1);
+        expect(activeBtns).toHaveLength(1);
         wrapper.unmount();
     });
 

@@ -31,7 +31,7 @@ describe('BookmarksPanel', () => {
                 activeFile: null,
             },
         });
-        expect(wrapper.findAll('.bookmark-item').length).toBe(0);
+        expect(wrapper.findAll('.bookmark-item')).toHaveLength(0);
         wrapper.unmount();
     });
 

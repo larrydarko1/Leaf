@@ -105,7 +105,7 @@ describe('AiModelBar', () => {
             });
             await wrapper.find('.ai-dropdown-trigger').trigger('click');
             const menuItems = document.querySelectorAll('.ai-dropdown-item');
-            expect(menuItems.length).toBe(2);
+            expect(menuItems).toHaveLength(2);
             wrapper.unmount();
             document.querySelectorAll('.ai-dropdown-menu').forEach((el) => el.remove());
         });

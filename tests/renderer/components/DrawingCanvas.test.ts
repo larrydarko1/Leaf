@@ -1,6 +1,6 @@
 import { shallowMount } from '@vue/test-utils';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ref, computed } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 
 import DrawingExportDialog from '@/renderer/components/drawing/DrawingExportDialog.vue';
 import DrawingFooter from '@/renderer/components/drawing/DrawingFooter.vue';
@@ -321,7 +321,8 @@ describe('DrawingCanvas', () => {
             const wrapper = mountCanvas();
             mockRenderScene.mockClear();
             const toolbar = wrapper.findComponent(DrawingToolbar);
-            await toolbar.vm.$emit('select-tool', 'rectangle');
+            toolbar.vm.$emit('select-tool', 'rectangle');
+            await nextTick();
             expect(mockRenderScene).toHaveBeenCalled();
             wrapper.unmount();
         });
@@ -330,7 +331,8 @@ describe('DrawingCanvas', () => {
             mockSelectedIds.value = new Set(['el-1', 'el-2']);
             const wrapper = mountCanvas();
             const toolbar = wrapper.findComponent(DrawingToolbar);
-            await toolbar.vm.$emit('select-tool', 'freedraw');
+            toolbar.vm.$emit('select-tool', 'freedraw');
+            await nextTick();
             expect(mockSelectedIds.value.size).toBe(0);
             wrapper.unmount();
         });
@@ -339,7 +341,8 @@ describe('DrawingCanvas', () => {
             mockSelectedIds.value = new Set(['el-1']);
             const wrapper = mountCanvas();
             const toolbar = wrapper.findComponent(DrawingToolbar);
-            await toolbar.vm.$emit('select-tool', 'select');
+            toolbar.vm.$emit('select-tool', 'select');
+            await nextTick();
             expect(mockSelectedIds.value.size).toBe(1);
             wrapper.unmount();
         });
@@ -354,15 +357,18 @@ describe('DrawingCanvas', () => {
 
         it('opens export dialog via footer event', async () => {
             const wrapper = mountCanvas();
-            await wrapper.findComponent(DrawingFooter).vm.$emit('open-export-dialog');
+            wrapper.findComponent(DrawingFooter).vm.$emit('open-export-dialog');
+            await nextTick();
             expect(wrapper.findComponent(DrawingExportDialog).props('visible')).toBe(true);
             wrapper.unmount();
         });
 
         it('closes export dialog on close event', async () => {
             const wrapper = mountCanvas();
-            await wrapper.findComponent(DrawingFooter).vm.$emit('open-export-dialog');
-            await wrapper.findComponent(DrawingExportDialog).vm.$emit('close');
+            wrapper.findComponent(DrawingFooter).vm.$emit('open-export-dialog');
+            await nextTick();
+            wrapper.findComponent(DrawingExportDialog).vm.$emit('close');
+            await nextTick();
             expect(wrapper.findComponent(DrawingExportDialog).props('visible')).toBe(false);
             wrapper.unmount();
         });

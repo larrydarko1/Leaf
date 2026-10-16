@@ -220,9 +220,7 @@ describe('AiMessageList', () => {
                 props: { ...baseProps, messages: [makeMsg('user', 'Resend me')], isReady: true },
             });
             const btns = wrapper.findAll('.ai-btn-action');
-            const resendBtn = btns.find(
-                (b) => b.attributes('aria-label')?.includes('resend') || b.attributes('aria-label')?.includes('Resend'),
-            );
+            const resendBtn = btns.find((b) => b.attributes('aria-label')?.toLowerCase().includes('resend') === true);
             expect(resendBtn).toBeDefined();
             wrapper.unmount();
         });

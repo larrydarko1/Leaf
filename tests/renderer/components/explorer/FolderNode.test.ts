@@ -181,7 +181,7 @@ describe('FolderNode — folder node', () => {
         const wrapper = mountWithI18n(FolderNode, {
             props: { ...baseProps, node: folderNode },
         });
-        expect(wrapper.findAll('.file-item').length).toBe(0);
+        expect(wrapper.findAll('.file-item')).toHaveLength(0);
         wrapper.unmount();
     });
 

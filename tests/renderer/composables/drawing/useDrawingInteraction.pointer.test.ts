@@ -557,7 +557,7 @@ describe('onPointerUp: create', () => {
         ctx.onPointerDown(ptr({ clientX: 0, clientY: 0 }));
         ctx.onPointerMove(ptr({ clientX: 100, clientY: 60, type: 'pointermove' }));
         ctx.onPointerUp(ptr({ type: 'pointerup' }));
-        expect(ctx.elements.value.length).toBe(1);
+        expect(ctx.elements.value).toHaveLength(1);
         expect(ctx.saveToHistory).toHaveBeenCalled();
         expect(ctx.scheduleAutoSave).toHaveBeenCalled();
         expect(ctx.creatingElement.value).toBeNull();
@@ -568,7 +568,7 @@ describe('onPointerUp: create', () => {
         ctx.onPointerDown(ptr({ clientX: 0, clientY: 0 }));
         ctx.onPointerMove(ptr({ clientX: 1, clientY: 1, type: 'pointermove' }));
         ctx.onPointerUp(ptr({ type: 'pointerup' }));
-        expect(ctx.elements.value.length).toBe(0);
+        expect(ctx.elements.value).toHaveLength(0);
         expect(ctx.saveToHistory).not.toHaveBeenCalled();
     });
 
@@ -626,7 +626,7 @@ describe('onPointerUp: freedraw', () => {
         ctx.onPointerMove(ptr({ clientX: 50, clientY: 50, type: 'pointermove' }));
         ctx.onPointerMove(ptr({ clientX: 80, clientY: 80, type: 'pointermove' }));
         ctx.onPointerUp(ptr({ type: 'pointerup' }));
-        expect(ctx.elements.value.length).toBe(1);
+        expect(ctx.elements.value).toHaveLength(1);
         expect(ctx.elements.value[0]?.type).toBe('freedraw');
         expect(ctx.saveToHistory).toHaveBeenCalled();
     });
@@ -635,7 +635,7 @@ describe('onPointerUp: freedraw', () => {
         const ctx = makeInteraction({ initialTool: 'freedraw' });
         ctx.onPointerDown(ptr({ clientX: 0, clientY: 0 }));
         ctx.onPointerUp(ptr({ type: 'pointerup' }));
-        expect(ctx.elements.value.length).toBe(0);
+        expect(ctx.elements.value).toHaveLength(0);
         expect(ctx.creatingElement.value).toBeNull();
     });
 });

@@ -106,21 +106,13 @@ vi.stubGlobal(
 
 vi.stubGlobal('clearInterval', vi.fn());
 
-Object.defineProperty(globalThis, 'window', {
+Object.defineProperty(window, 'electronAPI', {
     value: {
-        ...globalThis.window,
-        electronAPI: {
-            speechGetStatus: mockSpeechGetStatus,
-            speechInit: mockSpeechInit,
-            speechTranscribe: mockSpeechTranscribe,
-            speechResetSession: mockSpeechResetSession,
-            log: mockLog,
-        },
-        setInterval: vi.fn((fn: () => void, _ms: number) => {
-            storedIntervalFn = fn;
-            return 999;
-        }),
-        clearInterval: vi.fn(),
+        speechGetStatus: mockSpeechGetStatus,
+        speechInit: mockSpeechInit,
+        speechTranscribe: mockSpeechTranscribe,
+        speechResetSession: mockSpeechResetSession,
+        log: mockLog,
     },
     writable: true,
     configurable: true,
