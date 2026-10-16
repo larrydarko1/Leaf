@@ -3,17 +3,16 @@
  * and manages click-outside dismissal.
  */
 
-import { ref, watch, nextTick, onUnmounted, type Ref } from 'vue';
+import { ref, watch, nextTick, onUnmounted, type Ref, type ShallowRef } from 'vue';
 
 export function useContextMenu(
+    menuRef: Readonly<ShallowRef<HTMLElement | null>>,
     getVisible: () => boolean,
     getPosition: () => { x: number; y: number },
     onClose: () => void,
 ): {
-    menuRef: Ref<HTMLElement | null>;
     adjustedPosition: Ref<{ x: number; y: number }>;
 } {
-    const menuRef = ref<HTMLElement | null>(null);
     const adjustedPosition = ref({ x: 0, y: 0 });
 
     function handleClickOutside(event: MouseEvent): void {
@@ -62,5 +61,5 @@ export function useContextMenu(
 
     onUnmounted(removeListeners);
 
-    return { menuRef, adjustedPosition };
+    return { adjustedPosition };
 }

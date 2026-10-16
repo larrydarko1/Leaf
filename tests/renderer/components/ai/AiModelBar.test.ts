@@ -26,7 +26,6 @@ const baseProps = {
     selectedModelPath: null as string | null,
     selectedModelLabel: 'Select a model',
     showHistory: false,
-    isAnyGenerating: false,
 };
 
 function makeStatus(overrides: Partial<AiStatus> = {}): AiStatus {

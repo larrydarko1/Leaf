@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch, nextTick } from 'vue';
+import { computed, ref, watch, nextTick, useTemplateRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import IconChevronRight from '@/renderer/components/icons/IconChevronRight.vue';
@@ -53,11 +53,11 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-const renameInput = ref<HTMLInputElement | null>(null);
+const renameInput = useTemplateRef<HTMLInputElement>('renameInput');
 
 // Marquee-on-hover: scroll truncated names so the full text becomes readable.
-const folderNameTextEl = ref<HTMLElement | null>(null);
-const fileNameTextEl = ref<HTMLElement | null>(null);
+const folderNameTextEl = useTemplateRef<HTMLElement>('folderNameTextEl');
+const fileNameTextEl = useTemplateRef<HTMLElement>('fileNameTextEl');
 const folderScrollDistance = ref(0);
 const fileScrollDistance = ref(0);
 const folderScrollStyle = computed(() => scrollStyle(folderScrollDistance.value));

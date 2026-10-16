@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useTemplateRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import { useContextMenu } from '@/renderer/composables/ui/useContextMenu';
@@ -19,13 +20,13 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-const { menuRef, adjustedPosition } = useContextMenu(
+const menuRef = useTemplateRef<HTMLElement>('menuRef');
+const { adjustedPosition } = useContextMenu(
+    menuRef,
     () => props.visible,
     () => props.position,
     () => emit('close'),
 );
-
-// used as template ref via ref="menuRef"
 
 function handleItemClick(item: ContextMenuItem): void {
     if (item.disabled !== true) {
@@ -33,8 +34,6 @@ function handleItemClick(item: ContextMenuItem): void {
         emit('close');
     }
 }
-
-void menuRef;
 </script>
 
 <template>

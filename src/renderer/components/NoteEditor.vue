@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { keymap, EditorView } from '@codemirror/view';
-import { ref, watch, onMounted, onUnmounted, computed, shallowRef } from 'vue';
+import { ref, watch, onMounted, onUnmounted, computed, shallowRef, useTemplateRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import DrawingCanvas from '@/renderer/components/DrawingCanvas.vue';
@@ -55,11 +55,11 @@ defineExpose({ reloadContent });
 const { t } = useI18n();
 
 // CodeMirror container ref (replaces textarea + preview)
-const cmContainerRef = ref<HTMLElement | null>(null);
+const cmContainerRef = useTemplateRef<HTMLElement>('cmContainerRef');
 // CodeMirror container ref for code files
-const codeContainerRef = ref<HTMLElement | null>(null);
+const codeContainerRef = useTemplateRef<HTMLElement>('codeContainerRef');
 // Textarea ref for plain-text (non-markdown) files
-const textareaRef = ref<HTMLTextAreaElement | null>(null);
+const textareaRef = useTemplateRef<HTMLTextAreaElement>('textareaRef');
 
 // Obsidian-style embed resolver (must be initialized before useNotePersistence)
 const {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, useTemplateRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import IconArrow from '@/renderer/components/icons/IconArrow.vue';
@@ -48,7 +48,7 @@ const archShapeTypes: ToolType[] = [
 
 const { t } = useI18n();
 
-const archDropdownEl = ref<HTMLDivElement | null>(null);
+const archDropdownEl = useTemplateRef<HTMLDivElement>('archDropdownEl');
 const archDropdownOpen = ref(false);
 
 const archShapes = [

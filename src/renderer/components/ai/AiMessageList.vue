@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue';
+import { watch, nextTick, useTemplateRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import IconAlertCircle from '@/renderer/components/icons/IconAlertCircle.vue';
@@ -30,7 +30,6 @@ type Props = {
 };
 
 const props = defineProps<Props>();
-const editContent = defineModel<string>('editContent', { required: true });
 
 defineEmits<{
     'scroll': [];
@@ -41,11 +40,12 @@ defineEmits<{
     'open-history': [];
     'load-previous-model': [];
     'copy': [content: string, index: number];
-    'copy-code': [value: string];
     'start-edit': [index: number];
     'confirm-edit': [index: number];
     'resend': [index: number];
 }>();
+
+const editContent = defineModel<string>('editContent', { required: true });
 
 const copyIconSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
 const checkIconSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
@@ -53,10 +53,10 @@ const checkIconSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none
 const { t } = useI18n();
 
 // Exposed so AiPanel can drive auto-scroll on the real element.
-const messagesContainer = ref<HTMLElement | null>(null);
+const messagesContainer = useTemplateRef<HTMLElement>('messagesContainer');
 defineExpose({ messagesContainer });
 
-const editInputRef = ref<HTMLTextAreaElement[]>([]);
+const editInputRef = useTemplateRef<HTMLTextAreaElement[]>('editInputRef');
 
 function truncate(str: string, len: number): string {
     return str.length > len ? `${str.slice(0, len)}…` : str;
@@ -127,7 +127,7 @@ watch(
     async (index) => {
         if (index !== null) {
             await nextTick();
-            editInputRef.value[0]?.focus();
+            editInputRef.value?.[0]?.focus();
         }
     },
 );
